@@ -45,4 +45,5 @@ wrcf.o:	wrcf.c rev_zone.h dnsa.h
 
 .PHONY :	clean
 clean :
-	$(RM) *.o wzf wcf wrzf
+	$(RM) *.o wzf wcf wrzf wrcf
+
