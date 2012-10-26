@@ -8,7 +8,7 @@ CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 CPPFLAGS = -I/usr/include/mysql
-LDFLAGS = -L/usr/lib/i386-linux-gnu
+LDFLAGS = -L/usr/lib/i386-linux-gnu -L/usr/lib/mysql
 LIBS = -lmysqlclient
 
 all:	wzf wcf wrzf wrcf
