@@ -6,10 +6,11 @@ config files for these forward and reverse zones. This includes some sanity
 checking of the zonefiles and config files.
 
 **** Features *****
-** Add records to the database
+** Add records to the database - use ncurses?
 ** Automatically create reverse zone(s) in the database (via cron??)
 ** Specify different config file on command line
 ** Add install script (/usr/local most likely)
 
 **** Coding *****
 ** Farm out config file reading to a separate function in a lib.
+

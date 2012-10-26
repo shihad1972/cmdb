@@ -1,1 +1,4 @@
 Currently pretty basic. Go into the src/ subdirectory and type make.
+
+needs the mysql header files installed. This will be either package:
+libmysqlclient-dev on debian / ubuntu
