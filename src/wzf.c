@@ -151,15 +151,18 @@ int main (int argc, char *argv[])
 	 */
 	sprintf(c, ".");
 	sprintf(tmp2, "%s", zone_info.pri_dns);
+	/* Search for A records for the NS servers and add to zonefile */
 	if (!(thost = strtok(tmp2, c)))	{/* Grab up to first . */
 		printf("record does not seem to contain %s\n", c);
 		exit(NO_DELIM);
 	} else {
-		sprintf	(tmp, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'", zone_info.id, thost);
+		sprintf	(tmp, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'",
+			 zone_info.id, thost);
 		shiquery = tmp;
 		error = mysql_query(&shihad, shiquery);
 		if ((error != 0)) {
-			fprintf(stderr, "Query not successful: error code %d\n", error);
+			fprintf(stderr, "Query not successful: error code %d\n",
+				error);
 			exit(MY_QUERY_FAIL);
 		}
 		if (!(shihad_res = mysql_store_result(&shihad)))
@@ -189,6 +192,7 @@ int main (int argc, char *argv[])
 			offset = add_records(row_data, zout, offset);
 		}
 	}
+	/* Search for any MX records in the domain */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zone_info.id);
 	shiquery = tmp;
 	error = mysql_query(&shihad, tmp);
@@ -206,7 +210,8 @@ int main (int argc, char *argv[])
 			sprintf(c, "."); /* Grab up to first . */
 			sprintf(tmp, "%s", row_data.dest);
 			strtok(tmp, c);
-			sprintf(tmp2, "SELECT * FROM records WHERE zone = %d AND host = '%s'", zone_info.id, tmp);
+			sprintf(tmp2, "SELECT * FROM records WHERE zone = %d AND host = '%s'",
+				zone_info.id, tmp);
 			shiquery = tmp2;
 			if (!(mysql_init(&shihad2))) {
 				fprintf(stderr, "Cannot init. Out of memory?\n");
@@ -233,7 +238,7 @@ int main (int argc, char *argv[])
 		}
 	}
 	/** Now we have to test the zonefile for errors
-	 ** Best to output to CWD and test.
+	 ** Output zonefile and check then remove.
 	 **/
 	sprintf(zonefilename, "%sdb1.%s", dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
@@ -253,6 +258,10 @@ int main (int argc, char *argv[])
 		exit(error);
 	}
 	remove(zonefilename);
+	/** Get the rest of the A and CNAME records
+	 ** We will need to add the other record types
+	 ** Can check this from the DB
+	 **/
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'A' OR zone = %d AND type = 'CNAME'", zone_info.id, zone_info.id);
 	shiquery = tmp;
 	if (!(mysql_init(&shihad3))) {
@@ -277,6 +286,7 @@ int main (int argc, char *argv[])
 		offset = add_records(row_data3, zout2, offset);	
 	}
 	mysql_close(&shihad3); 
+	/* Output full zonefile */
 	sprintf(zonefilename, "%sdb.%s", dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		fprintf(stderr, "Cannot open zonefile file %s\n", zonefilename);
@@ -285,6 +295,8 @@ int main (int argc, char *argv[])
 		fputs(zout2, zonefile);
 		fclose(zonefile);
 	}
+	/** Check the zone for errors. If none, update DB with the to say that 
+	 ** zone is valid */
 	sprintf(tmp, "/usr/sbin/named-checkzone %s %s", zone_info.name, zonefilename);
 	system_command = tmp;
 	error = system(system_command);
