@@ -41,7 +41,7 @@ int main(void)
 	tmp2 = malloc(TBUFF_S * sizeof(char));
 	zonefile = malloc(CONF_S * sizeof(char));
 	dnsa_query = dnsa_line;
-	
+	/* Get values from config file */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);
 		fprintf(stderr, "Using default values\n");
@@ -71,6 +71,7 @@ int main(void)
 			sscanf(buff, "RNDC=%s", reload_comm);
 		fclose(cnf);
 	}
+	/* Check directory values for trailing / */
 	len = strlen(dir);
 	a = dir[len -1];
 	if (!(a == '/')) {
@@ -83,6 +84,7 @@ int main(void)
 		fprintf(stderr, "Cannot init. Out of memory?\n");
 		exit(MY_INIT_FAIL);
 	}
+	/* Initilaise MYSQL connection and query */
 	if (!(mysql_real_connect(&dnsa,
 		host, user, pass, db, port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
@@ -103,6 +105,7 @@ int main(void)
 		fprintf(stderr, "No reverse zones??\n");
 		exit(NO_RECORDS);
 	}
+	/* From each DB row, create the config line for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		for (i=0; i< RBUFF_S; i++)	/* zero tmp buffer */
 			*(tmp2 + i) = '\0';
@@ -118,6 +121,9 @@ int main(void)
 			fclose(cnf);
 		}
 	}
+	/* Write the config file to temp directory.
+	 * Check it and if successful write to real config file 
+	 * and reload bind */
 	sprintf(zonefile, "%s%s", tmpdir, dnsav);
 	if (!(cnf = fopen(zonefile, "w"))) {
 		fprintf(stderr, "Cannot open config files %s for writing!\n", zonefile);

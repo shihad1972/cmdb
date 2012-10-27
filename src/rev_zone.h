@@ -31,11 +31,20 @@ typedef struct rev_record_row_t { /* Hold dns record */
 	char dest[256];
 } rev_record_row_t;
 
-
-rev_zone_info_t fill_rev_zone_data(MYSQL_ROW my_row);
-size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout);
-rev_record_row_t get_rev_row (MYSQL_ROW my_row);
-void add_rev_records(char *rout, rev_record_row_t my_row);
-void get_in_addr_string(char *in_addr, char range[]);
+/* Return the data for one reverse zone */
+rev_zone_info_t
+fill_rev_zone_data(MYSQL_ROW my_row);
+/* Return the size of the string with the zone header */
+size_t
+create_rev_zone_header(rev_zone_info_t zone_info, char *rout);
+/* Return data of one reverse (PTR) record */
+rev_record_row_t
+get_rev_row (MYSQL_ROW my_row);
+/* Add the reverse (PTR) record to the output string */
+void
+add_rev_records(char *rout, rev_record_row_t my_row);
+/* Create the in-addr.arpa zonename from net work address */
+void
+get_in_addr_string(char *in_addr, char range[]);
 
 #endif

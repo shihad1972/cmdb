@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 	dquery = malloc(BUFF_S * sizeof(char));
 	tmp = malloc(BUFF_S * sizeof(char));
 	rout = malloc(FILE_S * sizeof(char));
+	/* Deal with command line args; looking for -r */
 	if (argc != 3) {
 		printf("Usage: %s -r <rev-zone-id>\n", argv[0]);
 		exit(ARGC_INVAL);
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
 		printf("Usage: %s -r <rev-zone-id>\n", argv[0]);
 		exit(ARGV_INVAL);
 	}
+	/* Get config values from config file or use defaults */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);
 		fprintf(stderr, "Using default values\n");
@@ -76,6 +78,7 @@ int main(int argc, char *argv[])
 			sscanf(buff, "REV=%s", rev);
 		fclose(cnf);
 	}
+	/* Check for trailing / on directory values */
 	len = strlen(dir);
 	a = dir[len -1];
 	if (!(a == '/')) {
@@ -84,6 +87,7 @@ int main(int argc, char *argv[])
 		dir[len + 1] = '\0';
 		len = strlen(dir);
 	}
+	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
 		exit(MY_INIT_FAIL);
@@ -112,9 +116,11 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Multiple rows found for reverse zone id %d\n", reverse);
 		exit(MULTI_DOMAIN);
 	}
+	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_zone_info = fill_rev_zone_data(dnsa_row);
 	}
+	/* Start the output string with the zonefile header */
 	len = create_rev_zone_header(rev_zone_info, rout);
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);
@@ -130,10 +136,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "No reverse records for zone %d\n", reverse);
 		exit(NO_RECORDS);
 	}
+	/* Add the reverse zone records */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_row = get_rev_row(dnsa_row);
 		add_rev_records(rout, rev_row);
 	}
+	/* Build the config filename from config values */
 	tmp2 = buff;
 	for (i=0; i< CONF_S; i++)	/* zero buffer */
 		*(tmp2 + i) = '\0';
@@ -142,6 +150,7 @@ int main(int argc, char *argv[])
 	len = strlen(rev_zone_info.net_range);
 	strncat(tmp2, rev_zone_info.net_range, len);
 	len = strlen(rout);
+	/* Write out the reverse zone to the zonefile */
 	if (!(cnf = fopen(buff, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing\n", buff);
 		exit(FILE_O_FAIL);
@@ -153,6 +162,8 @@ int main(int argc, char *argv[])
 		*(tmp + i) = '\0';
 	for (i=0; i < FILE_S; i++)	/* zero rout file output buffer */
 		*(rout + i) = '\0';
+	/* Check if the zonefile is valid. If so update the DB to say zone
+	 * is valid. */
 	get_in_addr_string(tmp, rev_zone_info.net_range);
 	sprintf(rout, "%s %s %s", chkzone, tmp, buff);
 	syscom = rout;

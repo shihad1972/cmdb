@@ -1,4 +1,14 @@
-/* wcf.c: main function for write config file */
+/* wcf.c: main function for write config file
+ * 
+ * This main function creates and writes the BIND config file
+ * for all the DNS zones that are held in the database. 
+ * 
+ * Contains some error checking (is config file valid, do the
+ * zone files exist)
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net
+ * 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +47,9 @@ int main(void)
 	dout = malloc(FILE_S * sizeof(char));
 	dnsa_line = malloc(TBUFF_S * sizeof(char));
 	zonefile = malloc(CONF_S * sizeof(char));
-	
+	/* Get config values from config file
+	 * 
+	 * This should probably be put to a separate function */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);
 		fprintf(stderr, "Using default values\n");
@@ -64,6 +76,7 @@ int main(void)
 			sscanf(buff, "DNSA=%s", dnsav);
 		fclose(cnf);
 	}
+	/* check if values have trailing / in the DIR value */
 	len = strlen(dir);
 	a = dir[len - 1];
 	if (!(a == '/')) {
@@ -80,7 +93,7 @@ int main(void)
 		bind[len + 1] = '\0';
 		len = strlen(bind);
 	}
-	
+	/* Initialise MYSQL Connection and query*/
 	printf("%s\t%s\n", dir, bind);
 	if (!(mysql_init(&dnsa))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
@@ -105,7 +118,7 @@ int main(void)
 		fprintf(stderr, "No valid domains found\n");
 		exit(NO_DOMAIN);
 	}
-	
+	/* From each DB row create the config liens */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(zonefile, "%sdb.%s", dir, dnsa_row[0]);
 		if ((cnf = fopen(zonefile, "r"))){
@@ -117,6 +130,7 @@ int main(void)
 			printf("Not adding for zonefile %s\n", dnsa_row[0]);
 		}
 	}
+	/* Write the BIND config file */
 	len = strlen(dnsav);
 	strncat(bind, dnsav, len);
 	if (!(cnf = fopen(bind, "w"))) {
@@ -127,7 +141,7 @@ int main(void)
 		fclose(cnf);
 	}
 	mysql_close(&dnsa);
-	
+	/* Check the file and if OK reload BIND */
 	error = system(check_comm);
 	if (!(error == 0)) {
 		fprintf(stderr, "Bind config check failed! Error code was %d\n", error);

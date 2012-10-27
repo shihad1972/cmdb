@@ -38,7 +38,7 @@ int main (int argc, char *argv[])
 	zonefilename = malloc(TBUFF_S * sizeof(char));
 	domain = malloc(TBUFF_S * sizeof(char));
 	c = malloc(CH_S * sizeof(char));
-	
+	/* Deal with command line args; looking for -d */
 	if (argc != 3) {
 		printf("Usage: %s -d <domain>\n", argv[0]);
 		exit(ARGC_INVAL);
@@ -54,6 +54,7 @@ int main (int argc, char *argv[])
 		printf("Usage: %s -d <domain>\n", argv[0]);
 		exit(ARGV_INVAL);
 	}
+	/* Read config values from config file */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);
 		fprintf(stderr, "Using default values\n");
@@ -74,6 +75,7 @@ int main (int argc, char *argv[])
 			sscanf(buff, "DIR=%s", dir);
 		fclose(cnf);
 	}
+	/* Check for trailing / in dir values */
 	len = strlen(dir);
 	a = dir[len -1];
 	if (!(a == '/')) {
@@ -82,6 +84,7 @@ int main (int argc, char *argv[])
 		dir[len + 1] = '\0';
 		len = strlen(dir);
 	}
+	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&shihad))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
 		exit(MY_INIT_FAIL);
@@ -110,10 +113,13 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "Multiple rows found for domain %s\n", domain);
 		exit(MULTI_DOMAIN);
 	}
+	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(shihad_res))) {
 		zone_info = fill_zone_data(my_row);
 	}
+	/* Create the zone file header */
 	offset = create_zone_header(zout, zone_info);
+	/* Check for MX records and add them to the zone */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zone_info.id);
 	shiquery = tmp;
 	error = mysql_query(&shihad, shiquery);

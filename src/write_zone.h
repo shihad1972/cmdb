@@ -28,19 +28,19 @@ typedef struct record_row_t { /* Hold dns record */
 	char dest[256];
 	char valid[256];
 } record_row_t;
-
+/* Return struct containing the DNS zone data */
 zone_info_t
 fill_zone_data(MYSQL_ROW my_row);
-
+/* Return struct containing DNS Record data */
 record_row_t
 fill_record_data(MYSQL_ROW my_row);
-
+/* Create the header of the DNS zone in a string; return size */
 size_t
 create_zone_header(char *output, zone_info_t);
-
+/* Add the MX records to the header string; return size */
 size_t
 add_mx_to_header(char *output, size_t offset, MYSQL_ROW results);
-
+/* ADd teh individual DNS Records to the zonefile string; return size */
 size_t
 add_records(record_row_t, char *output, size_t offset);
 
