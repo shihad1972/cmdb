@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
 			wzf(domain, config);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			id = get_rev_id(domain);
+			id = get_rev_id(domain, config);
 			if (id < 0) {
 				fprintf(stderr, "Invalid reverse domain\n");
 				exit(NO_DOMAIN);

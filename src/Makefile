@@ -19,32 +19,20 @@ dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o
 dnsa.o:	dnsa.c dnsa.h write_zone.h rev_zone.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-wzf:	write_zone.o wzf.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
-
 write_zone.o: write_zone.c write_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $< 
 
 wzf.o:	wzf.c write_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-wcf:	wcf.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
-
 wcf.o:	wcf.c write_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $< 
-
-wrzf:	write_rev_zone.o wrzf.o 
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 wrzf.o:	wrzf.c rev_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 write_rev_zone.o:	write_rev_zone.c dnsa.h rev_zone.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
-
-wrcf:	wrcf.o write_rev_zone.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 wrcf.o:	wrcf.c rev_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
@@ -56,3 +44,14 @@ command.o:	commline.c dnsa.h
 clean :
 	$(RM) *.o wzf wcf wrzf wrcf dnsa
 
+wrcf:	wrcf.o write_rev_zone.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+wrzf:	write_rev_zone.o wrzf.o 
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+wzf:	write_zone.o wzf.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+wcf:	wcf.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)

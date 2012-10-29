@@ -45,6 +45,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 int parse_config_file(char config[][CONF_S])
 {
 	FILE *cnf;	/* File handle for config file */
+	size_t len;
 	char buff[CONF_S] = "";
 	int retval;
 	sprintf(config[DB], "bind");
@@ -93,6 +94,23 @@ int parse_config_file(char config[][CONF_S])
 			sscanf(buff, "CHKC=%s", config[CHKC]);
 		retval = 0;
 		fclose(cnf);
+	}
+	/* The next 2 values need to be checked for a trailing /
+	 * If there is not one then add it
+	 */
+	sprintf(buff, "%s", config[DIR]);
+	len = strlen(buff);
+	if (buff[len - 1] != '/') {
+		buff[len] = '/';
+		buff[len + 1] = '\0';
+		sprintf(config[DIR], "%s", buff);
+	}
+	sprintf(buff, "%s", config[BIND]);
+	len = strlen(buff);
+	if (buff[len - 1] != '/') {
+		buff[len] = '/';
+		buff[len + 1] = '\0';
+		sprintf(config[BIND], "%s", buff);
 	}
 	
 	return retval;

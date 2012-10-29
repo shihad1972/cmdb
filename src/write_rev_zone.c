@@ -150,7 +150,7 @@ void get_in_addr_string(char *in_addr, char range[])
 /** Get the reverse zone ID from the database. Return -1 on error
  ** Perhaps should add more error codes, but for now we assume invalid domain
  **/
-int get_rev_id (char *domain)
+int get_rev_id (char *domain, char config[][CONF_S])
 {
 	char *queryp;
 	const char *dquery;

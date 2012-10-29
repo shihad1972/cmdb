@@ -48,7 +48,7 @@ void
 get_in_addr_string(char *in_addr, char range[]);
 /* Return the ID of the reverse domain; -1 indicates error */
 int
-get_rev_id(char *domain);
+get_rev_id(char *domain, config[][CONF_S]);
 /* Write out the reverse zone file */
 int 
 wrzf (int id, char config[][CONF_S]);
