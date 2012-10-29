@@ -4,7 +4,7 @@
 #include <string.h>
 #include "dnsa.h"
 
-void report_error(int error)
+void report_error(int error, const char *errstr)
 {
 	switch (error){
 		case ARGC_INVAL:
@@ -16,11 +16,11 @@ void report_error(int error)
 			exit(2);
 			break;
 		case NO_DOMAIN:
-			fprintf(stderr, "No domain was found\n");
+			fprintf(stderr, "No domain %s was found\n", errstr);
 			exit(3);
 			break;
 		case MULTI_DOMAIN:
-			fprintf(stderr, "Multiple domains found\n");
+			fprintf(stderr, "Multiple records found for %s\n", errstr);
 			exit(4);
 			break;
 		case NO_DELIM:
@@ -52,7 +52,7 @@ void report_error(int error)
 			exit(13);
 			break;
 		case FILE_O_FAIL:
-			fprintf(stderr, "Unable to open file\n");
+			fprintf(stderr, "Unable to open file %s\n", errstr);
 			exit(20);
 			break;
 		default:
