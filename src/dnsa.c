@@ -39,9 +39,9 @@ int main(int argc, char *argv[])
 	domain = dom;
 	
 	if ((strncmp(command.action, "write", COMM_S) == 0)) {
-		if ((strncmp(command.action, "forward", COMM_S) == 0)) {
+		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
 			wzf(domain);
-		} else if ((strncmp(command.action, "reverse", COMM_S) == 0)) {
+		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			id = get_rev_id(domain);
 			if (id < 0) {
 				fprintf(stderr, "Invalid reverse domain\n");
@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 			}
 		} else {
 			retval = 7;
-			printf("We have an invalid action: %s\n",
-			       command.action);
+			printf("We have an invalid type: %s\n",
+			       command.type);
 			exit(retval);
 		}
 	} else if ((strncmp(command.action, "write", COMM_S) == 0)) {
