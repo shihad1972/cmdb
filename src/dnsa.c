@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 			       command.type);
 			exit(retval);
 		}
-	} else if ((strncmp(command.action, "write", COMM_S) == 0)) {
+	} else if ((strncmp(command.action, "display", COMM_S) == 0)) {
 		printf("Display not yet implemented\n");
 		exit(0);
 	}

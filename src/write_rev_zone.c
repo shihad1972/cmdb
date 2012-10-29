@@ -152,8 +152,14 @@ void get_in_addr_string(char *in_addr, char range[])
  **/
 int get_rev_id (char *domain)
 {
+	char *queryp;
+	const char dquery[BUFF_S];
 	int retval;
-	printf("%s recieved\n", domain);
+	
+	queryp = dquery;
+	sprintf(queryp, "SELECT * FROM rev_zones WHERE net_range = '%s'",
+		domain);
+	
 	retval = -1;
 	return retval;
 }
