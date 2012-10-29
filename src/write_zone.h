@@ -40,7 +40,7 @@ create_zone_header(char *output, zone_info_t);
 /* Add the MX records to the header string; return size */
 size_t
 add_mx_to_header(char *output, size_t offset, MYSQL_ROW results);
-/* ADd teh individual DNS Records to the zonefile string; return size */
+/* Add the individual DNS Records to the zonefile string; return size */
 size_t
 add_records(record_row_t, char *output, size_t offset);
 

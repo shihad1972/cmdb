@@ -11,7 +11,13 @@ CPPFLAGS = -I/usr/include/mysql
 LDFLAGS = -L/usr/lib/i386-linux-gnu -L/usr/lib/mysql
 LIBS = -lmysqlclient
 
-all:	wzf wcf wrzf wrcf
+all:	wzf wcf wrzf wrcf dnsa
+
+dnsa:	dnsa.o command.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+dnsa.o:	dnsa.c dnsa.h write_zone.h rev_zone.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 wzf:	write_zone.o wzf.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -43,7 +49,10 @@ wrcf:	wrcf.o write_rev_zone.o
 wrcf.o:	wrcf.c rev_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
+command.o:	commline.c dnsa.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+
 .PHONY :	clean
 clean :
-	$(RM) *.o wzf wcf wrzf wrcf
+	$(RM) *.o wzf wcf wrzf wrcf dnsa
 

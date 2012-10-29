@@ -43,7 +43,7 @@ get_rev_row (MYSQL_ROW my_row);
 /* Add the reverse (PTR) record to the output string */
 void
 add_rev_records(char *rout, rev_record_row_t my_row);
-/* Create the in-addr.arpa zonename from net work address */
+/* Create the in-addr.arpa zonename from network address */
 void
 get_in_addr_string(char *in_addr, char range[]);
 

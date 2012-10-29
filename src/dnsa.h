@@ -4,6 +4,7 @@
 #define __DNSA_H__
 enum {			/* Buffer Sizes */
 	CH_S = 2,
+	COMM_S = 8,
 	RANGE_S = 16,
 	CONF_S = 80,
 	RBUFF_S = 256,
@@ -26,5 +27,14 @@ enum {			/* error codes */
 	MY_STORE_FAIL = 13,
 	FILE_O_FAIL = 20
 };
+
+typedef struct comm_line_t { /* Hold parsed command line args */
+	char action[8];
+	char domain[CONF_S];
+	char type[8];
+} comm_line_t;
+
+/* Get command line args and pass them. Put actions into the struct */
+int parse_command_line(int argc, char **argv, comm_line_t *comm);
 
 #endif
