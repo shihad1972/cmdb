@@ -70,31 +70,31 @@ int wzf (char *domain)
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&shihad))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
-		exit(MY_INIT_FAIL);
+		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&shihad,
 		host, user, pass, db, port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&shihad));
-		exit(MY_CONN_FAIL);
+		return MY_CONN_FAIL;
 	}
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
 	shiquery = tmp;
 	error = mysql_query(&shihad, shiquery);
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(shihad_res = mysql_store_result(&shihad))) {
 		fprintf(stderr, "Cannot store result set\n");
-		exit(MY_STORE_FAIL);
+		return MY_STORE_FAIL;
 	}
 	if (((shihad_rows = mysql_num_rows(shihad_res)) == 0)) {
 		fprintf(stderr, "Domain %s not found\n", domain);
-		exit(NO_DOMAIN);
+		return NO_DOMAIN;
 	} else if (shihad_rows > 1) {
 		fprintf(stderr, "Multiple rows found for domain %s\n", domain);
-		exit(MULTI_DOMAIN);
+		return MULTI_DOMAIN;
 	}
 	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(shihad_res))) {
@@ -108,7 +108,7 @@ int wzf (char *domain)
 	error = mysql_query(&shihad, shiquery);
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(shihad_res = mysql_store_result(&shihad)))
 		fprintf(stderr, "No result set?\n");
@@ -137,7 +137,7 @@ int wzf (char *domain)
 	/* Search for A records for the NS servers and add to zonefile */
 	if (!(thost = strtok(tmp2, c)))	{/* Grab up to first . */
 		printf("record does not seem to contain %s\n", c);
-		exit(NO_DELIM);
+		return NO_DELIM;
 	} else {
 		sprintf	(tmp, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'",
 			 zone_info.id, thost);
@@ -146,7 +146,7 @@ int wzf (char *domain)
 		if ((error != 0)) {
 			fprintf(stderr, "Query not successful: error code %d\n",
 				error);
-			exit(MY_QUERY_FAIL);
+			return MY_QUERY_FAIL;
 		}
 		if (!(shihad_res = mysql_store_result(&shihad)))
 			fprintf(stderr, "No result set?\n");
@@ -166,7 +166,7 @@ int wzf (char *domain)
 		error = mysql_query(&shihad, shiquery);
 		if ((error != 0)) {
 			fprintf(stderr, "Query not successful: error code %d\n", error);
-			exit(MY_QUERY_FAIL);
+			return MY_QUERY_FAIL;
 		}
 		if (!(shihad_res = mysql_store_result(&shihad)))
 			fprintf(stderr, "No result set?\n");
@@ -181,7 +181,7 @@ int wzf (char *domain)
 	error = mysql_query(&shihad, tmp);
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(shihad_res = mysql_store_result(&shihad)))
 		fprintf(stderr, "Store failed\n");
@@ -198,18 +198,18 @@ int wzf (char *domain)
 			shiquery = tmp2;
 			if (!(mysql_init(&shihad2))) {
 				fprintf(stderr, "Cannot init. Out of memory?\n");
-				exit(MY_INIT_FAIL);
+				return MY_INIT_FAIL;
 			}
 			if (!(mysql_real_connect(&shihad2,
 				host, user, pass, db, port, unix_socket, client_flag ))) {
 				fprintf(stderr, "Connect failed. Error: %s\n",
 					mysql_error(&shihad));
-				exit(MY_CONN_FAIL);
+				return MY_CONN_FAIL;
 			}
 			error = mysql_query(&shihad2, shiquery);
 			if ((error != 0)) {
 				fprintf(stderr, "Query not successful: error code %d\n", error);
-				exit(MY_QUERY_FAIL);
+				return MY_QUERY_FAIL;
 			}
 			if (!(my_res = mysql_store_result(&shihad2)))
 				fprintf(stderr, "No result set?\n");
@@ -226,7 +226,7 @@ int wzf (char *domain)
 	sprintf(zonefilename, "%sdb1.%s", dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		fprintf(stderr, "Cannot open zonefile file %s\n", zonefilename);
-		exit(FILE_O_FAIL);
+		return FILE_O_FAIL;
 	} else {
 		fputs(zout, zonefile);
 		fclose(zonefile);
@@ -238,7 +238,7 @@ int wzf (char *domain)
 		printf("Checkzone ran successfully\n");
 	} else {
 		printf("Checkzone exitied with status %d\n", error);
-		exit(error);
+		return error;
 	}
 	remove(zonefilename);
 	/** Get the rest of the A and CNAME records
@@ -249,18 +249,18 @@ int wzf (char *domain)
 	shiquery = tmp;
 	if (!(mysql_init(&shihad3))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
-		exit(MY_INIT_FAIL);
+		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&shihad3,
 		host, user, pass, db, port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&shihad));
-		exit(MY_CONN_FAIL);
+		return MY_CONN_FAIL;
 	}
 	error = mysql_query(&shihad3, shiquery);
 	if ((error != 0)) {
 		fprintf(stderr, "Query 3 not successful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(my_res = mysql_store_result(&shihad3)))
 		fprintf(stderr, "No result set?\n");
@@ -273,7 +273,7 @@ int wzf (char *domain)
 	sprintf(zonefilename, "%sdb.%s", dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		fprintf(stderr, "Cannot open zonefile file %s\n", zonefilename);
-		exit(FILE_O_FAIL);
+		return FILE_O_FAIL;
 	} else {
 		fputs(zout2, zonefile);
 		fclose(zonefile);
@@ -287,7 +287,7 @@ int wzf (char *domain)
 		printf("Checkzone ran successfully\n");
 	} else {
 		printf("Checkzone exitied with status %d\n", error);
-		exit(error);
+		return error;
 	}
 	sprintf(tmp, "UPDATE zones SET updated = 'no', valid = 'yes' WHERE name = '%s'", zone_info.name);
 	shiquery = tmp;
@@ -302,5 +302,5 @@ int wzf (char *domain)
 	free(tmp);
 	free(tmp2);
 	free(zonefilename);
-	exit(0);
+	return 0;
 }

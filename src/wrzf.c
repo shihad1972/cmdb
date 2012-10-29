@@ -71,31 +71,31 @@ int wrzf(int reverse)
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
-		exit(MY_INIT_FAIL);
+		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&dnsa,
 		host, user, pass, db, port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&dnsa));
-		exit(MY_CONN_FAIL);
+		return MY_CONN_FAIL;
 	}
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
 	dnsa_query = dquery;
 	error = mysql_query(&dnsa, dnsa_query);
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		fprintf(stderr, "Cannot store result set\n");
-		exit(MY_STORE_FAIL);
+		return MY_STORE_FAIL;
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		fprintf(stderr, "Reverse zone id %d not found\n", reverse);
-		exit(NO_DOMAIN);
+		return NO_DOMAIN;
 	} else if (dnsa_rows > 1) {
 		fprintf(stderr, "Multiple rows found for reverse zone id %d\n", reverse);
-		exit(MULTI_DOMAIN);
+		return MULTI_DOMAIN;
 	}
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -107,15 +107,15 @@ int wrzf(int reverse)
 	error = mysql_query(&dnsa, dnsa_query);
 	if ((error != 0)) {
 		fprintf(stderr, "Rev record query unsuccessful: error code %d\n", error);
-		exit(MY_QUERY_FAIL);
+		return MY_QUERY_FAIL;
 	}
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		fprintf(stderr, "Cannot store result set\n");
-		exit(MY_STORE_FAIL);
+		return MY_STORE_FAIL;
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		fprintf(stderr, "No reverse records for zone %d\n", reverse);
-		exit(NO_RECORDS);
+		return NO_RECORDS;
 	}
 	/* Add the reverse zone records */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -134,7 +134,7 @@ int wrzf(int reverse)
 	/* Write out the reverse zone to the zonefile */
 	if (!(cnf = fopen(buff, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing\n", buff);
-		exit(FILE_O_FAIL);
+		return FILE_O_FAIL;
 	} else {
 		fputs(rout, cnf);
 		fclose(cnf);
@@ -175,5 +175,5 @@ int wrzf(int reverse)
 	free(tmp);
 	free(rout);
 	free(dquery);
-	exit(0);
+	return 0;
 }
