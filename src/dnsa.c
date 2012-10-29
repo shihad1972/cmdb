@@ -25,14 +25,22 @@
 int main(int argc, char *argv[])
 {
 	comm_line_t command;
-	char *domain, dom[CONF_S];
-	int retval, id;
+	char *domain, dom[CONF_S], config[CHKC][CONF_S];
+	int retval, id, i;
 
 	retval = parse_command_line(argc, argv, &command);
 	if (retval < 0) {
 		printf("Usage: %s [-d | -w] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
 		exit (retval);
+	}
+	retval = parse_config_file(config);
+	if (retval < 0) {
+		printf("Config file parsing failed! Error code %d\n", retval);
+		for (i = 0; i < 11; i++) {
+			printf("%s ", config[i]);
+		}
+		exit(0);
 	}
 	
 	strncpy(dom, command.domain, CONF_S);

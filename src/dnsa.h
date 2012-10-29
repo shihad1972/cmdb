@@ -29,6 +29,20 @@ enum {			/* error codes */
 	FILE_O_FAIL = 20
 };
 
+enum {			/* Configuration values from configuration file */
+	DB,
+	USER,
+	PASS,
+	HOST,
+	DIR,
+	BIND,
+	DNSA,
+	REV,
+	RNDC,
+	CHKZ,
+	CHKC		/* Last value used to malloc config array */
+};
+
 typedef struct comm_line_t { /* Hold parsed command line args */
 	char action[8];
 	char domain[CONF_S];
@@ -36,6 +50,10 @@ typedef struct comm_line_t { /* Hold parsed command line args */
 } comm_line_t;
 
 /* Get command line args and pass them. Put actions into the struct */
-int parse_command_line(int argc, char **argv, comm_line_t *comm);
+int
+parse_command_line(int argc, char **argv, comm_line_t *comm);
+/* Grab config values from file */
+int
+parse_config_file(char config[][CONF_S]);
 
 #endif
