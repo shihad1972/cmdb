@@ -152,6 +152,9 @@ void get_in_addr_string(char *in_addr, char range[])
  **/
 int get_rev_id (char *domain, char config[][CONF_S])
 {
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
 	char *queryp;
 	const char *dquery;
 	int retval;
