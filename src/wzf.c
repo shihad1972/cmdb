@@ -302,6 +302,5 @@ int wzf (char *domain)
 	free(tmp);
 	free(tmp2);
 	free(zonefilename);
-	free(domain);
 	exit(0);
 }
