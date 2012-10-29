@@ -25,8 +25,8 @@
 int main(int argc, char *argv[])
 {
 	comm_line_t command;
-	char *domain, dom[CONF_S], config[CHKC][CONF_S];
-	int retval, id, i;
+	char *domain, dom[CONF_S], config[CHKC + 1][CONF_S];
+	int retval, id;
 
 	retval = parse_command_line(argc, argv, &command);
 	if (retval < 0) {
@@ -34,13 +34,10 @@ int main(int argc, char *argv[])
 			       argv[0]);
 		exit (retval);
 	}
+	sprintf(config[CONFIGFILE], "/etc/dnsa/dnsa.conf");
 	retval = parse_config_file(config);
 	if (retval < 0) {
-		printf("Config file parsing failed! Error code %d\n", retval);
-		for (i = 0; i < 11; i++) {
-			printf("%s ", config[i]);
-		}
-		exit(0);
+		printf("Config file parsing failed! Using default values\n");
 	}
 	
 	strncpy(dom, command.domain, CONF_S);
@@ -48,14 +45,14 @@ int main(int argc, char *argv[])
 	
 	if ((strncmp(command.action, "write", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			wzf(domain);
+			wzf(domain, config);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			id = get_rev_id(domain);
 			if (id < 0) {
 				fprintf(stderr, "Invalid reverse domain\n");
 				exit(NO_DOMAIN);
 			} else {
-				wrzf(id);
+				wrzf(id, config);
 			}
 		} else {
 			retval = 7;
@@ -67,9 +64,6 @@ int main(int argc, char *argv[])
 		printf("Display not yet implemented\n");
 		exit(0);
 	}
-	printf("Recieved from config file:\n");
-	for (i = 0; i < 11; i++) {
-		printf("%s ", config[i]);
-	}
+
 	exit(0);
 }

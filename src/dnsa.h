@@ -30,6 +30,7 @@ enum {			/* error codes */
 };
 
 enum {			/* Configuration values from configuration file */
+	CONFIGFILE,
 	DB,
 	USER,
 	PASS,

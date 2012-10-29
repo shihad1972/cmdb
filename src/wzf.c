@@ -4,9 +4,9 @@
 #include "dnsa.h"
 #include "write_zone.h"
 
-int wzf (char *domain)
+int wzf (char *domain, char config[][CONF_S])
 {
-	FILE *cnf, *zonefile;
+	FILE *zonefile;
 	MYSQL shihad, shihad2, shihad3;
 	MYSQL_RES *shihad_res, *my_res;
 	MYSQL_ROW my_row, my_row2, my_row3;
@@ -17,16 +17,8 @@ int wzf (char *domain)
 	int error;
 	unsigned int port;
 	unsigned long int client_flag;
-	char a;
 	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *thost;
-	char buff[CONF_S]="";
-	char host[CONF_S]="somehost";
-	char user[CONF_S]="someuser";
-	char pass[CONF_S]="scribble";
-	char db[CONF_S]="somedb";
-	char dir[CONF_S]="./";
 	const char *unix_socket, *shiquery, *system_command;
-	char confile[]="/etc/dnsa/dnsa.conf";
 	unix_socket = "";
 	port = 3306;
 	client_flag = 0;
@@ -37,43 +29,13 @@ int wzf (char *domain)
 	zonefilename = malloc(TBUFF_S * sizeof(char));
 	c = malloc(CH_S * sizeof(char));
 
-	/* Read config values from config file */
-	if (!(cnf = fopen(confile, "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", confile);
-		fprintf(stderr, "Using default values\n");
-	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", pass);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", host);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", user);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", db);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DIR=%s", dir);
-		fclose(cnf);
-	}
-	/* Check for trailing / in dir values */
-	len = strlen(dir);
-	a = dir[len -1];
-	if (!(a == '/')) {
-		fprintf(stderr, "dir value missing trailing /\n");
-		dir[len] = '/';
-		dir[len + 1] = '\0';
-		len = strlen(dir);
-	}
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&shihad))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
 		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&shihad,
-		host, user, pass, db, port, unix_socket, client_flag ))) {
+		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&shihad));
 		return MY_CONN_FAIL;
@@ -201,7 +163,7 @@ int wzf (char *domain)
 				return MY_INIT_FAIL;
 			}
 			if (!(mysql_real_connect(&shihad2,
-				host, user, pass, db, port, unix_socket, client_flag ))) {
+				config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
 				fprintf(stderr, "Connect failed. Error: %s\n",
 					mysql_error(&shihad));
 				return MY_CONN_FAIL;
@@ -223,7 +185,7 @@ int wzf (char *domain)
 	/** Now we have to test the zonefile for errors
 	 ** Output zonefile and check then remove.
 	 **/
-	sprintf(zonefilename, "%sdb1.%s", dir, zone_info.name);
+	sprintf(zonefilename, "%sdb1.%s", config[DIR], zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		fprintf(stderr, "Cannot open zonefile file %s\n", zonefilename);
 		return FILE_O_FAIL;
@@ -231,7 +193,7 @@ int wzf (char *domain)
 		fputs(zout, zonefile);
 		fclose(zonefile);
 	}
-	sprintf(tmp, "/usr/sbin/named-checkzone %s %s", zone_info.name, zonefilename);
+	sprintf(tmp, "%s %s %s",config[CHKZ], zone_info.name, zonefilename);
 	system_command = tmp;
 	error = system(system_command);
 	if (error == 0) {
@@ -252,7 +214,7 @@ int wzf (char *domain)
 		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&shihad3,
-		host, user, pass, db, port, unix_socket, client_flag ))) {
+		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&shihad));
 		return MY_CONN_FAIL;
@@ -270,7 +232,7 @@ int wzf (char *domain)
 	}
 	mysql_close(&shihad3); 
 	/* Output full zonefile */
-	sprintf(zonefilename, "%sdb.%s", dir, zone_info.name);
+	sprintf(zonefilename, "%sdb.%s", config[DIR], zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		fprintf(stderr, "Cannot open zonefile file %s\n", zonefilename);
 		return FILE_O_FAIL;
@@ -280,7 +242,7 @@ int wzf (char *domain)
 	}
 	/** Check the zone for errors. If none, update DB with the to say that 
 	 ** zone is valid */
-	sprintf(tmp, "/usr/sbin/named-checkzone %s %s", zone_info.name, zonefilename);
+	sprintf(tmp, "%s %s %s",config[CHKZ], zone_info.name, zonefilename);
 	system_command = tmp;
 	error = system(system_command);
 	if (error == 0) {

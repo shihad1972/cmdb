@@ -4,7 +4,7 @@
 #include "dnsa.h"
 #include "rev_zone.h"
 
-int wrzf(int reverse)
+int wrzf(int reverse, char config[][CONF_S])
 {
 	FILE *cnf;
 	MYSQL dnsa;
@@ -17,64 +17,23 @@ int wrzf(int reverse)
 	int error, i;
 	unsigned int port;
 	unsigned long int client_flag;
-	char a;
 	char *tmp, *rout, *tmp2, *dquery;
 	const char *unix_socket, *dnsa_query, *syscom;
 	char buff[CONF_S]="";
-	char host[CONF_S]="somehost";
-	char user[CONF_S]="someuser";
-	char pass[CONF_S]="scribble";
-	char db[CONF_S]="somedb";
-	char dir[CONF_S]="./";
-	char rev[CONF_S]="rev.conf";
-	char confile[CONF_S]="/etc/dnsa/dnsa.conf";
-	char chkzone[CONF_S]="/usr/sbin/named-checkzone";	/* Should get from config file */
 	unix_socket = "";
 	port = 3306;
 	client_flag = 0;
 	dquery = malloc(BUFF_S * sizeof(char));
 	tmp = malloc(BUFF_S * sizeof(char));
 	rout = malloc(FILE_S * sizeof(char));
-	/* Get config values from config file or use defaults */
-	if (!(cnf = fopen(confile, "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", confile);
-		fprintf(stderr, "Using default values\n");
-	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", pass);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", host);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", user);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", db);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DIR=%s", dir);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "REV=%s", rev);
-		fclose(cnf);
-	}
-	/* Check for trailing / on directory values */
-	len = strlen(dir);
-	a = dir[len -1];
-	if (!(a == '/')) {
-		fprintf(stderr, "dir value missing trailing /\n");
-		dir[len] = '/';
-		dir[len + 1] = '\0';
-		len = strlen(dir);
-	}
+	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
 		fprintf(stderr, "Cannot init. Out of memory?\n");
 		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&dnsa,
-		host, user, pass, db, port, unix_socket, client_flag ))) {
+		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&dnsa));
 		return MY_CONN_FAIL;
@@ -126,8 +85,8 @@ int wrzf(int reverse)
 	tmp2 = buff;
 	for (i=0; i< CONF_S; i++)	/* zero buffer */
 		*(tmp2 + i) = '\0';
-	len = strlen(dir);
-	strncpy(tmp2, dir, len);
+	len = strlen(config[DIR]);
+	strncpy(tmp2, config[DIR], len);
 	len = strlen(rev_zone_info.net_range);
 	strncat(tmp2, rev_zone_info.net_range, len);
 	len = strlen(rout);
@@ -146,7 +105,7 @@ int wrzf(int reverse)
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
 	get_in_addr_string(tmp, rev_zone_info.net_range);
-	sprintf(rout, "%s %s %s", chkzone, tmp, buff);
+	sprintf(rout, "%s %s %s", config[CHKZ], tmp, buff);
 	syscom = rout;
 	error = system(syscom);
 	if (error == 0) {

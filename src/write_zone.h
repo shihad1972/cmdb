@@ -45,5 +45,5 @@ size_t
 add_records(record_row_t, char *output, size_t offset);
 /* Write out the forward zone file */
 int
-wzf (char *domain);
+wzf (char *domain, char config[][CONF_S]);
 #endif
