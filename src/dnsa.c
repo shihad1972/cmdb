@@ -67,7 +67,9 @@ int main(int argc, char *argv[])
 		printf("Display not yet implemented\n");
 		exit(0);
 	}
-			
-			
+	printf("Recieved from config file:\n");
+	for (i = 0; i < 11; i++) {
+		printf("%s ", config[i]);
+	}
 	exit(0);
 }
