@@ -13,7 +13,7 @@ LIBS = -lmysqlclient
 
 all:	wzf wcf wrzf wrcf dnsa
 
-dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o
+dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o errors.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 dnsa.o:	dnsa.c dnsa.h write_zone.h rev_zone.h
@@ -38,6 +38,12 @@ wrcf.o:	wrcf.c rev_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 command.o:	commline.c dnsa.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+
+mysqlfuns.o:	mysql_funs.c dnsa.h mysql_funs.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+
+errors.o:	errors.c dnsa.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 .PHONY :	clean

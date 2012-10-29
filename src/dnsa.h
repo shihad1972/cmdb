@@ -56,5 +56,8 @@ parse_command_line(int argc, char **argv, comm_line_t *comm);
 /* Grab config values from file */
 int
 parse_config_file(char config[][CONF_S]);
+/* Error reporting function*/
+void 
+report_error(int error);
 
 #endif
