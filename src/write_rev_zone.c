@@ -147,4 +147,13 @@ void get_in_addr_string(char *in_addr, char range[])
 	strncat(in_addr, tmp, len);
 	free(line);
 }
-
+/** Get the reverse zone ID from the database. Return -1 on error
+ ** Perhaps should add more error codes, but for now we assume invalid domain
+ **/
+int get_rev_id (char *domain)
+{
+	int retval;
+	printf("%s recieved\n", domain);
+	retval = -1;
+	return retval;
+}

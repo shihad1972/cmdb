@@ -46,5 +46,11 @@ add_rev_records(char *rout, rev_record_row_t my_row);
 /* Create the in-addr.arpa zonename from network address */
 void
 get_in_addr_string(char *in_addr, char range[]);
+/* Return the ID of the reverse domain; -1 indicates error */
+int
+get_rev_id(char *domain);
+/* Write out the reverse zone file */
+int 
+wrzf (int id);
 
 #endif

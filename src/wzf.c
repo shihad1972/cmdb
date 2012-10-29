@@ -4,7 +4,7 @@
 #include "dnsa.h"
 #include "write_zone.h"
 
-int main (int argc, char *argv[])
+int wzf (char *domain)
 {
 	FILE *cnf, *zonefile;
 	MYSQL shihad, shihad2, shihad3;
@@ -18,14 +18,13 @@ int main (int argc, char *argv[])
 	unsigned int port;
 	unsigned long int client_flag;
 	char a;
-	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *domain, *thost;
+	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *thost;
 	char buff[CONF_S]="";
 	char host[CONF_S]="somehost";
 	char user[CONF_S]="someuser";
 	char pass[CONF_S]="scribble";
 	char db[CONF_S]="somedb";
 	char dir[CONF_S]="./";
-	char search[] = "-d";
 	const char *unix_socket, *shiquery, *system_command;
 	char confile[]="/etc/dnsa/dnsa.conf";
 	unix_socket = "";
@@ -36,24 +35,8 @@ int main (int argc, char *argv[])
 	tmp = malloc(BUFF_S * sizeof(char));
 	tmp2 = malloc(BUFF_S * sizeof(char));
 	zonefilename = malloc(TBUFF_S * sizeof(char));
-	domain = malloc(TBUFF_S * sizeof(char));
 	c = malloc(CH_S * sizeof(char));
-	/* Deal with command line args; looking for -d */
-	if (argc != 3) {
-		printf("Usage: %s -d <domain>\n", argv[0]);
-		exit(ARGC_INVAL);
-	}
-	len = strlen(argv[1]);
-	if ((strncmp(search, argv[1], len) == 0)) {
-		len = strlen(argv[2]);
-		if (!(domain = strncpy(domain, argv[2], ((len < CONF_S ? len : CONF_S - 1))))) {
-			printf("Unable to parse input\n");
-			exit(ARGV_INVAL);
-		}
-	} else {
-		printf("Usage: %s -d <domain>\n", argv[0]);
-		exit(ARGV_INVAL);
-	}
+
 	/* Read config values from config file */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);

@@ -4,7 +4,7 @@
 #include "dnsa.h"
 #include "rev_zone.h"
 
-int main(int argc, char *argv[])
+int wrzf(int reverse)
 {
 	FILE *cnf;
 	MYSQL dnsa;
@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	rev_zone_info_t rev_zone_info;
 	rev_record_row_t rev_row;
 	my_ulonglong dnsa_rows;
-	int error, reverse, i;
+	int error, i;
 	unsigned int port;
 	unsigned long int client_flag;
 	char a;
@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 	char db[CONF_S]="somedb";
 	char dir[CONF_S]="./";
 	char rev[CONF_S]="rev.conf";
-	char search[CH_S] = "-r";
 	char confile[CONF_S]="/etc/dnsa/dnsa.conf";
 	char chkzone[CONF_S]="/usr/sbin/named-checkzone";	/* Should get from config file */
 	unix_socket = "";
@@ -36,24 +35,6 @@ int main(int argc, char *argv[])
 	dquery = malloc(BUFF_S * sizeof(char));
 	tmp = malloc(BUFF_S * sizeof(char));
 	rout = malloc(FILE_S * sizeof(char));
-	/* Deal with command line args; looking for -r */
-	if (argc != 3) {
-		printf("Usage: %s -r <rev-zone-id>\n", argv[0]);
-		exit(ARGC_INVAL);
-	}
-	len = strlen(argv[1]);
-	if ((strncmp(search, argv[1], len) == 0)) {
-		len = strlen(argv[2]);
-		if (!(tmp = strncpy(tmp, argv[2], ((len < CONF_S ? len : CONF_S - 1))))) {
-			printf("Unable to parse input\n");
-			exit(ARGV_INVAL);
-		} else {
-			reverse = atoi(tmp);
-		}
-	} else {
-		printf("Usage: %s -r <rev-zone-id>\n", argv[0]);
-		exit(ARGV_INVAL);
-	}
 	/* Get config values from config file or use defaults */
 	if (!(cnf = fopen(confile, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", confile);

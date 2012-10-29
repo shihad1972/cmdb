@@ -43,5 +43,7 @@ add_mx_to_header(char *output, size_t offset, MYSQL_ROW results);
 /* Add the individual DNS Records to the zonefile string; return size */
 size_t
 add_records(record_row_t, char *output, size_t offset);
-
+/* Write out the forward zone file */
+int
+wzf (char *domain);
 #endif

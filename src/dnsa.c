@@ -25,18 +25,41 @@
 int main(int argc, char *argv[])
 {
 	comm_line_t command;
-	int i;
+	char *domain, dom[CONF_S];
+	int retval, id;
 
-	i = parse_command_line(argc, argv, &command);
-	if (i >= 0) {
-		printf("We got these inputs:\n");
-		printf("%s %s %s\n", command.action, command.type, command.domain);
-	} else {
+	retval = parse_command_line(argc, argv, &command);
+	if (retval < 0) {
 		printf("Usage: %s [-d | -w] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
+		exit (retval);
 	}
 	
-
+	strncpy(dom, command.domain, CONF_S);
+	domain = dom;
 	
+	if ((strncmp(command.action, "write", COMM_S) == 0)) {
+		if ((strncmp(command.action, "forward", COMM_S) == 0)) {
+			wzf(domain);
+		} else if ((strncmp(command.action, "reverse", COMM_S) == 0)) {
+			id = get_rev_id(domain);
+			if (id < 0) {
+				fprintf(stderr, "Invalid reverse domain\n");
+				exit(NO_DOMAIN);
+			} else {
+				wrzf(id);
+			}
+		} else {
+			retval = 7;
+			printf("We have an invalid action: %s\n",
+			       command.action);
+			exit(retval);
+		}
+	} else if ((strncmp(command.action, "write", COMM_S) == 0)) {
+		printf("Display not yet implemented\n");
+		exit(0);
+	}
+			
+			
 	exit(0);
 }

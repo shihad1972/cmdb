@@ -13,8 +13,8 @@ LIBS = -lmysqlclient
 
 all:	wzf wcf wrzf wrcf dnsa
 
-dnsa:	dnsa.o command.o
-	$(CC) $(CFLAGS) -o $@ $^
+dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 dnsa.o:	dnsa.c dnsa.h write_zone.h rev_zone.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
