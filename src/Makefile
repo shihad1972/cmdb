@@ -40,9 +40,6 @@ wrcf.o:	wrcf.c rev_zone.h dnsa.h
 command.o:	commline.c dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-mysqlfuns.o:	mysql_funs.c dnsa.h mysql_funs.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
-
 errors.o:	errors.c dnsa.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 

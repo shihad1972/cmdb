@@ -22,7 +22,6 @@
 #include "dnsa.h"
 #include "write_zone.h"
 #include "rev_zone.h"
-#include "mysql_funs.h"
 
 int main(int argc, char *argv[])
 {
