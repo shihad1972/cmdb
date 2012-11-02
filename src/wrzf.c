@@ -23,9 +23,9 @@ int wrzf(int reverse, char config[][CONF_S])
 	unix_socket = "";
 	port = 3306;
 	client_flag = 0;
-	dquery = malloc(BUFF_S * sizeof(char));
-	tmp = malloc(BUFF_S * sizeof(char));
-	rout = malloc(FILE_S * sizeof(char));
+	dquery = calloc(BUFF_S, sizeof(char));
+	tmp = calloc(BUFF_S, sizeof(char));
+	rout = calloc(FILE_S, sizeof(char));
 	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
