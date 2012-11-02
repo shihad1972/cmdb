@@ -15,8 +15,8 @@ typedef struct mysql_query_data_t {
 	char *pass;
 	unsigned int *port;
 	unsigned long int *client_flag;
-	const char *query;
-	const char *unix_socket;
+	const char **query;
+	const char **unix_socket;
 } mysql_query_data_t;
 
 
@@ -26,6 +26,6 @@ typedef struct mysql_query_data_t {
  * if any failure, return code will let us know
  */
 int
-run_mysql_query(mysql_query_data_t *mydata);
+run_mysql_query(mysql_query_data_t *mydata, char config[][CONF_S]);
 
 #endif

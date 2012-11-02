@@ -26,7 +26,8 @@ enum {			/* error codes */
 	MY_CONN_FAIL = 11,
 	MY_QUERY_FAIL = 12,
 	MY_STORE_FAIL = 13,
-	FILE_O_FAIL = 20
+	FILE_O_FAIL = 20,
+	MALLOC_FAIL = 30
 };
 
 enum {			/* Configuration values from configuration file */

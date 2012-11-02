@@ -26,17 +26,9 @@
 
 int main(int argc, char *argv[])
 {
-	MYSQL dnsa;
-	MYSQL_ROW dnsa_row;
-	MYSQL_RES *dnsa_res;
 	comm_line_t command;
-	mysql_query_data_t *mydqp;
-	my_ulonglong dnsa_rows;
-	char *domain, *queryp, dom[CONF_S], config[CHKC + 1][CONF_S];
-	const char *dquery, *unix_socket;
+	char *domain, config[CHKC + 1][CONF_S];
 	int retval, id;
-	unsigned int port = 3306;
-	unsigned long int client_flag = 0;
 
 	/* Get command line args. See above */
 	retval = parse_command_line(argc, argv, &command);
@@ -51,7 +43,9 @@ int main(int argc, char *argv[])
 	if (retval < 0) {
 		printf("Config file parsing failed! Using default values\n");
 	}
-	domain = &command.domain;
+	if (!(domain = malloc(CONF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "domain");
+	strncpy(domain, command.domain, CONF_S);
 	if ((strncmp(command.action, "write", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
 			wzf(domain, config);

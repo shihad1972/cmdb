@@ -53,11 +53,12 @@ size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 	char ch;
 	size_t offset;
 	offset = 0;
-	tmp = malloc(RBUFF_S * sizeof(char));
+	if (!(tmp = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp");
 	sprintf(tmp, "$TTL %d\n@\t\tIN SOA\t%s.\t%s. (\n",
 		zone_info.ttl, zone_info.pri_dns, zone_info.hostmaster);
 	offset = strlen(tmp);
-	strncat(rout, tmp, offset);
+	strncpy(rout, tmp, offset);
 	sprintf(tmp, "\t\t\t%d\t; Serial\n\t\t\t%d\t\t; Refresh\n\t\t\t%d\t\t; Retry\n",
 		zone_info.serial, zone_info.refresh, zone_info.retry);
 	offset = strlen(tmp);
@@ -155,15 +156,46 @@ int get_rev_id (char *domain, char config[][CONF_S])
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
-	char *queryp;
-	const char *dquery;
-	int retval;
-	
-	queryp = malloc(BUFF_S * sizeof(char));
+	my_ulonglong dnsa_rows;
+	unsigned int port = 3306;
+	unsigned long int client_flag = 0;
+	char *queryp, *error_code;
+	const char *dquery, *unix_socket, *error_str;
+	const char *ch = config[HOST];	/* DB Host */
+	const char *cu = config[USER];	/* DB User */
+	const char *cp = config[PASS]; /* DB Pass */
+	const char *cd = config[DB];	/* DB Database */
+	int retval, error;
+	unix_socket = "";
+	retval = 0;
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code");
+	error_str = error_code; 
+	if (!(queryp = malloc(BUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "queryp");
 	dquery = queryp;
-	sprintf(queryp, "SELECT * FROM rev_zones WHERE net_range = '%s'",
-		domain);
-	printf("%s\n", dquery);
-	retval = -1;
+	sprintf(queryp,
+		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
+	if (!(mysql_init(&dnsa))) {
+		report_error(MY_INIT_FAIL, error_str);
+	}
+	if (!(mysql_real_connect(&dnsa, ch, cu, cp, cd, port,
+		unix_socket, client_flag )))
+		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
+	error = mysql_query(&dnsa, dquery);
+	snprintf(error_code, CONF_S, "%d", error);
+	if ((error != 0))
+		report_error(MY_QUERY_FAIL, error_str);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
+		report_error(MY_STORE_FAIL, error_str);
+	}
+	snprintf(error_code, CONF_S, "%s", domain);
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+		report_error(NO_DOMAIN, error_str);
+	else if (dnsa_rows > 1)
+		report_error(MULTI_DOMAIN, domain);
+	dnsa_row = mysql_fetch_row(dnsa_res);
+	retval = atoi(dnsa_row[0]);
 	return retval;
 }
