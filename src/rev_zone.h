@@ -52,5 +52,6 @@ get_rev_id(char *domain, char config[][CONF_S]);
 /* Write out the reverse zone file */
 int 
 wrzf (int id, char config[][CONF_S]);
-
+int
+drzf (int id, char *domain, char config[][CONF_S]);
 #endif

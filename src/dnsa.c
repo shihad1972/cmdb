@@ -51,8 +51,7 @@ int main(int argc, char *argv[])
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			id = get_rev_id(domain, config);
 			if (id < 0) {
-				fprintf(stderr, "Invalid reverse domain\n");
-				exit(NO_DOMAIN);
+				report_error(NO_DOMAIN, domain);
 			} else {
 				wrzf(id, config);
 			}
@@ -66,8 +65,12 @@ int main(int argc, char *argv[])
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
 			dzf(domain, config);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			printf("Display not yet implemented\n");
-			exit(0);
+			id = get_rev_id(domain, config);
+			if (id < 0) {
+				report_error(NO_DOMAIN, domain);
+			} else {
+				drzf(id, domain, config);
+			}
 		}
 	}
 
