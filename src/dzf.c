@@ -102,10 +102,10 @@ int dzf (char *domain, char config[][CONF_S])
 			host[len + i] = '\t';
 		}
 		host[len + i] = '\0';
-		if ((rd->pri == 0)) {
+		if ((rd->pri == 0)) { /* Not an MX record so no PRI */
 			printf("%s\t%d\tIN\t%s\t%s\n", host,
 			       zi->ttl, rd->type, rd->dest);
-		} else if ((rd->pri > 0)) {
+		} else if ((rd->pri > 0)) { /* MX record so add PRI */
 			printf("%s\t%d\tIN\t%s\t%d\t%s\n", host,
 			       zi->ttl, rd->type, rd->pri, rd->dest);
 		}
@@ -121,5 +121,8 @@ int dzf (char *domain, char config[][CONF_S])
 	       host, zi->ttl, zi->pri_dns, zi->name);
 	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
+	free(tmp);
+	free(host);
+	free(error_code);
 	return error;
 }
