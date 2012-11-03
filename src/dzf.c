@@ -56,7 +56,7 @@ int dzf (char *domain, char config[][CONF_S])
 	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(dnsa_res)))
 		zone_info = fill_zone_data(my_row);
-	sprintf(tmp, "SELECT * FROM records WHERE zone = %d", zi->id);
+	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
 	error = mysql_query(&dnsa, dnsaquery);
 	snprintf(error_code, CONF_S, "%d", error);
 	if ((error != 0)) {
@@ -106,7 +106,7 @@ int dzf (char *domain, char config[][CONF_S])
 			printf("%s\t%d\tIN\t%s\t%s\n", host,
 			       zi->ttl, rd->type, rd->dest);
 		} else if ((rd->pri > 0)) {
-			printf("%s\t%d\tIN\t%s\t%d %s\n", host,
+			printf("%s\t%d\tIN\t%s\t%d\t%s\n", host,
 			       zi->ttl, rd->type, rd->pri, rd->dest);
 		}
 	}
