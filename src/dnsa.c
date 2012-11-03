@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	/* Get command line args. See above */
 	retval = parse_command_line(argc, argv, &command);
 	if (retval < 0) {
-		printf("Usage: %s [-d | -w] [-f | -r] -n <domain/netrange>\n",
+		printf("Usage: %s [-d | -w | -c] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
 		exit (retval);
 	}
@@ -71,6 +71,12 @@ int main(int argc, char *argv[])
 			} else {
 				drzf(id, domain, config);
 			}
+		}
+	} else if ((strncmp(command.action, "config", COMM_S) == 0)) {
+		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+			printf("Write forward config file\n");
+		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+			printf("Write reverse config file\n");
 		}
 	}
 

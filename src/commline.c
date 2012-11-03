@@ -17,6 +17,9 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 			strncpy(comp->action, "display", COMM_S);
 		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
 			strncpy(comp->action, "write", COMM_S);
+		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
+			strncpy(comp->action, "config", COMM_S);
+			strncpy(comp->domain, "none", CONF_S);
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			strncpy(comp->type, "forward", COMM_S);
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {
