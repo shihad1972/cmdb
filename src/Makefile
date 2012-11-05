@@ -13,31 +13,31 @@ LIBS = -lmysqlclient
 
 all:	wcf wrcf dnsa
 
-dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o errors.o dzf.o drzf.o wcf.o wrcf.o
+dnsa:	dnsa.o command.o wzf.o wrzf.o wrz.o wfz.o errors.o dzf.o drzf.o wcf.o wrcf.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-dnsa.o:	dnsa.c dnsa.h write_zone.h reverse.h
+dnsa.o:	dnsa.c dnsa.h forward.h reverse.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-write_zone.o: write_zone.c write_zone.h dnsa.h
+wfz.o: write_zone.c forward.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-dzf.o:	dzf.c write_zone.h dnsa.h
+dzf.o:	dzf.c forward.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 drzf.o:	drzf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-wzf.o:	wzf.c write_zone.h dnsa.h
+wzf.o:	wzf.c forward.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-wcf.o:	wcf.c write_zone.h dnsa.h
+wcf.o:	wcf.c forward.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $< 
 
 wrzf.o:	wrzf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-write_rev_zone.o:	write_rev_zone.c dnsa.h reverse.h
+wrz.o:	write_rev_zone.c dnsa.h reverse.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 wrcf.o:	wrcf.c reverse.h dnsa.h
@@ -53,8 +53,3 @@ errors.o:	errors.c dnsa.c
 clean :
 	$(RM) *.o wzf wcf wrzf wrcf dnsa
 
-wzf:	write_zone.o wzf.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
-
-wcf:	wcf.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)

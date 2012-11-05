@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dnsa.h"
-#include "write_zone.h"
+#include "forward.h"
 
 
 /** Function to fill a struct with results from the DB query

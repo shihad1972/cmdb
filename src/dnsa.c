@@ -20,7 +20,7 @@
 #include <string.h>
 #include <mysql.h>
 #include "dnsa.h"
-#include "write_zone.h"
+#include "forward.h"
 #include "reverse.h"
 
 int main(int argc, char *argv[])

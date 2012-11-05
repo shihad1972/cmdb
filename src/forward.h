@@ -1,4 +1,4 @@
-/* write_zone.h: Test connection to mysql database */
+/* forward.h: Function and data definitions for forward zones */
 
 #include <mysql.h>
 #ifndef	__WRITE_ZONE_H__
@@ -49,4 +49,7 @@ wzf (char *domain, char config[][CONF_S]);
 /* Display zone data */
 int
 dzf (char *domain, char config[][CONF_S]);
+/* Write the dnsa forward config file */
+int
+wcf(char config[][CONF_S]);
 #endif

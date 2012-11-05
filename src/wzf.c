@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dnsa.h"
-#include "write_zone.h"
+#include "forward.h"
 
 int wzf (char *domain, char config[][CONF_S])
 {
