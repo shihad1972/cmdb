@@ -60,5 +60,7 @@ parse_config_file(char config[][CONF_S]);
 /* Error reporting function*/
 void 
 report_error(int error, const char *errstr);
-
+/* Write the dnsa forward config file */
+int
+wcf(char config[][CONF_S]);
 #endif

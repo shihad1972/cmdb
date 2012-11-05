@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		}
 	} else if ((strncmp(command.action, "config", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			printf("Write forward config file\n");
+			wcf(config);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			printf("Write reverse config file\n");
 		}

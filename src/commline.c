@@ -82,6 +82,9 @@ int parse_config_file(char config[][CONF_S])
 			sscanf(buff, "DIR=%s", config[DIR]);
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf)))
+			sscanf(buff, "BIND=%s", config[BIND]);
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "REV=%s", config[REV]);
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf)))
