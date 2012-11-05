@@ -1,4 +1,4 @@
-/* write_rev_zone.c: DNSA module to write reverse zone file */
+/* rev_zone.c: DNSA module to write reverse zone file */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
