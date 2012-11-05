@@ -1,4 +1,12 @@
-/* errors.c: Error reporting functions */
+/* errors.c:
+ * 
+ * Error reporting functions for the DNSA program.
+ * 
+ * enum constants defined in dnsa.h
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

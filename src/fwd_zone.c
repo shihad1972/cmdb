@@ -1,3 +1,15 @@
+/* fwd_zone:
+ * 
+ * Contains various funtions that are needed to import / export
+ * forward zone information from the database, and to also write
+ * the zone files and BIND configuration files.
+ * 
+ * Part of the DNSA program
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

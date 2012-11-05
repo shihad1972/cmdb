@@ -1,3 +1,13 @@
+/* drzf.c: 
+ * 
+ * Contains functions to display the reverse zones
+ * contained in the database and also to list the reverse
+ * zones contained in the database.
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -165,6 +175,8 @@ int list_rev_zones (char config[][CONF_S])
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
+	/* To format the output, we need to know the string length of the
+	 * longest reverse domain */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);

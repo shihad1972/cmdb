@@ -6,11 +6,14 @@
  * 
  * -d :display
  * -w :write
- *   **One of these must be present but not both**
+ * -c :write configuration
+ * -l :list zones in database.
+ *   **At least one of these must be present**
  * -f : forward zone
  * -r : Reverse zone
  *   **One of these must be present but not both**
  * -n : domain name or netblock. only /8 /16 /24 netblocks accepted
+ *      needed for -d and -w functionality
  *
  * 
  */

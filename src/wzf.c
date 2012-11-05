@@ -1,3 +1,18 @@
+/* wzf.c:
+ * 
+ * Contains function to write out the forward zone file from information
+ * stored in the database.
+ * 
+ * Contains some basic error checking, and will update the zone in the
+ * database as valid if these checks are passed.
+ * 
+ * You still need to write out the config file to have the zones implemented
+ * on the name server
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

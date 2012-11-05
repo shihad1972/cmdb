@@ -1,4 +1,12 @@
-/* rev_zone.c: DNSA module to write reverse zone file */
+/* rev_zone.c:
+ *
+ * Contains functions that are needed to import and export information
+ * from / to the database about the reverse zones, and to also write out
+ * the reverse zone files and also the BIND reverse zone configuration file.
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

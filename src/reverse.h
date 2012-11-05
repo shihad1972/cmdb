@@ -1,4 +1,4 @@
-/* reverse.h: Write_rev_zone header */
+/* reverse.h: Reverse zone functions and data structures header */
 #include <mysql.h>
 #include "dnsa.h"
 

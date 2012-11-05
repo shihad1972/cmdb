@@ -1,3 +1,17 @@
+/* wrzf.c:
+ * 
+ * Contains the function to write out the reverse zonefile. 
+ * 
+ * This has some basic error checking, and if these checks are passed
+ * then the zone is updated as valid in the database.
+ * 
+ * You still need to write out the configuration file for the zones
+ * to be implemented in BIND
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

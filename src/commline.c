@@ -1,3 +1,14 @@
+/* commline.c:
+ * 
+ * Contains functions to deal with command line arguments and also
+ * to read the values from the configuration file.
+ *
+ * Part of the DNSA  program
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * 
+ */
+
 #include "dnsa.h"
 #include <stdio.h>
 #include <string.h>
