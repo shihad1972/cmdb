@@ -1,6 +1,6 @@
 /* wcf.c: main function for write config file
  * 
- * This main function creates and writes the BIND config file
+ * This function creates and writes the BIND config file
  * for all the DNS zones that are held in the database. 
  * 
  * Contains some error checking (is config file valid, do the

@@ -1,4 +1,16 @@
-/* wrcf.c: Write the reverse zone configuration file */
+/* wrcf.c: Write the reverse zone configuration file 
+ *
+ * This function creates and writes the BIND reverse zone
+ * configuration file from all the zones that are valid in
+ * the database. 
+ * 
+ * Contains some basic error checking, such as does the reverse
+ * zonefile exist on the filesystem, and is the written config
+ * file correct before reloading the name server.
+ * 
+ * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
