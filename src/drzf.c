@@ -123,3 +123,9 @@ int drzf (int id, char *domain, char config[][CONF_S])
 	free(error_code);
 	return 0;
 }
+
+int list_rev_zones (char config[][CONF_S])
+{
+	printf("Listing rev zones from DB %s\n", config[DB]);
+	return 0;
+}

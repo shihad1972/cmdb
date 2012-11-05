@@ -52,4 +52,7 @@ dzf (char *domain, char config[][CONF_S]);
 /* Write the dnsa forward config file */
 int
 wcf(char config[][CONF_S]);
+/* List the forward zones in the database */
+int
+list_zones (char config[][CONF_S]);
 #endif

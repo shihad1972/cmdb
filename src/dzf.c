@@ -126,3 +126,9 @@ int dzf (char *domain, char config[][CONF_S])
 	free(error_code);
 	return error;
 }
+
+int list_zones (char config[][CONF_S])
+{
+	printf("Listing zones from database %s\n", config[DB]);
+	return 0;
+}

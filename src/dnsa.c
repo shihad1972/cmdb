@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	/* Get command line args. See above */
 	retval = parse_command_line(argc, argv, &command);
 	if (retval < 0) {
-		printf("Usage: %s [-d | -w | -c] [-f | -r] -n <domain/netrange>\n",
+		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
 		exit (retval);
 	}
@@ -71,14 +71,34 @@ int main(int argc, char *argv[])
 			} else {
 				drzf(id, domain, config);
 			}
+		} else {
+			retval = 7;
+			printf("We have an invalid type: %s\n",
+			       command.type);
+			exit(retval);
 		}
 	} else if ((strncmp(command.action, "config", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
 			wcf(config);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			wrcf(config);
+		} else {
+			retval = 7;
+			printf("We have an invalid type: %s\n",
+			       command.type);
+			exit(retval);
+		}
+	} else if ((strncmp(command.action, "list", COMM_S) == 0)) {
+		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+			list_zones(config);
+		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+			list_rev_zones(config);
+		} else {
+			retval = 7;
+			printf("We have an invalid type: %s\n",
+			       command.type);
+			exit(retval);
 		}
 	}
-
 	exit(0);
 }

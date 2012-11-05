@@ -20,6 +20,9 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
 			strncpy(comp->action, "config", COMM_S);
 			strncpy(comp->domain, "none", CONF_S);
+		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
+			strncpy(comp->action, "list", COMM_S);
+			strncpy(comp->domain, "all", CONF_S);
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			strncpy(comp->type, "forward", COMM_S);
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {

@@ -58,4 +58,7 @@ drzf (int id, char *domain, char config[][CONF_S]);
 /* Write the dnsa reverse config file */
 int
 wrcf(char config[][CONF_S]);
+/* List the reverse zones in the database */
+int
+list_rev_zones (char config[][CONF_S]);
 #endif
