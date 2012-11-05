@@ -132,20 +132,23 @@ int list_zones (char config[][CONF_S])
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW my_row;
-	my_ulonglong dnsa_rows;
+	my_ulonglong dnsa_rows, start;
+	size_t max, len, tabs, i;
 	int error;
 	unsigned int port;
 	unsigned long int client_flag;
-	char *tmp, *error_code;
+	char *tmp, *domain, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
 	unix_socket = "";
 	port = 3306;
 	client_flag = 0;
+	max = start = len = 0;
 	tmp = malloc(FILE_S * sizeof(char));
+	domain = malloc(TBUFF_S * sizeof(char));
 	error_code = malloc(RBUFF_S * sizeof(char));
 	error_str = error_code;
 	printf("Listing zones from database %s\n", config[DB]);
-	sprintf(tmp, "SELECT name, valid FROM zones");
+	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
 	dnsaquery = tmp;
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
@@ -165,7 +168,30 @@ int list_zones (char config[][CONF_S])
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
-	while ((my_row = mysql_fetch_row(dnsa_res)))
-		printf("Domain %s:\tvalid: %s\n", my_row[0], my_row[1]);
+	while ((my_row = mysql_fetch_row(dnsa_res))) {
+		sprintf(domain, "%s", my_row[0]);
+		len = strlen(domain);
+		if (len > max)
+			max = len;
+	}
+	sprintf(domain, "Domain");
+	len = strlen(domain);
+	tabs = (max / 8) - (len / 8);
+	for (i = 0; i < tabs; i++) {
+		domain[len + i] = '\t';
+	}
+	domain[len + i] = '\0';
+	printf("%s\tValid\n\n", domain);
+	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
+	while ((my_row = mysql_fetch_row(dnsa_res))) {
+		sprintf(domain, "%s", my_row[0]);
+		len = strlen(domain);
+		tabs = (max / 8) - (len / 8);
+		for (i = 0; i < tabs; i++) {
+			domain[len + i] = '\t';
+		}
+		domain[len + i] = '\0';
+		printf("%s\t%s\n", domain, my_row[1]);
+	}
 	return 0;
 }
