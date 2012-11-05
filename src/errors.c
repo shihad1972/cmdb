@@ -9,51 +9,59 @@ void report_error(int error, const char *errstr)
 	switch (error){
 		case ARGC_INVAL:
 			fprintf(stderr, "Argc is invalid\n");
-			exit(1);
+			exit(ARGC_INVAL);
 			break;
 		case ARGV_INVAL:
 			fprintf(stderr, "Argv is invalid\n");
-			exit(2);
+			exit(ARGV_INVAL);
 			break;
 		case NO_DOMAIN:
 			fprintf(stderr, "No domain %s was found\n", errstr);
-			exit(3);
+			exit(NO_DOMAIN);
 			break;
 		case MULTI_DOMAIN:
 			fprintf(stderr, "Multiple records found for %s\n", errstr);
-			exit(4);
+			exit(MULTI_DOMAIN);
 			break;
 		case NO_DELIM:
 			fprintf(stderr, "No delimiter found in string\n");
-			exit(5);
+			exit(NO_DELIM);
 			break;
 		case NO_RECORDS:
 			fprintf(stderr, "No records found for the zone\n");
-			exit(6);
+			exit(NO_RECORDS);
 			break;
 		case WRONG_ACTION:
 			fprintf(stderr, "Incorrect action specified\n");
-			exit(7);
+			exit(WRONG_ACTION);
+			break;
+		case WRONG_TYPE:
+			fprintf(stderr, "Incorrect domain type specified\n");
+			exit(WRONG_TYPE);
+			break;
+		case DOMAIN_LIST_FAIL:
+			fprintf(stderr, "No domains were found to list from the database\n");
+			exit(DOMAIN_LIST_FAIL);
 			break;
 		case MY_INIT_FAIL:
 			fprintf(stderr, "Initialisation of MySQL connection failed\n");
-			exit(10);
+			exit(MY_INIT_FAIL);
 			break;
 		case MY_CONN_FAIL:
 			fprintf(stderr, "Unable to connect to MySQL Database\n");
-			exit(11);
+			exit(MY_CONN_FAIL);
 			break;
 		case MY_QUERY_FAIL:
 			fprintf(stderr, "Query to MySQL database failed\n");
-			exit(12);
+			exit(MY_QUERY_FAIL);
 			break;
 		case MY_STORE_FAIL:
 			fprintf(stderr, "Unable to store MySQL result set\n");
-			exit(13);
+			exit(MY_STORE_FAIL);
 			break;
 		case FILE_O_FAIL:
 			fprintf(stderr, "Unable to open file %s\n", errstr);
-			exit(20);
+			exit(FILE_O_FAIL);
 			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);

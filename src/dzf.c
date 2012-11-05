@@ -129,6 +129,43 @@ int dzf (char *domain, char config[][CONF_S])
 
 int list_zones (char config[][CONF_S])
 {
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW my_row;
+	my_ulonglong dnsa_rows;
+	int error;
+	unsigned int port;
+	unsigned long int client_flag;
+	char *tmp, *error_code;
+	const char *unix_socket, *dnsaquery, *error_str;
+	unix_socket = "";
+	port = 3306;
+	client_flag = 0;
+	tmp = malloc(FILE_S * sizeof(char));
+	error_code = malloc(RBUFF_S * sizeof(char));
+	error_str = error_code;
 	printf("Listing zones from database %s\n", config[DB]);
+	sprintf(tmp, "SELECT name, valid FROM zones");
+	dnsaquery = tmp;
+	if (!(mysql_init(&dnsa))) {
+		report_error(MY_INIT_FAIL, error_str);
+	}
+	if (!(mysql_real_connect(&dnsa,
+		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
+	}
+	error = mysql_query(&dnsa, dnsaquery);
+	snprintf(error_code, CONF_S, "%d", error);
+	if ((error != 0)) {
+		report_error(MY_QUERY_FAIL, error_str);
+	}
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
+		report_error(MY_STORE_FAIL, error_str);
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+		report_error(DOMAIN_LIST_FAIL, error_str);
+	while ((my_row = mysql_fetch_row(dnsa_res)))
+		printf("Domain %s:\tvalid: %s\n", my_row[0], my_row[1]);
 	return 0;
 }

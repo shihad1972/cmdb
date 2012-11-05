@@ -22,6 +22,8 @@ enum {			/* error codes */
 	NO_DELIM = 5,
 	NO_RECORDS = 6,
 	WRONG_ACTION = 7,
+	WRONG_TYPE = 8,
+	DOMAIN_LIST_FAIL = 9,
 	MY_INIT_FAIL = 10,
 	MY_CONN_FAIL = 11,
 	MY_QUERY_FAIL = 12,

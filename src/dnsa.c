@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 				wrzf(id, config);
 			}
 		} else {
-			retval = 7;
+			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
 			       command.type);
 			exit(retval);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 				drzf(id, domain, config);
 			}
 		} else {
-			retval = 7;
+			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
 			       command.type);
 			exit(retval);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			wrcf(config);
 		} else {
-			retval = 7;
+			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
 			       command.type);
 			exit(retval);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
 			list_rev_zones(config);
 		} else {
-			retval = 7;
+			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
 			       command.type);
 			exit(retval);
