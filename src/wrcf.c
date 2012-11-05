@@ -16,7 +16,7 @@
 #include <string.h>
 #include <mysql.h>
 #include "dnsa.h"
-#include "rev_zone.h"
+#include "reverse.h"
 
 int wrcf(char config[][CONF_S])
 {

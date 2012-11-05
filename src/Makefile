@@ -16,7 +16,7 @@ all:	wcf wrcf dnsa
 dnsa:	dnsa.o command.o wzf.o wrzf.o write_rev_zone.o write_zone.o errors.o dzf.o drzf.o wcf.o wrcf.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-dnsa.o:	dnsa.c dnsa.h write_zone.h rev_zone.h
+dnsa.o:	dnsa.c dnsa.h write_zone.h reverse.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 write_zone.o: write_zone.c write_zone.h dnsa.h
@@ -25,7 +25,7 @@ write_zone.o: write_zone.c write_zone.h dnsa.h
 dzf.o:	dzf.c write_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-drzf.o:	drzf.c rev_zone.h dnsa.h
+drzf.o:	drzf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 wzf.o:	wzf.c write_zone.h dnsa.h
@@ -34,13 +34,13 @@ wzf.o:	wzf.c write_zone.h dnsa.h
 wcf.o:	wcf.c write_zone.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $< 
 
-wrzf.o:	wrzf.c rev_zone.h dnsa.h
+wrzf.o:	wrzf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-write_rev_zone.o:	write_rev_zone.c dnsa.h rev_zone.h
+write_rev_zone.o:	write_rev_zone.c dnsa.h reverse.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-wrcf.o:	wrcf.c rev_zone.h dnsa.h
+wrcf.o:	wrcf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 command.o:	commline.c dnsa.h

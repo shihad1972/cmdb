@@ -1,4 +1,4 @@
-/* rev_zone.h: Write_rev_zone header */
+/* reverse.h: Write_rev_zone header */
 #include <mysql.h>
 #include "dnsa.h"
 
@@ -52,6 +52,10 @@ get_rev_id(char *domain, char config[][CONF_S]);
 /* Write out the reverse zone file */
 int 
 wrzf (int id, char config[][CONF_S]);
+/* Display the reverse zone file */
 int
 drzf (int id, char *domain, char config[][CONF_S]);
+/* Write the dnsa reverse config file */
+int
+wrcf(char config[][CONF_S]);
 #endif

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dnsa.h"
-#include "rev_zone.h"
+#include "reverse.h"
 
 int drzf (int id, char *domain, char config[][CONF_S])
 {

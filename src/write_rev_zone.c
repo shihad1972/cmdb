@@ -4,7 +4,7 @@
 #include <string.h>
 #include <mysql.h>
 #include "dnsa.h"
-#include "rev_zone.h"
+#include "reverse.h"
 
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
