@@ -189,5 +189,8 @@ int list_rev_zones (char config[][CONF_S])
 		domain[len + i] = '\0';
 		printf("%s\t%s\n", domain, my_row[1]);
 	}
+	free(domain);
+	free(tmp);
+	free(error_code);
 	return 0;
 }
