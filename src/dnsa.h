@@ -63,4 +63,7 @@ report_error(int error, const char *errstr);
 /* Write the dnsa forward config file */
 int
 wcf(char config[][CONF_S]);
+/* Write the dnsa reverse config file */
+int
+wrcf(char config[][CONF_S]);
 #endif
