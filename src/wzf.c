@@ -255,5 +255,6 @@ int wzf (char *domain, char config[][CONF_S])
 	free(tmp);
 	free(tmp2);
 	free(zonefilename);
+	free(error_code);
 	return 0;
 }

@@ -111,6 +111,7 @@ int wrcf(char config[][CONF_S])
 	free(tmp2);
 	free(rout);
 	free(dnsa_line);
+	free(error_code);
 	mysql_close(&dnsa);
 	exit(0);
 }
