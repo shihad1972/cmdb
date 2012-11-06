@@ -19,7 +19,7 @@
 #include "dnsa.h"
 #include "forward.h"
 
-int wzf (char *domain, char config[][CONF_S])
+int wzf (char *domain, dnsa_config_t *dc)
 {
 	FILE *zonefile;
 	MYSQL shihad, shihad2, shihad3;
@@ -34,7 +34,7 @@ int wzf (char *domain, char config[][CONF_S])
 	unsigned long int client_flag;
 	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *thost, *error_code;
 	const char *unix_socket, *shiquery, *system_command, *error_str;
-	unix_socket = "";
+	unix_socket = dc->socket;
 	port = 3306;
 	client_flag = 0;
 	zout = malloc(FILE_S * sizeof(char));
@@ -48,10 +48,10 @@ int wzf (char *domain, char config[][CONF_S])
 
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&shihad))) {
-		report_error(MY_INIT_FAIL, error_str);
+		report_error(MY_INIT_FAIL, mysql_error(&shihad));
 	}
 	if (!(mysql_real_connect(&shihad,
-		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&shihad));
 	}
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
@@ -176,7 +176,7 @@ int wzf (char *domain, char config[][CONF_S])
 				report_error(MY_INIT_FAIL, error_code);
 			}
 			if (!(mysql_real_connect(&shihad2,
-				config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+				dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 				report_error(MY_CONN_FAIL, mysql_error(&shihad));
 			}
 			error = mysql_query(&shihad2, shiquery);
@@ -196,14 +196,14 @@ int wzf (char *domain, char config[][CONF_S])
 	/** Now we have to test the zonefile for errors
 	 ** Output zonefile and check then remove.
 	 **/
-	sprintf(zonefilename, "%sdb1.%s", config[DIR], zone_info.name);
+	sprintf(zonefilename, "%sdb1.%s", dc->dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		report_error(FILE_O_FAIL, zonefilename);
 	} else {
 		fputs(zout, zonefile);
 		fclose(zonefile);
 	}
-	sprintf(tmp, "%s %s %s",config[CHKZ], zone_info.name, zonefilename);
+	sprintf(tmp, "%s %s %s", dc->chkz, zone_info.name, zonefilename);
 	system_command = tmp;
 	error = system(system_command);
 	if (error == 0) {
@@ -223,7 +223,7 @@ int wzf (char *domain, char config[][CONF_S])
 		report_error(MY_INIT_FAIL, error_str);
 	}
 	if (!(mysql_real_connect(&shihad3,
-		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&shihad));
 	}
 	error = mysql_query(&shihad3, shiquery);
@@ -239,7 +239,7 @@ int wzf (char *domain, char config[][CONF_S])
 	}
 	mysql_close(&shihad3); 
 	/* Output full zonefile */
-	sprintf(zonefilename, "%sdb.%s", config[DIR], zone_info.name);
+	sprintf(zonefilename, "%sdb.%s", dc->dir, zone_info.name);
  	if (!(zonefile = fopen(zonefilename, "w"))) {
 		report_error(FILE_O_FAIL, zonefilename);
 	} else {
@@ -248,7 +248,7 @@ int wzf (char *domain, char config[][CONF_S])
 	}
 	/** Check the zone for errors. If none, update DB with the to say that 
 	 ** zone is valid */
-	sprintf(tmp, "%s %s %s",config[CHKZ], zone_info.name, zonefilename);
+	sprintf(tmp, "%s %s %s",dc->chkz, zone_info.name, zonefilename);
 	system_command = tmp;
 	error = system(system_command);
 	if (error == 0) {

@@ -29,7 +29,9 @@
 int main(int argc, char *argv[])
 {
 	comm_line_t command;
-	char *domain, config[CHKC + 1][CONF_S];
+	dnsa_config_t dnsa_c, *dc;
+	dc = &dnsa_c;
+	char *domain, *config;
 	int retval, id;
 
 	/* Get command line args. See above */
@@ -40,23 +42,26 @@ int main(int argc, char *argv[])
 		exit (retval);
 	}
 	/* Get config values from config file */
-	sprintf(config[CONFIGFILE], "/etc/dnsa/dnsa.conf");
-	retval = parse_config_file(config);
+	if (!(config = malloc(CONF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "config");
+	init_config_values(dc);
+	sprintf(config, "/etc/dnsa/dnsa.conf");
+	retval = parse_config_file(dc, config);
 	if (retval < 0) {
 		printf("Config file parsing failed! Using default values\n");
-	}
+	}	
 	if (!(domain = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "domain");
 	strncpy(domain, command.domain, CONF_S);
 	if ((strncmp(command.action, "write", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			wzf(domain, config);
+			wzf(domain, dc);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			id = get_rev_id(domain, config);
+			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
 			} else {
-				wrzf(id, config);
+				wrzf(id, dc);
 			}
 		} else {
 			retval = WRONG_TYPE;
@@ -66,13 +71,13 @@ int main(int argc, char *argv[])
 		}
 	} else if ((strncmp(command.action, "display", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			dzf(domain, config);
+			dzf(domain, dc);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			id = get_rev_id(domain, config);
+			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
 			} else {
-				drzf(id, domain, config);
+				drzf(id, domain, dc);
 			}
 		} else {
 			retval = WRONG_TYPE;
@@ -82,9 +87,9 @@ int main(int argc, char *argv[])
 		}
 	} else if ((strncmp(command.action, "config", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			wcf(config);
+			wcf(dc);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			wrcf(config);
+			wrcf(dc);
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
@@ -93,9 +98,9 @@ int main(int argc, char *argv[])
 		}
 	} else if ((strncmp(command.action, "list", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
-			list_zones(config);
+			list_zones(dc);
 		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
-			list_rev_zones(config);
+			list_rev_zones(dc);
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
@@ -103,5 +108,7 @@ int main(int argc, char *argv[])
 			exit(retval);
 		}
 	}
+	free(config);
+	free(domain);
 	exit(0);
 }

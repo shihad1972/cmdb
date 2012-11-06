@@ -127,12 +127,16 @@ void get_in_addr_string(char *in_addr, char range[])
 {
 	size_t len;
 	char *tmp, *line;
+	char louisa[] = ".in-addr.arpa";
 	int c, i;
 	
 	c = '.';
 	i = 0;
+	tmp = 0;
 	len = strlen(range);
-	line = malloc((len + 1) * sizeof(char));
+	len++; /* Got to remember the \0 :) */
+	if (!(line = malloc((len) * sizeof(char))))
+		report_error(MALLOC_FAIL, "line");
 	strncpy(line, range, len);
 	tmp = strrchr(line, c);
 	*tmp = '\0';		/* Get rid of training .0 */
@@ -151,7 +155,7 @@ void get_in_addr_string(char *in_addr, char range[])
 	len = strlen(line);
 	strncat(in_addr, line, len);
 	tmp = line;
-	sprintf(tmp, ".in-addr.arpa");
+	sprintf(tmp, "%s", louisa);
 	len = strlen(tmp);
 	strncat(in_addr, tmp, len);
 	free(line);
@@ -159,22 +163,16 @@ void get_in_addr_string(char *in_addr, char range[])
 /** Get the reverse zone ID from the database. Return -1 on error
  ** Perhaps should add more error codes, but for now we assume invalid domain
  **/
-int get_rev_id (char *domain, char config[][CONF_S])
+int get_rev_id (char *domain, dnsa_config_t *dc)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
 	my_ulonglong dnsa_rows;
-	unsigned int port = 3306;
-	unsigned long int client_flag = 0;
 	char *queryp, *error_code;
 	const char *dquery, *unix_socket, *error_str;
-	const char *ch = config[HOST];	/* DB Host */
-	const char *cu = config[USER];	/* DB User */
-	const char *cp = config[PASS]; /* DB Pass */
-	const char *cd = config[DB];	/* DB Database */
 	int retval, error;
-	unix_socket = "";
+	unix_socket = dc->socket;
 	retval = 0;
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code");
@@ -187,8 +185,8 @@ int get_rev_id (char *domain, char config[][CONF_S])
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
-	if (!(mysql_real_connect(&dnsa, ch, cu, cp, cd, port,
-		unix_socket, client_flag )))
+	if (!(mysql_real_connect(&dnsa, dc->host, dc->user, dc->pass, dc->db, dc->port,
+		unix_socket, dc->cliflag )))
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	error = mysql_query(&dnsa, dquery);
 	snprintf(error_code, CONF_S, "%d", error);

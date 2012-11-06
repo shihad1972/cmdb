@@ -48,17 +48,17 @@ void
 get_in_addr_string(char *in_addr, char range[]);
 /* Return the ID of the reverse domain; -1 indicates error */
 int
-get_rev_id(char *domain, char config[][CONF_S]);
+get_rev_id(char *domain, dnsa_config_t *dc);
 /* Write out the reverse zone file */
 int 
-wrzf (int id, char config[][CONF_S]);
+wrzf (int id, dnsa_config_t *dc);
 /* Display the reverse zone file */
 int
-drzf (int id, char *domain, char config[][CONF_S]);
+drzf (int id, char *domain, dnsa_config_t *dc);
 /* Write the dnsa reverse config file */
 int
-wrcf(char config[][CONF_S]);
+wrcf(dnsa_config_t *dc);
 /* List the reverse zones in the database */
 int
-list_rev_zones (char config[][CONF_S]);
+list_rev_zones (dnsa_config_t *dc);
 #endif

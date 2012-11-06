@@ -22,6 +22,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	strncpy(comp->action, "NULL", COMM_S);
 	strncpy(comp->type, "NULL", COMM_S);
 	strncpy(comp->domain, "NULL", CONF_S);
+	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
 	
 	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
@@ -59,79 +60,116 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	return retval;
 }
 
-int parse_config_file(char config[][CONF_S])
+int parse_config_file(dnsa_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	size_t len;
 	char buff[CONF_S] = "";
+	char port[CONF_S] = "";
 	int retval;
-	sprintf(config[DB], "bind");
-	sprintf(config[USER], "root");
-	sprintf(config[HOST], "localhost");
-	sprintf(config[DIR], "/var/named/");
-	sprintf(config[BIND], "/var/named/");
-	sprintf(config[DNSA], "dnsa.conf");
-	sprintf(config[REV], "dnsa-rev.conf");
-	sprintf(config[RNDC], "/usr/sbin/rndc");
-	sprintf(config[CHKC], "/usr/sbin/named-checkconf");
-	sprintf(config[CHKZ], "/usr/sbin/named-checkzone");
-	if (!(cnf = fopen(config[CONFIGFILE], "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", config[CONFIGFILE]);
+	unsigned long int portno;
+	dc->port = 3306;
+	dc->cliflag = 0;
+	if (!(cnf = fopen(config, "r"))) {
+		fprintf(stderr, "Cannot open config file %s\n", config);
 		fprintf(stderr, "Using default values\n");
 		retval = -1;
 	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", config[PASS]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PASS=%s", dc->pass);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", config[HOST]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "HOST=%s", dc->host);	
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", config[USER]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "USER=%s", dc->user);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", config[DB]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DB=%s", dc->db);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DIR=%s", config[DIR]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DIR=%s", dc->dir);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "BIND=%s", config[BIND]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "BIND=%s", dc->bind);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "REV=%s", config[REV]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "REV=%s", dc->rev);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DNSA=%s", config[DNSA]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DNSA=%s", dc->dnsa);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "RNDC=%s", config[RNDC]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "RNDC=%s", dc->rndc);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKZ=%s", config[CHKZ]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "CHKZ=%s", dc->chkz);
+		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKC=%s", config[CHKC]);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "CHKC=%s", dc->chkc);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "SOCKET=%s", dc->socket);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PORT=%s", port);
+		}
 		retval = 0;
 		fclose(cnf);
+	}
+	portno = strtoul(port, NULL, 10);
+	if (portno > 65535) {
+		retval = -1;
+	} else {
+		dc->port = (unsigned int) portno;
 	}
 	/* The next 2 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
-	sprintf(buff, "%s", config[DIR]);
+	sprintf(buff, "%s", dc->dir);
 	len = strlen(buff);
 	if (buff[len - 1] != '/') {
 		buff[len] = '/';
 		buff[len + 1] = '\0';
-		sprintf(config[DIR], "%s", buff);
+		sprintf(dc->dir, "%s", buff);
 	}
-	sprintf(buff, "%s", config[BIND]);
+	sprintf(buff, "%s", dc->bind);
 	len = strlen(buff);
 	if (buff[len - 1] != '/') {
 		buff[len] = '/';
 		buff[len + 1] = '\0';
-		sprintf(config[BIND], "%s", buff);
+		sprintf(dc->bind, "%s", buff);
 	}
 	
 	return retval;
+}
+
+void init_config_values(dnsa_config_t *dc)
+{
+	char *buff;
+	buff = dc->socket;
+	sprintf(dc->db, "bind");
+	sprintf(dc->user, "root");
+	sprintf(dc->host, "localhost");
+	sprintf(dc->pass, "%s", "");
+	sprintf(dc->dir, "/var/named/");
+	sprintf(dc->bind, "/var/named/");
+	sprintf(dc->dnsa, "dnsa.conf");
+	sprintf(dc->rev, "dnsa-rev.conf");
+	sprintf(dc->rndc, "/usr/sbin/rndc");
+	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
+	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
+	sprintf(buff, "%s", "");
 }

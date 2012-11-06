@@ -18,7 +18,7 @@
 #include "dnsa.h"
 #include "reverse.h"
 
-int wrzf(int reverse, char config[][CONF_S])
+int wrzf(int reverse, dnsa_config_t *dc)
 {
 	FILE *cnf;
 	MYSQL dnsa;
@@ -34,12 +34,13 @@ int wrzf(int reverse, char config[][CONF_S])
 	char *tmp, *rout, *tmp2, *dquery;
 	const char *unix_socket, *dnsa_query, *syscom;
 	char buff[CONF_S]="";
-	unix_socket = "";
+	unix_socket = dc->socket;
 	port = 3306;
 	client_flag = 0;
 	dquery = calloc(BUFF_S, sizeof(char));
 	tmp = calloc(BUFF_S, sizeof(char));
 	rout = calloc(FILE_S, sizeof(char));
+	dnsa_query = dquery;
 	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
@@ -47,13 +48,12 @@ int wrzf(int reverse, char config[][CONF_S])
 		return MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(&dnsa,
-		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		fprintf(stderr, "Connect failed. Error: %s\n",
 			mysql_error(&dnsa));
 		return MY_CONN_FAIL;
 	}
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
-	dnsa_query = dquery;
 	error = mysql_query(&dnsa, dnsa_query);
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
@@ -99,8 +99,8 @@ int wrzf(int reverse, char config[][CONF_S])
 	tmp2 = buff;
 	for (i=0; i< CONF_S; i++)	/* zero buffer */
 		*(tmp2 + i) = '\0';
-	len = strlen(config[DIR]);
-	strncpy(tmp2, config[DIR], len);
+	len = strlen(dc->dir);
+	strncpy(tmp2, dc->dir, len);
 	len = strlen(rev_zone_info.net_range);
 	strncat(tmp2, rev_zone_info.net_range, len);
 	len = strlen(rout);
@@ -119,13 +119,14 @@ int wrzf(int reverse, char config[][CONF_S])
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
 	get_in_addr_string(tmp, rev_zone_info.net_range);
-	sprintf(rout, "%s %s %s", config[CHKZ], tmp, buff);
+	sprintf(rout, "%s %s %s", dc->chkz, tmp, buff);
 	syscom = rout;
 	error = system(syscom);
 	if (error == 0) {
 		printf("check of zone %s ran successfully\n", buff);
 		sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d",
 			reverse);
+		printf("%s\n", dnsa_query);
 		error = mysql_query(&dnsa, dnsa_query);
 		dnsa_rows = mysql_affected_rows(&dnsa);
 		if ((dnsa_rows == 1)) {

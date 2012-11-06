@@ -18,7 +18,7 @@
 #include "dnsa.h"
 #include "reverse.h"
 
-int wrcf(char config[][CONF_S])
+int wrcf(dnsa_config_t *dc)
 {
 	FILE *cnf;
 	MYSQL dnsa;
@@ -26,29 +26,25 @@ int wrcf(char config[][CONF_S])
 	MYSQL_ROW dnsa_row;
 	size_t len;
 	my_ulonglong dnsa_rows;
-	int error, i;
-	unsigned int port;
-	unsigned long int client_flag;
+	int error;
 	char *rout, *dnsa_line, *zonefile, *tmp, *tmp2, *error_code;
 	const char *dnsa_query, *unix_socket, *syscom, *error_str, *domain;
 	domain = "or reverse zone that is valid ";
-	unix_socket = "";
-	port = 3306;
-	client_flag = 0;
-	rout = malloc(FILE_S * sizeof(char));
-	dnsa_line = malloc(TBUFF_S * sizeof(char));
-	tmp = malloc(TBUFF_S * sizeof(char));
-	tmp2 = malloc(TBUFF_S * sizeof(char));
-	zonefile = malloc(CONF_S * sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
+	unix_socket = dc->socket;
+	rout = calloc(FILE_S, sizeof(char));
+	dnsa_line = calloc(TBUFF_S, sizeof(char));
+	tmp = calloc(TBUFF_S, sizeof(char));
+	tmp2 = calloc(TBUFF_S, sizeof(char));
+	zonefile = calloc(CONF_S, sizeof(char));
+	error_code = calloc(RBUFF_S, sizeof(char));
 	error_str = error_code;
 	dnsa_query = dnsa_line;
 	/* Initilaise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
-	if (!(mysql_real_connect(&dnsa, config[HOST], config[USER],
-		config[PASS], config[DB], port, unix_socket, client_flag ))) {
+	if (!(mysql_real_connect(&dnsa, dc->host, dc->user,
+		dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
 	sprintf(dnsa_line, "SELECT net_range FROM rev_zones");
@@ -65,15 +61,13 @@ int wrcf(char config[][CONF_S])
 	}
 	/* From each DB row, create the config line for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		for (i=0; i< RBUFF_S; i++)	/* zero tmp buffer */
-			*(tmp2 + i) = '\0';
 		get_in_addr_string(tmp2, dnsa_row[0]);
-		sprintf(zonefile, "%s%s", config[DIR], dnsa_row[0]);
+		sprintf(zonefile, "%s%s", dc->dir, dnsa_row[0]);
 		if (!(cnf = fopen(zonefile, "r"))) {
 			fprintf(stderr, "Cannot access zonefile %s\n", zonefile);
 		} else {
 			sprintf(tmp, "zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s%s\";\n\t\t};\n",
-				tmp2, config[DIR], dnsa_row[0]);
+				tmp2, dc->dir, dnsa_row[0]);
 			len = strlen(tmp);
 			strncat(rout, tmp, len);
 			fclose(cnf);
@@ -82,18 +76,18 @@ int wrcf(char config[][CONF_S])
 	/* Write the config file.
 	 * Check it and if successful write to real config file 
 	 * and reload bind */
-	sprintf(zonefile, "%s%s", config[BIND], config[REV]);
+	sprintf(zonefile, "%s%s", dc->bind, dc->rev);
 	if (!(cnf = fopen(zonefile, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing!\n", zonefile);
 		exit(FILE_O_FAIL);
 	} else {
 		fputs(rout, cnf);
 		fclose(cnf);
-		sprintf(tmp, "%s %s", config[CHKC], zonefile);
+		sprintf(tmp, "%s %s", dc->chkc, zonefile);
 		syscom = tmp;
 		error = system(syscom);
 		if ((error == 0)) {
-			sprintf(tmp, "%s reload", config[RNDC]);
+			sprintf(tmp, "%s reload", dc->rndc);
 			error = system(syscom);
 			if ((error == 0)) {
 				fprintf(stderr, "Reload successful\n");

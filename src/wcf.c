@@ -15,7 +15,7 @@
 #include <mysql.h>
 #include "dnsa.h"
 
-int wcf(char config[][CONF_S])
+int wcf(dnsa_config_t *dc)
 {
 	FILE *cnf;
 	MYSQL dnsa;
@@ -24,15 +24,11 @@ int wcf(char config[][CONF_S])
 	size_t len;
 	my_ulonglong dnsa_rows;
 	int error;
-	unsigned int port;
-	unsigned long int client_flag;
 	char *dout, *dnsa_line, *zonefile, *error_code;
 	const char *dnsa_query, *unix_socket, *check_comm, *reload_comm, *error_str, *domain;
 	dnsa_query = "SELECT name FROM zones WHERE valid = 'yes'";
 	domain = "that is valid ";
-	unix_socket = "";
-	port = 3306;
-	client_flag = 0;
+	unix_socket = dc->socket;
 	dout = calloc(FILE_S, sizeof(char));
 	dnsa_line = calloc(TBUFF_S, sizeof(char));
 	zonefile = calloc(CONF_S, sizeof(char));
@@ -43,8 +39,8 @@ int wcf(char config[][CONF_S])
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
-	if (!(mysql_real_connect(&dnsa, config[HOST], config[USER],
-		config[PASS], config[DB], port, unix_socket, client_flag ))) {
+	if (!(mysql_real_connect(&dnsa, dc->host, dc->user,
+		dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
 	error = mysql_query(&dnsa, dnsa_query);
@@ -60,7 +56,7 @@ int wcf(char config[][CONF_S])
 	}
 	/* From each DB row create the config liens */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		sprintf(zonefile, "%sdb.%s", config[DIR], dnsa_row[0]);
+		sprintf(zonefile, "%sdb.%s", dc->dir, dnsa_row[0]);
 		if ((cnf = fopen(zonefile, "r"))){
 			sprintf(dnsa_line, "zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s\";\n\t\t};\n\n", dnsa_row[0], zonefile);
 			len = strlen(dnsa_line);
@@ -71,7 +67,7 @@ int wcf(char config[][CONF_S])
 		}
 	}
 	/* Write the BIND config file */
-	sprintf(dnsa_line, "%s%s", config[BIND], config[DNSA]);
+	sprintf(dnsa_line, "%s%s", dc->bind, dc->dnsa);
 	
 	if (!(cnf = fopen(dnsa_line, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing!\n", dnsa_line);
@@ -82,13 +78,13 @@ int wcf(char config[][CONF_S])
 	}
 	/* Check the file and if OK reload BIND */
 	check_comm = dnsa_line;
-	sprintf(dnsa_line, "%s %s%s", config[CHKC], config[BIND], config[DNSA]);
+	sprintf(dnsa_line, "%s %s%s", dc->chkc, dc->bind, dc->dnsa);
 	error = system(check_comm);
 	if (!(error == 0)) {
 		fprintf(stderr, "Bind config check failed! Error code was %d\n", error);
 	} else {
 		reload_comm = dnsa_line;
-		sprintf(dnsa_line, "%s reload", config[RNDC]);
+		sprintf(dnsa_line, "%s reload", dc->rndc);
 		error = system(reload_comm);
 		if (!(error == 0)) {
 			fprintf(stderr, "Bind reload failed with error code %d\n", error);

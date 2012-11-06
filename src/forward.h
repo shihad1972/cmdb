@@ -1,32 +1,33 @@
 /* forward.h: Function and data definitions for forward zones */
 
 #include <mysql.h>
+#include "dnsa.h"
 #ifndef	__WRITE_ZONE_H__
 #define __WRITE_ZONE_H__
 
 typedef struct zone_info_t { /* Hold DNS zone */
 	int id;
-	char name[256];
-	char pri_dns[256];
-	char sec_dns[256];
+	char name[RBUFF_S];
+	char pri_dns[RBUFF_S];
+	char sec_dns[RBUFF_S];
 	int serial;
 	int refresh;
 	int retry;
 	int expire;
 	int ttl;
-	char valid[256];
+	char valid[RBUFF_S];
 	int owner;
-	char updated[256];
+	char updated[RBUFF_S];
 } zone_info_t;
 
 typedef struct record_row_t { /* Hold dns record */
 	int id;
 	int zone;
-	char host[256];
-	char type[256];
+	char host[RBUFF_S];
+	char type[RBUFF_S];
 	int pri;
-	char dest[256];
-	char valid[256];
+	char dest[RBUFF_S];
+	char valid[RBUFF_S];
 } record_row_t;
 /* Return struct containing the DNS zone data */
 zone_info_t
@@ -45,14 +46,14 @@ size_t
 add_records(record_row_t, char *output, size_t offset);
 /* Write out the forward zone file */
 int
-wzf (char *domain, char config[][CONF_S]);
+wzf (char *domain, dnsa_config_t *dc);
 /* Display zone data */
 int
-dzf (char *domain, char config[][CONF_S]);
+dzf (char *domain, dnsa_config_t *dc);
 /* Write the dnsa forward config file */
 int
-wcf(char config[][CONF_S]);
+wcf(dnsa_config_t *dc);
 /* List the forward zones in the database */
 int
-list_zones (char config[][CONF_S]);
+list_zones (dnsa_config_t *dc);
 #endif

@@ -56,7 +56,7 @@ void report_error(int error, const char *errstr)
 			exit(MY_INIT_FAIL);
 			break;
 		case MY_CONN_FAIL:
-			fprintf(stderr, "Unable to connect to MySQL Database\n");
+			fprintf(stderr, "Unable to connect to MySQL Database: %s\n", errstr);
 			exit(MY_CONN_FAIL);
 			break;
 		case MY_QUERY_FAIL:

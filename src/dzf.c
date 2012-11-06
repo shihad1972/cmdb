@@ -13,7 +13,7 @@
 #include "dnsa.h"
 #include "forward.h"
 
-int dzf (char *domain, char config[][CONF_S])
+int dzf (char *domain, dnsa_config_t *dc)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
@@ -23,13 +23,9 @@ int dzf (char *domain, char config[][CONF_S])
 	size_t min, max, len, tabs, i;
 	my_ulonglong dnsa_rows, start;
 	int error;
-	unsigned int port;
-	unsigned long int client_flag;
 	char *tmp, *host, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
-	unix_socket = "";
-	port = 3306;
-	client_flag = 0;
+	unix_socket = dc->socket;
 	tmp = malloc(FILE_S * sizeof(char));
 	host = malloc(TBUFF_S * sizeof(char));
 	error_code = malloc(RBUFF_S * sizeof(char));
@@ -45,7 +41,7 @@ int dzf (char *domain, char config[][CONF_S])
 		report_error(MY_INIT_FAIL, error_str);
 	}
 	if (!(mysql_real_connect(&dnsa,
-		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
 	dnsaquery = tmp;
@@ -136,7 +132,7 @@ int dzf (char *domain, char config[][CONF_S])
 	return error;
 }
 
-int list_zones (char config[][CONF_S])
+int list_zones (dnsa_config_t *dc)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
@@ -144,27 +140,23 @@ int list_zones (char config[][CONF_S])
 	my_ulonglong dnsa_rows, start;
 	size_t max, len, tabs, i;
 	int error;
-	unsigned int port;
-	unsigned long int client_flag;
 	char *tmp, *domain, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
-	unix_socket = "";
-	port = 3306;
-	client_flag = 0;
+	unix_socket = dc->socket;
 	max = len = 0;
 	start = 0;
 	tmp = malloc(FILE_S * sizeof(char));
 	domain = malloc(TBUFF_S * sizeof(char));
 	error_code = malloc(RBUFF_S * sizeof(char));
 	error_str = error_code;
-	printf("Listing zones from database %s\n", config[DB]);
+	printf("Listing zones from database %s\n", dc->db);
 	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
 	dnsaquery = tmp;
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
 	if (!(mysql_real_connect(&dnsa,
-		config[HOST], config[USER], config[PASS], config[DB], port, unix_socket, client_flag ))) {
+		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
 	error = mysql_query(&dnsa, dnsaquery);
