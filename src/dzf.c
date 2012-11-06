@@ -151,7 +151,8 @@ int list_zones (char config[][CONF_S])
 	unix_socket = "";
 	port = 3306;
 	client_flag = 0;
-	max = start = len = 0;
+	max = len = 0;
+	start = 0;
 	tmp = malloc(FILE_S * sizeof(char));
 	domain = malloc(TBUFF_S * sizeof(char));
 	error_code = malloc(RBUFF_S * sizeof(char));
