@@ -34,30 +34,42 @@ int wzf (char *domain, dnsa_config_t *dc)
 	unsigned long int client_flag;
 	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *thost, *error_code;
 	const char *unix_socket, *shiquery, *system_command, *error_str;
-	unix_socket = dc->socket;
+	
 	port = 3306;
 	client_flag = 0;
-	zout = malloc(FILE_S * sizeof(char));
-	zout2 = malloc(FILE_S * sizeof(char));
-	tmp = malloc(BUFF_S * sizeof(char));
-	tmp2 = malloc(BUFF_S * sizeof(char));
-	zonefilename = malloc(TBUFF_S * sizeof(char));
-	c = malloc(CH_S * sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
-	error_str = error_code; 
-
+	
+	if (!(zout = malloc(FILE_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "zout in wzf");
+	if (!(zout2 = malloc(FILE_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "zout2 in wzf");
+	if (!(tmp = malloc(BUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in wzf");
+	if (!(tmp2 = malloc(BUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp2 in wzf");
+	if (!(zonefilename = malloc(TBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefilename in wrz");
+	if (!(c = malloc(CH_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "c in wzf");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in wrz");
+	
+	shiquery = tmp;
+	unix_socket = dc->socket;
+	error_str = error_code;
+	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&shihad))) {
 		report_error(MY_INIT_FAIL, mysql_error(&shihad));
 	}
-	if (!(mysql_real_connect(&shihad,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
+	if (!(mysql_real_connect(&shihad, dc->host, dc->user, dc->pass,
+		dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&shihad));
 	}
+	
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
-	shiquery = tmp;
 	error = mysql_query(&shihad, shiquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -65,23 +77,26 @@ int wzf (char *domain, dnsa_config_t *dc)
 		snprintf(error_code, CONF_S, "%s", mysql_error(&shihad));
 		report_error(MY_STORE_FAIL, error_str);
 	}
-	snprintf(error_code, CONF_S, "%s", domain);
+	
 	if (((shihad_rows = mysql_num_rows(shihad_res)) == 0)) {
 		report_error(NO_DOMAIN, domain);
 	} else if (shihad_rows > 1) {
 		report_error(MULTI_DOMAIN, domain);
 	}
+	
 	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(shihad_res))) {
 		zone_info = fill_zone_data(my_row);
 	}
+	
 	/* Create the zone file header */
 	offset = create_zone_header(zout, zone_info);
+	
 	/* Check for MX records and add them to the zone */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zone_info.id);
-	shiquery = tmp;
 	error = mysql_query(&shihad, shiquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -94,7 +109,8 @@ int wzf (char *domain, dnsa_config_t *dc)
 			offset = add_mx_to_header(zout, offset, my_row);
 		}
 	}
-	sprintf(tmp, "$ORIGIN\t%s.\n", zone_info.name); 
+	sprintf(tmp, "$ORIGIN\t%s.\n", zone_info.name);
+	
 	/** zout2 will be used to write the real zone file.
 	 ** Cannot have A records for the NS and MX added twice
 	 ** so save the buffer into zout2 and use that
@@ -263,6 +279,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	shihad_rows = mysql_affected_rows(&shihad);
 	if (shihad_rows == 1)
 		fprintf(stderr, "DB updated as zone validated\n");
+	
 	mysql_close(&shihad);
 	free(c);
 	free(zout2);

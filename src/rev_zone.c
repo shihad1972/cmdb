@@ -20,20 +20,22 @@
 rev_zone_info_t fill_rev_zone_data(MYSQL_ROW my_row)
 {
 	size_t len;
-	const char *line, *ch, *hostmaster;
+	const char *line, *delim, *hostmaster;
 	char *tmp;
 	rev_zone_info_t my_zone;
-	ch = ".";
+	
+	delim = ".";
 	hostmaster = "hostmaster";
+	
 	my_zone.rev_zone_id = atoi(my_row[0]);
 	strncpy(my_zone.net_range, my_row[1], RANGE_S);
 	my_zone.prefix = atoi(my_row[2]);
 	strncpy(my_zone.net_start, my_row[3], RANGE_S);
 	strncpy(my_zone.net_finish, my_row[4], RANGE_S);
 	line = my_row[5];
-	my_zone.start_ip = (unsigned int) strtol(line, NULL, 10);
+	my_zone.start_ip = (unsigned int) strtoul(line, NULL, 10);
 	line = my_row[6];
-	my_zone.end_ip = (unsigned int) strtol(line, NULL, 10);
+	my_zone.end_ip = (unsigned int) strtoul(line, NULL, 10);
 	strncpy(my_zone.pri_dns, my_row[7], RBUFF_S);
 	strncpy(my_zone.sec_dns, my_row[8] ? my_row[8] : "NULL", RBUFF_S);
 	my_zone.serial = atoi(my_row[9]);
@@ -44,7 +46,8 @@ rev_zone_info_t fill_rev_zone_data(MYSQL_ROW my_row)
 	strncpy(my_zone.valid, my_row[14], RBUFF_S);
 	my_zone.owner = atoi(my_row[15]);
 	strncpy(my_zone.updated, my_row[16], RBUFF_S);
-	if (!(tmp = strstr(my_zone.pri_dns, ch))) {
+	
+	if (!(tmp = strstr(my_zone.pri_dns, delim))) {
 		fprintf(stderr, "strstr in fill_rev_zone_data failed!\n");
 		exit(NO_DELIM);
 	} else {
@@ -60,9 +63,12 @@ size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 	char *tmp;
 	char ch;
 	size_t offset;
-	offset = 0;
+	
 	if (!(tmp = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp");
+
+	offset = 0;
+
 	sprintf(tmp, "$TTL %d\n@\t\tIN SOA\t%s.\t%s. (\n",
 		zone_info.ttl, zone_info.pri_dns, zone_info.hostmaster);
 	offset = strlen(tmp);
@@ -76,19 +82,22 @@ size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
 	offset = strlen(zone_info.pri_dns);
-	ch = zone_info.pri_dns[offset - 1];
+	
 	/* check for trainling . in NS record */
+	ch = zone_info.pri_dns[offset - 1];
 	if (ch == '.')
 		sprintf(tmp, "\t\t\tNS\t%s\n", zone_info.pri_dns);
 	else
 		sprintf(tmp, "\t\t\tNS\t%s.\n", zone_info.pri_dns);
+	
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
 	/* check for secondary DNS record */
 	if ((strcmp(zone_info.sec_dns, "NULL")) == 0) {
-		;
+		;	/* No secondary NS record so do nothing */
 	} else {
 		offset = strlen(zone_info.sec_dns);
+		/* check for trainling . in NS record */
 		ch = zone_info.sec_dns[offset - 1];
 		if (ch == '.') {
 			sprintf(tmp, "\t\t\tNS\t%s\n;\n", zone_info.sec_dns);
@@ -96,6 +105,7 @@ size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 			sprintf(tmp, "\t\t\tNS\t%s.\n;\n", zone_info.sec_dns);
 		}
 	}
+	
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
 	offset = strlen(rout);
@@ -134,7 +144,7 @@ void get_in_addr_string(char *in_addr, char range[])
 	i = 0;
 	tmp = 0;
 	len = strlen(range);
-	len++; /* Got to remember the \0 :) */
+	len++; /* Got to remember the terminating \0 :) */
 	if (!(line = malloc((len) * sizeof(char))))
 		report_error(MALLOC_FAIL, "line");
 	strncpy(line, range, len);
@@ -172,35 +182,44 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	char *queryp, *error_code;
 	const char *dquery, *unix_socket, *error_str;
 	int retval, error;
-	unix_socket = dc->socket;
+	
 	retval = 0;
+	
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "error_code");
+		report_error(MALLOC_FAIL, "error_code in get_rev_id");
 	error_str = error_code; 
 	if (!(queryp = malloc(BUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "queryp");
+		report_error(MALLOC_FAIL, "queryp in get_rev_id");
+	
+	unix_socket = dc->socket;
 	dquery = queryp;
 	sprintf(queryp,
 		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
+
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
-	if (!(mysql_real_connect(&dnsa, dc->host, dc->user, dc->pass, dc->db, dc->port,
-		unix_socket, dc->cliflag )))
+	if (!(mysql_real_connect(&dnsa, dc->host, dc->user, dc->pass,
+		dc->db, dc->port, unix_socket, dc->cliflag )))
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
+	
 	error = mysql_query(&dnsa, dquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0))
 		report_error(MY_QUERY_FAIL, error_str);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
+	
 	snprintf(error_code, CONF_S, "%s", domain);
+	/* Check for only 1 result */
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
-		report_error(NO_DOMAIN, error_str);
+		report_error(NO_DOMAIN, domain);
 	else if (dnsa_rows > 1)
 		report_error(MULTI_DOMAIN, domain);
+	
 	dnsa_row = mysql_fetch_row(dnsa_res);
 	retval = atoi(dnsa_row[0]);
 	return retval;

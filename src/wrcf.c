@@ -29,16 +29,26 @@ int wrcf(dnsa_config_t *dc)
 	int error;
 	char *rout, *dnsa_line, *zonefile, *tmp, *tmp2, *error_code;
 	const char *dnsa_query, *unix_socket, *syscom, *error_str, *domain;
+	
 	domain = "or reverse zone that is valid ";
+	
+	if (!(rout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "rout in wrcf");
+	if (!(dnsa_line = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dnsa_line in wrcf");
+	if (!(tmp = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in wrcf");
+	if (!(tmp2 = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp2 in wrcf");
+	if (!(zonefile = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefile in wrcf");
+	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in wrcf");
+	
 	unix_socket = dc->socket;
-	rout = calloc(FILE_S, sizeof(char));
-	dnsa_line = calloc(TBUFF_S, sizeof(char));
-	tmp = calloc(TBUFF_S, sizeof(char));
-	tmp2 = calloc(TBUFF_S, sizeof(char));
-	zonefile = calloc(CONF_S, sizeof(char));
-	error_code = calloc(RBUFF_S, sizeof(char));
 	error_str = error_code;
 	dnsa_query = dnsa_line;
+	
 	/* Initilaise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
@@ -47,8 +57,10 @@ int wrcf(dnsa_config_t *dc)
 		dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
+	
 	sprintf(dnsa_line, "SELECT net_range FROM rev_zones");
 	error = mysql_query(&dnsa, dnsa_query);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -59,6 +71,7 @@ int wrcf(dnsa_config_t *dc)
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		report_error(NO_DOMAIN, domain);
 	}
+	
 	/* From each DB row, create the config line for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		get_in_addr_string(tmp2, dnsa_row[0]);
@@ -73,9 +86,9 @@ int wrcf(dnsa_config_t *dc)
 			fclose(cnf);
 		}
 	}
+	
 	/* Write the config file.
-	 * Check it and if successful write to real config file 
-	 * and reload bind */
+	 * Check it and if successful reload bind */
 	sprintf(zonefile, "%s%s", dc->bind, dc->rev);
 	if (!(cnf = fopen(zonefile, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing!\n", zonefile);
@@ -83,23 +96,22 @@ int wrcf(dnsa_config_t *dc)
 	} else {
 		fputs(rout, cnf);
 		fclose(cnf);
-		sprintf(tmp, "%s %s", dc->chkc, zonefile);
-		syscom = tmp;
+	}
+	sprintf(tmp, "%s %s", dc->chkc, zonefile);
+	syscom = tmp;
+	error = system(syscom);
+	if ((error != 0)) {
+		fprintf(stderr, "Check of config file failed. Error code %d\n",
+			error);
+	} else {
+		sprintf(tmp, "%s reload", dc->rndc);
 		error = system(syscom);
-		if ((error == 0)) {
-			sprintf(tmp, "%s reload", dc->rndc);
-			error = system(syscom);
-			if ((error == 0)) {
-				fprintf(stderr, "Reload successful\n");
-			} else {
-				fprintf(stderr, "Reload failed with error code %d\n",
-					error);
-			}
-		} else {
-			fprintf(stderr, "Check of config file failed. Error code %d\n",
+		if ((error != 0)) {
+			fprintf(stderr, "Reload failed with error code %d\n",
 				error);
 		}
 	}
+	
 	free(zonefile);
 	free(tmp);
 	free(tmp2);

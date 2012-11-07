@@ -26,15 +26,24 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	int error;
 	char *tmp, *dquery, *error_code, *in_addr;
 	const char *unix_socket, *dnsa_query, *error_str;
-	unix_socket = dc->socket;
-	dquery = calloc(BUFF_S, sizeof(char));
-	tmp = calloc(BUFF_S, sizeof(char));
-	in_addr = calloc(RBUFF_S, sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
+	
+	if (!(dquery = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dquery in drzf");
+	if (!(tmp = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in drzf");
+	if (!(in_addr = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "in_addr in drzf");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in drzf");
+	
 	error_str = error_code;
+	dnsa_query = dquery;
+	unix_socket = dc->socket;
 	rzi = &rev_zone_info;
 	rr = &rev_row;
+	
 	start = 0;
+	
 	/* Initialise MYSQL connection and query */
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", id);
 	if (!(mysql_init(&dnsa))) {
@@ -44,7 +53,6 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
-	dnsa_query = dquery;
 	error = mysql_query(&dnsa, dnsa_query);
 	snprintf(error_code, CONF_S, "%d", error);
 	if ((error != 0)) {
@@ -59,15 +67,17 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	} else if (dnsa_rows > 1) {
 		report_error(MULTI_DOMAIN, domain);
 	}
+	
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_zone_info = fill_rev_zone_data(dnsa_row);
 	}
+	
 	/* Get the reverse zone records */
-	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'",
-		id);
+	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", id);
 	error = mysql_query(&dnsa, dnsa_query);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -75,11 +85,14 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
+	
 	get_in_addr_string(in_addr, rzi->net_range);
 	/* calculate how many tabs we will need to format the output */
+	
 	len = strlen(in_addr);
-	min = len + 1;
+	min = len;
 	max = min;
+	
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_row = get_rev_row(dnsa_row);
 		sprintf(tmp, "%s.%s.", rr->host, in_addr);
@@ -95,10 +108,12 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 		tmp[len + i] = '\t';
 	}
 	tmp[len + i] = '\0';
+	
 	printf("%s\t%d IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
 	       rzi->hostmaster);
 	printf("%d %d %d %d %d\n", rzi->serial, rzi->refresh, rzi->retry,
 	       rzi->expire, rzi->ttl);
+
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_row = get_rev_row(dnsa_row);
@@ -119,10 +134,12 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 		tmp[len + i] = '\t';
 	}
 	tmp[len + i] = '\0';
+
 	printf("%s\t%d IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
 	       rzi->hostmaster);
 	printf("%d %d %d %d %d\n", rzi->serial, rzi->refresh, rzi->retry,
 	       rzi->expire, rzi->ttl);
+
 	free(in_addr);
 	free(dquery);
 	free(tmp);
@@ -140,16 +157,22 @@ int list_rev_zones (dnsa_config_t *dc)
 	int error;
 	char *tmp, *domain, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
+
+	if (!(domain = malloc(TBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in list_rev_zones");
+	if (!(tmp = malloc(FILE_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in list_rev_zones");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in list_rev_zones");
+
 	unix_socket = dc->socket;
+	dnsaquery = tmp;
+	error_str = error_code;
+
+	sprintf(tmp, "SELECT net_range, valid FROM rev_zones");
 	max = len = 0;
 	start = 0;
-	domain = malloc(TBUFF_S * sizeof(char));
-	tmp = malloc(FILE_S * sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
-	error_str = error_code;
-	printf("Listing rev zones from DB %s\n", dc->db);
-	sprintf(tmp, "SELECT net_range, valid FROM rev_zones");
-	dnsaquery = tmp;
+
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
@@ -157,8 +180,10 @@ int list_rev_zones (dnsa_config_t *dc)
 		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
+
 	error = mysql_query(&dnsa, dnsaquery);
 	snprintf(error_code, CONF_S, "%d", error);
+
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -168,6 +193,7 @@ int list_rev_zones (dnsa_config_t *dc)
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
+
 	/* To format the output, we need to know the string length of the
 	 * longest reverse domain */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
@@ -182,8 +208,12 @@ int list_rev_zones (dnsa_config_t *dc)
 	for (i = 0; i < tabs; i++) {
 		domain[len + i] = '\t';
 	}
+
+	printf("Listing rev zones from DB %s\n", dc->db);
 	printf("%s\tValid\n\n", domain);
+
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
+
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);

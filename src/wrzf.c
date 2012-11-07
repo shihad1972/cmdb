@@ -31,16 +31,23 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	int error, i;
 	unsigned int port;
 	unsigned long int client_flag;
-	char *tmp, *rout, *tmp2, *dquery;
+	char *tmp, *rout, *dquery, *domain;
 	const char *unix_socket, *dnsa_query, *syscom;
-	char buff[CONF_S]="";
-	unix_socket = dc->socket;
+	
 	port = 3306;
 	client_flag = 0;
-	dquery = calloc(BUFF_S, sizeof(char));
-	tmp = calloc(BUFF_S, sizeof(char));
-	rout = calloc(FILE_S, sizeof(char));
+	
+	if (!(dquery = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dquery in wrzf");
+	if (!(tmp = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in wrzf");
+	if (!(rout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "rout in wrzf");
+	if (!(domain = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in wrzf");
+	
 	dnsa_query = dquery;
+	unix_socket = dc->socket;
 	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
@@ -53,8 +60,10 @@ int wrzf(int reverse, dnsa_config_t *dc)
 			mysql_error(&dnsa));
 		return MY_CONN_FAIL;
 	}
+	
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);
+	
 	if ((error != 0)) {
 		fprintf(stderr, "Query not successful: error code %d\n", error);
 		return MY_QUERY_FAIL;
@@ -70,14 +79,18 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fprintf(stderr, "Multiple rows found for reverse zone id %d\n", reverse);
 		return MULTI_DOMAIN;
 	}
+	
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_zone_info = fill_rev_zone_data(dnsa_row);
 	}
+	
 	/* Start the output string with the zonefile header */
 	len = create_rev_zone_header(rev_zone_info, rout);
+	
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);
+	
 	if ((error != 0)) {
 		fprintf(stderr, "Rev record query unsuccessful: error code %d\n", error);
 		return MY_QUERY_FAIL;
@@ -90,43 +103,43 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fprintf(stderr, "No reverse records for zone %d\n", reverse);
 		return NO_RECORDS;
 	}
+	
 	/* Add the reverse zone records */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_row = get_rev_row(dnsa_row);
 		add_rev_records(rout, rev_row);
 	}
+	
 	/* Build the config filename from config values */
-	tmp2 = buff;
-	for (i=0; i< CONF_S; i++)	/* zero buffer */
-		*(tmp2 + i) = '\0';
 	len = strlen(dc->dir);
-	strncpy(tmp2, dc->dir, len);
+	strncpy(domain, dc->dir, len);
 	len = strlen(rev_zone_info.net_range);
-	strncat(tmp2, rev_zone_info.net_range, len);
-	len = strlen(rout);
+	strncat(domain, rev_zone_info.net_range, len);
+	
 	/* Write out the reverse zone to the zonefile */
-	if (!(cnf = fopen(buff, "w"))) {
-		fprintf(stderr, "Cannot open config file %s for writing\n", buff);
+	if (!(cnf = fopen(domain, "w"))) {
+		fprintf(stderr, "Cannot open config file %s for writing\n", domain);
 		return FILE_O_FAIL;
 	} else {
 		fputs(rout, cnf);
 		fclose(cnf);
 	}
+	
 	for (i=0; i< CONF_S; i++)	/* zero tmp buffer */
 		*(tmp + i) = '\0';
 	for (i=0; i < FILE_S; i++)	/* zero rout file output buffer */
 		*(rout + i) = '\0';
+	
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
 	get_in_addr_string(tmp, rev_zone_info.net_range);
-	sprintf(rout, "%s %s %s", dc->chkz, tmp, buff);
+	sprintf(rout, "%s %s %s", dc->chkz, tmp, domain);
 	syscom = rout;
 	error = system(syscom);
 	if (error == 0) {
-		printf("check of zone %s ran successfully\n", buff);
+		printf("check of zone %s ran successfully\n", domain);
 		sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d",
 			reverse);
-		printf("%s\n", dnsa_query);
 		error = mysql_query(&dnsa, dnsa_query);
 		dnsa_rows = mysql_affected_rows(&dnsa);
 		if ((dnsa_rows == 1)) {
@@ -143,8 +156,9 @@ int wrzf(int reverse, dnsa_config_t *dc)
 				reverse);
 		}
 	} else {
-		printf("Check of zone %s failed. Error code %d\n", buff, error);
+		printf("Check of zone %s failed. Error code %d\n", domain, error);
 	}
+	
 	mysql_close(&dnsa);
 	free(tmp);
 	free(rout);

@@ -30,10 +30,11 @@ int main(int argc, char *argv[])
 {
 	comm_line_t command;
 	dnsa_config_t dnsa_c, *dc;
-	dc = &dnsa_c;
 	char *domain, *config;
 	int retval, id;
 
+	dc = &dnsa_c;
+	
 	/* Get command line args. See above */
 	retval = parse_command_line(argc, argv, &command);
 	if (retval < 0) {
@@ -41,17 +42,20 @@ int main(int argc, char *argv[])
 			       argv[0]);
 		exit (retval);
 	}
-	/* Get config values from config file */
+	
+	if (!(domain = malloc(CONF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in dnsa.c");
 	if (!(config = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "config");
+		report_error(MALLOC_FAIL, "config in dnsa.c");
+	
+	/* Get config values from config file */	
 	init_config_values(dc);
 	sprintf(config, "/etc/dnsa/dnsa.conf");
 	retval = parse_config_file(dc, config);
 	if (retval < 0) {
 		printf("Config file parsing failed! Using default values\n");
-	}	
-	if (!(domain = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "domain");
+	}
+
 	strncpy(domain, command.domain, CONF_S);
 	if ((strncmp(command.action, "write", COMM_S) == 0)) {
 		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
@@ -108,6 +112,7 @@ int main(int argc, char *argv[])
 			exit(retval);
 		}
 	}
+	
 	free(config);
 	free(domain);
 	exit(0);

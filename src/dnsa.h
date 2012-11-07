@@ -33,21 +33,6 @@ enum {			/* error codes */
 	MALLOC_FAIL = 30
 };
 
-enum {			/* Configuration values from configuration file */
-	CONFIGFILE,
-	DB,
-	USER,
-	PASS,
-	HOST,
-	DIR,
-	BIND,
-	DNSA,
-	REV,
-	RNDC,
-	CHKZ,
-	CHKC		/* Last value used to malloc config array */
-};
-
 typedef struct comm_line_t { /* Hold parsed command line args */
 	char action[COMM_S];
 	char type[COMM_S];

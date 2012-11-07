@@ -25,16 +25,24 @@ int dzf (char *domain, dnsa_config_t *dc)
 	int error;
 	char *tmp, *host, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
-	unix_socket = dc->socket;
-	tmp = malloc(FILE_S * sizeof(char));
-	host = malloc(TBUFF_S * sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
+	
+	if (!(tmp = malloc(FILE_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in dzf");
+	if (!(host = malloc(TBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "host in dzf");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in dzf");
+	
 	error_str = error_code;
+	unix_socket = dc->socket;
 	zi = &zone_info;
 	rd = &row_data;
+	dnsaquery = tmp;
+	
 	min = strlen(domain) + 2;
 	max = min;
 	start = 0;
+	
 	/* Initialise MYSQL connection and query */
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
 	if (!(mysql_init(&dnsa))) {
@@ -44,9 +52,10 @@ int dzf (char *domain, dnsa_config_t *dc)
 		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
-	dnsaquery = tmp;
+	
 	error = mysql_query(&dnsa, dnsaquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -58,12 +67,15 @@ int dzf (char *domain, dnsa_config_t *dc)
 		report_error(NO_DOMAIN, domain);
 	else if (dnsa_rows > 1)
 		report_error(MULTI_DOMAIN, domain);
+	
 	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(dnsa_res)))
 		zone_info = fill_zone_data(my_row);
+	
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
 	error = mysql_query(&dnsa, dnsaquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -73,7 +85,8 @@ int dzf (char *domain, dnsa_config_t *dc)
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(NO_RECORDS, domain);
-	/** Check for the size of the sting $host.$domain. and if bigger than
+	
+	/** Check for the size of the string $host.$domain. and if bigger than
 	 ** the previous largest then save the result. This will go through all
 	 ** the records and then find the largest string. We can then format
 	 ** the output correctly
@@ -93,10 +106,12 @@ int dzf (char *domain, dnsa_config_t *dc)
 		host[len + i] = '\t';
 	}
 	host[len + i] = '\0';
+	
 	printf("%s\t%d\tIN\tSOA\t%s. hostmaster.%s. ",
 	       host, zi->ttl, zi->pri_dns, zi->name);
 	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
+
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(my_row);
@@ -115,6 +130,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 			       zi->ttl, rd->type, rd->pri, rd->dest);
 		}
 	}
+	
 	sprintf(host, "%s.", zi->name);
 	len = strlen(host);
 	tabs = (max / 8) - (len / 8);
@@ -122,10 +138,12 @@ int dzf (char *domain, dnsa_config_t *dc)
 		host[len + i] = '\t';
 	}
 	host[len + i] = '\0';
+	
 	printf("%s\t%d\tIN\tSOA\t%s. hostmaster.%s. ",
 	       host, zi->ttl, zi->pri_dns, zi->name);
 	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
+
 	free(tmp);
 	free(host);
 	free(error_code);
@@ -142,16 +160,24 @@ int list_zones (dnsa_config_t *dc)
 	int error;
 	char *tmp, *domain, *error_code;
 	const char *unix_socket, *dnsaquery, *error_str;
+
+	if (!(tmp = malloc(FILE_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in list_zones");
+	if (!(domain = malloc(TBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in list_zones");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in list_zones");
+	
 	unix_socket = dc->socket;
+	error_str = error_code;
+	dnsaquery = tmp;
+	
 	max = len = 0;
 	start = 0;
-	tmp = malloc(FILE_S * sizeof(char));
-	domain = malloc(TBUFF_S * sizeof(char));
-	error_code = malloc(RBUFF_S * sizeof(char));
-	error_str = error_code;
+	
 	printf("Listing zones from database %s\n", dc->db);
 	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
-	dnsaquery = tmp;
+	
 	if (!(mysql_init(&dnsa))) {
 		report_error(MY_INIT_FAIL, error_str);
 	}
@@ -159,8 +185,10 @@ int list_zones (dnsa_config_t *dc)
 		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
 		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
 	}
+	
 	error = mysql_query(&dnsa, dnsaquery);
 	snprintf(error_code, CONF_S, "%d", error);
+	
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
@@ -170,8 +198,10 @@ int list_zones (dnsa_config_t *dc)
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
+	
 	/* To format the output, we need to know the string length of the
 	 * longest domain */
+	
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);
@@ -185,8 +215,11 @@ int list_zones (dnsa_config_t *dc)
 		domain[len + i] = '\t';
 	}
 	domain[len + i] = '\0';
+	
 	printf("%s\tValid\n\n", domain);
+	
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
+	
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);

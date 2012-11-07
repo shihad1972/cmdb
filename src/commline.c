@@ -19,6 +19,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	int i, retval;
 	
 	retval = 0;
+
 	strncpy(comp->action, "NULL", COMM_S);
 	strncpy(comp->type, "NULL", COMM_S);
 	strncpy(comp->domain, "NULL", CONF_S);
@@ -64,12 +65,15 @@ int parse_config_file(dnsa_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	size_t len;
-	char buff[CONF_S] = "";
-	char port[CONF_S] = "";
 	int retval;
 	unsigned long int portno;
+
+	char buff[CONF_S] = "";
+	char port[CONF_S] = "";
+
 	dc->port = 3306;
 	dc->cliflag = 0;
+
 	if (!(cnf = fopen(config, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", config);
 		fprintf(stderr, "Using default values\n");
@@ -129,12 +133,17 @@ int parse_config_file(dnsa_config_t *dc, char *config)
 		retval = 0;
 		fclose(cnf);
 	}
+	
+	/* We need to check the value of portnop before we convert to int.
+	 * Obviously we cannot have a port > 65535
+	 */
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
 		retval = -1;
 	} else {
 		dc->port = (unsigned int) portno;
 	}
+	
 	/* The next 2 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
