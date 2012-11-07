@@ -36,11 +36,11 @@ fill_zone_data(MYSQL_ROW my_row);
 record_row_t
 fill_record_data(MYSQL_ROW my_row);
 /* Create the header of the DNS zone in a string; return size */
-size_t
+void
 create_zone_header(char *output, zone_info_t);
-/* Add the MX records to the header string; return size */
-size_t
-add_mx_to_header(char *output, size_t offset, MYSQL_ROW results);
+/* Add the MX records to the header string */
+void
+add_mx_to_header(char *output, MYSQL_ROW results);
 /* Add the individual DNS Records to the zonefile string; return size */
 size_t
 add_records(record_row_t, char *output, size_t offset);

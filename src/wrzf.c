@@ -17,6 +17,7 @@
 #include <string.h>
 #include "dnsa.h"
 #include "reverse.h"
+#include "mysqlfunc.h"
 
 int wrzf(int reverse, dnsa_config_t *dc)
 {
@@ -29,7 +30,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	my_ulonglong dnsa_rows;
 	int error, i;
 	char *zonefn, *rout, *dquery, *domain;
-	const char *unix_socket, *dnsa_query, *net_range;
+	const char *dnsa_query, *net_range;
 	
 	
 	if (!(dquery = calloc(BUFF_S, sizeof(char))))
@@ -42,21 +43,11 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "domain in wrzf");
 	
 	dnsa_query = dquery;
-	unix_socket = dc->socket;
 	rzi = &rev_zone_info;
 	net_range = rzi->net_range;
 	
 	/* Initialise MYSQL connection and query */
-	if (!(mysql_init(&dnsa))) {
-		fprintf(stderr, "Cannot init. Out of memory?\n");
-		return MY_INIT_FAIL;
-	}
-	if (!(mysql_real_connect(&dnsa,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		fprintf(stderr, "Connect failed. Error: %s\n",
-			mysql_error(&dnsa));
-		return MY_CONN_FAIL;
-	}
+	dnsa_mysql_init(dc, &dnsa);
 	
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);

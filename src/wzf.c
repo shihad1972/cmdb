@@ -18,6 +18,7 @@
 #include <string.h>
 #include "dnsa.h"
 #include "forward.h"
+#include "mysqlfunc.h"
 
 int wzf (char *domain, dnsa_config_t *dc)
 {
@@ -53,13 +54,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	error_str = error_code;
 	
 	/* Initialise MYSQL connection and query */
-	if (!(mysql_init(&shihad))) {
-		report_error(MY_INIT_FAIL, mysql_error(&shihad));
-	}
-	if (!(mysql_real_connect(&shihad, dc->host, dc->user, dc->pass,
-		dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&shihad));
-	}
+	dnsa_mysql_init(dc, &shihad);
 	
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
 	error = mysql_query(&shihad, shiquery);
@@ -85,7 +80,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	}
 	
 	/* Create the zone file header */
-	offset = create_zone_header(zout, zone_info);
+	create_zone_header(zout, zone_info);
 	
 	/* Check for MX records and add them to the zone */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zone_info.id);
@@ -95,25 +90,28 @@ int wzf (char *domain, dnsa_config_t *dc)
 	if ((error != 0)) {
 		report_error(MY_QUERY_FAIL, error_str);
 	}
-	if (!(shihad_res = mysql_store_result(&shihad)))
-		fprintf(stderr, "No result set?\n");
+	if (!(shihad_res = mysql_store_result(&shihad))) {
+		snprintf(error_code, CONF_S, "%s", mysql_error(&shihad));
+		report_error(MY_STORE_FAIL, error_str);
+	}
 	if (((shihad_rows = mysql_num_rows(shihad_res)) == 0)) {
 		fprintf(stderr, "No MX records for domain %s\n", domain);
 	} else {
 		while ((my_row = mysql_fetch_row(shihad_res))) {
-			offset = add_mx_to_header(zout, offset, my_row);
+			add_mx_to_header(zout, my_row);
 		}
 	}
 	sprintf(tmp, "$ORIGIN\t%s.\n", zone_info.name);
+	len = strlen(tmp);
+	strncat(zout, tmp, len);
 	
 	/** zout2 will be used to write the real zone file.
 	 ** Cannot have A records for the NS and MX added twice
 	 ** so save the buffer into zout2 and use that
 	 */
-	len = strlen(tmp);
-	strncat(zout, tmp, len);
-	offset += len;
+	offset = strlen(zout);
 	strncpy(zout2, zout, offset);
+	
 	/** We need to add the A records for the DNS servers and MX servers
 	 ** Cannot do this in the previous 2 functions as we need a new query
 	 ** This is so we can can check the zone header for errors. We can use
@@ -128,7 +126,6 @@ int wzf (char *domain, dnsa_config_t *dc)
 	} else {
 		sprintf	(tmp, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'",
 			 zone_info.id, thost);
-		shiquery = tmp;
 		error = mysql_query(&shihad, shiquery);
 		if ((error != 0)) {
 			fprintf(stderr, "Query not successful: error code %d\n",
@@ -142,9 +139,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 			offset = add_records(row_data, zout, offset);	
 		}
 	}
-	if ((strcmp(zone_info.sec_dns, "NULL")) == 0) { /* Do we have a secondary DNS server? */
-		;
-	} else {
+	if (!(strcmp(zone_info.sec_dns, "NULL")) == 0) { /* Do we have a secondary DNS server? */
 		sprintf(c, ".");
 		sprintf(tmp2, "%s", zone_info.sec_dns);
 		strtok(tmp2, c); /* Grab up to first . */

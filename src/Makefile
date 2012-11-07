@@ -13,7 +13,7 @@ LIBS = -lmysqlclient
 
 all:	dnsa
 
-dnsa:	dnsa.o command.o wzf.o wrzf.o wrz.o wfz.o errors.o dzf.o drzf.o wcf.o wrcf.o
+dnsa:	dnsa.o command.o wzf.o wrzf.o wrz.o wfz.o errors.o dzf.o drzf.o wcf.o wrcf.o dnsa_mysql.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 dnsa.o:	dnsa.c dnsa.h forward.h reverse.h
@@ -39,6 +39,9 @@ wrz.o:	rev_zone.c dnsa.h reverse.h
 
 wcf.o:	wcf.c forward.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $< 
+
+dnsa_mysql.o:	mysqlfunc.c mysqlfunc.h dnsa.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 wrcf.o:	wrcf.c reverse.h dnsa.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
