@@ -125,10 +125,22 @@ rev_record_row_t get_rev_row (MYSQL_ROW my_row)
 void add_rev_records(char *rout, rev_record_row_t my_row)
 {
 	char *tmp;
-	tmp = malloc(RBUFF_S * sizeof(char));
+	if (!(tmp = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in add_rev_records");
 	sprintf(tmp, "%s\t\tPTR\t%s\n", my_row.host, my_row.dest);
 	strncat(rout, tmp, RBUFF_S);
 	free(tmp);
+}
+
+void create_rev_zone_filename (char *dom, const char *nr, dnsa_config_t *dc)
+{
+	size_t len;
+	
+	len = strlen(dc->dir);
+	strncpy(dom, dc->dir, len);
+	len = strlen(nr);
+	strncat(dom, nr, len);
+	
 }
 /** This function needs proper testing on range other than /24. This will most likely not
  ** be able to handle anything not on a /8, /16, or /24 boundary.

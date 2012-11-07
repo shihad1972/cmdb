@@ -49,6 +49,9 @@ get_in_addr_string(char *in_addr, char range[]);
 /* Return the ID of the reverse domain; -1 indicates error */
 int
 get_rev_id(char *domain, dnsa_config_t *dc);
+/* Create the string for the reverse zonefile filename */
+void 
+create_rev_zone_filename (char *domain, const char *net_range, dnsa_config_t *dc);
 /* Write out the reverse zone file */
 int 
 wrzf (int id, dnsa_config_t *dc);

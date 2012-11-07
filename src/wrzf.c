@@ -25,14 +25,14 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
 	size_t len;
-	rev_zone_info_t rev_zone_info;
+	rev_zone_info_t rev_zone_info, *rzi;
 	rev_record_row_t rev_row;
 	my_ulonglong dnsa_rows;
 	int error, i;
 	unsigned int port;
 	unsigned long int client_flag;
 	char *tmp, *rout, *dquery, *domain;
-	const char *unix_socket, *dnsa_query, *syscom;
+	const char *unix_socket, *dnsa_query, *syscom, *net_range;
 	
 	port = 3306;
 	client_flag = 0;
@@ -48,6 +48,8 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	
 	dnsa_query = dquery;
 	unix_socket = dc->socket;
+	rzi = &rev_zone_info;
+	net_range = rzi->net_range;
 	
 	/* Initialise MYSQL connection and query */
 	if (!(mysql_init(&dnsa))) {
@@ -111,10 +113,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	}
 	
 	/* Build the config filename from config values */
-	len = strlen(dc->dir);
-	strncpy(domain, dc->dir, len);
-	len = strlen(rev_zone_info.net_range);
-	strncat(domain, rev_zone_info.net_range, len);
+	create_rev_zone_filename(domain, net_range, dc);
 	
 	/* Write out the reverse zone to the zonefile */
 	if (!(cnf = fopen(domain, "w"))) {
@@ -132,7 +131,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
-	get_in_addr_string(tmp, rev_zone_info.net_range);
+	get_in_addr_string(tmp, rzi->net_range);
 	sprintf(rout, "%s %s %s", dc->chkz, tmp, domain);
 	syscom = rout;
 	error = system(syscom);

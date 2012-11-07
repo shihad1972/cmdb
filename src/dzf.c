@@ -1,4 +1,4 @@
-/* drf.c:
+/* dzf.c:
  * 
  * Contains functions to display the forward zones and list the
  * forward zones contained in the database. 
