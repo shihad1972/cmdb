@@ -35,7 +35,7 @@ typedef struct rev_record_row_t { /* Hold dns record */
 rev_zone_info_t
 fill_rev_zone_data(MYSQL_ROW my_row);
 /* Return the size of the string with the zone header */
-size_t
+void
 create_rev_zone_header(rev_zone_info_t zone_info, char *rout);
 /* Return data of one reverse (PTR) record */
 rev_record_row_t
@@ -52,6 +52,9 @@ get_rev_id(char *domain, dnsa_config_t *dc);
 /* Create the string for the reverse zonefile filename */
 void 
 create_rev_zone_filename (char *domain, const char *net_range, dnsa_config_t *dc);
+/* Check the rev zone for errors */
+void
+check_rev_zone(char *filename, char *domain, dnsa_config_t *dc);
 /* Write out the reverse zone file */
 int 
 wrzf (int id, dnsa_config_t *dc);

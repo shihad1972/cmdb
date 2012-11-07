@@ -30,6 +30,7 @@ enum {			/* error codes */
 	MY_QUERY_FAIL = 12,
 	MY_STORE_FAIL = 13,
 	FILE_O_FAIL = 20,
+	CHKZONE_FAIL = 21,
 	MALLOC_FAIL = 30
 };
 

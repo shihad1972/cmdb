@@ -24,23 +24,18 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
-	size_t len;
 	rev_zone_info_t rev_zone_info, *rzi;
 	rev_record_row_t rev_row;
 	my_ulonglong dnsa_rows;
 	int error, i;
-	unsigned int port;
-	unsigned long int client_flag;
-	char *tmp, *rout, *dquery, *domain;
-	const char *unix_socket, *dnsa_query, *syscom, *net_range;
+	char *zonefn, *rout, *dquery, *domain;
+	const char *unix_socket, *dnsa_query, *net_range;
 	
-	port = 3306;
-	client_flag = 0;
 	
 	if (!(dquery = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "dquery in wrzf");
-	if (!(tmp = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "tmp in wrzf");
+	if (!(zonefn = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefn in wrzf");
 	if (!(rout = calloc(FILE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "rout in wrzf");
 	if (!(domain = calloc(CONF_S, sizeof(char))))
@@ -88,7 +83,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	}
 	
 	/* Start the output string with the zonefile header */
-	len = create_rev_zone_header(rev_zone_info, rout);
+	create_rev_zone_header(rev_zone_info, rout);
 	
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);
@@ -124,42 +119,33 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fclose(cnf);
 	}
 	
-	for (i=0; i< CONF_S; i++)	/* zero tmp buffer */
-		*(tmp + i) = '\0';
 	for (i=0; i < FILE_S; i++)	/* zero rout file output buffer */
 		*(rout + i) = '\0';
 	
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
-	get_in_addr_string(tmp, rzi->net_range);
-	sprintf(rout, "%s %s %s", dc->chkz, tmp, domain);
-	syscom = rout;
-	error = system(syscom);
-	if (error == 0) {
-		printf("check of zone %s ran successfully\n", domain);
-		sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d",
-			reverse);
-		error = mysql_query(&dnsa, dnsa_query);
-		dnsa_rows = mysql_affected_rows(&dnsa);
-		if ((dnsa_rows == 1)) {
-			fprintf(stderr, "Rev Zone id %d set to valid in DB\n", reverse);
-		} else if ((dnsa_rows == 0)) {
-			if ((error == 0)) {
-				fprintf(stderr, "Rev zone id %d already valid in DB\n", reverse);
-			} else {
-				fprintf(stderr, "Rev Zone id %d not validated in DB\n", reverse);
-				fprintf(stderr, "Error code from query is: %d\n", error);
-			}
+	get_in_addr_string(zonefn, rzi->net_range);
+	check_rev_zone(zonefn, domain, dc);
+
+	sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d", reverse);
+	error = mysql_query(&dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(&dnsa);
+	if ((dnsa_rows == 1)) {
+		fprintf(stderr, "Rev Zone id %d set to valid in DB\n", reverse);
+	} else if ((dnsa_rows == 0)) {
+		if ((error == 0)) {
+			fprintf(stderr, "Rev zone id %d already valid in DB\n", reverse);
 		} else {
-			fprintf(stderr, "More than one zone update?? Multiple ID's %d??\n",
-				reverse);
+			fprintf(stderr, "Rev Zone id %d not validated in DB\n", reverse);
+			fprintf(stderr, "Error code from query is: %d\n", error);
 		}
 	} else {
-		printf("Check of zone %s failed. Error code %d\n", domain, error);
+		fprintf(stderr, "More than one zone update?? Multiple ID's %d??\n",
+			reverse);
 	}
 	
 	mysql_close(&dnsa);
-	free(tmp);
+	free(zonefn);
 	free(rout);
 	free(dquery);
 	return 0;

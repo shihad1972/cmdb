@@ -58,7 +58,7 @@ rev_zone_info_t fill_rev_zone_data(MYSQL_ROW my_row)
 	return my_zone;
 }
 
-size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
+void create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 {
 	char *tmp;
 	char ch;
@@ -110,7 +110,25 @@ size_t create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 	strncat(rout, tmp, offset);
 	offset = strlen(rout);
 	free(tmp);
-	return offset;
+}
+
+void check_rev_zone(char *filename, char *domain, dnsa_config_t *dc)
+{
+	char *command;
+	const char *syscom;
+	int error;
+	
+	if (!(command = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "command in check_rev_zone");
+	syscom = command;
+	
+	sprintf(command, "%s %s %s", dc->chkz, filename, domain);
+	error = system(syscom);
+	if (error != 0)
+		report_error(CHKZONE_FAIL, domain);
+	else
+		printf("check of zone %s ran successfully\n", domain);
+	free(command);
 }
 
 rev_record_row_t get_rev_row (MYSQL_ROW my_row)

@@ -71,6 +71,10 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "Unable to open file %s\n", errstr);
 			exit(FILE_O_FAIL);
 			break;
+		case CHKZONE_FAIL:
+			fprintf(stderr, "Checking the zone %s failed\n", errstr);
+			exit(CHKZONE_FAIL);
+			break;
 		case MALLOC_FAIL:
 			fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
 			exit(MALLOC_FAIL);

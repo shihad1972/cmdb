@@ -30,14 +30,9 @@ int wzf (char *domain, dnsa_config_t *dc)
 	size_t offset, len;
 	my_ulonglong shihad_rows;
 	int error;
-	unsigned int port;
-	unsigned long int client_flag;
 	char *zout, *zout2, *tmp, *tmp2, *c, *zonefilename, *thost, *error_code;
 	const char *unix_socket, *shiquery, *system_command, *error_str;
-	
-	port = 3306;
-	client_flag = 0;
-	
+
 	if (!(zout = malloc(FILE_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "zout in wzf");
 	if (!(zout2 = malloc(FILE_S * sizeof(char))))
