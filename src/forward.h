@@ -35,15 +35,27 @@ fill_zone_data(MYSQL_ROW my_row);
 /* Return struct containing DNS Record data */
 record_row_t
 fill_record_data(MYSQL_ROW my_row);
-/* Create the header of the DNS zone in a string; return size */
+/* Create the header of the DNS zone in a string */
 void
 create_zone_header(char *output, zone_info_t);
 /* Add the MX records to the header string */
 void
 add_mx_to_header(char *output, MYSQL_ROW results);
+/* Add the A records for the NS servers to the zonefile */
+void
+add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out);
+/* Add the A records for the MX servers to the zonefile; return no added */
+int
+add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out);
 /* Add the individual DNS Records to the zonefile string; return size */
 size_t
 add_records(record_row_t, char *output, size_t offset);
+/* Check forward zone file for errors */
+void
+check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc);
+/* Write fwd zonefile to filesystem */
+void
+write_fwd_zonefile(char *filename, char *output);
 /* Write out the forward zone file */
 int
 wzf (char *domain, dnsa_config_t *dc);

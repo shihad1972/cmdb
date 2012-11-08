@@ -33,3 +33,21 @@ void dnsa_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
 	
 	free(error_code);
 }
+
+void dnsa_mysql_query(MYSQL *mydnsa, const char *query)
+{
+	int error;
+	const char *error_string;
+	char *error_code;
+	
+	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in dnsa_mysql_init");
+	
+	error_string = error_code;
+	
+	error = mysql_query(mydnsa, query);
+	if ((error != 0)) {
+		report_error(MY_QUERY_FAIL, error_string);
+	}
+	free(error_code);
+}

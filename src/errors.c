@@ -32,11 +32,11 @@ void report_error(int error, const char *errstr)
 			exit(MULTI_DOMAIN);
 			break;
 		case NO_DELIM:
-			fprintf(stderr, "No delimiter found in string\n");
+			fprintf(stderr, "No delimiter %s found in string\n", errstr);
 			exit(NO_DELIM);
 			break;
 		case NO_RECORDS:
-			fprintf(stderr, "No records found for the zone\n");
+			fprintf(stderr, "No records found for the zone %s\n", errstr);
 			exit(NO_RECORDS);
 			break;
 		case WRONG_ACTION:
