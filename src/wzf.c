@@ -59,6 +59,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	my_row = mysql_fetch_row(dnsa_res);
 	zone_info = fill_zone_data(my_row);
 	create_zone_header(zout, zone_info);
+	
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
 	dnsa_mysql_query(&dnsa, dnsa_query);
 	
@@ -93,6 +94,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	write_fwd_zonefile(zonefilename, zout);
 	check_fwd_zone(zonefilename, zi->name, dc);
 	remove(zonefilename);
+	
 	/* Add the rest of the records */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'A' OR zone = %d AND type = 'CNAME'", zi->id, zi->id);
 	dnsa_mysql_query(&dnsa, dnsa_query);

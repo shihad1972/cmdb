@@ -64,7 +64,7 @@ void report_error(int error, const char *errstr)
 			exit(MY_QUERY_FAIL);
 			break;
 		case MY_STORE_FAIL:
-			fprintf(stderr, "Unable to store MySQL result set\n");
+			fprintf(stderr, "Unable to store MySQL result set: %s\n", errstr);
 			exit(MY_STORE_FAIL);
 			break;
 		case FILE_O_FAIL:

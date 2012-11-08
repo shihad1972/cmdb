@@ -51,15 +51,10 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	dnsa_mysql_init(dc, &dnsa);
 	
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
-	error = mysql_query(&dnsa, dnsa_query);
+	dnsa_mysql_query(&dnsa, dnsa_query);
 	
-	if ((error != 0)) {
-		fprintf(stderr, "Query not successful: error code %d\n", error);
-		return MY_QUERY_FAIL;
-	}
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
-		fprintf(stderr, "Cannot store result set\n");
-		return MY_STORE_FAIL;
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		fprintf(stderr, "Reverse zone id %d not found\n", reverse);
