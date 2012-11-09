@@ -84,6 +84,9 @@ int wzf (char *domain, dnsa_config_t *dc)
 	
 	add_ns_A_records_to_header(zi, dc, zout);
 	error = add_MX_A_records_to_header(zi, dc, zout);
+	if (error < 0) {
+		; /* No MX records */
+	}
 
 	/* Check zonefile */
 	sprintf(zonefilename, "%sdb1.%s", dc->dir, zi->name);

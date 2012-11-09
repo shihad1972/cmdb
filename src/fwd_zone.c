@@ -51,45 +51,49 @@ zone_info_t fill_zone_data(MYSQL_ROW my_row)
 /* Write out zone file header */
 void create_zone_header(char *zout, zone_info_t zone_info)
 {
+	zone_info_t *zi;
 	char *tmp;
 	size_t offset;
 	offset = 0;
-	tmp = malloc(RBUFF_S * sizeof(char));
-	sprintf(tmp, "$ORIGIN .\n$TTL %d\n", zone_info.ttl);
+	if (!(tmp = malloc(TBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in create_zone_header");
+	zi = &zone_info;
+	sprintf(tmp, "$ORIGIN .\n$TTL %d\n", zi->ttl);
 	offset = strlen(tmp);
 	strncpy(zout, tmp, offset);
-	if (strlen(zone_info.name) < 16) {
-		sprintf(tmp, "%s\t\tIN SOA\t", zone_info.name);
+	if (strlen(zi->name) < 16) {
+		sprintf(tmp, "%s\t\tIN SOA\t", zi->name);
 		offset = strlen(tmp);
 		strncat(zout, tmp , offset);
 	} else {
-		sprintf(tmp, "%s\tIN SOA\t", zone_info.name);
+		sprintf(tmp, "%s\tIN SOA\t", zi->name);
 		offset = strlen(tmp);
 		strncat(zout, tmp , offset);
 	}
-	sprintf(tmp, "%s. hostmaster.%s. (\n\t\t\t", zone_info.pri_dns, zone_info.name);
+	sprintf(tmp, "%s. hostmaster.%s. (\n\t\t\t", zi->pri_dns, zi->name);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t; Serial\n\t\t\t", zone_info.serial);
+	sprintf(tmp, "%d\t; Serial\n\t\t\t", zi->serial);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Refresh\n\t\t\t", zone_info.refresh);
+	sprintf(tmp, "%d\t\t; Refresh\n\t\t\t", zi->refresh);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Retry\n\t\t\t", zone_info.retry);
+	sprintf(tmp, "%d\t\t; Retry\n\t\t\t", zi->retry);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Expire\n\t\t\t", zone_info.expire);
+	sprintf(tmp, "%d\t\t; Expire\n\t\t\t", zi->expire);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d)\t\t; Negative Cache TTL\n\t\t\tNS\t\t%s.\n", zone_info.ttl, zone_info.pri_dns);
+	sprintf(tmp, "%d)\t\t; Negative Cache TTL\n\t\t\tNS\t\t%s.\n", zi->ttl, zi->pri_dns);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	if (!(strcmp(zone_info.sec_dns, "NULL")) == 0) {
-		sprintf(tmp, "\t\t\tNS\t\t%s.\n", zone_info.sec_dns);
+	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {
+		sprintf(tmp, "\t\t\tNS\t\t%s.\n", zi->sec_dns);
 		offset = strlen(tmp);
 		strncat(zout, tmp, offset);
 	}
+	free(tmp);
 }
 /* add MX records to zone file header */
 void add_mx_to_header(char *output,  MYSQL_ROW results)
