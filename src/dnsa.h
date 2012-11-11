@@ -42,7 +42,7 @@ enum {			/* action codes */
 	LIST_ZONES = 4
 };
 
-enum {			/* zone types; use NONE from above */
+enum {			/* zone types; use NONE from action codes */
 	FORWARD_ZONE = 1,
 	REVERSE_ZONE = 2
 };
