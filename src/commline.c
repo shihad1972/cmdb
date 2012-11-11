@@ -27,14 +27,14 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	
 	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
-			comp->action = DISPLAY;
+			comp->action = DISPLAY_ZONE;
 		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
-			comp->action = WRITE;
+			comp->action = WRITE_ZONE;
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
-			comp->action = CONFIGURE;
+			comp->action = CONFIGURE_ZONE;
 			strncpy(comp->domain, "none", CONF_S);
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
-			comp->action = LISTZ;
+			comp->action = LIST_ZONES;
 			strncpy(comp->domain, "all", CONF_S);
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			strncpy(comp->type, "forward", COMM_S);

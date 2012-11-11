@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	}
 
 	strncpy(domain, cm->domain, CONF_S);
-	if (cm->action == WRITE) {
+	if (cm->action == WRITE_ZONE) {
 		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			wzf(domain, dc);
 		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 			       cm->type);
 			exit(retval);
 		}
-	} else if (cm->action == DISPLAY) {
+	} else if (cm->action == DISPLAY_ZONE) {
 		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			dzf(domain, dc);
 		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 			       cm->type);
 			exit(retval);
 		}
-	} else if (cm->action == CONFIGURE) {
+	} else if (cm->action == CONFIGURE_ZONE) {
 		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			wcf(dc);
 		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 			       cm->type);
 			exit(retval);
 		}
-	} else if (cm->action == LISTZ) {
+	} else if (cm->action == LIST_ZONES) {
 		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			list_zones(dc);
 		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {

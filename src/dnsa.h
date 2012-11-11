@@ -36,10 +36,10 @@ enum {			/* error codes */
 
 enum {			/* action codes */
 	NONE = 0,
-	WRITE = 1,
-	DISPLAY = 2,
-	CONFIGURE = 3,
-	LISTZ = 4
+	WRITE_ZONE = 1,
+	DISPLAY_ZONE = 2,
+	CONFIGURE_ZONE = 3,
+	LIST_ZONES = 4
 };
 
 typedef struct comm_line_t { /* Hold parsed command line args */
