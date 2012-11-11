@@ -42,9 +42,14 @@ enum {			/* action codes */
 	LIST_ZONES = 4
 };
 
+enum {			/* zone types; use NONE from above */
+	FORWARD_ZONE = 1,
+	REVERSE_ZONE = 2
+};
+
 typedef struct comm_line_t { /* Hold parsed command line args */
 	short int action;
-	char type[COMM_S];
+	short int type;
 	char domain[CONF_S];
 	char config[CONF_S];
 } comm_line_t;

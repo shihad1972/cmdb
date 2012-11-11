@@ -21,7 +21,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	retval = 0;
 
 	comp->action = NONE;
-	strncpy(comp->type, "NULL", COMM_S);
+	comp->type = NONE;
 	strncpy(comp->domain, "NULL", CONF_S);
 	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
 	
@@ -37,9 +37,9 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 			comp->action = LIST_ZONES;
 			strncpy(comp->domain, "all", CONF_S);
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
-			strncpy(comp->type, "forward", COMM_S);
+			comp->type = FORWARD_ZONE;
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {
-			strncpy(comp->type, "reverse", COMM_S);
+			comp->type = REVERSE_ZONE;
 		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
 			i++;
 			if (i >= argc) 
@@ -53,7 +53,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	
 	if (comp->action == NONE)
 		retval = -1;
-	else if ((strncmp(comp->type, "NULL", COMM_S) == 0))
+	else if (comp->type == NONE)
 		retval = -1;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = -1;

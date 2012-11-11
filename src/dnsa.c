@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
 
 	strncpy(domain, cm->domain, CONF_S);
 	if (cm->action == WRITE_ZONE) {
-		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
+		if (cm->type == FORWARD_ZONE) {
 			wzf(domain, dc);
-		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
+		} else if (cm->type == REVERSE_ZONE) {
 			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
@@ -70,14 +70,14 @@ int main(int argc, char *argv[])
 			}
 		} else {
 			retval = WRONG_TYPE;
-			printf("We have an invalid type: %s\n",
+			printf("We have an invalid type: %d\n",
 			       cm->type);
 			exit(retval);
 		}
 	} else if (cm->action == DISPLAY_ZONE) {
-		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
+		if (cm->type == FORWARD_ZONE) {
 			dzf(domain, dc);
-		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
+		} else if (cm->type == REVERSE_ZONE) {
 			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
@@ -86,29 +86,29 @@ int main(int argc, char *argv[])
 			}
 		} else {
 			retval = WRONG_TYPE;
-			printf("We have an invalid type: %s\n",
+			printf("We have an invalid type: %d\n",
 			       cm->type);
 			exit(retval);
 		}
 	} else if (cm->action == CONFIGURE_ZONE) {
-		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
+		if (cm->type == FORWARD_ZONE) {
 			wcf(dc);
-		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
+		} else if (cm->type == REVERSE_ZONE) {
 			wrcf(dc);
 		} else {
 			retval = WRONG_TYPE;
-			printf("We have an invalid type: %s\n",
+			printf("We have an invalid type: %d\n",
 			       cm->type);
 			exit(retval);
 		}
 	} else if (cm->action == LIST_ZONES) {
-		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
+		if (cm->type == FORWARD_ZONE) {
 			list_zones(dc);
-		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
+		} else if (cm->type == REVERSE_ZONE) {
 			list_rev_zones(dc);
 		} else {
 			retval = WRONG_TYPE;
-			printf("We have an invalid type: %s\n",
+			printf("We have an invalid type: %d\n",
 			       cm->type);
 			exit(retval);
 		}
