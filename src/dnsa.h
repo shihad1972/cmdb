@@ -34,8 +34,16 @@ enum {			/* error codes */
 	MALLOC_FAIL = 30
 };
 
+enum {			/* action codes */
+	NONE = 0,
+	WRITE = 1,
+	DISPLAY = 2,
+	CONFIGURE = 3,
+	LISTZ = 4
+};
+
 typedef struct comm_line_t { /* Hold parsed command line args */
-	char action[COMM_S];
+	short int action;
 	char type[COMM_S];
 	char domain[CONF_S];
 	char config[CONF_S];

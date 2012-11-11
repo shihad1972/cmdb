@@ -28,12 +28,13 @@
 
 int main(int argc, char *argv[])
 {
-	comm_line_t command;
+	comm_line_t command, *cm;
 	dnsa_config_t dnsa_c, *dc;
 	char *domain, *config;
 	int retval, id;
 
 	dc = &dnsa_c;
+	cm = &command;
 	
 	/* Get command line args. See above */
 	retval = parse_command_line(argc, argv, &command);
@@ -56,11 +57,11 @@ int main(int argc, char *argv[])
 		printf("Config file parsing failed! Using default values\n");
 	}
 
-	strncpy(domain, command.domain, CONF_S);
-	if ((strncmp(command.action, "write", COMM_S) == 0)) {
-		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+	strncpy(domain, cm->domain, CONF_S);
+	if (cm->action == WRITE) {
+		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			wzf(domain, dc);
-		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
 			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
@@ -70,13 +71,13 @@ int main(int argc, char *argv[])
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
-			       command.type);
+			       cm->type);
 			exit(retval);
 		}
-	} else if ((strncmp(command.action, "display", COMM_S) == 0)) {
-		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+	} else if (cm->action == DISPLAY) {
+		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			dzf(domain, dc);
-		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
 			id = get_rev_id(domain, dc);
 			if (id < 0) {
 				report_error(NO_DOMAIN, domain);
@@ -86,29 +87,29 @@ int main(int argc, char *argv[])
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
-			       command.type);
+			       cm->type);
 			exit(retval);
 		}
-	} else if ((strncmp(command.action, "config", COMM_S) == 0)) {
-		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+	} else if (cm->action == CONFIGURE) {
+		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			wcf(dc);
-		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
 			wrcf(dc);
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
-			       command.type);
+			       cm->type);
 			exit(retval);
 		}
-	} else if ((strncmp(command.action, "list", COMM_S) == 0)) {
-		if ((strncmp(command.type, "forward", COMM_S) == 0)) {
+	} else if (cm->action == LISTZ) {
+		if ((strncmp(cm->type, "forward", COMM_S) == 0)) {
 			list_zones(dc);
-		} else if ((strncmp(command.type, "reverse", COMM_S) == 0)) {
+		} else if ((strncmp(cm->type, "reverse", COMM_S) == 0)) {
 			list_rev_zones(dc);
 		} else {
 			retval = WRONG_TYPE;
 			printf("We have an invalid type: %s\n",
-			       command.type);
+			       cm->type);
 			exit(retval);
 		}
 	}

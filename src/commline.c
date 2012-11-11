@@ -20,21 +20,21 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	
 	retval = 0;
 
-	strncpy(comp->action, "NULL", COMM_S);
+	comp->action = NONE;
 	strncpy(comp->type, "NULL", COMM_S);
 	strncpy(comp->domain, "NULL", CONF_S);
 	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
 	
 	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
-			strncpy(comp->action, "display", COMM_S);
+			comp->action = DISPLAY;
 		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
-			strncpy(comp->action, "write", COMM_S);
+			comp->action = WRITE;
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
-			strncpy(comp->action, "config", COMM_S);
+			comp->action = CONFIGURE;
 			strncpy(comp->domain, "none", CONF_S);
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
-			strncpy(comp->action, "list", COMM_S);
+			comp->action = LISTZ;
 			strncpy(comp->domain, "all", CONF_S);
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			strncpy(comp->type, "forward", COMM_S);
@@ -51,7 +51,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 		}
 	}
 	
-	if ((strncmp(comp->action, "NULL", COMM_S) == 0))
+	if (comp->action == NONE)
 		retval = -1;
 	else if ((strncmp(comp->type, "NULL", COMM_S) == 0))
 		retval = -1;
