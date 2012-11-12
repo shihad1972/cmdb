@@ -34,9 +34,22 @@ enum {			/* error codes */
 	MALLOC_FAIL = 30
 };
 
+enum {			/* action codes */
+	NONE = 0,
+	WRITE_ZONE = 1,
+	DISPLAY_ZONE = 2,
+	CONFIGURE_ZONE = 3,
+	LIST_ZONES = 4
+};
+
+enum {			/* zone types; use NONE from action codes */
+	FORWARD_ZONE = 1,
+	REVERSE_ZONE = 2
+};
+
 typedef struct comm_line_t { /* Hold parsed command line args */
-	char action[COMM_S];
-	char type[COMM_S];
+	short int action;
+	short int type;
 	char domain[CONF_S];
 	char config[CONF_S];
 } comm_line_t;

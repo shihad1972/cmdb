@@ -209,11 +209,20 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
 	my_ulonglong dnsa_rows;
+	size_t len;
 	char *queryp, *error_code;
 	const char *dquery, *unix_socket, *error_str;
 	int retval, error;
 	
 	retval = 0;
+	
+	/* if domain is all, then we are listing all domains. Return with 0
+	  if domain is none, then we are writing config file. Return with 0 */
+	len = strlen(domain);
+	if ((strncmp(domain, "all", len)) == 0)
+		return retval;
+	if ((strncmp(domain, "none", len)) == 0)
+		return retval;
 	
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in get_rev_id");

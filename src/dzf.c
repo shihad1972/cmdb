@@ -13,18 +13,20 @@
 #include "dnsa.h"
 #include "forward.h"
 
+MYSQL dnsa;
+MYSQL_RES *dnsa_res;
+MYSQL_ROW my_row;
+my_ulonglong dnsa_rows, start;
+size_t max, len, tabs, i;
+char *tmp, *error_code;
+const char *unix_socket, *dnsaquery, *error_str;
+
 int dzf (char *domain, dnsa_config_t *dc)
 {
-	MYSQL dnsa;
-	MYSQL_RES *dnsa_res;
-	MYSQL_ROW my_row;
 	zone_info_t zone_info, *zi;
 	record_row_t row_data, *rd;
-	size_t min, max, len, tabs, i;
-	my_ulonglong dnsa_rows, start;
 	int error;
-	char *tmp, *host, *error_code;
-	const char *unix_socket, *dnsaquery, *error_str;
+	char *host;
 	
 	if (!(tmp = malloc(FILE_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in dzf");
@@ -39,8 +41,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	rd = &row_data;
 	dnsaquery = tmp;
 	
-	min = strlen(domain) + 2;
-	max = min;
+	max = strlen(domain) + 2;
 	start = 0;
 	
 	/* Initialise MYSQL connection and query */
@@ -144,22 +145,18 @@ int dzf (char *domain, dnsa_config_t *dc)
 	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
 
+	mysql_close(&dnsa);
 	free(tmp);
 	free(host);
 	free(error_code);
+	error_str = 0;
 	return error;
 }
 
 int list_zones (dnsa_config_t *dc)
 {
-	MYSQL dnsa;
-	MYSQL_RES *dnsa_res;
-	MYSQL_ROW my_row;
-	my_ulonglong dnsa_rows, start;
-	size_t max, len, tabs, i;
 	int error;
-	char *tmp, *domain, *error_code;
-	const char *unix_socket, *dnsaquery, *error_str;
+	char *domain;
 
 	if (!(tmp = malloc(FILE_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in list_zones");
@@ -230,8 +227,11 @@ int list_zones (dnsa_config_t *dc)
 		domain[len + i] = '\0';
 		printf("%s\t%s\n", domain, my_row[1]);
 	}
+	
+	mysql_close(&dnsa);
 	free(domain);
 	free(tmp);
 	free(error_code);
+	error_str = 0;
 	return 0;
 }
