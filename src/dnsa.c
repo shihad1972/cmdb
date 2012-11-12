@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
 #include "dnsa.h"
 #include "forward.h"
 #include "reverse.h"
