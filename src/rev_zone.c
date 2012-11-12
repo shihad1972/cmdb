@@ -224,11 +224,9 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	 * If domain is none, then we are writing config file. Return with 0 
 	 */
 	len = strlen(domain);
-	if ((strncmp(domain, "all", len)) == 0)
+	if ((strncmp(domain, "all", len)) == 0 || (strncmp(domain, "none", len)) == 0 )
 		return retval;
-	if ((strncmp(domain, "none", len)) == 0)
-		return retval;
-	
+
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in get_rev_id");
 	error_str = error_code; 
@@ -254,5 +252,9 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	
 	dnsa_row = mysql_fetch_row(dnsa_res);
 	retval = atoi(dnsa_row[0]);
+	free(error_code);
+	free(queryp);
+	error_str = 0;
+	dquery = 0;
 	return retval;
 }
