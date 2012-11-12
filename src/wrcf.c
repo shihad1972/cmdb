@@ -17,6 +17,7 @@
 #include <mysql.h>
 #include "dnsa.h"
 #include "reverse.h"
+#include "mysqlfunc.h"
 
 int wrcf(dnsa_config_t *dc)
 {
@@ -28,7 +29,7 @@ int wrcf(dnsa_config_t *dc)
 	my_ulonglong dnsa_rows;
 	int error;
 	char *rout, *dnsa_line, *zonefile, *tmp, *tmp2, *error_code;
-	const char *dnsa_query, *unix_socket, *syscom, *error_str, *domain;
+	const char *dnsa_query, *syscom, *error_str, *domain;
 	
 	domain = "or reverse zone that is valid ";
 	
@@ -45,25 +46,13 @@ int wrcf(dnsa_config_t *dc)
 	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in wrcf");
 	
-	unix_socket = dc->socket;
 	error_str = error_code;
 	dnsa_query = dnsa_line;
 	
 	/* Initilaise MYSQL connection and query */
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa, dc->host, dc->user,
-		dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	}
-	
 	sprintf(dnsa_line, "SELECT net_range FROM rev_zones");
-	error = mysql_query(&dnsa, dnsa_query);
-	
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);

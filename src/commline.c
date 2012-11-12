@@ -5,7 +5,7 @@
  *
  * Part of the DNSA  program
  * 
- * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * (C) Iain M Conochie 2012
  * 
  */
 

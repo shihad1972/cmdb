@@ -4,15 +4,19 @@
  * contained in the database and also to list the reverse
  * zones contained in the database.
  * 
- * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * Part of the DNSA  program
+ * 
+ * (C) Iain M Conochie 2012
  * 
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mysql.h>
 #include "dnsa.h"
 #include "reverse.h"
+#include "mysqlfunc.h"
 
 MYSQL dnsa;
 MYSQL_RES *dnsa_res;
@@ -25,7 +29,6 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 {
 	rev_zone_info_t rev_zone_info, *rzi;
 	rev_record_row_t rev_row, *rr;
-	int error;
 	char *tmp, *dquery, *error_code, *in_addr;
 	
 	if (!(dquery = calloc(BUFF_S, sizeof(char))))
@@ -47,18 +50,8 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	
 	/* Initialise MYSQL connection and query */
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", id);
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	}
-	error = mysql_query(&dnsa, dnsa_query);
-	snprintf(error_code, CONF_S, "%d", error);
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
@@ -76,12 +69,7 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	
 	/* Get the reverse zone records */
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", id);
-	error = mysql_query(&dnsa, dnsa_query);
-	snprintf(error_code, CONF_S, "%d", error);
-	
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
@@ -150,7 +138,6 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 
 int list_rev_zones (dnsa_config_t *dc)
 {
-	int error;
 	char *tmp, *domain, *error_code;
 
 	if (!(domain = malloc(TBUFF_S * sizeof(char))))
@@ -168,29 +155,18 @@ int list_rev_zones (dnsa_config_t *dc)
 	max = len = 0;
 	start = 0;
 
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	}
-
-	error = mysql_query(&dnsa, dnsa_query);
-	snprintf(error_code, CONF_S, "%d", error);
-
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
-
-	/* To format the output, we need to know the string length of the
-	 * longest reverse domain */
+	/* 
+	 * To format the output, we need to know the string length of the
+	 * longest reverse domain 
+	 */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", dnsa_row[0]);
 		len = strlen(domain);

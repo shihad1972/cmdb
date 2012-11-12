@@ -4,7 +4,9 @@
  * from / to the database about the reverse zones, and to also write out
  * the reverse zone files and also the BIND reverse zone configuration file.
  * 
- * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * Part of the DNSA  program
+ * 
+ * (C) Iain M Conochie 2012
  * 
  */
 #include <stdio.h>
@@ -13,6 +15,7 @@
 #include <mysql.h>
 #include "dnsa.h"
 #include "reverse.h"
+#include "mysqlfunc.h"
 
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
@@ -211,13 +214,15 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	my_ulonglong dnsa_rows;
 	size_t len;
 	char *queryp, *error_code;
-	const char *dquery, *unix_socket, *error_str;
-	int retval, error;
+	const char *dquery, *error_str;
+	int retval;
 	
 	retval = 0;
 	
-	/* if domain is all, then we are listing all domains. Return with 0
-	  if domain is none, then we are writing config file. Return with 0 */
+	/* 
+	 * If domain is all, then we are listing all domains. Return with 0
+	 * If domain is none, then we are writing config file. Return with 0 
+	 */
 	len = strlen(domain);
 	if ((strncmp(domain, "all", len)) == 0)
 		return retval;
@@ -230,23 +235,11 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	if (!(queryp = malloc(BUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "queryp in get_rev_id");
 	
-	unix_socket = dc->socket;
 	dquery = queryp;
 	sprintf(queryp,
 		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
-
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa, dc->host, dc->user, dc->pass,
-		dc->db, dc->port, unix_socket, dc->cliflag )))
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	
-	error = mysql_query(&dnsa, dquery);
-	snprintf(error_code, CONF_S, "%d", error);
-	
-	if ((error != 0))
-		report_error(MY_QUERY_FAIL, error_str);
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);

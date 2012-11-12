@@ -15,6 +15,7 @@
  * -n : domain name or netblock. only /8 /16 /24 netblocks accepted
  *      needed for -d and -w functionality
  *
+ * (C) 2012 Iain M Conochie
  * 
  */
 

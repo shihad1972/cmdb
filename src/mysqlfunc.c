@@ -1,6 +1,8 @@
 /* mysqlfunc.c
  *
- * Contains the functions for mysql access for the dnsa program
+ * Contains the functions for mysql access.
+ * 
+ * Part of the DNSA  program
  *
  * (C) 2012 Iain M Conochie
  */
@@ -12,10 +14,12 @@
 #include "dnsa.h"
 #include "mysqlfunc.h"
 
+const char *error_string;
+char *error_code;
+
 void dnsa_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
 {
-	const char *unix_socket, *error_string;
-	char *error_code;
+	const char *unix_socket;
 	
 	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in dnsa_mysql_init");
@@ -37,8 +41,6 @@ void dnsa_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
 void dnsa_mysql_query(MYSQL *mydnsa, const char *query)
 {
 	int error;
-	const char *error_string;
-	char *error_code;
 	
 	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in dnsa_mysql_init");

@@ -3,15 +3,19 @@
  * Contains functions to display the forward zones and list the
  * forward zones contained in the database. 
  * 
- * (C) Iain M Conochie 2012 <iain@ailsatech.net>
+ * Part of the DNSA  program
+ * 
+ * (C) Iain M Conochie 2012
  * 
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mysql.h>
 #include "dnsa.h"
 #include "forward.h"
+#include "mysqlfunc.h"
 
 MYSQL dnsa;
 MYSQL_RES *dnsa_res;
@@ -25,7 +29,6 @@ int dzf (char *domain, dnsa_config_t *dc)
 {
 	zone_info_t zone_info, *zi;
 	record_row_t row_data, *rd;
-	int error;
 	char *host;
 	
 	if (!(tmp = malloc(FILE_S * sizeof(char))))
@@ -46,20 +49,8 @@ int dzf (char *domain, dnsa_config_t *dc)
 	
 	/* Initialise MYSQL connection and query */
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	}
-	
-	error = mysql_query(&dnsa, dnsaquery);
-	snprintf(error_code, CONF_S, "%d", error);
-	
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
@@ -74,24 +65,19 @@ int dzf (char *domain, dnsa_config_t *dc)
 		zone_info = fill_zone_data(my_row);
 	
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
-	error = mysql_query(&dnsa, dnsaquery);
-	snprintf(error_code, CONF_S, "%d", error);
-	
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(NO_RECORDS, domain);
-	
-	/** Check for the size of the string $host.$domain. and if bigger than
-	 ** the previous largest then save the result. This will go through all
-	 ** the records and then find the largest string. We can then format
-	 ** the output correctly
-	 **/
+	/*
+	 * Check for the size of the string $host.$domain. and if bigger than
+	 * the previous largest then save the result. This will go through all
+	 * the records and then find the largest string. We can then format
+	 * the output correctly
+	 */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(my_row);
 		sprintf(host, "%s.%s.", rd->host, domain);
@@ -150,12 +136,11 @@ int dzf (char *domain, dnsa_config_t *dc)
 	free(host);
 	free(error_code);
 	error_str = 0;
-	return error;
+	return 0;
 }
 
 int list_zones (dnsa_config_t *dc)
 {
-	int error;
 	char *domain;
 
 	if (!(tmp = malloc(FILE_S * sizeof(char))))
@@ -174,31 +159,18 @@ int list_zones (dnsa_config_t *dc)
 	
 	printf("Listing zones from database %s\n", dc->db);
 	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
-	
-	if (!(mysql_init(&dnsa))) {
-		report_error(MY_INIT_FAIL, error_str);
-	}
-	if (!(mysql_real_connect(&dnsa,
-		dc->host, dc->user, dc->pass, dc->db, dc->port, unix_socket, dc->cliflag ))) {
-		report_error(MY_CONN_FAIL, mysql_error(&dnsa));
-	}
-	
-	error = mysql_query(&dnsa, dnsaquery);
-	snprintf(error_code, CONF_S, "%d", error);
-	
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_str);
-	}
+	dnsa_mysql_init(dc, &dnsa);
+	dnsa_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(DOMAIN_LIST_FAIL, error_str);
-	
-	/* To format the output, we need to know the string length of the
-	 * longest domain */
-	
+	/* 
+	 * To format the output, we need to know the string length of the
+	 * longest domain 
+	 */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);
@@ -216,7 +188,6 @@ int list_zones (dnsa_config_t *dc)
 	printf("%s\tValid\n\n", domain);
 	
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
-	
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		sprintf(domain, "%s", my_row[0]);
 		len = strlen(domain);
