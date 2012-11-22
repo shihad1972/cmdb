@@ -1,7 +1,8 @@
 /* forward.h: Function and data definitions for forward zones */
 
 #include <mysql/mysql.h>
-#include "dnsa.h"
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 #ifndef	__WRITE_ZONE_H__
 #define __WRITE_ZONE_H__
 

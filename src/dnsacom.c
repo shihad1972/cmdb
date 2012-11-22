@@ -9,10 +9,11 @@
  * 
  */
 
-#include "dnsa.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 
 int parse_command_line(int argc, char **argv, comm_line_t *comp)
 {

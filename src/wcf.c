@@ -13,7 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mysql/mysql.h>
-#include "dnsa.h"
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 #include "mysqlfunc.h"
 
 int wcf(dnsa_config_t *dc)

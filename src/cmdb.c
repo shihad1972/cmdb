@@ -17,10 +17,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
+#include "cmdb_cmdb.h"
 
 int main(int argc, char *argv[])
 {
-	comm_line_t command, *cm;
+	cmdb_comm_line_t command, *cm;
 	cmdb_config_t cmdb_c, *cmc;
 	int retval;
 	
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 	printf("Action: ");
 	if (cm->action == DISPLAY)
 		printf("Display\n");
-	else if (cm->action == LIST)
+	else if (cm->action == LIST_OBJ)
 		printf("List\n");
 	else if (cm->action == NONE)
 		printf("No Action\n");

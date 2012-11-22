@@ -22,7 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dnsa.h"
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 #include "forward.h"
 #include "reverse.h"
 

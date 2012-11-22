@@ -11,7 +11,7 @@ CPPFLAGS =
 LDFLAGS = -L/usr/lib/i386-linux-gnu -L/usr/lib/mysql
 LIBS = -lmysqlclient
 DOBJECTS = dnsa.o dnsacom.o wzf.o wrzf.o rev_zone.o fwd_zone.o errors.o dzf.o drzf.o wcf.o wrcf.o mysqlfunc.o
-COBJECTS = cmdb.o cmdbcom.o
+COBJECTS = cmdb.o cmdbcom.o mysqlfunc.o errors.o
 
 all:	dnsa cmdb
 

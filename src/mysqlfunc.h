@@ -4,7 +4,8 @@
  */
 
 #include <mysql/mysql.h>
-#include "dnsa.h"
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 
 #ifndef __MYSQL_FUNC_H
 #define __MYSQL_FUNC_H

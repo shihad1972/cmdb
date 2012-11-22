@@ -13,8 +13,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
+#include "cmdb_cmdb.h"
 
-int parse_command_line(int argc, char **argv, comm_line_t *comp)
+int parse_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 {
 	int i, retval;
 	
@@ -36,7 +37,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
 			comp->action = DISPLAY;
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
-			comp->action = LIST;
+			comp->action = LIST_OBJ;
 		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
 			i++;
 			if (i >= argc)

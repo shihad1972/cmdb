@@ -2,7 +2,7 @@
  * 
  * Error reporting functions.
  * 
- * enum constants defined in dnsa.h
+ * enum constants defined in cmdb_dnsa.h
  * 
  * Part of the DNSA  program
  * 
@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dnsa.h"
+#include "cmdb.h"
+#include "cmdb_dnsa.h"
 
 void report_error(int error, const char *errstr)
 {
