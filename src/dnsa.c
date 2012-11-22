@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	cm = &command;
 	
 	/* Get command line args. See above */
-	retval = parse_command_line(argc, argv, &command);
+	retval = parse_command_line(argc, argv, cm);
 	if (retval < 0) {
 		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	
 	/* Get config values from config file */	
 	init_config_values(dc);
-	sprintf(config, "/etc/dnsa/dnsa.conf");
+	sprintf(config, "%s", cm->config);
 	retval = parse_config_file(dc, config);
 	if (retval < 0) {
 		printf("Config file parsing failed! Using default values\n");

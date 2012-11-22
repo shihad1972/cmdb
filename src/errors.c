@@ -88,3 +88,34 @@ void report_error(int error, const char *errstr)
 			break;
 	}
 }
+
+void display_cmdb_command_line_error(int retval, char *program)
+{
+	switch (retval){
+		case NO_NAME:
+			fprintf(stderr, "No name specified with -n\n");
+			break;
+		case NO_ID:
+			fprintf(stderr, "No ID specified with -i\n");
+			break;
+		case NO_TYPE:
+			fprintf(stderr, "No type specified on command line\n");
+			break;
+		case NO_ACTION:
+			fprintf(stderr, "No action specified on command line\n");
+			break;
+		case NO_NAME_OR_ID:
+			fprintf(stderr, "No name or ID specified on command line\n");
+			break;
+		case GENERIC_ERROR:
+			fprintf(stderr, "Unknown command line option\n");
+			break;
+		default:
+			fprintf(stderr, "Unknown error code!\n");
+			break;
+	}
+
+	printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
+	       program);
+	exit (retval);
+}

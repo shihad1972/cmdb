@@ -24,42 +24,35 @@ int main(int argc, char *argv[])
 	cmdb_comm_line_t command, *cm;
 	cmdb_config_t cmdb_c, *cmc;
 	int retval;
+	char *cmdb_config, *name, *uuid;
 	
 	cm = &command;
 	cmc = &cmdb_c;
 	
-	retval = parse_command_line(argc, argv, cm);
-	if (retval < 0) {
-		switch (retval){
-			case NO_NAME:
-				fprintf(stderr, "No name specified with -n\n");
-				break;
-			case NO_ID:
-				fprintf(stderr, "No ID specified with -i\n");
-				break;
-			case NO_TYPE:
-				fprintf(stderr, "No type specified on command line\n");
-				break;
-			case NO_ACTION:
-				fprintf(stderr, "No action specified on command line\n");
-				break;
-			case NO_NAME_OR_ID:
-				fprintf(stderr, "No name or ID specified on command line\n");
-				break;
-			case GENERIC_ERROR:
-				fprintf(stderr, "Unknown command line option\n");
-				break;
-			default:
-				fprintf(stderr, "Unknown error code!\n");
-				break;
-		}
-		
-		printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
-		       argv[0]);
-		exit (retval);
+	name = cm->name;
+	uuid = cm->id;
+	
+	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
+	
+	init_cmdb_config_values(cmc);
+	retval = parse_cmdb_command_line(argc, argv, cm);
+	if (retval < 0)
+		display_cmdb_command_line_error(retval, argv[0]);
+	sprintf(cmdb_config, "%s", cm->config);
+	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	
+	switch (cm->action){
+		case DISPLAY:
+			if (cm->type == SERVER)
+				display_server_info(name, uuid, cmc);
+			break;
+		default:
+			printf("Not yet implemented :(\n");
+			break;
 	}
 	
-	printf("This is what we got in the config struct\n");
+/*	printf("This is what we got in the config struct\n");
 	printf("Action: ");
 	if (cm->action == DISPLAY)
 		printf("Display\n");
@@ -84,7 +77,7 @@ int main(int argc, char *argv[])
 	
 	printf("Name: %s\n", cm->name);
 	printf("ID: %s\n", cm->id);
-	printf("Config file: %s\n", cm->config);
+	printf("Config file: %s\n", cm->config); */
 	
 	exit (0);
 }

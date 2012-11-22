@@ -20,6 +20,7 @@
 #include "cmdb_dnsa.h"
 #include "reverse.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 int wrzf(int reverse, dnsa_config_t *dc)
 {
@@ -49,7 +50,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	net_range = rzi->net_range;
 	
 	/* Initialise MYSQL connection and query */
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
 	cmdb_mysql_query(&dnsa, dnsa_query);

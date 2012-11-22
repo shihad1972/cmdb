@@ -15,7 +15,7 @@
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 
-int parse_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
+int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 {
 	int i, retval;
 	
@@ -23,7 +23,7 @@ int parse_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	
 	comp->action = NONE;
 	comp->type = NONE;
-	strncpy(comp->config, "/etc/conman/conman.conf", CONF_S - 1);
+	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	strncpy(comp->name, "NULL", CONF_S - 1);
 	strncpy(comp->id, "NULL", RANGE_S - 1);
 	
@@ -38,6 +38,7 @@ int parse_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 			comp->action = DISPLAY;
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
 			comp->action = LIST_OBJ;
+			sprintf(comp->name, "all");
 		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
 			i++;
 			if (i >= argc)
@@ -68,4 +69,69 @@ int parse_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 		retval = NO_NAME_OR_ID;
 	
 	return retval;
+}
+
+int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
+{
+	FILE *cnf;	/* File handle for config file */
+	int retval;
+	unsigned long int portno;
+
+	char buff[CONF_S] = "";
+	char port[CONF_S] = "";
+
+	if (!(cnf = fopen(config, "r"))) {
+		fprintf(stderr, "Cannot open config file %s\n", config);
+		fprintf(stderr, "Using default values\n");
+		retval = -1;
+	} else {
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PASS=%s", dc->pass);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "HOST=%s", dc->host);	
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "USER=%s", dc->user);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DB=%s", dc->db);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "SOCKET=%s", dc->socket);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PORT=%s", port);
+		}
+		retval = 0;
+		fclose(cnf);
+	}
+	
+	/* We need to check the value of portnop before we convert to int.
+	 * Obviously we cannot have a port > 65535
+	 */
+	portno = strtoul(port, NULL, 10);
+	if (portno > 65535) {
+		retval = -1;
+	} else {
+		dc->port = (unsigned int) portno;
+	}
+	
+	return retval;
+}
+
+void init_cmdb_config_values(cmdb_config_t *dc)
+{
+	sprintf(dc->db, "cmdb");
+	sprintf(dc->user, "root");
+	sprintf(dc->host, "localhost");
+	sprintf(dc->pass, "%s", "");
+	sprintf(dc->socket, "%s", "");
+	dc->port = 3306;
+	dc->cliflag = 0;
 }

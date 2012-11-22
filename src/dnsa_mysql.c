@@ -1,4 +1,4 @@
-/* mysqlfunc.c
+/* dnsa_mysql.c
  *
  * Contains the functions for mysql access.
  * 
@@ -14,16 +14,17 @@
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 const char *error_string;
 char *my_error_code;
 
-void cmdb_mysql_init(dnsa_config_t *dc, MYSQL *cmdb_mysql)
+void dnsa_mysql_init(dnsa_config_t *dc, MYSQL *cmdb_mysql)
 {
 	const char *unix_socket;
 	
 	if (!(my_error_code = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "my_error_code in cmdb_mysql_init");
+		report_error(MALLOC_FAIL, "my_error_code in dnsa_mysql_init");
 	
 	unix_socket = dc->socket;
 	error_string = my_error_code;
@@ -44,7 +45,7 @@ void cmdb_mysql_query(MYSQL *mydnsa, const char *query)
 	int error;
 	
 	if (!(my_error_code = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "my_error_code in cmdb_mysql_init");
+		report_error(MALLOC_FAIL, "my_error_code in dnsa_mysql_init");
 	
 	error_string = my_error_code;
 	

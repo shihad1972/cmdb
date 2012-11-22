@@ -17,6 +17,7 @@
 #include "cmdb_dnsa.h"
 #include "forward.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 MYSQL dnsa;
 MYSQL_RES *dnsa_res;
@@ -50,7 +51,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	
 	/* Initialise MYSQL connection and query */
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
@@ -160,7 +161,7 @@ int list_zones (dnsa_config_t *dc)
 	
 	printf("Listing zones from database %s\n", dc->db);
 	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));

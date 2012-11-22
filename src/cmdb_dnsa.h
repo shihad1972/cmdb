@@ -3,34 +3,6 @@
 #ifndef __CMDB_DNSA_H__
 #define __CMDB_DNSA_H__
 
-enum {			/* error codes */
-	OK = 0,
-	ARGC_INVAL = 1,
-	ARGV_INVAL = 2,
-	NO_DOMAIN = 3,
-	MULTI_DOMAIN = 4,
-	NO_DELIM = 5,
-	NO_RECORDS = 6,
-	WRONG_ACTION = 7,
-	WRONG_TYPE = 8,
-	DOMAIN_LIST_FAIL = 9,
-	MY_INIT_FAIL = 10,
-	MY_CONN_FAIL = 11,
-	MY_QUERY_FAIL = 12,
-	MY_STORE_FAIL = 13,
-	FILE_O_FAIL = 20,
-	CHKZONE_FAIL = 21,
-	MALLOC_FAIL = 30
-};
-
-enum {			/* action codes */
-	NONE = 0,
-	WRITE_ZONE = 1,
-	DISPLAY_ZONE = 2,
-	CONFIGURE_ZONE = 3,
-	LIST_ZONES = 4
-};
-
 enum {			/* zone types; use NONE from action codes */
 	FORWARD_ZONE = 1,
 	REVERSE_ZONE = 2
@@ -69,8 +41,5 @@ parse_config_file(dnsa_config_t *dc, char *config);
 /*initialise configuration struct */
 void
 init_config_values(dnsa_config_t *dc);
-/* Error reporting function */
-void 
-report_error(int error, const char *errstr);
 
 #endif

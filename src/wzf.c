@@ -21,6 +21,7 @@
 #include "cmdb_dnsa.h"
 #include "forward.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 int wzf (char *domain, dnsa_config_t *dc)
 {
@@ -48,7 +49,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	zi = &zone_info;
 	
 	/* Initialise MYSQL connection and query */
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 

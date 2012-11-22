@@ -97,6 +97,14 @@ int parse_config_file(dnsa_config_t *dc, char *config)
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "SOCKET=%s", dc->socket);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PORT=%s", port);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "DIR=%s", dc->dir);
 		}
 		rewind(cnf);
@@ -122,14 +130,6 @@ int parse_config_file(dnsa_config_t *dc, char *config)
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "CHKC=%s", dc->chkc);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "SOCKET=%s", dc->socket);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "PORT=%s", port);
 		}
 		retval = 0;
 		fclose(cnf);

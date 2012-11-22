@@ -1,27 +1,12 @@
 /* cmdb_cmdb.h */
 
-#ifndef __CMDB_CMDB_H
-#define __CMDB_CMDB_H
-
-enum {			/* Action codes */
-	NONE = 0,
-	DISPLAY = 1,
-	LIST_OBJ = 2
-};
+#ifndef __CMDB_CMDB_H__
+#define __CMDB_CMDB_H__
 
 enum {			/* Display codes; use NONE from action codes */
 	SERVER = 1,
 	CUSTOMER = 2,
 	CONTACT = 3
-};
-
-enum {			/* Return codes */
-	GENERIC_ERROR = -1,
-	NO_NAME = -2,
-	NO_ID = -3,
-	NO_TYPE = -4,
-	NO_ACTION = -5,
-	NO_NAME_OR_ID = -6
 };
 
 typedef struct cmdb_comm_line_t { /* Hold parsed command line args */
@@ -44,6 +29,15 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 
 /* Get command line args and pass them. Put actions into the struct */
 int
-parse_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
+/* Grab config values from file */
+int
+parse_cmdb_config_file(cmdb_config_t *dc, char *config);
+/* Initialisa config struct */
+void
+init_cmdb_config_values(cmdb_config_t *dc);
+/*Display a servers build info */
+int
+display_server_info (char *name, char *uuid, cmdb_config_t *config);
 
 #endif

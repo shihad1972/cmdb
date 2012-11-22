@@ -18,6 +18,7 @@
 #include "cmdb_dnsa.h"
 #include "reverse.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 MYSQL dnsa;
 MYSQL_RES *dnsa_res;
@@ -51,17 +52,16 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	
 	/* Initialise MYSQL connection and query */
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", id);
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(NO_DOMAIN, domain);
-	} else if (dnsa_rows > 1) {
+	else if (dnsa_rows > 1)
 		report_error(MULTI_DOMAIN, domain);
-	}
 	
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -156,7 +156,7 @@ int list_rev_zones (dnsa_config_t *dc)
 	max = len = 0;
 	start = 0;
 
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));

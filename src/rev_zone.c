@@ -17,6 +17,7 @@
 #include "cmdb_dnsa.h"
 #include "reverse.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
@@ -237,7 +238,7 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	dquery = queryp;
 	sprintf(queryp,
 		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));

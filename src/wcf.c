@@ -16,6 +16,7 @@
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "mysqlfunc.h"
+#include "dnsa_mysql.h"
 
 int wcf(dnsa_config_t *dc)
 {
@@ -44,7 +45,7 @@ int wcf(dnsa_config_t *dc)
 	error_str = error_code;
 
 	/* Initialise MYSQL Connection and query*/
-	cmdb_mysql_init(dc, &dnsa);
+	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
