@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
+#include <mysql/mysql.h>
 #include "dnsa.h"
 #include "forward.h"
 #include "mysqlfunc.h"

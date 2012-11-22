@@ -3,7 +3,7 @@
  * Header file for the mysql functions
  */
 
-#include <mysql.h>
+#include <mysql/mysql.h>
 #include "dnsa.h"
 
 #ifndef __MYSQL_FUNC_H
