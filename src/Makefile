@@ -10,10 +10,11 @@ CFLAGS = -ansi -std=c99 -pedantic -W -Wall -Wconversion -Wshadow -Wcast-qual -Ww
 CPPFLAGS = -I/usr/include/mysql
 LDFLAGS = -L/usr/lib/i386-linux-gnu -L/usr/lib/mysql
 LIBS = -lmysqlclient
+OBJECTS = dnsa.o command.o wzf.o wrzf.o wrz.o wfz.o errors.o dzf.o drzf.o wcf.o wrcf.o dnsa_mysql.o
 
 all:	dnsa
 
-dnsa:	dnsa.o command.o wzf.o wrzf.o wrz.o wfz.o errors.o dzf.o drzf.o wcf.o wrcf.o dnsa_mysql.o
+dnsa:	$(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 dnsa.o:	dnsa.c dnsa.h forward.h reverse.h
