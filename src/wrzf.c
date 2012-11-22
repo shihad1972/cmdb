@@ -48,10 +48,10 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	net_range = rzi->net_range;
 	
 	/* Initialise MYSQL connection and query */
-	dnsa_mysql_init(dc, &dnsa);
+	cmdb_mysql_init(dc, &dnsa);
 	
 	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));

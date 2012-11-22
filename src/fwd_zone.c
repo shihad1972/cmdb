@@ -177,8 +177,8 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 		report_error(NO_DELIM, error_string);
 	/* Find and add 1st NS record */
 	sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'", zi->id, thost);
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa)))
 		report_error(NO_RECORDS, zi->name);
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -191,7 +191,7 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 		if (!(thost = strtok(line, c)))
 			report_error(NO_DELIM, error_string);
 		sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'", zi->id, thost);
-		dnsa_mysql_query(&dnsa, dnsa_query);
+		cmdb_mysql_query(&dnsa, dnsa_query);
 		if (!(dnsa_res = mysql_store_result(&dnsa)))
 			report_error(NO_RECORDS, zi->name);
 		while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -230,8 +230,8 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	
 	sprintf(c, ".");
 	sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa)))
 		report_error(NO_RECORDS, zi->name);
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
@@ -246,8 +246,8 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 			report_error(NO_DELIM, error_string);
 		sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host = '%s'",
 				zi->id, thost);
-		dnsa_mysql_init(dc, &dnsa2);
-		dnsa_mysql_query(&dnsa2, dquery);
+		cmdb_mysql_init(dc, &dnsa2);
+		cmdb_mysql_query(&dnsa2, dquery);
 		if (!(dnsa_res2 = mysql_store_result(&dnsa2))) {
 			fprintf(stderr, "No result set?\n");
 			if (mx == 0)

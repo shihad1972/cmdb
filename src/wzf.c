@@ -47,9 +47,9 @@ int wzf (char *domain, dnsa_config_t *dc)
 	zi = &zone_info;
 	
 	/* Initialise MYSQL connection and query */
-	dnsa_mysql_init(dc, &dnsa);
+	cmdb_mysql_init(dc, &dnsa);
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 
 	if (!(dnsa_res = mysql_store_result(&dnsa)))
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
@@ -61,7 +61,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	create_zone_header(zout, zone_info);
 	
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	
 	if (!(dnsa_res = mysql_store_result(&dnsa)))
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
@@ -96,7 +96,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	
 	/* Add the rest of the records */
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'A' OR zone = %d AND type = 'CNAME'", zi->id, zi->id);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(my_res = mysql_store_result(&dnsa)))
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	while ((my_row = mysql_fetch_row(my_res))) {

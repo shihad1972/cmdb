@@ -49,8 +49,8 @@ int dzf (char *domain, dnsa_config_t *dc)
 	
 	/* Initialise MYSQL connection and query */
 	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dnsaquery);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
@@ -65,7 +65,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 		zone_info = fill_zone_data(my_row);
 	
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
-	dnsa_mysql_query(&dnsa, dnsaquery);
+	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
@@ -159,8 +159,8 @@ int list_zones (dnsa_config_t *dc)
 	
 	printf("Listing zones from database %s\n", dc->db);
 	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dnsaquery);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);

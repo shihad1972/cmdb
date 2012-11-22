@@ -51,8 +51,8 @@ int wrcf(dnsa_config_t *dc)
 	
 	/* Initilaise MYSQL connection and query */
 	sprintf(dnsa_line, "SELECT net_range FROM rev_zones");
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);

@@ -236,8 +236,8 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	dquery = queryp;
 	sprintf(queryp,
 		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
-	dnsa_mysql_init(dc, &dnsa);
-	dnsa_mysql_query(&dnsa, dquery);
+	cmdb_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
