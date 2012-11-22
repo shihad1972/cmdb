@@ -36,7 +36,9 @@ enum {			/* DNSA error codes */
 
 enum {			/* CMDB error codes: start @ 101 to avoid conflict */
 	SERVER_NOT_FOUND = 101,
-	MULTIPLE_SERVERS = 102
+	MULTIPLE_SERVERS = 102,
+	CUSTOMER_NOT_FOUND = 103,
+	MULTIPLE_CUSTOMERS = 104
 };
 
 enum {			/* CMDB Return codes */

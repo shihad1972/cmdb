@@ -27,17 +27,15 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cmdb_config_t;
 
-/* Get command line args and pass them. Put actions into the struct */
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
-/* Grab config values from file */
 int
 parse_cmdb_config_file(cmdb_config_t *dc, char *config);
-/* Initialisa config struct */
 void
 init_cmdb_config_values(cmdb_config_t *dc);
-/*Display a servers build info */
 int
 display_server_info (char *name, char *uuid, cmdb_config_t *config);
+int
+display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 
 #endif

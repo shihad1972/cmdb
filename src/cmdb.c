@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
 		case DISPLAY:
 			if (cm->type == SERVER)
 				display_server_info(name, uuid, cmc);
+			else if (cm->type == CUSTOMER)
+				display_customer_info(name, uuid, cmc);
 			break;
 		default:
 			printf("Not yet implemented :(\n");
