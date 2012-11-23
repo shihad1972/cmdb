@@ -180,7 +180,6 @@ int list_rev_zones (dnsa_config_t *dc)
 	for (i = 0; i < tabs; i++) {
 		domain[len + i] = '\t';
 	}
-
 	printf("Listing rev zones from DB %s\n", dc->db);
 	printf("%s\tValid\n\n", domain);
 
