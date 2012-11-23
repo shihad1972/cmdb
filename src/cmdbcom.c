@@ -54,7 +54,7 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 			else if ((strncmp(argv[i], "-", 1) == 0))
 				retval = NO_ID;
 			else
-				strncpy(comp->id, argv[i], RANGE_S);
+				strncpy(comp->id, argv[i], CONF_S);
 		} else {
 			retval = GENERIC_ERROR;
 		}

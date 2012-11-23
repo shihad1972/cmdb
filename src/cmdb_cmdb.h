@@ -14,7 +14,7 @@ typedef struct cmdb_comm_line_t { /* Hold parsed command line args */
 	short int type;
 	char config[CONF_S];
 	char name[CONF_S];
-	char id[RANGE_S];
+	char id[CONF_S];
 } cmdb_comm_line_t;
 
 typedef struct cmdb_config_t { /* Hold CMDB configuration values */
