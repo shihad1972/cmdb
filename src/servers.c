@@ -18,12 +18,11 @@
 MYSQL cmdb;
 MYSQL_RES *cmdb_res;
 MYSQL_ROW cmdb_row;
-my_ulonglong cmdb_rows, start;
-size_t max, len, tabs, i;
+my_ulonglong cmdb_rows;
 char *error_code;
 const char *unix_socket, *cmdb_query, *error_str;
 
-int display_server_info (char *server, char *uuid, cmdb_config_t *config)
+int display_server_info(char *server, char *uuid, cmdb_config_t *config)
 {
 	char *cquery;
 	
@@ -34,7 +33,7 @@ int display_server_info (char *server, char *uuid, cmdb_config_t *config)
 	error_str = error_code;
 	cmdb_query = cquery;
 	if ((strncmp(server, "NULL", CONF_S))) {
-		sprintf(cquery, "SELECT vendor, make, model, uuid FROM server WHERE name = '%s'",
+		sprintf(cquery, "SELECT vendor, make, model, uuid, name FROM server WHERE name = '%s'",
 			server);
 		cmdb_mysql_init(config, &cmdb);
 		cmdb_mysql_query(&cmdb, cmdb_query);
@@ -49,15 +48,10 @@ int display_server_info (char *server, char *uuid, cmdb_config_t *config)
 			report_error(MULTIPLE_SERVERS, server);
 		
 		cmdb_row = mysql_fetch_row(cmdb_res);
-		printf("Server %s info\n", server);
-		printf("Vendor: %s\n", cmdb_row[0]);
-		printf("Make: %s\n", cmdb_row[1]);
-		printf("Model: %s\n", cmdb_row[2]);
-		printf("UUID: %s\n", cmdb_row[3]);
-		mysql_close(&cmdb);
+		display_server_from_name(cmdb_row);
 	} else if ((strncmp(uuid, "NULL", CONF_S))) {
 		printf("UUID: %s\n", uuid);
-		sprintf(cquery, "SELECT vendor, make, model, name FROM server WHERE uuid = '%s'",
+		sprintf(cquery, "SELECT vendor, make, model, name, uuid FROM server WHERE uuid = '%s'",
 			uuid);
 		cmdb_mysql_init(config, &cmdb);
 		cmdb_mysql_query(&cmdb, cmdb_query);
@@ -72,15 +66,34 @@ int display_server_info (char *server, char *uuid, cmdb_config_t *config)
 			report_error(MULTIPLE_SERVERS, server);
 		
 		cmdb_row = mysql_fetch_row(cmdb_res);
-		printf("Server %s info\n", cmdb_row[3]);
-		printf("Vendor: %s\n", cmdb_row[0]);
-		printf("Make: %s\n", cmdb_row[1]);
-		printf("Model: %s\n", cmdb_row[2]);
-		printf("UUID: %s\n", uuid);
-		mysql_close(&cmdb);
+		display_server_from_uuid(cmdb_row);
 	}
+	mysql_close(&cmdb);
 	free(cquery);
 	free(error_code);
 	return 0;
 }
+
+void display_all_servers(cmdb_config_t *config)
+{
+}
+
+void display_server_from_name(char **server_info)
+{
+	printf("Server %s info\n", server_info[4]);
+	printf("Vendor: %s\n", server_info[0]);
+	printf("Make: %s\n", server_info[1]);
+	printf("Model: %s\n", server_info[2]);
+	printf("UUID: %s\n", server_info[3]);
+}
+
+void display_server_from_uuid(char **server_info)
+{
+	printf("Server %s info\n", server_info[3]);
+	printf("Vendor: %s\n", server_info[0]);
+	printf("Make: %s\n", server_info[1]);
+	printf("Model: %s\n", server_info[2]);
+	printf("UUID: %s\n", server_info[4]);
+}
+
 

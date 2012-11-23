@@ -35,7 +35,25 @@ void
 init_cmdb_config_values(cmdb_config_t *dc);
 int
 display_server_info (char *name, char *uuid, cmdb_config_t *config);
+void
+display_all_servers(cmdb_config_t *config);
 int
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
+int
+display_customer_info_on_coid(char *coid, cmdb_config_t *config);
+int
+display_customer_info_on_name(char *name, cmdb_config_t *config);
+void
+display_all_customers(cmdb_config_t *config);
+/* Routines to display server data from database. */
+void
+display_server_from_name(char **server_info);
+void
+display_server_from_uuid(char **server_info);
+/* Routines to display customer data from database. */
+void
+display_customer_from_name(char **cust_info);
+void
+display_customer_from_coid(char **cust_info);
 
 #endif
