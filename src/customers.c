@@ -107,7 +107,7 @@ int display_customer_info_on_name(char *name, cmdb_config_t *config)
 	else {
 		while ((cmdb_row = mysql_fetch_row(cmdb_res))) {
 			printf("Contact for %s: %s %s %s\n",
-			       cmdb_row[4], cmdb_row[0], cmdb_row[1], cmdb_row[2]);
+			       name, cmdb_row[0], cmdb_row[1], cmdb_row[2]);
 		}
 	}
 	mysql_free_result(cmdb_res);

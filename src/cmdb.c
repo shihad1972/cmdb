@@ -59,33 +59,6 @@ int main(int argc, char *argv[])
 			printf("Not yet implemented :(\n");
 			break;
 	}
-	
-/*	printf("This is what we got in the config struct\n");
-	printf("Action: ");
-	if (cm->action == DISPLAY)
-		printf("Display\n");
-	else if (cm->action == LIST_OBJ)
-		printf("List\n");
-	else if (cm->action == NONE)
-		printf("No Action\n");
-	else
-		printf("Unknown action type\n");
-	
-	printf("Object type: ");
-	if (cm->type == SERVER)
-		printf("Server\n");
-	else if (cm->type == CUSTOMER)
-		printf("Customer\n");
-	else if (cm->type == CONTACT)
-		printf("Contact\n");
-	else if (cm->type == NONE)
-		printf("No object type\n");
-	else
-		printf("Unknown object type");
-	
-	printf("Name: %s\n", cm->name);
-	printf("ID: %s\n", cm->id);
-	printf("Config file: %s\n", cm->config); */
-	
+	free(cmdb_config);
 	exit (0);
 }

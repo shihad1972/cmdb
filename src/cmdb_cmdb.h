@@ -38,6 +38,10 @@ display_server_info (char *name, char *uuid, cmdb_config_t *config);
 void
 display_all_servers(cmdb_config_t *config);
 int
+display_server_info_on_uuid(char *coid, cmdb_config_t *config);
+int
+display_server_info_on_name(char *name, cmdb_config_t *config);
+int
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 int
 display_customer_info_on_coid(char *coid, cmdb_config_t *config);
