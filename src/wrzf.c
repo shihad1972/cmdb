@@ -70,7 +70,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_zone_info = fill_rev_zone_data(dnsa_row);
 	}
-	
+	mysql_free_result(dnsa_res);
 	/* Start the output string with the zonefile header */
 	create_rev_zone_header(rev_zone_info, rout);
 	
@@ -95,7 +95,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		rev_row = get_rev_row(dnsa_row);
 		add_rev_records(rout, rev_row);
 	}
-	
+	mysql_free_result(dnsa_res);
 	/* Build the config filename from config values */
 	create_rev_zone_filename(domain, net_range, dc);
 	
@@ -134,8 +134,10 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	}
 	
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(zonefn);
 	free(rout);
 	free(dquery);
+	free(domain);
 	return 0;
 }

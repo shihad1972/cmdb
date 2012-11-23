@@ -102,7 +102,8 @@ void add_mx_to_header(char *output,  MYSQL_ROW results)
 {
 	size_t count;
 	char *tmp;
-	tmp = malloc(1024 * sizeof(char));
+	if (!(tmp = malloc(BUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in add_mx_to_header");
 	sprintf(tmp, "\t\t\t%s", results[3]);
 	count = strlen(tmp);
 	strncat(output, tmp, count);
@@ -112,6 +113,7 @@ void add_mx_to_header(char *output,  MYSQL_ROW results)
 	sprintf(tmp, "\t%s\n", results[5]);
 	count = strlen(tmp);
 	strncat(output, tmp, count);
+	free(tmp);
 }
 
 record_row_t fill_record_data(MYSQL_ROW my_row)
@@ -132,7 +134,8 @@ size_t add_records(record_row_t my_row, char *output, size_t offset)
 {
 	char *tmp;
 	size_t len;
-	tmp = malloc(sizeof(char) * RBUFF_S);
+	if (!(tmp = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in add_records");
 	len = strlen(my_row.host);
 	if (len >= 8)
 		sprintf(tmp, "%s\t", my_row.host);
@@ -149,6 +152,7 @@ size_t add_records(record_row_t my_row, char *output, size_t offset)
 	len = strlen(tmp);
 	strncat(output, tmp, len);
 	offset += len;
+	free(tmp);
 	return offset;
 }
 
@@ -189,6 +193,7 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	}
 	/* Now check for second NS record */
 	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {
+		mysql_free_result(dnsa_res);
 		sprintf(line, "%s", zi->sec_dns);
 		if (!(thost = strtok(line, c)))
 			report_error(NO_DELIM, error_string);
@@ -201,6 +206,8 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 			len = add_records(row_data, out, len);
 		}
 	}
+	mysql_free_result(dnsa_res);
+	mysql_close(&dnsa);
 	free(dquery);
 	free(c);
 	free(line);
@@ -239,6 +246,11 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		fprintf(stderr, "No MX records for domain %s\n", zi->name);
 		mx = -1;
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		free(dquery);
+		free(c);
+		free(line);
 		return mx;
 	}
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
@@ -254,15 +266,23 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 			fprintf(stderr, "No result set?\n");
 			if (mx == 0)
 				mx = -1;
+			mysql_free_result(dnsa_res);
+			mysql_close(&dnsa);
+			free(dquery);
+			free(c);
+			free(line);
 			return mx;
 		}
 		while ((dnsa_row = mysql_fetch_row(dnsa_res2))) {
 			row_data2 = fill_record_data(dnsa_row);
 			len = add_records(row_data2, out, len);
 		}
+		mysql_free_result(dnsa_res2);
 		mysql_close(&dnsa2);
 		mx++;
 	}
+	mysql_free_result(dnsa_res);
+	mysql_close(&dnsa);
 	free(dquery);
 	free(c);
 	free(line);

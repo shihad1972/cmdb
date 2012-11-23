@@ -77,7 +77,7 @@ int wrcf(dnsa_config_t *dc)
 			fclose(cnf);
 		}
 	}
-	
+	mysql_free_result(dnsa_res);
 	/* Write the config file.
 	 * Check it and if successful reload bind */
 	sprintf(zonefile, "%s%s", dc->bind, dc->rev);
@@ -110,5 +110,6 @@ int wrcf(dnsa_config_t *dc)
 	free(dnsa_line);
 	free(error_code);
 	mysql_close(&dnsa);
-	exit(0);
+	mysql_library_end();
+	return 0;
 }

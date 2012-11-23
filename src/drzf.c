@@ -67,7 +67,7 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_zone_info = fill_rev_zone_data(dnsa_row);
 	}
-	
+	mysql_free_result(dnsa_res);
 	/* Get the reverse zone records */
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", id);
 	cmdb_mysql_query(&dnsa, dnsa_query);
@@ -127,8 +127,9 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	       rzi->hostmaster);
 	printf("%d %d %d %d %d\n", rzi->serial, rzi->refresh, rzi->retry,
 	       rzi->expire, rzi->ttl);
-
+	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(in_addr);
 	free(dquery);
 	free(tmp);
@@ -195,8 +196,9 @@ int list_rev_zones (dnsa_config_t *dc)
 		domain[len + i] = '\0';
 		printf("%s\t%s\n", domain, dnsa_row[1]);
 	}
-	
+	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(domain);
 	free(tmp);
 	free(error_code);

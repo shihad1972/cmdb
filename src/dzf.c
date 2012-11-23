@@ -57,15 +57,21 @@ int dzf (char *domain, dnsa_config_t *dc)
 		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
 		report_error(MY_STORE_FAIL, error_str);
 	}
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(tmp);
+		free(host);
+		free(error_code);
 		report_error(NO_DOMAIN, domain);
-	else if (dnsa_rows > 1)
+	} else if (dnsa_rows > 1)
 		report_error(MULTI_DOMAIN, domain);
 	
 	/* Get the zone info from the DB */
 	while ((my_row = mysql_fetch_row(dnsa_res)))
 		zone_info = fill_zone_data(my_row);
-	
+	mysql_free_result(dnsa_res);
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
@@ -132,8 +138,9 @@ int dzf (char *domain, dnsa_config_t *dc)
 	       host, zi->ttl, zi->pri_dns, zi->name);
 	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
-
+	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(tmp);
 	free(host);
 	free(error_code);
@@ -200,8 +207,9 @@ int list_zones (dnsa_config_t *dc)
 		domain[len + i] = '\0';
 		printf("%s\t%s\n", domain, my_row[1]);
 	}
-	
+	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(domain);
 	free(tmp);
 	free(error_code);

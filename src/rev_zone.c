@@ -247,16 +247,33 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	
 	snprintf(error_code, CONF_S, "%s", domain);
 	/* Check for only 1 result */
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		free(error_code);
+		free(queryp);
+		error_str = 0;
+		dquery = 0;
+		mysql_library_end();
 		report_error(NO_DOMAIN, domain);
-	else if (dnsa_rows > 1)
+	} else if (dnsa_rows > 1) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		free(error_code);
+		free(queryp);
+		error_str = 0;
+		dquery = 0;
+		mysql_library_end();
 		report_error(MULTI_DOMAIN, domain);
-	
+	}
 	dnsa_row = mysql_fetch_row(dnsa_res);
 	retval = atoi(dnsa_row[0]);
+	mysql_free_result(dnsa_res);
+	mysql_close(&dnsa);
 	free(error_code);
 	free(queryp);
 	error_str = 0;
 	dquery = 0;
+	mysql_library_end();
 	return retval;
 }

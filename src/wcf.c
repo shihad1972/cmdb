@@ -94,11 +94,12 @@ int wcf(dnsa_config_t *dc)
 			fprintf(stderr, "Bind reload failed with error code %d\n", error);
 		}
 	}
-	
+	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(dout);
 	free(dnsa_line);
 	free(zonefile);
 	free(error_code);
-	exit(0);
+	return 0;
 }

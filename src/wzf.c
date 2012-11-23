@@ -61,7 +61,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	my_row = mysql_fetch_row(dnsa_res);
 	zone_info = fill_zone_data(my_row);
 	create_zone_header(zout, zone_info);
-	
+	mysql_free_result(dnsa_res);
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	
@@ -72,7 +72,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 			add_mx_to_header(zout, my_row);
 		}
 	}
-	
+	mysql_free_result(dnsa_res);
 	sprintf(tmp, "$ORIGIN\t%s.\n", zi->name);
 	len = strlen(tmp);
 	strncat(zout, tmp, len);
@@ -105,6 +105,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 		row_data = fill_record_data(my_row);
 		offset = add_records(row_data, zout2, offset);	
 	}
+	mysql_free_result(my_res);
 	sprintf(zonefilename, "%sdb.%s", dc->dir, zi->name);
 	write_fwd_zonefile(zonefilename, zout2);
 	check_fwd_zone(zonefilename, zi->name, dc);
@@ -113,8 +114,8 @@ int wzf (char *domain, dnsa_config_t *dc)
 	dnsa_rows = mysql_affected_rows(&dnsa);
 	if (dnsa_rows == 1)
 		fprintf(stderr, "DB updated as zone validated\n");
-
 	mysql_close(&dnsa);
+	mysql_library_end();
 	free(zout2);
 	free(zout);
 	free(tmp);
