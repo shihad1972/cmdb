@@ -110,6 +110,10 @@ void display_cmdb_command_line_error(int retval, char *program)
 		case GENERIC_ERROR:
 			fprintf(stderr, "Unknown command line option\n");
 			break;
+		case DISPLAY_USAGE:
+			display_cmdb_usage();
+			exit(retval);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code!\n");
 			break;
@@ -118,4 +122,16 @@ void display_cmdb_command_line_error(int retval, char *program)
 	printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
 	       program);
 	exit (retval);
+}
+
+void display_cmdb_usage(void)
+{
+	printf("CMDB: Configuration Management Database\n\n");
+	printf("Action options:\n");
+	printf("-d: display\n-l: list\n-a: add\n");
+	printf("-t: add contact (when specified with -c for customer)\n\n");
+	printf("Type options:\n");
+	printf("-s: server\n-c: customer\n\n");
+	printf("Name options:\n");
+	printf("-n: name\n-i: uuid for server or coid for customer\n");
 }

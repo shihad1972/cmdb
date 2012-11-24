@@ -37,12 +37,31 @@ int main(int argc, char *argv[])
 	
 	init_cmdb_config_values(cmc);
 	retval = parse_cmdb_command_line(argc, argv, cm);
-	if (retval < 0)
+	if (retval < 0) {
+		free(cmdb_config);
 		display_cmdb_command_line_error(retval, argv[0]);
+	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
 	
-	switch (cm->action){
+	switch (cm->type) {
+		case SERVER:
+			if (cm->action == DISPLAY)
+				display_server_info(name, uuid, cmc);
+			else if (cm->action == LIST_OBJ)
+				display_all_servers(cmc);
+			break;
+		case CUSTOMER:
+			if (cm->action == DISPLAY)
+				display_customer_info(name, uuid, cmc);
+			else if (cm->action == LIST_OBJ)
+				display_all_customers(cmc);
+			break;
+		default:
+			printf("Not implemented yet :(\n");
+			break;
+	}
+/*	switch (cm->action){
 		case DISPLAY:
 			if (cm->type == SERVER)
 				display_server_info(name, uuid, cmc);
@@ -58,7 +77,7 @@ int main(int argc, char *argv[])
 		default:
 			printf("Not yet implemented :(\n");
 			break;
-	}
+	} */
 	free(cmdb_config);
 	exit (0);
 }

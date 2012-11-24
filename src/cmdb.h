@@ -47,7 +47,8 @@ enum {			/* CMDB Return codes */
 	NO_ID = -3,
 	NO_TYPE = -4,
 	NO_ACTION = -5,
-	NO_NAME_OR_ID = -6
+	NO_NAME_OR_ID = -6,
+	DISPLAY_USAGE = -7
 };
 
 
@@ -71,5 +72,7 @@ report_error(int error, const char *errstr);
 /* cmdb comand line error function */
 void
 display_cmdb_command_line_error(int retval, char *program);
+void
+display_cmdb_usage(void);
 
 #endif

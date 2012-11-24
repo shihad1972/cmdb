@@ -60,14 +60,18 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 		}
 	}
 	
-	if (comp->type == NONE)
+	if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;
-	else if (comp->action == NONE)
+	else if ((comp->action == NONE) && (comp->type != NONE))
 		retval = NO_ACTION;
 	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
-		strncmp(comp->id, "NULL", CONF_S) == 0)
+		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
+		(comp->type != NONE || comp->action != NONE))
 		retval = NO_NAME_OR_ID;
-	
+	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
+		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
+		(comp->type == NONE && comp->action == NONE))
+		retval = DISPLAY_USAGE;
 	return retval;
 }
 
