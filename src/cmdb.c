@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
 	switch (cm->type) {
 		case SERVER:
 			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
-				retval = validate_user_input(cm->id, uuid_regex);
+				retval = validate_user_input(cm->id, UUID_REGEX);
 			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
-				retval = validate_user_input(cm->name, name_regex);
+				retval = validate_user_input(cm->name, NAME_REGEX);
 			} else {
 				printf("Both name and uuid set to NULL??\n");
 				free(cmdb_config);
@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
 			break;
 		case CUSTOMER:
 			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
-				retval = validate_user_input(cm->id, coid_regex);
+				retval = validate_user_input(cm->id, COID_REGEX);
 			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
-				retval = validate_user_input(cm->name, customer_name_regex);
+				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
 			} else {
 				printf("Both name and coid set to NULL??\n");
 				free(cmdb_config);

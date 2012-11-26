@@ -26,6 +26,7 @@
 #include "cmdb_dnsa.h"
 #include "forward.h"
 #include "reverse.h"
+#include "checks.h"
 
 int main(int argc, char *argv[])
 {
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
 	cm = &command;
 	
 	/* Get command line args. See above */
-	retval = parse_command_line(argc, argv, cm);
+	retval = parse_dnsa_command_line(argc, argv, cm);
 	if (retval < 0) {
 		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
@@ -53,13 +54,20 @@ int main(int argc, char *argv[])
 	/* Get config values from config file */	
 	init_config_values(dc);
 	sprintf(config, "%s", cm->config);
-	retval = parse_config_file(dc, config);
+	retval = parse_dnsa_config_file(dc, config);
 	if (retval < 0) {
 		printf("Config file parsing failed! Using default values\n");
 	}
+	free(config);
 
 	strncpy(domain, cm->domain, CONF_S);
 	if (cm->type == FORWARD_ZONE) {
+		retval = validate_user_input(domain, DOMAIN_REGEX);
+		if (retval < 0) {
+			printf("User input not valid!\n");
+			free(domain);
+			exit (retval);
+		}
 		if (cm->action == WRITE_ZONE) {
 			wzf(domain, dc);
 		} else if (cm->action == DISPLAY_ZONE) {
@@ -85,10 +93,10 @@ int main(int argc, char *argv[])
 	} else {
 		retval = WRONG_TYPE;
 		printf("We have an invalid type id %d\n", cm->type);
+		free(domain);
 		exit(retval);
 	}
 	
-	free(config);
 	free(domain);
 	exit(0);
 }

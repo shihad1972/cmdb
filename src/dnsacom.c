@@ -15,7 +15,7 @@
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 
-int parse_command_line(int argc, char **argv, comm_line_t *comp)
+int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 {
 	int i, retval;
 	
@@ -62,7 +62,7 @@ int parse_command_line(int argc, char **argv, comm_line_t *comp)
 	return retval;
 }
 
-int parse_config_file(dnsa_config_t *dc, char *config)
+int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	size_t len;

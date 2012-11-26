@@ -19,7 +19,27 @@
 
 #define OVECCOUNT 18    /* should be a multiple of 3 */
 
-int validate_user_input(char *input, char *regex_test)
+/*char uuid_regex[] = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$";
+char customer_name_regex[] = "^[a-zA-Z0-9]*[a-zA-Z0-9\\-\\_\\ \']*[a-zA-Z0-9]$";
+char name_regex[] = "^[a-zA-Z0-9][a-zA-Z0-9\\-\\_]*[a-zA-Z0-9]$";
+char id_regex[] = "^[0-9]+$";
+char coid_regex[] = "^[A-Z0-9]{5,7}[A-Z0-9]$";
+char mac_regex[] = "^[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}$";
+char ip_regex[] = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
+char domain_regex[] = "^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$"; */
+/*char ip_regex[] = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"; */
+
+const char *regexps[8] = {
+	"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+	"^[a-zA-Z0-9][a-zA-Z0-9\\-\\_]*[a-zA-Z0-9]$",
+	"^[0-9]+$",
+	"^[a-zA-Z0-9]*[a-zA-Z0-9\\-\\_\\ \']*[a-zA-Z0-9]$",
+	"^[A-Z0-9]{5,7}[A-Z0-9]$",
+	"^[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}$",
+	"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+	"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$"
+};
+int validate_user_input(char *input, int regex_test)
 {
 	pcre *regexp;
 	const char *error;
@@ -29,7 +49,7 @@ int validate_user_input(char *input, char *regex_test)
 	input_length = (int)strlen(input);
 	
 	regexp = pcre_compile(
-		regex_test,
+		regexps[regex_test],
 		0,
 		&error,
 		&erroffset,
@@ -58,8 +78,9 @@ int validate_user_input(char *input, char *regex_test)
 	if (valid == 0) {
 		valid = OVECCOUNT / 3;
 		printf("ovector only has room for %d captured substrings\n", valid - 1);
-		return 0;
+		pcre_free(regexp);
+		return -1;
 	}
-	
+	pcre_free(regexp);
 	return 1;
 }

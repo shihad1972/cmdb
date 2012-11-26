@@ -10,7 +10,7 @@ CFLAGS = -ansi -std=c99 -pedantic -W -Wall -Wconversion -Wshadow -Wcast-qual -Ww
 CPPFLAGS =
 LDFLAGS = -L/usr/lib/mysql
 LIBS = -lmysqlclient -lpcre
-DOBJECTS = dnsa.o dnsacom.o wzf.o wrzf.o rev_zone.o fwd_zone.o errors.o dzf.o drzf.o wcf.o wrcf.o dnsa_mysql.o
+DOBJECTS = dnsa.o dnsacom.o wzf.o wrzf.o rev_zone.o fwd_zone.o errors.o dzf.o drzf.o wcf.o wrcf.o dnsa_mysql.o checks.o
 COBJECTS = cmdb.o cmdbcom.o cmdb_mysql.o errors.o servers.o customers.o checks.o
 
 all:	dnsa cmdb

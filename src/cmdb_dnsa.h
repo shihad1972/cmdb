@@ -34,10 +34,10 @@ typedef struct dnsa_config_t { /* Hold DNSA configuration values */
 
 /* Get command line args and pass them. Put actions into the struct */
 int
-parse_command_line(int argc, char **argv, comm_line_t *comm);
+parse_dnsa_command_line(int argc, char **argv, comm_line_t *comm);
 /* Grab config values from file */
 int
-parse_config_file(dnsa_config_t *dc, char *config);
+parse_dnsa_config_file(dnsa_config_t *dc, char *config);
 /*initialise configuration struct */
 void
 init_config_values(dnsa_config_t *dc);

@@ -18,6 +18,7 @@
 #include "reverse.h"
 #include "mysqlfunc.h"
 #include "dnsa_mysql.h"
+#include "checks.h"
 
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
@@ -228,7 +229,11 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	len = strlen(domain);
 	if ((strncmp(domain, "all", len)) == 0 || (strncmp(domain, "none", len)) == 0 )
 		return retval;
-
+	retval = validate_user_input(domain, IP_REGEX);
+	if (retval < 0) {
+		printf("User input not valid!\n");
+		return retval;
+	}
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in get_rev_id");
 	error_str = error_code; 
