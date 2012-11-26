@@ -1,8 +1,8 @@
-/* cbscom.c
+/* cbccom.c
  * 
  * Functions to get configuration values and also parse command line arguments
  * 
- * part of the cbs program
+ * part of the cbc program
  * 
  * (C) 2012 Iain M. Conochie
  * 
@@ -12,9 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
-#include "cmdb_cbs.h"
+#include "cmdb_cbc.h"
 
-int parse_cbs_config_file(cbs_config_t *dc, char *config)
+int parse_cbc_config_file(cbc_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -68,7 +68,7 @@ int parse_cbs_config_file(cbs_config_t *dc, char *config)
 	return retval;
 }
 
-void init_cbs_config_values(cbs_config_t *dc)
+void init_cbc_config_values(cbc_config_t *dc)
 {
 	sprintf(dc->db, "cmdb");
 	sprintf(dc->user, "root");
