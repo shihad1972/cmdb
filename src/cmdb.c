@@ -18,6 +18,7 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
+#include "checks.h"
 
 int main(int argc, char *argv[])
 {
@@ -43,15 +44,48 @@ int main(int argc, char *argv[])
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	if (retval == -2) {
+		printf("Port value higher that 65535!\n");
+		free(cmdb_config);
+		exit (1);
+	}
 	
 	switch (cm->type) {
 		case SERVER:
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, uuid_regex);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, name_regex);
+			} else {
+				printf("Both name and uuid set to NULL??\n");
+				free(cmdb_config);
+				exit (1);
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				free(cmdb_config);
+				exit (1);
+			}
 			if (cm->action == DISPLAY)
 				display_server_info(name, uuid, cmc);
 			else if (cm->action == LIST_OBJ)
 				display_all_servers(cmc);
 			break;
 		case CUSTOMER:
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, coid_regex);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, customer_name_regex);
+			} else {
+				printf("Both name and coid set to NULL??\n");
+				free(cmdb_config);
+				exit (1);
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				free(cmdb_config);
+				exit (1);
+			}
 			if (cm->action == DISPLAY)
 				display_customer_info(name, uuid, cmc);
 			else if (cm->action == LIST_OBJ)

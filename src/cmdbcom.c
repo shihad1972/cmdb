@@ -116,12 +116,12 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 		fclose(cnf);
 	}
 	
-	/* We need to check the value of portnop before we convert to int.
+	/* We need to check the value of portno before we convert to int.
 	 * Obviously we cannot have a port > 65535
 	 */
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
-		retval = -1;
+		retval = -2;
 	} else {
 		dc->port = (unsigned int) portno;
 	}
