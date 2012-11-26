@@ -1,17 +1,11 @@
 /* cmdb_cbc.h */
 
-#ifndef __CMDB_CBS_H__
-#define __CMDB_CBS_H__
+#ifndef __CMDB_CBC_H__
+#define __CMDB_CBC_H__
 
-enum {			/* Display codes; use NONE from action codes */
-	SERVER = 1,
-	CUSTOMER = 2,
-	CONTACT = 3
-};
 
 typedef struct cbc_comm_line_t { /* Hold parsed command line args */
 	short int action;
-	short int type;
 	char config[CONF_S];
 	char name[CONF_S];
 	char id[CONF_S];

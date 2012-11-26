@@ -14,7 +14,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 
-int parse_cbc_config_file(cbc_config_t *dc, char *config)
+int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -29,23 +29,23 @@ int parse_cbc_config_file(cbc_config_t *dc, char *config)
 		retval = -1;
 	} else {
 		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "PASS=%s", dc->pass);
+			sscanf(buff, "PASS=%s", cbc->pass);
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "HOST=%s", dc->host);	
+			sscanf(buff, "HOST=%s", cbc->host);	
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "USER=%s", dc->user);
+			sscanf(buff, "USER=%s", cbc->user);
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "DB=%s", dc->db);
+			sscanf(buff, "DB=%s", cbc->db);
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "SOCKET=%s", dc->socket);
+			sscanf(buff, "SOCKET=%s", cbc->socket);
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
@@ -62,19 +62,19 @@ int parse_cbc_config_file(cbc_config_t *dc, char *config)
 	if (portno > 65535) {
 		retval = -2;
 	} else {
-		dc->port = (unsigned int) portno;
+		cbc->port = (unsigned int) portno;
 	}
 	
 	return retval;
 }
 
-void init_cbc_config_values(cbc_config_t *dc)
+void init_cbc_config_values(cbc_config_t *cbc)
 {
-	sprintf(dc->db, "cmdb");
-	sprintf(dc->user, "root");
-	sprintf(dc->host, "localhost");
-	sprintf(dc->pass, "%s", "");
-	sprintf(dc->socket, "%s", "");
-	dc->port = 3306;
-	dc->cliflag = 0;
+	sprintf(cbc->db, "cmdb");
+	sprintf(cbc->user, "root");
+	sprintf(cbc->host, "localhost");
+	sprintf(cbc->pass, "%s", "");
+	sprintf(cbc->socket, "%s", "");
+	cbc->port = 3306;
+	cbc->cliflag = 0;
 }
