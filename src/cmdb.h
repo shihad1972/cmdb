@@ -6,6 +6,7 @@ enum {			/* Buffer Sizes */
 	CH_S = 2,
 	COMM_S = 8,
 	RANGE_S = 16,
+	MAC_S = 32,
 	HOST_S = 64,
 	CONF_S = 80,
 	RBUFF_S = 256,
@@ -14,7 +15,7 @@ enum {			/* Buffer Sizes */
 	FILE_S = 4096
 };
 
-enum {			/* DNSA error codes */
+enum {			/* dnsa error codes */
 	OK = 0,
 	ARGC_INVAL = 1,
 	ARGV_INVAL = 2,
@@ -34,14 +35,14 @@ enum {			/* DNSA error codes */
 	MALLOC_FAIL = 30
 };
 
-enum {			/* CMDB error codes: start @ 101 to avoid conflict */
+enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	SERVER_NOT_FOUND = 101,
 	MULTIPLE_SERVERS = 102,
 	CUSTOMER_NOT_FOUND = 103,
 	MULTIPLE_CUSTOMERS = 104
 };
 
-enum {			/* CMDB Return codes */
+enum {			/* cmdb return codes */
 	GENERIC_ERROR = -1,
 	NO_NAME = -2,
 	NO_ID = -3,
@@ -49,6 +50,10 @@ enum {			/* CMDB Return codes */
 	NO_ACTION = -5,
 	NO_NAME_OR_ID = -6,
 	DISPLAY_USAGE = -7
+};
+
+enum {			/* cbc return codes */
+	NO_UUID = -8
 };
 
 enum {			/* cmdb config file error codes */
@@ -70,19 +75,28 @@ enum {			/* cbc config file error codes */
 	KICKSTART_ERR = 8
 };
 
-enum {			/* CMDB Action codes */
+enum {			/* cmdb Action codes */
 	NONE = 0,
 	DISPLAY = 1,
 	LIST_OBJ = 2
 };
-
-enum {			/* DNSA action codes */
+enum {			/* dnsa action codes */
 	WRITE_ZONE = 1,
 	DISPLAY_ZONE = 2,
 	CONFIGURE_ZONE = 3,
 	LIST_ZONES = 4
 };
 
+enum {			/* cbc action codes */
+	WRITE_CONFIG = 1,
+	DISPLAY_CONFIG = 2,
+	ADD_CONFIG = 3
+};
+
+enum {			/* cbc values for build type */
+	PRESEED = 1,
+	KICKSTART = 2
+};
 
 /* Error reporting function */
 void 
