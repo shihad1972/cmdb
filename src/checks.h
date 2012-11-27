@@ -22,6 +22,10 @@ enum {			/* regex search codes */
 	DOMAIN_REGEX
 };
 
-int validate_user_input(char *input, int test);
+int
+validate_user_input(char *input, int test);
+
+int
+add_trailing_slash(char *member);
 
 #endif

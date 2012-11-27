@@ -51,6 +51,14 @@ enum {			/* CMDB Return codes */
 	DISPLAY_USAGE = -7
 };
 
+enum {				/* CBC Config file error codes */
+	CONF_ERR = 1,
+	PORT_ERR = 2,
+	TMP_ERR = 3,
+	TFTP_ERR = 4,
+	PXE_ERR = 5,
+	OS_ERR = 6
+};
 
 enum {			/* CMDB Action codes */
 	NONE = 0,

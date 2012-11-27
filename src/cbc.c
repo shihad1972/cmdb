@@ -29,11 +29,12 @@ int main(int argc, char *argv[])
 	init_cbc_config_values(cmc);
 	
 	retval = parse_cbc_config_file(cmc, cbc_config);
-	if (retval == -2) {
-		retval = 1;
-		printf("Port value higher that 65535!\n");
-		exit (retval);
+	free(cbc_config);
+	if (retval > 1) {
+		parse_cbc_config_error(retval);
+		exit(retval);
 	}
-	
+	/* Debug */
+	print_cbc_config(cmc);
 	exit(retval);
 }

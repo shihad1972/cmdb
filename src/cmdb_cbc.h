@@ -19,6 +19,11 @@ typedef struct cbc_config_t { /* Hold CMDB configuration values */
 	char socket[CONF_S];
 	unsigned int port;
 	unsigned long int cliflag;
+	char tmpdir[CONF_S];
+	char tftpdir[CONF_S];
+	char pxe[CONF_S];
+	char toplevelos[CONF_S];
+	char dhcpconf[CONF_S];
 } cbc_config_t;
 
 
@@ -27,5 +32,11 @@ parse_cbc_config_file(cbc_config_t *dc, char *config);
 
 void
 init_cbc_config_values(cbc_config_t *dc);
+
+void
+parse_cbc_config_error(int error);
+
+void
+print_cbc_config(cbc_config_t *cbc);
 
 #endif
