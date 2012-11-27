@@ -55,10 +55,11 @@ int main(int argc, char *argv[])
 	init_config_values(dc);
 	sprintf(config, "%s", cm->config);
 	retval = parse_dnsa_config_file(dc, config);
-	if (retval < 0) {
-		printf("Config file parsing failed! Using default values\n");
-	}
 	free(config);
+	if (retval > 1) {
+		parse_dnsa_config_error(retval);
+		exit(retval);
+	}
 
 	strncpy(domain, cm->domain, CONF_S);
 	if (cm->type == FORWARD_ZONE) {

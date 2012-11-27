@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
+#include "checks.h"
 
 int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 {
@@ -65,7 +66,6 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
-	size_t len;
 	int retval;
 	unsigned long int portno;
 
@@ -78,7 +78,7 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	if (!(cnf = fopen(config, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", config);
 		fprintf(stderr, "Using default values\n");
-		retval = -1;
+		retval = CONF_ERR;
 	} else {
 		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "PASS=%s", dc->pass);
@@ -131,7 +131,7 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "CHKC=%s", dc->chkc);
 		}
-		retval = 0;
+		retval = NONE;
 		fclose(cnf);
 	}
 	
@@ -140,7 +140,7 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	 */
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
-		retval = -1;
+		retval = PORT_ERR;
 	} else {
 		dc->port = (unsigned int) portno;
 	}
@@ -148,22 +148,28 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	/* The next 2 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
-	sprintf(buff, "%s", dc->dir);
-	len = strlen(buff);
-	if (buff[len - 1] != '/') {
-		buff[len] = '/';
-		buff[len + 1] = '\0';
-		sprintf(dc->dir, "%s", buff);
-	}
-	sprintf(buff, "%s", dc->bind);
-	len = strlen(buff);
-	if (buff[len - 1] != '/') {
-		buff[len] = '/';
-		buff[len + 1] = '\0';
-		sprintf(dc->bind, "%s", buff);
-	}
+	
+	if ((retval = add_trailing_slash(dc->dir)) != 0)
+		retval = DIR_ERR;
+	if ((retval = add_trailing_slash(dc->bind)) != 0)
+		retval = BIND_ERR;
 	
 	return retval;
+}
+
+void parse_dnsa_config_error(int error)
+{
+	switch(error) {
+		case PORT_ERR:
+			fprintf(stderr, "Port higher than 65535!\n");
+			break;
+		case DIR_ERR:
+			fprintf(stderr, "Cannot add trailing / to DIR: > 79 characters\n");
+			break;
+		case BIND_ERR:
+			fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
+			break;
+		}
 }
 
 void init_config_values(dnsa_config_t *dc)

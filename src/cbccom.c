@@ -139,7 +139,7 @@ void print_cbc_config(cbc_config_t *cbc)
 	fprintf(stderr, "PASS: %s\n", cbc->pass);
 	fprintf(stderr, "HOST: %s\n", cbc->host);
 	fprintf(stderr, "PORT: %d\n", cbc->port);
-	fprintf(stderr, "SOCKER: %s\n", cbc->socket);
+	fprintf(stderr, "SOCKET: %s\n", cbc->socket);
 	fprintf(stderr, "TMPDIR: %s\n", cbc->tmpdir);
 	fprintf(stderr, "TFTPDIR: %s\n", cbc->tftpdir);
 	fprintf(stderr, "PXE: %s\n", cbc->pxe);

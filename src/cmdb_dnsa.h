@@ -41,5 +41,7 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config);
 /*initialise configuration struct */
 void
 init_config_values(dnsa_config_t *dc);
+void
+parse_dnsa_config_error(int error);
 
 #endif

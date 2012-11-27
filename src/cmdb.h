@@ -51,9 +51,17 @@ enum {			/* CMDB Return codes */
 	DISPLAY_USAGE = -7
 };
 
-enum {				/* CBC Config file error codes */
+enum {			/* cmdb config file error codes */
 	CONF_ERR = 1,
 	PORT_ERR = 2,
+};
+
+enum {			/* dnsa config file error codes */
+	DIR_ERR = 3,
+	BIND_ERR = 4
+};
+
+enum {			/* cbc config file error codes */
 	TMP_ERR = 3,
 	TFTP_ERR = 4,
 	PXE_ERR = 5,
