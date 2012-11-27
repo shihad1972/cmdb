@@ -24,6 +24,8 @@ typedef struct cbc_config_t { /* Hold CMDB configuration values */
 	char pxe[CONF_S];
 	char toplevelos[CONF_S];
 	char dhcpconf[CONF_S];
+	char kickstart[CONF_S];
+	char preseed[CONF_S];
 } cbc_config_t;
 
 

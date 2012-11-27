@@ -34,6 +34,6 @@ int main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
-
+	print_cbc_config(cmc);
 	exit(retval);
 }

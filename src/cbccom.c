@@ -73,6 +73,14 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 			sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
 		}
 		rewind (cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PRESEED=%s", cbc->preseed);
+		}
+		rewind (cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "KICKSTART=%s", cbc->kickstart);
+		}
+		rewind (cnf);
 		retval = 0;
 		fclose(cnf);
 	}
@@ -96,6 +104,10 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		retval = PXE_ERR;
 	if ((retval = add_trailing_slash(cbc->toplevelos)) != 0)
 		retval = OS_ERR;
+	if ((retval = add_trailing_slash(cbc->preseed)) != 0)
+		retval = PRESEED_ERR;
+	if ((retval = add_trailing_slash(cbc->kickstart)) !=0)
+		retval = KICKSTART_ERR;
 	
 	return retval;
 }
@@ -145,4 +157,6 @@ void print_cbc_config(cbc_config_t *cbc)
 	fprintf(stderr, "PXE: %s\n", cbc->pxe);
 	fprintf(stderr, "TOPLEVELOS: %s\n", cbc->toplevelos);
 	fprintf(stderr, "DHCPCONF: %s\n", cbc->dhcpconf);
+	fprintf(stderr, "PRESEED: %s\n", cbc->preseed);
+	fprintf(stderr, "KICKSTART: %s\n", cbc->kickstart);
 }

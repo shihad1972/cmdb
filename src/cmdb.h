@@ -65,7 +65,9 @@ enum {			/* cbc config file error codes */
 	TMP_ERR = 3,
 	TFTP_ERR = 4,
 	PXE_ERR = 5,
-	OS_ERR = 6
+	OS_ERR = 6,
+	PRESEED_ERR = 7,
+	KICKSTART_ERR = 8
 };
 
 enum {			/* CMDB Action codes */
