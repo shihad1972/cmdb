@@ -111,7 +111,10 @@ void display_cmdb_command_line_error(int retval, char *program)
 			fprintf(stderr, "Unknown command line option\n");
 			break;
 		case DISPLAY_USAGE:
-			display_cmdb_usage();
+			if ((strncmp(program, "cmdb", CONF_S) == 0))
+				display_cmdb_usage();
+			else if ((strncmp(program, "cbc", CONF_S) == 0))
+				display_cbc_usage();
 			exit(retval);
 			break;
 		default:
@@ -134,4 +137,15 @@ void display_cmdb_usage(void)
 	printf("-s: server\n-c: customer\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
+}
+
+void display_cbc_usage(void)
+{
+	printf("cbc: Create Build Configuration\n\n");
+	printf("Action options:\n");
+	printf("-l: create\n-y: display\n\n");
+	printf("Build type options:\n");
+	printf("-k: kickstart\n-p: preseed\n\n");
+	printf("Name options:\n");
+	printf("-n: name\n-u: uuid for server\n-t: server_id\n");
 }
