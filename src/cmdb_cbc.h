@@ -70,6 +70,12 @@ void
 print_cbc_command_line_values(cbc_comm_line_t *command_line);
 
 int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb, cbc_build_t *cbt);
+parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
+
+int
+get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
+
+int
+get_build_info(cbc_build_t *build_info, char *server_name);
 
 #endif

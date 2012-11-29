@@ -2,6 +2,7 @@
 
 #include <mysql/mysql.h>
 #include "cmdb.h"
+#include "cmdb_cmdb.h"
 #include "mysqlfunc.h"
 
 

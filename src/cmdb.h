@@ -106,5 +106,7 @@ void
 display_cmdb_command_line_error(int retval, char *program);
 void
 display_cmdb_usage(void);
+void
+display_cbc_usage(void);
 
 #endif

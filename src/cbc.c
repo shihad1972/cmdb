@@ -34,7 +34,10 @@ int main(int argc, char *argv[])
 	init_cbc_comm_values(cml);
 	init_cbc_build_values(cbt);
 	
-	retval = parse_cbc_command_line(argc, argv, cml, cbt);
+	retval = parse_cbc_command_line(argc, argv, cml);
+	if (retval < 0)
+		display_cmdb_command_line_error(retval, argv[0]);
+	
 	retval = parse_cbc_config_file(cmc, cbc_config);
 	
 	free(cbc_config);
@@ -42,6 +45,9 @@ int main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
+	retval = get_server_name(cml, cmc);
+	retval = get_build_info(cbt, cml->name);
+	
 	print_cbc_config(cmc);
 	print_cbc_command_line_values(cml);
 	print_cbc_build_values(cbt);

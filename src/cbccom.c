@@ -112,7 +112,7 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 	return retval;
 }
 
-int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb, cbc_build_t *cbt)
+int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 {
 	int retval, i;
 	
@@ -149,14 +149,16 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb, cbc_buil
 			retval = DISPLAY_USAGE;
 		}
 	}
-	
-	if (cb->action == NONE)
+	if ((cb->action == NONE) && (cb->build_type == NONE) && (cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0) && (strncmp(cb->name, "NULL", CONF_S) == 0))
+		retval = DISPLAY_USAGE;
+	else if (cb->action == NONE)
 		retval = NO_ACTION;
 	else if (cb->build_type == NONE)
 		retval = NO_TYPE;
-	else if ((cb->server_id == NONE) || (strncmp(cb->uuid, "NONE", CONF_S) == 0)
-		|| (strncmp(cb->name, "NONE", CONF_S) == 0))
+	else if ((cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0)
+		&& (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
+	
 	
 	return retval;
 	
