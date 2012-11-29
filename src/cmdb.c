@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
 		case SERVER:
 			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
 				retval = validate_user_input(cm->id, UUID_REGEX);
+				if (retval < 0)
+					retval = validate_user_input(cm->id, NAME_REGEX);
 			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
 				retval = validate_user_input(cm->name, NAME_REGEX);
 			} else {
