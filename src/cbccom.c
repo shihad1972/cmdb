@@ -199,6 +199,13 @@ void init_cbc_config_values(cbc_config_t *cbc)
 	sprintf(cbc->host, "localhost");
 	sprintf(cbc->pass, "%s", "");
 	sprintf(cbc->socket, "%s", "");
+	sprintf(cbc->tmpdir, "/tmp/cbc");
+	sprintf(cbc->tftpdir, "/tftpboot");
+	sprintf(cbc->pxe, "pxelinx.cfg");
+	sprintf(cbc->toplevelos, "/build");
+	sprintf(cbc->dhcpconf, "/etc/dhcpd/dhcpd.hosts");
+	sprintf(cbc->preseed, "preseed");
+	sprintf(cbc->kickstart, "kickstart");
 	cbc->port = 3306;
 	cbc->cliflag = 0;
 }
