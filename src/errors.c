@@ -146,8 +146,11 @@ void display_cmdb_command_line_error(int retval, char *program)
 			fprintf(stderr, "Unknown error code!\n");
 			break;
 	}
-
-	printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
+	if ((strncmp(program, "cmdb", CONF_S) == 0))
+		printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
+	       program);
+	else if ((strncmp(program, "cbc", CONF_S) == 0))
+		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
 	       program);
 	exit (retval);
 }
@@ -168,9 +171,9 @@ void display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
-	printf("-l: create\n-y: display\n\n");
+	printf("-w: create\n-d: display\n\n");
 	printf("Build type options:\n");
 	printf("-k: kickstart\n-p: preseed\n\n");
 	printf("Name options:\n");
-	printf("-n: name\n-u: uuid for server\n-t: server_id\n");
+	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 }

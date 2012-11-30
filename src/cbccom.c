@@ -131,7 +131,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				retval = NO_UUID;
 			else
 				strncpy(cb->uuid, argv[i], CONF_S);
-		} else if ((strncmp(argv[i], "-t", COMM_S) == 0)) {
+		} else if ((strncmp(argv[i], "-i", COMM_S) == 0)) {
 			i++;
 			if (i >= argc)
 				retval = NO_ID;
@@ -141,9 +141,9 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 			cb->build_type = KICKSTART;
 		} else if ((strncmp(argv[i], "-p", COMM_S) == 0)) {
 			cb->build_type = PRESEED;
-		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
+		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
 			cb->action = WRITE_CONFIG;
-		} else if ((strncmp(argv[i], "-y", COMM_S) == 0)) {
+		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
 			cb->action = DISPLAY_CONFIG;
 		} else {
 			retval = DISPLAY_USAGE;
