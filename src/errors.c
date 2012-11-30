@@ -99,6 +99,14 @@ void report_error(int error, const char *errstr)
 			THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
 			exit(MULTIPLE_SERVER_IDS);
 			break;
+		case SERVER_UUID_NOT_FOUND:
+			fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
+			exit(SERVER_UUID_NOT_FOUND);
+			break;
+		case MULTIPLE_SERVER_UUIDS:
+			fprintf(stderr, "Multiple servers with uuid %s in database\n\
+			THIS SHOULD NOT HAPPEN. CHeck your database!\n", errstr);
+			break;
 		case CUSTOMER_NOT_FOUND:
 			fprintf(stderr, "Customer %s not found\n", errstr);
 			exit(CUSTOMER_NOT_FOUND);
