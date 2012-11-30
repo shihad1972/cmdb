@@ -37,6 +37,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char hostname[CONF_S];
 	char domain[RBUFF_S];
 	char alias[CONF_S];
+	char version[CONF_S];
 	char varient[CONF_S];
 	char arch[CONF_S];
 	char boot[RBUFF_S];
@@ -72,10 +73,11 @@ print_cbc_command_line_values(cbc_comm_line_t *command_line);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
 
-int
+void
 get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 
 int
-get_build_info(cbc_build_t *build_info, char *server_name);
+get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int server_id);
+
 
 #endif

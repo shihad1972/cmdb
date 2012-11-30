@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
-	retval = get_server_name(cml, cmc);
-	retval = get_build_info(cbt, cml->name);
+	get_server_name(cml, cmc);
+	retval = get_build_info(cbt, cmc, cml->server_id);
 	
 	print_cbc_config(cmc);
 	print_cbc_command_line_values(cml);
