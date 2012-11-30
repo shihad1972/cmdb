@@ -82,6 +82,31 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
 			exit(MALLOC_FAIL);
 			break;
+		case SERVER_NOT_FOUND:
+			fprintf(stderr, "Server %s not found in database\n", errstr);
+			exit(SERVER_NOT_FOUND);
+			break;
+		case MULTIPLE_SERVERS:
+			fprintf(stderr, "Multiple servers with name %s found in database\n", errstr);
+			exit(MULTIPLE_SERVERS);
+			break;
+		case SERVER_ID_NOT_FOUND:
+			fprintf(stderr, "Server with id %s not found in database\n", errstr);
+			exit(SERVER_ID_NOT_FOUND);
+			break;
+		case MULTIPLE_SERVER_IDS:
+			fprintf(stderr, "Multiple servers with id %s in database\n\
+			THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
+			exit(MULTIPLE_SERVER_IDS);
+			break;
+		case CUSTOMER_NOT_FOUND:
+			fprintf(stderr, "Customer %s not found\n", errstr);
+			exit(CUSTOMER_NOT_FOUND);
+			break;
+		case MULTIPLE_CUSTOMERS:
+			fprintf(stderr, "Multiple customers found for %s\n", errstr);
+			exit(MULTIPLE_CUSTOMERS);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);

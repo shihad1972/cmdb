@@ -26,7 +26,7 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 	MYSQL_RES *cbc_res;
 	MYSQL_ROW cbc_row;
 	my_ulonglong cbc_rows;
-	char *query;
+	char *query, server_id[40];
 	const char *cbc_query;
 	
 	if (!(query = calloc(BUFF_S, sizeof(char))))
@@ -48,11 +48,19 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 		free(query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
+	sprintf(server_id, "%ld", info->server_id);
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
-		report_error(SERVER_NOT_FOUND, info->name);
+		if (strncmp(info->name, "NULL", CONF_S))
+			report_error(SERVER_NOT_FOUND, info->name);
+		else if (strncmp(info->uuid, "NULL", CONF_S))
+			report_error(SERVER_UUID_NOT_FOUND, info->uuid);
+		else if (info->server_id > 1)
+			report_error(SERVER_ID_NOT_FOUND, server_id);
+		else
+			report_error(NO_NAME_UUID_ID, server_id);
 	} else if (cbc_rows > 1) {
 		mysql_free_result(cbc_res);
 		mysql_close(&cbc);
