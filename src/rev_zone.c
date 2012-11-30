@@ -282,3 +282,216 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	mysql_library_end();
 	return retval;
 }
+
+int wrzf(int reverse, dnsa_config_t *dc)
+{
+	FILE *cnf;
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	rev_zone_info_t rev_zone_info, *rzi;
+	rev_record_row_t rev_row;
+	my_ulonglong dnsa_rows;
+	int error, i;
+	char *zonefn, *rout, *dquery, *domain;
+	const char *dnsa_query, *net_range;
+	
+	
+	if (!(dquery = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dquery in wrzf");
+	if (!(zonefn = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefn in wrzf");
+	if (!(rout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "rout in wrzf");
+	if (!(domain = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in wrzf");
+	
+	dnsa_query = dquery;
+	rzi = &rev_zone_info;
+	net_range = rzi->net_range;
+	
+	/* Initialise MYSQL connection and query */
+	dnsa_mysql_init(dc, &dnsa);
+	
+	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		fprintf(stderr, "Reverse zone id %d not found\n", reverse);
+		return NO_DOMAIN;
+	} else if (dnsa_rows > 1) {
+		fprintf(stderr, "Multiple rows found for reverse zone id %d\n", reverse);
+		return MULTI_DOMAIN;
+	}
+	
+	/* Get the information for the reverse zone */
+	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
+		rev_zone_info = fill_rev_zone_data(dnsa_row);
+	}
+	mysql_free_result(dnsa_res);
+	/* Start the output string with the zonefile header */
+	create_rev_zone_header(rev_zone_info, rout);
+	
+	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
+	error = mysql_query(&dnsa, dnsa_query);
+	
+	if ((error != 0)) {
+		fprintf(stderr, "Rev record query unsuccessful: error code %d\n", error);
+		return MY_QUERY_FAIL;
+	}
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		fprintf(stderr, "Cannot store result set\n");
+		return MY_STORE_FAIL;
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		fprintf(stderr, "No reverse records for zone %d\n", reverse);
+		return NO_RECORDS;
+	}
+	
+	/* Add the reverse zone records */
+	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
+		rev_row = get_rev_row(dnsa_row);
+		add_rev_records(rout, rev_row);
+	}
+	mysql_free_result(dnsa_res);
+	/* Build the config filename from config values */
+	create_rev_zone_filename(domain, net_range, dc);
+	
+	/* Write out the reverse zone to the zonefile */
+	if (!(cnf = fopen(domain, "w"))) {
+		fprintf(stderr, "Cannot open config file %s for writing\n", domain);
+		return FILE_O_FAIL;
+	} else {
+		fputs(rout, cnf);
+		fclose(cnf);
+	}
+	
+	for (i=0; i < FILE_S; i++)	/* zero rout file output buffer */
+		*(rout + i) = '\0';
+	
+	/* Check if the zonefile is valid. If so update the DB to say zone
+	 * is valid. */
+	get_in_addr_string(zonefn, rzi->net_range);
+	check_rev_zone(zonefn, domain, dc);
+
+	sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d", reverse);
+	error = mysql_query(&dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(&dnsa);
+	if ((dnsa_rows == 1)) {
+		fprintf(stderr, "Rev Zone id %d set to valid in DB\n", reverse);
+	} else if ((dnsa_rows == 0)) {
+		if ((error == 0)) {
+			fprintf(stderr, "Rev zone id %d already valid in DB\n", reverse);
+		} else {
+			fprintf(stderr, "Rev Zone id %d not validated in DB\n", reverse);
+			fprintf(stderr, "Error code from query is: %d\n", error);
+		}
+	} else {
+		fprintf(stderr, "More than one zone update?? Multiple ID's %d??\n",
+			reverse);
+	}
+	
+	mysql_close(&dnsa);
+	mysql_library_end();
+	free(zonefn);
+	free(rout);
+	free(dquery);
+	free(domain);
+	return 0;
+}
+
+int wrcf(dnsa_config_t *dc)
+{
+	FILE *cnf;
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	size_t len;
+	my_ulonglong dnsa_rows;
+	int error;
+	char *rout, *dnsa_line, *zonefile, *tmp, *tmp2, *error_code;
+	const char *dnsa_query, *syscom, *error_str, *domain;
+	
+	domain = "or reverse zone that is valid ";
+	
+	if (!(rout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "rout in wrcf");
+	if (!(dnsa_line = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dnsa_line in wrcf");
+	if (!(tmp = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in wrcf");
+	if (!(tmp2 = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp2 in wrcf");
+	if (!(zonefile = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefile in wrcf");
+	if (!(error_code = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in wrcf");
+	
+	error_str = error_code;
+	dnsa_query = dnsa_line;
+	
+	/* Initilaise MYSQL connection and query */
+	sprintf(dnsa_line, "SELECT net_range FROM rev_zones");
+	dnsa_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
+		report_error(MY_STORE_FAIL, error_str);
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		report_error(NO_DOMAIN, domain);
+	}
+	
+	/* From each DB row, create the config line for the reverse zone */
+	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
+		get_in_addr_string(tmp2, dnsa_row[0]);
+		sprintf(zonefile, "%s%s", dc->dir, dnsa_row[0]);
+		if (!(cnf = fopen(zonefile, "r"))) {
+			fprintf(stderr, "Cannot access zonefile %s\n", zonefile);
+		} else {
+			sprintf(tmp, "zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s%s\";\n\t\t};\n",
+				tmp2, dc->dir, dnsa_row[0]);
+			len = strlen(tmp);
+			strncat(rout, tmp, len);
+			fclose(cnf);
+		}
+	}
+	mysql_free_result(dnsa_res);
+	/* Write the config file.
+	 * Check it and if successful reload bind */
+	sprintf(zonefile, "%s%s", dc->bind, dc->rev);
+	if (!(cnf = fopen(zonefile, "w"))) {
+		fprintf(stderr, "Cannot open config file %s for writing!\n", zonefile);
+		exit(FILE_O_FAIL);
+	} else {
+		fputs(rout, cnf);
+		fclose(cnf);
+	}
+	sprintf(tmp, "%s %s", dc->chkc, zonefile);
+	syscom = tmp;
+	error = system(syscom);
+	if ((error != 0)) {
+		fprintf(stderr, "Check of config file failed. Error code %d\n",
+			error);
+	} else {
+		sprintf(tmp, "%s reload", dc->rndc);
+		error = system(syscom);
+		if ((error != 0)) {
+			fprintf(stderr, "Reload failed with error code %d\n",
+				error);
+		}
+	}
+	
+	free(zonefile);
+	free(tmp);
+	free(tmp2);
+	free(rout);
+	free(dnsa_line);
+	free(error_code);
+	mysql_close(&dnsa);
+	mysql_library_end();
+	return 0;
+}

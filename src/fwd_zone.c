@@ -318,3 +318,189 @@ void write_fwd_zonefile(char *filename, char *output)
 		fclose(zonefile);
 	}
 }
+
+int wzf (char *domain, dnsa_config_t *dc)
+{
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res, *my_res;
+	MYSQL_ROW my_row;
+	zone_info_t zone_info, *zi;
+	record_row_t row_data;
+	size_t offset, len;
+	my_ulonglong dnsa_rows;
+	int error;
+	char *zout, *zout2, *tmp, *zonefilename;
+	const char *dnsa_query;
+
+	if (!(zout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zout in wzf");
+	if (!(zout2 = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zout2 in wzf");
+	if (!(tmp = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in wzf");
+	if (!(zonefilename = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefilename in wrz");
+	
+	dnsa_query = tmp;
+	zi = &zone_info;
+	
+	/* Initialise MYSQL connection and query */
+	dnsa_mysql_init(dc, &dnsa);
+	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+
+	if (!(dnsa_res = mysql_store_result(&dnsa)))
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+		report_error(NO_DOMAIN, domain);
+	
+	my_row = mysql_fetch_row(dnsa_res);
+	zone_info = fill_zone_data(my_row);
+	create_zone_header(zout, zone_info);
+	mysql_free_result(dnsa_res);
+	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	
+	if (!(dnsa_res = mysql_store_result(&dnsa)))
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	if (!(dnsa_rows = mysql_num_rows(dnsa_res)) == 0) {
+		while ((my_row = mysql_fetch_row(dnsa_res))) {
+			add_mx_to_header(zout, my_row);
+		}
+	}
+	mysql_free_result(dnsa_res);
+	sprintf(tmp, "$ORIGIN\t%s.\n", zi->name);
+	len = strlen(tmp);
+	strncat(zout, tmp, len);
+	
+	/** zout2 will be used to write the real zone file.
+	 ** Cannot have A records for the NS and MX added twice
+	 ** so save the buffer into zout2 and use that
+	 */
+	len = strlen(zout);
+	strncpy(zout2, zout, len);
+	
+	add_ns_A_records_to_header(zi, dc, zout);
+	error = add_MX_A_records_to_header(zi, dc, zout);
+	if (error < 0) {
+		; /* No MX records */
+	}
+
+	/* Check zonefile */
+	sprintf(zonefilename, "%sdb1.%s", dc->dir, zi->name);
+	write_fwd_zonefile(zonefilename, zout);
+	check_fwd_zone(zonefilename, zi->name, dc);
+	remove(zonefilename);
+	
+	/* Add the rest of the records */
+	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'A' OR zone = %d AND type = 'CNAME'", zi->id, zi->id);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(my_res = mysql_store_result(&dnsa)))
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	while ((my_row = mysql_fetch_row(my_res))) {
+		row_data = fill_record_data(my_row);
+		offset = add_records(row_data, zout2, offset);	
+	}
+	mysql_free_result(my_res);
+	sprintf(zonefilename, "%sdb.%s", dc->dir, zi->name);
+	write_fwd_zonefile(zonefilename, zout2);
+	check_fwd_zone(zonefilename, zi->name, dc);
+	sprintf(tmp, "UPDATE zones SET updated = 'no', valid = 'yes' WHERE name = '%s'", zi->name);
+	error = mysql_query(&dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(&dnsa);
+	if (dnsa_rows == 1)
+		fprintf(stderr, "DB updated as zone validated\n");
+	mysql_close(&dnsa);
+	mysql_library_end();
+	free(zout2);
+	free(zout);
+	free(tmp);
+	free(zonefilename);
+	return 0;
+}
+
+int wcf(dnsa_config_t *dc)
+{
+	FILE *cnf;
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	size_t len;
+	my_ulonglong dnsa_rows;
+	int error;
+	char *dout, *dnsa_line, *zonefile, *error_code;
+	const char *dnsa_query, *check_comm, *reload_comm, *error_str, *domain;
+	
+	dnsa_query = "SELECT name FROM zones WHERE valid = 'yes'";
+	domain = "that is valid ";
+
+	if (!(dout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dout in wcf");
+	if (!(dnsa_line = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dnsa_line in wcf");
+	if (!(zonefile = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefile in wcf");
+	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "error_code in wcf");
+	
+	error_str = error_code;
+
+	/* Initialise MYSQL Connection and query*/
+	dnsa_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
+		report_error(MY_STORE_FAIL, error_str);
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		report_error(NO_DOMAIN, domain);
+	}
+	
+	/* From each DB row create the config lines
+	 * also check if the zone file exists on the filesystem*/
+	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
+		sprintf(zonefile, "%sdb.%s", dc->dir, dnsa_row[0]);
+		if ((cnf = fopen(zonefile, "r"))){
+			sprintf(dnsa_line, "zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s\";\n\t\t};\n\n", dnsa_row[0], zonefile);
+			len = strlen(dnsa_line);
+			strncat(dout, dnsa_line, len);
+			fclose(cnf);
+		} else {
+			printf("Not adding for zonefile %s\n", dnsa_row[0]);
+		}
+	}
+	
+	/* Write the BIND config file */
+	sprintf(dnsa_line, "%s%s", dc->bind, dc->dnsa);
+	
+	if (!(cnf = fopen(dnsa_line, "w"))) {
+		fprintf(stderr, "Cannot open config file %s for writing!\n", dnsa_line);
+		exit(1);
+	} else {
+		fputs(dout, cnf);
+		fclose(cnf);
+	}
+	
+	/* Check the file and if OK reload BIND */
+	check_comm = dnsa_line;
+	sprintf(dnsa_line, "%s %s%s", dc->chkc, dc->bind, dc->dnsa);
+	error = system(check_comm);
+	if (error != 0) {
+		fprintf(stderr, "Bind config check failed! Error code was %d\n", error);
+	} else {
+		reload_comm = dnsa_line;
+		sprintf(dnsa_line, "%s reload", dc->rndc);
+		error = system(reload_comm);
+		if (error != 0) {
+			fprintf(stderr, "Bind reload failed with error code %d\n", error);
+		}
+	}
+	mysql_free_result(dnsa_res);
+	mysql_close(&dnsa);
+	mysql_library_end();
+	free(dout);
+	free(dnsa_line);
+	free(zonefile);
+	free(error_code);
+	return 0;
+}
