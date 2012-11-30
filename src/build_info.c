@@ -108,19 +108,16 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 		mysql_close(&build);
 		mysql_library_end();
 		free(query);
-		report_error(SERVER_NOT_FOUND, sserver_id);
+		report_error(SERVER_ID_NOT_FOUND, sserver_id);
 	} else if (build_rows > 1) {
 		mysql_free_result(build_res);
 		mysql_close(&build);
 		mysql_library_end();
 		free(query);
-		report_error(MULTIPLE_SERVERS, sserver_id);
+		report_error(MULTIPLE_SERVER_IDS, sserver_id);
 	}
 	build_row = mysql_fetch_row(build_res);
 	fill_build_info(build_info, build_row);
-	printf("######Debug######\n");
-	printf("%s %s %s\n", build_row[5], build_row[6], build_row[7]);
-	printf("#################\n");
 	mysql_free_result(build_res);
 	mysql_close(&build);
 	free(query);

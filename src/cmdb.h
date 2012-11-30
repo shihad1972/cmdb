@@ -38,8 +38,10 @@ enum {			/* dnsa error codes */
 enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	SERVER_NOT_FOUND = 101,
 	MULTIPLE_SERVERS = 102,
-	CUSTOMER_NOT_FOUND = 103,
-	MULTIPLE_CUSTOMERS = 104
+	SERVER_ID_NOT_FOUND = 103,
+	MULTIPLE_SERVER_IDS = 104,
+	CUSTOMER_NOT_FOUND = 105,
+	MULTIPLE_CUSTOMERS = 106
 };
 
 enum {			/* cmdb return codes */
