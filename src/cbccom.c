@@ -153,8 +153,9 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
+/*	No need for this (yet) - should get it from the database
 	else if (cb->build_type == NONE)
-		retval = NO_TYPE;
+		retval = NO_TYPE; */
 	else if ((cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0)
 		&& (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
