@@ -37,6 +37,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char hostname[CONF_S];
 	char domain[RBUFF_S];
 	char alias[CONF_S];
+	char ver_alias[CONF_S];
 	char version[CONF_S];
 	char varient[CONF_S];
 	char arch[CONF_S];

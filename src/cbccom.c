@@ -237,6 +237,7 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	sprintf(build_config->gateway, "NULL");
 	sprintf(build_config->nameserver, "NULL");
 	sprintf(build_config->netmask, "NULL");
+	sprintf(build_config->ver_alias, "NULL");
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
@@ -247,6 +248,7 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	fprintf(stderr, "HOST: %s\n", build_config->hostname);
 	fprintf(stderr, "DOMAIN: %s\n", build_config->domain);
 	fprintf(stderr, "OS: %s\n", build_config->alias);
+	fprintf(stderr, "OS ALIAS: %s\n", build_config->ver_alias);
 	fprintf(stderr, "BUILD VARIENT: %s\n", build_config->varient);
 	fprintf(stderr, "ARCH: %s\n", build_config->arch);
 	fprintf(stderr, "BOOT LINE: %s\n", build_config->boot);
