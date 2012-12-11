@@ -48,8 +48,18 @@ int main(int argc, char *argv[])
 	get_server_name(cml, cmc);
 	retval = get_build_info(cbt, cmc, cml->server_id);
 	
-	print_cbc_config(cmc);
-	print_cbc_command_line_values(cml);
-	print_cbc_build_values(cbt);
+	switch (cml->action) {
+		case WRITE_CONFIG:
+			write_build_config(cml, cmc, cbt);
+			break;
+		case DISPLAY_CONFIG:
+			print_cbc_config(cmc);
+			print_cbc_command_line_values(cml);
+			print_cbc_build_values(cbt);
+			break;
+		default:
+			printf("Case %d not implemented yet\n", cml->action);
+			break;
+	}
 	exit(retval);
 }

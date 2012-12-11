@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
@@ -132,6 +133,17 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 	return retval;
 }
 
+void write_build_config(cbc_comm_line_t *cclt, cbc_config_t *cct, cbc_build_t *cbt)
+{
+	uint32_t ip_addr;
+	char ip_address[16];
+	char hex_ip[10];
+	sprintf(ip_address, "%s", cbt->ip_address);
+	inet_pton(AF_INET, ip_address, &ip_addr);
+	ip_addr = htonl(ip_addr);
+	sprintf(hex_ip, "%lX", (unsigned long)ip_addr);
+}
+
 void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 {
 	sprintf(cbt->arch, "%s", br[0]);
@@ -149,3 +161,4 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	if (br[12])
 		sprintf(cbt->ver_alias, "%s", br[12]);
 }
+

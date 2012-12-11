@@ -80,5 +80,8 @@ get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 int
 get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int server_id);
 
+void
+write_build_config(cbc_comm_line_t *cclt, cbc_config_t *cct, cbc_build_t *cbt);
+
 
 #endif
