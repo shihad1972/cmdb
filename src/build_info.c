@@ -129,6 +129,7 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 	fill_build_info(build_info, build_row);
 	mysql_free_result(build_res);
 	mysql_close(&build);
+	mysql_library_end();
 	free(query);
 	return retval;
 }

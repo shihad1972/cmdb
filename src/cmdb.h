@@ -77,7 +77,24 @@ enum {			/* cbc config file error codes */
 	PXE_ERR = 5,
 	OS_ERR = 6,
 	PRESEED_ERR = 7,
-	KICKSTART_ERR = 8
+	KICKSTART_ERR = 8,
+	NO_TMP_ERR = 9,
+	NO_TFTP_ERR = 10,
+	NO_PXE_ERR = 11,
+	NO_OS_ERR = 12,
+	NO_PRESEED_ERR = 13,
+	NO_KICKSTART_ERR = 14,
+	MULTI_TMP_ERR = 15,
+	MULTI_TFTP_ERR = 16,
+	MULTI_PXE_ERR = 17,
+	MULTI_OS_ERR = 18,
+	MULTI_PRESEED_ERR = 19,
+	MULTI_KICKSTART_ERR = 20,
+	NO_ERR = 21,
+	MULTI_ERR = 22,
+	DHCP_ERR = 23,
+	NO_DHCP_ERR = 24,
+	MULTI_DHCP_ERR = 25
 };
 
 enum {			/* cmdb Action codes */

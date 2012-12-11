@@ -11,9 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "checks.h"
+#include "cbc_mysql.h"
+
+int
+get_db_config(cbc_config_t *cct, char *search);
 
 int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 {
@@ -52,34 +57,6 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "PORT=%s", port);
 		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "TMPDIR=%s", cbc->tmpdir);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "TFTPDIR=%s", cbc->tftpdir);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "PXE=%s", cbc->pxe);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "TOPLEVELOS=%s", cbc->toplevelos);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "PRESEED=%s", cbc->preseed);
-		}
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
-			sscanf(buff, "KICKSTART=%s", cbc->kickstart);
-		}
 		rewind (cnf);
 		retval = 0;
 		fclose(cnf);
@@ -96,6 +73,106 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		cbc->port = (unsigned int) portno;
 	}
 	
+	sprintf(buff, "cbctmpdir");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->tmpdir, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_TMP_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_TMP_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbctftpdir");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->tftpdir, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_TFTP_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_TFTP_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbcpxe");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->pxe, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_PXE_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_PXE_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbctlos");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->toplevelos, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_OS_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_OS_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbcdhcp");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->dhcpconf, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_DHCP_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_DHCP_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbcpreseed");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->preseed, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_PRESEED_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_PRESEED_ERR;
+				break;
+		}
+	}
+	sprintf(buff, "cbckickstart");
+	retval = get_db_config(cbc, buff);
+	if (retval == 0) {
+		sprintf(cbc->kickstart, "%s", buff);
+	} else {
+		switch (retval) {
+			case NO_ERR:
+				return NO_KICKSTART_ERR;
+				break;
+			case MULTI_ERR:
+				return MULTI_KICKSTART_ERR;
+				break;
+		}
+	}
+	
+		
 	if ((retval = add_trailing_slash(cbc->tmpdir)) != 0)
 		retval = TMP_ERR;
 	if ((retval = add_trailing_slash(cbc->tftpdir)) != 0)
@@ -160,11 +237,52 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 		&& (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
 	
-	
 	return retval;
 	
 }
 
+int get_db_config(cbc_config_t *cct, char *search)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	
+	if (!(query = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_db_config");
+	
+	cbc_query = query;
+	sprintf(query, "SELECT value FROM configuration WHERE config = '%s'", search);
+	cbc_mysql_init(cct, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		return NO_ERR;
+	} else  if (cbc_rows > 1) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		return MULTI_ERR;
+	} else {
+		cbc_row = mysql_fetch_row(cbc_res);
+		strncpy(search, cbc_row[0], CONF_S);
+		mysql_free_result(cbc_res);
+	}
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	return 0;
+}
 void parse_cbc_config_error(int error)
 {
 	switch(error) {

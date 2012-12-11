@@ -10,3 +10,13 @@ UPDATE build_type SET url = 'http://debian.shihad.org/preseed/' WHERE alias = 'd
 UPDATE build_type SET url = 'http://ubuntu.shihad.org/preseed/' WHERE alias = 'ubuntu';
 UPDATE build_type SET url = 'http://kickstart.shihad.org/ks/' WHERE alias = 'centos';
 UPDATE build_type SET url = 'http://slackware.shihad.org/' WHERE alias = 'slack';
+#
+# 11/12/2012
+INSERT INTO configuration (config, value) VALUES ("cbctmpdir", "/tmp/cbs/");
+INSERT INTO configuration (config, value) VALUES ("cbctftpdir", "/var/lib/tftpboot/");
+INSERT INTO configuration (config, value) VALUES ("cbcpxe", "pxelinux.cfg/");
+INSERT INTO configuration (config, value) VALUES ("cbctlos", "/usr/local/build/");
+INSERT INTO configuration (config, value) VALUES ("cbcdhcp", "/etc/dhcp/dhcpd.hosts");
+INSERT INTO configuration (config, value) VALUES ("cbcpreseed", "preseed/");
+INSERT INTO configuration (config, value) VALUES ("cbckickstart", "ks/");
+
