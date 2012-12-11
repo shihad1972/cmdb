@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	
 	switch (cml->action) {
 		case WRITE_CONFIG:
-			write_build_config(cml, cmc, cbt);
+			write_tftp_config(cmc, cbt);
 			break;
 		case DISPLAY_CONFIG:
 			print_cbc_config(cmc);

@@ -356,6 +356,9 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	sprintf(build_config->nameserver, "NULL");
 	sprintf(build_config->netmask, "NULL");
 	sprintf(build_config->ver_alias, "NULL");
+	sprintf(build_config->build_type, "NULL");
+	sprintf(build_config->arg, "NULL");
+	sprintf(build_config->url, "NULL");
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
@@ -373,6 +376,9 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	fprintf(stderr, "GW: %s\n", build_config->gateway);
 	fprintf(stderr, "NS: %s\n", build_config->nameserver);
 	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
+	fprintf(stderr, "BUILD TYPE: %s\n", build_config->build_type);
+	fprintf(stderr, "ARG: %s\n", build_config->arg);
+	fprintf(stderr, "URL: %s\n", build_config->url);
 	fprintf(stderr, "\n");
 }
 

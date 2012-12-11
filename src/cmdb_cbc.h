@@ -45,6 +45,9 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char gateway[RANGE_S];
 	char nameserver[RANGE_S];
 	char netmask[RANGE_S];
+	char build_type[RANGE_S];
+	char arg[RANGE_S];
+	char url[RBUFF_S];
 } cbc_build_t;
 
 int
@@ -81,7 +84,7 @@ int
 get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int server_id);
 
 void
-write_build_config(cbc_comm_line_t *cclt, cbc_config_t *cct, cbc_build_t *cbt);
+write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt);
 
 
 #endif

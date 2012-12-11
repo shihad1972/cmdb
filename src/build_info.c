@@ -21,6 +21,9 @@
 void
 fill_build_info(cbc_build_t *cbt, MYSQL_ROW br);
 
+void
+write_config_file(char *filename, char *output);
+
 void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
 	MYSQL cbc;
@@ -97,10 +100,11 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 		report_error(MALLOC_FAIL, "query in get_build_info");
 	
 	sprintf(query,
-"SELECT arch, alias, os_version, INET_NTOA(ip), mac_addr, INET_NTOA(netmask),\
+"SELECT arch, bo.alias, os_version, INET_NTOA(ip), mac_addr, INET_NTOA(netmask),\
  INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname, boot_line, valias,\
- ver_alias FROM build_ip bi LEFT JOIN (build_domain bd, build_os bo, build b,\
- server s, boot_line bootl, varient v) ON (bi.bd_id = bd.bd_id AND\
+ ver_alias, build_type, arg, url FROM build_ip bi LEFT JOIN (build_domain bd,\
+ build_os bo, build b, build_type bt, server s, boot_line bootl, varient v)\
+ ON (bi.bd_id = bd.bd_id AND bt.bt_id = bootl.bt_id AND\
  b.ip_id = bi.ip_id AND bo.os_id = b.os_id AND s.server_id = b.server_id AND\
  bootl.boot_id = bo.boot_id AND b.varient_id = v.varient_id)\
  WHERE s.server_id = %ld", server_id);
@@ -134,15 +138,57 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 	return retval;
 }
 
-void write_build_config(cbc_comm_line_t *cclt, cbc_config_t *cct, cbc_build_t *cbt)
+void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 {
 	uint32_t ip_addr;
+	size_t len;
 	char ip_address[16];
 	char hex_ip[10];
+	char filename[TBUFF_S];
+	char *file_content;
+	char *tmp;
+	
+	if (!(file_content = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "file_content in write_build_config");
+	if (!(tmp = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in write_build_config");
+
 	sprintf(ip_address, "%s", cbt->ip_address);
 	inet_pton(AF_INET, ip_address, &ip_addr);
 	ip_addr = htonl(ip_addr);
 	sprintf(hex_ip, "%lX", (unsigned long)ip_addr);
+	sprintf(filename, "%s%s%s", cct->tftpdir, cct->pxe, hex_ip);
+	sprintf(tmp, "default %s\n\nlabel %s\nkernel vmlinuz-%s-%s-%s\n",
+		cbt->hostname,
+		cbt->hostname,
+		cbt->alias,
+		cbt->version,
+		cbt->arch);
+	len = strlen(tmp);
+	strncpy(file_content, tmp, len);
+	if ((strncmp("none", cbt->boot, CONF_S)) != 0) {
+		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n",
+		cbt->alias,
+		cbt->version,
+		cbt->arch,
+		cbt->boot,
+		cbt->arg,
+		cbt->url,
+		cbt->hostname);
+		len = strlen(tmp);
+		strncat(file_content, tmp, len);
+	} else {
+		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img\n",
+		cbt->alias,
+		cbt->version,
+		cbt->arch);
+		len = strlen(tmp);
+		strncat(file_content, tmp, len);
+	}
+	write_config_file(filename, file_content);
+	printf("%s", file_content);
+	free(file_content);
+	free(tmp);
 }
 
 void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
@@ -159,7 +205,20 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	sprintf(cbt->domain, "%s", br[9]);
 	sprintf(cbt->boot, "%s", br[10]);
 	sprintf(cbt->varient, "%s", br[11]);
-	if (br[12])
-		sprintf(cbt->ver_alias, "%s", br[12]);
+	sprintf(cbt->ver_alias, "%s", br[12]);
+	sprintf(cbt->build_type, "%s", br[13]);
+	sprintf(cbt->arg, "%s", br[14]);
+	sprintf(cbt->url, "%s", br[15]);
+}
+
+void write_config_file(char *filename, char *output)
+{
+	FILE *configfile;
+	if (!(configfile = fopen(filename, "w"))) {
+		report_error(FILE_O_FAIL, filename);
+	} else {
+		fputs(output, configfile);
+		fclose(configfile);
+	}
 }
 
