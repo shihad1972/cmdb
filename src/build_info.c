@@ -162,7 +162,7 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 	sprintf(ip_address, "%s", cbt->ip_address);
 	inet_pton(AF_INET, ip_address, &ip_addr);
 	ip_addr = htonl(ip_addr);
-	sprintf(hex_ip, "%lX", (unsigned long)ip_addr);
+	sprintf(hex_ip, "%X", ip_addr);
 	sprintf(filename, "%s%s%s", cct->tftpdir, cct->pxe, hex_ip);
 	sprintf(tmp, "default %s\n\nlabel %s\nkernel vmlinuz-%s-%s-%s\n",
 		cbt->hostname,
