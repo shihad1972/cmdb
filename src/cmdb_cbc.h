@@ -87,4 +87,8 @@ void
 write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt);
 
 
+void
+write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt);
+
+
 #endif

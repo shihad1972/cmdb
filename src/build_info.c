@@ -12,7 +12,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
+#include <time.h>	
+#include <arpa/inet.h>	/* required for IP address conversion */
+#include <sys/stat.h>
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
@@ -23,6 +25,9 @@ fill_build_info(cbc_build_t *cbt, MYSQL_ROW br);
 
 void
 write_config_file(char *filename, char *output);
+
+void
+read_dhcp_hosts_file(char *from, char *content, long int filesize);
 
 void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
@@ -211,6 +216,27 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	sprintf(cbt->url, "%s", br[15]);
 }
 
+void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
+{
+	char *dhcp_file;
+	char *dhcp_content;
+	long int dhcp_size;
+	struct stat dhcp_stat;
+	
+	if (!(dhcp_file = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dhcp_file in write_dhcp_config");
+	
+	sprintf(dhcp_file, "%s-", cct->dhcpconf);
+	stat(dhcp_file, &dhcp_stat);
+	dhcp_size = dhcp_stat.st_size;
+	if (!(dhcp_content = calloc((size_t)dhcp_size + TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dhcp_content in write_dhcp_config");
+	read_dhcp_hosts_file(cct->dhcpconf, dhcp_content, dhcp_size);
+	printf("%s\n", dhcp_content);
+	free(dhcp_file);
+	free(dhcp_content);
+}
+
 void write_config_file(char *filename, char *output)
 {
 	FILE *configfile;
@@ -220,5 +246,32 @@ void write_config_file(char *filename, char *output)
 		fputs(output, configfile);
 		fclose(configfile);
 	}
+}
+
+void read_dhcp_hosts_file(char *from, char *content, long int filesize)
+{
+	FILE *dhcp;
+	time_t now;
+	struct tm *lctime;
+	char time_string[18];
+	char file_to[CONF_S];
+	char buff[TBUFF_S];
+	
+	now = time(0);
+	lctime = localtime(&now);
+	sprintf(time_string, "%d%d%d%d%d%d",
+		lctime->tm_year + 1900,
+		lctime->tm_mon + 1,
+		lctime->tm_mday,
+		lctime->tm_hour,
+		lctime->tm_min,
+		lctime->tm_sec);
+	sprintf(file_to, "%s-%s", from, time_string);
+	fprintf(stderr, "%s\n", file_to);
+	if (!(dhcp = fopen(from, "r")))
+		report_error(FILE_O_FAIL, from);
+	while (fgets(buff, filesize, dhcp))
+		strncat(content, buff, TBUFF_S);
+	fclose(dhcp);
 }
 
