@@ -27,7 +27,8 @@ void
 write_config_file(char *filename, char *output);
 
 void
-read_dhcp_hosts_file(char *from, char *content, long int filesize);
+read_dhcp_hosts_file(cbc_build_t *cbcbt, char *from, char *content, char *new_content);
+
 
 void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
@@ -191,7 +192,7 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 		strncat(file_content, tmp, len);
 	}
 	write_config_file(filename, file_content);
-	printf("%s", file_content);
+	printf("TFTP file written\n");
 	free(file_content);
 	free(tmp);
 }
@@ -218,23 +219,36 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 
 void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
 {
-	char *dhcp_file;
+	size_t len;
 	char *dhcp_content;
+	char *dhcp_new_content;
+	char buff[RBUFF_S];
 	long int dhcp_size;
 	struct stat dhcp_stat;
 	
-	if (!(dhcp_file = calloc(CONF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "dhcp_file in write_dhcp_config");
-	
-	sprintf(dhcp_file, "%s-", cct->dhcpconf);
-	stat(dhcp_file, &dhcp_stat);
+	stat(cct->dhcpconf, &dhcp_stat);
+
 	dhcp_size = dhcp_stat.st_size;
-	if (!(dhcp_content = calloc((size_t)dhcp_size + TBUFF_S, sizeof(char))))
+	
+	if (!(dhcp_content = calloc((size_t)dhcp_size, sizeof(char))))
 		report_error(MALLOC_FAIL, "dhcp_content in write_dhcp_config");
-	read_dhcp_hosts_file(cct->dhcpconf, dhcp_content, dhcp_size);
-	printf("%s\n", dhcp_content);
-	free(dhcp_file);
+	if (!(dhcp_new_content = calloc((size_t)dhcp_size + TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "dhcp_new_content in write_dhcp_config");
+	
+	read_dhcp_hosts_file(cbt, cct->dhcpconf, dhcp_content, dhcp_new_content);
+	
+	sprintf(buff, "host %s { hardware ethernet %s; fixed-address %s; option domain-name \"%s\"; }\n",
+		cbt->hostname,
+		cbt->mac_address,
+		cbt->ip_address,
+		cbt->domain);
+	len = strlen(buff);
+	strncat (dhcp_new_content, buff, len);
+	write_config_file(cct->dhcpconf, dhcp_new_content);
+	
+	printf("DHCP file written\n");
 	free(dhcp_content);
+	free(dhcp_new_content);
 }
 
 void write_config_file(char *filename, char *output)
@@ -248,11 +262,13 @@ void write_config_file(char *filename, char *output)
 	}
 }
 
-void read_dhcp_hosts_file(char *from, char *content, long int filesize)
+void read_dhcp_hosts_file(cbc_build_t *cbcbt, char *from, char *content, char *new_content)
 {
 	FILE *dhcp;
+	size_t len, conlen;
 	time_t now;
 	struct tm *lctime;
+	int success;
 	char time_string[18];
 	char file_to[CONF_S];
 	char buff[TBUFF_S];
@@ -266,12 +282,30 @@ void read_dhcp_hosts_file(char *from, char *content, long int filesize)
 		lctime->tm_hour,
 		lctime->tm_min,
 		lctime->tm_sec);
+	
 	sprintf(file_to, "%s-%s", from, time_string);
-	fprintf(stderr, "%s\n", file_to);
 	if (!(dhcp = fopen(from, "r")))
 		report_error(FILE_O_FAIL, from);
-	while (fgets(buff, filesize, dhcp))
-		strncat(content, buff, TBUFF_S);
+	while (fgets(buff, TBUFF_S, dhcp)) {
+		len = strlen(buff) + 1;
+		if ((conlen = strlen(content) == 0))
+			strncpy(content, buff, len);
+		else
+			strncat(content, buff, len);
+		if (!(strstr(buff, cbcbt->hostname))) {
+			if (!(strstr(buff, cbcbt->ip_address))) {
+				if (!(strstr(buff, cbcbt->mac_address))) {
+					if ((conlen = strlen(new_content) == 0))
+						strncpy(new_content, buff, len);
+					else
+						strncat(new_content, buff, len);
+				}
+			}
+		}
+	}
 	fclose(dhcp);
+	success = rename(from, file_to);
+	if (success < 0)
+		printf("Error backing up old config! Check permissions!\n");
 }
 
