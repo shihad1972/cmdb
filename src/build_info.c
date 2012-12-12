@@ -230,9 +230,9 @@ void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
 
 	dhcp_size = dhcp_stat.st_size;
 	
-	if (!(dhcp_content = calloc((size_t)dhcp_size, sizeof(char))))
+	if (!(dhcp_content = calloc((size_t)dhcp_size + 1, sizeof(char))))
 		report_error(MALLOC_FAIL, "dhcp_content in write_dhcp_config");
-	if (!(dhcp_new_content = calloc((size_t)dhcp_size + TBUFF_S, sizeof(char))))
+	if (!(dhcp_new_content = calloc((size_t)dhcp_size + TBUFF_S + 1, sizeof(char))))
 		report_error(MALLOC_FAIL, "dhcp_new_content in write_dhcp_config");
 	
 	read_dhcp_hosts_file(cbt, cct->dhcpconf, dhcp_content, dhcp_new_content);
