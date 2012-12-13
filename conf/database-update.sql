@@ -91,4 +91,14 @@ INSERT INTO packages (package, varient_id, os_id) SELECT 'mysqmail-dovecot-logge
 INSERT INTO packages (package, varient_id, os_id) SELECT 'mysql-server', v.varient_id, bo.os_id FROM varient v, build_os bo WHERE v.valias = 'lamp' AND bo.alias = 'debian';
 INSERT INTO packages (package, varient_id, os_id) SELECT 'mysql-server', v.varient_id, bo.os_id FROM varient v, build_os bo WHERE v.valias = 'mysql' AND bo.alias = 'debian';
 INSERT INTO packages (package, varient_id, os_id) SELECT 'slapd', v.varient_id, bo.os_id FROM varient v, build_os bo WHERE v.valias = 'ldap' AND bo.alias = 'debian';
-
+ALTER TABLE build_domain ADD COLUMN ntp_server varchar(64) NOT NULL DEFAULT 'shihad.org';
+ALTER TABLE build_domain ADD COLUMN config_ntp tinyint(4) NOT NULL DEFAULT 1;
+ALTER TABLE build_domain ADD COLUMN ldap_server varchar(64) NOT NULL DEFAULT 'ldap01.shihad.org';
+ALTER TABLE build_domain ADD COLUMN ldap_ssl tinyint(4) NOT NULL DEFAULT 1;
+ALTER TABLE build_domain ADD COLUMN ldap_dn varchar(96) NOT NULL DEFAULT 'dc=shihad,dc=org';
+ALTER TABLE build_domain ADD COLUMN config_ldap tinyint(4) NOT NULL DEFAULT 1;
+ALTER TABLE build_domain ADD COLUMN ldap_bind varchar(96) NOT NULL DEFAULT 'cn=thargoid,dc=shihad,dc=org';
+ALTER TABLE build_domain ADD COLUMN log_server varchar(64) NOT NULL DEFAULT 'logger01.shihad.org';
+ALTER TABLE build_domain ADD COLUMN config_log tinyint (4) NOT NULL DEFAULT 1;
+ALTER TABLE build_domain ADD COLUMN email_server varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org';
+ALTER TABLE build_domain ADD COLUMN config_email tinyint (4) NOT NULL DEFAULT 1;
