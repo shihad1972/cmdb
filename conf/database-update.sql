@@ -97,7 +97,7 @@ ALTER TABLE build_domain ADD COLUMN ldap_server varchar(64) NOT NULL DEFAULT 'ld
 ALTER TABLE build_domain ADD COLUMN ldap_ssl tinyint(4) NOT NULL DEFAULT 1;
 ALTER TABLE build_domain ADD COLUMN ldap_dn varchar(96) NOT NULL DEFAULT 'dc=shihad,dc=org';
 ALTER TABLE build_domain ADD COLUMN config_ldap tinyint(4) NOT NULL DEFAULT 1;
-ALTER TABLE build_domain ADD COLUMN ldap_bind varchar(96) NOT NULL DEFAULT 'cn=thargoid,dc=shihad,dc=org';
+ALTER TABLE build_domain ADD COLUMN ldap_bind varchar(128) NOT NULL DEFAULT 'cn=thargoid,dc=shihad,dc=org';
 ALTER TABLE build_domain ADD COLUMN log_server varchar(64) NOT NULL DEFAULT 'logger01.shihad.org';
 ALTER TABLE build_domain ADD COLUMN config_log tinyint (4) NOT NULL DEFAULT 1;
 ALTER TABLE build_domain ADD COLUMN email_server varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org';
