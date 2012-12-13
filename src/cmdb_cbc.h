@@ -54,6 +54,9 @@ int
 parse_cbc_config_file(cbc_config_t *dc, char *config);
 
 void
+init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt, cbc_build_t *cbt);
+
+void
 init_cbc_config_values(cbc_config_t *dc);
 
 void

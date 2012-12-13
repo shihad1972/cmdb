@@ -313,6 +313,13 @@ void parse_cbc_config_error(int error)
 	}
 }
 
+void init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt, cbc_build_t *cbt)
+{
+	init_cbc_config_values(cct);
+	init_cbc_comm_values(cclt);
+	init_cbc_build_values(cbt);
+}
+
 void init_cbc_config_values(cbc_config_t *cbc)
 {
 	sprintf(cbc->db, "cmdb");

@@ -30,9 +30,7 @@ int main(int argc, char *argv[])
 	cbt = &cb_t;
 	strncpy(cbc_config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	
-	init_cbc_config_values(cmc);
-	init_cbc_comm_values(cml);
-	init_cbc_build_values(cbt);
+	init_all_config(cmc, cml, cbt);
 	
 	retval = parse_cbc_command_line(argc, argv, cml);
 	if (retval < 0)
