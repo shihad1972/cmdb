@@ -48,6 +48,14 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char build_type[RANGE_S];
 	char arg[RANGE_S];
 	char url[RBUFF_S];
+	char country[RANGE_S];
+	char locale[RANGE_S];
+	char language[RANGE_S];
+	char keymap[RANGE_S];
+	char netdev[RANGE_S];
+	char mirror[CONF_S];
+	char ntpserver[CONF_S];
+	int config_ntp;
 } cbc_build_t;
 
 int
@@ -89,9 +97,11 @@ get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int 
 void
 write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt);
 
-
 void
 write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt);
+
+int
+write_build_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
 
 #endif

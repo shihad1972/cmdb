@@ -102,3 +102,11 @@ ALTER TABLE build_domain ADD COLUMN log_server varchar(64) NOT NULL DEFAULT 'log
 ALTER TABLE build_domain ADD COLUMN config_log tinyint (4) NOT NULL DEFAULT 1;
 ALTER TABLE build_domain ADD COLUMN email_server varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org';
 ALTER TABLE build_domain ADD COLUMN config_email tinyint (4) NOT NULL DEFAULT 1;
+INSERT INTO locale (os_id, bt_id) SELECT os_id, bt_id FROM build_os WHERE alias = 'debian';
+ALTER TABLE build_type ADD COLUMN mirror varchar(256) NOT NULL DEFAULT 'none';
+UPDATE  build_type SET mirror = 'ftp.uk.debian.org' WHERE alias = 'debian';
+ALTER TABLE build_domain ADD COLUMN xymon_server varchar(64) NOT NULL DEFAULT 'hobbit.shihad.org';
+ALTER TABLE build_domain ADD COLUMN xymon_config tinyint NOT NULL DEFAULT 1;
+ALTER TABLE build_domain CHANGE COLUMN email_server smtp_server varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org';
+ALTER TABLE build_domain CHANGE COLUMN ldap_server ldap_url varchar(96) NOT NULL DEFAULT 'ldaps://ldap01.shihad.org';
+UPDATE build_domain SET ntp_server = 'shihad.org';

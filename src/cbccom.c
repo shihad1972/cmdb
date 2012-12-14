@@ -366,34 +366,72 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	sprintf(build_config->build_type, "NULL");
 	sprintf(build_config->arg, "NULL");
 	sprintf(build_config->url, "NULL");
+	sprintf(build_config->country, "NULL");
+	sprintf(build_config->locale, "NULL");
+	sprintf(build_config->language, "NULL");
+	sprintf(build_config->keymap, "NULL");
+	sprintf(build_config->netdev, "NULL");
+	sprintf(build_config->mirror, "NULL");
+	sprintf(build_config->ntpserver, "NULL");
+	build_config->config_ntp = 0;
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
 {
 	fprintf(stderr, "########\nBuild Values\n");
-	fprintf(stderr, "IP: %s\n", build_config->ip_address);
 	fprintf(stderr, "MAC: %s\n", build_config->mac_address);
+	fprintf(stderr, "NETWORK DEVICE: %s\n", build_config->netdev);
+	fprintf(stderr, "IP: %s\n", build_config->ip_address);
+	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
+	fprintf(stderr, "GW: %s\n", build_config->gateway);
+	fprintf(stderr, "NS: %s\n", build_config->nameserver);
 	fprintf(stderr, "HOST: %s\n", build_config->hostname);
 	fprintf(stderr, "DOMAIN: %s\n", build_config->domain);
+	if (build_config->config_ntp > 0)
+		fprintf(stderr, "NTP SERVER: %s\n", build_config->ntpserver);
 	fprintf(stderr, "OS: %s\n", build_config->alias);
 	fprintf(stderr, "OS ALIAS: %s\n", build_config->ver_alias);
 	fprintf(stderr, "BUILD VARIENT: %s\n", build_config->varient);
 	fprintf(stderr, "ARCH: %s\n", build_config->arch);
 	fprintf(stderr, "BOOT LINE: %s\n", build_config->boot);
-	fprintf(stderr, "GW: %s\n", build_config->gateway);
-	fprintf(stderr, "NS: %s\n", build_config->nameserver);
-	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
 	fprintf(stderr, "BUILD TYPE: %s\n", build_config->build_type);
 	fprintf(stderr, "ARG: %s\n", build_config->arg);
 	fprintf(stderr, "URL: %s\n", build_config->url);
+	fprintf(stderr, "MIRROR: %s\n", build_config->mirror);
+	fprintf(stderr, "COUNTRY: %s\n", build_config->country);
+	fprintf(stderr, "LOCALE: %s\n", build_config->locale);
+	fprintf(stderr, "LANGUAGE: %s\n", build_config->language);
+	fprintf(stderr, "KEYMAP: %s\n", build_config->keymap);
 	fprintf(stderr, "\n");
 }
 
 void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 {
 	fprintf(stderr, "########\nCommand line Values\n");
-	fprintf(stderr, "Action: %d\n", command_line->action);
-	fprintf(stderr, "Usedb: %d\n", command_line->usedb);
+	switch (command_line->action) {
+		case WRITE_CONFIG:
+			fprintf(stderr, "Action: Write configuration file\n");
+			break;
+		case DISPLAY_CONFIG:
+			fprintf(stderr, "Action: Display configuration\n");
+			break;
+		case ADD_CONFIG:
+			fprintf(stderr, "Action: Add configuration for build\n");
+			break;
+		default:
+			fprintf(stderr, "Action: Unknown!!\n");
+	}
+	switch (command_line->usedb) {
+		case FALSE:
+			fprintf(stderr, "Usedb: No\n");
+			break;
+		case TRUE:
+			fprintf(stderr, "Usedb: Yes\n");
+			break;
+		default:
+			fprintf(stderr, "Usedb: Unknown!!\n");
+			break;
+	}
 	fprintf(stderr, "Build type: %d\n", command_line->build_type);
 	fprintf(stderr, "Server ID: %ld\n", command_line->server_id);
 	fprintf(stderr, "Config: %s\n", command_line->config);

@@ -12,7 +12,8 @@ enum {			/* Buffer Sizes */
 	RBUFF_S = 256,
 	TBUFF_S = 512,
 	BUFF_S = 1024,
-	FILE_S = 4096
+	FILE_S = 4096,
+	BUILD_S = 65536
 };
 
 enum {			/* dnsa error codes */
@@ -32,7 +33,8 @@ enum {			/* dnsa error codes */
 	MY_STORE_FAIL = 13,
 	FILE_O_FAIL = 20,
 	CHKZONE_FAIL = 21,
-	MALLOC_FAIL = 30
+	MALLOC_FAIL = 30,
+	BUFFER_FULL = 31
 };
 
 enum {			/* cmdb error codes: start @ 101 to avoid conflict */
@@ -118,6 +120,11 @@ enum {			/* cbc action codes */
 enum {			/* cbc values for build type */
 	PRESEED = 1,
 	KICKSTART = 2
+};
+
+enum {
+	FALSE = 0,
+	TRUE = 1
 };
 
 /* Error reporting function */

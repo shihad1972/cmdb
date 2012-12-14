@@ -50,10 +50,11 @@ int main(int argc, char *argv[])
 		case WRITE_CONFIG:
 			write_tftp_config(cmc, cbt);
 			write_dhcp_config(cmc, cbt);
+			retval = write_build_config(cmc, cbt);
 			break;
 		case DISPLAY_CONFIG:
-			print_cbc_config(cmc);
-			print_cbc_command_line_values(cml);
+		/*	print_cbc_config(cmc);
+			print_cbc_command_line_values(cml); */
 			print_cbc_build_values(cbt);
 			break;
 		default:

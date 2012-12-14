@@ -29,6 +29,14 @@ write_config_file(char *filename, char *output);
 void
 read_dhcp_hosts_file(cbc_build_t *cbcbt, char *from, char *content, char *new_content);
 
+void
+add_append_line(cbc_build_t *cbcbt, char *output, char *tmp);
+
+int
+write_preseed_config(cbc_build_t *cbt);
+
+int
+write_kickstart_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
 void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
@@ -106,14 +114,16 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 		report_error(MALLOC_FAIL, "query in get_build_info");
 	
 	sprintf(query,
-"SELECT arch, bo.alias, os_version, INET_NTOA(ip), mac_addr, INET_NTOA(netmask),\
- INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname, boot_line, valias,\
- ver_alias, build_type, arg, url FROM build_ip bi LEFT JOIN (build_domain bd,\
- build_os bo, build b, build_type bt, server s, boot_line bootl, varient v)\
- ON (bi.bd_id = bd.bd_id AND bt.bt_id = bootl.bt_id AND\
+"SELECT arch, bo.alias, os_version, INET_NTOA(ip), mac_addr,\
+ INET_NTOA(netmask), INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname,\
+ boot_line, valias,ver_alias, build_type, arg, url, country, locale, language,\
+ keymap, net_inst_int, mirror, config_ntp, ntp_server FROM build_ip bi LEFT\
+ JOIN (build_domain bd, build_os bo, build b, build_type bt, server s,\
+ boot_line bootl, varient v, locale l) ON (bi.bd_id = bd.bd_id\
+ AND bt.bt_id = bootl.bt_id AND\
  b.ip_id = bi.ip_id AND bo.os_id = b.os_id AND s.server_id = b.server_id AND\
- bootl.boot_id = bo.boot_id AND b.varient_id = v.varient_id)\
- WHERE s.server_id = %ld", server_id);
+ bootl.boot_id = bo.boot_id AND b.varient_id = v.varient_id AND\
+ l.os_id = b.os_id) WHERE s.server_id = %ld", server_id);
 	build_query = query;
 	cbc_mysql_init(config, &build);
 	cmdb_mysql_query(&build, build_query);
@@ -173,16 +183,7 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 	len = strlen(tmp);
 	strncpy(file_content, tmp, len);
 	if ((strncmp("none", cbt->boot, CONF_S)) != 0) {
-		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n",
-		cbt->alias,
-		cbt->version,
-		cbt->arch,
-		cbt->boot,
-		cbt->arg,
-		cbt->url,
-		cbt->hostname);
-		len = strlen(tmp);
-		strncat(file_content, tmp, len);
+		add_append_line(cbt, file_content, tmp);
 	} else {
 		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img\n",
 		cbt->alias,
@@ -195,6 +196,29 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 	printf("TFTP file written\n");
 	free(file_content);
 	free(tmp);
+}
+
+void add_append_line(cbc_build_t *cbt, char *output, char *tmp)
+{
+	size_t len;
+	if ((strncmp(cbt->build_type, "preseed", RANGE_S) == 0)) {
+		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img country=%s ",
+			cbt->alias,
+			cbt->version,
+			cbt->arch,
+			cbt->country);
+		len = strlen(tmp);
+		strncat(output, tmp, len);
+		sprintf(tmp, "locale=%s keymap=%s %s %s=%s%s.cfg\n",
+			cbt->locale,
+			cbt->keymap,
+			cbt->boot,
+			cbt->arg,
+			cbt->url,
+			cbt->hostname);
+		len = strlen(tmp);
+		strncat(output, tmp, len);
+	}
 }
 
 void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
@@ -215,6 +239,15 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	sprintf(cbt->build_type, "%s", br[13]);
 	sprintf(cbt->arg, "%s", br[14]);
 	sprintf(cbt->url, "%s", br[15]);
+	sprintf(cbt->country, "%s", br[16]);
+	sprintf(cbt->locale, "%s", br[17]);
+	sprintf(cbt->language, "%s", br[18]);
+	sprintf(cbt->keymap, "%s", br[19]);
+	sprintf(cbt->netdev, "%s", br[20]);
+	sprintf(cbt->mirror, "%s", br[21]);
+	cbt->config_ntp = ((strncmp(br[22], "0", CH_S)));
+	if (br[23])
+		sprintf(cbt->ntpserver, "%s", br[23]);
 }
 
 void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
@@ -309,3 +342,130 @@ void read_dhcp_hosts_file(cbc_build_t *cbcbt, char *from, char *content, char *n
 		printf("Error backing up old config! Check permissions!\n");
 }
 
+int write_build_config(cbc_config_t *cmc, cbc_build_t *cbt)
+{
+	int retval;
+	retval = 0;
+	if ((strncmp(cbt->build_type, "preseed", RANGE_S) == 0))
+		retval = write_preseed_config(cbt);
+	else if ((strncmp(cbt->build_type, "kickstart", RANGE_S) == 0))
+		retval = write_kickstart_config(cmc, cbt);
+	return retval;
+}
+
+int write_preseed_config(cbc_build_t *cbt)
+{
+	size_t len, total;
+	int retval;
+	char *output;
+	char *tmp;
+	
+	len = total = 0;
+	retval = 0;
+	
+	if (!(output = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "output in write_preseed_config");
+	if (!(tmp = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in write_preseed_config");
+	
+	snprintf(tmp, FILE_S,
+	"d-i console-setup/ask_detect boolean false\n\
+d-i debian-installer/locale string %s\n\
+d-i debian-installer/language string %s\n\
+d-i console-keymaps-at/keymap select %s\n\
+d-i keymap select %s\n",
+		cbt->locale,
+		cbt->language,
+		cbt->keymap,
+		cbt->keymap);
+	len = strlen(tmp);
+	if (len + total < BUILD_S) {
+		strncat(output, tmp, FILE_S);
+		total = strlen(output);
+	} else {
+		retval = BUFFER_FULL;
+		return retval;
+	}
+	
+	snprintf(tmp, FILE_S,
+	"d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
+d-i netcfg/enable boolean true\n\
+d-i netcfg/confirm_static boolean true\n\
+d-i netcfg/disable_dhcp boolean true\n\
+d-i netcfg/choose_interface select %s\n\
+d-i netcfg/get_nameservers string %s\n\
+d-i netcfg/get_ipaddress string %s\n\
+d-i netcfg/get_netmask string %s\n\
+d-i netcfg/get_gateway string %s\n\
+d-i netcfg/get_hostname string %s\n\
+d-i netcfg/get_domain string %s\n",
+		cbt->netdev,
+		cbt->nameserver,
+		cbt->ip_address,
+		cbt->netmask,
+		cbt->gateway,
+		cbt->hostname,
+		cbt->domain);
+	len = strlen(tmp);
+	if (len + total < BUILD_S) {
+		strncat(output, tmp, FILE_S);
+		total = strlen(output);
+	} else {
+		retval = BUFFER_FULL;
+		return retval;
+	}
+	
+	snprintf(tmp, FILE_S,
+	"d-i netcfg/wireless_wep string\n\
+d-i hw-detect/load_firmware boolean true\n\
+d-i mirror/country string manual\n\
+d-i mirror/http/hostname string %s\n\
+d-i mirror/http/directory string /debian\n\
+d-i mirror/suite string %s\n\
+d-i passwd/root-password-crypted password $1$d/0w8MHb$tdqENqvXIz53kZp2svuak1\n\
+d-i passwd/user-fullname string Monkey User\n\
+d-i passwd/username string monkey\n\
+d-i passwd/user-password-crypted password $1$Hir6Ul13$.T1tAO.yfK5g7WDKSw0nI/\n\
+d-i clock-setup/utc boolean true\n\
+d-i time/zone string %s\n",
+		cbt->mirror,
+		cbt->ver_alias,
+		cbt->country);
+	len = strlen(tmp);
+	if (len + total < BUILD_S) {
+		strncat(output, tmp, FILE_S);
+		total = strlen(output);
+	} else {
+		retval = BUFFER_FULL;
+		return retval;
+	}
+	if (cbt->config_ntp == 0)
+		snprintf(tmp, HOST_S, "d-i clock-setup/ntp boolean false");
+	else
+		snprintf(tmp, RBUFF_S, "d-i clock-setup/ntp boolean \
+true\nd-i clock-setup/ntp-server string %s\n",
+			cbt->ntpserver);
+	len = strlen(tmp);
+	if (len + total < BUILD_S) {
+		strncat(output, tmp, FILE_S);
+		total = strlen(output);
+	} else {
+		retval = BUFFER_FULL;
+		return retval;
+	}
+
+	
+	printf("%s", output);
+	free(tmp);
+	free(output);
+	return retval;
+}
+
+int write_kickstart_config(cbc_config_t *cmc, cbc_build_t *cbt)
+{
+	int retval;
+	retval = 0;
+	printf("kickstart location: %s\n", cmc->kickstart);
+	printf("hostname: %s\n", cbt->hostname);
+	return retval;
+}
