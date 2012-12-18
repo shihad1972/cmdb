@@ -112,3 +112,4 @@ ALTER TABLE build_domain CHANGE COLUMN ldap_server ldap_url varchar(96) NOT NULL
 UPDATE build_domain SET ntp_server = 'shihad.org';
 ## 17/12/2012
 ALTER TABLE partitions ADD COLUMN logical_volume varchar(16) NOT NULL DEFAULT 'none';
+ALTER TABLE build_domain CHANGE COLUMN xymon_config config_xymon tinyint;

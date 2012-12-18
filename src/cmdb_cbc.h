@@ -59,6 +59,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	int config_ntp;
 	int use_lvm;
 	unsigned long int server_id;
+	unsigned long int bd_id;
 } cbc_build_t;
 
 typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
@@ -71,6 +72,19 @@ typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
 	char log_vol[RANGE_S + 1];
 	struct pre_disk_part_t *nextpart;
 } pre_disk_part_t;
+
+typedef struct pre_app_config_t {
+	char ldap_url[URL_S];
+	char ldap_dn[URL_S];
+	char ldap_bind[URL_S];
+	char log_server[CONF_S];
+	char smtp_server[CONF_S];
+	char xymon_server[CONF_S];
+	unsigned long int config_ldap;
+	unsigned long int config_log;
+	unsigned long int config_email;
+	unsigned long int config_xymon;
+} pre_app_config_t;
 
 int
 parse_cbc_config_file(cbc_config_t *dc, char *config);

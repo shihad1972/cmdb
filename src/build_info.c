@@ -46,6 +46,9 @@ int
 add_preseed_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
 
 int
+write_application_preconfig(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
+
+int
 write_regular_preheader(char *output, char *tmp);
 
 int
@@ -68,6 +71,12 @@ part_node_delete(pre_disk_part_t head_node);
 
 void
 part_node_free(void);
+
+void
+init_app_config(pre_app_config_t *configuration);
+
+void
+get_app_config(cbc_config_t *cmc, cbc_build_t *cbt, pre_app_config_t *configuration);
 
 void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
@@ -99,6 +108,7 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 	}
 	sprintf(server_id, "%ld", info->server_id);
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
@@ -149,9 +159,9 @@ int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long 
 "SELECT arch, bo.alias, os_version, INET_NTOA(ip), mac_addr,\
  INET_NTOA(netmask), INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname,\
  boot_line, valias,ver_alias, build_type, arg, url, country, locale, language,\
- keymap, net_inst_int, mirror, config_ntp, ntp_server, device, lvm FROM\
- build_ip bi LEFT JOIN (build_domain bd, build_os bo, build b, build_type bt,\
- server s, \
+ keymap, net_inst_int, mirror, device, lvm, bd.bd_id, config_ntp, ntp_server \
+ FROM build_ip bi LEFT JOIN (build_domain bd, build_os bo, build b, \
+ build_type bt, server s, \
  boot_line bootl, varient v, locale l, disk_dev dd) ON (bi.bd_id = bd.bd_id \
  AND bt.bt_id = bootl.bt_id AND dd.server_id = s.server_id AND\
  b.ip_id = bi.ip_id AND bo.os_id = b.os_id AND s.server_id = b.server_id AND \
@@ -278,11 +288,12 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	sprintf(cbt->keymap, "%s", br[19]);
 	sprintf(cbt->netdev, "%s", br[20]);
 	sprintf(cbt->mirror, "%s", br[21]);
-	cbt->config_ntp = ((strncmp(br[22], "0", CH_S)));
-	if (br[23])
-		sprintf(cbt->ntpserver, "%s", br[23]);
-	sprintf(cbt->diskdev, "%s", br[24]);
-	cbt->use_lvm = ((strncmp(br[25], "0", CH_S)));
+	sprintf(cbt->diskdev, "%s", br[22]);
+	cbt->use_lvm = ((strncmp(br[23], "0", CH_S)));
+	cbt->bd_id = strtoul(br[24], NULL, 10);
+	cbt->config_ntp = ((strncmp(br[25], "0", CH_S)));
+	if (br[26])
+		sprintf(cbt->ntpserver, "%s", br[26]);
 }
 
 void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
@@ -542,6 +553,39 @@ d-i pkgsel/include string ");
 		free(output);
 		return retval;
 	}
+	snprintf(tmp, FILE_S,
+"d-i pkgsel/upgrade select none\n\
+popularity-contest popularity-contest/participate boolean false\n\
+d-i finish-install/keep-consoles boolean true\n\
+d-i finish-install/reboot_in_progress note\n\
+d-i cdrom-detect/eject boolean false\n");
+	len = strlen(tmp);
+	total = strlen(output);
+	if ((total + len) > BUILD_S) {
+		free(tmp);
+		free(output);
+		return BUFFER_FULL;
+	} else {
+		strncat(output, tmp, len);
+	}
+	snprintf(tmp, FILE_S,
+"d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh \
+&& chmod 755 base.sh && ./base.sh\n\n", cbt->url);
+	len = strlen(tmp);
+	total = strlen(output);
+	if ((total + len) > BUILD_S) {
+		free(tmp);
+		free(output);
+		return BUFFER_FULL;
+	} else {
+		strncat(output, tmp, len);
+	}
+	retval = write_application_preconfig(cmc, cbt, output, tmp);
+	if (retval == BUFFER_FULL) {
+		free(tmp);
+		free(output);
+		return retval;
+	}
 
 	printf("Preseed file:\n%s", output);
 	free(tmp);
@@ -592,6 +636,7 @@ cbt->server_id);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
@@ -871,6 +916,7 @@ cbt->alias, cbt->version, cbt->varient, cbt->arch);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(package);
@@ -908,6 +954,191 @@ cbt->alias, cbt->version, cbt->varient, cbt->arch);
 	free(package);
 	free(query);
 	return retval;
+}
+
+int write_application_preconfig(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff)
+{
+	size_t buff_len, out_len;
+	pre_app_config_t *app_conf;
+	int retval;
+	retval = 0;
+	
+	out_len = strlen(out);
+	if (!(app_conf = malloc(sizeof(pre_app_config_t))))
+		report_error(MALLOC_FAIL, "app_config in write_application_preconfig");
+	
+	init_app_config(app_conf);
+	get_app_config(cmc, cbt, app_conf);
+	
+	if (out_len + MAC_S < BUILD_S)
+		strncat(out, "\n\n#Application Configuration\n\n", MAC_S);
+	else
+		return BUFFER_FULL;
+	
+	out_len = strlen(out);
+	if (app_conf->config_email > 0) {
+		snprintf(buff, FILE_S,
+"postfix postfix/mailname  string  %s.%s\n\
+postfix postfix/main_mailer_type  select  Internet with smarthost\n\
+postfix postfix/destinations string  %s.%s, localhost.%s, localhost\n\
+postfix postfix/relayhost    string  %s\n\n",
+			 cbt->hostname,
+			 cbt->domain,
+			 cbt->hostname,
+			 cbt->domain,
+			 cbt->domain,
+			 app_conf->smtp_server);
+		buff_len = strlen(buff);
+		if (out_len + buff_len < BUILD_S) {
+			strncat(out, buff, buff_len);
+		} else {
+			return BUFFER_FULL;
+		}
+		out_len = strlen(out);
+	}
+
+	if (app_conf->config_xymon > 0) {
+		snprintf(buff, FILE_S,
+"xymon-client    hobbit-client/HOBBITSERVERS     string  %s\n\
+xymon-client    hobbit-client/CLIENTHOSTNAME    string  %s.%s\n\n",
+			 app_conf->xymon_server,
+			 cbt->hostname,
+			 cbt->domain);
+		buff_len = strlen(buff);
+		if (out_len + buff_len < BUILD_S) {
+			strncat(out, buff, buff_len);
+		} else {
+			return BUFFER_FULL;
+		}
+		out_len = strlen(out);
+	}
+
+	if (app_conf->config_ldap > 0) {
+		snprintf(buff, FILE_S,
+"libnss-ldap     libnss-ldap/bindpw      password\n\
+libnss-ldap     libnss-ldap/rootbindpw  password\n\
+libnss-ldap     libnss-ldap/dblogin     boolean false\n\
+libnss-ldap     libnss-ldap/override    boolean true\n\
+libnss-ldap     shared/ldapns/base-dn   string  %s\n\
+libnss-ldap     libnss-ldap/rootbinddn  string  %s\n\
+libnss-ldap     shared/ldapns/ldap_version      select  3\n\
+libnss-ldap     libnss-ldap/binddn      string  %s\n\
+libnss-ldap     shared/ldapns/ldap-server       string %s\n\
+libnss-ldap     libnss-ldap/nsswitch    note\n\
+libnss-ldap     libnss-ldap/confperm    boolean false\n\
+libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\n\
+libpam-ldap     libpam-ldap/rootbindpw  password\n\
+libpam-ldap     libpam-ldap/bindpw      password\n\
+libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
+libpam-ldap     shared/ldapns/base-dn   string  %s\n\
+libpam-ldap     libpam-ldap/override    boolean true\n\
+libpam-ldap     shared/ldapns/ldap_version      select  3\n\
+libpam-ldap     libpam-ldap/dblogin     boolean false\n\
+libpam-ldap     shared/ldapns/ldap-server       string  %s\n\
+libpam-ldap     libpam-ldap/pam_password        select  crypt\n\
+libpam-ldap     libpam-ldap/binddn      string  %s\n\
+libpam-ldap     libpam-ldap/rootbinddn  string  %s\n\
+libpam-ldap     libpam-ldap/dbrootlogin boolean true \n",
+			 app_conf->ldap_dn,
+			 app_conf->ldap_bind,
+			 app_conf->ldap_bind,
+			 app_conf->ldap_url,
+			 app_conf->ldap_dn,
+			 app_conf->ldap_url,
+			 app_conf->ldap_bind,
+			 app_conf->ldap_bind);
+		buff_len = strlen(buff);
+		if (out_len + buff_len < BUILD_S) {
+			strncat(out, buff, buff_len);
+		} else {
+			return BUFFER_FULL;
+		}
+		out_len = strlen(out);
+	}
+	free(app_conf);
+	return retval;
+}
+
+void init_app_config(pre_app_config_t *config)
+{
+	snprintf(config->ldap_url, COMM_S, "NULL");
+	snprintf(config->ldap_dn, COMM_S, "NULL");
+	snprintf(config->ldap_bind, COMM_S, "NULL");
+	snprintf(config->log_server, COMM_S, "NULL");
+	snprintf(config->smtp_server, COMM_S, "NULL");
+	snprintf(config->xymon_server, COMM_S, "NULL");
+	config->config_ldap = 0;
+	config->config_log = 0;
+	config->config_email = 0;
+	config->config_xymon = 0;
+}
+
+void get_app_config(cbc_config_t *cmc, cbc_build_t *cbt, pre_app_config_t *configuration)
+{
+	char *query, sserver_id[10];
+	const char *cbc_query;
+	unsigned long int ldapssl;
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_app_config");
+	snprintf(query, RBUFF_S,
+"SELECT ldap_url, ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, \
+config_log, smtp_server, config_email, xymon_server, config_xymon FROM \
+build_domain WHERE bd_id = %ld", cbt->bd_id);
+	snprintf(sserver_id, 10, "%ld", cbt->server_id);
+	cbc_query = query;
+	cbc_mysql_init(cmc, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == NONE)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(SERVER_ID_NOT_FOUND, sserver_id);
+	}
+	if (cbc_rows > 1){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MULTIPLE_SERVER_IDS, sserver_id);
+	}
+	cbc_row = mysql_fetch_row(cbc_res);
+	configuration->config_ldap = strtoul(cbc_row[4], NULL, 10);
+	configuration->config_log = strtoul(cbc_row[6], NULL, 10);
+	configuration->config_email = strtoul(cbc_row[8], NULL, 10);
+	configuration->config_xymon = strtoul(cbc_row[10], NULL, 10);
+	ldapssl = strtoul(cbc_row[1], NULL, 10);
+	if (configuration->config_ldap > NONE) {
+		if (ldapssl > NONE) {
+			snprintf(configuration->ldap_url, URL_S, "ldaps://%s",
+			 cbc_row[0]);
+		} else {
+			snprintf(configuration->ldap_url, URL_S, "ldap://%s",
+			 cbc_row[0]);
+		}
+		snprintf(configuration->ldap_dn, URL_S, cbc_row[2]);
+		snprintf(configuration->ldap_bind, URL_S, cbc_row[3]);
+	}
+	if (configuration->config_log > NONE)
+		snprintf(configuration->log_server, CONF_S, cbc_row[5]);
+	if (configuration->config_email > NONE)
+		snprintf(configuration->smtp_server, CONF_S, cbc_row[7]);
+	if (configuration->config_xymon > NONE)
+		snprintf(configuration->xymon_server, CONF_S, cbc_row[9]);
+	free(query);
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
 }
 
 int write_kickstart_config(cbc_config_t *cmc, cbc_build_t *cbt)

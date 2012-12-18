@@ -9,6 +9,7 @@ enum {			/* Buffer Sizes */
 	MAC_S = 32,
 	HOST_S = 64,
 	CONF_S = 80,
+	URL_S = 136,
 	RBUFF_S = 256,
 	TBUFF_S = 512,
 	BUFF_S = 1024,
