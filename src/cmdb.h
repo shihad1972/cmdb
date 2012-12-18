@@ -49,7 +49,8 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	NO_NAME_UUID_ID = 109,
 	SERVER_BUILD_NOT_FOUND = 110,
 	MULTIPLE_SERVER_BUILDS = 111,
-	SERVER_PART_NOT_FOUND = 112
+	SERVER_PART_NOT_FOUND = 112,
+	SERVER_PACKAGES_NOT_FOUND = 113
 };
 
 enum {			/* cmdb return codes */

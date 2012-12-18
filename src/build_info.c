@@ -543,7 +543,7 @@ d-i pkgsel/include string ");
 		return retval;
 	}
 
-	printf("%s", output);
+	printf("Preseed file:\n%s", output);
 	free(tmp);
 	free(output);
 	return retval;
@@ -840,18 +840,72 @@ add_partition_to_preseed(pre_disk_part_t *part, char *output, char *buff, int sp
 int add_preseed_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff)
 {
 	int retval;
-	char *query;
+	char *query, *package;
 	const char *cbc_query;
-	size_t len, total, full;
+	size_t len, total, full, row_len;
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
 	
 	retval = 0;
+	len = strlen(buff);
+	full = strlen(out);
 	if(!(query = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in add_preseed_packages");
+	if (!(package = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "package in add_preseed_packages");
 	snprintf(query, BUFF_S - 1,
-"select package from packages p, varient v WHERE os_id = 40 AND valias = '%s' AND v.varient_id = p.varient_id", cbt->varient);
+"select package from packages p, varient v, build_os bo WHERE bo.os_id =\
+p.os_id AND alias = '%s' AND os_version = '%s' AND valias = '%s'\
+AND arch = '%s' AND v.varient_id = p.varient_id",
+cbt->alias, cbt->version, cbt->varient, cbt->arch);
+	cbc_query = query;
+	cbc_mysql_init(cmc, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(package);
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(package);
+		free(query);
+		report_error(SERVER_PACKAGES_NOT_FOUND, cbt->hostname);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		row_len = strlen(cbc_row[0]);
+		snprintf(package, row_len + 2, "%s ", cbc_row[0]);
+		row_len = strlen(package);
+		total = len + 1 + row_len;
+		if (total < FILE_S) {
+			strncat(buff, package, row_len);
+			len = strlen(buff);
+		} else {
+			retval = BUFFER_FULL;
+			mysql_free_result(cbc_res);
+			mysql_close(&cbc);
+			mysql_library_end();
+			free(package);
+			free(query);
+			return retval;
+		}
+	}
+	snprintf(package, COMM_S, "\n");
+	if ((len + 2) < FILE_S)
+		strncat(buff, package, CH_S);
 	len = strlen(buff);
-	total = strlen(out);
+	if ((len + 1 + full) < BUILD_S)
+		strncat(out, buff, len); 
 	
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(package);
 	free(query);
 	return retval;
 }
