@@ -46,7 +46,10 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	MULTIPLE_SERVER_UUIDS = 106,
 	CUSTOMER_NOT_FOUND = 107,
 	MULTIPLE_CUSTOMERS = 108,
-	NO_NAME_UUID_ID = 109
+	NO_NAME_UUID_ID = 109,
+	SERVER_BUILD_NOT_FOUND = 110,
+	MULTIPLE_SERVER_BUILDS = 111,
+	SERVER_PART_NOT_FOUND = 112
 };
 
 enum {			/* cmdb return codes */
@@ -120,6 +123,12 @@ enum {			/* cbc action codes */
 enum {			/* cbc values for build type */
 	PRESEED = 1,
 	KICKSTART = 2
+};
+
+enum {			/* cbc values for special partitions */
+	ROOT = 1,
+	BOOT = 2,
+	SWAP = 3
 };
 
 enum {

@@ -53,10 +53,24 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char language[RANGE_S];
 	char keymap[RANGE_S];
 	char netdev[RANGE_S];
+	char diskdev[MAC_S];
 	char mirror[CONF_S];
 	char ntpserver[CONF_S];
 	int config_ntp;
+	int use_lvm;
+	unsigned long int server_id;
 } cbc_build_t;
+
+typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
+	unsigned long int min;
+	unsigned long int pri;
+	unsigned long int max;
+	unsigned long int part_id;
+	char mount_point[HOST_S + 1];
+	char filesystem[RANGE_S + 1];
+	char log_vol[RANGE_S + 1];
+	struct pre_disk_part_t *nextpart;
+} pre_disk_part_t;
 
 int
 parse_cbc_config_file(cbc_config_t *dc, char *config);

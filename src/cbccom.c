@@ -373,7 +373,10 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	sprintf(build_config->netdev, "NULL");
 	sprintf(build_config->mirror, "NULL");
 	sprintf(build_config->ntpserver, "NULL");
+	sprintf(build_config->diskdev, "NULL");
 	build_config->config_ntp = 0;
+	build_config->use_lvm = 0;
+	build_config->server_id = 0;
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
@@ -381,10 +384,18 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	fprintf(stderr, "########\nBuild Values\n");
 	fprintf(stderr, "MAC: %s\n", build_config->mac_address);
 	fprintf(stderr, "NETWORK DEVICE: %s\n", build_config->netdev);
+	fprintf(stderr, "DISK DEVICE: %s\n", build_config->diskdev);
+	if (!build_config->use_lvm)
+		fprintf(stderr, "USE LVM: No\n");
+	else if (build_config->use_lvm == 1)
+		fprintf(stderr, "USE LVM: Yes\n");
+	else
+		fprintf(stderr, "USE LVM: Unknown!!\n");
 	fprintf(stderr, "IP: %s\n", build_config->ip_address);
 	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
 	fprintf(stderr, "GW: %s\n", build_config->gateway);
 	fprintf(stderr, "NS: %s\n", build_config->nameserver);
+	fprintf(stderr, "SERVER_ID: %ld\n", build_config->server_id);
 	fprintf(stderr, "HOST: %s\n", build_config->hostname);
 	fprintf(stderr, "DOMAIN: %s\n", build_config->domain);
 	if (build_config->config_ntp > 0)

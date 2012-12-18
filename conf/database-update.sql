@@ -110,3 +110,5 @@ ALTER TABLE build_domain ADD COLUMN xymon_config tinyint NOT NULL DEFAULT 1;
 ALTER TABLE build_domain CHANGE COLUMN email_server smtp_server varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org';
 ALTER TABLE build_domain CHANGE COLUMN ldap_server ldap_url varchar(96) NOT NULL DEFAULT 'ldaps://ldap01.shihad.org';
 UPDATE build_domain SET ntp_server = 'shihad.org';
+## 17/12/2012
+ALTER TABLE partitions ADD COLUMN logical_volume varchar(16) NOT NULL DEFAULT 'none';

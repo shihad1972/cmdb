@@ -115,6 +115,18 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "Multiple customers found for %s\n", errstr);
 			exit(MULTIPLE_CUSTOMERS);
 			break;
+		case SERVER_BUILD_NOT_FOUND:
+			fprintf(stderr, "Build for server id %s not found\n", errstr);
+			exit(SERVER_BUILD_NOT_FOUND);
+			break;
+		case MULTIPLE_SERVER_BUILDS:
+			fprintf(stderr, "Multiple builds found for server id %s\n", errstr);
+			exit(MULTIPLE_SERVER_BUILDS);
+			break;
+		case SERVER_PART_NOT_FOUND:
+			fprintf(stderr, "No partition information for server id %s\n", errstr);
+			exit(SERVER_PART_NOT_FOUND);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
