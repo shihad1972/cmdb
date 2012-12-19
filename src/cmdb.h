@@ -61,7 +61,8 @@ enum {			/* cmdb return codes */
 	NO_TYPE = -4,
 	NO_ACTION = -5,
 	NO_NAME_OR_ID = -6,
-	DISPLAY_USAGE = -7
+	DISPLAY_USAGE = -7,
+	NO_DOMAIN_NAME= -8
 };
 
 enum {			/* cbc return codes */
@@ -148,5 +149,7 @@ void
 display_cmdb_usage(void);
 void
 display_cbc_usage(void);
+void
+display_dnsa_usage(void);
 
 #endif

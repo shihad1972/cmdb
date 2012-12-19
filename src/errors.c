@@ -155,11 +155,16 @@ void display_cmdb_command_line_error(int retval, char *program)
 		case GENERIC_ERROR:
 			fprintf(stderr, "Unknown command line option\n");
 			break;
+		case NO_DOMAIN:
+			fprintf(stderr, "No domain specified on command line\n");
+			break;
 		case DISPLAY_USAGE:
 			if ((strncmp(program, "cmdb", CONF_S) == 0))
 				display_cmdb_usage();
 			else if ((strncmp(program, "cbc", CONF_S) == 0))
 				display_cbc_usage();
+			else if ((strncmp(program, "dnsa", CONF_S) ==0))
+				display_dnsa_usage();
 			exit(retval);
 			break;
 		default:
@@ -171,6 +176,9 @@ void display_cmdb_command_line_error(int retval, char *program)
 	       program);
 	else if ((strncmp(program, "cbc", CONF_S) == 0))
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
+	       program);
+	else if ((strncmp(program, "dnsa", CONF_S) ==0))
+		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
 	       program);
 	exit (retval);
 }
@@ -196,4 +204,15 @@ void display_cbc_usage(void)
 	printf("-k: kickstart\n-p: preseed\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
+}
+
+void display_dnsa_usage(void)
+{
+	printf("dnsa: Domain Name System Administratiom\n\n");
+	printf("Action options:\n");
+	printf("-s: display zone\n-w: write_zone\n-c: write configuration file\n\n");
+	printf("Zone type:\n");
+	printf("-f: forward zone\n-r: reverse zone\n\n");
+	printf("Name options:\n");
+	printf("-n zone-name\n");
 }

@@ -41,9 +41,10 @@ int main(int argc, char *argv[])
 	/* Get command line args. See above */
 	retval = parse_dnsa_command_line(argc, argv, cm);
 	if (retval < 0) {
-		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
+/*		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
 			       argv[0]);
-		exit (retval);
+		exit (retval); */
+		display_cmdb_command_line_error(retval, argv[0]);
 	}
 	
 	if (!(domain = malloc(CONF_S * sizeof(char))))

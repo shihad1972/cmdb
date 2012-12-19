@@ -45,20 +45,21 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
 			i++;
 			if (i >= argc) 
-				retval = -1;
+				retval = NO_DOMAIN_NAME;
 			else
 				strncpy(comp->domain, argv[i], CONF_S);
 		} else {
-			retval = -1;
+			retval = DISPLAY_USAGE;
 		}
 	}
-	
-	if (comp->action == NONE)
-		retval = -1;
+	if (comp->action == NONE && comp->type == NONE && strncmp(comp->domain, "NULL", CONF_S) == 0)
+		retval = DISPLAY_USAGE;
+	else if (comp->action == NONE)
+		retval = NO_ACTION;
 	else if (comp->type == NONE)
-		retval = -1;
+		retval = NO_TYPE;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0))
-		retval = -1;
+		retval = NO_DOMAIN_NAME;
 	
 	return retval;
 }
