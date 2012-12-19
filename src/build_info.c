@@ -726,7 +726,8 @@ d-i partman-auto/expert_recipe string                         \\\n\
                        $primary{ }                            \\\n\
                        method{ lvm }                          \\\n\
                        device{ %s }                     \\\n\
-                       vg_name{ systemlv }                    \\", device);
+                       vg_name{ systemlv }                    \\\n\
+      . \\", device);
 	full_len = strlen(output);
 	len = strlen(tmp);
 	if ((len + full_len) < BUILD_S)
