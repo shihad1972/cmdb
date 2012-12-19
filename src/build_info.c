@@ -401,10 +401,10 @@ int write_build_config(cbc_config_t *cmc, cbc_build_t *cbt)
 
 int write_preseed_config(cbc_config_t *cmc, cbc_build_t *cbt)
 {
+	FILE *precnf;
 	size_t len, total;
 	int retval;
-	char *output;
-	char *tmp;
+	char *output, *tmp, *preseed;
 	
 	len = total = 0;
 	retval = 0;
@@ -413,7 +413,12 @@ int write_preseed_config(cbc_config_t *cmc, cbc_build_t *cbt)
 		report_error(MALLOC_FAIL, "output in write_preseed_config");
 	if (!(tmp = calloc(FILE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in write_preseed_config");
-	
+	if (!(preseed = calloc(HOST_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "preseed in write_preseed_config");
+	snprintf(preseed, HOST_S, "%s%s/%s.cfg",
+		 cmc->toplevelos,
+		 cbt->alias,
+		 cbt->hostname);
 	snprintf(tmp, FILE_S,
 	"d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string %s\n\
@@ -587,7 +592,15 @@ d-i cdrom-detect/eject boolean false\n");
 		return retval;
 	}
 
-	printf("Preseed file:\n%s", output);
+	printf("Preseed file: %s\n", preseed);
+	if (!(precnf = fopen(preseed, "w"))) {
+		fprintf(stderr, "Cannot open config file %s for writing\n", preseed);
+                return FILE_O_FAIL;
+	} else {
+		fputs(output, precnf);
+		fclose(precnf);
+	}
+	free(preseed);
 	free(tmp);
 	free(output);
 	return retval;
