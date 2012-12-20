@@ -63,7 +63,7 @@ void report_error(int error, const char *errstr)
 			exit(MY_CONN_FAIL);
 			break;
 		case MY_QUERY_FAIL:
-			fprintf(stderr, "Query to MySQL database failed\n");
+			fprintf(stderr, "Query to MySQL database failed with error %s\n", errstr);
 			exit(MY_QUERY_FAIL);
 			break;
 		case MY_STORE_FAIL:
@@ -77,6 +77,18 @@ void report_error(int error, const char *errstr)
 		case CHKZONE_FAIL:
 			fprintf(stderr, "Checking the zone %s failed\n", errstr);
 			exit(CHKZONE_FAIL);
+			break;
+		case NO_ZONE_CONFIGURATION:
+			fprintf(stderr, "There are no dnsa configuration values in the database\n");
+			exit(NO_ZONE_CONFIGURATION);
+			break;
+		case CANNOT_INSERT_ZONE:
+			fprintf(stderr, "Unable to add zone %s to database", errstr);
+			exit(CANNOT_INSERT_ZONE);
+			break;
+		case CANNOT_INSERT_RECORD:
+			fprintf(stderr, "Unable to add record %s to database", errstr);
+			exit(CANNOT_INSERT_RECORD);
 			break;
 		case MALLOC_FAIL:
 			fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
@@ -178,7 +190,7 @@ void display_cmdb_command_line_error(int retval, char *program)
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
 	       program);
 	else if ((strncmp(program, "dnsa", CONF_S) ==0))
-		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
+		printf("Usage: %s [-d | -w | -c | -l | -z] [-f | -r] -n <domain/netrange>\n",
 	       program);
 	exit (retval);
 }
@@ -210,7 +222,8 @@ void display_dnsa_usage(void)
 {
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Action options:\n");
-	printf("-s: display zone\n-w: write_zone\n-c: write configuration file\n\n");
+	printf("-s: display zone\n-w: write_zone\n-c: write configuration file\
+	\n-z: Add zone\n\n");
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");

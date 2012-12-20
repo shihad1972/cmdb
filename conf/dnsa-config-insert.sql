@@ -1,0 +1,9 @@
+INSERT INTO configuration (config, value) VALUES ('dnsa_refresh', '28800');
+INSERT INTO configuration (config, value) VALUES ('dnsa_retry', '7200');
+INSERT INTO configuration (config, value) VALUES ('dnsa_expire', '1209600');
+INSERT INTO configuration (config, value) VALUES ('dnsa_ttl', '86400');
+INSERT INTO configuration (config, value) VALUES ('dnsa_pri_dns', '192.168.50.1');
+INSERT INTO configuration (config, value) VALUES ('dnsa_sec_dns', '192.168.1.122');
+INSERT INTO configuration (config, value) VALUES ('dnsa_web_ip', '192.168.50.1');
+INSERT INTO configuration (config, value) VALUES ('dnsa_mail_ip', '192.168.1.140');
+INSERT INTO configuration (config, value) VALUES ('dnsa_ftp_ip', '192.168.50.1');

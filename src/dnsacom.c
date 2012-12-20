@@ -32,6 +32,8 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 			comp->action = DISPLAY_ZONE;
 		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
 			comp->action = WRITE_ZONE;
+		} else if ((strncmp(argv[i], "-z", COMM_S) == 0)) {
+			comp->action = ADD_ZONE;
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
 			comp->action = CONFIGURE_ZONE;
 			strncpy(comp->domain, "none", CONF_S);

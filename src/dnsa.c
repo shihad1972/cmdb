@@ -78,6 +78,8 @@ int main(int argc, char *argv[])
 			list_zones(dc);
 		} else if (cm->action == CONFIGURE_ZONE) {
 			wcf(dc);
+		} else if (cm->action == ADD_ZONE) {
+			add_fwd_zone(domain, dc);
 		}
 	} else if (cm->type == REVERSE_ZONE) {
 		id = get_rev_id(domain, dc);

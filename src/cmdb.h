@@ -34,6 +34,9 @@ enum {			/* dnsa error codes */
 	MY_STORE_FAIL = 13,
 	FILE_O_FAIL = 20,
 	CHKZONE_FAIL = 21,
+	NO_ZONE_CONFIGURATION = 22,
+	CANNOT_INSERT_ZONE = 23,
+	CANNOT_INSERT_RECORD = 24,
 	MALLOC_FAIL = 30,
 	BUFFER_FULL = 31
 };
@@ -114,7 +117,9 @@ enum {			/* dnsa action codes */
 	WRITE_ZONE = 1,
 	DISPLAY_ZONE = 2,
 	CONFIGURE_ZONE = 3,
-	LIST_ZONES = 4
+	LIST_ZONES = 4,
+	ADD_ZONE = 5,
+	ADD_RECORD = 6
 };
 
 enum {			/* cbc action codes */

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
@@ -129,26 +130,190 @@ record_row_t fill_record_data(MYSQL_ROW my_row)
 	return records;
 }
 
+void init_dnsa_zone(dnsa_zone_t *dnsa_zone)
+{
+	snprintf(dnsa_zone->name, COMM_S, "NULL");
+	snprintf(dnsa_zone->pri_dns, COMM_S, "NULL");
+	snprintf(dnsa_zone->sec_dns, COMM_S, "NULL");
+	snprintf(dnsa_zone->web_ip, COMM_S, "NULL");
+	snprintf(dnsa_zone->ftp_ip, COMM_S, "NULL");
+	snprintf(dnsa_zone->mail_ip, COMM_S, "NULL");
+	dnsa_zone->serial = 0;
+	dnsa_zone->refresh = 0;
+	dnsa_zone->retry = 0;
+	dnsa_zone->expire = 0;
+	dnsa_zone->ttl = 0;
+}
 
-size_t add_records(record_row_t my_row, char *output, size_t offset)
+void print_fwd_zone_config(dnsa_zone_t *zone)
+{
+	printf("Zone %s information\n", zone->name);
+	printf("Serial: %ld\n", zone->serial);
+	printf("Refresh: %ld\n", zone->refresh);
+	printf("Retry: %ld\n", zone->retry);
+	printf("Expire: %ld\n", zone->expire);
+	printf("TTL: %ld\n", zone->ttl);
+	printf("Primary DNS: %s\n", zone->pri_dns);
+	printf("Secondary DNS: %s\n", zone->sec_dns);
+	printf("Web IP address: %s\n", zone->web_ip);
+	printf("FTP IP address: %s\n", zone->ftp_ip);
+	printf("MX IP address: %s\n", zone->mail_ip);
+}
+
+void fill_dnsa_config(MYSQL_ROW my_row, dnsa_zone_t *zone)
+{
+	if ((strncmp(my_row[0], "dnsa_pri_dns", RBUFF_S)) == 0)
+		snprintf(zone->pri_dns, RBUFF_S, "%s",  my_row[1]);
+	else if ((strncmp(my_row[0], "dnsa_sec_dns", RBUFF_S)) == 0)
+		snprintf(zone->sec_dns, RBUFF_S, "%s",  my_row[1]);
+	else if ((strncmp(my_row[0], "dnsa_web_ip", RANGE_S)) == 0)
+		snprintf(zone->web_ip, RANGE_S, "%s", my_row[1]);
+	else if ((strncmp(my_row[0], "dnsa_ftp_ip", RANGE_S)) == 0)
+		snprintf(zone->ftp_ip, RANGE_S, "%s", my_row[1]);
+	else if ((strncmp(my_row[0], "dnsa_mail_ip", RANGE_S)) == 0)
+		snprintf(zone->mail_ip, RANGE_S, "%s", my_row[1]);
+	else if ((strncmp(my_row[0], "dnsa_refresh", RBUFF_S)) == 0)
+		zone->refresh = strtoul(my_row[1], NULL, 10);
+	else if ((strncmp(my_row[0], "dnsa_retry", RBUFF_S)) == 0)
+		zone->retry = strtoul(my_row[1], NULL, 10);
+	else if ((strncmp(my_row[0], "dnsa_expire", RBUFF_S)) == 0)
+		zone->expire = strtoul(my_row[1], NULL, 10);
+	else if ((strncmp(my_row[0], "dnsa_ttl", RBUFF_S)) == 0)
+		zone->ttl = strtoul(my_row[1], NULL, 10);
+}
+
+void insert_new_fwd_zone(dnsa_zone_t *zone, dnsa_config_t *config)
+{
+	MYSQL dnsa;
+	my_ulonglong dnsa_rows;
+	char *query;
+	const char *dnsa_query;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_new_fwd_zone");
+	
+	snprintf(query, RBUFF_S,
+"INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
+ttl) VALUES ('%s', 'ns1.%s', 'ns2.%s', %ld, %ld, %ld, %ld, %ld)",
+		 zone->name,
+		 zone->name,
+		 zone->name,
+		 zone->serial,
+		 zone->refresh,
+		 zone->retry,
+		 zone->expire,
+		 zone->ttl);
+	dnsa_query = query;
+	dnsa_mysql_init(config, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(&dnsa);
+	if (dnsa_rows == 1) {
+		fprintf(stderr, "New zone %s added\n", zone->name);
+	} else {
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(CANNOT_INSERT_ZONE, zone->name);
+	}
+	mysql_close(&dnsa);
+	mysql_library_end();
+	free(query);
+}
+
+void insert_new_fwd_zone_records(dnsa_zone_t *zone, dnsa_config_t *config)
+{
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	my_ulonglong dnsa_rows;
+	char *query;
+	const char *dnsa_query;
+	unsigned long int zone_id;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_new_fwd_zone_records");
+	snprintf(query, RBUFF_S,
+"SELECT id FROM zones WHERE name = '%s'", zone->name);
+	dnsa_query = query;
+	dnsa_mysql_init(config, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(NO_DOMAIN, zone->name);
+	} else if (dnsa_rows > 1) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(MULTI_DOMAIN, zone->name);
+	}
+	dnsa_row = mysql_fetch_row(dnsa_res);
+	zone_id = strtoul(dnsa_row[0], NULL, 10);
+	mysql_free_result(dnsa_res);
+	
+	add_fwd_zone_record(&dnsa, zone_id, "ftp", zone->ftp_ip, "A");
+	add_fwd_zone_record(&dnsa, zone_id, "www", zone->web_ip, "A");
+	add_fwd_zone_record(&dnsa, zone_id, "mail01", zone->mail_ip, "A");
+	add_fwd_zone_record(&dnsa, zone_id, "ns1", zone->pri_dns, "A");
+	add_fwd_zone_record(&dnsa, zone_id, "ns2", zone->sec_dns, "A");
+	mysql_close(&dnsa);
+	mysql_library_end();
+	free(query);
+}
+
+void add_fwd_zone_record(MYSQL *dnsa, unsigned long int zone_id, const char *name, char *dest, const char *type)
+{
+	char *query;
+	const char *dnsa_query;
+	my_ulonglong dnsa_rows;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in add_fwd_zone_record");
+	dnsa_query = query;
+	snprintf(query, RBUFF_S,
+"INSERT INTO records (zone, host, type, destination) VALUES \
+(%ld, '%s', '%s', '%s')", zone_id, name, type, dest);
+	cmdb_mysql_query(dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(dnsa);
+	if (dnsa_rows == 1) {
+		fprintf(stderr, "New record %s added\n", name);
+	} else {
+		mysql_close(dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(CANNOT_INSERT_RECORD, name);
+	}
+	free(query);
+}
+
+size_t add_records(record_row_t *my_row, char *output, size_t offset)
 {
 	char *tmp;
 	size_t len;
 	if (!(tmp = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in add_records");
-	len = strlen(my_row.host);
+	len = strlen(my_row->host);
 	if (len >= 8)
-		sprintf(tmp, "%s\t", my_row.host);
+		sprintf(tmp, "%s\t", my_row->host);
 	else
-		sprintf(tmp, "%s\t\t", my_row.host);
+		sprintf(tmp, "%s\t\t", my_row->host);
 	len = strlen(tmp);
 	strncat(output, tmp, len);
 	offset += len;
-	sprintf(tmp, "%s\t", my_row.type);
+	sprintf(tmp, "%s\t", my_row->type);
 	len = strlen(tmp);
 	strncat(output, tmp, len);
 	offset += len;
-	sprintf(tmp, "%s\n", my_row.dest);
+	sprintf(tmp, "%s\n", my_row->dest);
 	len = strlen(tmp);
 	strncat(output, tmp, len);
 	offset += len;
@@ -189,7 +354,7 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 		report_error(NO_RECORDS, zi->name);
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(dnsa_row);
-		len = add_records(row_data, out, len);
+		len = add_records(&row_data, out, len);
 	}
 	/* Now check for second NS record */
 	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {
@@ -203,7 +368,7 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 			report_error(NO_RECORDS, zi->name);
 		while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 			row_data = fill_record_data(dnsa_row);
-			len = add_records(row_data, out, len);
+			len = add_records(&row_data, out, len);
 		}
 	}
 	mysql_free_result(dnsa_res);
@@ -275,7 +440,7 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 		}
 		while ((dnsa_row = mysql_fetch_row(dnsa_res2))) {
 			row_data2 = fill_record_data(dnsa_row);
-			len = add_records(row_data2, out, len);
+			len = add_records(&row_data2, out, len);
 		}
 		mysql_free_result(dnsa_res2);
 		mysql_close(&dnsa2);
@@ -317,6 +482,58 @@ void write_fwd_zonefile(char *filename, char *output)
 		fputs(output, zonefile);
 		fclose(zonefile);
 	}
+}
+
+void add_fwd_zone(char *domain, dnsa_config_t *dc)
+{
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	my_ulonglong dnsa_rows;
+	dnsa_zone_t *new_zone;
+	char *query;
+	const char *dnsa_query;
+
+	if (!(new_zone = malloc(sizeof(dnsa_zone_t))))
+		report_error(MALLOC_FAIL, "new_zone in add_fwd_zone");
+	if (!(query = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in add_fwd_zone");
+	
+	init_dnsa_zone(new_zone);
+	snprintf(query, BUFF_S,\
+"SELECT config, value FROM configuration WHERE config LIKE 'dnsa_%%'");
+	dnsa_query = query;
+	dnsa_mysql_init(dc, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		free(new_zone);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		free(new_zone);
+		report_error(NO_ZONE_CONFIGURATION, dnsa_query);
+	}
+	while ((dnsa_row = mysql_fetch_row(dnsa_res)))
+		fill_dnsa_config(dnsa_row, new_zone);
+	
+	mysql_free_result(dnsa_res);
+	mysql_close(&dnsa);
+	mysql_library_end();
+	
+	snprintf(new_zone->name, RBUFF_S, "%s", domain);
+	update_fwd_zone_serial(new_zone);
+	print_fwd_zone_config(new_zone);
+	insert_new_fwd_zone(new_zone, dc);
+	insert_new_fwd_zone_records(new_zone, dc);
+	free(query);
+	free(new_zone);
 }
 
 int wzf (char *domain, dnsa_config_t *dc)
@@ -399,7 +616,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	while ((my_row = mysql_fetch_row(my_res))) {
 		row_data = fill_record_data(my_row);
-		offset = add_records(row_data, zout2, offset);	
+		offset = add_records(&row_data, zout2, offset);	
 	}
 	mysql_free_result(my_res);
 	sprintf(zonefilename, "%sdb.%s", dc->dir, zi->name);
@@ -503,4 +720,33 @@ int wcf(dnsa_config_t *dc)
 	free(zonefile);
 	free(error_code);
 	return 0;
+}
+
+void update_fwd_zone_serial(dnsa_zone_t *zone)
+{
+	time_t now;
+	struct tm *lctime;
+	char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[RANGE_S];
+	unsigned long int serial;
+	
+	now = time(0);
+	lctime = localtime(&now);
+	snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
+	if (lctime->tm_mon < 9)
+		snprintf(smonth, COMM_S, "0%d", lctime->tm_mon + 1);
+	else
+		snprintf(smonth, COMM_S, "%d", lctime->tm_mon + 1);
+	if (lctime->tm_mday < 10)
+		snprintf(sday, COMM_S, "0%d", lctime->tm_mday);
+	else
+		snprintf(sday, COMM_S, "%d", lctime->tm_mday);
+	snprintf(sserial, RANGE_S, "%s%s%s01",
+		 syear,
+		 smonth,
+		 sday);
+	serial = strtoul(sserial, NULL, 10);
+	if (zone->serial < serial)
+		zone->serial = serial;
+	else
+		zone->serial++;
 }
