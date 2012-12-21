@@ -30,27 +30,24 @@
 
 int main(int argc, char *argv[])
 {
-	comm_line_t command, *cm;
-	dnsa_config_t dnsa_c, *dc;
+	comm_line_t *cm;
+	dnsa_config_t *dc;
 	char *domain, *config;
 	int retval, id;
 
-	dc = &dnsa_c;
-	cm = &command;
-	
-	/* Get command line args. See above */
-	retval = parse_dnsa_command_line(argc, argv, cm);
-	if (retval < 0) {
-/*		printf("Usage: %s [-d | -w | -c | -l] [-f | -r] -n <domain/netrange>\n",
-			       argv[0]);
-		exit (retval); */
-		display_cmdb_command_line_error(retval, argv[0]);
-	}
-	
 	if (!(domain = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "domain in dnsa.c");
 	if (!(config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "config in dnsa.c");
+	if (!(dc = malloc(sizeof(dnsa_config_t))))
+		report_error(MALLOC_FAIL, "dc in dnsa.c");
+	if (!(cm = malloc(sizeof(comm_line_t))))
+		report_error(MALLOC_FAIL, "cm in dnsa.c");
+	
+	/* Get command line args. See above */
+	retval = parse_dnsa_command_line(argc, argv, cm);
+	if (retval < 0)
+		display_cmdb_command_line_error(retval, argv[0]);
 	
 	/* Get config values from config file */	
 	init_config_values(dc);
@@ -80,6 +77,8 @@ int main(int argc, char *argv[])
 			wcf(dc);
 		} else if (cm->action == ADD_ZONE) {
 			add_fwd_zone(domain, dc);
+		} else if (cm->action == ADD_HOST) {
+			add_fwd_host(dc, cm);
 		}
 	} else if (cm->type == REVERSE_ZONE) {
 		id = get_rev_id(domain, dc);
@@ -102,5 +101,7 @@ int main(int argc, char *argv[])
 	}
 	
 	free(domain);
+	free(cm);
+	free(dc);
 	exit(0);
 }

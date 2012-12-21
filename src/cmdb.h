@@ -65,7 +65,10 @@ enum {			/* cmdb return codes */
 	NO_ACTION = -5,
 	NO_NAME_OR_ID = -6,
 	DISPLAY_USAGE = -7,
-	NO_DOMAIN_NAME= -8
+	NO_DOMAIN_NAME = -8,
+	NO_IP_ADDRESS = -9,
+	NO_HOST_NAME = -10,
+	NO_RECORD_TYPE = -11
 };
 
 enum {			/* cbc return codes */
@@ -119,7 +122,8 @@ enum {			/* dnsa action codes */
 	CONFIGURE_ZONE = 3,
 	LIST_ZONES = 4,
 	ADD_ZONE = 5,
-	ADD_RECORD = 6
+	ADD_RECORD = 6,
+	ADD_HOST = 7
 };
 
 enum {			/* cbc action codes */

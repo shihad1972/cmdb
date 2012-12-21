@@ -295,6 +295,49 @@ void add_fwd_zone_record(MYSQL *dnsa, unsigned long int zone_id, const char *nam
 	free(query);
 }
 
+void add_fwd_host(dnsa_config_t *dct, comm_line_t *clt)
+{
+	MYSQL dnsa;
+	MYSQL_RES *dnsa_res;
+	MYSQL_ROW dnsa_row;
+	my_ulonglong dnsa_rows;
+	char *query;
+	const char *dnsa_query;
+	unsigned long int zone_id;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_new_fwd_zone_records");
+	snprintf(query, RBUFF_S,
+"SELECT id FROM zones WHERE name = '%s'", clt->domain);
+	dnsa_query = query;
+	dnsa_mysql_init(dct, &dnsa);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
+	}
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(NO_DOMAIN, clt->domain);
+	} else if (dnsa_rows > 1) {
+		mysql_free_result(dnsa_res);
+		mysql_close(&dnsa);
+		mysql_library_end();
+		free(query);
+		report_error(MULTI_DOMAIN, clt->domain);
+	}
+	dnsa_row = mysql_fetch_row(dnsa_res);
+	zone_id = strtoul(dnsa_row[0], NULL, 10);
+	mysql_free_result(dnsa_res);
+	free(query);
+	add_fwd_zone_record(&dnsa, zone_id, clt->host, clt->dest, clt->rtype);
+}
+
 size_t add_records(record_row_t *my_row, char *output, size_t offset)
 {
 	char *tmp;

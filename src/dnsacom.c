@@ -25,6 +25,9 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 	comp->action = NONE;
 	comp->type = NONE;
 	strncpy(comp->domain, "NULL", CONF_S);
+	strncpy(comp->dest, "NULL", RANGE_S);
+	strncpy(comp->rtype, "NULL", RANGE_S);
+	strncpy(comp->host, "NULL", RANGE_S);
 	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
 	
 	for (i = 1; i < argc; i++) {
@@ -37,6 +40,8 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
 			comp->action = CONFIGURE_ZONE;
 			strncpy(comp->domain, "none", CONF_S);
+		} else if ((strncmp(argv[i], "-a", COMM_S) == 0)) {
+			comp->action = ADD_HOST;
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
 			comp->action = LIST_ZONES;
 			strncpy(comp->domain, "all", CONF_S);
@@ -50,6 +55,24 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 				retval = NO_DOMAIN_NAME;
 			else
 				strncpy(comp->domain, argv[i], CONF_S);
+		} else if ((strncmp(argv[i], "-i", COMM_S) == 0)) {
+			i++;
+			if (i >= argc)
+				retval = NO_IP_ADDRESS;
+			else
+				strncpy(comp->dest, argv[i], RBUFF_S);
+		} else if ((strncmp(argv[i], "-h", COMM_S) == 0)) {
+			i++;
+			if (i >= argc)
+				retval = NO_HOST_NAME;
+			else
+				strncpy(comp->host, argv[i], RBUFF_S);
+		} else if ((strncmp(argv[i], "-t", COMM_S) == 0)) {
+			i++;
+			if (i >= argc)
+				retval = NO_RECORD_TYPE;
+			else
+				strncpy(comp->rtype, argv[i], RANGE_S);
 		} else {
 			retval = DISPLAY_USAGE;
 		}
@@ -62,7 +85,12 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		retval = NO_TYPE;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = NO_DOMAIN_NAME;
-	
+	else if ((comp->action == ADD_HOST && strncmp(comp->dest, "NULL", RANGE_S) == 0))
+		retval = NO_IP_ADDRESS;
+	else if ((comp->action == ADD_HOST && strncmp(comp->host, "NULL", RBUFF_S) == 0))
+		retval = NO_HOST_NAME;
+	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
+		retval = NO_RECORD_TYPE;
 	return retval;
 }
 

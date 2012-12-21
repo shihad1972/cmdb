@@ -167,8 +167,17 @@ void display_cmdb_command_line_error(int retval, char *program)
 		case GENERIC_ERROR:
 			fprintf(stderr, "Unknown command line option\n");
 			break;
-		case NO_DOMAIN:
+		case NO_DOMAIN_NAME:
 			fprintf(stderr, "No domain specified on command line\n");
+			break;
+		case NO_IP_ADDRESS:
+			fprintf(stderr, "No IP address specified on command line\n");
+			break;
+		case NO_HOST_NAME:
+			fprintf(stderr, "No hostname specified on command line\n");
+			break;
+		case NO_RECORD_TYPE:
+			fprintf(stderr, "No record type specified on command line\n");
 			break;
 		case DISPLAY_USAGE:
 			if ((strncmp(program, "cmdb", CONF_S) == 0))
@@ -190,7 +199,8 @@ void display_cmdb_command_line_error(int retval, char *program)
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
 	       program);
 	else if ((strncmp(program, "dnsa", CONF_S) ==0))
-		printf("Usage: %s [-d | -w | -c | -l | -z] [-f | -r] -n <domain/netrange>\n",
+		printf("Usage: %s [-d | -w | -c | -l | -z -a] [-f | -r] -n \
+<domain/netrange> -i <IP address> -h <hostname> -t <record type>\n",
 	       program);
 	exit (retval);
 }
@@ -222,10 +232,12 @@ void display_dnsa_usage(void)
 {
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Action options:\n");
-	printf("-s: display zone\n-w: write_zone\n-c: write configuration file\
-	\n-z: Add zone\n\n");
+	printf("-s: display zone\n-w: write zone\n-c: write configuration file\
+	\n-z: Add zone\n-a: Add host record\n\n");
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");
-	printf("-n zone-name\n");
+	printf("-n: zone-name\n\n");
+	printf("Host options for use with adding a host record:\n");
+	printf("-i: IP Address\n-t: Record type (A, MX etc)\n-h: host\n\n");
 }

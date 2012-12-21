@@ -13,6 +13,9 @@ typedef struct comm_line_t { /* Hold parsed command line args */
 	short int type;
 	char domain[CONF_S];
 	char config[CONF_S];
+	char host[RBUFF_S];
+	char dest[RBUFF_S];
+	char rtype[RANGE_S];
 } comm_line_t;
 
 typedef struct dnsa_config_t { /* Hold DNSA configuration values */

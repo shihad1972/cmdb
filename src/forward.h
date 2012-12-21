@@ -121,8 +121,9 @@ insert_new_fwd_zone(dnsa_zone_t *zone, dnsa_config_t *config);
 /* Insert A records for new zone */
 void
 insert_new_fwd_zone_records(dnsa_zone_t *zone, dnsa_config_t *config);
-/* Insert recrod into database */
+/* Insert record into database */
 void
 add_fwd_zone_record(MYSQL *dnsa, unsigned long int zone_id, const char *name, char *dest, const char *type);
-
+void
+add_fwd_host(dnsa_config_t *dct, comm_line_t *clt);
 #endif
