@@ -27,27 +27,18 @@
  */
 zone_info_t fill_zone_data(MYSQL_ROW my_row)
 {
-	int id;
-	unsigned long int ulid;
 	zone_info_t my_zone;
-	id = atoi(my_row[0]);
-	my_zone.id = id;
+	my_zone.id = atoi(my_row[0]);
 	strncpy(my_zone.name, my_row[1], RBUFF_S);
 	strncpy(my_zone.pri_dns, my_row[2], RBUFF_S);
 	strncpy(my_zone.sec_dns, my_row[3] ? my_row[3] : "NULL", RBUFF_S);
-	ulid = strtoul(my_row[4], NULL, 10);
-	my_zone.serial = ulid;
-	ulid = strtoul(my_row[5], NULL, 10);
-	my_zone.refresh = ulid;
-	ulid = strtoul(my_row[6], NULL, 10);
-	my_zone.retry = ulid;
-	ulid = strtoul(my_row[7], NULL, 10);
-	my_zone.expire = ulid;
-	ulid = strtoul(my_row[8], NULL, 10);
-	my_zone.ttl = ulid;
+	my_zone.serial = strtoul(my_row[4], NULL, 10);
+	my_zone.refresh = strtoul(my_row[5], NULL, 10);
+	my_zone.retry = strtoul(my_row[6], NULL, 10);
+	my_zone.expire = strtoul(my_row[7], NULL, 10);
+	my_zone.ttl = strtoul(my_row[8], NULL, 10);
 	strncpy(my_zone.valid, my_row[9], RBUFF_S);
-	id = atoi(my_row[10]);
-	my_zone.owner = id;
+	my_zone.owner = atoi(my_row[10]);
 	strncpy(my_zone.updated, my_row[11], RBUFF_S);
 	return my_zone;
 }
@@ -131,7 +122,7 @@ record_row_t fill_record_data(MYSQL_ROW my_row)
 	return records;
 }
 
-void init_dnsa_zone(dnsa_zone_t *dnsa_zone)
+void init_dnsa_zone(zone_info_t *dnsa_zone)
 {
 	snprintf(dnsa_zone->name, COMM_S, "NULL");
 	snprintf(dnsa_zone->pri_dns, COMM_S, "NULL");
@@ -139,14 +130,18 @@ void init_dnsa_zone(dnsa_zone_t *dnsa_zone)
 	snprintf(dnsa_zone->web_ip, COMM_S, "NULL");
 	snprintf(dnsa_zone->ftp_ip, COMM_S, "NULL");
 	snprintf(dnsa_zone->mail_ip, COMM_S, "NULL");
+	snprintf(dnsa_zone->valid, COMM_S, "NULL");
+	snprintf(dnsa_zone->updated, COMM_S, "NULL");
 	dnsa_zone->serial = 0;
 	dnsa_zone->refresh = 0;
 	dnsa_zone->retry = 0;
 	dnsa_zone->expire = 0;
 	dnsa_zone->ttl = 0;
+	dnsa_zone->id = 0;
+	dnsa_zone->owner = 0;
 }
 
-void print_fwd_zone_config(dnsa_zone_t *zone)
+void print_fwd_zone_config(zone_info_t *zone)
 {
 	printf("Zone %s information\n", zone->name);
 	printf("Serial: %ld\n", zone->serial);
@@ -161,7 +156,7 @@ void print_fwd_zone_config(dnsa_zone_t *zone)
 	printf("MX IP address: %s\n", zone->mail_ip);
 }
 
-void fill_dnsa_config(MYSQL_ROW my_row, dnsa_zone_t *zone)
+void fill_dnsa_config(MYSQL_ROW my_row, zone_info_t *zone)
 {
 	if ((strncmp(my_row[0], "dnsa_pri_dns", RBUFF_S)) == 0)
 		snprintf(zone->pri_dns, RBUFF_S, "%s",  my_row[1]);
@@ -183,7 +178,7 @@ void fill_dnsa_config(MYSQL_ROW my_row, dnsa_zone_t *zone)
 		zone->ttl = strtoul(my_row[1], NULL, 10);
 }
 
-void insert_new_fwd_zone(dnsa_zone_t *zone, dnsa_config_t *config)
+void insert_new_fwd_zone(zone_info_t *zone, dnsa_config_t *config)
 {
 	MYSQL dnsa;
 	my_ulonglong dnsa_rows;
@@ -221,7 +216,7 @@ ttl) VALUES ('%s', 'ns1.%s', 'ns2.%s', %ld, %ld, %ld, %ld, %ld)",
 	free(query);
 }
 
-void insert_new_fwd_zone_records(dnsa_zone_t *zone, dnsa_config_t *config)
+void insert_new_fwd_zone_records(zone_info_t *zone, dnsa_config_t *config)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
@@ -534,11 +529,11 @@ void add_fwd_zone(char *domain, dnsa_config_t *dc)
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
 	my_ulonglong dnsa_rows;
-	dnsa_zone_t *new_zone;
+	zone_info_t *new_zone;
 	char *query;
 	const char *dnsa_query;
 
-	if (!(new_zone = malloc(sizeof(dnsa_zone_t))))
+	if (!(new_zone = malloc(sizeof(zone_info_t))))
 		report_error(MALLOC_FAIL, "new_zone in add_fwd_zone");
 	if (!(query = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in add_fwd_zone");
@@ -617,8 +612,15 @@ int wzf (char *domain, dnsa_config_t *dc)
 	
 	my_row = mysql_fetch_row(dnsa_res);
 	zone_info = fill_zone_data(my_row);
-	create_zone_header(zout, zone_info);
 	mysql_free_result(dnsa_res);
+	update_fwd_zone_serial(zi);
+	snprintf(tmp, BUFF_S,
+"UPDATE zones SET serial = %ld WHERE name = '%s'", zi->serial, domain);
+	cmdb_mysql_query(&dnsa, dnsa_query);
+	dnsa_rows = mysql_affected_rows(&dnsa);
+	if (dnsa_rows != 1)
+		fprintf(stderr, "Unable to update serial for zone '%s'", domain);
+	create_zone_header(zout, zone_info);
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	
@@ -766,7 +768,7 @@ int wcf(dnsa_config_t *dc)
 	return 0;
 }
 
-void update_fwd_zone_serial(dnsa_zone_t *zone)
+void update_fwd_zone_serial(zone_info_t *zone)
 {
 	time_t now;
 	struct tm *lctime;

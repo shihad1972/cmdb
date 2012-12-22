@@ -14,6 +14,9 @@ typedef struct zone_info_t { /* Hold DNS zone */
 	char sec_dns[RBUFF_S];
 	char valid[RBUFF_S];
 	char updated[RBUFF_S];
+	char web_ip[RANGE_S];
+	char ftp_ip[RANGE_S];
+	char mail_ip[RANGE_S];
 	unsigned long int serial;
 	unsigned long int refresh;
 	unsigned long int retry;
@@ -23,11 +26,11 @@ typedef struct zone_info_t { /* Hold DNS zone */
 
 typedef struct record_row_t { /* Hold dns record */
 	int id;
+	int pri;
 	int zone;
+	char dest[RBUFF_S];
 	char host[RBUFF_S];
 	char type[RBUFF_S];
-	int pri;
-	char dest[RBUFF_S];
 	char valid[RBUFF_S];
 } record_row_t;
 
@@ -55,11 +58,11 @@ fill_record_data(MYSQL_ROW my_row);
 
 /* Initialise strcut with new zone data */
 void
-init_dnsa_zone(dnsa_zone_t *dnsa_zone);
+init_dnsa_zone(zone_info_t *dnsa_zone);
 
 /* Fill zone configuration from database information */
 void
-fill_dnsa_config(MYSQL_ROW my_row, dnsa_zone_t *zone);
+fill_dnsa_config(MYSQL_ROW my_row, zone_info_t *zone);
 
 /* Create the header of the DNS zone in a string */
 void
@@ -111,16 +114,16 @@ list_zones (dnsa_config_t *dc);
 
 /* Update the forward zone serial number */
 void
-update_fwd_zone_serial(dnsa_zone_t *zone);
+update_fwd_zone_serial(zone_info_t *zone);
 /* Print out new fwd zone config */
 void
-print_fwd_zone_config(dnsa_zone_t *zone);
+print_fwd_zone_config(zone_info_t *zone);
 /* Insert new forward zone into database */
 void
-insert_new_fwd_zone(dnsa_zone_t *zone, dnsa_config_t *config);
+insert_new_fwd_zone(zone_info_t *zone, dnsa_config_t *config);
 /* Insert A records for new zone */
 void
-insert_new_fwd_zone_records(dnsa_zone_t *zone, dnsa_config_t *config);
+insert_new_fwd_zone_records(zone_info_t *zone, dnsa_config_t *config);
 /* Insert record into database */
 void
 add_fwd_zone_record(MYSQL *dnsa, unsigned long int zone_id, const char *name, char *dest, const char *type);
