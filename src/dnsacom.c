@@ -220,3 +220,18 @@ void init_config_values(dnsa_config_t *dc)
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
 	sprintf(buff, "%s", "");
 }
+
+int validate_comm_line(comm_line_t *comm)
+{
+	int retval;
+	
+	retval = 0;
+	
+	retval = validate_user_input(comm->host, NAME_REGEX);
+	if (retval < 0)
+		return retval;
+	retval = validate_user_input(comm->dest, IP_REGEX);
+	if (retval < 0)
+		return retval;
+	return retval;
+}

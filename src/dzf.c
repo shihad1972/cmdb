@@ -102,9 +102,9 @@ int dzf (char *domain, dnsa_config_t *dc)
 	}
 	host[len + i] = '\0';
 	
-	printf("%s\t%d\tIN\tSOA\t%s. hostmaster.%s. ",
+	printf("%s\t%ld\tIN\tSOA\t%s. hostmaster.%s. ",
 	       host, zi->ttl, zi->pri_dns, zi->name);
-	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
+	printf("%ld %ld %ld %ld %ld\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
 
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
@@ -118,10 +118,10 @@ int dzf (char *domain, dnsa_config_t *dc)
 		}
 		host[len + i] = '\0';
 		if ((rd->pri == 0)) { /* Not an MX record so no PRI */
-			printf("%s\t%d\tIN\t%s\t%s\n", host,
+			printf("%s\t%ld\tIN\t%s\t%s\n", host,
 			       zi->ttl, rd->type, rd->dest);
 		} else if ((rd->pri > 0)) { /* MX record so add PRI */
-			printf("%s\t%d\tIN\t%s\t%d\t%s\n", host,
+			printf("%s\t%ld\tIN\t%s\t%d\t%s\n", host,
 			       zi->ttl, rd->type, rd->pri, rd->dest);
 		}
 	}
@@ -134,9 +134,9 @@ int dzf (char *domain, dnsa_config_t *dc)
 	}
 	host[len + i] = '\0';
 	
-	printf("%s\t%d\tIN\tSOA\t%s. hostmaster.%s. ",
+	printf("%s\t%ld\tIN\tSOA\t%s. hostmaster.%s. ",
 	       host, zi->ttl, zi->pri_dns, zi->name);
-	printf("%d %d %d %d %d\n", zi->serial, zi->refresh, zi->retry,
+	printf("%ld %ld %ld %ld %ld\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
 	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);

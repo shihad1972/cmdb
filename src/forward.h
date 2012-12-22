@@ -8,17 +8,17 @@
 
 typedef struct zone_info_t { /* Hold DNS zone */
 	int id;
+	int owner;
 	char name[RBUFF_S];
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
-	int serial;
-	int refresh;
-	int retry;
-	int expire;
-	int ttl;
 	char valid[RBUFF_S];
-	int owner;
 	char updated[RBUFF_S];
+	unsigned long int serial;
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
 } zone_info_t;
 
 typedef struct record_row_t { /* Hold dns record */

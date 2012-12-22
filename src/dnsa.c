@@ -56,15 +56,20 @@ int main(int argc, char *argv[])
 	free(config);
 	if (retval > 1) {
 		parse_dnsa_config_error(retval);
+		free(domain);
+		free(dc);
+		free(cm);
 		exit(retval);
 	}
-
+	retval = 0;
 	strncpy(domain, cm->domain, CONF_S);
 	if (cm->type == FORWARD_ZONE) {
 		retval = validate_user_input(domain, DOMAIN_REGEX);
 		if (retval < 0) {
 			printf("User input not valid!\n");
 			free(domain);
+			free(dc);
+			free(cm);
 			exit (retval);
 		}
 		if (cm->action == WRITE_ZONE) {
@@ -78,6 +83,14 @@ int main(int argc, char *argv[])
 		} else if (cm->action == ADD_ZONE) {
 			add_fwd_zone(domain, dc);
 		} else if (cm->action == ADD_HOST) {
+			retval = validate_comm_line(cm);
+			if (retval < 0) {
+				printf("User input not valid!\n");
+				free(domain);
+				free(dc);
+				free(cm);
+				exit (retval);
+			}
 			add_fwd_host(dc, cm);
 		}
 	} else if (cm->type == REVERSE_ZONE) {

@@ -28,22 +28,23 @@
 zone_info_t fill_zone_data(MYSQL_ROW my_row)
 {
 	int id;
+	unsigned long int ulid;
 	zone_info_t my_zone;
 	id = atoi(my_row[0]);
 	my_zone.id = id;
 	strncpy(my_zone.name, my_row[1], RBUFF_S);
 	strncpy(my_zone.pri_dns, my_row[2], RBUFF_S);
 	strncpy(my_zone.sec_dns, my_row[3] ? my_row[3] : "NULL", RBUFF_S);
-	id = atoi(my_row[4]);
-	my_zone.serial = id;
-	id = atoi(my_row[5]);
-	my_zone.refresh = id;
-	id = atoi(my_row[6]);
-	my_zone.retry = id;
-	id = atoi(my_row[7]);
-	my_zone.expire = id;
-	id = atoi(my_row[8]);
-	my_zone.ttl = id;
+	ulid = strtoul(my_row[4], NULL, 10);
+	my_zone.serial = ulid;
+	ulid = strtoul(my_row[5], NULL, 10);
+	my_zone.refresh = ulid;
+	ulid = strtoul(my_row[6], NULL, 10);
+	my_zone.retry = ulid;
+	ulid = strtoul(my_row[7], NULL, 10);
+	my_zone.expire = ulid;
+	ulid = strtoul(my_row[8], NULL, 10);
+	my_zone.ttl = ulid;
 	strncpy(my_zone.valid, my_row[9], RBUFF_S);
 	id = atoi(my_row[10]);
 	my_zone.owner = id;
@@ -61,7 +62,7 @@ void create_zone_header(char *zout, zone_info_t zone_info)
 	if (!(tmp = malloc(TBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in create_zone_header");
 	zi = &zone_info;
-	sprintf(tmp, "$ORIGIN .\n$TTL %d\n", zi->ttl);
+	sprintf(tmp, "$ORIGIN .\n$TTL %ld\n", zi->ttl);
 	offset = strlen(tmp);
 	strncpy(zout, tmp, offset);
 	if (strlen(zi->name) < 16) {
@@ -76,19 +77,19 @@ void create_zone_header(char *zout, zone_info_t zone_info)
 	sprintf(tmp, "%s. hostmaster.%s. (\n\t\t\t", zi->pri_dns, zi->name);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t; Serial\n\t\t\t", zi->serial);
+	sprintf(tmp, "%ld\t; Serial\n\t\t\t", zi->serial);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Refresh\n\t\t\t", zi->refresh);
+	sprintf(tmp, "%ld\t\t; Refresh\n\t\t\t", zi->refresh);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Retry\n\t\t\t", zi->retry);
+	sprintf(tmp, "%ld\t\t; Retry\n\t\t\t", zi->retry);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d\t\t; Expire\n\t\t\t", zi->expire);
+	sprintf(tmp, "%ld\t\t; Expire\n\t\t\t", zi->expire);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
-	sprintf(tmp, "%d)\t\t; Negative Cache TTL\n\t\t\tNS\t\t%s.\n", zi->ttl, zi->pri_dns);
+	sprintf(tmp, "%ld)\t\t; Negative Cache TTL\n\t\t\tNS\t\t%s.\n", zi->ttl, zi->pri_dns);
 	offset = strlen(tmp);
 	strncat(zout, tmp, offset);
 	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {

@@ -46,5 +46,8 @@ void
 init_config_values(dnsa_config_t *dc);
 void
 parse_dnsa_config_error(int error);
+/* Validate command line input */
+int
+validate_comm_line(comm_line_t *comm);
 
 #endif
