@@ -23,48 +23,44 @@
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
  */
-rev_zone_info_t fill_rev_zone_data(MYSQL_ROW my_row)
+void fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *my_zone)
 {
 	size_t len;
-	const char *line, *delim, *hostmaster;
+	const char *delim, *hostmaster;
 	char *tmp;
-	rev_zone_info_t my_zone;
 	
 	delim = ".";
 	hostmaster = "hostmaster";
 	
-	my_zone.rev_zone_id = atoi(my_row[0]);
-	strncpy(my_zone.net_range, my_row[1], RANGE_S);
-	my_zone.prefix = atoi(my_row[2]);
-	strncpy(my_zone.net_start, my_row[3], RANGE_S);
-	strncpy(my_zone.net_finish, my_row[4], RANGE_S);
-	line = my_row[5];
-	my_zone.start_ip = (unsigned int) strtoul(line, NULL, 10);
-	line = my_row[6];
-	my_zone.end_ip = (unsigned int) strtoul(line, NULL, 10);
-	strncpy(my_zone.pri_dns, my_row[7], RBUFF_S);
-	strncpy(my_zone.sec_dns, my_row[8] ? my_row[8] : "NULL", RBUFF_S);
-	my_zone.serial = atoi(my_row[9]);
-	my_zone.refresh = atoi(my_row[10]);
-	my_zone.retry = atoi(my_row[11]);
-	my_zone.expire = atoi(my_row[12]);
-	my_zone.ttl = atoi(my_row[13]);
-	strncpy(my_zone.valid, my_row[14], RBUFF_S);
-	my_zone.owner = atoi(my_row[15]);
-	strncpy(my_zone.updated, my_row[16], RBUFF_S);
+	my_zone->rev_zone_id = atoi(my_row[0]);
+	strncpy(my_zone->net_range, my_row[1], RANGE_S);
+	my_zone->prefix = atoi(my_row[2]);
+	strncpy(my_zone->net_start, my_row[3], RANGE_S);
+	strncpy(my_zone->net_finish, my_row[4], RANGE_S);
+	my_zone->start_ip = strtoul(my_row[5], NULL, 10);
+	my_zone->end_ip = strtoul(my_row[6], NULL, 10);
+	strncpy(my_zone->pri_dns, my_row[7], RBUFF_S);
+	strncpy(my_zone->sec_dns, my_row[8] ? my_row[8] : "NULL", RBUFF_S);
+	my_zone->serial = strtoul(my_row[9], NULL, 10);
+	my_zone->refresh = strtoul(my_row[10], NULL, 10);
+	my_zone->retry = strtoul(my_row[11], NULL, 10);
+	my_zone->expire = strtoul(my_row[12], NULL, 10);
+	my_zone->ttl = strtoul(my_row[13], NULL, 10);
+	strncpy(my_zone->valid, my_row[14], RBUFF_S);
+	my_zone->owner = atoi(my_row[15]);
+	strncpy(my_zone->updated, my_row[16], RBUFF_S);
 	
-	if (!(tmp = strstr(my_zone.pri_dns, delim))) {
+	if (!(tmp = strstr(my_zone->pri_dns, delim))) {
 		fprintf(stderr, "strstr in fill_rev_zone_data failed!\n");
 		exit(NO_DELIM);
 	} else {
-		strncpy(my_zone.hostmaster, hostmaster, RANGE_S);
+		strncpy(my_zone->hostmaster, hostmaster, RANGE_S);
 		len = strlen(tmp);
-		strncat(my_zone.hostmaster, tmp, len);
+		strncat(my_zone->hostmaster, tmp, len);
 	}
-	return my_zone;
 }
 
-void create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
+void create_rev_zone_header(rev_zone_info_t *zone_info, char *rout)
 {
 	char *tmp;
 	char ch;
@@ -75,40 +71,40 @@ void create_rev_zone_header(rev_zone_info_t zone_info, char *rout)
 
 	offset = 0;
 
-	sprintf(tmp, "$TTL %d\n@\t\tIN SOA\t%s.\t%s. (\n",
-		zone_info.ttl, zone_info.pri_dns, zone_info.hostmaster);
+	sprintf(tmp, "$TTL %ld\n@\t\tIN SOA\t%s.\t%s. (\n",
+		zone_info->ttl, zone_info->pri_dns, zone_info->hostmaster);
 	offset = strlen(tmp);
 	strncpy(rout, tmp, offset);
-	sprintf(tmp, "\t\t\t%d\t; Serial\n\t\t\t%d\t\t; Refresh\n\t\t\t%d\t\t; Retry\n",
-		zone_info.serial, zone_info.refresh, zone_info.retry);
+	sprintf(tmp, "\t\t\t%ld\t; Serial\n\t\t\t%ld\t\t; Refresh\n\t\t\t%ld\t\t; Retry\n",
+		zone_info->serial, zone_info->refresh, zone_info->retry);
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
-	sprintf(tmp, "\t\t\t%d\t\t; Expire\n\t\t\t%d)\t\t; Negative Cache TTL\n",
-		zone_info.expire, zone_info.ttl);
+	sprintf(tmp, "\t\t\t%ld\t\t; Expire\n\t\t\t%ld)\t\t; Negative Cache TTL\n",
+		zone_info->expire, zone_info->ttl);
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
-	offset = strlen(zone_info.pri_dns);
+	offset = strlen(zone_info->pri_dns);
 	
 	/* check for trainling . in NS record */
-	ch = zone_info.pri_dns[offset - 1];
+	ch = zone_info->pri_dns[offset - 1];
 	if (ch == '.')
-		sprintf(tmp, "\t\t\tNS\t%s\n", zone_info.pri_dns);
+		sprintf(tmp, "\t\t\tNS\t%s\n", zone_info->pri_dns);
 	else
-		sprintf(tmp, "\t\t\tNS\t%s.\n", zone_info.pri_dns);
+		sprintf(tmp, "\t\t\tNS\t%s.\n", zone_info->pri_dns);
 	
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
 	/* check for secondary DNS record */
-	if ((strcmp(zone_info.sec_dns, "NULL")) == 0) {
+	if ((strcmp(zone_info->sec_dns, "NULL")) == 0) {
 		;	/* No secondary NS record so do nothing */
 	} else {
-		offset = strlen(zone_info.sec_dns);
+		offset = strlen(zone_info->sec_dns);
 		/* check for trainling . in NS record */
-		ch = zone_info.sec_dns[offset - 1];
+		ch = zone_info->sec_dns[offset - 1];
 		if (ch == '.') {
-			sprintf(tmp, "\t\t\tNS\t%s\n;\n", zone_info.sec_dns);
+			sprintf(tmp, "\t\t\tNS\t%s\n;\n", zone_info->sec_dns);
 		} else {
-			sprintf(tmp, "\t\t\tNS\t%s.\n;\n", zone_info.sec_dns);
+			sprintf(tmp, "\t\t\tNS\t%s.\n;\n", zone_info->sec_dns);
 		}
 	}
 	
@@ -289,7 +285,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
-	rev_zone_info_t rev_zone_info, *rzi;
+	rev_zone_info_t *rzi;
 	rev_record_row_t rev_row;
 	my_ulonglong dnsa_rows;
 	int error, i;
@@ -305,9 +301,10 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "rout in wrzf");
 	if (!(domain = calloc(CONF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "domain in wrzf");
+	if (!(rzi = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rzi in wrzf");
 	
 	dnsa_query = dquery;
-	rzi = &rev_zone_info;
 	net_range = rzi->net_range;
 	
 	/* Initialise MYSQL connection and query */
@@ -329,11 +326,11 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		rev_zone_info = fill_rev_zone_data(dnsa_row);
+		fill_rev_zone_data(dnsa_row, rzi);
 	}
 	mysql_free_result(dnsa_res);
 	/* Start the output string with the zonefile header */
-	create_rev_zone_header(rev_zone_info, rout);
+	create_rev_zone_header(rzi, rout);
 	
 	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
 	error = mysql_query(&dnsa, dnsa_query);

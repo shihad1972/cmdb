@@ -29,7 +29,7 @@ const char *unix_socket, *dnsa_query, *error_str;
 
 int drzf (int id, char *domain, dnsa_config_t *dc)
 {
-	rev_zone_info_t rev_zone_info, *rzi;
+	rev_zone_info_t *rzi;
 	rev_record_row_t rev_row, *rr;
 	char *tmp, *dquery, *error_code, *in_addr;
 	
@@ -41,11 +41,13 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "in_addr in drzf");
 	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "error_code in drzf");
+	if (!(rzi = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rzi in drzf");
 	
 	error_str = error_code;
 	dnsa_query = dquery;
 	unix_socket = dc->socket;
-	rzi = &rev_zone_info;
+/*	rzi = &rev_zone_info; */
 	rr = &rev_row;
 	
 	start = 0;
@@ -65,7 +67,7 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	
 	/* Get the information for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		rev_zone_info = fill_rev_zone_data(dnsa_row);
+		fill_rev_zone_data(dnsa_row, rzi);
 	}
 	mysql_free_result(dnsa_res);
 	/* Get the reverse zone records */
@@ -97,9 +99,9 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	}
 	tmp[len + i] = '\0';
 	
-	printf("%s\t%d IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
+	printf("%s\t%ld IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
 	       rzi->hostmaster);
-	printf("%d %d %d %d %d\n", rzi->serial, rzi->refresh, rzi->retry,
+	printf("%ld %ld %ld %ld %ld\n", rzi->serial, rzi->refresh, rzi->retry,
 	       rzi->expire, rzi->ttl);
 
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
@@ -112,7 +114,7 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 			tmp[len + i] = '\t';
 		}
 		tmp[len + i] = '\0';
-		printf("%s\t%d IN\tPTR\t%s\n", tmp, rzi->ttl,
+		printf("%s\t%ld IN\tPTR\t%s\n", tmp, rzi->ttl,
 		       rr->dest);
 	}
 	sprintf(tmp, "%s.", in_addr);
@@ -123,9 +125,9 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	}
 	tmp[len + i] = '\0';
 
-	printf("%s\t%d IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
+	printf("%s\t%ld IN SOA\t%s. %s. ", tmp, rzi->ttl, rzi->pri_dns,
 	       rzi->hostmaster);
-	printf("%d %d %d %d %d\n", rzi->serial, rzi->refresh, rzi->retry,
+	printf("%ld %ld %ld %ld %ld\n", rzi->serial, rzi->refresh, rzi->retry,
 	       rzi->expire, rzi->ttl);
 	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);

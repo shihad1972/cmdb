@@ -8,36 +8,36 @@
 
 typedef struct rev_zone_info_t { /* Hold DNS zone */
 	int rev_zone_id;
-	char net_range[16];
 	int prefix;
+	int owner;
+	char net_range[16];
 	char net_start[16];
 	char net_finish[16];
-	unsigned int start_ip;
-	unsigned int end_ip;
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
-	int serial;
-	int refresh;
-	int retry;
-	int expire;
-	int ttl;
 	char valid[RBUFF_S];
-	int owner;
 	char updated[RBUFF_S];
 	char hostmaster[RBUFF_S];
+	unsigned long int start_ip;
+	unsigned long int end_ip;
+	unsigned long int serial;
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
 } rev_zone_info_t;
 
 typedef struct rev_record_row_t { /* Hold dns record */
-	char host[256];
-	char dest[256];
+	char host[RBUFF_S];
+	char dest[RBUFF_S];
 } rev_record_row_t;
 
 /* Return the data for one reverse zone */
-rev_zone_info_t
-fill_rev_zone_data(MYSQL_ROW my_row);
+void
+fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *rzi);
 /* Return the size of the string with the zone header */
 void
-create_rev_zone_header(rev_zone_info_t zone_info, char *rout);
+create_rev_zone_header(rev_zone_info_t *zone_info, char *rout);
 /* Return data of one reverse (PTR) record */
 rev_record_row_t
 get_rev_row (MYSQL_ROW my_row);
