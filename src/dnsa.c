@@ -32,13 +32,11 @@ int main(int argc, char *argv[])
 {
 	comm_line_t *cm;
 	dnsa_config_t *dc;
-	char *domain, *config;
+	char *domain;
 	int retval, id;
 
 	if (!(domain = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "domain in dnsa.c");
-	if (!(config = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "config in dnsa.c");
 	if (!(dc = malloc(sizeof(dnsa_config_t))))
 		report_error(MALLOC_FAIL, "dc in dnsa.c");
 	if (!(cm = malloc(sizeof(comm_line_t))))
@@ -51,9 +49,7 @@ int main(int argc, char *argv[])
 	
 	/* Get config values from config file */	
 	init_config_values(dc);
-	sprintf(config, "%s", cm->config);
-	retval = parse_dnsa_config_file(dc, config);
-	free(config);
+	retval = parse_dnsa_config_file(dc, cm->config);
 	if (retval > 1) {
 		parse_dnsa_config_error(retval);
 		free(domain);

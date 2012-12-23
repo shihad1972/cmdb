@@ -47,7 +47,6 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	error_str = error_code;
 	dnsa_query = dquery;
 	unix_socket = dc->socket;
-/*	rzi = &rev_zone_info; */
 	rr = &rev_row;
 	
 	start = 0;
@@ -136,6 +135,7 @@ int drzf (int id, char *domain, dnsa_config_t *dc)
 	free(dquery);
 	free(tmp);
 	free(error_code);
+	free(rzi);
 	error_str = 0;
 	return 0;
 }

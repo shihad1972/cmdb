@@ -212,8 +212,8 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	MYSQL_ROW dnsa_row;
 	my_ulonglong dnsa_rows;
 	size_t len;
-	char *queryp, *error_code;
-	const char *dquery, *error_str;
+	char *queryp;
+	const char *dquery;
 	int retval;
 	
 	retval = 0;
@@ -230,9 +230,6 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 		printf("User input not valid!\n");
 		return retval;
 	}
-	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "error_code in get_rev_id");
-	error_str = error_code; 
 	if (!(queryp = malloc(BUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "queryp in get_rev_id");
 	
@@ -242,27 +239,21 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
-		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
-		report_error(MY_STORE_FAIL, error_str);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	
-	snprintf(error_code, CONF_S, "%s", domain);
 	/* Check for only 1 result */
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		mysql_free_result(dnsa_res);
 		mysql_close(&dnsa);
-		free(error_code);
 		free(queryp);
-		error_str = 0;
 		dquery = 0;
 		mysql_library_end();
 		report_error(NO_DOMAIN, domain);
 	} else if (dnsa_rows > 1) {
 		mysql_free_result(dnsa_res);
 		mysql_close(&dnsa);
-		free(error_code);
 		free(queryp);
-		error_str = 0;
 		dquery = 0;
 		mysql_library_end();
 		report_error(MULTI_DOMAIN, domain);
@@ -271,9 +262,7 @@ int get_rev_id (char *domain, dnsa_config_t *dc)
 	retval = atoi(dnsa_row[0]);
 	mysql_free_result(dnsa_res);
 	mysql_close(&dnsa);
-	free(error_code);
 	free(queryp);
-	error_str = 0;
 	dquery = 0;
 	mysql_library_end();
 	return retval;
@@ -397,6 +386,7 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	free(rout);
 	free(dquery);
 	free(domain);
+	free(rzi);
 	return 0;
 }
 
