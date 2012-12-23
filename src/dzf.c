@@ -24,8 +24,8 @@ MYSQL_RES *dnsa_res;
 MYSQL_ROW my_row;
 my_ulonglong dnsa_rows, start;
 size_t max, len, tabs, i;
-char *tmp, *error_code;
-const char *unix_socket, *dnsaquery, *error_str;
+char *tmp;
+const char *unix_socket, *dnsaquery;
 
 int dzf (char *domain, dnsa_config_t *dc)
 {
@@ -37,10 +37,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "tmp in dzf");
 	if (!(host = malloc(TBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "host in dzf");
-	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "error_code in dzf");
 	
-	error_str = error_code;
 	unix_socket = dc->socket;
 	zi = &zone_info;
 	rd = &row_data;
@@ -54,8 +51,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
-		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
-		report_error(MY_STORE_FAIL, error_str);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		mysql_free_result(dnsa_res);
@@ -63,7 +59,6 @@ int dzf (char *domain, dnsa_config_t *dc)
 		mysql_library_end();
 		free(tmp);
 		free(host);
-		free(error_code);
 		report_error(NO_DOMAIN, domain);
 	} else if (dnsa_rows > 1)
 		report_error(MULTI_DOMAIN, domain);
@@ -75,8 +70,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
-		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
-		report_error(MY_STORE_FAIL, error_str);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
 		report_error(NO_RECORDS, domain);
@@ -143,8 +137,6 @@ int dzf (char *domain, dnsa_config_t *dc)
 	mysql_library_end();
 	free(tmp);
 	free(host);
-	free(error_code);
-	error_str = 0;
 	return 0;
 }
 
@@ -156,11 +148,8 @@ int list_zones (dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "tmp in list_zones");
 	if (!(domain = malloc(TBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "domain in list_zones");
-	if (!(error_code = malloc(RBUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "error_code in list_zones");
 	
 	unix_socket = dc->socket;
-	error_str = error_code;
 	dnsaquery = tmp;
 	
 	max = len = 0;
@@ -171,11 +160,10 @@ int list_zones (dnsa_config_t *dc)
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
-		snprintf(error_code, CONF_S, "%s", mysql_error(&dnsa));
-		report_error(MY_STORE_FAIL, error_str);
+		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
-		report_error(DOMAIN_LIST_FAIL, error_str);
+		report_error(DOMAIN_LIST_FAIL, domain);
 	/* 
 	 * To format the output, we need to know the string length of the
 	 * longest domain 
@@ -212,7 +200,5 @@ int list_zones (dnsa_config_t *dc)
 	mysql_library_end();
 	free(domain);
 	free(tmp);
-	free(error_code);
-	error_str = 0;
 	return 0;
 }

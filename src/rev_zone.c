@@ -176,10 +176,10 @@ void get_in_addr_string(char *in_addr, char range[])
 	i = 0;
 	tmp = 0;
 	len = strlen(range);
-	len++; /* Got to remember the terminating \0 :) */
-	if (!(line = malloc((len) * sizeof(char))))
+	 /*len++; Got to remember the terminating \0 :) */
+	if (!(line = malloc((len + 1) * sizeof(char))))
 		report_error(MALLOC_FAIL, "line");
-	strncpy(line, range, len);
+	snprintf(line, len, "%s", range);
 	tmp = strrchr(line, c);
 	*tmp = '\0';		/* Get rid of training .0 */
 	while ((tmp = strrchr(line, c))) {
@@ -196,10 +196,8 @@ void get_in_addr_string(char *in_addr, char range[])
 	}
 	len = strlen(line);
 	strncat(in_addr, line, len);
-	tmp = line;
-	sprintf(tmp, "%s", louisa);
-	len = strlen(tmp);
-	strncat(in_addr, tmp, len);
+	len = strlen(louisa);
+	strncat(in_addr, louisa, len);
 	free(line);
 }
 /** Get the reverse zone ID from the database. Return -1 on error
