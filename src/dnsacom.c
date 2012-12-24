@@ -24,6 +24,7 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 
 	comp->action = NONE;
 	comp->type = NONE;
+	comp->prefix = NONE;
 	strncpy(comp->domain, "NULL", CONF_S);
 	strncpy(comp->dest, "NULL", RANGE_S);
 	strncpy(comp->rtype, "NULL", RANGE_S);
@@ -73,6 +74,12 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 				retval = NO_RECORD_TYPE;
 			else
 				strncpy(comp->rtype, argv[i], RANGE_S);
+		} else if ((strncmp(argv[i], "-p", COMM_S) == 0)) {
+			i++;
+			if (i >= argc)
+				retval = NO_PREFIX;
+			else
+				comp->prefix = strtoul(argv[i], NULL, 10);
 		} else {
 			retval = DISPLAY_USAGE;
 		}
@@ -91,6 +98,8 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;
+	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
+		retval = NO_PREFIX;
 	return retval;
 }
 

@@ -11,6 +11,7 @@ enum {			/* zone types; use NONE from action codes */
 typedef struct comm_line_t { /* Hold parsed command line args */
 	short int action;
 	short int type;
+	unsigned long int prefix;
 	char domain[CONF_S];
 	char config[CONF_S];
 	char host[RBUFF_S];

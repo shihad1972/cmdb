@@ -8,7 +8,6 @@
 
 typedef struct rev_zone_info_t { /* Hold DNS zone */
 	int rev_zone_id;
-	int prefix;
 	int owner;
 	char net_range[16];
 	char net_start[16];
@@ -18,6 +17,7 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 	char valid[RBUFF_S];
 	char updated[RBUFF_S];
 	char hostmaster[RBUFF_S];
+	unsigned long int prefix;
 	unsigned long int start_ip;
 	unsigned long int end_ip;
 	unsigned long int serial;
@@ -47,9 +47,11 @@ add_rev_records(char *rout, rev_record_row_t my_row);
 /* Create the in-addr.arpa zonename from network address */
 void
 get_in_addr_string(char *in_addr, char range[]);
+void
+get_in_addr_string2(char *in_addr, char *range, unsigned long int prefix);
 /* Return the ID of the reverse domain; -1 indicates error */
 int
-get_rev_id(char *domain, dnsa_config_t *dc);
+get_rev_id(char *domain, dnsa_config_t *dc, short int action);
 /* Create the string for the reverse zonefile filename */
 void 
 create_rev_zone_filename (char *domain, const char *net_range, dnsa_config_t *dc);
@@ -68,4 +70,25 @@ wrcf(dnsa_config_t *dc);
 /* List the reverse zones in the database */
 int
 list_rev_zones (dnsa_config_t *dc);
+/* Add reverse zone into database */
+void
+add_rev_zone(char *domain, dnsa_config_t *dc, unsigned long int prefix);
+/* Initialise the rev_zone_info_t struct */
+void
+init_dnsa_rev_zone(rev_zone_info_t *rev_zone);
+/* Print values of rev_zone_info_t struct */
+void
+print_rev_zone_info(rev_zone_info_t *rzi);
+/* Fill rev_zone_info_t from mysql data */
+void
+add_rev_config(MYSQL_ROW mr, rev_zone_info_t *rzi);
+/* Calculate network range values for rev_zone_info_t struct */
+void
+fill_range_info(rev_zone_info_t *rz);
+/* Work out network range */
+unsigned long int
+get_net_range(unsigned long int prefix);
+/* Update serial on reverse zone */
+void
+update_rev_zone_serial(rev_zone_info_t *zone);
 #endif

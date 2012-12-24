@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 			add_fwd_host(dc, cm);
 		}
 	} else if (cm->type == REVERSE_ZONE) {
-		id = get_rev_id(domain, dc);
+		id = get_rev_id(domain, dc, cm->action);
 		if (id < 0)
 			report_error(NO_DOMAIN, domain);
 		if (cm->action == WRITE_ZONE) {
@@ -101,6 +101,21 @@ int main(int argc, char *argv[])
 			list_rev_zones(dc);
 		} else if (cm->action == CONFIGURE_ZONE) {
 			wrcf(dc);
+		} else if (cm->action == ADD_ZONE) {
+			if (cm->prefix != 8 && cm->prefix != 16 && cm->prefix != 24) {
+				if (cm->prefix > 24 && cm->prefix < 32) {
+					add_rev_zone(domain, dc, cm->prefix);
+				} else {
+					fprintf(stderr, "Cannot use classless prefix %lu\n", cm->prefix);
+					fprintf(stderr, "Please use multiple /24\n");
+					free(domain);
+					free(dc);
+					free(cm);
+					exit(1);
+				}
+			} else {
+				add_rev_zone(domain, dc, cm->prefix);
+			}
 		}
 	} else {
 		retval = WRONG_TYPE;
