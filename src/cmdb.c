@@ -97,23 +97,6 @@ int main(int argc, char *argv[])
 			printf("Not implemented yet :(\n");
 			break;
 	}
-/*	switch (cm->action){
-		case DISPLAY:
-			if (cm->type == SERVER)
-				display_server_info(name, uuid, cmc);
-			else if (cm->type == CUSTOMER)
-				display_customer_info(name, uuid, cmc);
-			break;
-		case LIST_OBJ:
-			if (cm->type == SERVER)
-				display_all_servers(cmc);
-			else if (cm->type == CUSTOMER)
-				display_all_customers(cmc);
-			break;
-		default:
-			printf("Not yet implemented :(\n");
-			break;
-	} */
 	free(cmdb_config);
 	exit (0);
 }
