@@ -15,19 +15,22 @@
 
 int main(int argc, char *argv[])
 {
-	cbc_config_t cbc_c, *cmc;
-	cbc_comm_line_t cbt_c, *cml;
-	cbc_build_t cb_t, *cbt;
+	cbc_config_t *cmc;
+	cbc_comm_line_t *cml;
+	cbc_build_t *cbt;
 	char *cbc_config;
 	int retval;
 	
 	retval = 0;
 	if (!(cbc_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cbc_config in cbc.c");
+	if (!(cmc = malloc(sizeof(cbc_config_t))))
+		report_error(MALLOC_FAIL, "cmc in cbc.c");
+	if (!(cml = malloc(sizeof(cbc_comm_line_t))))
+		report_error(MALLOC_FAIL, "cml in cbc.c");
+	if (!(cbt = malloc(sizeof(cbc_build_t))))
+		report_error(MALLOC_FAIL, "cbt in cbc.c");
 	
-	cmc = &cbc_c;
-	cml = &cbt_c;
-	cbt = &cb_t;
 	strncpy(cbc_config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	
 	init_all_config(cmc, cml, cbt);
@@ -61,5 +64,8 @@ int main(int argc, char *argv[])
 			printf("Case %d not implemented yet\n", cml->action);
 			break;
 	}
+	free(cmc);
+	free(cml);
+	free(cbt);
 	exit(retval);
 }

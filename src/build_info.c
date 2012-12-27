@@ -208,9 +208,9 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 	char *tmp;
 	
 	if (!(file_content = calloc(FILE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "file_content in write_build_config");
+		report_error(MALLOC_FAIL, "file_content in write_tftp_config");
 	if (!(tmp = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "tmp in write_build_config");
+		report_error(MALLOC_FAIL, "tmp in write_tftp_config");
 
 	sprintf(ip_address, "%s", cbt->ip_address);
 	inet_pton(AF_INET, ip_address, &ip_addr);
