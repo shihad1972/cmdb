@@ -1140,15 +1140,15 @@ build_domain WHERE bd_id = %ld", cbt->bd_id);
 			snprintf(configuration->ldap_url, URL_S, "ldap://%s",
 			 cbc_row[0]);
 		}
-		snprintf(configuration->ldap_dn, URL_S, cbc_row[2]);
-		snprintf(configuration->ldap_bind, URL_S, cbc_row[3]);
+		snprintf(configuration->ldap_dn, URL_S, "%s", cbc_row[2]);
+		snprintf(configuration->ldap_bind, URL_S, "%s", cbc_row[3]);
 	}
 	if (configuration->config_log > NONE)
-		snprintf(configuration->log_server, CONF_S, cbc_row[5]);
+		snprintf(configuration->log_server, CONF_S, "%s", cbc_row[5]);
 	if (configuration->config_email > NONE)
-		snprintf(configuration->smtp_server, CONF_S, cbc_row[7]);
+		snprintf(configuration->smtp_server, CONF_S, "%s", cbc_row[7]);
 	if (configuration->config_xymon > NONE)
-		snprintf(configuration->xymon_server, CONF_S, cbc_row[9]);
+		snprintf(configuration->xymon_server, CONF_S, "%s", cbc_row[9]);
 	free(query);
 	mysql_free_result(cbc_res);
 	mysql_close(&cbc);
