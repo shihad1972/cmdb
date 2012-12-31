@@ -19,7 +19,9 @@ enum {			/* regex search codes */
 	COID_REGEX,
 	MAC_REGEX,
 	IP_REGEX,
-	DOMAIN_REGEX
+	DOMAIN_REGEX,
+	PATH_REGEX,
+	FS_REGEX
 };
 
 int

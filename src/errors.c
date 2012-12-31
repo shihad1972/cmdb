@@ -225,7 +225,7 @@ void display_cbc_usage(void)
 	printf("Add options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n\n");
 	printf("Display options:\n");
-	printf("-r: partition schemes\n-g: OS and versions\n-m: build domains\n\n");
+	printf("-r: partition schemes\n-g: OS and versions\n-m: build domain\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 }

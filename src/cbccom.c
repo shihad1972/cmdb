@@ -200,12 +200,15 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
+				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'u':
 				snprintf(cb->uuid, CONF_S, "%s", optarg);
+				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'i':
 				cb->server_id = strtoul(optarg, NULL, 10);
+				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'p':
 				snprintf(cb->partition, CONF_S, "%s", optarg);
@@ -221,15 +224,12 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'w':
 				cb->action = WRITE_CONFIG;
-				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'd':
 				cb->action = DISPLAY_CONFIG;
-				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'a':
 				cb->action = ADD_CONFIG;
-				snprintf(cb->action_type, MAC_S, "config");
 				break;
 			case 'r':
 				snprintf(cb->action_type, MAC_S, "partition");
@@ -246,14 +246,25 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break; 
 		}
 	}
-	if ((cb->action == NONE) && (cb->build_type == NONE) && (cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0) && (strncmp(cb->name, "NULL", CONF_S) == 0))
+	if ((cb->action == NONE) && 
+	 (cb->build_type == NONE) && 
+	 (cb->server_id == NONE) && 
+	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
+	 (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
-	else if ((cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0)
-		&& (strncmp(cb->name, "NULL", CONF_S) == 0))
+	else if ((cb->server_id == NONE) && 
+	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
+	 (strncmp(cb->name, "NULL", CONF_S) == 0) &&
+	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
-	
+	else if ((cb->action == ADD_CONFIG) &&
+	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
+	 (cb->server_id == NONE) &&
+	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
+	 (strncmp(cb->name, "NULL", CONF_S) == 0))
+		retval = NO_NAME_OR_ID;
 	return retval;
 	
 }
@@ -361,9 +372,14 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	cbt->build_type = NONE;
 	cbt->server_id = NONE;
 	cbt->usedb = 1;
-	sprintf(cbt->name, "NULL");
-	sprintf(cbt->uuid, "NULL");
-	sprintf(cbt->config, "/etc/dnsa/dnsa.conf");	
+	snprintf(cbt->name, CONF_S, "NULL");
+	snprintf(cbt->uuid, CONF_S, "NULL");
+	snprintf(cbt->action_type, MAC_S, "NULL");
+	snprintf(cbt->partition, CONF_S, "NULL");
+	snprintf(cbt->os, CONF_S, "NULL");
+	snprintf(cbt->os_version, CONF_S, "NULL");
+	snprintf(cbt->build_domain, RBUFF_S, "NULL");
+	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");	
 }
 
 void init_cbc_build_values(cbc_build_t *build_config)

@@ -52,11 +52,11 @@ int main(int argc, char *argv[])
 		free(cbt);
 		exit(retval);
 	}
-	get_server_name(cml, cmc);
-	retval = get_build_info(cbt, cmc, cml->server_id);
 	
 	switch (cml->action) {
 		case WRITE_CONFIG:
+			get_server_name(cml, cmc);
+			retval = get_build_info(cmc, cbt, cml->server_id);
 			write_tftp_config(cmc, cbt);
 			write_dhcp_config(cmc, cbt);
 			retval = write_build_config(cmc, cbt);
@@ -64,7 +64,16 @@ int main(int argc, char *argv[])
 		case DISPLAY_CONFIG:
 		/*	print_cbc_config(cmc);
 			print_cbc_command_line_values(cml); */
+			get_server_name(cml, cmc);
+			retval = get_build_info(cmc, cbt, cml->server_id);
 			print_cbc_build_values(cbt);
+			break;
+		case ADD_CONFIG:
+			if (strncmp(cml->action_type, "partition", MAC_S) == 0)
+				retval = add_partition_scheme(cmc);
+			else
+				printf("Case %s not implemented yet\n",
+				 cml->action_type);
 			break;
 		default:
 			printf("Case %d not implemented yet\n", cml->action);

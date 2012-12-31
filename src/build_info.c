@@ -20,6 +20,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_mysql.h"
+#include "build.h"
 
 void
 fill_build_info(cbc_build_t *cbt, MYSQL_ROW br);
@@ -55,22 +56,7 @@ int
 write_lvm_preheader(char *output, char *tmp, char *device);
 
 int
-check_for_special_partition(pre_disk_part_t *part_info);
-
-int
 add_partition_to_preseed(pre_disk_part_t *part_info, char *output, char *buff, int special, int lvm);
-
-pre_disk_part_t
-*part_node_create(void);
-
-pre_disk_part_t
-*part_node_add(pre_disk_part_t *head_node, MYSQL_ROW part_row);
-
-int
-part_node_delete(pre_disk_part_t head_node);
-
-void
-part_node_free(void);
 
 void
 init_app_config(pre_app_config_t *configuration);
@@ -116,7 +102,7 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 			report_error(SERVER_NOT_FOUND, info->name);
 		else if (strncmp(info->uuid, "NULL", CONF_S))
 			report_error(SERVER_UUID_NOT_FOUND, info->uuid);
-		else if (info->server_id > 1)
+		else if (info->server_id > 0)
 			report_error(SERVER_ID_NOT_FOUND, server_id);
 		else
 			report_error(NO_NAME_UUID_ID, server_id);
@@ -138,7 +124,7 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 	free(query);
 }
 
-int get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int server_id)
+int get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long int server_id)
 {
 	MYSQL build;
 	MYSQL_RES *build_res;

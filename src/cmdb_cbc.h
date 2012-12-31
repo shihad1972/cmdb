@@ -125,7 +125,7 @@ void
 get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 
 int
-get_build_info(cbc_build_t *build_info, cbc_config_t *config, unsigned long int server_id);
+get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long int server_id);
 
 void
 write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt);
@@ -136,5 +136,7 @@ write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt);
 int
 write_build_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
+int
+add_partition_scheme(cbc_config_t *config);
 
 #endif
