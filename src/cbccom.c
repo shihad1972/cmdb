@@ -8,9 +8,10 @@
  * 
  */
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
@@ -191,48 +192,64 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 
 int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 {
-	int retval, i;
+	int retval, opt;
 	
 	retval = NONE;
-	
-	for (i = 1; i < argc; i++) {
-		if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_NAME;
-			else
-				strncpy(cb->name, argv[i], CONF_S);
-		} else if ((strncmp(argv[i], "-u", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_UUID;
-			else
-				strncpy(cb->uuid, argv[i], CONF_S);
-		} else if ((strncmp(argv[i], "-i", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_ID;
-			else
-				cb->server_id = strtoul(argv[i], NULL, 10);
-		} else if ((strncmp(argv[i], "-k", COMM_S) == 0)) {
-			cb->build_type = KICKSTART;
-		} else if ((strncmp(argv[i], "-p", COMM_S) == 0)) {
-			cb->build_type = PRESEED;
-		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
-			cb->action = WRITE_CONFIG;
-		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
-			cb->action = DISPLAY_CONFIG;
-		} else {
-			retval = DISPLAY_USAGE;
+
+	while ((opt = getopt(argc, argv, "n:u:i:p:o:v:b:wdargm")) != -1) {
+		switch (opt) {
+			case 'n':
+				snprintf(cb->name, CONF_S, "%s", optarg);
+				break;
+			case 'u':
+				snprintf(cb->uuid, CONF_S, "%s", optarg);
+				break;
+			case 'i':
+				cb->server_id = strtoul(optarg, NULL, 10);
+				break;
+			case 'p':
+				snprintf(cb->partition, CONF_S, "%s", optarg);
+				break;
+			case 'o':
+				snprintf(cb->os, CONF_S, "%s", optarg);
+				break;
+			case 'v':
+				snprintf(cb->os_version, MAC_S, "%s", optarg);
+				break;
+			case 'b':
+				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+				break;
+			case 'w':
+				cb->action = WRITE_CONFIG;
+				snprintf(cb->action_type, MAC_S, "config");
+				break;
+			case 'd':
+				cb->action = DISPLAY_CONFIG;
+				snprintf(cb->action_type, MAC_S, "config");
+				break;
+			case 'a':
+				cb->action = ADD_CONFIG;
+				snprintf(cb->action_type, MAC_S, "config");
+				break;
+			case 'r':
+				snprintf(cb->action_type, MAC_S, "partition");
+				break;
+			case 'g':
+				snprintf(cb->action_type, MAC_S, "os");
+				break;
+			case 'm':
+				snprintf(cb->action_type, MAC_S, "bdomain");
+				break;
+			default:
+				printf("Unknown option: %c\n", opt);
+				retval = DISPLAY_USAGE;
+				break; 
 		}
 	}
 	if ((cb->action == NONE) && (cb->build_type == NONE) && (cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0) && (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
-/*	No need for this (yet) - should get it from the database
-	else if (cb->build_type == NONE)
-		retval = NO_TYPE; */
 	else if ((cb->server_id == NONE) && (strncmp(cb->uuid, "NULL", CONF_S) == 0)
 		&& (strncmp(cb->name, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;

@@ -221,9 +221,11 @@ void display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
-	printf("-w: create\n-d: display\n\n");
-	printf("Build type options:\n");
-	printf("-k: kickstart\n-p: preseed\n\n");
+	printf("-w: create\n-d: display\n-a: add\n\n");
+	printf("Add options:\n");
+	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n\n");
+	printf("Display options:\n");
+	printf("-r: partition schemes\n-g: OS and versions\n-m: build domains\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 }

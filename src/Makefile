@@ -6,7 +6,7 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -ansi -std=c99 -pedantic -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -g
+CFLAGS = -ansi -std=c99 -pedantic -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -g -D_POSIX_C_SOURCE=200809L
 CPPFLAGS =
 LDFLAGS = -L/usr/lib/mysql
 LIBS = -lmysqlclient -lpcre

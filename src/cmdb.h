@@ -149,6 +149,9 @@ enum {
 	TRUE = 1
 };
 
+extern char *optarg;
+extern int optind, opterr, optopt;
+
 /* Error reporting function */
 void 
 report_error(int error, const char *errstr);
