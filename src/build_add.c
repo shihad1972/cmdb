@@ -37,16 +37,19 @@ check_for_scheme_name(cbc_config_t *conf, char *name);
 void
 show_all_partitions(pre_disk_part_t *head);
 
+void
+add_pre_part_to_db(pre_disk_part_t *partition, cbc_config_t *config);
+
 int add_partition_scheme(cbc_config_t *config)
 {
 /*	MYSQL cbc;
 	MYSQL_RES *cbc_res;
 	MYSQL_ROW cbc_row;
-	my_ulonglong cbc_rows;
-	unsigned long int id; */
+	my_ulonglong cbc_rows; */
+	unsigned long int id;
 	int retval, use_lvm, i;
 	char *input, *scheme_name;
-	pre_disk_part_t *head_part;
+	pre_disk_part_t *head_part, *node;
 	
 	retval = NONE;
 	use_lvm = i = 0;
@@ -60,6 +63,7 @@ int add_partition_scheme(cbc_config_t *config)
 	
 	printf("Do you want to use the logical volume manager?: ");
 	fgets(input, CONF_S, stdin);
+	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		use_lvm = 1;
 	}
@@ -73,8 +77,12 @@ int add_partition_scheme(cbc_config_t *config)
 		free(scheme_name);
 		return 1;
 	}
+	do {
+		get_partition_data(head_part, use_lvm, input);
+	} while ((retval = get_another_partition() > 0));
+	show_all_partitions(head_part);
 	
-/*	if ((retval = check_for_scheme_name(config, scheme_name) > 0)) {
+	if ((retval = check_for_scheme_name(config, scheme_name) > 0)) {
 		printf("Scheme name %s already used in database\n", scheme_name);
 		free(input);
 		free(scheme_name);
@@ -86,18 +94,50 @@ int add_partition_scheme(cbc_config_t *config)
 		free(input);
 		free(scheme_name);
 		return 1;
-	} */
-	do 
-		get_partition_data(head_part, use_lvm, input);
-	while ((retval = get_another_partition() > 0));
-	show_all_partitions(head_part);
+	}
 	
-	free(head_part);
+	node = head_part;
+	/* Should add some error checking to this really */
+	do {
+		node->part_id = id;
+		add_pre_part_to_db(node, config);
+		node = node->nextpart;
+	} while (node);
+		
 	return retval;
 }
 
-int
-check_for_scheme_name(cbc_config_t *conf, char *name)
+void add_pre_part_to_db(pre_disk_part_t *partition, cbc_config_t *config)
+{
+	MYSQL cbc;
+	char *query;
+	const char *cbc_query;
+	int log_vol_check;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in add_pre_part_to_db");
+	if ((log_vol_check = strncmp(partition->log_vol, "NULL", CONF_S) == 0)) {
+		snprintf(query, RBUFF_S,
+"INSERT INTO default_partitions (minimum, maximum, priority, def_scheme_id, \
+mount_point, filesystem) \
+VALUES (%lu, %lu, %lu, %lu, '%s', '%s')", 
+partition->min, partition->max, partition->pri, partition->part_id, partition->mount_point,
+partition->filesystem);
+	} else {
+		snprintf(query, RBUFF_S,
+"INSERT INTO default_partitions (minimum, maximum, priority, def_scheme_id, \
+mount_point, filesystem, logical_volume) \
+VALUES (%lu, %lu, %lu, %lu, '%s', '%s', '%s')", 
+partition->min, partition->max, partition->pri, partition->part_id, partition->mount_point,
+partition->filesystem, partition->log_vol);
+	}
+	
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+}
+
+int check_for_scheme_name(cbc_config_t *conf, char *name)
 {
 	MYSQL cbc;
 	MYSQL_RES *cbc_res;
