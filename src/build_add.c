@@ -29,18 +29,24 @@ unsigned long int
 insert_scheme_name_into_db(cbc_config_t *config, char *scheme_name);
 
 int
+get_another_partition(void);
+
+int
 check_for_scheme_name(cbc_config_t *conf, char *name);
+
+void
+show_all_partitions(pre_disk_part_t *head);
 
 int add_partition_scheme(cbc_config_t *config)
 {
-	MYSQL cbc;
+/*	MYSQL cbc;
 	MYSQL_RES *cbc_res;
 	MYSQL_ROW cbc_row;
 	my_ulonglong cbc_rows;
-	unsigned long int id;
+	unsigned long int id; */
 	int retval, use_lvm, i;
 	char *input, *scheme_name;
-	pre_disk_part_t *node, *saved, *head_part;
+	pre_disk_part_t *head_part;
 	
 	retval = NONE;
 	use_lvm = i = 0;
@@ -68,7 +74,7 @@ int add_partition_scheme(cbc_config_t *config)
 		return 1;
 	}
 	
-	if ((retval = check_for_scheme_name(config, scheme_name) > 0)) {
+/*	if ((retval = check_for_scheme_name(config, scheme_name) > 0)) {
 		printf("Scheme name %s already used in database\n", scheme_name);
 		free(input);
 		free(scheme_name);
@@ -80,11 +86,11 @@ int add_partition_scheme(cbc_config_t *config)
 		free(input);
 		free(scheme_name);
 		return 1;
-	}
-	while (get_another_partition()) {
-		get_partition_data(head_part, lvm, input);
-		i++;
-	}
+	} */
+	do 
+		get_partition_data(head_part, use_lvm, input);
+	while ((retval = get_another_partition() > 0));
+	show_all_partitions(head_part);
 	
 	free(head_part);
 	return retval;
@@ -187,50 +193,120 @@ insert_scheme_name_into_db(cbc_config_t *conf, char *name)
 	return id;
 	
 }
+
+int get_another_partition(void)
+{
+	char *answer;
+	
+	if (!(answer = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "answer in get_another_partition");
+	
+	printf("Enter another partition (y/n)? ");
+	fgets(answer, CONF_S, stdin);
+	chomp(answer);
+	if ((strncmp(answer, "y", CH_S)) == 0 || (strncmp(answer, "Y", CH_S) == 0)) {
+		printf("Getting another partition\n");
+		free(answer);
+		return 1;
+	} else {
+		printf("OK. No more partitions\n");
+		free(answer);
+		return 0;
+	}
+}
+
 void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 {
 	pre_disk_part_t *new, *saved;
+	
 	int retval;
 	
-	new = part_node_create();
-	saved = head;
-	while (saved->nextpart)
-		saved = saved->nextpart;
-	saved->nextpart = new;
+	retval = strncmp(head->mount_point, "NULL", CONF_S);
+	/* First check if head has been filled */
+	if (retval != 0) {
+		new = part_node_create();
+		saved = head;
+		while (saved->nextpart)
+			saved = saved->nextpart;
+		saved->nextpart = new;
+	} else {
+		new = head;
+	}
 	
 	printf("Please enter the mount point: ");
 	fgets(input, HOST_S, stdin);
 	chomp(input);
-	if ((retval = validate_user_input(input, PATH_REGEX) < 0))
+	if ((strncmp(input, "swap", HOST_S) == 0)) {
+		retval = 0;
+	} else {
+		retval = validate_user_input(input, PATH_REGEX);
+	}
+	while (retval < 0) {
 		printf("Mount point %s not valid\n", input);
+		printf("Please enter the mount point: ");
+		fgets(input, HOST_S, stdin);
+		chomp(input);
+		retval = validate_user_input(input, PATH_REGEX);
+	}
 	snprintf(new->mount_point, HOST_S, "%s", input);
 
 	printf("Please enter the file system: ");
 	fgets(input, RANGE_S, stdin);
 	chomp(input);
-	if ((retval = validate_user_input(input, FS_REGEX) < 0))
+	retval = validate_user_input(input, FS_REGEX);
+	while (retval < 0) {
 		printf("Filesystem not valid\n");
+		printf("Please enter the file system: ");
+		fgets(input, RANGE_S, stdin);
+		chomp(input);
+		retval = validate_user_input(input, FS_REGEX);
+	}
 	snprintf(new->filesystem, RANGE_S, "%s", input);
 
 	printf("Please enter the minimum partition size (in MB): ");
 	fgets(input, RANGE_S, stdin);
 	chomp(input);
-	if ((retval = validate_user_input(input, ID_REGEX) < 0))
+	retval = validate_user_input(input, ID_REGEX);
+	while (retval < 0) {
 		printf("Size not valid\n");
+		printf("Please enter the minimum partition size (in MB): ");
+		fgets(input, RANGE_S, stdin);
+		chomp(input);
+		retval = validate_user_input(input, ID_REGEX);
+	}
 	new->min = strtoul(input, NULL, 10);
 	
 	printf("Please enter the maximum partition size (in MB): ");
 	fgets(input, RANGE_S, stdin);
 	chomp(input);
-	if ((retval = validate_user_input(input, ID_REGEX) < 0))
+	retval = validate_user_input(input, ID_REGEX);
+	while ((retval < 0) || (new->min > (strtoul(input, NULL, 10)))) {
 		printf("Size not valid\n");
+		printf("Please enter the maximum partition size (in MB): ");
+		fgets(input, RANGE_S, stdin);
+		chomp(input);
+		retval = validate_user_input(input, ID_REGEX);
+		if (retval >= 0) {
+			new->max = strtoul(input, NULL, 10);
+			if (new->max < new->min) {
+				retval = -1;
+				printf("Max must be greater than min\n");
+			}
+		}
+	}
 	new->max = strtoul(input, NULL, 10);
 	
 	printf("Please enter the priority of the max size: ");
 	fgets(input, RANGE_S, stdin);
 	chomp(input);
-	if ((retval = validate_user_input(input, ID_REGEX) < 0))
+	retval = validate_user_input(input, ID_REGEX);
+	while (retval < 0) {
 		printf("Size not valid\n");
+		printf("Please enter the priority of the max size: ");
+		fgets(input, RANGE_S, stdin);
+		chomp(input);
+		retval = validate_user_input(input, ID_REGEX);
+	}
 	new->pri = strtoul(input, NULL, 10);
 	
 	if (lvm == 1) {
@@ -252,12 +328,31 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 		printf("Logical volume name: %s\n", new->log_vol);
 	printf("Accept (y/n)? ");
 	fgets(input, CONF_S, stdin);
+	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		;
 	} else {
-		free(new);
-		saved->nextpart = 0;
+		if (head != new) {
+			free(new);
+			saved->nextpart = 0;
+		}
 	}
+}
+
+void show_all_partitions(pre_disk_part_t *head)
+{
+	pre_disk_part_t *node;
+	size_t len;
+	node = head;
+	do {
+		printf("Partition %s on FS %s\n", node->mount_point, node->filesystem);
+		printf("Min size: %lu\tMax Size: %lu\tPriority: %lu\n",
+		       node->min, node->max, node->pri);
+		if ((len = strlen(node->log_vol) > 0))
+			printf("Logical volume: %s\n", node->log_vol);
+		printf("\n\n");
+		node = node->nextpart;
+	} while (node);
 }
 
 void chomp(char *input)
