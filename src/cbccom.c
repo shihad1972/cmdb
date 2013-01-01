@@ -196,7 +196,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p:o:v:b:wdargm")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:ro:v:b:wdapgm")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -210,8 +210,8 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				cb->server_id = strtoul(optarg, NULL, 10);
 				snprintf(cb->action_type, MAC_S, "config");
 				break;
-			case 'p':
-				snprintf(cb->partition, CONF_S, "%s", optarg);
+			case 'r':
+				snprintf(cb->action_type, MAC_S, "%s", "partition");
 				break;
 			case 'o':
 				snprintf(cb->os, CONF_S, "%s", optarg);
@@ -231,7 +231,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 			case 'a':
 				cb->action = ADD_CONFIG;
 				break;
-			case 'r':
+			case 'p':
 				snprintf(cb->action_type, MAC_S, "partition");
 				break;
 			case 'g':
@@ -375,7 +375,6 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");
-	snprintf(cbt->partition, CONF_S, "NULL");
 	snprintf(cbt->os, CONF_S, "NULL");
 	snprintf(cbt->os_version, CONF_S, "NULL");
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");

@@ -12,7 +12,6 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 	char config[CONF_S];
 	char name[CONF_S];
 	char uuid[CONF_S];
-	char partition[CONF_S];
 	char os[CONF_S];
 	char os_version[MAC_S];
 	char build_domain[RBUFF_S];
