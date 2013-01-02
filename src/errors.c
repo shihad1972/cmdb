@@ -117,7 +117,7 @@ void report_error(int error, const char *errstr)
 			break;
 		case MULTIPLE_SERVER_UUIDS:
 			fprintf(stderr, "Multiple servers with uuid %s in database\n\
-			THIS SHOULD NOT HAPPEN. CHeck your database!\n", errstr);
+			THIS SHOULD NOT HAPPEN. Check your database!\n", errstr);
 			break;
 		case CUSTOMER_NOT_FOUND:
 			fprintf(stderr, "Customer %s not found\n", errstr);
@@ -230,18 +230,18 @@ void display_cbc_usage(void)
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 	printf("\nWrite options:\n");
 	printf("Just specify a server\n");
-	printf("cbc -w [-n | -i | -u ]\n\n");
+	printf("cbc -w [-n | -i | -u ] <server_specifier>\n\n");
 	printf("Add Options:\n");
 	printf("Specify which build option you would like to add\n");
 	printf("cbc -a [-p | -o | -v | -b | -x ]\n\n");
 	printf("Display Options:\n");
 	printf("One option from at least one group must be provided\n");
 	printf("You can also present one option from both groups\n");
-	printf("cbc -d [-p | -o | -b | -x ] [-n | -i | -u ]\n\n");
+	printf("cbc -d [-p | -o | -b | -x ] [-n | -i | -u ] [<server_specifier>]\n\n");
 	printf("Create Options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -r <scheme> -g <OS> -f <version> -m <domain> -z ");
-	printf("<varient> [-n | -i | -u ]\n\n");
+	printf("<varient> [-n | -i | -u ] <server_specifier>\n\n");
 }
 
 void display_dnsa_usage(void)
