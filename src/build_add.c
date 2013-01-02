@@ -45,7 +45,7 @@ int add_partition_scheme(cbc_config_t *config)
 	unsigned long int id;
 	int retval, use_lvm, i;
 	char *input, *scheme_name;
-	pre_disk_part_t *head_part, *node;
+	pre_disk_part_t *head_part, *node, *saved;
 	
 	retval = NONE;
 	use_lvm = i = 0;
@@ -100,7 +100,12 @@ int add_partition_scheme(cbc_config_t *config)
 		node = node->nextpart;
 	} while (node);
 	
-	/* Need to free up the linked list from memory here */
+	node = saved = head_part;
+	while (node) {
+		saved = node->nextpart;
+		free(node);
+		node = saved;
+	}
 	return retval;
 }
 
