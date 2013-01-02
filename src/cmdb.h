@@ -55,7 +55,8 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	MULTIPLE_SERVER_BUILDS = 111,
 	SERVER_PART_NOT_FOUND = 112,
 	SERVER_PACKAGES_NOT_FOUND = 113,
-	OS_NOT_FOUND = 114
+	OS_NOT_FOUND = 114,
+	OS_VERSION_NOT_FOUND = 115
 };
 
 enum {			/* cmdb return codes */

@@ -152,4 +152,7 @@ display_partition_schemes(cbc_config_t *config);
 void
 display_build_operating_systems(cbc_config_t *config);
 
+void
+display_build_os_versions(cbc_config_t *config);
+
 #endif

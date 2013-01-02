@@ -74,6 +74,8 @@ int main(int argc, char *argv[])
 					display_partition_schemes(cmc);
 				else if ((strncmp(cml->action_type, "os", MAC_S) == 0))
 					display_build_operating_systems(cmc);
+				else if ((strncmp(cml->action_type, "os_version", MAC_S) == 0))
+					display_build_os_versions(cmc);
 				else
 					printf("Can only display partition config\n");
 			} else if (cml->server > 0) {

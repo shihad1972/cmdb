@@ -235,3 +235,56 @@ on bo.bt_id = bt.bt_id ORDER BY os");
 	mysql_library_end();
 	free(query);
 }
+
+void display_build_os_versions(cbc_config_t *config)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *os;
+	const char *cbc_query;
+	int os_check;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in display_build_os_versions");
+	if (!(os = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "os in display_build_os_versions");
+	snprintf(os, MAC_S, "none");
+	cbc_query = query;
+	snprintf(query, RBUFF_S,
+"SELECT os, os_version, ver_alias, arch FROM build_os ORDER BY os, os_version, arch");
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		free(os);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		free(os);
+		report_error(OS_VERSION_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		if ((os_check = strncmp(os, cbc_row[0], MAC_S) == 0)) {
+			printf("\t%s\t%s\t%s\n",
+			       cbc_row[1], cbc_row[2], cbc_row[3]);
+		} else {
+			snprintf(os, MAC_S, "%s", cbc_row[0]);
+			printf("Operating system %s\n\tversion\talias\tarch\n", cbc_row[0]);
+			printf("\t%s\t%s\t%s\n",
+			       cbc_row[1], cbc_row[2], cbc_row[3]);
+		}
+	}
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(os);
+}
