@@ -70,7 +70,10 @@ int main(int argc, char *argv[])
 				retval = get_build_info(cmc, cbt, cml->server_id);
 				print_cbc_build_values(cbt);
 			} else if (cml->server == 0) {
-				printf("Can only display the server config\n");
+				if ((strncmp(cml->action_type, "partition", MAC_S) == 0))
+					display_partition_schemes(cmc);
+				else
+					printf("Can only display partition config\n");
 			} else if (cml->server > 0) {
 				printf("Cannot handle server and type actions\n");
 			}

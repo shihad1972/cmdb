@@ -69,11 +69,9 @@ enum {			/* cmdb return codes */
 	NO_IP_ADDRESS = -9,
 	NO_HOST_NAME = -10,
 	NO_RECORD_TYPE = -11,
-	NO_PREFIX = -12
-};
-
-enum {			/* cbc return codes */
-	NO_UUID = -8
+	NO_PREFIX = -12,
+	NO_PARTITION_SCHEMES = -13,
+	NO_UUID = -14
 };
 
 enum {			/* cmdb config file error codes */

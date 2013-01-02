@@ -42,10 +42,6 @@ add_pre_part_to_db(pre_disk_part_t *partition, cbc_config_t *config);
 
 int add_partition_scheme(cbc_config_t *config)
 {
-/*	MYSQL cbc;
-	MYSQL_RES *cbc_res;
-	MYSQL_ROW cbc_row;
-	my_ulonglong cbc_rows; */
 	unsigned long int id;
 	int retval, use_lvm, i;
 	char *input, *scheme_name;
@@ -103,7 +99,8 @@ int add_partition_scheme(cbc_config_t *config)
 		add_pre_part_to_db(node, config);
 		node = node->nextpart;
 	} while (node);
-		
+	
+	/* Need to free up the linked list from memory here */
 	return retval;
 }
 
@@ -261,8 +258,8 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	
 	int retval;
 	
-	retval = strncmp(head->mount_point, "NULL", CONF_S);
 	/* First check if head has been filled */
+	retval = strncmp(head->mount_point, "NULL", CONF_S);
 	if (retval != 0) {
 		new = part_node_create();
 		saved = head;

@@ -79,6 +79,12 @@ typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
 	struct pre_disk_part_t *nextpart;
 } pre_disk_part_t;
 
+typedef struct partition_schemes_t {
+	unsigned long int id;
+	char name[CONF_S];
+	struct partition_schemes_t *next;
+} partition_schemes_t;
+
 typedef struct pre_app_config_t {
 	char ldap_url[URL_S];
 	char ldap_dn[URL_S];
@@ -139,5 +145,8 @@ write_build_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
 int
 add_partition_scheme(cbc_config_t *config);
+
+void
+display_partition_schemes(cbc_config_t *config);
 
 #endif
