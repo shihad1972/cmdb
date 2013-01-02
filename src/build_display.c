@@ -194,3 +194,44 @@ logical_volume FROM default_partitions WHERE def_scheme_id = %lu ORDER BY mount_
 	}
 	free(query);
 }
+
+void display_build_operating_systems(cbc_config_t *config)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in display_build_operating_systems");
+	cbc_query = query;
+	snprintf(query, RBUFF_S,
+"SELECT DISTINCT os, build_type FROM build_os bo LEFT JOIN build_type bt \
+on bo.bt_id = bt.bt_id ORDER BY os");
+	
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(OS_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		printf("We have an os %s with a build type %s\n",
+		      cbc_row[0], cbc_row[1]);
+	}
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+}
