@@ -130,7 +130,8 @@ enum {			/* dnsa action codes */
 enum {			/* cbc action codes */
 	WRITE_CONFIG = 1,
 	DISPLAY_CONFIG = 2,
-	ADD_CONFIG = 3
+	ADD_CONFIG = 3,
+	CREATE_CONFIG = 4
 };
 
 enum {			/* cbc values for build type */

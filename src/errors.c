@@ -6,7 +6,7 @@
  * 
  * Part of the DNSA  program
  * 
- * (C) Iain M Conochie 2012
+ * (C) Iain M Conochie 2012 - 2013
  * 
  */
 #include <stdio.h>
@@ -221,13 +221,27 @@ void display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
-	printf("-w: create\n-d: display\n-a: add\n\n");
-	printf("Add options:\n");
-	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n\n");
-	printf("Display options:\n");
-	printf("-r: partition schemes\n-g: OS and versions\n-m: build domain\n\n");
+	printf("-w: write build files\n-d: display build details\n");
+	printf("-a: add build options\n-c: create build in database\n\n");
+	printf("Add and display options:\n");
+	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n");
+	printf("-x: varient\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
+	printf("\nWrite options:\n");
+	printf("Just specify a server\n");
+	printf("cbc -w [-n | -i | -u ]\n\n");
+	printf("Add Options:\n");
+	printf("Specify which build option you would like to add\n");
+	printf("cbc -a [-p | -o | -v | -b | -x ]\n\n");
+	printf("Display Options:\n");
+	printf("One option from at least one group must be provided\n");
+	printf("You can also present one option from both groups\n");
+	printf("cbc -d [-p | -o | -b | -x ] [-n | -i | -u ]\n\n");
+	printf("Create Options:\n");
+	printf("Use the Display to get these names\n");
+	printf("cbc -c -r <scheme> -g <OS> -f <version> -m <domain> -z ");
+	printf("<varient> [-n | -i | -u ]\n\n");
 }
 
 void display_dnsa_usage(void)

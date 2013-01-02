@@ -5,17 +5,19 @@
 
 
 typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
-	unsigned long int server_id;
-	short int action;
-	short int usedb;
-	short int build_type;
 	char config[CONF_S];
 	char name[CONF_S];
 	char uuid[CONF_S];
+	char partition[CONF_S];
+	char varient[CONF_S];
 	char os[CONF_S];
 	char os_version[MAC_S];
 	char build_domain[RBUFF_S];
 	char action_type[MAC_S];
+	short int action;
+	short int usedb;
+	short int server;
+	unsigned long int server_id;
 } cbc_comm_line_t;
 
 typedef struct cbc_config_t {		/* Hold CMDB configuration values */
@@ -24,8 +26,6 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	char pass[CONF_S];
 	char host[CONF_S];
 	char socket[CONF_S];
-	unsigned int port;
-	unsigned long int cliflag;
 	char tmpdir[CONF_S];
 	char tftpdir[CONF_S];
 	char pxe[CONF_S];
@@ -33,6 +33,8 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	char dhcpconf[CONF_S];
 	char kickstart[CONF_S];
 	char preseed[CONF_S];
+	unsigned int port;
+	unsigned long int cliflag;
 } cbc_config_t;
 
 typedef struct cbc_build_t {		/* Hold build configuration values */
@@ -67,13 +69,13 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 } cbc_build_t;
 
 typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
+	char mount_point[HOST_S + 1];
+	char filesystem[RANGE_S + 1];
+	char log_vol[RANGE_S + 1];
 	unsigned long int min;
 	unsigned long int pri;
 	unsigned long int max;
 	unsigned long int part_id;
-	char mount_point[HOST_S + 1];
-	char filesystem[RANGE_S + 1];
-	char log_vol[RANGE_S + 1];
 	struct pre_disk_part_t *nextpart;
 } pre_disk_part_t;
 

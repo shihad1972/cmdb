@@ -62,18 +62,36 @@ int main(int argc, char *argv[])
 			retval = write_build_config(cmc, cbt);
 			break;
 		case DISPLAY_CONFIG:
+			if ((cml->server > 0) && 
+			 (strncmp(cml->action_type, "NULL", MAC_S) == 0)) {
 		/*	print_cbc_config(cmc);
 			print_cbc_command_line_values(cml); */
-			get_server_name(cml, cmc);
-			retval = get_build_info(cmc, cbt, cml->server_id);
-			print_cbc_build_values(cbt);
+				get_server_name(cml, cmc);
+				retval = get_build_info(cmc, cbt, cml->server_id);
+				print_cbc_build_values(cbt);
+			} else if (cml->server == 0) {
+				printf("Can only display the server config\n");
+			} else if (cml->server > 0) {
+				printf("Cannot handle server and type actions\n");
+			}
 			break;
 		case ADD_CONFIG:
 			if (strncmp(cml->action_type, "partition", MAC_S) == 0)
 				retval = add_partition_scheme(cmc);
+			else if (strncmp(cml->action_type, "os", MAC_S) == 0)
+				printf("Adding OS not yet implemented\n");
+			else if (strncmp(cml->action_type, "os_version", MAC_S) == 0)
+				printf("Adding OS version not yet implemented\n");
+			else if (strncmp(cml->action_type, "build_domain", MAC_S) == 0)
+				printf("Adding build_domain not yet implemented\n");
+			else if (strncmp(cml->action_type, "varient", MAC_S) == 0)
+				printf("Adding varient not yet implemented\n");
 			else
 				printf("Case %s not implemented yet\n",
 				 cml->action_type);
+			break;
+		case CREATE_CONFIG:
+			printf("Creating the config not yet implemented\n");
 			break;
 		default:
 			printf("Case %d not implemented yet\n", cml->action);

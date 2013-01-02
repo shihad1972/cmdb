@@ -4,7 +4,7 @@
  * 
  * part of the cbc program
  * 
- * (C) 2012 Iain M. Conochie
+ * (C) 2012 - 2013 Iain M. Conochie
  * 
  */
 
@@ -196,31 +196,34 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:ro:v:b:wdapgm")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:r:g:f:m:z:wdacpovbx")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
-				snprintf(cb->action_type, MAC_S, "config");
+				cb->server = TRUE;
 				break;
 			case 'u':
 				snprintf(cb->uuid, CONF_S, "%s", optarg);
-				snprintf(cb->action_type, MAC_S, "config");
+				cb->server = TRUE;
 				break;
 			case 'i':
 				cb->server_id = strtoul(optarg, NULL, 10);
-				snprintf(cb->action_type, MAC_S, "config");
+				cb->server = TRUE;
 				break;
 			case 'r':
-				snprintf(cb->action_type, MAC_S, "%s", "partition");
+				snprintf(cb->partition, CONF_S, "%s", optarg);
 				break;
-			case 'o':
+			case 'g':
 				snprintf(cb->os, CONF_S, "%s", optarg);
 				break;
-			case 'v':
+			case 'f':
 				snprintf(cb->os_version, MAC_S, "%s", optarg);
 				break;
-			case 'b':
+			case 'm':
 				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+				break;
+			case 'z':
+				snprintf(cb->varient, CONF_S, "%s", optarg);
 				break;
 			case 'w':
 				cb->action = WRITE_CONFIG;
@@ -231,14 +234,23 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 			case 'a':
 				cb->action = ADD_CONFIG;
 				break;
+			case 'c':
+				cb->action = CREATE_CONFIG;
+				break;
 			case 'p':
 				snprintf(cb->action_type, MAC_S, "partition");
 				break;
-			case 'g':
+			case 'o':
 				snprintf(cb->action_type, MAC_S, "os");
 				break;
-			case 'm':
-				snprintf(cb->action_type, MAC_S, "bdomain");
+			case 'v':
+				snprintf(cb->action_type, MAC_S, "os_version");
+				break;
+			case 'b':
+				snprintf(cb->action_type, MAC_S, "build_domain");
+				break;
+			case 'x':
+				snprintf(cb->action_type, MAC_S, "varient");
 				break;
 			default:
 				printf("Unknown option: %c\n", opt);
@@ -247,23 +259,17 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 		}
 	}
 	if ((cb->action == NONE) && 
-	 (cb->build_type == NONE) && 
-	 (cb->server_id == NONE) && 
-	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
-	 (strncmp(cb->name, "NULL", CONF_S) == 0))
+	 (cb->server == NONE) &&
+	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
-	else if ((cb->server_id == NONE) && 
-	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
-	 (strncmp(cb->name, "NULL", CONF_S) == 0) &&
+	else if ((cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
 	else if ((cb->action == ADD_CONFIG) &&
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
-	 (cb->server_id == NONE) &&
-	 (strncmp(cb->uuid, "NULL", CONF_S) == 0) && 
-	 (strncmp(cb->name, "NULL", CONF_S) == 0))
+	 (cb->server == NONE))
 		retval = NO_NAME_OR_ID;
 	return retval;
 	
@@ -369,14 +375,16 @@ void init_cbc_config_values(cbc_config_t *cbc)
 void init_cbc_comm_values(cbc_comm_line_t *cbt)
 {
 	cbt->action = NONE;
-	cbt->build_type = NONE;
 	cbt->server_id = NONE;
+	cbt->server = NONE;
 	cbt->usedb = 1;
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");
 	snprintf(cbt->os, CONF_S, "NULL");
 	snprintf(cbt->os_version, CONF_S, "NULL");
+	snprintf(cbt->partition, CONF_S, "NULL");
+	snprintf(cbt->varient, CONF_S, "NULL");
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");
 	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");	
 }
@@ -461,6 +469,9 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 		case ADD_CONFIG:
 			fprintf(stderr, "Action: Add configuration for build\n");
 			break;
+		case CREATE_CONFIG:
+			fprintf(stderr, "Action: Create build configuration\n");
+			break;
 		default:
 			fprintf(stderr, "Action: Unknown!!\n");
 	}
@@ -475,7 +486,6 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 			fprintf(stderr, "Usedb: Unknown!!\n");
 			break;
 	}
-	fprintf(stderr, "Build type: %d\n", command_line->build_type);
 	fprintf(stderr, "Server ID: %ld\n", command_line->server_id);
 	fprintf(stderr, "Config: %s\n", command_line->config);
 	fprintf(stderr, "Name: %s\n", command_line->name);
