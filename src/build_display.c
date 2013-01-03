@@ -201,6 +201,7 @@ void display_build_operating_systems(cbc_config_t *config)
 	MYSQL_RES *cbc_res;
 	MYSQL_ROW cbc_row;
 	my_ulonglong cbc_rows;
+	size_t len;
 	char *query;
 	const char *cbc_query;
 	
@@ -226,9 +227,16 @@ on bo.bt_id = bt.bt_id ORDER BY os");
 		free(query);
 		report_error(OS_NOT_FOUND, query);
 	}
+	printf("Operating System\tBuild Type\n");
 	while ((cbc_row = mysql_fetch_row(cbc_res))){
-		printf("We have an os %s with a build type %s\n",
-		      cbc_row[0], cbc_row[1]);
+		len = strlen(cbc_row[0]);
+		if ((len / 8) > 1) {
+			printf("%s\t%s\n", cbc_row[0], cbc_row[1]);
+		} else if ((len / 8) > 0) {
+			printf("%s\t\t%s\n", cbc_row[0], cbc_row[1]);
+		} else {
+			printf("%s\t\t\t%s\n", cbc_row[0], cbc_row[1]);
+		}
 	}
 	mysql_free_result(cbc_res);
 	mysql_close(&cbc);
@@ -242,14 +250,18 @@ void display_build_os_versions(cbc_config_t *config)
 	MYSQL_RES *cbc_res;
 	MYSQL_ROW cbc_row;
 	my_ulonglong cbc_rows;
-	char *query, *os;
+	size_t len, alen;
+	char *query, *os, *version;
 	const char *cbc_query;
-	int os_check;
+	int os_check, i;
 	
+	i = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in display_build_os_versions");
 	if (!(os = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "os in display_build_os_versions");
+	if (!(version = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "version in display_build_os_versions");
 	snprintf(os, MAC_S, "none");
 	cbc_query = query;
 	snprintf(query, RBUFF_S,
@@ -261,6 +273,7 @@ void display_build_os_versions(cbc_config_t *config)
 		mysql_library_end();
 		free(query);
 		free(os);
+		free(version);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
@@ -269,22 +282,57 @@ void display_build_os_versions(cbc_config_t *config)
 		mysql_library_end();
 		free(query);
 		free(os);
+		free(version);
 		report_error(OS_VERSION_NOT_FOUND, query);
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		len = strlen(cbc_row[0]);
+		alen = strlen(cbc_row[2]);
 		if ((os_check = strncmp(os, cbc_row[0], MAC_S) == 0)) {
-			printf("\t%s\t%s\t%s\n",
-			       cbc_row[1], cbc_row[2], cbc_row[3]);
+			if ((os_check = strncmp(version, cbc_row[1], MAC_S) == 0)) {
+				printf(" and %s", cbc_row[3]);
+			} else {
+				printf("\n");
+				if ((alen / 8) > 0) {
+					printf("\t\t%s\t%s\t%s",
+					 cbc_row[1], cbc_row[2], cbc_row[3]);
+				} else {
+					printf("\t\t%s\t%s\t\t%s",
+					 cbc_row[1], cbc_row[2], cbc_row[3]);
+				}
+			}
 		} else {
 			snprintf(os, MAC_S, "%s", cbc_row[0]);
-			printf("Operating system %s\n\tversion\talias\tarch\n", cbc_row[0]);
-			printf("\t%s\t%s\t%s\n",
-			       cbc_row[1], cbc_row[2], cbc_row[3]);
+			if (i > 0)
+				printf("\n");
+			if ((len / 8) > 1) {
+				printf("%s:\n\t\tversion\talias\t\tarch\n", cbc_row[0]);
+			} else if ((len / 8) > 0) {
+				printf("%s:\tversion\talias\t\tarch\n", cbc_row[0]);
+			} else {
+				printf("%s:\t\tversion\talias\t\tarch\n", cbc_row[0]);
+			}
+			if ((alen / 8) > 0) {
+				printf("\t\t%s\t%s\t%s",
+				 cbc_row[1], cbc_row[2], cbc_row[3]);
+			} else {
+				printf("\t\t%s\t%s\t\t%s",
+				 cbc_row[1], cbc_row[2], cbc_row[3]);
+			}
 		}
+		snprintf(version, MAC_S, "%s", cbc_row[1]);
+		i++;
 	}
+	printf("\n");
 	mysql_free_result(cbc_res);
 	mysql_close(&cbc);
 	mysql_library_end();
 	free(query);
 	free(os);
+	free(version);
+}
+
+void display_build_domains(cbc_config_t *config)
+{
+	
 }
