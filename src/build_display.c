@@ -334,5 +334,52 @@ void display_build_os_versions(cbc_config_t *config)
 
 void display_build_domains(cbc_config_t *config)
 {
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char sip_address[16], eip_address[16];
+	char *query;
+	const char *cbc_query;
+	size_t len;
+	uint32_t sip_addr, eip_addr;
+	unsigned long int sip, eip;
 	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in display_build_domains");
+	
+	snprintf(query, RBUFF_S,
+"SELECT domain, start_ip, end_ip FROM build_domain");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(OS_VERSION_NOT_FOUND, query);
+	}
+	printf("Build domains:\nDomain\t\t\tStart IP\tEnd IP\n");
+	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		len = strlen(cbc_row[0]);
+		sip = strtoul(cbc_row[1], NULL, 10);
+		eip = strtoul(cbc_row[2], NULL, 10);
+		sip_addr = htonl(sip);
+		eip_addr = htonl(eip);
+		inet_ntop(AF_INET, &sip_addr, sip_address, 16);
+		inet_ntop(AF_INET, &eip_addr, eip_address, 16);
+		if ((len / 8) > 1)
+			printf("%s\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+		else if ((len / 8) > 0)
+			printf("%s\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+		else
+			printf("%s\t\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+	}
 }
