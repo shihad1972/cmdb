@@ -68,10 +68,20 @@ int main(int argc, char *argv[])
 				free(cmdb_config);
 				exit (1);
 			}
-			if (cm->action == DISPLAY)
+			if (cm->action == DISPLAY) {
 				display_server_info(name, uuid, cmc);
-			else if (cm->action == LIST_OBJ)
+			} else if (cm->action == LIST_OBJ) {
 				display_all_servers(cmc);
+			} else if (cm->action == ADD_TO_DB) {
+				retval = add_server_to_database(cmc);
+				if (retval > 0) {
+					printf("Error adding to database\n");
+					free(cmdb_config);
+					exit(1);
+				} else {
+					printf("Added into database\n");
+				}
+			}
 			break;
 		case CUSTOMER:
 			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {

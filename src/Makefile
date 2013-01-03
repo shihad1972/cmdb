@@ -13,17 +13,20 @@ LIBS = -lmysqlclient -lpcre
 DOBJECTS = dnsa.o dnsacom.o rev_zone.o fwd_zone.o errors.o dzf.o drzf.o dnsa_mysql.o checks.o
 COBJECTS = cmdb.o cmdbcom.o cmdb_mysql.o errors.o servers.o customers.o checks.o
 BOBJECTS = cbc.o cbc_mysql.o errors.o checks.o cbccom.o build_info.o build_add.o build_display.o
+DHEADERS = mysqlfunc.h cmdb_dnsa.h dnsa_mysql.h forward.h reverse.h cmdb.h checks.h
+CHEADERS = mysqlfunc.h cmdb_cmdb.h cmdb_mysql.h cmdb.h checks.h
+BHEADERS = build.h cbc_mysql.h cmdb_cbc.h cmdb.h mysqlfunc.h
 
 all:	dnsa cmdb cbc
 
-dnsa:	$(DOBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+dnsa:	$(DOBJECTS) $(DHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
 
-cmdb:	$(COBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+cmdb:	$(COBJECTS) $(CHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(COBJECTS) $(LDFLAGS) $(LIBS)
 
-cbc:	$(BOBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+cbc:	$(BOBJECTS) $(BHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(BOBJECTS) $(LDFLAGS) $(LIBS)
 
 .PHONY :	clean
 clean :

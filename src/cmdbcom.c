@@ -9,6 +9,7 @@
  *
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,7 +18,7 @@
 
 int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 {
-	int i, retval;
+	int opt, retval;
 	
 	retval = NONE;
 	
@@ -27,7 +28,41 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	strncpy(comp->name, "NULL", CONF_S - 1);
 	strncpy(comp->id, "NULL", RANGE_S - 1);
 	
-	for (i = 1; i < argc; i++) {
+	while ((opt = getopt(argc, argv, "n:i:dlatsc")) != -1) {
+		switch (opt) {
+			case 'n':
+				snprintf(comp->name, CONF_S, "%s", optarg);
+				break;
+			case 'i':
+				snprintf(comp->id, CONF_S, "%s", optarg);
+				break;
+			case 's':
+				comp->type = SERVER;
+				break;
+			case 'c':
+				comp->type = CUSTOMER;
+				break;
+			case 'd':
+				comp->action = DISPLAY;
+				break;
+			case 'l':
+				comp->action = LIST_OBJ;
+				snprintf(comp->name, MAC_S, "all");
+				break;
+			case 'a':
+				comp->action = ADD_TO_DB;
+				snprintf(comp->name, MAC_S, "none");
+				break;
+			case 't':
+				comp->type = CONTACT;
+				break;
+			default:
+				printf("Unknown option: %c\n", opt);
+				retval = DISPLAY_USAGE;
+				break;
+		}
+	}
+/*	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-s", COMM_S) == 0)) {
 			comp->type = SERVER;
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
@@ -58,7 +93,7 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 		} else {
 			retval = GENERIC_ERROR;
 		}
-	}
+	} */
 	
 	if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;

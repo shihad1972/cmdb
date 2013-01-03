@@ -201,7 +201,7 @@ void display_cmdb_command_line_error(int retval, char *program)
 			break;
 	}
 	if ((strncmp(program, "cmdb", CONF_S) == 0))
-		printf("Usage: %s [-s | -c | -t ] [-d | -l ] [-n <name> | -i <id> ]\n",
+		printf("Usage: %s [-s | -c ] [-d | -l | -a | -t ] [-n <name> | -i <id> ]\n",
 	       program);
 	else if ((strncmp(program, "cbc", CONF_S) == 0))
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",

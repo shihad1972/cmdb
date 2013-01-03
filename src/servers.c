@@ -132,4 +132,15 @@ void display_server_from_uuid(char **server_info)
 	printf("UUID: %s\n", server_info[4]);
 }
 
-
+int add_server_to_database(cmdb_config_t *config)
+{
+	char *query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in add_server_to_database");
+	
+	free(query);
+	return retval;
+}

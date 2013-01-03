@@ -117,7 +117,8 @@ enum {			/* cbc config file error codes */
 enum {			/* cmdb Action codes */
 	NONE = 0,
 	DISPLAY = 1,
-	LIST_OBJ = 2
+	LIST_OBJ = 2,
+	ADD_TO_DB = 3
 };
 enum {			/* dnsa action codes */
 	WRITE_ZONE = 1,

@@ -27,6 +27,13 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cmdb_config_t;
 
+typedef struct cmdb_vm_server_hosts_t {
+	char name[CONF_S];
+	char type[CONF_S];
+	unsigned long int id;
+	struct cmdb_vm_server_hosts_t *next;
+} cmdb_vm_server_hosts_t;
+
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
 int
@@ -59,6 +66,7 @@ void
 display_customer_from_name(char **cust_info);
 void
 display_customer_from_coid(char **cust_info);
-
+int
+add_server_to_database(cmdb_config_t *config);
 
 #endif
