@@ -78,8 +78,10 @@ int main(int argc, char *argv[])
 					display_build_os_versions(cmc);
 				else if ((strncmp(cml->action_type, "build_domain", MAC_S) == 0))
 					display_build_domains(cmc);
+				else if ((strncmp(cml->action_type, "varient", MAC_S) == 0))
+					display_build_varients(cmc);
 				else
-					printf("Can only display partition config\n");
+					printf("Unknown action type %s\n", cml->action_type);
 			} else if (cml->server > 0) {
 				printf("Cannot handle server and type actions\n");
 			}

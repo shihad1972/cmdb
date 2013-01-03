@@ -364,7 +364,7 @@ void display_build_domains(cbc_config_t *config)
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
-		report_error(OS_VERSION_NOT_FOUND, query);
+		report_error(BUILD_DOMAIN_NOT_FOUND, query);
 	}
 	printf("Build domains:\nDomain\t\t\tStart IP\tEnd IP\n");
 	while ((cbc_row = mysql_fetch_row(cbc_res))){
@@ -382,4 +382,53 @@ void display_build_domains(cbc_config_t *config)
 		else
 			printf("%s\t\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
 	}
+	free(query);
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+}
+
+void display_build_varients(cbc_config_t *config)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	size_t len;
+	char *query;
+	const char *cbc_query;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in display_build_varients");
+	
+	cbc_query = query;
+	snprintf(query, RBUFF_S, "SELECT varient, valias FROM varient");
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(VARIENT_NOT_FOUND, query);
+	}
+	printf("Build varients:\nAlias\t\tFull Name\n");
+	while ((cbc_row = mysql_fetch_row(cbc_res))){
+		len = strlen(cbc_row[1]);
+		if ((len / 8) > 0)
+			printf("%s\t%s\n", cbc_row[1], cbc_row[0]);
+		else
+			printf("%s\t\t%s\n", cbc_row[1], cbc_row[0]);
+	}
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+		
 }
