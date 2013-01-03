@@ -139,6 +139,14 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No partition information for server id %s\n", errstr);
 			exit(SERVER_PART_NOT_FOUND);
 			break;
+		case OS_NOT_FOUND:
+			fprintf(stderr, "No build Operating Systems were found\n");
+			exit(OS_NOT_FOUND);
+			break;
+		case NO_PARTITION_SCHEMES:
+			fprintf(stderr, "No partition schemes were found\n");
+			exit(NO_PARTITION_SCHEMES);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
@@ -223,7 +231,7 @@ void display_cbc_usage(void)
 	printf("Action options:\n");
 	printf("-w: write build files\n-d: display build details\n");
 	printf("-a: add build options\n-c: create build in database\n\n");
-	printf("Add and display options:\n");
+	printf("Add, display and create options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n");
 	printf("-x: varient\n\n");
 	printf("Name options:\n");
@@ -240,7 +248,7 @@ void display_cbc_usage(void)
 	printf("cbc -d [-p | -o | -b | -x ] [-n | -i | -u ] [<server_specifier>]\n\n");
 	printf("Create Options:\n");
 	printf("Use the Display to get these names\n");
-	printf("cbc -c -r <scheme> -g <OS> -f <version> -m <domain> -z ");
+	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
 	printf("<varient> [-n | -i | -u ] <server_specifier>\n\n");
 }
 

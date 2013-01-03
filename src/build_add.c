@@ -4,7 +4,7 @@
  * 
  * Part of the cbc program
  * 
- * (C) 2012 Iain M. Conochie
+ * (C) 2012 - 2013 Iain M. Conochie
  * 
  */
 
@@ -137,6 +137,9 @@ partition->filesystem, partition->log_vol);
 	cbc_query = query;
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
 }
 
 int check_for_scheme_name(cbc_config_t *conf, char *name)
@@ -231,7 +234,7 @@ insert_scheme_name_into_db(cbc_config_t *conf, char *name)
 		return id;
 	}
 	id = strtoul(query, NULL, 10);
-	printf("Returning %lu\n", id);
+	printf("Partition has id %lu in the database\n", id);
 	return id;
 	
 }
@@ -386,13 +389,14 @@ void show_all_partitions(pre_disk_part_t *head)
 	pre_disk_part_t *node;
 	size_t len;
 	node = head;
+	printf("\n");
 	do {
 		printf("Partition %s on FS %s\n", node->mount_point, node->filesystem);
 		printf("Min size: %lu\tMax Size: %lu\tPriority: %lu\n",
 		       node->min, node->max, node->pri);
 		if ((len = strlen(node->log_vol) > 0))
 			printf("Logical volume: %s\n", node->log_vol);
-		printf("\n\n");
+		printf("\n");
 		node = node->nextpart;
 	} while (node);
 }

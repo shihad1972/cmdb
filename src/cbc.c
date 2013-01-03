@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
 		exit(retval);
 	}
 	
+/*	print_cbc_command_line_values(cml); */
 	switch (cml->action) {
 		case WRITE_CONFIG:
 			get_server_name(cml, cmc);
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
 		case DISPLAY_CONFIG:
 			if ((cml->server > 0) && 
 			 (strncmp(cml->action_type, "NULL", MAC_S) == 0)) {
-		/*	print_cbc_config(cmc);
+		/*	print_cbc_config(cmc); 
 			print_cbc_command_line_values(cml); */
 				get_server_name(cml, cmc);
 				retval = get_build_info(cmc, cbt, cml->server_id);

@@ -371,8 +371,8 @@ void display_build_domains(cbc_config_t *config)
 		len = strlen(cbc_row[0]);
 		sip = strtoul(cbc_row[1], NULL, 10);
 		eip = strtoul(cbc_row[2], NULL, 10);
-		sip_addr = htonl(sip);
-		eip_addr = htonl(eip);
+		sip_addr = htonl((unsigned int)sip);
+		eip_addr = htonl((unsigned int)eip);
 		inet_ntop(AF_INET, &sip_addr, sip_address, 16);
 		inet_ntop(AF_INET, &eip_addr, eip_address, 16);
 		if ((len / 8) > 1)

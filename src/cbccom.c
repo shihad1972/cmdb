@@ -196,7 +196,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:r:g:f:m:z:wdacpovbx")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::wdac")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -210,19 +210,24 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				cb->server_id = strtoul(optarg, NULL, 10);
 				cb->server = TRUE;
 				break;
-			case 'r':
+			case 'p':
+				snprintf(cb->action_type, MAC_S, "partition");
 				snprintf(cb->partition, CONF_S, "%s", optarg);
 				break;
-			case 'g':
+			case 'o':
+				snprintf(cb->action_type, MAC_S, "os");
 				snprintf(cb->os, CONF_S, "%s", optarg);
 				break;
-			case 'f':
+			case 'v':
+				snprintf(cb->action_type, MAC_S, "os_version");
 				snprintf(cb->os_version, MAC_S, "%s", optarg);
 				break;
-			case 'm':
+			case 'b':
+				snprintf(cb->action_type, MAC_S, "build_domain");
 				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 				break;
-			case 'z':
+			case 'x':
+				snprintf(cb->action_type, MAC_S, "varient");
 				snprintf(cb->varient, CONF_S, "%s", optarg);
 				break;
 			case 'w':
@@ -236,21 +241,6 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'c':
 				cb->action = CREATE_CONFIG;
-				break;
-			case 'p':
-				snprintf(cb->action_type, MAC_S, "partition");
-				break;
-			case 'o':
-				snprintf(cb->action_type, MAC_S, "os");
-				break;
-			case 'v':
-				snprintf(cb->action_type, MAC_S, "os_version");
-				break;
-			case 'b':
-				snprintf(cb->action_type, MAC_S, "build_domain");
-				break;
-			case 'x':
-				snprintf(cb->action_type, MAC_S, "varient");
 				break;
 			default:
 				printf("Unknown option: %c\n", opt);
@@ -490,6 +480,9 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 	fprintf(stderr, "Config: %s\n", command_line->config);
 	fprintf(stderr, "Name: %s\n", command_line->name);
 	fprintf(stderr, "UUID: %s\n", command_line->uuid);
+	fprintf(stderr, "OS: %s\n", command_line->os);
+	fprintf(stderr, "Build Domain: %s\n", command_line->build_domain);
+	fprintf(stderr, "Action Type: %s\n", command_line->action_type);
 	fprintf(stderr, "\n");
 }
 
