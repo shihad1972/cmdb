@@ -2,6 +2,7 @@
 
 #ifndef __CMDB_CMDB_H__
 #define __CMDB_CMDB_H__
+#include "mysql/mysql.h"
 
 enum {			/* Display codes; use NONE from action codes */
 	SERVER = 1,
@@ -27,12 +28,35 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cmdb_config_t;
 
-typedef struct cmdb_vm_server_hosts_t {
+typedef struct cmdb_vm_host_t {
 	char name[CONF_S];
 	char type[CONF_S];
 	unsigned long int id;
-	struct cmdb_vm_server_hosts_t *next;
-} cmdb_vm_server_hosts_t;
+	struct cmdb_vm_host_t *next;
+} cmdb_vm_host_t;
+
+typedef struct cmdb_server_t {
+	char vendor[CONF_S];
+	char make[CONF_S];
+	char model[CONF_S];
+	char uuid[CONF_S];
+	char name[MAC_S];
+	unsigned long int cust_id;
+	unsigned long int server_id;
+	unsigned long int vm_server_id;
+	struct cmdb_server_t *next;
+} cmdb_server_t;
+
+typedef struct cmdb_customer_t {
+	char name[HOST_S];
+	char address[NAME_S];
+	char city[HOST_S];
+	char county[MAC_S];
+	char postcode[RANGE_S];
+	char coid[RANGE_S];
+	unsigned long int cust_id;
+	struct cmdb_customer_t *next;
+} cmdb_customer_t;
 
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
@@ -68,5 +92,22 @@ void
 display_customer_from_coid(char **cust_info);
 int
 add_server_to_database(cmdb_config_t *config);
-
+void
+get_full_server_config(cmdb_server_t *server);
+void
+print_server_details(cmdb_server_t *server);
+/* Linked list functions for virtual machine hosts */
+cmdb_vm_host_t
+*vm_host_create(void);
+cmdb_vm_host_t
+*get_vm_host(cmdb_config_t *config);
+void
+fill_vm_host_node(cmdb_vm_host_t *head, MYSQL_ROW myrow);
+/* Linked list fucntions for customers */
+cmdb_customer_t
+*create_customer_node(void);
+unsigned long int
+get_customer_for_server(cmdb_config_t *config);
+cmdb_customer_t 
+*add_customer_node(cmdb_customer_t *head, MYSQL_ROW myrow);
 #endif

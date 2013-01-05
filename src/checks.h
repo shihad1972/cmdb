@@ -21,7 +21,8 @@ enum {			/* regex search codes */
 	IP_REGEX,
 	DOMAIN_REGEX,
 	PATH_REGEX,
-	FS_REGEX
+	FS_REGEX,
+	MAKE_REGEX
 };
 
 int

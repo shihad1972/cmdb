@@ -9,6 +9,7 @@ enum {			/* Buffer Sizes */
 	MAC_S = 32,
 	HOST_S = 64,
 	CONF_S = 80,
+	NAME_S = 128,
 	URL_S = 136,
 	RBUFF_S = 256,
 	TBUFF_S = 512,
@@ -58,7 +59,9 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	OS_NOT_FOUND = 114,
 	OS_VERSION_NOT_FOUND = 115,
 	BUILD_DOMAIN_NOT_FOUND = 116,
-	VARIENT_NOT_FOUND = 117
+	VARIENT_NOT_FOUND = 117,
+	NO_VM_HOSTS = 118,
+	NO_CUSTOMERS = 119
 };
 
 enum {			/* cmdb return codes */
@@ -168,5 +171,8 @@ void
 display_cbc_usage(void);
 void
 display_dnsa_usage(void);
+
+void
+chomp(char *input);
 
 #endif

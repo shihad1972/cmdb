@@ -18,7 +18,4 @@ part_node_free(void);
 int
 check_for_special_partition(pre_disk_part_t *part_info);
 
-void
-chomp(char *input);
-
 #endif /* _BUILD_H */
