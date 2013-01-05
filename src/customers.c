@@ -14,6 +14,7 @@
 #include "cmdb_cmdb.h"
 #include "mysqlfunc.h"
 #include "cmdb_mysql.h"
+#include "checks.h"
 
 MYSQL cmdb;
 MYSQL_RES *cmdb_res;
@@ -134,6 +135,10 @@ void display_all_customers(cmdb_config_t *config)
 	cmdb_mysql_init(config, &cust);
 	cmdb_mysql_query(&cust, cust_cmdb_query);
 	if (!(cust_res = mysql_store_result(&cust))) {
+		mysql_close(&cust);
+		mysql_library_end();
+		free(cust_query);
+		free(cust_coid);
 		report_error(MY_STORE_FAIL, mysql_error(&cust));
 	}
 	while ((cust_row = mysql_fetch_row(cust_res))) {
@@ -165,3 +170,157 @@ void display_customer_from_coid(char **cust_info)
 	printf("County: %s\n", cmdb_row[2]);
 	printf("Postcode: %s\n", cmdb_row[3]);
 }
+
+cmdb_customer_t *create_customer_node(void)
+{
+	cmdb_customer_t *head;
+	
+	if (!(head = malloc(sizeof(cmdb_customer_t))))
+		report_error(MALLOC_FAIL, "head in create_customer_node");
+	head->cust_id = 0;
+	snprintf(head->name, HOST_S, "NULL");
+	snprintf(head->address, NAME_S, "NULL");
+	snprintf(head->city, HOST_S, "NULL");
+	snprintf(head->county, MAC_S, "NULL");
+	snprintf(head->postcode, RANGE_S, "NULL");
+	snprintf(head->coid, RANGE_S, "NULL");
+	head->next = NULL;
+	
+	return head;
+}
+
+cmdb_customer_t *add_customer_node(cmdb_customer_t *head, MYSQL_ROW myrow)
+{
+	cmdb_customer_t *new, *saved;
+	if ((strncmp(head->name, "NULL", HOST_S) != 0))
+		new = create_customer_node();
+	else
+		new = head;
+	new->cust_id = strtoul(myrow[0], NULL, 10);
+	snprintf(new->name, HOST_S, "%s", myrow[1]);
+	snprintf(new->address, NAME_S, "%s", myrow[2]);
+	snprintf(new->city, HOST_S, "%s", myrow[3]);
+	snprintf(new->county, MAC_S, "%s", myrow[4]);
+	snprintf(new->postcode, RANGE_S, "%s", myrow[5]);
+	snprintf(new->coid, RANGE_S, "%s", myrow[6]);
+	
+	saved = head;
+	while (saved->next)
+		saved = saved->next;
+	if (new != head)
+		saved->next = new;
+	return head;
+}
+
+unsigned long int get_customer_for_server(cmdb_config_t *config)
+{
+	cmdb_customer_t *head, *saved;
+	size_t len;
+	char *query, *coid;
+	int retval;
+	unsigned long int id;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_customer_for_server");
+	if (!(coid = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "coid in get_customer_for_server");
+	head = create_customer_node();
+	snprintf(query, RBUFF_S,
+"SELECT cust_id, name, address, city, county, postcode, coid FROM customer");
+	cmdb_query = query;
+	cmdb_mysql_init(config, &cmdb);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	if (!(cmdb_res = mysql_store_result(&cmdb))) {
+		mysql_close(&cmdb);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, "in get_customer_for_server");
+	}
+	if ((cmdb_rows = mysql_num_rows(cmdb_res)) == 0) {
+		mysql_free_result(cmdb_res);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		free(query);
+		report_error(NO_CUSTOMERS, "NULL");
+	}
+	printf("Please input the ID of the customer for this server\n");
+	printf("ID\t\tCoid\t\tName\n");
+	while ((cmdb_row = mysql_fetch_row(cmdb_res))) {
+		head = add_customer_node(head, cmdb_row);
+	}
+	mysql_free_result(cmdb_res);
+	mysql_close(&cmdb);
+	mysql_library_end();
+	saved = head;
+	printf("Please input the ID of the customer for this server\n");
+	printf("ID\t\tCoid\t\tName\n");
+	while (saved) {
+		len = strlen(saved->coid);
+		if ((saved->cust_id > 9999999)) {
+			if ((len / 8) >0) {
+				printf("%lu\t%s\t%s\n", 
+				 saved->cust_id, saved->coid, saved->name);
+			} else {
+				printf("%lu\t%s\t\t%s\n",
+				 saved->cust_id, saved->coid, saved->name);
+			}
+		} else {
+			if ((len / 8) >0) {
+				printf("%lu\t\t%s\t%s\n", 
+				 saved->cust_id, saved->coid, saved->name);
+			} else {
+				printf("%lu\t\t%s\t\t%s\n",
+				 saved->cust_id, saved->coid, saved->name);
+			}
+		}
+		saved = saved->next;
+	}
+	fgets(query, CONF_S, stdin);
+	chomp(query);
+	while ((retval = validate_user_input(query, ID_REGEX)) < 0) {
+		while ((retval = validate_user_input(query, COID_REGEX)) < 0) {
+			printf("User input not valid!\n");
+			printf("Please input the ID or COID of the customer for this server\n");
+			fgets(query, CONF_S, stdin);
+			chomp(query);
+		}
+	}
+	
+	if ((retval = validate_user_input(query, ID_REGEX) > 0)) {
+		id = strtoul(query, NULL, 10);
+		free(coid);
+		free(query);
+		while (head) {
+			saved = head->next;
+			free(head);
+			head = saved;
+		}
+		return id;
+	} else {
+		snprintf(coid, RANGE_S, "%s", query);
+		while (saved) {
+			if ((strncmp(saved->coid, coid, RANGE_S) == 0)) {
+				id = saved->cust_id;
+				free(coid);
+				free(query);
+				while (head) {
+					saved = head->next;
+					free(head);
+					head = saved;
+				}
+				return id;
+			} else {
+				saved = saved->next;
+			}
+		}
+	}
+	free(coid);
+	free(query);
+	while (head) {
+		saved = head->next;
+		free(head);
+		head = saved;
+	}
+	return 0;
+}
+

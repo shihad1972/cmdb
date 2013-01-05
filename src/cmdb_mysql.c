@@ -50,7 +50,7 @@ void cmdb_mysql_query(MYSQL *mycmdb, const char *query)
 	
 	error = mysql_query(mycmdb, query);
 	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, error_string);
+		report_error(MY_QUERY_FAIL, mysql_error(mycmdb));
 	}
 	free(my_error_code);
 }

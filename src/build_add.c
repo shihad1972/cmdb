@@ -400,11 +400,3 @@ void show_all_partitions(pre_disk_part_t *head)
 		node = node->nextpart;
 	} while (node);
 }
-
-void chomp(char *input)
-{
-	size_t len;
-	len = strlen(input);
-	if (input[len -1] == '\n')
-		input[len -1] = '\0';
-}

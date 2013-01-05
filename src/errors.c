@@ -147,6 +147,14 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No partition schemes were found\n");
 			exit(NO_PARTITION_SCHEMES);
 			break;
+		case NO_VM_HOSTS:
+			fprintf(stderr, "No VM server hosts were found\n");
+			exit(NO_VM_HOSTS);
+			break;
+		case NO_CUSTOMERS:
+			fprintf(stderr, "No customers were found\n");
+			exit(NO_CUSTOMERS);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
@@ -264,4 +272,12 @@ void display_dnsa_usage(void)
 	printf("-n: zone-name\n\n");
 	printf("Host options for use with adding a host record:\n");
 	printf("-i: IP Address\n-t: Record type (A, MX etc)\n-h: host\n\n");
+}
+
+void chomp(char *input)
+{
+	size_t len;
+	len = strlen(input);
+	if (input[len -1] == '\n')
+		input[len -1] = '\0';
 }
