@@ -139,6 +139,7 @@ int add_server_to_database(cmdb_config_t *config)
 	int retval;
 	cmdb_server_t *server;
 	cmdb_vm_host_t *node;
+	cmdb_hardware_t *hard, *hsaved;
 	
 	retval = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
@@ -155,11 +156,24 @@ int add_server_to_database(cmdb_config_t *config)
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		node = get_vm_host(config);
 		server->vm_server_id = node->id;
+		free(node);
 	}
-	free(node);
 	server->cust_id = get_customer_for_server(config);
 	get_full_server_config(server);
 	print_server_details(server);
+	hard = hard_node_create();
+	retval = get_server_hardware(config, hard, server->server_id);
+	if (retval == 0) {
+		printf("Hardware accepted\n");
+	} else {
+		printf("Hardware not accepted\n");
+	}
+	hsaved = hard;
+	while (hard->next) {
+		hsaved = hard->next;
+		free(hard);
+		hard = hsaved;
+	}
 	free(server);
 	free(input);
 	free(query);
@@ -241,6 +255,7 @@ void get_full_server_config(cmdb_server_t *server)
 		chomp(input);
 	}
 	snprintf(server->name, CONF_S, "%s", input);
+	free(input);
 }
 cmdb_vm_host_t *vm_host_create(void)
 {
@@ -289,6 +304,9 @@ cmdb_vm_host_t *get_vm_host(cmdb_config_t *config)
 	while ((cmdb_row = mysql_fetch_row(cmdb_res))) {
 		fill_vm_host_node(head, cmdb_row);
 	}
+	mysql_free_result(cmdb_res);
+	mysql_close(&cmdb);
+	mysql_library_end();
 	node = head;
 	printf("Please input the ID of the VM server host you wish to use\n");
 	printf("ID\tName\t\t\tType\n");
@@ -344,4 +362,222 @@ void fill_vm_host_node(cmdb_vm_host_t *head, MYSQL_ROW myrow)
 			saved = saved->next;
 		saved->next = new;
 	}
+}
+
+int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id)
+{
+	int retval;
+	cmdb_hard_type_t *hthead, *net, *disk;
+	cmdb_hardware_t *new;
+	
+	retval = 0;
+	hthead = hard_type_node_create();
+	add_hardware_types(config, hthead);
+	printf("\nNow we need to ask you for some hardware\n");
+	retval = get_network_device(head);
+	if (retval > 0) {
+		fprintf(stderr, "Unable to get network device\n");
+		retval = 1;
+		return retval;
+	}
+	retval = get_disk_device(head);
+	if (retval > 0) {
+		fprintf(stderr, "Unable to get disk device\n");
+		retval = 1;
+		return retval;
+	}
+	net = get_network_device_id(hthead);
+	if (!net) {
+		printf("Unable to find network card hardware type\n");
+		while (net) {
+			net = net->next;
+			free(hthead);
+			hthead = net;
+		}
+		retval = 1;
+		return retval;
+	} else {
+		head->ht_id = net->ht_id;
+		head->server_id = id;
+	}
+	disk = get_disk_device_id(hthead);
+	if (!disk) {
+		printf("Unable to find hard disk hardware type\n");
+		while (disk) {
+			disk = disk->next;
+			free(hthead);
+			hthead = disk;
+		}
+		retval = 1;
+		return retval;
+	} else {
+		new = head->next;
+		new->ht_id = disk->ht_id;
+		new->server_id = id;
+	}
+	
+	return retval;
+}
+
+void add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead)
+{
+	char *query;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in add_hardware_types");
+	
+	snprintf(query, RBUFF_S,
+"SELECT hard_type_id, type, class FROM hard_type");
+	cmdb_query = query;
+	cmdb_mysql_init(config, &cmdb);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	if (!(cmdb_res = mysql_store_result(&cmdb))) {
+		free(query);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
+	}
+	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
+		mysql_free_result(cmdb_res);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		free(query);
+		report_error(NO_HARDWARE_TYPES, query);
+	}
+	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
+		fill_hardware_types(hthead, cmdb_row);
+	mysql_free_result(cmdb_res);
+	mysql_close(&cmdb);
+	mysql_library_end();
+	free(query);
+}
+
+cmdb_hardware_t *hard_node_create(void)
+{
+	cmdb_hardware_t *hard;
+	
+	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
+		report_error(MALLOC_FAIL, "hard in *hard_node_create");
+	snprintf(hard->detail, MAC_S, "NULL");
+	snprintf(hard->device, MAC_S, "NULL");
+	hard->hard_id = 0;
+	hard->ht_id = 0;
+	hard->server_id = 0;
+	hard->next = NULL;
+	return hard;
+}
+
+cmdb_hard_type_t *hard_type_node_create(void)
+{
+	cmdb_hard_type_t *hardtype;
+	
+	if (!(hardtype = malloc(sizeof(cmdb_hard_type_t))))
+		report_error(MALLOC_FAIL, "hardtype in hard_type_node_create");
+	snprintf(hardtype->type, HOST_S, "NULL");
+	snprintf(hardtype->hclass, HOST_S, "NULL");
+	hardtype->ht_id = 0;
+	hardtype->next = NULL;
+	return hardtype;
+}
+
+void fill_hardware_types(cmdb_hard_type_t *head, MYSQL_ROW row)
+{
+	cmdb_hard_type_t *node, *saved;
+	
+	if ((strncmp(head->type, "NULL", HOST_S)) == 0)
+		node = head;
+	else
+		node = hard_type_node_create();
+	
+	node->ht_id = strtoul(row[0], NULL, 10);
+	snprintf(node->type, HOST_S, "%s", row[1]);
+	snprintf(node->hclass, HOST_S, "%s", row[2]);
+	saved = head;
+	if (node != head) {
+		while (saved->next)
+			saved = saved->next;
+		saved->next = node;
+	}
+}
+
+cmdb_hard_type_t *get_network_device_id(cmdb_hard_type_t *head)
+{
+	cmdb_hard_type_t *net;
+	
+	net = head;
+	while (net) {
+		if (((strncmp(net->type, "network", HOST_S)) == 0) &&
+		 (strncmp(net->hclass, "Network Card", HOST_S)) == 0) {
+			return net;
+		} else {
+			net = net->next;
+		}
+	}
+	net = NULL;
+	return net;
+}
+
+cmdb_hard_type_t *get_disk_device_id(cmdb_hard_type_t *head)
+{
+	cmdb_hard_type_t *disk;
+	
+	disk = head;
+	while (disk) {
+		if (((strncmp(disk->type, "storage", HOST_S)) == 0) &&
+		 (strncmp(disk->hclass, "Hard Disk", HOST_S)) == 0) {
+			return disk;
+		} else {
+			disk = disk->next;
+		}
+	}
+	disk = NULL;
+	return disk;
+}
+
+int get_network_device(cmdb_hardware_t *head)
+{
+	int retval;
+	
+	retval = 0;
+	printf("Please enter the network device (without the leading /dev/\n");
+	fgets(head->device, MAC_S, stdin);
+	while ((retval = validate_user_input(head->device, DEV_REGEX) < 0)) {
+		printf("Network device not valid!\n");
+		printf("Please enter the network device (without the leading /dev/\n");
+		fgets(head->device, MAC_S, stdin);
+	}
+	printf("Please enter the network device MAC Address\n");
+	fgets(head->detail, HOST_S, stdin);
+	while ((retval = validate_user_input(head->detail, MAC_REGEX) < 0)) {
+		printf("Network device not valid!\n");
+		printf("Please enter the network device MAC address\n");
+		fgets(head->detail, HOST_S, stdin);
+	}
+	return 0;
+}
+
+int get_disk_device(cmdb_hardware_t *head)
+{
+	int retval;
+	cmdb_hardware_t *disk;
+	
+	retval = 0;
+	disk = hard_node_create();
+	head->next = disk;
+	printf("Please enter the disk device (without the leading /dev/\n");
+	fgets(disk->device, MAC_S, stdin);
+	while ((retval = validate_user_input(disk->device, DEV_REGEX) < 0)) {
+		printf("Disk device not valid!\n");
+		printf("Please enter the disk device (without the leading /dev/\n");
+		fgets(disk->device, MAC_S, stdin);
+	}
+	printf("Please enter the disk device capacity (# [TB | GB | MB])\n");
+	fgets(disk->detail, HOST_S, stdin);
+	while ((retval = validate_user_input(disk->detail, CAPACITY_REGEX) < 0)) {
+		printf("Disk Capacity not valid!\n");
+		printf("Please enter the disk device capacity\n");
+		printf("A number followed by one space followed by either TB, GB or MB\n");
+		fgets(disk->detail, HOST_S, stdin);
+	}
+	return 0;
 }

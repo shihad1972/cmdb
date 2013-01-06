@@ -61,7 +61,8 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	BUILD_DOMAIN_NOT_FOUND = 116,
 	VARIENT_NOT_FOUND = 117,
 	NO_VM_HOSTS = 118,
-	NO_CUSTOMERS = 119
+	NO_CUSTOMERS = 119,
+	NO_HARDWARE_TYPES = 120
 };
 
 enum {			/* cmdb return codes */

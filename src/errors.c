@@ -155,6 +155,10 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No customers were found\n");
 			exit(NO_CUSTOMERS);
 			break;
+		case NO_HARDWARE_TYPES:
+			fprintf(stderr, "No Hardware types were found\n");
+			exit(NO_HARDWARE_TYPES);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);

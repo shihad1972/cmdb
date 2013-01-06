@@ -18,7 +18,7 @@
 
 #define OVECCOUNT 18    /* should be a multiple of 3 */
 
-const char *regexps[11] = {
+const char *regexps[13] = {
 	"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
 	"^[a-zA-Z0-9][a-zA-Z0-9\\-\\_]*[a-zA-Z0-9]$",
 	"^[0-9]+$",
@@ -29,7 +29,9 @@ const char *regexps[11] = {
 	"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$",
 	"^/([a-zA-Z0-9]*)(/([a-zA-Z0-9]+))*$",
 	"^[a-zA-Z0-9]+$",
-	"^[a-zA-Z0-9][a-zA-Z0-9\\ ]*[a-zA-Z0-9]$"
+	"^[a-zA-Z0-9][a-zA-Z0-9\\ ]*[a-zA-Z0-9]$",
+	"^[a-z][a-z0-9]*$",
+	"^[0-9]*\\ [TGM]B$"
 };
 int validate_user_input(char *input, int regex_test)
 {

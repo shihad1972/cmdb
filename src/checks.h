@@ -22,7 +22,9 @@ enum {			/* regex search codes */
 	DOMAIN_REGEX,
 	PATH_REGEX,
 	FS_REGEX,
-	MAKE_REGEX
+	MAKE_REGEX,
+	DEV_REGEX,
+	CAPACITY_REGEX
 };
 
 int

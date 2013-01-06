@@ -58,6 +58,22 @@ typedef struct cmdb_customer_t {
 	struct cmdb_customer_t *next;
 } cmdb_customer_t;
 
+typedef struct cmdb_hard_type_t {
+	char type[HOST_S];
+	char hclass[HOST_S];
+	unsigned long int ht_id;
+	struct cmdb_hard_type_t *next;
+} cmdb_hard_type_t;
+
+typedef struct cmdb_hardware_t {
+	char detail[HOST_S];
+	char device[MAC_S];
+	unsigned long int hard_id;
+	unsigned long int server_id;
+	unsigned long int ht_id;
+	struct cmdb_hardware_t *next;
+} cmdb_hardware_t;
+
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
 int
@@ -110,4 +126,24 @@ unsigned long int
 get_customer_for_server(cmdb_config_t *config);
 cmdb_customer_t 
 *add_customer_node(cmdb_customer_t *head, MYSQL_ROW myrow);
+/* linked list functions for hardware and hardware types */
+cmdb_hard_type_t
+*hard_type_node_create(void);
+cmdb_hardware_t
+*hard_node_create(void);
+void
+add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead);
+void
+fill_hardware_types(cmdb_hard_type_t *head, MYSQL_ROW row);
+cmdb_hard_type_t
+*get_network_device_id(cmdb_hard_type_t *head);
+cmdb_hard_type_t
+*get_disk_device_id(cmdb_hard_type_t *head);
+int
+get_network_device(cmdb_hardware_t *head);
+int
+get_disk_device(cmdb_hardware_t *head);
+/* Server functions */
+int
+get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id);
 #endif
