@@ -680,6 +680,7 @@ int get_network_device(cmdb_hardware_t *head)
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device (without the leading /dev/\n");
 		fgets(head->device, MAC_S, stdin);
+		chomp(head->device);
 	}
 	printf("Please enter the network device MAC Address\n");
 	fgets(head->detail, HOST_S, stdin);
@@ -688,6 +689,7 @@ int get_network_device(cmdb_hardware_t *head)
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device MAC address\n");
 		fgets(head->detail, HOST_S, stdin);
+		chomp(head->detail);
 	}
 	return 0;
 }
@@ -707,6 +709,7 @@ int get_disk_device(cmdb_hardware_t *head)
 		printf("Disk device not valid!\n");
 		printf("Please enter the disk device (without the leading /dev/\n");
 		fgets(disk->device, MAC_S, stdin);
+		chomp(disk->device);
 	}
 	printf("Please enter the disk device capacity (# [TB | GB | MB])\n");
 	fgets(disk->detail, HOST_S, stdin);
@@ -716,6 +719,7 @@ int get_disk_device(cmdb_hardware_t *head)
 		printf("Please enter the disk device capacity\n");
 		printf("A number followed by one space followed by either TB, GB or MB\n");
 		fgets(disk->detail, HOST_S, stdin);
+		chomp(disk->detail);
 	}
 	return 0;
 }
