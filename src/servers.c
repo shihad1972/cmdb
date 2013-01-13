@@ -2,7 +2,7 @@
  * 
  * Functions relating to servers in the database for the cmdb program
  * 
- * (C) 2012 Iain M Conochie
+ * (C) 2012 - 2013 Iain M Conochie
  * 
  */
 
@@ -168,12 +168,14 @@ int add_server_to_database(cmdb_config_t *config)
 	} else {
 		printf("Hardware not accepted\n");
 	}
-	hsaved = hard;
+	printf("\n");
+	print_hardware_details(hard);
 	while (hard->next) {
 		hsaved = hard->next;
 		free(hard);
 		hard = hsaved;
 	}
+	free(hard);
 	free(server);
 	free(input);
 	free(query);
@@ -190,6 +192,14 @@ void print_server_details(cmdb_server_t *server)
 	printf("Model:\t%s\n", server->model);
 	printf("Cust id:\t%lu\n", server->cust_id);
 	printf("VM Server ID:\t%lu\n", server->vm_server_id);
+}
+void print_hardware_details(cmdb_hardware_t *hard)
+{
+	printf("Network Card:\n");
+	printf("Device: %s\tMac Address: %s\n", hard->device, hard->detail);
+	hard = hard->next;
+	printf("Hard Disk:\n");
+	printf("Device: /dev/%s\tSize: %s\n", hard->device, hard->detail);
 }
 
 void get_full_server_config(cmdb_server_t *server)
@@ -415,6 +425,12 @@ int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned l
 		new->ht_id = disk->ht_id;
 		new->server_id = id;
 	}
+	while (hthead->next) {
+		net = hthead->next;
+		free(hthead);
+		hthead = net;
+	}
+	free(hthead);
 	
 	return retval;
 }
@@ -542,14 +558,14 @@ int get_network_device(cmdb_hardware_t *head)
 	printf("Please enter the network device (without the leading /dev/\n");
 	fgets(head->device, MAC_S, stdin);
 	while ((retval = validate_user_input(head->device, DEV_REGEX) < 0)) {
-		printf("Network device not valid!\n");
+		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device (without the leading /dev/\n");
 		fgets(head->device, MAC_S, stdin);
 	}
 	printf("Please enter the network device MAC Address\n");
 	fgets(head->detail, HOST_S, stdin);
 	while ((retval = validate_user_input(head->detail, MAC_REGEX) < 0)) {
-		printf("Network device not valid!\n");
+		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device MAC address\n");
 		fgets(head->detail, HOST_S, stdin);
 	}

@@ -112,6 +112,8 @@ void
 get_full_server_config(cmdb_server_t *server);
 void
 print_server_details(cmdb_server_t *server);
+void
+print_hardware_details(cmdb_hardware_t *hard);
 /* Linked list functions for virtual machine hosts */
 cmdb_vm_host_t
 *vm_host_create(void);
