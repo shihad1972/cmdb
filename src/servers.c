@@ -135,15 +135,13 @@ void display_server_from_uuid(char **server_info)
 
 int add_server_to_database(cmdb_config_t *config)
 {
-	char *query, *input;
+	char *input;
 	int retval;
 	cmdb_server_t *server;
 	cmdb_vm_host_t *node;
 	cmdb_hardware_t *hard, *hsaved;
 	
 	retval = 0;
-	if (!(query = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "query in add_server_to_database");
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
 	if (!(server = malloc(sizeof(cmdb_server_t))))
@@ -161,15 +159,29 @@ int add_server_to_database(cmdb_config_t *config)
 	server->cust_id = get_customer_for_server(config);
 	get_full_server_config(server);
 	print_server_details(server);
+	retval = insert_server_into_db(config, server);
+	if (retval > 0) {
+		free(input);
+		free(server);
+		return retval;
+	}
 	hard = hard_node_create();
 	retval = get_server_hardware(config, hard, server->server_id);
-	if (retval == 0) {
-		printf("Hardware accepted\n");
-	} else {
-		printf("Hardware not accepted\n");
+	if (retval != 0) {
+		printf("Hardware input failed\n");
+		free(input);
+		free(server);
+		while (hard->next) {
+			hsaved = hard->next;
+			free(hard);
+			hard = hsaved;
+		}
+		free(hard);
+		return retval;
 	}
 	printf("\n");
 	print_hardware_details(hard);
+	retval = add_hardware_to_db(config, hard);
 	while (hard->next) {
 		hsaved = hard->next;
 		free(hard);
@@ -178,6 +190,112 @@ int add_server_to_database(cmdb_config_t *config)
 	free(hard);
 	free(server);
 	free(input);
+	return retval;
+}
+
+int insert_server_into_db(cmdb_config_t *config, cmdb_server_t *server)
+{
+	char *query;
+	int retval;
+
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_server_into_db");
+	retval = 0;
+
+	snprintf(query, RBUFF_S,
+"SELECT server_id FROM server WHERE name = '%s'", server->name);
+	cmdb_query = query;
+	cmdb_mysql_init(config, &cmdb);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	if (!(cmdb_res = mysql_store_result(&cmdb))) {
+		free(query);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
+	}
+	cmdb_rows = mysql_num_rows(cmdb_res);
+	if (cmdb_rows > 0)
+		retval = SERVER_EXISTS;
+	if (retval > 0) {
+		free(query);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		return retval;
+	}
+	snprintf(query, RBUFF_S,
+"INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name) \
+VALUES ('%s', '%s', '%s', '%s', %lu, %lu, '%s')",
+		server->vendor, server->make, server->model, server->uuid,
+		server->cust_id, server->vm_server_id, server->name);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	cmdb_rows = mysql_affected_rows(&cmdb);
+
+	if (cmdb_rows != 1)
+		retval = MY_INSERT_FAIL;
+	if (retval > 0) {
+		free(query);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		return retval;
+	}
+	snprintf(query, RBUFF_S,
+"SELECT server_id FROM server WHERE name = '%s'", server->name);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	if (!(cmdb_res = mysql_store_result(&cmdb))) {
+		free(query);
+		mysql_close(&cmdb);
+		mysql_library_end();
+		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
+	}
+	cmdb_row = mysql_fetch_row(cmdb_res);
+	server->server_id = strtoul(cmdb_row[0], NULL, 10);
+	mysql_free_result(cmdb_res);
+	mysql_close(&cmdb);
+	mysql_library_end();
+	free(query);
+	return retval;
+}
+
+int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
+{
+	cmdb_hardware_t *next;
+	int retval;
+
+	next = hw;
+	retval = 0;
+	while (next) {
+		retval = insert_hardware_into_db(config, next);
+		if (retval > 0) {
+			next = 0;
+		} else {
+			next = next->next;
+		}
+	}
+
+	return retval;
+}
+
+int insert_hardware_into_db(cmdb_config_t *config, cmdb_hardware_t *hw)
+{
+	int retval;
+	char *query;
+
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_hardware_into_db");
+	retval = 0;
+
+	snprintf(query, RBUFF_S,
+"INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
+('%s', '%s', %lu, %lu)", hw->detail, hw->device, hw->server_id, hw->ht_id);
+	cmdb_query = query;
+	cmdb_mysql_init(config, &cmdb);
+	cmdb_mysql_query(&cmdb, cmdb_query);
+	cmdb_rows = mysql_affected_rows(&cmdb);
+
+	if (cmdb_rows != 1)
+		retval = MY_INSERT_FAIL;
+	mysql_close(&cmdb);
+	mysql_library_end();
 	free(query);
 	return retval;
 }
@@ -195,10 +313,10 @@ void print_server_details(cmdb_server_t *server)
 }
 void print_hardware_details(cmdb_hardware_t *hard)
 {
-	printf("Network Card:\n");
+	printf("Network Card for server ID: %lu\n", hard->server_id);
 	printf("Device: %s\tMac Address: %s\n", hard->device, hard->detail);
 	hard = hard->next;
-	printf("Hard Disk:\n");
+	printf("Hard Disk for server ID: %lu\n", hard->server_id);
 	printf("Device: /dev/%s\tSize: %s\n", hard->device, hard->detail);
 }
 
@@ -557,6 +675,7 @@ int get_network_device(cmdb_hardware_t *head)
 	retval = 0;
 	printf("Please enter the network device (without the leading /dev/\n");
 	fgets(head->device, MAC_S, stdin);
+	chomp(head->device);
 	while ((retval = validate_user_input(head->device, DEV_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device (without the leading /dev/\n");
@@ -564,6 +683,7 @@ int get_network_device(cmdb_hardware_t *head)
 	}
 	printf("Please enter the network device MAC Address\n");
 	fgets(head->detail, HOST_S, stdin);
+	chomp(head->detail);
 	while ((retval = validate_user_input(head->detail, MAC_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device MAC address\n");
@@ -582,6 +702,7 @@ int get_disk_device(cmdb_hardware_t *head)
 	head->next = disk;
 	printf("Please enter the disk device (without the leading /dev/\n");
 	fgets(disk->device, MAC_S, stdin);
+	chomp(disk->device);
 	while ((retval = validate_user_input(disk->device, DEV_REGEX) < 0)) {
 		printf("Disk device not valid!\n");
 		printf("Please enter the disk device (without the leading /dev/\n");
@@ -589,6 +710,7 @@ int get_disk_device(cmdb_hardware_t *head)
 	}
 	printf("Please enter the disk device capacity (# [TB | GB | MB])\n");
 	fgets(disk->detail, HOST_S, stdin);
+	chomp(disk->detail);
 	while ((retval = validate_user_input(disk->detail, CAPACITY_REGEX) < 0)) {
 		printf("Disk Capacity not valid!\n");
 		printf("Please enter the disk device capacity\n");

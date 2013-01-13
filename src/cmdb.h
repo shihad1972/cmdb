@@ -33,6 +33,7 @@ enum {			/* dnsa error codes */
 	MY_CONN_FAIL = 11,
 	MY_QUERY_FAIL = 12,
 	MY_STORE_FAIL = 13,
+	MY_INSERT_FAIL = 14,
 	FILE_O_FAIL = 20,
 	CHKZONE_FAIL = 21,
 	NO_ZONE_CONFIGURATION = 22,
@@ -62,7 +63,8 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	VARIENT_NOT_FOUND = 117,
 	NO_VM_HOSTS = 118,
 	NO_CUSTOMERS = 119,
-	NO_HARDWARE_TYPES = 120
+	NO_HARDWARE_TYPES = 120,
+	SERVER_EXISTS = 121
 };
 
 enum {			/* cmdb return codes */

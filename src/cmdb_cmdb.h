@@ -108,6 +108,12 @@ void
 display_customer_from_coid(char **cust_info);
 int
 add_server_to_database(cmdb_config_t *config);
+int
+add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw);
+int
+insert_server_into_db(cmdb_config_t *config, cmdb_server_t *server);
+int
+insert_hardware_into_db(cmdb_config_t *config, cmdb_hardware_t *hardware);
 void
 get_full_server_config(cmdb_server_t *server);
 void
