@@ -261,11 +261,12 @@ void display_cbc_usage(void)
 	printf("cbc -w [-n | -i | -u ] <server_specifier>\n\n");
 	printf("Add Options:\n");
 	printf("Specify which build option you would like to add\n");
-	printf("cbc -a [-p | -o | -v | -b | -x ]\n\n");
+	printf("cbc -a [-p | -o | -v | -b | -x | -l ]\n\n");
 	printf("Display Options:\n");
 	printf("One option from at least one group must be provided\n");
 	printf("You can also present one option from both groups\n");
-	printf("cbc -d [-p | -o | -b | -x ] [-n | -i | -u ] [<server_specifier>]\n\n");
+	printf("cbc -d [-p | -o | -b | -x | -l ] [-n | -i | -u ] ");
+	printf("[<server_specifier>]\n\n");
 	printf("Create Options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
