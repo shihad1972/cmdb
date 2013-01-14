@@ -24,7 +24,8 @@ enum {			/* regex search codes */
 	FS_REGEX,
 	MAKE_REGEX,
 	DEV_REGEX,
-	CAPACITY_REGEX
+	CAPACITY_REGEX,
+	OS_VER_REGEX
 };
 
 int

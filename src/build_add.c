@@ -400,3 +400,483 @@ void show_all_partitions(pre_disk_part_t *head)
 		node = node->nextpart;
 	} while (node);
 }
+
+int create_build_config(cbc_config_t *cbc, cbc_comm_line_t *cml, cbc_build_t *cbt)
+{
+/*	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query; */
+	int retval;
+	
+	retval = 0;
+	if ((strncmp(cml->os, "NULL", CONF_S) == 0))
+		if ((retval = get_os_from_user(cbc, cml)) != 0)
+			return retval;
+	if ((strncmp(cml->os_version, "NULL", MAC_S) == 0))
+		if ((retval = get_os_version_from_user(cbc, cml)) != 0)
+			return retval;
+	if ((strncmp(cml->arch, "NULL", MAC_S) == 0))
+		if ((retval = get_os_arch_from_user(cbc, cml)) != 0)
+			return retval;
+	if ((retval = get_build_os_id(cbc, cml)) != 0)
+		return retval;
+	if ((retval = get_server_name(cml, cbc)) != 0)
+		return retval;
+	if ((strncmp(cml->build_domain, "NULL", RBUFF_S) == 0))
+		if ((retval = get_build_domain_from_user(cbc, cml)) != 0)
+			return retval;
+	if ((strncmp(cml->varient, "NULL", CONF_S) == 0))
+		if ((retval = get_build_varient_from_user(cbc, cml)) != 0)
+			return retval;
+	if (cml->locale == 0)
+		if ((retval = get_locale_from_user(cbc, cml)) != 0)
+			return retval;
+	if ((strncmp(cml->partition, "NULL", CONF_S) == 0))
+		if ((retval = get_disk_scheme_from_user(cbc, cml)) != 0)
+			return retval;
+	/* copy_build_values(cml, cbt);
+	insert_build_into_database(cbt); */
+	print_cbc_command_line_values(cml);
+
+	return retval;
+}
+
+int get_os_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_os_from_user");
+	if (!(input = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_os_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT DISTINCT alias FROM build_os");
+	printf("Please choose the OS you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(OS_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res)))
+		printf("%s\n", cbc_row[0]);
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, CONF_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the OS from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	if (retval > 0)
+		retval = 0;
+	snprintf(cml->os, CONF_S, "%s", input);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_os_version_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_os_version_from_user");
+	if (!(input = calloc(MAC_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_os_version_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT DISTINCT os_version FROM build_os WHERE alias = '%s' ORDER BY \
+os_version", cml->os);
+	printf("Please choose the OS version you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(OS_VERSION_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res)))
+		printf("%s\n", cbc_row[0]);
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, MAC_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, OS_VER_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the OS version from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	if (retval > 0)
+		retval = 0;
+	snprintf(cml->os_version, MAC_S, "%s", input);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_os_arch_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_os_arch_from_user");
+	if (!(input = calloc(MAC_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_os_arch_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT DISTINCT arch FROM build_os WHERE alias = '%s' AND os_version = '%s' \
+ORDER BY arch", cml->os, cml->os_version);
+	printf("Please choose the OS arch you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(WRONG_OS_ARCH, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res)))
+		printf("%s\n", cbc_row[0]);
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, MAC_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the OS arch from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	if (retval > 0)
+		retval = 0;
+	snprintf(cml->arch, MAC_S, "%s", input);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_build_os_id(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_os_arch_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT os_id FROM build_os WHERE alias = '%s' AND os_version = '%s' AND \
+arch = '%s'", cml->os, cml->os_version, cml->arch);
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)) {
+		retval = OS_DOES_NOT_EXIST;
+	} else if (cbc_rows > 1) {
+		retval = MULTIPLE_OS;
+	} else {
+		cbc_row = mysql_fetch_row(cbc_res);
+		cml->os_id = strtoul(cbc_row[0], NULL, 10);
+	}
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	
+	return retval;
+}
+
+int get_build_domain_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	char sip_address[16], eip_address[16];
+	const char *cbc_query;
+	int retval;
+	unsigned long int start, end;
+	uint32_t sip_addr, eip_addr;
+	size_t len;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_build_doman_from_user");
+	if (!(input = calloc(MAC_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_build_doman_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT domain, start_ip, end_ip FROM build_domain");
+	printf("Please choose the build domain you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(BUILD_DOMAIN_NOT_FOUND, query);
+	}
+	printf("Domain\t\t\tStart IP\tEnd IP\n");
+	while ((cbc_row = mysql_fetch_row(cbc_res))) {
+		len = strlen(cbc_row[0]);
+		start = strtoul(cbc_row[1], NULL, 10);
+		end = strtoul(cbc_row[2], NULL, 10);
+		sip_addr = htonl((unsigned int)start);
+		eip_addr = htonl((unsigned int)end);
+		inet_ntop(AF_INET, &sip_addr, sip_address, 16);
+		inet_ntop(AF_INET, &eip_addr, eip_address, 16);
+		if ((len / 8) > 1)
+			printf("%s\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+		else if ((len / 8) > 0)
+			printf("%s\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+		else 
+			printf("%s\t\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
+	}
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, MAC_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, DOMAIN_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the OS arch from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	if (retval > 0)
+		retval = 0;
+	snprintf(cml->build_domain, MAC_S, "%s", input);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_build_varient_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_build_varient_from_user");
+	if (!(input = calloc(MAC_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_build_varient_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT valias FROM varient");
+	printf("Please choose the varient you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(VARIENT_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res)))
+		printf("%s\n", cbc_row[0]);
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, MAC_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the varient from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	if (retval > 0)
+		retval = 0;
+	snprintf(cml->varient, MAC_S, "%s", input);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_locale_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_locale_from_user");
+	if (!(input = calloc(MAC_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_locale_from_user");
+	snprintf(query, RBUFF_S,
+"SELECT locale_id, locale, country, language, keymap FROM locale WHERE \
+os_id = %lu", cml->os_id);
+	printf("Please choose the locale you wish to use.\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(NO_LOCALE_FOR_OS, query);
+	} else if (cbc_rows == 1) {
+		cbc_row = mysql_fetch_row(cbc_res);
+		printf("Only 1 locale for OS %s, ver %s, arch %s\n",
+		 cml->os, cml->os_version, cml->arch);
+		cml->locale = strtoul(cbc_row[0], NULL, 10);
+	} else {
+		printf("Locale Selection; select ID\n");
+		printf("ID\tLocale\t\tCountry\tLanguage\tKeymap\n");
+		while ((cbc_row = mysql_fetch_row(cbc_res)))
+			printf("%s\t%s\t%s\t%s\t%s\n",
+		  cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4]);
+		mysql_free_result(cbc_res);
+		printf("\n");
+		fgets(input, MAC_S, stdin);
+		chomp(input);
+		while ((retval = validate_user_input(input, ID_REGEX) < 0)) {
+			printf("User input not valid!\n");
+			printf("Please input the OS arch from the above list:\n");
+			fgets(input, CONF_S, stdin);
+			chomp(input);
+		}
+		if (retval > 0)
+			retval = 0;
+		cml->locale = strtoul(input, NULL, 10);
+	}
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(query);
+	free(input);
+	
+	return retval;
+}
+
+int get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
+{
+	char *scheme_name;
+	int retval;
+	
+	retval = 0;
+	if (!(scheme_name = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "scheme_name in get_disk_scheme_from_user");
+	printf("Partition Schemes\n");
+	display_partition_schemes(config);
+	printf("Input the name of the scheme you wish to use\n");
+	fgets(scheme_name, CONF_S, stdin);
+	chomp(scheme_name);
+	while ((retval = validate_user_input(scheme_name, NAME_REGEX) < 0)) {
+		printf("Scheme name not valid!\n");
+		printf("Please input one of the scheme names show above\n");
+		fgets(scheme_name, CONF_S, stdin);
+		chomp(scheme_name);
+	}
+	snprintf(cml->partition, CONF_S, "%s", scheme_name);
+	free(scheme_name);
+	return retval;
+}

@@ -14,10 +14,13 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 	char os_version[MAC_S];
 	char build_domain[RBUFF_S];
 	char action_type[MAC_S];
+	char arch[MAC_S];
 	short int action;
 	short int usedb;
 	short int server;
 	unsigned long int server_id;
+	unsigned long int os_id;
+	unsigned long int locale;
 } cbc_comm_line_t;
 
 typedef struct cbc_config_t {		/* Hold CMDB configuration values */
@@ -62,10 +65,12 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char diskdev[MAC_S];
 	char mirror[CONF_S];
 	char ntpserver[CONF_S];
+	char part_scheme_name[CONF_S];
 	int config_ntp;
 	int use_lvm;
 	unsigned long int server_id;
 	unsigned long int bd_id;
+	unsigned long int def_scheme_id;
 } cbc_build_t;
 
 typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
@@ -128,7 +133,7 @@ print_cbc_command_line_values(cbc_comm_line_t *command_line);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
 
-void
+int
 get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 
 int
@@ -163,5 +168,32 @@ display_build_varients(cbc_config_t *config);
 
 void
 display_build_locales(cbc_config_t *config);
+
+int
+create_build_config(cbc_config_t *cbc, cbc_comm_line_t *cml, cbc_build_t *cbt);
+
+int
+get_os_from_user(cbc_config_t *cbc, cbc_comm_line_t *cml);
+
+int
+get_os_version_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_os_arch_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_build_os_id(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_build_domain_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_build_varient_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_locale_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
 
 #endif

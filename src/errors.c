@@ -167,6 +167,18 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No build domains found\n");
 			exit(BUILD_DOMAIN_NOT_FOUND);
 			break;
+		case CREATE_BUILD_FAILED:
+			fprintf(stderr, "Create build config failed with error %s\n", errstr);
+			exit(CREATE_BUILD_FAILED);
+			break;
+		case ID_INVALID:
+			fprintf(stderr, "ID Invalid\n");
+			exit(ID_INVALID);
+			break;
+		case NAME_INVALID:
+			fprintf(stderr, "Name %s invalid\n", errstr);
+			exit(NAME_INVALID);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
@@ -253,7 +265,7 @@ void display_cbc_usage(void)
 	printf("-a: add build options\n-c: create build in database\n\n");
 	printf("Add, display and create options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n");
-	printf("-l: locale\n-x: varient\n\n");
+	printf("-l: locale\n-x: varient\n-r: arch\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 	printf("\nWrite options:\n");
@@ -270,7 +282,8 @@ void display_cbc_usage(void)
 	printf("Create Options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
-	printf("<varient> -l<locale_id> [-n | -i | -u ] <server_specifier>\n\n");
+	printf("<varient> -l<locale_id> -r<arch> [-n | -i | -u ] ");
+	printf("<server_specifier>\n\n");
 }
 
 void display_dnsa_usage(void)
@@ -285,6 +298,25 @@ void display_dnsa_usage(void)
 	printf("-n: zone-name\n\n");
 	printf("Host options for use with adding a host record:\n");
 	printf("-i: IP Address\n-t: Record type (A, MX etc)\n-h: host\n\n");
+}
+
+void get_error_string(int error, char *errstr)
+{
+	switch (error) {
+		case SERVER_NOT_FOUND:
+			snprintf(errstr, MAC_S, "Server not found");
+			break;
+		case SERVER_UUID_NOT_FOUND:
+			snprintf(errstr, MAC_S, "Server not found");
+			break;
+		case SERVER_ID_NOT_FOUND:
+			snprintf(errstr, MAC_S, "Server not found");
+			break;
+		case NO_NAME_UUID_ID:
+			snprintf(errstr, MAC_S,
+			 "No server name / id / uuid specified");
+			break;
+	}
 }
 
 void chomp(char *input)

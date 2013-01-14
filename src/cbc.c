@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	cbc_config_t *cmc;
 	cbc_comm_line_t *cml;
 	cbc_build_t *cbt;
-	char *cbc_config;
+	char *cbc_config, sretval[MAC_S];
 	int retval;
 	
 	retval = 0;
@@ -56,7 +56,12 @@ int main(int argc, char *argv[])
 /*	print_cbc_command_line_values(cml); */
 	switch (cml->action) {
 		case WRITE_CONFIG:
-			get_server_name(cml, cmc);
+			if ((retval = get_server_name(cml, cmc) != 0)) {
+				free(cmc);
+				free(cml);
+				free(cbt);
+				report_error(retval, "NULL");
+			}
 			retval = get_build_info(cmc, cbt, cml->server_id);
 			write_tftp_config(cmc, cbt);
 			write_dhcp_config(cmc, cbt);
@@ -67,7 +72,7 @@ int main(int argc, char *argv[])
 			 (strncmp(cml->action_type, "NULL", MAC_S) == 0)) {
 		/*	print_cbc_config(cmc); 
 			print_cbc_command_line_values(cml); */
-				get_server_name(cml, cmc);
+				retval = get_server_name(cml, cmc);
 				retval = get_build_info(cmc, cbt, cml->server_id);
 				print_cbc_build_values(cbt);
 			} else if (cml->server == 0) {
@@ -105,7 +110,16 @@ int main(int argc, char *argv[])
 				 cml->action_type);
 			break;
 		case CREATE_CONFIG:
-			printf("Creating the config not yet implemented\n");
+			retval = create_build_config(cmc, cml, cbt);
+			if (retval == 0) {
+				printf("Config created in database\n");
+			} else {
+				get_error_string(retval, sretval);
+				free(cmc);
+				free(cml);
+				free(cbt);
+				report_error(CREATE_BUILD_FAILED, sretval);
+			}
 			break;
 		default:
 			printf("Case %d not implemented yet\n", cml->action);

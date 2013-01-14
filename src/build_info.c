@@ -64,7 +64,7 @@ init_app_config(pre_app_config_t *configuration);
 void
 get_app_config(cbc_config_t *cmc, cbc_build_t *cbt, pre_app_config_t *configuration);
 
-void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
+int get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 {
 	MYSQL cbc;
 	MYSQL_RES *cbc_res;
@@ -72,9 +72,11 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 	my_ulonglong cbc_rows;
 	char *query, server_id[40];
 	const char *cbc_query;
+	int retval;
 	
 	if (!(query = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_server_name");
+	retval = 0;
 	
 	if (info->server_id != 0)
 		sprintf(query, "SELECT server_id, name, uuid FROM server WHERE server_id = %ld", info->server_id);
@@ -98,20 +100,26 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
-		if (strncmp(info->name, "NULL", CONF_S))
-			report_error(SERVER_NOT_FOUND, info->name);
-		else if (strncmp(info->uuid, "NULL", CONF_S))
-			report_error(SERVER_UUID_NOT_FOUND, info->uuid);
-		else if (info->server_id > 0)
-			report_error(SERVER_ID_NOT_FOUND, server_id);
-		else
-			report_error(NO_NAME_UUID_ID, server_id);
+		if (strncmp(info->name, "NULL", CONF_S)) {
+			retval = SERVER_NOT_FOUND;
+			return retval;
+		} else if (strncmp(info->uuid, "NULL", CONF_S)) {
+			retval = SERVER_UUID_NOT_FOUND;
+			return retval;
+		} else if (info->server_id > 0) {
+			retval = SERVER_ID_NOT_FOUND;
+			return retval;
+		} else {
+			retval = NO_NAME_UUID_ID;
+			return retval;
+		}
 	} else if (cbc_rows > 1) {
 		mysql_free_result(cbc_res);
 		mysql_close(&cbc);
 		mysql_library_end();
 		free(query);
-		report_error(MULTIPLE_SERVERS, info->name);
+		retval = MULTIPLE_SERVERS;
+		return retval;
 	}
 	cbc_row = mysql_fetch_row(cbc_res);
 	info->server_id = strtoul(cbc_row[0], NULL, 10);
@@ -122,6 +130,7 @@ void get_server_name(cbc_comm_line_t *info, cbc_config_t *config)
 	mysql_close(&cbc);
 	mysql_library_end();
 	free(query);
+	return retval;
 }
 
 int get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long int server_id)

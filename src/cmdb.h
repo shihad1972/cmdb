@@ -59,12 +59,19 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	SERVER_PACKAGES_NOT_FOUND = 113,
 	OS_NOT_FOUND = 114,
 	OS_VERSION_NOT_FOUND = 115,
-	BUILD_DOMAIN_NOT_FOUND = 116,
-	VARIENT_NOT_FOUND = 117,
-	NO_VM_HOSTS = 118,
-	NO_CUSTOMERS = 119,
-	NO_HARDWARE_TYPES = 120,
-	SERVER_EXISTS = 121
+	OS_DOES_NOT_EXIST = 116,
+	MULTIPLE_OS = 117,
+	BUILD_DOMAIN_NOT_FOUND = 118,
+	VARIENT_NOT_FOUND = 119,
+	NO_VM_HOSTS = 120,
+	NO_CUSTOMERS = 121,
+	NO_HARDWARE_TYPES = 122,
+	SERVER_EXISTS = 123,
+	CREATE_BUILD_FAILED = 124,
+	NO_LOCALE_FOR_OS = 125,
+	NO_DISK_SCHEMES = 126,
+	ID_INVALID = 127,
+	NAME_INVALID = 128
 };
 
 enum {			/* cmdb return codes */
@@ -154,6 +161,14 @@ enum {			/* cbc values for special partitions */
 	SWAP = 3
 };
 
+enum {			/* cbc create build error codes */
+	NO_OS = 1,
+	NO_OS_VERSION = 2,
+	NO_ARCH = 3,
+	WRONG_OS_VERSION = 4,
+	WRONG_OS_ARCH = 5
+};
+
 enum {
 	FALSE = 0,
 	TRUE = 1
@@ -165,6 +180,8 @@ extern int optind, opterr, optopt;
 /* Error reporting function */
 void 
 report_error(int error, const char *errstr);
+void
+get_error_string(int error, char *errstr);
 /* cmdb comand line error function */
 void
 display_cmdb_command_line_error(int retval, char *program);

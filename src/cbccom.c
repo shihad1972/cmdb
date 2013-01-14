@@ -196,7 +196,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::wdac")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::r:wdac")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -232,7 +232,11 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'l':
 				snprintf(cb->action_type, MAC_S, "locale");
-				snprintf(cb->varient, CONF_S, "%s", optarg);
+				if (optarg)
+					cb->locale = strtoul(optarg, NULL, 10);
+				break;
+			case 'r':
+				snprintf(cb->arch, MAC_S, "%s", optarg);
 				break;
 			case 'w':
 				cb->action = WRITE_CONFIG;
@@ -265,6 +269,8 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
 	 (cb->server == NONE))
 		retval = NO_NAME_OR_ID;
+	if (cb->action == CREATE_CONFIG)
+		snprintf(cb->action_type, MAC_S, "create config");
 	return retval;
 	
 }
@@ -372,6 +378,8 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	cbt->server_id = NONE;
 	cbt->server = NONE;
 	cbt->usedb = 1;
+	cbt->locale = 0;
+	cbt->os_id = 0;
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");
@@ -380,7 +388,8 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	snprintf(cbt->partition, CONF_S, "NULL");
 	snprintf(cbt->varient, CONF_S, "NULL");
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");	
+	snprintf(cbt->arch, MAC_S, "NULL");
+	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
 }
 
 void init_cbc_build_values(cbc_build_t *build_config)
@@ -408,9 +417,11 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	snprintf(build_config->mirror, COMM_S, "NULL");
 	snprintf(build_config->ntpserver, COMM_S, "NULL");
 	snprintf(build_config->diskdev, COMM_S, "NULL");
+	snprintf(build_config->part_scheme_name, CONF_S, "NULL");
 	build_config->config_ntp = 0;
 	build_config->use_lvm = 0;
 	build_config->server_id = 0;
+	build_config->def_scheme_id = 0;
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
@@ -424,7 +435,8 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	else if (build_config->use_lvm == 1)
 		fprintf(stderr, "USE LVM: Yes\n");
 	else
-		fprintf(stderr, "USE LVM: Unknown!!\n");
+		fprintf(stderr, "USE LVM: Unknown!!: %d\n", build_config->use_lvm);
+	fprintf(stderr, "PART SCHEME NAME: %s\n", build_config->part_scheme_name);
 	fprintf(stderr, "IP: %s\n", build_config->ip_address);
 	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
 	fprintf(stderr, "GW: %s\n", build_config->gateway);
@@ -480,13 +492,20 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 			fprintf(stderr, "Usedb: Unknown!!\n");
 			break;
 	}
-	fprintf(stderr, "Server ID: %ld\n", command_line->server_id);
 	fprintf(stderr, "Config: %s\n", command_line->config);
 	fprintf(stderr, "Name: %s\n", command_line->name);
 	fprintf(stderr, "UUID: %s\n", command_line->uuid);
+	fprintf(stderr, "Server ID: %ld\n", command_line->server_id);
+	fprintf(stderr, "OS ID: %lu\n", command_line->os_id);
 	fprintf(stderr, "OS: %s\n", command_line->os);
+	fprintf(stderr, "OS Version: %s\n", command_line->os_version);
+	fprintf(stderr, "Architecture: %s\n", command_line->arch);
+	fprintf(stderr, "Locale ID: %lu\n", command_line->locale);
 	fprintf(stderr, "Build Domain: %s\n", command_line->build_domain);
 	fprintf(stderr, "Action Type: %s\n", command_line->action_type);
+	fprintf(stderr, "Partition: %s\n", command_line->partition);
+	fprintf(stderr, "Varient: %s\n", command_line->varient);
+	
 	fprintf(stderr, "\n");
 }
 

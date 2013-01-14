@@ -479,8 +479,9 @@ void display_build_locales(cbc_config_t *config)
 		chomp(input);
 	}
 	snprintf(query, RBUFF_S,
-"SELECT locale_id, locale, country, language, keymap FROM locale l, build_os \
-bo WHERE bo.os_id = l.os_id AND bo.alias = '%s'", input);
+"SELECT locale_id, os_version, arch, locale, country, language, keymap FROM \
+locale l, build_os bo WHERE bo.os_id = l.os_id AND bo.alias = '%s' \
+ORDER BY os_version", input);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
 		mysql_close(&cbc);
@@ -493,10 +494,10 @@ bo WHERE bo.os_id = l.os_id AND bo.alias = '%s'", input);
 		printf("Perhaps you may like to add some?\n");
 	} else {
 		printf("Locales for %s\n", input);
-		printf("ID\tLocale\t\tCountry\tLanguage\tKeymap\n");
+		printf("ID\tOS Ver\tArch\tLocale\t\tCountry\tLanguage\tKeymap\n");
 		while ((cbc_row = mysql_fetch_row(cbc_res))) {
-			printf("%s\t%s\t%s\t%s\t\t%s\n",
-cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4]);
+			printf("%s\t%s\t%s\t%s\t%s\t%s\t\t%s\n",
+cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4], cbc_row[5], cbc_row[6]);
 		}
 	}
 	mysql_free_result(cbc_res);
