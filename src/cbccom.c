@@ -196,7 +196,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::wdac")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::wdac")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -228,6 +228,10 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'x':
 				snprintf(cb->action_type, MAC_S, "varient");
+				snprintf(cb->varient, CONF_S, "%s", optarg);
+				break;
+			case 'l':
+				snprintf(cb->action_type, MAC_S, "locale");
 				snprintf(cb->varient, CONF_S, "%s", optarg);
 				break;
 			case 'w':

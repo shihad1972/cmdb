@@ -161,4 +161,7 @@ display_build_domains(cbc_config_t *config);
 void
 display_build_varients(cbc_config_t *config);
 
+void
+display_build_locales(cbc_config_t *config);
+
 #endif

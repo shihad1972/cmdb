@@ -432,3 +432,76 @@ void display_build_varients(cbc_config_t *config)
 	free(query);
 		
 }
+
+void display_build_locales(cbc_config_t *config)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query, *input;
+	const char *cbc_query;
+	int retval;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in display_build_locales");
+	if (!(input = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in display_build_locales");
+	snprintf(query, RBUFF_S,
+"SELECT DISTINCT alias FROM build_os");
+	printf("Please choose the OS you wish to view locales for\n\n");
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		mysql_free_result(cbc_res);
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(OS_NOT_FOUND, query);
+	}
+	while ((cbc_row = mysql_fetch_row(cbc_res)))
+		printf("%s\n", cbc_row[0]);
+	mysql_free_result(cbc_res);
+	printf("\n");
+	fgets(input, CONF_S, stdin);
+	chomp(input);
+	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
+		printf("User input not valid!\n");
+		printf("Please input the OS from the above list:\n");
+		fgets(input, CONF_S, stdin);
+		chomp(input);
+	}
+	snprintf(query, RBUFF_S,
+"SELECT locale_id, locale, country, language, keymap FROM locale l, build_os \
+bo WHERE bo.os_id = l.os_id AND bo.alias = '%s'", input);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		mysql_close(&cbc);
+		mysql_library_end();
+		free(query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
+		printf("OS %s does not have any locales\n", input);
+		printf("Perhaps you may like to add some?\n");
+	} else {
+		printf("Locales for %s\n", input);
+		printf("ID\tLocale\t\tCountry\tLanguage\tKeymap\n");
+		while ((cbc_row = mysql_fetch_row(cbc_res))) {
+			printf("%s\t%s\t%s\t%s\t\t%s\n",
+cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4]);
+		}
+	}
+	mysql_free_result(cbc_res);
+	mysql_close(&cbc);
+	mysql_library_end();
+	free(input);
+	free(query);
+}

@@ -70,6 +70,10 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "Unable to store MySQL result set: %s\n", errstr);
 			exit(MY_STORE_FAIL);
 			break;
+		case MY_INSERT_FAIL:
+			fprintf(stderr, "Unable to insert into MySQL db:\n%s\n", errstr);
+			exit(MY_INSERT_FAIL);
+			break;
 		case FILE_O_FAIL:
 			fprintf(stderr, "Unable to open file %s\n", errstr);
 			exit(FILE_O_FAIL);
@@ -159,6 +163,10 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No Hardware types were found\n");
 			exit(NO_HARDWARE_TYPES);
 			break;
+		case BUILD_DOMAIN_NOT_FOUND:
+			fprintf(stderr, "No build domains found\n");
+			exit(BUILD_DOMAIN_NOT_FOUND);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
@@ -245,7 +253,7 @@ void display_cbc_usage(void)
 	printf("-a: add build options\n-c: create build in database\n\n");
 	printf("Add, display and create options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-b: build domain\n");
-	printf("-x: varient\n\n");
+	printf("-l: locale\n-x: varient\n\n");
 	printf("Name options:\n");
 	printf("-n: name\n-u: uuid for server\n-i: server_id\n");
 	printf("\nWrite options:\n");
@@ -261,7 +269,7 @@ void display_cbc_usage(void)
 	printf("Create Options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
-	printf("<varient> [-n | -i | -u ] <server_specifier>\n\n");
+	printf("<varient> -l<locale_id> [-n | -i | -u ] <server_specifier>\n\n");
 }
 
 void display_dnsa_usage(void)
