@@ -68,7 +68,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	unsigned long int bd_id;
 } cbc_build_t;
 
-typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
+typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
 	char mount_point[HOST_S + 1];
 	char filesystem[RANGE_S + 1];
 	char log_vol[RANGE_S + 1];
@@ -79,14 +79,14 @@ typedef struct pre_disk_part_t {		/* Linked list for disk partitions */
 	struct pre_disk_part_t *nextpart;
 } pre_disk_part_t;
 
-typedef struct partition_schemes_t {
+typedef struct partition_schemes_t {	/* Linked list for partition schemes */
 	unsigned long int id;
 	char name[CONF_S];
 	struct partition_schemes_t *next;
 } partition_schemes_t;
 
-typedef struct pre_app_config_t {
-	char ldap_url[URL_S];
+typedef struct pre_app_config_t {	/* Linked list for preseed extra */
+	char ldap_url[URL_S];		/* application config */
 	char ldap_dn[URL_S];
 	char ldap_bind[URL_S];
 	char log_server[CONF_S];

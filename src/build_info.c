@@ -144,15 +144,16 @@ int get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long 
 	sprintf(query,
 "SELECT arch, bo.alias, os_version, INET_NTOA(ip), mac_addr,\
  INET_NTOA(netmask), INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname,\
- boot_line, valias,ver_alias, build_type, arg, url, country, locale, language,\
- keymap, net_inst_int, mirror, device, lvm, bd.bd_id, config_ntp, ntp_server \
- FROM build_ip bi LEFT JOIN (build_domain bd, build_os bo, build b, \
- build_type bt, server s, \
- boot_line bootl, varient v, locale l, disk_dev dd) ON (bi.bd_id = bd.bd_id \
- AND bt.bt_id = bootl.bt_id AND dd.server_id = s.server_id AND\
- b.ip_id = bi.ip_id AND bo.os_id = b.os_id AND s.server_id = b.server_id AND \
- bootl.boot_id = bo.boot_id AND b.varient_id = v.varient_id AND \
- l.os_id = b.os_id) WHERE s.server_id = %ld", server_id);
+ boot_line, valias,ver_alias, build_type, arg, url, bd.country, locale, \
+ bd.language, bd.keymap, net_inst_int, mirror, device, lvm, bd.bd_id, \
+ config_ntp, ntp_server FROM build_ip bi LEFT JOIN (build_domain bd, \
+ build_os bo, build b, build_type bt, server s, boot_line bootl, varient v, \
+ locale l, disk_dev dd) ON (bi.bd_id = bd.bd_id  AND bt.bt_id = bootl.bt_id \
+ AND dd.server_id = s.server_id AND b.ip_id = bi.ip_id AND bo.os_id = b.os_id \
+ AND s.server_id = b.server_id AND bootl.boot_id = bo.boot_id AND \
+ b.varient_id = v.varient_id AND l.os_id = b.os_id AND l.country = bd.country \
+ AND l.keymap = bd.keymap AND l.language = bd.language) \
+ WHERE s.server_id = %ld", server_id);
 	build_query = query;
 	cbc_mysql_init(config, &build);
 	cmdb_mysql_query(&build, build_query);
