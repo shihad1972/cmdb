@@ -13,4 +13,10 @@
 
 void
 cmdb_mysql_query(MYSQL *cmdb_mysql, const char *query);
+
+void
+cmdb_mysql_clean(MYSQL *cmdb_mysql, char *query);
+
+void
+cmdb_mysql_clean_full(MYSQL_RES *cmdb_res, MYSQL *cmdb_mysql, char *query);
 #endif

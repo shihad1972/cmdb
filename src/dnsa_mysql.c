@@ -39,19 +39,3 @@ void dnsa_mysql_init(dnsa_config_t *dc, MYSQL *cmdb_mysql)
 	
 	free(my_error_code);
 }
-
-void cmdb_mysql_query(MYSQL *mydnsa, const char *query)
-{
-	int error;
-	
-	if (!(my_error_code = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "my_error_code in cmdb_mysql_query");
-	
-	error_string = my_error_code;
-	
-	error = mysql_query(mydnsa, query);
-	if ((error != 0)) {
-		report_error(MY_QUERY_FAIL, mysql_error(mydnsa));
-	}
-	free(my_error_code);
-}

@@ -179,6 +179,18 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "Name %s invalid\n", errstr);
 			exit(NAME_INVALID);
 			break;
+		case NO_LOCALE_FOR_OS:
+			fprintf(stderr, "No locale for OS %s\n", errstr);
+			exit(NO_LOCALE_FOR_OS);
+			break;
+		case VARIENT_NOT_FOUND:
+			fprintf(stderr, "No varient %s found\n", errstr);
+			exit(VARIENT_NOT_FOUND);
+			break;
+		case MULTIPLE_VARIENTS:
+			fprintf(stderr, "Multiple varients found for %s\n", errstr);
+			exit(MULTIPLE_VARIENTS);
+			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);
 			exit(error);
