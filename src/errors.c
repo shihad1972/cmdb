@@ -168,7 +168,7 @@ void report_error(int error, const char *errstr)
 			exit(BUILD_DOMAIN_NOT_FOUND);
 			break;
 		case CREATE_BUILD_FAILED:
-			fprintf(stderr, "Create build config failed with error %s\n", errstr);
+			fprintf(stderr, "Create build config failed with error: %s\n", errstr);
 			exit(CREATE_BUILD_FAILED);
 			break;
 		case ID_INVALID:
@@ -327,6 +327,14 @@ void get_error_string(int error, char *errstr)
 		case NO_NAME_UUID_ID:
 			snprintf(errstr, MAC_S,
 			 "No server name / id / uuid specified");
+			break;
+		case BUILD_DOMAIN_NOT_FOUND:
+			snprintf(errstr, MAC_S,
+			 "Build domain not found");
+			 break;
+		default:
+			snprintf(errstr, MAC_S,
+			 "Unknown error %d\n", error);
 			break;
 	}
 }

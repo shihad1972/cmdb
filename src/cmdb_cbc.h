@@ -40,30 +40,46 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cbc_config_t;
 
+typedef struct cbc_domain_ip_t {
+	unsigned long int ip;
+	char hostname[CONF_S];
+	struct cbc_domain_ip_t *next;
+} cbc_domain_ip_t;
+
+typedef struct cbc_build_domain_t {		/* Hold net info for build domain */
+	unsigned long int start_ip;
+	unsigned long int end_ip;
+	unsigned long int netmask;
+	unsigned long int gateway;
+	unsigned long int ns;
+	cbc_domain_ip_t *iplist;
+} cbc_build_domain_t;
+
 typedef struct cbc_build_t {		/* Hold build configuration values */
 	char ip_address[RANGE_S];
+	char gateway[RANGE_S];
+	char nameserver[RANGE_S];
+	char netmask[RANGE_S];
 	char mac_address[MAC_S];
+	char netdev[RANGE_S];
 	char hostname[CONF_S];
 	char domain[RBUFF_S];
 	char alias[CONF_S];
 	char ver_alias[CONF_S];
 	char version[CONF_S];
-	char varient[CONF_S];
+	char base_ver[MAC_S];
 	char arch[CONF_S];
+	char varient[CONF_S];
 	char boot[RBUFF_S];
-	char gateway[RANGE_S];
-	char nameserver[RANGE_S];
-	char netmask[RANGE_S];
 	char build_type[RANGE_S];
 	char arg[RANGE_S];
 	char url[RBUFF_S];
+	char mirror[CONF_S];
 	char country[RANGE_S];
 	char locale[RANGE_S];
 	char language[RANGE_S];
 	char keymap[RANGE_S];
-	char netdev[RANGE_S];
 	char diskdev[MAC_S];
-	char mirror[CONF_S];
 	char ntpserver[CONF_S];
 	char part_scheme_name[CONF_S];
 	int config_ntp;
@@ -71,6 +87,12 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	unsigned long int server_id;
 	unsigned long int bd_id;
 	unsigned long int def_scheme_id;
+	unsigned long int os_id;
+	unsigned long int varient_id;
+	unsigned long int boot_id;
+	unsigned long int locale_id;
+	unsigned long int ip_id;
+	cbc_build_domain_t *build_dom;
 } cbc_build_t;
 
 typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
@@ -87,6 +109,7 @@ typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
 typedef struct partition_schemes_t {	/* Linked list for partition schemes */
 	unsigned long int id;
 	char name[CONF_S];
+	unsigned long int lvm;
 	struct partition_schemes_t *next;
 } partition_schemes_t;
 
@@ -126,6 +149,9 @@ print_cbc_config(cbc_config_t *cbc);
 
 void
 print_cbc_build_values(cbc_build_t *build_config);
+
+void
+print_cbc_build_ids(cbc_build_t *build_config);
 
 void
 print_cbc_command_line_values(cbc_comm_line_t *command_line);
@@ -195,5 +221,47 @@ get_locale_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
 
 int
 get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+
+int
+copy_build_values(cbc_comm_line_t *cml, cbc_build_t *cbt);
+
+void
+copy_initial_build_values(cbc_comm_line_t *cml, cbc_build_t *cbt);
+
+int
+get_build_hardware(cbc_config_t *config, cbc_build_t *cbt);
+
+unsigned long int
+get_hard_type_id(cbc_config_t *config, char *htype, char *hclass);
+
+int
+get_build_hardware_device(cbc_config_t *config, unsigned long int id, unsigned long int sid, char *device, char *detail);
+
+int
+get_build_varient_id(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+get_build_partition_id(cbc_config_t *config, cbc_build_t *cbt);
+
+void
+get_base_os_version(cbc_build_t *cbt);
+
+int
+get_build_boot_line_id(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+get_build_domain_id(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+insert_build_into_database(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+get_build_domain_info_on_id(cbc_config_t *config, cbc_build_domain_t *cbt, unsigned long int id);
+
+int
+get_build_domain_ip_list(cbc_config_t *config, cbc_build_domain_t *bd);
+
+void
+convert_build_ip_address(cbc_build_t *cbt);
 
 #endif

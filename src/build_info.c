@@ -746,45 +746,6 @@ d-i partman-auto/expert_recipe string                         \\\n\
 	return 0;
 }
 
-pre_disk_part_t *part_node_create(void)
-{
-	pre_disk_part_t *dptr;
-	
-	if (!(dptr = malloc(sizeof(pre_disk_part_t))))
-		report_error(MALLOC_FAIL, "disk_part in part_node_create");
-	dptr->nextpart = 0;
-	dptr->min = dptr->max = dptr->pri = 0;
-	sprintf(dptr->mount_point, "NULL");
-	sprintf(dptr->filesystem, "NULL");
-	return dptr;
-}
-
-pre_disk_part_t *part_node_add(pre_disk_part_t *head_node, MYSQL_ROW part_row)
-{
-	pre_disk_part_t *new_node, *node;
-/*	new_node = part_node_create(); */
-	if (!(new_node = malloc(sizeof(pre_disk_part_t))))
-		report_error(MALLOC_FAIL, "disk_part in part_node_create");
-	
-	new_node->min = strtoul(part_row[0], NULL, 10);
-	new_node->max = strtoul(part_row[1], NULL, 10);
-	new_node->pri = strtoul(part_row[2], NULL, 10);
-	snprintf(new_node->mount_point, HOST_S, "%s", part_row[3]);
-	snprintf(new_node->filesystem, RANGE_S, "%s", part_row[4]);
-	new_node->part_id = strtoul(part_row[5], NULL, 10);
-	snprintf(new_node->log_vol, RANGE_S, "%s", part_row[6]);
-	new_node->nextpart = NULL;
-	if (!head_node) {
-		head_node = new_node;
-	} else {
-		for (node = head_node; node->nextpart; node=node->nextpart) {
-			;
-		}
-		node->nextpart = new_node;
-	}
-	return head_node;
-}
-
 int check_for_special_partition(pre_disk_part_t *part)
 {
 	int retval;

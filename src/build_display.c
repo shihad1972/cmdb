@@ -58,35 +58,32 @@ get_partition_schemes(cbc_config_t *config, partition_schemes_t *part)
 	cbc_query = query;
 	
 	snprintf(query, RBUFF_S,
-"SELECT def_scheme_id, scheme_name FROM partition_schemes");
+"SELECT def_scheme_id, scheme_name, lvm FROM partition_schemes");
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		report_error(NO_PARTITION_SCHEMES, query);
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res))) {
 		add_display_partition_scheme(part, cbc_row);
 	}
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 	
 	saved = part;
 	do {
-		printf("Partition scheme id %lu: %s\n", saved->id, saved->name);
+		printf("Partition scheme id %lu: %s ", saved->id, saved->name);
+		if (saved->lvm)
+			printf("LVM\n");
+		else
+			printf("No LVM\n");
 		get_schemes_partitions(saved->id, config);
 		saved = saved->next;
 	} while (saved);
-	free(query);
 	
 	node = saved = part;
 	while (node) {
@@ -114,6 +111,7 @@ void add_display_partition_scheme(partition_schemes_t *head, MYSQL_ROW cbc_row)
 	
 	new->id = strtoul(cbc_row[0], NULL, 10);
 	snprintf(new->name, CONF_S, "%s", cbc_row[1]);
+	new->lvm = strtoul(cbc_row[2], NULL, 10);
 		
 }
 
@@ -127,6 +125,7 @@ partition_schemes_t *init_part_scheme_struct(void)
 	snprintf(node->name, CONF_S, "NULL");
 	node->id = 0;
 	node->next = '\0';
+	node->lvm = 0;
 	return node;
 }
 
@@ -155,24 +154,17 @@ logical_volume FROM default_partitions WHERE def_scheme_id = %lu ORDER BY mount_
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		report_error(SERVER_PART_NOT_FOUND, sserver_id);
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res))){
 		head_part = part_node_add(head_part, cbc_row);
 	}
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 	node = head_part;
 	while(node) {
 		printf("\t%s\t%s\t%lu\t%lu\t%lu\t",
@@ -192,7 +184,6 @@ logical_volume FROM default_partitions WHERE def_scheme_id = %lu ORDER BY mount_
 		free(node);
 		node = saved;
 	}
-	free(query);
 }
 
 void display_build_operating_systems(cbc_config_t *config)
@@ -209,22 +200,17 @@ void display_build_operating_systems(cbc_config_t *config)
 		report_error(MALLOC_FAIL, "query in display_build_operating_systems");
 	cbc_query = query;
 	snprintf(query, RBUFF_S,
-"SELECT DISTINCT os, build_type FROM build_os bo LEFT JOIN build_type bt \
+"SELECT DISTINCT bo.alias, build_type FROM build_os bo LEFT JOIN build_type bt \
 on bo.bt_id = bt.bt_id ORDER BY os");
 	
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		report_error(OS_NOT_FOUND, query);
 	}
 	printf("Operating System\tBuild Type\n");
@@ -238,10 +224,7 @@ on bo.bt_id = bt.bt_id ORDER BY os");
 			printf("%s\t\t\t%s\n", cbc_row[0], cbc_row[1]);
 		}
 	}
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
-	free(query);
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 }
 
 void display_build_os_versions(cbc_config_t *config)
@@ -269,18 +252,13 @@ void display_build_os_versions(cbc_config_t *config)
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		free(os);
 		free(version);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		free(os);
 		free(version);
 		report_error(OS_VERSION_NOT_FOUND, query);
@@ -324,10 +302,7 @@ void display_build_os_versions(cbc_config_t *config)
 		i++;
 	}
 	printf("\n");
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
-	free(query);
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 	free(os);
 	free(version);
 }
@@ -354,16 +329,11 @@ void display_build_domains(cbc_config_t *config)
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		report_error(BUILD_DOMAIN_NOT_FOUND, query);
 	}
 	printf("Build domains:\nDomain\t\t\tStart IP\tEnd IP\n");
@@ -382,10 +352,7 @@ void display_build_domains(cbc_config_t *config)
 		else
 			printf("%s\t\t\t%s\t%s\n", cbc_row[0], sip_address, eip_address);
 	}
-	free(query);
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 }
 
 void display_build_varients(cbc_config_t *config)
@@ -406,16 +373,11 @@ void display_build_varients(cbc_config_t *config)
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		report_error(VARIENT_NOT_FOUND, query);
 	}
 	printf("Build varients:\nAlias\t\tFull Name\n");
@@ -426,11 +388,7 @@ void display_build_varients(cbc_config_t *config)
 		else
 			printf("%s\t\t%s\n", cbc_row[1], cbc_row[0]);
 	}
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
-	free(query);
-		
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 }
 
 void display_build_locales(cbc_config_t *config)
@@ -454,16 +412,13 @@ void display_build_locales(cbc_config_t *config)
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
+		free(input);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_free_result(cbc_res);
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
+		free(input);
 		report_error(OS_NOT_FOUND, query);
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res)))
@@ -484,9 +439,8 @@ locale l, build_os bo WHERE bo.os_id = l.os_id AND bo.alias = '%s' \
 ORDER BY os_version", input);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&cbc, query);
+		free(input);
 		report_error(MY_STORE_FAIL, mysql_error(&cbc));
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
@@ -500,9 +454,6 @@ ORDER BY os_version", input);
 cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4], cbc_row[5], cbc_row[6]);
 		}
 	}
-	mysql_free_result(cbc_res);
-	mysql_close(&cbc);
-	mysql_library_end();
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
 	free(input);
-	free(query);
 }

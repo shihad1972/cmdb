@@ -399,6 +399,8 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	snprintf(build_config->hostname, COMM_S, "NULL");
 	snprintf(build_config->domain, COMM_S, "NULL");
 	snprintf(build_config->alias, COMM_S, "NULL");
+	snprintf(build_config->version, COMM_S, "NULL");
+	snprintf(build_config->base_ver, COMM_S, "NULL");
 	snprintf(build_config->varient, COMM_S, "NULL");
 	snprintf(build_config->arch, COMM_S, "NULL");
 	snprintf(build_config->boot, COMM_S, "NULL");
@@ -421,14 +423,30 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	build_config->config_ntp = 0;
 	build_config->use_lvm = 0;
 	build_config->server_id = 0;
+	build_config->bd_id = 0;
 	build_config->def_scheme_id = 0;
+	build_config->os_id = 0;
+	build_config->varient_id = 0;
+	build_config->boot_id = 0;
+	build_config->locale_id = 0;
+	build_config->ip_id = 0;
+	build_config->build_dom = '\0';
+}
+
+void print_cbc_build_ids(cbc_build_t *build)
+{
+	fprintf(stderr, "Server: %lu\n", build->server_id);
+	fprintf(stderr, "Build domain: %lu\n", build->bd_id);
+	fprintf(stderr, "OS: %lu\n", build->os_id);
+	fprintf(stderr, "Varient: %lu\n", build->varient_id);
+	fprintf(stderr, "Boot: %lu\n", build->boot_id);
+	fprintf(stderr, "Locale: %lu\n", build->locale_id);
+	fprintf(stderr, "Partition Scheme: %lu\n", build->def_scheme_id);
 }
 
 void print_cbc_build_values(cbc_build_t *build_config)
 {
 	fprintf(stderr, "########\nBuild Values\n");
-	fprintf(stderr, "MAC: %s\n", build_config->mac_address);
-	fprintf(stderr, "NETWORK DEVICE: %s\n", build_config->netdev);
 	fprintf(stderr, "DISK DEVICE: %s\n", build_config->diskdev);
 	if (!build_config->use_lvm)
 		fprintf(stderr, "USE LVM: No\n");
@@ -437,6 +455,8 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	else
 		fprintf(stderr, "USE LVM: Unknown!!: %d\n", build_config->use_lvm);
 	fprintf(stderr, "PART SCHEME NAME: %s\n", build_config->part_scheme_name);
+	fprintf(stderr, "MAC: %s\n", build_config->mac_address);
+	fprintf(stderr, "NETWORK DEVICE: %s\n", build_config->netdev);
 	fprintf(stderr, "IP: %s\n", build_config->ip_address);
 	fprintf(stderr, "NETMASK: %s\n", build_config->netmask);
 	fprintf(stderr, "GW: %s\n", build_config->gateway);
@@ -447,9 +467,11 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	if (build_config->config_ntp > 0)
 		fprintf(stderr, "NTP SERVER: %s\n", build_config->ntpserver);
 	fprintf(stderr, "OS: %s\n", build_config->alias);
+	fprintf(stderr, "OS VERSION: %s\n", build_config->version);
 	fprintf(stderr, "OS ALIAS: %s\n", build_config->ver_alias);
-	fprintf(stderr, "BUILD VARIENT: %s\n", build_config->varient);
+	fprintf(stderr, "OS ID: %lu\n", build_config->os_id);
 	fprintf(stderr, "ARCH: %s\n", build_config->arch);
+	fprintf(stderr, "BUILD VARIENT: %s\n", build_config->varient);
 	fprintf(stderr, "BOOT LINE: %s\n", build_config->boot);
 	fprintf(stderr, "BUILD TYPE: %s\n", build_config->build_type);
 	fprintf(stderr, "ARG: %s\n", build_config->arg);

@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 /*	print_cbc_command_line_values(cml); */
 	switch (cml->action) {
 		case WRITE_CONFIG:
-			if ((retval = get_server_name(cml, cmc) != 0)) {
+			if ((retval = get_server_name(cml, cmc)) != 0) {
 				free(cmc);
 				free(cml);
 				free(cbt);
@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
 				printf("Config created in database\n");
 			} else {
 				get_error_string(retval, sretval);
+				printf("Retval from create_build_config was: %d\n", retval);
 				free(cmc);
 				free(cml);
 				free(cbt);
