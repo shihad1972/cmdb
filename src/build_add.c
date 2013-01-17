@@ -1049,7 +1049,7 @@ int insert_build_into_database(cbc_config_t *config, cbc_build_t *cbt)
 		free(cbt->build_dom);
 		return retval;
 	}
-	if ((retval = get_build_domain_ip_list(config, cbt->build_dom)) != 0) {
+	if ((retval = get_build_ip(config, cbt->build_dom)) != 0) {
 		free(cbt->build_dom);
 		return retval;
 	}
@@ -1101,7 +1101,7 @@ int get_build_domain_info_on_id(cbc_config_t *config, cbc_build_domain_t *cbdt, 
 }
 
 int
-get_build_domain_ip_list(cbc_config_t *config, cbc_build_domain_t *bd)
+get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 {
 	cbc_domain_ip_t *iplist, *saved;
 	MYSQL cbc;
@@ -1189,3 +1189,4 @@ void convert_build_ip_address(cbc_build_t *cbt)
 	inet_ntop(AF_INET, &ip_addr, ip_address, 16);
 	snprintf(cbt->nameserver, RANGE_S, "%s", ip_address);
 }
+

@@ -259,7 +259,7 @@ int
 get_build_domain_info_on_id(cbc_config_t *config, cbc_build_domain_t *cbt, unsigned long int id);
 
 int
-get_build_domain_ip_list(cbc_config_t *config, cbc_build_domain_t *bd);
+get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd);
 
 void
 convert_build_ip_address(cbc_build_t *cbt);
