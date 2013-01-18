@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>	/* required for IP address conversion */
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
@@ -293,6 +294,7 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 
 void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
 {
+	FILE *restart;
 	size_t len;
 	char *dhcp_content;
 	char *dhcp_new_content;
@@ -320,7 +322,39 @@ void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
 	strncat (dhcp_new_content, buff, len);
 	write_config_file(cct->dhcpconf, dhcp_new_content);
 	
+	snprintf(buff, RBUFF_S, "%s/restart", cct->tmpdir); 
 	printf("DHCP file written\n");
+	if (stat(cct->tmpdir, &dhcp_stat) == 0) {
+		if (!(restart = fopen(buff, "w"))) {
+			free(cct);
+			free(cbt);
+			free(dhcp_content);
+			free(dhcp_new_content);
+			report_error(FILE_O_FAIL, buff);
+		} else {
+			fclose(restart);
+		}
+	} else {
+		snprintf(buff, RBUFF_S, "%s", cct->tmpdir);
+		if (mkdir(buff, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0) {
+			free(cct);
+			free(cbt);
+			free(dhcp_content);
+			free(dhcp_new_content);
+			report_error(DIR_C_FAIL, buff);
+		} else {
+			snprintf(buff, RBUFF_S, "%s/restart", cct->tmpdir);
+			if (!(restart = fopen(buff, "w"))) {
+				free(cct);
+				free(cbt);
+				free(dhcp_content);
+				free(dhcp_new_content);
+				report_error(FILE_O_FAIL, buff);
+			} else {
+				fclose(restart);
+			}
+		}
+	}
 	free(dhcp_content);
 	free(dhcp_new_content);
 }
@@ -617,6 +651,7 @@ int write_disk_preconfig(
 	char sserver_id[HOST_S];
 	const char *cbc_query;
 	int retval, parti;
+	size_t len;
 	retval = parti = 0;
 	if (cbt->use_lvm)
 		retval = write_lvm_preheader(output, tmp, cbt->diskdev);
@@ -669,6 +704,9 @@ cbt->server_id);
 			return BUFFER_FULL;
 		node = node->nextpart;
 	}
+	len = strlen(output);
+	len--;
+	*(output + len) = '\0';
 	strncat(output, "\n\n", 3);
 	for (node = head_part; node; ){
 		saved = node->nextpart;

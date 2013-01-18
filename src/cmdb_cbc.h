@@ -264,4 +264,16 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd);
 void
 convert_build_ip_address(cbc_build_t *cbt);
 
+int
+insert_ip_into_db(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+insert_into_build_table(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+insert_build_partitions(cbc_config_t *config, cbc_build_t *cbt);
+
+int
+insert_disk_device(cbc_config_t *config, cbc_build_t *cbt);
+
 #endif

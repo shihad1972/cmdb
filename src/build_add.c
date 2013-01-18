@@ -932,7 +932,7 @@ int get_build_partition_id(cbc_config_t *config, cbc_build_t *cbt)
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_build_partition_id");
 	snprintf(query, RBUFF_S,
-"SELECT def_scheme_id FROM partition_schemes WHERE scheme_name = '%s'",
+"SELECT def_scheme_id, lvm FROM partition_schemes WHERE scheme_name = '%s'",
 	 cbt->part_scheme_name);
 	cbc_query = query;
 	cbc_mysql_init(config, &cbc);
@@ -947,6 +947,8 @@ int get_build_partition_id(cbc_config_t *config, cbc_build_t *cbt)
 	} else if (cbc_rows == 1) {
 		cbc_row = mysql_fetch_row(cbc_res);
 		cbt->def_scheme_id = strtoul(cbc_row[0], NULL, 10);
+		if ((strncmp(cbc_row[1], "1", COMM_S)) == 0)
+			cbt->use_lvm = 1;
 		cmdb_mysql_clean_full(cbc_res, &cbc, query);
 		return retval;
 	}
@@ -1051,9 +1053,30 @@ int insert_build_into_database(cbc_config_t *config, cbc_build_t *cbt)
 	}
 	if ((retval = get_build_ip(config, cbt->build_dom)) != 0) {
 		free(cbt->build_dom);
+		free(cbt->build_dom->iplist);
 		return retval;
 	}
 	convert_build_ip_address(cbt);
+	if ((retval = insert_ip_into_db(config, cbt)) != 0) {
+		free(cbt->build_dom);
+		free(cbt->build_dom->iplist);
+		return retval;
+	}
+	if ((retval = insert_into_build_table(config, cbt)) != 0) {
+		free(cbt->build_dom);
+		free(cbt->build_dom->iplist);
+		return retval;
+	}
+	if ((retval = insert_build_partitions(config, cbt)) != 0) {
+		free(cbt->build_dom);
+		free(cbt->build_dom->iplist);
+		return retval;
+	}
+	if ((retval = insert_disk_device(config, cbt)) != 0) {
+		free(cbt->build_dom);
+		free(cbt->build_dom->iplist);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1069,7 +1092,7 @@ int get_build_domain_info_on_id(cbc_config_t *config, cbc_build_domain_t *cbdt, 
 	
 	retval = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "query in get_build_varient_id");
+		report_error(MALLOC_FAIL, "query in get_build_domain_info_on_id");
 	snprintf(query, RBUFF_S,
 "SELECT start_ip, end_ip,  netmask, gateway, ns FROM build_domain WHERE bd_id = %lu",
 	 id);
@@ -1110,7 +1133,7 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	my_ulonglong cbc_rows;
 	char *query;
 	const char *cbc_query;
-	int retval;
+	int retval, found;
 	unsigned long int ip;
 	
 	retval = 0;
@@ -1128,9 +1151,7 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	}
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
 		cmdb_mysql_clean_full(cbc_res, &cbc, query);
-		for (ip = bd->start_ip; ip<= bd->end_ip; ip++) {
-			ip_node_add_basic(bd, ip, "free");
-		}
+		ip_node_add_basic(bd, bd->start_ip, "free");
 	} else {
 		while ((cbc_row = mysql_fetch_row(cbc_res))) {
 			ip = strtoul(cbc_row[0], NULL, 10);
@@ -1145,22 +1166,33 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	
 	iplist = bd->iplist;
 	for (ip = bd->start_ip; ip <= bd->end_ip; ip++) {
+		found = 0;
 		if (ip == iplist->ip) {
 			if ((strncmp(iplist->hostname, "free", COMM_S)) == 0) {
 				break;
 			} else {
 				continue;
 			}
-		} else {
-			break;
 		}
-		if (iplist->next) {
-			iplist = iplist->next;
+		iplist = bd->iplist;
+		while (iplist) {
+			if (iplist->ip == ip) {
+				found = 1;
+				break;
+			} else {
+				iplist = iplist->next;
+			}
+		}
+		if (found == 1) {
+			continue;
 		} else {
 			break;
 		}
 	}
-	bd->iplist->ip = ip;
+	if (found == 0)
+		bd->iplist->ip = ip;
+	else
+		retval = NO_BUILD_IP;
 	saved = iplist = bd->iplist->next;
 	while (saved) {
 		saved = iplist->next;
@@ -1190,3 +1222,139 @@ void convert_build_ip_address(cbc_build_t *cbt)
 	snprintf(cbt->nameserver, RANGE_S, "%s", ip_address);
 }
 
+int insert_ip_into_db(cbc_config_t *config, cbc_build_t *cbt)
+{
+	MYSQL cbc;
+	MYSQL_RES *cbc_res;
+	MYSQL_ROW cbc_row;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_ip_into_db");
+	snprintf(query, RBUFF_S,
+"SELECT * FROM build_ip WHERE ip = %lu\n", cbt->build_dom->iplist->ip);
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		cmdb_mysql_clean(&cbc, query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) > 0)){
+		cmdb_mysql_clean_full(cbc_res, &cbc, query);
+		return BUILD_IP_IN_USE;
+	}
+	mysql_free_result(cbc_res);
+	snprintf(query, RBUFF_S,
+"INSERT INTO build_ip (ip, hostname, domainname, bd_id) VALUES \
+(%lu, '%s', '%s', %lu)",
+	  cbt->build_dom->iplist->ip, cbt->hostname, cbt->domain, cbt->bd_id);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if ((cbc_rows = mysql_affected_rows(&cbc)) != 1) {
+		cmdb_mysql_clean(&cbc, query);
+		retval = CANNOT_INSERT_IP;
+	}
+	snprintf(query, RBUFF_S,
+"SELECT ip_id FROM build_ip WHERE ip = %lu", cbt->build_dom->iplist->ip);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if (!(cbc_res = mysql_store_result(&cbc))) {
+		cmdb_mysql_clean(&cbc, query);
+		report_error(MY_STORE_FAIL, mysql_error(&cbc));
+	}
+	if (((cbc_rows = mysql_num_rows(cbc_res)) > 1)){
+		retval = MULTIPLE_BUILD_IPS;
+	} else if (cbc_rows == 1) {
+		cbc_row = mysql_fetch_row(cbc_res);
+		cbt->ip_id = strtoul(cbc_row[0], NULL, 10);
+		retval = 0;
+	} else {
+		retval = CANNOT_FIND_BUILD_IP;
+	}
+	cmdb_mysql_clean_full(cbc_res, &cbc, query);
+	return retval;
+}
+
+int insert_into_build_table(cbc_config_t *config, cbc_build_t *cbt)
+{
+	MYSQL cbc;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_into_build_table");
+	snprintf(query, RBUFF_S,
+"INSERT INTO build (server_id, os_id, varient_id, boot_id, ip_id, locale_id, mac_addr, net_inst_int) \
+VALUES (%lu, %lu, %lu, %lu, %lu, %lu, '%s', '%s')",
+		 cbt->server_id,
+		 cbt->os_id,
+		 cbt->varient_id,
+		 cbt->boot_id,
+		 cbt->ip_id,
+		 cbt->locale_id,
+		 cbt->mac_address,
+		 cbt->netdev);
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if ((cbc_rows = mysql_affected_rows(&cbc)) != 1) {
+		retval = CANNOT_INSERT_BUILD;
+	}
+	cmdb_mysql_clean(&cbc, query);
+	return retval;
+}
+
+int insert_build_partitions(cbc_config_t *config, cbc_build_t *cbt)
+{
+	MYSQL cbc;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_build_partitions");
+	snprintf(query, RBUFF_S,
+"INSERT INTO partitions (server_id, minimum, maximum, priority, mount_point, filesystem, logical_volume) \
+SELECT '%lu', minimum, maximum, priority, mount_point, filesystem, logical_volume FROM \
+default_partitions  WHERE def_scheme_id = %lu", cbt->server_id, cbt->def_scheme_id);
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if ((cbc_rows = mysql_affected_rows(&cbc)) < 1) {
+		retval = CANNOT_INSERT_PARTITIONS;
+	}
+	cmdb_mysql_clean(&cbc, query);
+	return retval;
+}
+
+int insert_disk_device(cbc_config_t *config, cbc_build_t *cbt)
+{
+	MYSQL cbc;
+	my_ulonglong cbc_rows;
+	char *query;
+	const char *cbc_query;
+	int retval;
+	
+	retval = 0;
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_disk_device");
+	snprintf(query, RBUFF_S,
+"INSERT INTO disk_dev (server_id, device, lvm) VALUES (%lu, '/dev/%s', %d)",
+		 cbt->server_id, cbt->diskdev, cbt->use_lvm);
+	cbc_query = query;
+	cbc_mysql_init(config, &cbc);
+	cmdb_mysql_query(&cbc, cbc_query);
+	if ((cbc_rows = mysql_affected_rows(&cbc)) < 1) {
+		retval = CANNOT_INSERT_DISK_DEVICE;
+	}
+	cmdb_mysql_clean(&cbc, query);
+	return retval;
+}

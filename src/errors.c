@@ -331,10 +331,22 @@ void get_error_string(int error, char *errstr)
 		case BUILD_DOMAIN_NOT_FOUND:
 			snprintf(errstr, MAC_S,
 			 "Build domain not found");
-			 break;
+			break;
+		case NO_BUILD_IP:
+			snprintf(errstr, MAC_S,
+			 "No IP's left in build domain");
+			break;
+		case BUILD_IP_IN_USE:
+			snprintf(errstr, MAC_S,
+			 "Build IP already in use");
+			break;
+		case CANNOT_INSERT_IP:
+			snprintf(errstr, MAC_S,
+			 "Cannot insert build IP into DB");
+			break;
 		default:
 			snprintf(errstr, MAC_S,
-			 "Unknown error %d\n", error);
+			 "Unknown error %d", error);
 			break;
 	}
 }

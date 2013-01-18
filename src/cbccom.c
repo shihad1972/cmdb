@@ -269,6 +269,9 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
 	 (cb->server == NONE))
 		retval = NO_NAME_OR_ID;
+	else if ((cb->action == CREATE_CONFIG) &&
+	 (cb->server == NONE))
+		retval = NO_NAME_OR_ID;
 	if (cb->action == CREATE_CONFIG)
 		snprintf(cb->action_type, MAC_S, "create config");
 	return retval;
