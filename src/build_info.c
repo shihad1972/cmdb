@@ -504,7 +504,7 @@ d-i netcfg/get_domain string %s\n",
 d-i hw-detect/load_firmware boolean true\n\
 d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
-d-i mirror/http/directory string /debian\n\
+d-i mirror/http/directory string /%s\n\
 d-i mirror/suite string %s\n\
 d-i passwd/root-password-crypted password $1$d/0w8MHb$tdqENqvXIz53kZp2svuak1\n\
 d-i passwd/user-fullname string Monkey User\n\
@@ -513,6 +513,7 @@ d-i passwd/user-password-crypted password $1$Hir6Ul13$.T1tAO.yfK5g7WDKSw0nI/\n\
 d-i clock-setup/utc boolean true\n\
 d-i time/zone string %s\n",
 		cbt->mirror,
+		cbt->alias,
 		cbt->ver_alias,
 		cbt->country);
 	len = strlen(tmp);
@@ -577,10 +578,10 @@ true\nd-i clock-setup/ntp-server string %s\n",
 "d-i apt-setup/non-free boolean true\n\
 d-i apt-setup/contrib boolean true\n\
 d-i apt-setup/services-select multiselect security, volatile\n\
-d-i apt-setup/security_host string security.debian.org\n\
-d-i apt-setup/volatile_host string volatile.debian.org\n\
+d-i apt-setup/security_host string security.%s.org\n\
+d-i apt-setup/volatile_host string volatile.%s.org\n\
 tasksel tasksel/first multiselect standard, web-server\n\
-d-i pkgsel/include string ");
+d-i pkgsel/include string ", cbt->alias, cbt->alias);
 	retval = add_preseed_packages(cmc, cbt, output, tmp);
 	if (retval == BUFFER_FULL) {
 		free(tmp);
