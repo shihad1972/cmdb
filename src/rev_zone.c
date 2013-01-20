@@ -778,7 +778,7 @@ void update_rev_zone_serial(rev_zone_info_t *zone)
 
 int build_rev_zone(dnsa_config_t *dc, char *domain)
 {
-	int retval, id;
+	int retval;
 	rev_zone_info_t *rev_zone;
 	rev_record_row_t *records;
 
@@ -796,7 +796,6 @@ int build_rev_zone(dnsa_config_t *dc, char *domain)
 		free(rev_zone);
 		return retval;
 	}
-	id = rev_zone->rev_zone_id;
 	if ((retval = get_rev_zone_records(dc, rev_zone, records)) > 0) {
 		delete_A_records(records);
 		free(rev_zone);
@@ -864,11 +863,9 @@ int get_rev_zone_records(dnsa_config_t *dc, rev_zone_info_t *rev, rev_record_row
 	char *query;
 	const char *dnsa_query;
 	int retval;
-	rev_record_row_t *saved;
 	dnsa_config_and_reverse *config;
 
 	retval = 0;
-	saved = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_rev_zone_records");
 	if (!(config = malloc(sizeof(dnsa_config_and_reverse))))
