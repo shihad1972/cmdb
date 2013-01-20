@@ -14,6 +14,9 @@
 void
 cmdb_mysql_query(MYSQL *cmdb_mysql, const char *query);
 
+int
+cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query);
+
 void
 cmdb_mysql_clean(MYSQL *cmdb_mysql, char *query);
 

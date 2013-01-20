@@ -797,14 +797,18 @@ int build_rev_zone(dnsa_config_t *dc, char *domain)
 		return retval;
 	}
 	id = rev_zone->rev_zone_id;
-	print_rev_zone_info(rev_zone);
 	if ((retval = get_rev_zone_records(dc, rev_zone, records)) > 0) {
-		/* delete_rev_recors(records); */
+		delete_A_records(records);
 		free(rev_zone);
 		return retval;
 	}
-	if ((retval = insert_rev_records(dc, records, id)) > 0) {
-		/* delete_rev_recors(records); */
+	if ((retval = convert_rev_records(records, rev_zone->prefix)) > 0) {
+		delete_A_records(records);
+		free(rev_zone);
+		return retval;
+	}
+	if ((retval = insert_rev_records(dc, records, rev_zone)) > 0) {
+		delete_A_records(records);
 		free(rev_zone);
 		return retval;
 	}
@@ -869,6 +873,9 @@ int get_rev_zone_records(dnsa_config_t *dc, rev_zone_info_t *rev, rev_record_row
 		report_error(MALLOC_FAIL, "query in get_rev_zone_records");
 	if (!(config = malloc(sizeof(dnsa_config_and_reverse))))
 		report_error(MALLOC_FAIL, "config in get_rev_zone_records");
+	config->dc = dc;
+	config->record = records;
+	config->zone = rev;
 	dnsa_query = query;
 	dnsa_mysql_init(dc, &dnsa);
 	snprintf(query, RBUFF_S, "SELECT name, host, destination FROM \
@@ -886,13 +893,13 @@ records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination");
 		return NO_FORWARD_RECORDS;
 	}
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		config->dc = dc;
-		config->record = records;
-		config->zone = rev;
 		if ((retval = store_valid_a_record(config, dnsa_row)) != 0) {
+			retval++;
 			continue;
 		}
 	}
+	if (retval > 0)
+		printf("There were %d records not added\n", retval);
 	free(config);
 	cmdb_mysql_clean_full(dnsa_res, &dnsa, query);
 	return retval;
@@ -912,7 +919,6 @@ int store_valid_a_record(dnsa_config_and_reverse *config, MYSQL_ROW row)
 	if ((check_if_a_record_exists(record, row[2])) != 0) {
 		return retval;
 	}
-	printf("IP Address %s in zone\n", row[2]);
 	if ((retval = store_a_record(record, row)) != 0) {
 		return retval;
 	}
@@ -928,11 +934,13 @@ int store_a_record(rev_record_row_t *record, MYSQL_ROW row)
 		report_error(MALLOC_FAIL, "new in store_a_record");
 	/* Check for head node */
 	if ((strncmp(record->dest, "NULL", COMM_S)) == 0) {
-		printf("Head record\n");
 		free(new);
 		new = record;
 	}
-	snprintf(new->dest, RBUFF_S, "%s.%s.", row[1], row[0]);
+	if ((strncmp(row[1], "@", CH_S)) == 0)
+		snprintf(new->dest, RBUFF_S, "%s.", row[0]);
+	else
+		snprintf(new->dest, RBUFF_S, "%s.%s.", row[1], row[0]);
 	snprintf(new->host, RBUFF_S, "%s", row[2]);
 	new->next = 0;
 	if (new == record) {
@@ -962,8 +970,80 @@ int check_if_a_record_exists(rev_record_row_t *record, char *ip)
 	return 0;
 }
 
-int insert_rev_records(dnsa_config_t *dc, rev_record_row_t *records, int id)
+int convert_rev_records(rev_record_row_t *records, unsigned long int prefix)
 {
+	rev_record_row_t *saved;
+	char *host;
+	
+	saved = records;
+	while (saved) {
+		if (prefix == 8) {
+			host = strchr(saved->host, '.');
+		} else if (prefix == 16) {
+			host = strchr(saved->host, '.');
+			host = strchr(saved->host, '.');
+		} else if (prefix>= 24) {
+			host = strrchr(saved->host, '.');
+		} else {
+			printf("Prefix %lu invalid\n", prefix);
+			return 1;
+		}
+		host++;
+		snprintf(saved->host, RBUFF_S, "%s", host);
+		saved = saved->next;
+	}
+	return 0;
+}
+int insert_rev_records(dnsa_config_t *dc, rev_record_row_t *records, rev_zone_info_t *zone)
+{
+	MYSQL dnsa;
+	char *query;
+	const char *dnsa_query;
+	int retval;
+	rev_record_row_t *saved;
+	
+	if (!(query = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in insert_rev_records");
+	saved = records;
+	dnsa_query = query;
+	dnsa_mysql_init(dc, &dnsa);
+	snprintf(query, RBUFF_S,
+"START TRANSACTION");
+	if ((retval = cmdb_mysql_query_with_checks(&dnsa, dnsa_query)) > 0) {
+		mysql_rollback(&dnsa);
+		cmdb_mysql_clean(&dnsa, query);
+		return retval;
+	}
+	snprintf(query, RBUFF_S,
+"DELETE FROM rev_records WHERE rev_zone = %d", zone->rev_zone_id);
+	if ((retval = cmdb_mysql_query_with_checks(&dnsa, dnsa_query)) > 0) {
+		mysql_rollback(&dnsa);
+		cmdb_mysql_clean(&dnsa, query);
+		return retval;
+	}
+	update_rev_zone_serial(zone);
+	snprintf(query, RBUFF_S,
+"UPDATE rev_zones SET updated = 'yes', valid = 'unknown', \
+serial = %lu WHERE rev_zone_id = %d", zone->serial, zone->rev_zone_id);
+	if ((retval = cmdb_mysql_query_with_checks(&dnsa, dnsa_query)) > 0) {
+		mysql_rollback(&dnsa);
+		cmdb_mysql_clean(&dnsa, query);
+		return retval;
+	}
+	while (saved) {
+		snprintf(query, RBUFF_S,
+"INSERT INTO rev_records (rev_zone, host, destination) VALUES (%d, '%s', '%s')",
+		 zone->rev_zone_id, saved->host, saved->dest);
+		if ((retval = cmdb_mysql_query_with_checks(&dnsa, dnsa_query)) > 0) {
+			mysql_rollback(&dnsa);
+			cmdb_mysql_clean(&dnsa, query);
+			return retval;
+		}
+		saved = saved->next;
+	}
+	mysql_commit(&dnsa);
+	cmdb_mysql_clean(&dnsa, query);
+	
 	return 0;
 }
 

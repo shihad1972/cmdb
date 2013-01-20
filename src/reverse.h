@@ -63,6 +63,9 @@ check_if_a_record_exists(rev_record_row_t *record, char *ip);
 /* Delete linked list of A records */
 void
 delete_A_records(rev_record_row_t *records);
+/* Insert the reverse records into the database */
+int
+insert_rev_records(dnsa_config_t *dc, rev_record_row_t *records, rev_zone_info_t *zone);
 /* Create the in-addr.arpa zonename from network address */
 void
 get_in_addr_string(char *in_addr, char range[]);
@@ -122,4 +125,7 @@ get_rev_zone_info(dnsa_config_t *dc, rev_zone_info_t *rev);
 /* Get the list of reverse zone records */
 int
 get_rev_zone_records(dnsa_config_t *dc, rev_zone_info_t *rev, rev_record_row_t *records);
+/* Convert dest from full IP address to DB insert ready for reverse zone */
+int
+convert_rev_records(rev_record_row_t *records, unsigned long int prefix);
 #endif
