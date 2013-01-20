@@ -40,8 +40,11 @@ enum {			/* dnsa error codes */
 	NO_ZONE_CONFIGURATION = 23,
 	CANNOT_INSERT_ZONE = 24,
 	CANNOT_INSERT_RECORD = 25,
-	MALLOC_FAIL = 30,
-	BUFFER_FULL = 31
+	NO_FORWARD_RECORDS = 26,
+	CANNOT_ADD_A_RECORD = 27,
+	REV_BUILD_FAILED = 28,
+	MALLOC_FAIL = 40,
+	BUFFER_FULL = 41
 };
 
 enum {			/* cmdb error codes: start @ 101 to avoid conflict */
@@ -161,7 +164,8 @@ enum {			/* dnsa action codes */
 	LIST_ZONES = 4,
 	ADD_ZONE = 5,
 	ADD_RECORD = 6,
-	ADD_HOST = 7
+	ADD_HOST = 7,
+	BUILD_REV = 8
 };
 
 enum {			/* cbc action codes */

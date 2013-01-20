@@ -30,7 +30,14 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 typedef struct rev_record_row_t { /* Hold dns record */
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
+	struct rev_record_row_t *next;
 } rev_record_row_t;
+
+typedef struct dnsa_config_and_reverse {
+	dnsa_config_t *dc;
+	rev_record_row_t *record;
+	rev_zone_info_t *zone;
+} dnsa_config_and_reverse;
 
 /* Return the data for one reverse zone */
 void
@@ -44,6 +51,18 @@ get_rev_row (MYSQL_ROW my_row);
 /* Add the reverse (PTR) record to the output string */
 void
 add_rev_records(char *rout, rev_record_row_t my_row);
+/* Get all the A records to build a reverse zone */
+int
+store_valid_a_record(dnsa_config_and_reverse *config, MYSQL_ROW row);
+/* Store single A record for the reverse zone */
+int
+store_a_record(rev_record_row_t *record, MYSQL_ROW row);
+/* Do we already have a reverse record for this IP address? */
+int
+check_if_a_record_exists(rev_record_row_t *record, char *ip);
+/* Delete linked list of A records */
+void
+delete_A_records(rev_record_row_t *records);
 /* Create the in-addr.arpa zonename from network address */
 void
 get_in_addr_string(char *in_addr, char range[]);
@@ -76,6 +95,9 @@ add_rev_zone(char *domain, dnsa_config_t *dc, unsigned long int prefix);
 /* Initialise the rev_zone_info_t struct */
 void
 init_dnsa_rev_zone(rev_zone_info_t *rev_zone);
+/* Initialise the rev_record_row_t struct */
+void
+init_dnsa_rev_record(rev_record_row_t *rev_record);
 /* Print values of rev_zone_info_t struct */
 void
 print_rev_zone_info(rev_zone_info_t *rzi);
@@ -91,4 +113,13 @@ get_net_range(unsigned long int prefix);
 /* Update serial on reverse zone */
 void
 update_rev_zone_serial(rev_zone_info_t *zone);
+/* Build the rev zone from forward IP's */
+int
+build_rev_zone(dnsa_config_t *dc, char *domain);
+/* Get full Reverse zone information */
+int
+get_rev_zone_info(dnsa_config_t *dc, rev_zone_info_t *rev);
+/* Get the list of reverse zone records */
+int
+get_rev_zone_records(dnsa_config_t *dc, rev_zone_info_t *rev, rev_record_row_t *records);
 #endif

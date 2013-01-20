@@ -303,7 +303,8 @@ void display_dnsa_usage(void)
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Action options:\n");
 	printf("-d: display zone\n-w: write zone\n-l: list zones\n");
-	printf("-c: write configuration file\n-z: Add zone\n-a: Add host record\n\n");
+	printf("-c: write configuration file\n-z: Add zone\n-a: Add host record\n");
+	printf("-b: build reverse zone\n\n");
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");

@@ -46,6 +46,9 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
 			comp->action = LIST_ZONES;
 			strncpy(comp->domain, "all", CONF_S);
+		} else if ((strncmp(argv[i], "-b", COMM_S) == 0)) {
+			comp->action = BUILD_REV;
+			comp->type = REVERSE_ZONE;
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			comp->type = FORWARD_ZONE;
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {

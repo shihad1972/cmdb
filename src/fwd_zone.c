@@ -109,6 +109,7 @@ void add_mx_to_header(char *output,  MYSQL_ROW results)
 	free(tmp);
 }
 
+/* Hopefully soon to be obselete */
 record_row_t fill_record_data(MYSQL_ROW my_row)
 {
 	record_row_t records;

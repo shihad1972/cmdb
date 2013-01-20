@@ -36,6 +36,17 @@ typedef struct dnsa_config_t { /* Hold DNSA configuration values */
 	unsigned long int cliflag;
 } dnsa_config_t;
 
+typedef struct record_row_t { /* Hold dns record */
+	int id;
+	int pri;
+	int zone;
+	char dest[RBUFF_S];
+	char host[RBUFF_S];
+	char type[RBUFF_S];
+	char valid[RBUFF_S];
+	struct record_row_t *next;
+} record_row_t;
+
 /* Get command line args and pass them. Put actions into the struct */
 int
 parse_dnsa_command_line(int argc, char **argv, comm_line_t *comm);

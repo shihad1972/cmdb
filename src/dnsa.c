@@ -116,6 +116,12 @@ int main(int argc, char *argv[])
 			} else {
 				add_rev_zone(domain, dc, cm->prefix);
 			}
+		} else if (cm->action == BUILD_REV) {
+			if ((retval = build_rev_zone(dc, domain)) > 0) {
+				free(dc);
+				free(cm);
+				report_error(REV_BUILD_FAILED, domain);
+			}
 		}
 	} else {
 		retval = WRONG_TYPE;

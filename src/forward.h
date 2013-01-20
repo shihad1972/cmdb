@@ -24,16 +24,6 @@ typedef struct zone_info_t { /* Hold DNS zone */
 	unsigned long int ttl;
 } zone_info_t;
 
-typedef struct record_row_t { /* Hold dns record */
-	int id;
-	int pri;
-	int zone;
-	char dest[RBUFF_S];
-	char host[RBUFF_S];
-	char type[RBUFF_S];
-	char valid[RBUFF_S];
-} record_row_t;
-
 typedef struct dnsa_zone_t { /* Hold the DNSA zone information */
 	unsigned long int serial;
 	unsigned long int refresh;
@@ -53,6 +43,7 @@ zone_info_t
 fill_zone_data(MYSQL_ROW my_row);
 
 /* Return struct containing DNS Record data */
+/* Hopefully soon to be obselete */
 record_row_t
 fill_record_data(MYSQL_ROW my_row);
 
