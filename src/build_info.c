@@ -1029,29 +1029,31 @@ libnss-ldap     libnss-ldap/rootbindpw  password\n\
 libnss-ldap     libnss-ldap/dblogin     boolean false\n\
 libnss-ldap     libnss-ldap/override    boolean true\n\
 libnss-ldap     shared/ldapns/base-dn   string  %s\n\
+libnss-ldap     shared/ldapns/ldap-server       string %s\n\
+libnss-ldap     libnss-ldap/binddn      string  %s\n\
 libnss-ldap     libnss-ldap/rootbinddn  string  %s\n\
 libnss-ldap     shared/ldapns/ldap_version      select  3\n\
-libnss-ldap     libnss-ldap/binddn      string  %s\n\
-libnss-ldap     shared/ldapns/ldap-server       string %s\n\
 libnss-ldap     libnss-ldap/nsswitch    note\n\
 libnss-ldap     libnss-ldap/confperm    boolean false\n\
-libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\n\
+libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
+\n\
 libpam-ldap     libpam-ldap/rootbindpw  password\n\
 libpam-ldap     libpam-ldap/bindpw      password\n\
-libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
 libpam-ldap     shared/ldapns/base-dn   string  %s\n\
-libpam-ldap     libpam-ldap/override    boolean true\n\
-libpam-ldap     shared/ldapns/ldap_version      select  3\n\
-libpam-ldap     libpam-ldap/dblogin     boolean false\n\
 libpam-ldap     shared/ldapns/ldap-server       string  %s\n\
 libpam-ldap     libpam-ldap/pam_password        select  crypt\n\
 libpam-ldap     libpam-ldap/binddn      string  %s\n\
 libpam-ldap     libpam-ldap/rootbinddn  string  %s\n\
-libpam-ldap     libpam-ldap/dbrootlogin boolean true \n",
+libpam-ldap     libpam-ldap/dblogin     boolean false\n\
+libpam-ldap     libpam-ldap/override    boolean true\n\
+libpam-ldap     shared/ldapns/ldap_version      select  3\n\
+libpam-ldap     libpam-ldap/dbrootlogin boolean true \n\
+libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
+",
 			 app_conf->ldap_dn,
-			 app_conf->ldap_bind,
-			 app_conf->ldap_bind,
 			 app_conf->ldap_url,
+			 app_conf->ldap_bind,
+			 app_conf->ldap_bind,
 			 app_conf->ldap_dn,
 			 app_conf->ldap_url,
 			 app_conf->ldap_bind,
