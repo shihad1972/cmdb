@@ -175,6 +175,9 @@ int
 write_build_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
 int
+delete_build_if_exists(cbc_config_t *cmc, cbc_build_t *cbt);
+
+int
 add_partition_scheme(cbc_config_t *config);
 
 void

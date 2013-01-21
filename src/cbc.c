@@ -129,5 +129,9 @@ int main(int argc, char *argv[])
 	free(cmc);
 	free(cml);
 	free(cbt);
+	if (retval == DISPLAY_USAGE)
+		retval = NONE;
+	if (retval != NONE)
+		printf("Exit with %d\n", retval);
 	exit(retval);
 }

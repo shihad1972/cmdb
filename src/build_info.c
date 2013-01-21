@@ -421,11 +421,38 @@ int write_build_config(cbc_config_t *cmc, cbc_build_t *cbt)
 {
 	int retval;
 	retval = 0;
+	if ((retval = delete_build_if_exists(cmc, cbt)) != 0)
+		return CANNOT_DELETE_BUILD;
 	if ((strncmp(cbt->build_type, "preseed", RANGE_S) == 0))
 		retval = write_preseed_config(cmc, cbt);
 	else if ((strncmp(cbt->build_type, "kickstart", RANGE_S) == 0))
 		retval = write_kickstart_config(cmc, cbt);
+	else
+		return retval;
 	return retval;
+}
+
+int delete_build_if_exists(cbc_config_t *cmc, cbc_build_t *cbt)
+{
+	MYSQL build;
+	my_ulonglong build_rows;
+	int retval;
+	char *query;
+	const char *build_query;
+	
+	if (!(query = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in get_build_info");
+	snprintf(query, RBUFF_S,
+"DELETE FROM build, build_ip, disk_dev WHERE server_id = %lu", cbt->server_id);
+	printf("Server ID: %lu\n", cbt->server_id);
+	build_query = query;
+	cbc_mysql_init(cmc, &build);
+	cmdb_mysql_query(&build, build_query);
+	build_rows = mysql_affected_rows(&build);
+	if (build_rows > 0)
+		printf("Deleted %lu builds from database\n", build_rows);
+	cmdb_mysql_clean(&build, query);
+	return 0;
 }
 
 int write_preseed_config(cbc_config_t *cmc, cbc_build_t *cbt)
