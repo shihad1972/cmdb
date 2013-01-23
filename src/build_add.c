@@ -120,14 +120,14 @@ void add_pre_part_to_db(pre_disk_part_t *partition, cbc_config_t *config)
 		report_error(MALLOC_FAIL, "query in add_pre_part_to_db");
 	if ((log_vol_check = strncmp(partition->log_vol, "NULL", CONF_S) == 0)) {
 		snprintf(query, RBUFF_S,
-"INSERT INTO default_partitions (minimum, maximum, priority, def_scheme_id, \
+"INSERT INTO default_part (minimum, maximum, priority, def_scheme_id, \
 mount_point, filesystem) \
 VALUES (%lu, %lu, %lu, %lu, '%s', '%s')", 
 partition->min, partition->max, partition->pri, partition->part_id, partition->mount_point,
 partition->filesystem);
 	} else {
 		snprintf(query, RBUFF_S,
-"INSERT INTO default_partitions (minimum, maximum, priority, def_scheme_id, \
+"INSERT INTO default_part (minimum, maximum, priority, def_scheme_id, \
 mount_point, filesystem, logical_volume) \
 VALUES (%lu, %lu, %lu, %lu, '%s', '%s', '%s')", 
 partition->min, partition->max, partition->pri, partition->part_id, partition->mount_point,
@@ -151,7 +151,7 @@ int check_for_scheme_name(cbc_config_t *conf, char *name)
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in check_for_scheme_name");
 	snprintf(query, RBUFF_S,
-"SELECT * FROM partition_schemes WHERE scheme_name = '%s'", name);
+"SELECT * FROM seed_schemes WHERE scheme_name = '%s'", name);
 	cbc_query = query;
 	cbc_mysql_init(conf, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
@@ -186,7 +186,7 @@ insert_scheme_name_into_db(cbc_config_t *conf, char *name, int lvm)
 		report_error(MALLOC_FAIL, "query in insert_scheme_name_into_db");
 	
 	snprintf(query, RBUFF_S,
-"INSERT INTO partition_schemes (scheme_name) VALUES ('%s', %d)", name, lvm);
+"INSERT INTO seed_schemes (scheme_name, lvm) VALUES ('%s', %d)", name, lvm);
 	cbc_query = query;
 	cbc_mysql_init(conf, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
@@ -196,7 +196,7 @@ insert_scheme_name_into_db(cbc_config_t *conf, char *name, int lvm)
 		return id;
 	}
 	snprintf(query, RBUFF_S,
-"SELECT def_scheme_id FROM partition_schemes WHERE scheme_name = '%s'", name);
+"SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = '%s'", name);
 	cbc_mysql_init(conf, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
@@ -420,6 +420,8 @@ int create_build_config(cbc_config_t *config, cbc_comm_line_t *cml, cbc_build_t 
 			return retval;
 	if ((retval = copy_build_values(cml, cbt)) != 0)
 		return retval;
+	if ((retval = delete_build_if_exists(config, cbt)) != 0)
+		return CANNOT_DELETE_BUILD;
 	if ((retval = get_build_hardware(config, cbt)) != 0)
 		return retval;
 	if ((retval = get_build_varient_id(config, cbt)) != 0)
@@ -932,7 +934,7 @@ int get_build_partition_id(cbc_config_t *config, cbc_build_t *cbt)
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_build_partition_id");
 	snprintf(query, RBUFF_S,
-"SELECT def_scheme_id, lvm FROM partition_schemes WHERE scheme_name = '%s'",
+"SELECT def_scheme_id, lvm FROM seed_schemes WHERE scheme_name = '%s'",
 	 cbt->part_scheme_name);
 	cbc_query = query;
 	cbc_mysql_init(config, &cbc);
@@ -1322,9 +1324,9 @@ int insert_build_partitions(cbc_config_t *config, cbc_build_t *cbt)
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in insert_build_partitions");
 	snprintf(query, RBUFF_S,
-"INSERT INTO partitions (server_id, minimum, maximum, priority, mount_point, filesystem, logical_volume) \
+"INSERT INTO seed_part (server_id, minimum, maximum, priority, mount_point, filesystem, logical_volume) \
 SELECT '%lu', minimum, maximum, priority, mount_point, filesystem, logical_volume FROM \
-default_partitions  WHERE def_scheme_id = %lu", cbt->server_id, cbt->def_scheme_id);
+default_part  WHERE def_scheme_id = %lu", cbt->server_id, cbt->def_scheme_id);
 	cbc_query = query;
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);

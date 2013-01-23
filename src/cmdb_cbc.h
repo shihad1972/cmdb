@@ -79,6 +79,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	char locale[RANGE_S];
 	char language[RANGE_S];
 	char keymap[RANGE_S];
+	char timezone[HOST_S];
 	char diskdev[MAC_S];
 	char ntpserver[CONF_S];
 	char part_scheme_name[CONF_S];
@@ -117,9 +118,12 @@ typedef struct pre_app_config_t {	/* Linked list for preseed extra */
 	char ldap_url[URL_S];		/* application config */
 	char ldap_dn[URL_S];
 	char ldap_bind[URL_S];
+	char ldap_host[URL_S];
 	char log_server[CONF_S];
+	char nfs_domain[CONF_S];
 	char smtp_server[CONF_S];
 	char xymon_server[CONF_S];
+	short int ldap_ssl;
 	unsigned long int config_ldap;
 	unsigned long int config_log;
 	unsigned long int config_email;

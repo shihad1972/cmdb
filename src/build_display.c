@@ -58,7 +58,7 @@ get_partition_schemes(cbc_config_t *config, partition_schemes_t *part)
 	cbc_query = query;
 	
 	snprintf(query, RBUFF_S,
-"SELECT def_scheme_id, scheme_name, lvm FROM partition_schemes");
+"SELECT def_scheme_id, scheme_name, lvm FROM seed_schemes");
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {
@@ -150,7 +150,7 @@ get_schemes_partitions(unsigned long int id, cbc_config_t *config)
 	cbc_query = query;
 	snprintf(query, BUFF_S,
 "SELECT minimum, maximum, priority, mount_point, filesystem, def_part_id, \
-logical_volume FROM default_partitions WHERE def_scheme_id = %lu ORDER BY mount_point\n", id);
+logical_volume FROM default_part WHERE def_scheme_id = %lu ORDER BY mount_point\n", id);
 	cbc_mysql_init(config, &cbc);
 	cmdb_mysql_query(&cbc, cbc_query);
 	if (!(cbc_res = mysql_store_result(&cbc))) {

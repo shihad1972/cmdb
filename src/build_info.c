@@ -23,6 +23,9 @@
 #include "cbc_mysql.h"
 #include "build.h"
 
+int
+check_buffer_length(char *tmp, char *output);
+
 void
 fill_build_info(cbc_build_t *cbt, MYSQL_ROW br);
 
@@ -35,6 +38,12 @@ read_dhcp_hosts_file(cbc_build_t *cbcbt, char *from, char *content, char *new_co
 void
 add_append_line(cbc_build_t *cbcbt, char *output, char *tmp);
 
+void
+add_preseed_append_line(cbc_build_t *cbt, char *tmp);
+
+void
+add_kickstart_append_line(cbc_build_t *cbt, char *tmp);
+
 int
 write_preseed_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
@@ -42,10 +51,25 @@ int
 write_kickstart_config(cbc_config_t *cmc, cbc_build_t *cbt);
 
 int
-write_disk_preconfig(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
+add_kick_network_config(cbc_build_t *cbt, char *out, char *buff);
+
+void
+get_kickstart_auth_line(cbc_build_t *cbt, char *out, pre_app_config_t *aconf);
 
 int
-add_preseed_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
+add_kick_ldap_config(pre_app_config_t *conf, char *output, char *tmp);
+
+int
+add_kick_nfs_config(pre_app_config_t *conf, char *output, char *tmp);
+
+int
+add_kick_var_tmp_scripts(char *output, char *tmp);
+
+int
+write_disk_config(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
+
+int
+add_build_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
 
 int
 write_application_preconfig(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff);
@@ -58,6 +82,9 @@ write_lvm_preheader(char *output, char *tmp, char *device);
 
 int
 add_partition_to_preseed(pre_disk_part_t *part_info, char *output, char *buff, int special, int lvm);
+
+int
+add_partition_to_kickstart(pre_disk_part_t *part_info, char *output, char *buff, int lvm);
 
 void
 init_app_config(pre_app_config_t *configuration);
@@ -156,7 +183,7 @@ int get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long 
  INET_NTOA(netmask), INET_NTOA(gateway), INET_NTOA(ns), hostname, domainname,\
  boot_line, valias,ver_alias, build_type, arg, url, l.country, locale, \
  l.language, l.keymap, net_inst_int, mirror, device, lvm, bd.bd_id, \
- config_ntp, ntp_server FROM build_ip bi LEFT JOIN (build_domain bd, \
+ config_ntp, l.timezone, bo.os_id, ntp_server FROM build_ip bi LEFT JOIN (build_domain bd, \
  build_os bo, build b, build_type bt, server s, boot_line bootl, varient v, \
  locale l, disk_dev dd) ON (bi.bd_id = bd.bd_id  AND bt.bt_id = bootl.bt_id \
  AND dd.server_id = s.server_id AND b.ip_id = bi.ip_id AND bo.os_id = b.os_id \
@@ -240,24 +267,46 @@ void write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt)
 void add_append_line(cbc_build_t *cbt, char *output, char *tmp)
 {
 	size_t len;
-	if ((strncmp(cbt->build_type, "preseed", RANGE_S) == 0)) {
-		sprintf(tmp, "append initrd=initrd-%s-%s-%s.img country=%s ",
-			cbt->alias,
-			cbt->version,
-			cbt->arch,
-			cbt->country);
-		len = strlen(tmp);
-		strncat(output, tmp, len);
+	sprintf(tmp, "append initrd=initrd-%s-%s-%s.img ",
+		cbt->alias,
+		cbt->version,
+		cbt->arch);
+	len = strlen(tmp);
+	strncat(output, tmp, len);
+	if (strncmp(cbt->build_type, "preseed", RANGE_S) == 0)
+		add_preseed_append_line(cbt, tmp);
+	else if (strncmp(cbt->build_type, "kickstart", RANGE_S) == 0)
+		add_kickstart_append_line(cbt, tmp);
+	len = strlen(tmp);
+	strncat(output, tmp, len);
+}
+
+void add_preseed_append_line(cbc_build_t *cbt, char *tmp)
+{
+	if ((strncmp(cbt->alias, "ubuntu", CONF_S)) ==0) {
+		snprintf(tmp, BUFF_S,
+"country=%s console-setup/layoutcode=%s %s %s=%s%s.cfg\n",
+		 cbt->country,
+		 cbt->country,
+		 cbt->boot,
+		 cbt->arg,
+		 cbt->url,
+		 cbt->hostname);
+	} else {
 		sprintf(tmp, "locale=%s keymap=%s %s %s=%s%s.cfg\n",
-			cbt->locale,
-			cbt->keymap,
-			cbt->boot,
-			cbt->arg,
-			cbt->url,
-			cbt->hostname);
-		len = strlen(tmp);
-		strncat(output, tmp, len);
+		 cbt->locale,
+		 cbt->keymap,
+		 cbt->boot,
+		 cbt->arg,
+		 cbt->url,
+		 cbt->hostname);
 	}
+}
+
+void add_kickstart_append_line(cbc_build_t *cbt, char *tmp)
+{
+	snprintf(tmp, RBUFF_S,
+"%s %s=%s%s.cfg\n", cbt->boot, cbt->arg, cbt->url, cbt->hostname);
 }
 
 void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
@@ -288,8 +337,11 @@ void fill_build_info(cbc_build_t *cbt, MYSQL_ROW br)
 	cbt->use_lvm = ((strncmp(br[23], "0", CH_S)));
 	cbt->bd_id = strtoul(br[24], NULL, 10);
 	cbt->config_ntp = ((strncmp(br[25], "0", CH_S)));
-	if (br[26])
-		sprintf(cbt->ntpserver, "%s", br[26]);
+	sprintf(cbt->timezone, "%s", br[26]);
+	cbt->os_id = strtoul(br[27], NULL, 10);
+	if (br[28]) {
+		sprintf(cbt->ntpserver, "%s", br[28]);
+	}
 }
 
 void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
@@ -332,6 +384,7 @@ void write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt)
 			free(dhcp_new_content);
 			report_error(FILE_O_FAIL, buff);
 		} else {
+			fputs("restart", restart);
 			fclose(restart);
 		}
 	} else {
@@ -421,8 +474,6 @@ int write_build_config(cbc_config_t *cmc, cbc_build_t *cbt)
 {
 	int retval;
 	retval = 0;
-	if ((retval = delete_build_if_exists(cmc, cbt)) != 0)
-		return CANNOT_DELETE_BUILD;
 	if ((strncmp(cbt->build_type, "preseed", RANGE_S) == 0))
 		retval = write_preseed_config(cmc, cbt);
 	else if ((strncmp(cbt->build_type, "kickstart", RANGE_S) == 0))
@@ -440,19 +491,30 @@ int delete_build_if_exists(cbc_config_t *cmc, cbc_build_t *cbt)
 	char *query;
 	const char *build_query;
 	
+	retval = 0;
 	if (!(query = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_build_info");
 	snprintf(query, RBUFF_S,
-"DELETE FROM build, build_ip, disk_dev WHERE server_id = %lu", cbt->server_id);
-	printf("Server ID: %lu\n", cbt->server_id);
+"DELETE FROM disk_dev WHERE server_id = %lu", cbt->server_id);
 	build_query = query;
 	cbc_mysql_init(cmc, &build);
 	cmdb_mysql_query(&build, build_query);
+	snprintf(query, RBUFF_S,
+"DELETE FROM build_ip WHERE hostname = '%s' AND domainname = '%s'",
+		cbt->hostname,
+		cbt->domain);
+	cmdb_mysql_query(&build, build_query);
+	snprintf(query, RBUFF_S,
+"DELETE FROM build WHERE server_id = %lu", cbt->server_id);
+	cmdb_mysql_query(&build, build_query);
+	snprintf(query, RBUFF_S,
+"DELETE FROM seed_part WHERE server_id = %lu", cbt->server_id);
+	cmdb_mysql_query(&build, build_query);
 	build_rows = mysql_affected_rows(&build);
 	if (build_rows > 0)
-		printf("Deleted %lu builds from database\n", build_rows);
+		printf("Deleted previous build from database\n");
 	cmdb_mysql_clean(&build, query);
-	return 0;
+	return retval;
 }
 
 int write_preseed_config(cbc_config_t *cmc, cbc_build_t *cbt)
@@ -581,7 +643,7 @@ true\nd-i clock-setup/ntp-server string %s\n",
 		retval = BUFFER_FULL;
 		return retval;
 	}
-	retval = write_disk_preconfig(cmc, cbt, output, tmp);
+	retval = write_disk_config(cmc, cbt, output, tmp);
 	if (retval == BUFFER_FULL) {
 		free(tmp);
 		free(output);
@@ -609,7 +671,7 @@ d-i apt-setup/security_host string security.%s.org\n\
 d-i apt-setup/volatile_host string volatile.%s.org\n\
 tasksel tasksel/first multiselect standard, web-server\n\
 d-i pkgsel/include string ", cbt->alias, cbt->alias);
-	retval = add_preseed_packages(cmc, cbt, output, tmp);
+	retval = add_build_packages(cmc, cbt, output, tmp);
 	if (retval == BUFFER_FULL) {
 		free(tmp);
 		free(output);
@@ -663,7 +725,7 @@ d-i cdrom-detect/eject boolean false\n");
 	return retval;
 }
 
-int write_disk_preconfig(
+int write_disk_config(
 			cbc_config_t *cmc,
 			cbc_build_t *cbt,
 			char *output,
@@ -681,13 +743,16 @@ int write_disk_preconfig(
 	int retval, parti;
 	size_t len;
 	retval = parti = 0;
-	if (cbt->use_lvm)
-		retval = write_lvm_preheader(output, tmp, cbt->diskdev);
-	else
-		retval = write_regular_preheader(output, tmp);
-	if (retval > 0) {
-		mysql_library_end();
-		return retval;
+	if ((strncmp(cbt->build_type, "preseed", RANGE_S)) == 0) {
+		if (cbt->use_lvm) {
+			retval = write_lvm_preheader(output, tmp, cbt->diskdev);
+		} else {
+			retval = write_regular_preheader(output, tmp);
+		}
+		if (retval > 0) {
+			mysql_library_end();
+			return retval;
+		}
 	}
 	snprintf(sserver_id, HOST_S - 1, "%ld", cbt->server_id);
 	
@@ -695,7 +760,7 @@ int write_disk_preconfig(
 		report_error(MALLOC_FAIL, "query in write_reg_disk_preconfig");
 	snprintf(query, BUFF_S - 1,
 "SELECT minimum, maximum, priority, mount_point, filesystem, part_id, \
-logical_volume FROM partitions WHERE server_id = %ld ORDER BY mount_point\n",
+logical_volume FROM seed_part WHERE server_id = %ld ORDER BY mount_point\n",
 cbt->server_id);
 	cbc_query = query;
 	cbc_mysql_init(cmc, &cbc);
@@ -720,17 +785,21 @@ cbt->server_id);
 	mysql_close(&cbc);
 	mysql_library_end();
 	node = head_part;
-	while ((node)) {
-		parti = check_for_special_partition(node);
-		retval = add_partition_to_preseed(
-			node,
-			output,
-			tmp,
-			parti,
-			cbt->use_lvm);
-		if (retval == BUFFER_FULL)
-			return BUFFER_FULL;
-		node = node->nextpart;
+	if ((strncmp(cbt->build_type, "preseed", RANGE_S)) == 0) {
+		while ((node)) {
+			parti = check_for_special_partition(node);
+			retval = add_partition_to_preseed(
+				node,
+				output,
+				tmp,
+				parti,
+				cbt->use_lvm);
+			if (retval == BUFFER_FULL)
+				return BUFFER_FULL;
+			node = node->nextpart;
+		}
+	} else if ((strncmp(cbt->build_type, "kickstart", RANGE_S)) == 0) {
+		add_partition_to_kickstart(node, output, tmp, cbt->use_lvm);
 	}
 	len = strlen(output);
 	len--;
@@ -918,7 +987,65 @@ add_partition_to_preseed(pre_disk_part_t *part, char *output, char *buff, int sp
 	return retval;
 }
 
-int add_preseed_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff)
+int add_partition_to_kickstart(pre_disk_part_t *part_info, char *output, char *buff, int lvm)
+{
+	int retval;
+	pre_disk_part_t *node;
+	
+	node = part_info;
+	if (lvm > 0) {
+		snprintf(buff, RBUFF_S,
+"clearpart --all\n");
+		if ((retval = check_buffer_length(buff, output)) > 0)
+			return retval;
+		while (node) {
+			if ((strncmp(node->mount_point, "/boot", HOST_S)) == 0) {
+				break;
+			} else {
+				node = node->nextpart;
+			}
+		}
+		if (!node)
+			return NO_BOOT_PARTITION;
+		else
+			snprintf(buff, RBUFF_S,
+"part %s --fstype \"%s\" --size %lu\n", node->mount_point, node->filesystem, node->min);
+		if ((retval = check_buffer_length(buff, output)) > 0)
+			return retval;
+		snprintf(buff, RBUFF_S,
+"part pv.2 --size=1 --grow\nvolgroup vg00 --pesize=32768 pv.2\n");
+		if ((retval = check_buffer_length(buff, output)) > 0)
+			return retval;
+		node = part_info;
+		while (node) {
+			if ((strncmp(node->mount_point, "/boot", HOST_S)) == 0) {
+				node = node->nextpart;
+				continue;
+			} else if ((strncmp(node->mount_point, "swap", HOST_S)) == 0) {
+				snprintf(buff, RBUFF_S,
+"logvol %s --name=%s --vgname=vg00 --size %lu\n", node->mount_point, node->log_vol, node->min);
+				if ((retval = check_buffer_length(buff, output)) > 0) {
+					return retval;
+				}
+				node = node->nextpart;
+			} else {
+				snprintf(buff, RBUFF_S,
+"logvol %s --fstype %s --name=%s --vgname=vg00 --size=%lu\n",
+				 node->mount_point,
+				 node->filesystem,
+				 node->log_vol,
+				 node->min);
+				if ((retval = check_buffer_length(buff, output)) > 0) {
+					return retval;
+				}
+				node = node->nextpart;
+			}
+		}
+	}
+	return 0;
+}
+
+int add_build_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *buff)
 {
 	int retval;
 	char *query, *package;
@@ -933,9 +1060,9 @@ int add_preseed_packages(cbc_config_t *cmc, cbc_build_t *cbt, char *out, char *b
 	len = strlen(buff);
 	full = strlen(out);
 	if(!(query = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "query in add_preseed_packages");
+		report_error(MALLOC_FAIL, "query in add_build_packages");
 	if (!(package = calloc(CONF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "package in add_preseed_packages");
+		report_error(MALLOC_FAIL, "package in add_build_packages");
 	snprintf(query, BUFF_S - 1,
 "select package from packages p, varient v, build_os bo WHERE bo.os_id =\
 p.os_id AND alias = '%s' AND os_version = '%s' AND valias = '%s'\
@@ -961,7 +1088,10 @@ cbt->alias, cbt->version, cbt->varient, cbt->arch);
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res))){
 		row_len = strlen(cbc_row[0]);
-		snprintf(package, row_len + 2, "%s ", cbc_row[0]);
+		if ((strncmp(cbt->build_type, "preseed", RANGE_S)) == 0)
+			snprintf(package, row_len + 2, "%s ", cbc_row[0]);
+		else if ((strncmp(cbt->build_type, "kickstart", RANGE_S)) == 0)
+			snprintf(package, row_len + 2, "%s\n", cbc_row[0]);
 		row_len = strlen(package);
 		total = len + 1 + row_len;
 		if (total < FILE_S) {
@@ -1092,6 +1222,33 @@ libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
 			return BUFFER_FULL;
 		}
 		out_len = strlen(out);
+		if ((strncmp(cbt->alias, "ubuntu", CONF_S)) == 0) {
+			snprintf(buff, FILE_S, "\
+\n\
+ldap-auth-config        ldap-auth-config/bindpw password\n\
+ldap-auth-config        ldap-auth-config/rootbindpw     password\n\
+ldap-auth-config        ldap-auth-config/binddn string  cn=%s\n\
+ldap-auth-config        ldap-auth-config/dbrootlogin    boolean true\n\
+ldap-auth-config        ldap-auth-config/rootbinddn     string  cn=%s\n\
+ldap-auth-config        ldap-auth-config/pam_password   select  md5\n\
+ldap-auth-config        ldap-auth-config/move-to-debconf        boolean true\n\
+ldap-auth-config        ldap-auth-config/ldapns/ldap-server     string  %s\n\
+ldap-auth-config        ldap-auth-config/ldapns/base-dn string  %s\n\
+ldap-auth-config        ldap-auth-config/override       boolean true\n\
+ldap-auth-config        ldap-auth-config/ldapns/ldap_version    select  3\n\
+ldap-auth-config        ldap-auth-config/dblogin        boolean false\n",
+			 app_conf->ldap_bind,
+			 app_conf->ldap_bind,
+			 app_conf->ldap_url,
+			 app_conf->ldap_dn);
+			buff_len = strlen(buff);
+			if (out_len + buff_len < BUILD_S) {
+				strncat(out, buff, buff_len);
+			} else {
+				return BUFFER_FULL;
+			}
+			out_len = strlen(out);
+		}
 	}
 	free(app_conf);
 	return retval;
@@ -1124,8 +1281,8 @@ void get_app_config(cbc_config_t *cmc, cbc_build_t *cbt, pre_app_config_t *confi
 		report_error(MALLOC_FAIL, "query in get_app_config");
 	snprintf(query, RBUFF_S,
 "SELECT ldap_url, ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, \
-config_log, smtp_server, config_email, xymon_server, config_xymon FROM \
-build_domain WHERE bd_id = %ld", cbt->bd_id);
+config_log, smtp_server, config_email, xymon_server, config_xymon, nfs_domain \
+FROM build_domain WHERE bd_id = %ld", cbt->bd_id);
 	snprintf(sserver_id, 10, "%ld", cbt->server_id);
 	cbc_query = query;
 	cbc_mysql_init(cmc, &cbc);
@@ -1160,10 +1317,13 @@ build_domain WHERE bd_id = %ld", cbt->bd_id);
 		if (ldapssl > NONE) {
 			snprintf(configuration->ldap_url, URL_S, "ldaps://%s",
 			 cbc_row[0]);
+			configuration->ldap_ssl = 1;
 		} else {
 			snprintf(configuration->ldap_url, URL_S, "ldap://%s",
 			 cbc_row[0]);
+			configuration->ldap_ssl = 0;
 		}
+		snprintf(configuration->ldap_host, URL_S, "%s", cbc_row[0]);
 		snprintf(configuration->ldap_dn, URL_S, "%s", cbc_row[2]);
 		snprintf(configuration->ldap_bind, URL_S, "%s", cbc_row[3]);
 	}
@@ -1173,6 +1333,7 @@ build_domain WHERE bd_id = %ld", cbt->bd_id);
 		snprintf(configuration->smtp_server, CONF_S, "%s", cbc_row[7]);
 	if (configuration->config_xymon > NONE)
 		snprintf(configuration->xymon_server, CONF_S, "%s", cbc_row[9]);
+	snprintf(configuration->nfs_domain, CONF_S, "%s", cbc_row[11]);
 	free(query);
 	mysql_free_result(cbc_res);
 	mysql_close(&cbc);
@@ -1181,9 +1342,246 @@ build_domain WHERE bd_id = %ld", cbt->bd_id);
 
 int write_kickstart_config(cbc_config_t *cmc, cbc_build_t *cbt)
 {
+	FILE *kick;
+	int retval;
+	char *output, *tmp, *url, *newurl;
+	pre_app_config_t *aconf;
+
+	retval = 0;
+	if (!(aconf = malloc(sizeof(pre_app_config_t))))
+		report_error(MALLOC_FAIL, "aconf in write_kickstart_config");
+	if (!(output = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "output in write_kickstart_config");
+	if (!(tmp = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in write_kickstart_config");
+	if (!(url = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "url in write_kickstart_config");
+	get_app_config(cmc, cbt, aconf);
+	get_kickstart_auth_line(cbt, tmp, aconf);
+	snprintf(output, RBUFF_S, "%s", tmp);
+	snprintf(tmp, RBUFF_S,
+"bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n");
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	snprintf(tmp, RBUFF_S,
+"keyboard %s\n\
+lang %s\n\
+timezone  %s\n", cbt->keymap, cbt->locale, cbt->timezone);
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	snprintf(tmp, RBUFF_S,
+"logging --level=info\nreboot\n\
+rootpw --iscrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+selinux --disabled\n\
+skipx\n\
+install\n\n");
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	if ((retval = write_disk_config(cmc, cbt, output, tmp)) != 0)
+		return retval;
+	if ((retval = add_kick_network_config(cbt, output, tmp)) > 0)
+		return retval;
+	snprintf(tmp, CONF_S,
+"%%packages\n@Base\n\n");
+	if ((retval = add_build_packages(cmc, cbt, output, tmp)) != 0)
+		return retval;
+	snprintf(tmp, FILE_S,
+"%%post\n\ncd /tmp\nwget %sscripts/mounts.sh\n\
+wget %sscripts/motd.sh\n\
+wget %sscripts/ntp.sh\n\
+wget %sscripts/postfix-config.sh\nfor i in *.sh; do chmod 755 $i; done\n\n\
+cd /var/tmp\n\n\
+wget %sscripts/config.sh\n\
+wget %sscripts/hobbit-client-install.sh\n\
+wget %sscripts/xymon.sh\nfor i in *.sh; do chmod 755 $i; done\n\n", cbt->url, cbt->url, cbt->url, cbt->url, cbt->url,
+			cbt->url, cbt->url);
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	snprintf(url, RBUFF_S, "%s", cbt->url);
+	newurl = strrchr(url, '/');
+	*newurl = '\0';
+	newurl = strrchr(url, '/');
+	newurl++;
+	*newurl = '\0';
+	snprintf(tmp, FILE_S,
+"cd /tmp\n\nwget %sdisable_install.php  > /root/disable.log\n\n\
+./config.sh > /root/config.sh.log 2>&1\n\
+./mounts.sh > /root/mounts.sh.log 2>&1\n\
+./motd.sh > /root/motd.sh.log 2>&1\n\
+./ntp.sh > /root/ntp.log 2>&1\n\
+/sbin/chkconfig sendmail off\n\
+/sbin/chkconfig postfix on\n\
+./postfix-config.sh -h %s -d %s -i %s > /root/postfix.log 2>&1\n\n",
+	  url, cbt->hostname, cbt->domain, cbt->ip_address);
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	if (aconf->config_ldap > 0)
+		if ((retval = add_kick_ldap_config(aconf, output, tmp)) > 0)
+			return retval;
+	free(url);
+	if ((retval = add_kick_nfs_config(aconf, output, tmp)) > 0)
+		return retval;
+	if ((retval = add_kick_var_tmp_scripts(output, tmp)) > 0)
+		return retval;
+	snprintf(tmp, RBUFF_S, "%s%s/%s.cfg", cmc->toplevelos, cbt->alias, cbt->hostname);
+	if (!(kick = fopen(tmp, "w"))) {
+		free(aconf);
+		free(output);
+		free(tmp);
+		return FILE_O_FAIL;
+	} else {
+		fputs(output, kick);
+		fclose(kick);
+	}
+	return retval;
+}
+int add_kick_network_config(cbc_build_t *cbt, char *out, char *buff)
+{
+	int retval;
+	
+	retval = 0;
+	snprintf(buff, FILE_S,
+"url --url=http://%s/%s/%s/%s\n\
+network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s --hostname=%s.%s --onboot=on\n\n",	cbt->mirror, cbt->alias, cbt->arch, cbt->version,
+		cbt->netdev, cbt->ip_address, cbt->netmask, cbt->gateway, cbt->nameserver,
+		cbt->hostname, cbt->domain);
+	if ((retval = check_buffer_length(buff, out)) > 0)
+		retval = BUFFER_FULL;
+	return retval;
+}
+
+void get_kickstart_auth_line(cbc_build_t *cbt, char *out, pre_app_config_t *aconf)
+{
+	if (cbt->use_lvm == 0) {
+		snprintf(out, RBUFF_S,
+"auth --useshadow --enablemd5\n");
+	} else if (cbt->use_lvm > 0) {
+		if (aconf->ldap_ssl > 0) {
+			snprintf(out, RBUFF_S,
+"auth --useshadow --enablemd5 --enableldap --enableldapauth  --enableldaptls \
+--ldapserver=%s --ldapbasedn=%s\n", aconf->ldap_host, aconf->ldap_dn);
+		} else {
+			snprintf(out, RBUFF_S,
+"auth --useshadow --enablemd5 --enableldap --enableldapauth \
+--ldapserver=%s --ldapbasedn=%s\n", aconf->ldap_host, aconf->ldap_dn);
+		}
+	}
+}
+
+int add_kick_ldap_config(pre_app_config_t *conf, char *output, char *tmp)
+{
+	char *url;
 	int retval;
 	retval = 0;
-	printf("kickstart location: %s\n", cmc->kickstart);
-	printf("hostname: %s\n", cbt->hostname);
+	url = strchr(conf->ldap_url, '/');
+	url++;
+	url++;
+	if (conf->ldap_ssl > 0) {
+		snprintf(tmp, FILE_S,
+			 /* Hard coded certificate location */
+"wget http://www.shihad.org/Buka-Root-CA.pem\n\
+cp Buka-Root-CA.pem /etc/pki/tls/certs\n\
+cat >> /etc/openldap/ldap.conf<<EOF\n\
+TLS_CACERTFILE  /etc/pki/tls/certs/Buka-Root-CA.pem\n\
+EOF\n\
+cat >> /etc/ldap.conf <<EOF\n\
+tls_cacertfile /etc/pki/tls/certs/Buka-Root-CA.pem\n\
+EOF\n\
+yum install nss-pam-ldapd pam_ldap -y\n\
+/sbin/chkconfig --levels 2345 nscd on\n\
+authconfig --update --enableldap --enableldapauth --enableldaptls --ldapserver=%s --ldapbasedn=%s\n\n",
+		 url,
+		 conf->ldap_dn);
+	} else if (conf->ldap_ssl == 0) {
+		snprintf(tmp, FILE_S,
+"yum install nss-pam-ldapd pam_ldap -y\n\
+/sbin/chkconfig --levels 2345 nscd on\n\
+authconfig --update --enableldap --enableldapauth --ldapserver=%s --ldapbasedn=%s\n\n",
+		 url,
+		 conf->ldap_dn);
+	}
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
 	return retval;
+}
+
+int add_kick_nfs_config(pre_app_config_t *conf, char *output, char *tmp)
+{
+	char *url;
+	int retval;
+	
+	url = strchr(conf->ldap_url, '/');
+	url++;
+	url++;
+	retval = 0;
+	snprintf(tmp, FILE_S,
+"if [ -f /etc/idmapd.conf ]; then\n\
+    cp /etc/idmapd.conf /etc/idmapd.bak\n\
+fi\n\
+\n\
+cat > /etc/idmapd.conf <<EOF\n\
+[General]\n\
+Domain = %s\n\
+\n\
+[Mapping]\n\
+\n\
+[Translation]\n\
+\n\
+Method = nsswitch\n\
+\n\
+[Static]\n\
+\n\
+[UMICH_SCHEMA]\n\
+\n\
+LDAP_server = %s\n\
+\n\
+LDAP_base = %s\n\
+EOF\n", conf->nfs_domain, url, conf->ldap_dn);
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		return BUFFER_FULL;
+	return retval;
+}
+
+int add_kick_var_tmp_scripts(char *output, char *tmp)
+{
+	int retval;
+	
+	retval = 0;
+	snprintf(tmp, FILE_S,
+"OUTPUT=/etc/rc.d/rc.local\n\n\
+echo \"if [ -x /var/tmp/config.sh ]; then\" >> $OUTPUT\n\
+echo \"  /var/tmp/config.sh > /root/config.log 2>&1\" >> $OUTPUT\n\
+echo \"  chmod 644 /var/tmp/config.sh\" >> $OUTPUT\n\
+echo \"fi\" >> $OUTPUT\n\
+echo \" \" >> $OUTPUT\n\
+echo \"if [ -x /var/tmp/hobbit-client-install.sh ]; then\" >> $OUTPUT\n\
+echo \"  HOSTNAME=\\`/bin/hostname\\`\" >> $OUTPUT\n\
+echo \"  /var/tmp/hobbit-client-install.sh -h \\$HOSTNAME > /root/hobb-cli-inst.log 2>&1\" >> $OUTPUT\n\
+echo \"  chmod 644 /var/tmp/hobbit-client-install.sh\" >> $OUTPUT\n\
+echo \"fi\" >> $OUTPUT\n\
+echo \" \" >> $OUTPUT\n\
+echo \"if [ -x /var/tmp/xymon.sh ]; then\" >> $OUTPUT\n\
+echo \"  /var/tmp/xymon.sh > /root/xymon.log 2>&1\" >> $OUTPUT\n\
+echo \"  chmod 644 /var/tmp/xymon.sh\" >> $OUTPUT\n\
+echo \"fi\" >> $OUTPUT\n");
+	if ((retval = check_buffer_length(tmp, output)) > 0)
+		retval = BUFFER_FULL;
+	return retval;
+}
+
+
+int check_buffer_length(char *tmp, char *output)
+{
+	size_t tmp_len, out_len;
+		tmp_len = strlen(tmp);
+	out_len = strlen(output);
+	if ((tmp_len + out_len) < BUILD_S) {
+		strncat(output, tmp, tmp_len);
+	} else {
+		return BUFFER_FULL;
+	}
+	return 0;
 }
