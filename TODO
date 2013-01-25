@@ -7,7 +7,7 @@ checking of the zonefiles and config files.
 
 **** Features *****
 ** Add records to the database - use ncurses?
-** Automatically create reverse zone(s) in the database (via cron??)
+** Automatically create reverse zone(s) in the database (via cron??) Done - commit 0df2265
 ** Specify different config file on command line
 ** Add install script (/usr/local most likely)
 
