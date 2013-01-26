@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([cmdb], [0.1.0], [iain-at-thargoid-dot-co-dot-uk])
-AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_SRCDIR([src/build_display.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
 
@@ -63,9 +63,11 @@ AC_DEFUN([AX_LIB_MYSQL],
 
             found_mysql="yes"
             AC_MSG_RESULT([yes])
+            HAVE_MYSQL="true"
         else
             found_mysql="no"
             AC_MSG_RESULT([no])
+            HAVE_MYSQL="false"
         fi
     fi
 
@@ -132,6 +134,7 @@ else
   AC_CHECK_LIB(pcre, pcre_study)
   if test "$ac_cv_lib_pcre_pcre_study" = "yes" ; then
      PCRE_LIBS="-lpcre"
+     HAVE_PCRE="true"
      AC_MSG_CHECKING([lib pcre])
      AC_MSG_RESULT([$PCRE_LIBS])
      m4_ifval($1,$1)
@@ -144,6 +147,7 @@ else
      if test "$ac_cv_lib_pcre_pcre_compile" = "yes" ; then
         AC_MSG_RESULT(.setting PCRE_LIBS -L$with_pcre/lib -lpcre)
         PCRE_LIBS="-L$with_pcre/lib -lpcre"
+        HAVE_PCRE="true"
         test -d "$with_pcre/include" && PCRE_CFLAGS="-I$with_pcre/include"
         AC_MSG_CHECKING([lib pcre])
         AC_MSG_RESULT([$PCRE_LIBS])
@@ -152,6 +156,7 @@ else
         AC_MSG_CHECKING([lib pcre])
         AC_MSG_RESULT([no, (WARNING)])
         m4_ifval($2,$2)
+        HAVE_PCRE="false"
      fi
   fi
 fi
@@ -161,6 +166,9 @@ AC_SUBST([PCRE_CFLAGS])
 
 AX_LIB_MYSQL
 AX_PATH_LIB_PCRE
+
+AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
+AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -173,4 +181,5 @@ AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
+AC_CONFIG_SUBDIRS([cmdb-0.1.0])
 AC_OUTPUT
