@@ -38,7 +38,4 @@ cbc:
 	$(ECHO) Building cbc : $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS)
 
-.PHONY :	clean
-clean :
-	$(RM) *.o dnsa cmdb cbc
 
