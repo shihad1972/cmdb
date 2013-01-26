@@ -425,12 +425,12 @@ void display_build_locales(cbc_config_t *config)
 		printf("%s\n", cbc_row[0]);
 	mysql_free_result(cbc_res);
 	printf("\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(query, RBUFF_S,

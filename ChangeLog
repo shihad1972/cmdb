@@ -1,3 +1,33 @@
+commit d9665a79b83d92b49e91d6cbac2f0022aa8fcffc
+Author: Iain M Conochie <iain@shihad.org>
+Date:   Sat Jan 26 18:25:30 2013 +0000
+
+    trying to remove ignoring return value of 'fgets', declared with attribute warn_unused_result warnings
+
+commit 0cfc48bee976774800007b7a5f48960044cba7f7
+Author: Iain M Conochie <iain@shihad.org>
+Date:   Sat Jan 26 18:11:12 2013 +0000
+
+    Fix buffer overflows
+
+commit 8450e3b42edf119ebd3d02cb7ab17ad760a46b25
+Author: Iain M Conochie <iain@shihad.org>
+Date:   Sat Jan 26 17:28:31 2013 +0000
+
+    Removed make clean rule. Hopefully this will be added by autotools
+
+commit 8e5b7ab2a0a3488260c27e3ba56b3aa30acd2ccd
+Author: Iain M Conochie <iain@shihad.org>
+Date:   Sat Jan 26 15:24:15 2013 +0000
+
+    Updated autoconf files.
+
+commit 7ed9bcac2c2299fc1834c87100147d906e195d0e
+Author: Iain M Conochie <iain@shihad.org>
+Date:   Fri Jan 25 19:08:54 2013 +0000
+
+    Added base Makefile.am and configure.ac. Updated doc files too
+
 commit 336786d4a24eff8118b5af98764563cdc4feec28
 Author: Iain M Conochie <iain@shihad.org>
 Date:   Wed Jan 23 01:42:39 2013 +0000

@@ -275,13 +275,13 @@ unsigned long int get_customer_for_server(cmdb_config_t *config)
 		}
 		saved = saved->next;
 	}
-	fgets(query, CONF_S, stdin);
+	query = fgets(query, CONF_S, stdin);
 	chomp(query);
 	while ((retval = validate_user_input(query, ID_REGEX)) < 0) {
 		while ((retval = validate_user_input(query, COID_REGEX)) < 0) {
 			printf("User input not valid!\n");
 			printf("Please input the ID or COID of the customer for this server\n");
-			fgets(query, CONF_S, stdin);
+			query = fgets(query, CONF_S, stdin);
 			chomp(query);
 		}
 	}

@@ -670,55 +670,64 @@ cmdb_hard_type_t *get_disk_device_id(cmdb_hard_type_t *head)
 
 int get_network_device(cmdb_hardware_t *head)
 {
+	char *input;
 	int retval;
+	
+	if (!(input = calloc(HOST_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_network_device");
 	
 	retval = 0;
 	printf("Please enter the network device (without the leading /dev/\n");
-	head->device = fgets(head->device, MAC_S, stdin);
+	input = fgets(head->device, MAC_S, stdin);
 	chomp(head->device);
 	while ((retval = validate_user_input(head->device, DEV_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device (without the leading /dev/\n");
-		head->device = fgets(head->device, MAC_S, stdin);
+		input = fgets(head->device, MAC_S, stdin);
 		chomp(head->device);
 	}
 	printf("Please enter the network device MAC Address\n");
-	head->detail = fgets(head->detail, HOST_S, stdin);
+	input = fgets(head->detail, HOST_S, stdin);
 	chomp(head->detail);
 	while ((retval = validate_user_input(head->detail, MAC_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device MAC address\n");
-		head->detail = fgets(head->detail, HOST_S, stdin);
+		input = fgets(head->detail, HOST_S, stdin);
 		chomp(head->detail);
 	}
+	free(input);
 	return 0;
 }
 
 int get_disk_device(cmdb_hardware_t *head)
 {
+	char *input;
 	int retval;
 	cmdb_hardware_t *disk;
+	
+	if (!(input = calloc(HOST_S + 1, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in get_disk_device");
 	
 	retval = 0;
 	disk = hard_node_create();
 	head->next = disk;
 	printf("Please enter the disk device (without the leading /dev/\n");
-	disk->device = fgets(disk->device, MAC_S, stdin);
+	input = fgets(disk->device, MAC_S, stdin);
 	chomp(disk->device);
 	while ((retval = validate_user_input(disk->device, DEV_REGEX) < 0)) {
 		printf("Disk device not valid!\n");
 		printf("Please enter the disk device (without the leading /dev/\n");
-		disk->device = fgets(disk->device, MAC_S, stdin);
+		input = fgets(disk->device, MAC_S, stdin);
 		chomp(disk->device);
 	}
 	printf("Please enter the disk device capacity (# [TB | GB | MB])\n");
-	disk->detail = fgets(disk->detail, HOST_S, stdin);
+	input = fgets(disk->detail, HOST_S, stdin);
 	chomp(disk->detail);
 	while ((retval = validate_user_input(disk->detail, CAPACITY_REGEX) < 0)) {
 		printf("Disk Capacity not valid!\n");
 		printf("Please enter the disk device capacity\n");
 		printf("A number followed by one space followed by either TB, GB or MB\n");
-		disk->detail = fgets(disk->detail, HOST_S, stdin);
+		input = fgets(disk->detail, HOST_S, stdin);
 		chomp(disk->detail);
 	}
 	return 0;

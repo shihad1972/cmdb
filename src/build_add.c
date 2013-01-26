@@ -751,12 +751,12 @@ int get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	printf("Partition Schemes\n");
 	display_partition_schemes(config);
 	printf("Input the name of the scheme you wish to use\n");
-	input = fgets(scheme_name, CONF_S, stdin);
+	scheme_name = fgets(scheme_name, CONF_S, stdin);
 	chomp(scheme_name);
 	while ((retval = validate_user_input(scheme_name, NAME_REGEX) < 0)) {
 		printf("Scheme name not valid!\n");
 		printf("Please input one of the scheme names show above\n");
-		input = fgets(scheme_name, CONF_S, stdin);
+		scheme_name = fgets(scheme_name, CONF_S, stdin);
 		chomp(scheme_name);
 	}
 	snprintf(cml->partition, CONF_S, "%s", scheme_name);
