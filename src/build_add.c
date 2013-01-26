@@ -513,7 +513,7 @@ os_version", cml->os);
 	while ((retval = validate_user_input(input, OS_VER_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS version from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -571,7 +571,7 @@ ORDER BY arch", cml->os, cml->os_version);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS arch from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -642,7 +642,7 @@ int get_build_domain_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	while ((retval = validate_user_input(input, DOMAIN_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS arch from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -668,7 +668,7 @@ int get_build_varient_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the varient from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -727,7 +727,7 @@ os_id = %lu", cml->os_id);
 		while ((retval = validate_user_input(input, ID_REGEX) < 0)) {
 			printf("User input not valid!\n");
 			printf("Please input the OS arch from the above list:\n");
-			fgets(input, CONF_S, stdin);
+			fgets(input, MAC_S, stdin);
 			chomp(input);
 		}
 		if (retval > 0)
@@ -805,8 +805,8 @@ int get_build_hardware(cbc_config_t *config, cbc_build_t *cbt)
 	if ((retval = get_build_hardware_device(config, disk, cbt->server_id, stype, sclass)) != 0)
 		return retval;
 	snprintf(cbt->diskdev, MAC_S, "%s", stype);
-	snprintf(cbt->netdev, MAC_S, "%s", ntype);
-	snprintf(cbt->mac_address, HOST_S, "%s", nclass);
+	snprintf(cbt->netdev, RANGE_S, "%s", ntype);
+	snprintf(cbt->mac_address, MAC_S, "%s", nclass);
 	return retval;
 }
 

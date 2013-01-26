@@ -387,7 +387,7 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");
 	snprintf(cbt->os, CONF_S, "NULL");
-	snprintf(cbt->os_version, CONF_S, "NULL");
+	snprintf(cbt->os_version, MAC_S, "NULL");
 	snprintf(cbt->partition, CONF_S, "NULL");
 	snprintf(cbt->varient, CONF_S, "NULL");
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");

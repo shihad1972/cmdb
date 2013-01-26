@@ -382,7 +382,7 @@ void get_full_server_config(cmdb_server_t *server)
 		fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
-	snprintf(server->name, CONF_S, "%s", input);
+	snprintf(server->name, MAC_S, "%s", input);
 	free(input);
 }
 cmdb_vm_host_t *vm_host_create(void)
