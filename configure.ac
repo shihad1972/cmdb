@@ -20,8 +20,8 @@ AC_CHECK_HEADERS([arpa/inet.h stdlib.h string.h unistd.h])
 AC_DEFUN([AX_LIB_MYSQL],
 [
     AC_ARG_WITH([mysql],
-        AC_HELP_STRING([--with-mysql=@&lt;:@ARG@:&gt;@],
-            [use MySQL client library @&lt;:@default=yes@:&gt;@, optionally specify path to mysql_config]
+        AC_HELP_STRING([--with-mysql=@<:@ARG@:>@],
+            [use MySQL client library @<:@default=yes@:>@, optionally specify path to mysql_config]
         ),
         [
         if test "$withval" = "no"; then
@@ -80,7 +80,7 @@ AC_DEFUN([AX_LIB_MYSQL],
 
     if test "$found_mysql" = "yes" -a -n "$mysql_version_req"; then
 
-        AC_MSG_CHECKING([if MySQL version is &gt;= $mysql_version_req])
+        AC_MSG_CHECKING([if MySQL version is >= $mysql_version_req])
 
         dnl Decompose required version string of MySQL
         dnl and calculate its number representation
@@ -108,7 +108,7 @@ AC_DEFUN([AX_LIB_MYSQL],
                                    \+ $mysql_version_minor \* 1000 \
                                    \+ $mysql_version_micro`
 
-        mysql_version_check=`expr $mysql_version_number \&gt;\= $mysql_version_req_number`
+        mysql_version_check=`expr $mysql_version_number \>\= $mysql_version_req_number`
         if test "$mysql_version_check" = "1"; then
             AC_MSG_RESULT([yes])
         else
