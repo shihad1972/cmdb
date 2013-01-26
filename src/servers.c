@@ -149,7 +149,7 @@ int add_server_to_database(cmdb_config_t *config)
 	
 	printf("***CMDB: Add server into the database***\n\n");
 	printf("Is this server a virtual machine? (y/n): ");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		node = get_vm_host(config);
@@ -329,57 +329,57 @@ void get_full_server_config(cmdb_server_t *server)
 		report_error(MALLOC_FAIL, "input in get_full_server_config");
 	
 	printf("Please input the vendor of the server:\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the vendor of the server:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(server->vendor, CONF_S, "%s", input);
 	
 	printf("Please input the make of the server:\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, MAKE_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the make of the server:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(server->make, CONF_S, "%s", input);
 	
 	printf("Please input the model of the server:\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the model of the server:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(server->model, CONF_S, "%s", input);
 	
 	printf("Please input the uuid of the server:\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, UUID_REGEX) < 0) && 
 		(retval = validate_user_input(input, COID_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the uuid of the server:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(server->uuid, CONF_S, "%s", input);
 	
 	printf("Please input the name of the server:\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the model of the server:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	snprintf(server->name, MAC_S, "%s", input);
@@ -448,11 +448,11 @@ cmdb_vm_host_t *get_vm_host(cmdb_config_t *config)
 			printf("%lu\t%s\t\t\t%s\n", node->id, node->name, node->type);
 		node = node->next;
 	} while (node);
-	fgets(input, MAC_S, stdin);
+	input = fgets(input, MAC_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, ID_REGEX)) < 0) {
 		printf("Input %s not valid. Please input the ID of the server you wish to use\n", input);
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	id = strtoul(input, NULL, 10);
@@ -674,21 +674,21 @@ int get_network_device(cmdb_hardware_t *head)
 	
 	retval = 0;
 	printf("Please enter the network device (without the leading /dev/\n");
-	fgets(head->device, MAC_S, stdin);
+	head->device = fgets(head->device, MAC_S, stdin);
 	chomp(head->device);
 	while ((retval = validate_user_input(head->device, DEV_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device (without the leading /dev/\n");
-		fgets(head->device, MAC_S, stdin);
+		head->device = fgets(head->device, MAC_S, stdin);
 		chomp(head->device);
 	}
 	printf("Please enter the network device MAC Address\n");
-	fgets(head->detail, HOST_S, stdin);
+	head->detail = fgets(head->detail, HOST_S, stdin);
 	chomp(head->detail);
 	while ((retval = validate_user_input(head->detail, MAC_REGEX) < 0)) {
 		printf("Network device %s not valid!\n", head->device);
 		printf("Please enter the network device MAC address\n");
-		fgets(head->detail, HOST_S, stdin);
+		head->detail = fgets(head->detail, HOST_S, stdin);
 		chomp(head->detail);
 	}
 	return 0;
@@ -703,22 +703,22 @@ int get_disk_device(cmdb_hardware_t *head)
 	disk = hard_node_create();
 	head->next = disk;
 	printf("Please enter the disk device (without the leading /dev/\n");
-	fgets(disk->device, MAC_S, stdin);
+	disk->device = fgets(disk->device, MAC_S, stdin);
 	chomp(disk->device);
 	while ((retval = validate_user_input(disk->device, DEV_REGEX) < 0)) {
 		printf("Disk device not valid!\n");
 		printf("Please enter the disk device (without the leading /dev/\n");
-		fgets(disk->device, MAC_S, stdin);
+		disk->device = fgets(disk->device, MAC_S, stdin);
 		chomp(disk->device);
 	}
 	printf("Please enter the disk device capacity (# [TB | GB | MB])\n");
-	fgets(disk->detail, HOST_S, stdin);
+	disk->detail = fgets(disk->detail, HOST_S, stdin);
 	chomp(disk->detail);
 	while ((retval = validate_user_input(disk->detail, CAPACITY_REGEX) < 0)) {
 		printf("Disk Capacity not valid!\n");
 		printf("Please enter the disk device capacity\n");
 		printf("A number followed by one space followed by either TB, GB or MB\n");
-		fgets(disk->detail, HOST_S, stdin);
+		disk->detail = fgets(disk->detail, HOST_S, stdin);
 		chomp(disk->detail);
 	}
 	return 0;

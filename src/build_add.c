@@ -58,14 +58,14 @@ int add_partition_scheme(cbc_config_t *config)
 		report_error(MALLOC_FAIL, "scheme_name in add_partition_scheme");
 	
 	printf("Do you want to use the logical volume manager?: ");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		use_lvm = 1;
 	}
 	
 	printf("Please input the name of the scheme: ");
-	fgets(scheme_name, CONF_S, stdin);
+	scheme_name = fgets(scheme_name, CONF_S, stdin);
 	chomp(scheme_name);
 	if ((retval = validate_user_input(scheme_name, NAME_REGEX) < 0)) {
 		printf("Scheme name %s not valid\n", scheme_name);
@@ -228,7 +228,7 @@ int get_another_partition(void)
 		report_error(MALLOC_FAIL, "answer in get_another_partition");
 	
 	printf("Enter another partition (y/n)? ");
-	fgets(answer, CONF_S, stdin);
+	answer = fgets(answer, CONF_S, stdin);
 	chomp(answer);
 	if ((strncmp(answer, "y", CH_S)) == 0 || (strncmp(answer, "Y", CH_S) == 0)) {
 		printf("Getting another partition\n");
@@ -260,7 +260,7 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	}
 	
 	printf("Please enter the mount point: ");
-	fgets(input, HOST_S, stdin);
+	input = fgets(input, HOST_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "swap", HOST_S) == 0)) {
 		retval = 0;
@@ -270,46 +270,46 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	while (retval < 0) {
 		printf("Mount point %s not valid\n", input);
 		printf("Please enter the mount point: ");
-		fgets(input, HOST_S, stdin);
+		input = fgets(input, HOST_S, stdin);
 		chomp(input);
 		retval = validate_user_input(input, PATH_REGEX);
 	}
 	snprintf(new->mount_point, HOST_S, "%s", input);
 
 	printf("Please enter the file system: ");
-	fgets(input, RANGE_S, stdin);
+	input = fgets(input, RANGE_S, stdin);
 	chomp(input);
 	retval = validate_user_input(input, FS_REGEX);
 	while (retval < 0) {
 		printf("Filesystem not valid\n");
 		printf("Please enter the file system: ");
-		fgets(input, RANGE_S, stdin);
+		input = fgets(input, RANGE_S, stdin);
 		chomp(input);
 		retval = validate_user_input(input, FS_REGEX);
 	}
 	snprintf(new->filesystem, RANGE_S, "%s", input);
 
 	printf("Please enter the minimum partition size (in MB): ");
-	fgets(input, RANGE_S, stdin);
+	input = fgets(input, RANGE_S, stdin);
 	chomp(input);
 	retval = validate_user_input(input, ID_REGEX);
 	while (retval < 0) {
 		printf("Size not valid\n");
 		printf("Please enter the minimum partition size (in MB): ");
-		fgets(input, RANGE_S, stdin);
+		input = fgets(input, RANGE_S, stdin);
 		chomp(input);
 		retval = validate_user_input(input, ID_REGEX);
 	}
 	new->min = strtoul(input, NULL, 10);
 	
 	printf("Please enter the maximum partition size (in MB): ");
-	fgets(input, RANGE_S, stdin);
+	input = fgets(input, RANGE_S, stdin);
 	chomp(input);
 	retval = validate_user_input(input, ID_REGEX);
 	while ((retval < 0) || (new->min > (strtoul(input, NULL, 10)))) {
 		printf("Size not valid\n");
 		printf("Please enter the maximum partition size (in MB): ");
-		fgets(input, RANGE_S, stdin);
+		input = fgets(input, RANGE_S, stdin);
 		chomp(input);
 		retval = validate_user_input(input, ID_REGEX);
 		if (retval >= 0) {
@@ -323,13 +323,13 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	new->max = strtoul(input, NULL, 10);
 	
 	printf("Please enter the priority of the max size: ");
-	fgets(input, RANGE_S, stdin);
+	input = fgets(input, RANGE_S, stdin);
 	chomp(input);
 	retval = validate_user_input(input, ID_REGEX);
 	while (retval < 0) {
 		printf("Size not valid\n");
 		printf("Please enter the priority of the max size: ");
-		fgets(input, RANGE_S, stdin);
+		input = fgets(input, RANGE_S, stdin);
 		chomp(input);
 		retval = validate_user_input(input, ID_REGEX);
 	}
@@ -337,7 +337,7 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	
 	if (lvm == 1) {
 		printf("Name for the logical volume: ");
-		fgets(input, RANGE_S, stdin);
+		input = fgets(input, RANGE_S, stdin);
 		chomp(input);
 		if ((retval = validate_user_input(input, NAME_REGEX) < 0))
 			printf("Logical volume name not valid\n");
@@ -353,7 +353,7 @@ void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 	if (lvm == 1)
 		printf("Logical volume name: %s\n", new->log_vol);
 	printf("Accept (y/n)? ");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		;
@@ -453,12 +453,12 @@ int get_os_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	printf("Please choose the OS you wish to use.\n\n");
 	display_build_operating_systems(config);
 	printf("\n");
-	fgets(input, CONF_S, stdin);
+	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS from the above list:\n");
-		fgets(input, CONF_S, stdin);
+		input = fgets(input, CONF_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -508,12 +508,12 @@ os_version", cml->os);
 		printf("%s\n", cbc_row[0]);
 	mysql_free_result(cbc_res);
 	printf("\n");
-	fgets(input, MAC_S, stdin);
+	input = fgets(input, MAC_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, OS_VER_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS version from the above list:\n");
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -566,12 +566,12 @@ ORDER BY arch", cml->os, cml->os_version);
 		printf("%s\n", cbc_row[0]);
 	mysql_free_result(cbc_res);
 	printf("\n");
-	fgets(input, MAC_S, stdin);
+	input = fgets(input, MAC_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS arch from the above list:\n");
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -637,12 +637,12 @@ int get_build_domain_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	printf("Please choose the build domain you wish to use.\n\n");
 	display_build_domains(config);
 	printf("\n");
-	fgets(input, MAC_S, stdin);
+	input = fgets(input, MAC_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, DOMAIN_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the OS arch from the above list:\n");
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -663,12 +663,12 @@ int get_build_varient_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	printf("Please choose the varient you wish to use.\n\n");
 	display_build_varients(config);
 	printf("\n");
-	fgets(input, MAC_S, stdin);
+	input = fgets(input, MAC_S, stdin);
 	chomp(input);
 	while ((retval = validate_user_input(input, NAME_REGEX) < 0)) {
 		printf("User input not valid!\n");
 		printf("Please input the varient from the above list:\n");
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 	}
 	if (retval > 0)
@@ -722,12 +722,12 @@ os_id = %lu", cml->os_id);
 			printf("%s\t%s\t%s\t%s\t%s\n",
 		  cbc_row[0], cbc_row[1], cbc_row[2], cbc_row[3], cbc_row[4]);
 		printf("\n");
-		fgets(input, MAC_S, stdin);
+		input = fgets(input, MAC_S, stdin);
 		chomp(input);
 		while ((retval = validate_user_input(input, ID_REGEX) < 0)) {
 			printf("User input not valid!\n");
 			printf("Please input the OS arch from the above list:\n");
-			fgets(input, MAC_S, stdin);
+			input = fgets(input, MAC_S, stdin);
 			chomp(input);
 		}
 		if (retval > 0)
@@ -751,12 +751,12 @@ int get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml)
 	printf("Partition Schemes\n");
 	display_partition_schemes(config);
 	printf("Input the name of the scheme you wish to use\n");
-	fgets(scheme_name, CONF_S, stdin);
+	input = fgets(scheme_name, CONF_S, stdin);
 	chomp(scheme_name);
 	while ((retval = validate_user_input(scheme_name, NAME_REGEX) < 0)) {
 		printf("Scheme name not valid!\n");
 		printf("Please input one of the scheme names show above\n");
-		fgets(scheme_name, CONF_S, stdin);
+		input = fgets(scheme_name, CONF_S, stdin);
 		chomp(scheme_name);
 	}
 	snprintf(cml->partition, CONF_S, "%s", scheme_name);
