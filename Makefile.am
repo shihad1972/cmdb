@@ -3,7 +3,6 @@
 # Makefile for DNSA c programs
 #
 #
-CC = gcc
 RM = rm -f
 ECHO = echo
 DIR = src
