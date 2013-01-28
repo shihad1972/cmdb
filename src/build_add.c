@@ -243,7 +243,7 @@ int get_another_partition(void)
 
 void get_partition_data(pre_disk_part_t *head, int lvm, char *input)
 {
-	pre_disk_part_t *new, *saved;
+	pre_disk_part_t *new, *saved = '\0';
 	
 	int retval;
 	
@@ -819,7 +819,8 @@ unsigned long int get_hard_type_id(cbc_config_t *config, char *htype, char *hcla
 	char *query;
 	const char *cbc_query;
 	unsigned long int retval;
-	
+
+	retval = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_hard_type_id");
 	snprintf(query, RBUFF_S,
@@ -1139,6 +1140,7 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	unsigned long int ip;
 	
 	retval = 0;
+	found = 0;
 	if (!(query = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "query in get_build_varient_id");
 	snprintf(query, RBUFF_S,
@@ -1168,7 +1170,6 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	
 	iplist = bd->iplist;
 	for (ip = bd->start_ip; ip <= bd->end_ip; ip++) {
-		found = 0;
 		if (ip == iplist->ip) {
 			if ((strncmp(iplist->hostname, "free", COMM_S)) == 0) {
 				break;
