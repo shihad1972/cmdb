@@ -1,10 +1,10 @@
 /* forward.h: Function and data definitions for forward zones */
 
+#ifndef	__WRITE_ZONE_H__
+#define __WRITE_ZONE_H__
 #include <mysql/mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
-#ifndef	__WRITE_ZONE_H__
-#define __WRITE_ZONE_H__
 
 typedef struct zone_info_t { /* Hold DNS zone */
 	int id;
@@ -23,20 +23,6 @@ typedef struct zone_info_t { /* Hold DNS zone */
 	unsigned long int expire;
 	unsigned long int ttl;
 } zone_info_t;
-
-typedef struct dnsa_zone_t { /* Hold the DNSA zone information */
-	unsigned long int serial;
-	unsigned long int refresh;
-	unsigned long int retry;
-	unsigned long int expire;
-	unsigned long int ttl;
-	char name[RBUFF_S];
-	char pri_dns[RANGE_S];
-	char sec_dns[RANGE_S];
-	char web_ip[RANGE_S];
-	char ftp_ip[RANGE_S];
-	char mail_ip[RANGE_S];
-} dnsa_zone_t;
 
 /* Return struct containing the DNS zone data */
 zone_info_t

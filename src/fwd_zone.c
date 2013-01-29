@@ -583,7 +583,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	MYSQL_ROW my_row;
 	zone_info_t zone_info, *zi;
 	record_row_t row_data;
-	size_t offset, len = 0;
+	size_t len, offset;
 	my_ulonglong dnsa_rows;
 	int error;
 	char *zout, *zout2, *tmp, *zonefilename;
@@ -600,6 +600,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	
 	dnsa_query = tmp;
 	zi = &zone_info;
+	len = offset = 0;
 	
 	/* Initialise MYSQL connection and query */
 	dnsa_mysql_init(dc, &dnsa);
