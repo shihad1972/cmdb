@@ -83,7 +83,7 @@ $ORIGIN .\n$TTL %ld\n\
 	if ((offset + strlen(zout)) < len)
 		strncat(zout, tmp, offset);
 	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {
-		sprintf(tmp, "\t\t\tNS\t\t%s.\n", zi->sec_dns);
+		snprintf(tmp, BUFF_S, "\t\t\tNS\t\t%s.\n", zi->sec_dns);
 		offset = strlen(tmp);
 		strncat(zout, tmp, offset);
 	}
@@ -352,13 +352,15 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	dnsa_query = dquery;
 	len = 0;
 	
-	sprintf(c, ".");
+	snprintf(c, CH_S, ".");
 	error_string = c;
-	sprintf(line, "%s", zi->pri_dns);
+	snprintf(line, BUFF_S, "%s", zi->pri_dns);
 	if (!(thost = strtok(line, c)))
 		report_error(NO_DELIM, error_string);
 	/* Find and add 1st NS record */
-	sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'", zi->id, thost);
+	snprintf(dquery, RBUFF_S, "\
+SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'",
+		 zi->id, thost);
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
@@ -374,10 +376,12 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	/* Now check for second NS record */
 	if (!(strcmp(zi->sec_dns, "NULL")) == 0) {
 		mysql_free_result(dnsa_res);
-		sprintf(line, "%s", zi->sec_dns);
+		snprintf(line, BUFF_S, "%s", zi->sec_dns);
 		if (!(thost = strtok(line, c)))
 			report_error(NO_DELIM, error_string);
-		sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'", zi->id, thost);
+		snprintf(dquery, RBUFF_S, "\
+SELECT * FROM records WHERE zone = %d AND host like '%s' AND type = 'A'",
+			zi->id, thost);
 		cmdb_mysql_query(&dnsa, dnsa_query);
 		if (!(dnsa_res = mysql_store_result(&dnsa)))
 			report_error(NO_RECORDS, zi->name);
@@ -391,7 +395,7 @@ void add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	free(line);
 }
 
-int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
+void add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 {
 	MYSQL dnsa, dnsa2;
 	MYSQL_RES *dnsa_res, *dnsa_res2;
@@ -401,7 +405,6 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	record_row_t row_data, row_data2;
 	char *line, *dquery, *c, *thost;
 	const char *dnsa_query, *error_string;
-	int mx;
 	
 	if (!(line = malloc(BUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "line in add_MX_A_records");
@@ -413,10 +416,10 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	dnsa_query = dquery;
 	error_string = c;
 	len = 0;
-	mx = 0;
 	
-	sprintf(c, ".");
-	sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
+	snprintf(c, CH_S, ".");
+	snprintf(dquery, RBUFF_S, "\
+SELECT * FROM records WHERE zone = %d AND type = 'MX'", zi->id);
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
@@ -425,29 +428,27 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
 		fprintf(stderr, "No MX records for domain %s\n", zi->name);
-		mx = -1;
 		cmdb_mysql_clean_full(dnsa_res, &dnsa, dquery);
 		free(c);
 		free(line);
-		return mx;
+		return;
 	}
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(dnsa_row);
-		sprintf(line, "%s", row_data.dest);
+		snprintf(line, BUFF_S, "%s", row_data.dest);
 		if (!(thost = strtok(line, c)))
 			report_error(NO_DELIM, error_string);
-		sprintf(dquery, "SELECT * FROM records WHERE zone = %d AND host = '%s'",
+		snprintf(dquery, RBUFF_S, "\
+SELECT * FROM records WHERE zone = %d AND host = '%s'",
 				zi->id, thost);
 		dnsa_mysql_init(dc, &dnsa2);
 		cmdb_mysql_query(&dnsa2, dquery);
 		if (!(dnsa_res2 = mysql_store_result(&dnsa2))) {
 			fprintf(stderr, "No result set?\n");
-			if (mx == 0)
-				mx = -1;
 			cmdb_mysql_clean_full(dnsa_res2, &dnsa2, dquery);
 			cmdb_mysql_clean_full(dnsa_res, &dnsa, line);
 			free(c);
-			return mx;
+			return;
 		}
 		while ((dnsa_row = mysql_fetch_row(dnsa_res2))) {
 			row_data2 = fill_record_data(dnsa_row);
@@ -455,12 +456,10 @@ int add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out)
 		}
 		mysql_free_result(dnsa_res2);
 		mysql_close(&dnsa2);
-		mx++;
 	}
 	cmdb_mysql_clean_full(dnsa_res, &dnsa, dquery);
 	free(c);
 	free(line);
-	return mx;
 }
 
 void check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc)
@@ -473,7 +472,7 @@ void check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc)
 		report_error(MALLOC_FAIL, "command in check_rev_zone");
 	syscom = command;
 	
-	sprintf(command, "%s %s %s", dc->chkz, domain, filename);
+	snprintf(command, RBUFF_S, "%s %s %s", dc->chkz, domain, filename);
 	error = system(syscom);
 	if (error != 0)
 		report_error(CHKZONE_FAIL, domain);
@@ -600,7 +599,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 		}
 	}
 	mysql_free_result(dnsa_res);
-	sprintf(tmp, "$ORIGIN\t%s.\n", zi->name);
+	snprintf(tmp, BUFF_S, "$ORIGIN\t%s.\n", zi->name);
 	len = strlen(tmp);
 	strncat(zout, tmp, len);
 	
@@ -614,7 +613,7 @@ int wzf (char *domain, dnsa_config_t *dc)
 	strncpy(zout2, zout, len);
 	
 	add_ns_A_records_to_header(zi, dc, zout);
-	error = add_MX_A_records_to_header(zi, dc, zout);
+	add_MX_A_records_to_header(zi, dc, zout);
 	if (!(zonefilename = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefilename in wrz");
 	/* Check zonefile */
@@ -638,7 +637,7 @@ OR zone = %d AND type = 'CNAME'", zi->id, zi->id);
 		offset = add_records(&row_data, zout2, offset);	
 	}
 	mysql_free_result(dnsa_res);
-	sprintf(zonefilename, "%sdb.%s", dc->dir, zi->name);
+	snprintf(zonefilename, TBUFF_S, "%sdb.%s", dc->dir, zi->name);
 	write_fwd_zonefile(zonefilename, zout2);
 	check_fwd_zone(zonefilename, zi->name, dc);
 	snprintf(tmp, BUFF_S,
@@ -688,7 +687,7 @@ int wcf(dnsa_config_t *dc)
 	if (!(zonefile = calloc(CONF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefile in wcf");
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
-		sprintf(zonefile, "%sdb.%s", dc->dir, dnsa_row[0]);
+		snprintf(zonefile, CONF_S, "%sdb.%s", dc->dir, dnsa_row[0]);
 		if ((cnf = fopen(zonefile, "r"))){
 			snprintf(dnsa_line, TBUFF_S, "\
 zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s\";\n\t\t};\n\n", 
@@ -701,7 +700,7 @@ zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s\";\n\t\t};\n\n",
 		}
 	}
 	/* Write the BIND config file */
-	sprintf(dnsa_line, "%s%s", dc->bind, dc->dnsa);
+	snprintf(dnsa_line, TBUFF_S, "%s%s", dc->bind, dc->dnsa);
 	if (!(cnf = fopen(dnsa_line, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing!\n", dnsa_line);
 		exit(1);
@@ -711,13 +710,13 @@ zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s\";\n\t\t};\n\n",
 	}
 	/* Check the file and if OK reload BIND */
 	check_comm = dnsa_line;
-	sprintf(dnsa_line, "%s %s%s", dc->chkc, dc->bind, dc->dnsa);
+	snprintf(dnsa_line, TBUFF_S, "%s %s%s", dc->chkc, dc->bind, dc->dnsa);
 	error = system(check_comm);
 	if (error != 0) {
 		fprintf(stderr, "Bind config check failed! Error code was %d\n", error);
 	} else {
 		reload_comm = dnsa_line;
-		sprintf(dnsa_line, "%s reload", dc->rndc);
+		snprintf(dnsa_line, TBUFF_S, "%s reload", dc->rndc);
 		error = system(reload_comm);
 		if (error != 0) {
 			fprintf(stderr, "Bind reload failed with error code %d\n", error);

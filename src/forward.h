@@ -54,7 +54,7 @@ void
 add_ns_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out);
 
 /* Add the A records for the MX servers to the zonefile; return no added */
-int
+void
 add_MX_A_records_to_header(zone_info_t *zi, dnsa_config_t *dc, char *out);
 
 /* Add the individual DNS Records to the zonefile string; return size */
