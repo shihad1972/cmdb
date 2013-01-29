@@ -44,9 +44,12 @@ int main(int argc, char *argv[])
 	
 	/* Get command line args. See above */
 	retval = parse_dnsa_command_line(argc, argv, cm);
-	if (retval < 0)
+	if (retval < 0) {
+		free(domain);
+		free(dc);
+		free(cm);
 		display_cmdb_command_line_error(retval, argv[0]);
-	
+	}
 	/* Get config values from config file */	
 	init_config_values(dc);
 	retval = parse_dnsa_config_file(dc, cm->config);

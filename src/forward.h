@@ -43,7 +43,7 @@ fill_dnsa_config(MYSQL_ROW my_row, zone_info_t *zone);
 
 /* Create the header of the DNS zone in a string */
 void
-create_zone_header(char *output, zone_info_t);
+create_zone_header(char *output, zone_info_t *zi, size_t len);
 
 /* Add the MX records to the header string */
 void

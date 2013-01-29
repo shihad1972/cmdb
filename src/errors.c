@@ -42,6 +42,10 @@ void report_error(int error, const char *errstr)
 			fprintf(stderr, "No records found for the zone %s\n", errstr);
 			exit(NO_RECORDS);
 			break;
+		case NO_FORWARD_RECORDS:
+			fprintf(stderr, "No records found for forward zone %s\n", errstr);
+			exit(NO_FORWARD_RECORDS);
+			break;
 		case WRONG_ACTION:
 			fprintf(stderr, "Incorrect action specified\n");
 			exit(WRONG_ACTION);

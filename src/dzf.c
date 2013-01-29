@@ -5,7 +5,7 @@
  * 
  * Part of the DNSA  program
  * 
- * (C) Iain M Conochie 2012
+ * (C) Iain M Conochie 2012 - 2013
  * 
  */
 
@@ -47,17 +47,17 @@ int dzf (char *domain, dnsa_config_t *dc)
 	start = 0;
 	
 	/* Initialise MYSQL connection and query */
-	sprintf(tmp, "SELECT * FROM zones WHERE name = '%s'", domain);
+	snprintf(tmp, FILE_S,
+"SELECT * FROM zones WHERE name = '%s'", domain);
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, tmp);
+		free(host);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
-		mysql_free_result(dnsa_res);
-		mysql_close(&dnsa);
-		mysql_library_end();
-		free(tmp);
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, tmp);
 		free(host);
 		report_error(NO_DOMAIN, domain);
 	} else if (dnsa_rows > 1)
@@ -67,13 +67,17 @@ int dzf (char *domain, dnsa_config_t *dc)
 	while ((my_row = mysql_fetch_row(dnsa_res)))
 		zone_info = fill_zone_data(my_row);
 	mysql_free_result(dnsa_res);
-	sprintf(tmp, "SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
+	snprintf(tmp, FILE_S,
+"SELECT * FROM records WHERE zone = %d ORDER BY type", zi->id);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, tmp);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, tmp);
 		report_error(NO_RECORDS, domain);
+	}
 	/*
 	 * Check for the size of the string $host.$domain. and if bigger than
 	 * the previous largest then save the result. This will go through all
@@ -82,13 +86,13 @@ int dzf (char *domain, dnsa_config_t *dc)
 	 */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(my_row);
-		sprintf(host, "%s.%s.", rd->host, domain);
+		snprintf(host, TBUFF_S, "%s.%s.", rd->host, domain);
 		len = strlen(host);
 		if (len > max) {
 			max = len;
 		}
 	}
-	sprintf(host, "%s.", zi->name);
+	snprintf(host, TBUFF_S, "%s.", zi->name);
 	len = strlen(host);
 	tabs = (max / 8) - (len / 8);
 	for (i = 0; i < tabs; i++) {
@@ -104,7 +108,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
 		row_data = fill_record_data(my_row);
-		sprintf(host, "%s.%s.", rd->host, domain);
+		snprintf(host, TBUFF_S, "%s.%s.", rd->host, domain);
 		len = strlen(host);
 		tabs = (max / 8) - (len / 8);
 		for (i = 0; i < tabs; i++) {
@@ -120,7 +124,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 		}
 	}
 	
-	sprintf(host, "%s.", zi->name);
+	snprintf(host, TBUFF_S, "%s.", zi->name);
 	len = strlen(host);
 	tabs = (max / 8) - (len / 8);
 	for (i = 0; i < tabs; i++) {
@@ -132,10 +136,7 @@ int dzf (char *domain, dnsa_config_t *dc)
 	       host, zi->ttl, zi->pri_dns, zi->name);
 	printf("%ld %ld %ld %ld %ld\n", zi->serial, zi->refresh, zi->retry,
 	       zi->expire, zi->ttl);
-	mysql_free_result(dnsa_res);
-	mysql_close(&dnsa);
-	mysql_library_end();
-	free(tmp);
+	cmdb_mysql_clean_full(dnsa_res, &dnsa, tmp);
 	free(host);
 	return 0;
 }
@@ -156,25 +157,30 @@ int list_zones (dnsa_config_t *dc)
 	start = 0;
 	
 	printf("Listing zones from database %s\n", dc->db);
-	sprintf(tmp, "SELECT name, valid FROM zones ORDER BY name");
+	snprintf(tmp, FILE_S, "SELECT name, valid FROM zones ORDER BY name");
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsaquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, tmp);
+		free(domain);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0))
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, tmp);
+		free(domain);
 		report_error(DOMAIN_LIST_FAIL, domain);
+	}
 	/* 
 	 * To format the output, we need to know the string length of the
 	 * longest domain 
 	 */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
-		sprintf(domain, "%s", my_row[0]);
+		snprintf(domain, TBUFF_S, "%s", my_row[0]);
 		len = strlen(domain);
 		if (len > max)
 			max = len;
 	}
-	sprintf(domain, "Domain");
+	snprintf(domain, TBUFF_S, "Domain");
 	len = strlen(domain);
 	tabs = (max / 8) - (len / 8);
 	for (i = 0; i < tabs; i++) {
@@ -186,7 +192,7 @@ int list_zones (dnsa_config_t *dc)
 	
 	mysql_data_seek(dnsa_res, start);	/* rewind MYSQL results */
 	while ((my_row = mysql_fetch_row(dnsa_res))) {
-		sprintf(domain, "%s", my_row[0]);
+		snprintf(domain, TBUFF_S, "%s", my_row[0]);
 		len = strlen(domain);
 		tabs = (max / 8) - (len / 8);
 		for (i = 0; i < tabs; i++) {
@@ -195,10 +201,7 @@ int list_zones (dnsa_config_t *dc)
 		domain[len + i] = '\0';
 		printf("%s\t%s\n", domain, my_row[1]);
 	}
-	mysql_free_result(dnsa_res);
-	mysql_close(&dnsa);
-	mysql_library_end();
-	free(domain);
+	cmdb_mysql_clean_full(dnsa_res, &dnsa, domain);
 	free(tmp);
 	return 0;
 }
