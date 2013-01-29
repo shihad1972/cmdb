@@ -1,6 +1,6 @@
 /* dnsa_mysql.h: Header file for DNSA mysql specific functions */
 
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 

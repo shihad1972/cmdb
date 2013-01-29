@@ -1,5 +1,5 @@
 /* reverse.h: Reverse zone functions and data structures header */
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 

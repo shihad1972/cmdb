@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>	/* required for IP address conversion */
 #include <sys/stat.h>
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_mysql.h"

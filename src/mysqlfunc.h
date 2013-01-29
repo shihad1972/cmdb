@@ -3,7 +3,7 @@
  * Header file for the mysql functions
  */
 
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 
 #ifndef __MYSQL_FUNC_H

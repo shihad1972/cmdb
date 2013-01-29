@@ -2,7 +2,7 @@
 
 #ifndef	__WRITE_ZONE_H__
 #define __WRITE_ZONE_H__
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 

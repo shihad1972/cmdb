@@ -2,7 +2,7 @@
 
 #ifndef __CMDB_CMDB_H__
 #define __CMDB_CMDB_H__
-#include "mysql/mysql.h"
+#include "mysql.h"
 
 enum {			/* Display codes; use NONE from action codes */
 	SERVER = 1,

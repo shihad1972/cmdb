@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql/mysql.h>
+#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "reverse.h"
