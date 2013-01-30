@@ -6,7 +6,7 @@
  * 
  * Part of the DNSA  program
  * 
- * (C) Iain M Conochie 2012
+ * (C) Iain M Conochie 2012 - 2013
  * 
  */
 #include <stdio.h>
@@ -25,7 +25,7 @@
 /** Function to fill a struct with results from the DB query
  ** No error checking on fields
  */
-void fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *my_zone)
+void fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *rev)
 {
 	size_t len;
 	const char *delim, *hostmaster;
@@ -34,31 +34,31 @@ void fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *my_zone)
 	delim = ".";
 	hostmaster = "hostmaster";
 	
-	my_zone->rev_zone_id = atoi(my_row[0]);
-	strncpy(my_zone->net_range, my_row[1], RANGE_S);
-	my_zone->prefix = strtoul(my_row[2], NULL, 10);
-	strncpy(my_zone->net_start, my_row[3], RANGE_S);
-	strncpy(my_zone->net_finish, my_row[4], RANGE_S);
-	my_zone->start_ip = strtoul(my_row[5], NULL, 10);
-	my_zone->end_ip = strtoul(my_row[6], NULL, 10);
-	strncpy(my_zone->pri_dns, my_row[7], RBUFF_S);
-	strncpy(my_zone->sec_dns, my_row[8] ? my_row[8] : "NULL", RBUFF_S);
-	my_zone->serial = strtoul(my_row[9], NULL, 10);
-	my_zone->refresh = strtoul(my_row[10], NULL, 10);
-	my_zone->retry = strtoul(my_row[11], NULL, 10);
-	my_zone->expire = strtoul(my_row[12], NULL, 10);
-	my_zone->ttl = strtoul(my_row[13], NULL, 10);
-	strncpy(my_zone->valid, my_row[14], RBUFF_S);
-	my_zone->owner = atoi(my_row[15]);
-	strncpy(my_zone->updated, my_row[16], RBUFF_S);
-	
-	if (!(tmp = strstr(my_zone->pri_dns, delim))) {
+	rev->rev_zone_id = atoi(my_row[0]);
+	strncpy(rev->net_range, my_row[1], RANGE_S);
+	rev->prefix = strtoul(my_row[2], NULL, 10);
+	strncpy(rev->net_start, my_row[3], RANGE_S);
+	strncpy(rev->net_finish, my_row[4], RANGE_S);
+	rev->start_ip = strtoul(my_row[5], NULL, 10);
+	rev->end_ip = strtoul(my_row[6], NULL, 10);
+	strncpy(rev->pri_dns, my_row[7], RBUFF_S);
+	strncpy(rev->sec_dns, my_row[8] ? my_row[8] : "NULL", RBUFF_S);
+	rev->serial = strtoul(my_row[9], NULL, 10);
+	rev->refresh = strtoul(my_row[10], NULL, 10);
+	rev->retry = strtoul(my_row[11], NULL, 10);
+	rev->expire = strtoul(my_row[12], NULL, 10);
+	rev->ttl = strtoul(my_row[13], NULL, 10);
+	strncpy(rev->valid, my_row[14], RBUFF_S);
+	rev->owner = atoi(my_row[15]);
+	strncpy(rev->updated, my_row[16], RBUFF_S);
+
+	if (!(tmp = strstr(rev->pri_dns, delim))) {
 		fprintf(stderr, "strstr in fill_rev_zone_data failed!\n");
 		exit(NO_DELIM);
 	} else {
-		strncpy(my_zone->hostmaster, hostmaster, RANGE_S);
+		strncpy(rev->hostmaster, hostmaster, RANGE_S);
 		len = strlen(tmp);
-		strncat(my_zone->hostmaster, tmp, len);
+		strncat(rev->hostmaster, tmp, len);
 	}
 }
 
@@ -68,25 +68,20 @@ void create_rev_zone_header(rev_zone_info_t *zone_info, char *rout)
 	char ch;
 	size_t offset;
 	
-	if (!(tmp = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "tmp");
+	if (!(tmp = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "tmp in create_rev_zone_header");
 
 	offset = 0;
-
-	sprintf(tmp, "$TTL %ld\n@\t\tIN SOA\t%s.\t%s. (\n",
-		zone_info->ttl, zone_info->pri_dns, zone_info->hostmaster);
+	snprintf(tmp, FILE_S, "\
+$TTL %ld\n@\t\tIN SOA\t%s.\t%s. (\n\
+\t\t\t%ld\t; Serial\n\t\t\t%ld\t\t; Refresh\n\t\t\t%ld\t\t; Retry\n\
+\t\t\t%ld\t\t; Expire\n\t\t\t%ld)\t\t; Negative Cache TTL\n",
+		 zone_info->ttl, zone_info->pri_dns, zone_info->hostmaster,
+		 zone_info->serial, zone_info->refresh, zone_info->retry,
+		 zone_info->expire, zone_info->ttl);
 	offset = strlen(tmp);
 	strncpy(rout, tmp, offset);
-	sprintf(tmp, "\t\t\t%ld\t; Serial\n\t\t\t%ld\t\t; Refresh\n\t\t\t%ld\t\t; Retry\n",
-		zone_info->serial, zone_info->refresh, zone_info->retry);
-	offset = strlen(tmp);
-	strncat(rout, tmp, offset);
-	sprintf(tmp, "\t\t\t%ld\t\t; Expire\n\t\t\t%ld)\t\t; Negative Cache TTL\n",
-		zone_info->expire, zone_info->ttl);
-	offset = strlen(tmp);
-	strncat(rout, tmp, offset);
 	offset = strlen(zone_info->pri_dns);
-	
 	/* check for trainling . in NS record */
 	ch = zone_info->pri_dns[offset - 1];
 	if (ch == '.')
@@ -97,9 +92,7 @@ void create_rev_zone_header(rev_zone_info_t *zone_info, char *rout)
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
 	/* check for secondary DNS record */
-	if ((strcmp(zone_info->sec_dns, "NULL")) == 0) {
-		;	/* No secondary NS record so do nothing */
-	} else {
+	if (!(strcmp(zone_info->sec_dns, "NULL")) == 0) {
 		offset = strlen(zone_info->sec_dns);
 		/* check for trainling . in NS record */
 		ch = zone_info->sec_dns[offset - 1];
@@ -109,10 +102,8 @@ void create_rev_zone_header(rev_zone_info_t *zone_info, char *rout)
 			sprintf(tmp, "\t\t\tNS\t%s.\n;\n", zone_info->sec_dns);
 		}
 	}
-	
 	offset = strlen(tmp);
 	strncat(rout, tmp, offset);
-	offset = strlen(rout);
 	free(tmp);
 }
 
@@ -125,8 +116,7 @@ void check_rev_zone(char *filename, char *domain, dnsa_config_t *dc)
 	if (!(command = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "command in check_rev_zone");
 	syscom = command;
-	
-	sprintf(command, "%s %s %s", dc->chkz, filename, domain);
+	snprintf(command, RBUFF_S, "%s %s %s", dc->chkz, filename, domain);
 	error = system(syscom);
 	if (error != 0)
 		report_error(CHKZONE_FAIL, domain);
@@ -149,12 +139,12 @@ void add_rev_records(char *rout, rev_record_row_t my_row)
 	char *tmp;
 	if (!(tmp = malloc(RBUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in add_rev_records");
-	sprintf(tmp, "%s\t\tPTR\t%s\n", my_row.host, my_row.dest);
+	snprintf(tmp, RBUFF_S, "%s\t\tPTR\t%s\n", my_row.host, my_row.dest);
 	strncat(rout, tmp, RBUFF_S);
 	free(tmp);
 }
 
-void create_rev_zone_filename (char *dom, const char *nr, dnsa_config_t *dc)
+void create_rev_zone_filename (char *dom, char *nr, dnsa_config_t *dc)
 {
 	size_t len;
 	
@@ -162,42 +152,6 @@ void create_rev_zone_filename (char *dom, const char *nr, dnsa_config_t *dc)
 	strncpy(dom, dc->dir, len);
 	len = strlen(nr);
 	strncat(dom, nr, len);
-	
-}
-/** This function needs proper testing on range other than /24. This will most likely not
- ** be able to handle anything not on a /8, /16, or /24 boundary.
- */
-void get_in_addr_string(char *in_addr, char range[])
-{
-	size_t len;
-	char *tmp, *line;
-	char louisa[] = ".in-addr.arpa";
-	int c, i;
-	
-	c = '.';
-	i = 0;
-	tmp = 0;
-	len = strlen(range);
-	len++;/* Got to remember the terminating \0 :) */
-	if (!(line = malloc((len) * sizeof(char))))
-		report_error(MALLOC_FAIL, "line");
-	snprintf(line, len, "%s", range);
-	tmp = strrchr(line, c);
-	*tmp = '\0';		/* Get rid of training .0 */
-	while ((tmp = strrchr(line, c))) {
-		++tmp;
-		len = strlen(tmp);
-		strncat(in_addr, tmp, len);
-		strncat(in_addr, ".", 1);
-		--tmp;
-		*tmp = '\0';
-		i++;
-	}
-	len = strlen(line);
-	strncat(in_addr, line, len);
-	len = strlen(louisa);
-	strncat(in_addr, louisa, len);
-	free(line);
 }
 
 void get_in_addr_string2(char *in_addr, char range[], unsigned long int prefix)
@@ -212,14 +166,12 @@ void get_in_addr_string2(char *in_addr, char range[], unsigned long int prefix)
 	tmp = 0;
 	len = strlen(range);
 	len++;/* Got to remember the terminating \0 :) */
-	if (!(line = malloc((len) * sizeof(char))))
+	if (!(line = calloc(len, sizeof(char))))
 		report_error(MALLOC_FAIL, "line in get_in_addr_string2");
 	if (!(classless = calloc(CONF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "classless in get_in_addr_string2");
 	
 	snprintf(line, len, "%s", range);
-/*	tmp = strrchr(line, c);
-	*tmp = '\0';		 Get rid of training .0 */
 	switch (prefix) {
 		case 24:
 			tmp = strrchr(line, c);
@@ -312,7 +264,6 @@ int get_rev_id (char *domain, dnsa_config_t *dc, short int action)
 	int retval;
 	
 	retval = 0;
-	
 	/* 
 	 * If domain is all, then we are listing all domains. Return with 0
 	 * If domain is none, then we are writing config file. Return with 0 
@@ -329,39 +280,26 @@ int get_rev_id (char *domain, dnsa_config_t *dc, short int action)
 		return retval;	/* No Need to get ID to add a zone */
 	if (!(queryp = malloc(BUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "queryp in get_rev_id");
-	
 	dquery = queryp;
-	sprintf(queryp,
-		"SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
+	snprintf(queryp, BUFF_S, "\
+SELECT rev_zone_id FROM rev_zones WHERE net_range = '%s'", domain);
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dquery);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, queryp);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
-	
 	/* Check for only 1 result */
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
-		mysql_free_result(dnsa_res);
-		mysql_close(&dnsa);
-		free(queryp);
-		dquery = 0;
-		mysql_library_end();
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, queryp);
 		report_error(NO_DOMAIN, domain);
 	} else if (dnsa_rows > 1) {
-		mysql_free_result(dnsa_res);
-		mysql_close(&dnsa);
-		free(queryp);
-		dquery = 0;
-		mysql_library_end();
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, queryp);
 		report_error(MULTI_DOMAIN, domain);
 	}
 	dnsa_row = mysql_fetch_row(dnsa_res);
 	retval = atoi(dnsa_row[0]);
-	mysql_free_result(dnsa_res);
-	mysql_close(&dnsa);
-	free(queryp);
-	dquery = 0;
-	mysql_library_end();
+	cmdb_mysql_clean_full(dnsa_res, &dnsa, queryp);
 	return retval;
 }
 
@@ -371,35 +309,23 @@ int wrzf(int reverse, dnsa_config_t *dc)
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
 	MYSQL_ROW dnsa_row;
+	my_ulonglong dnsa_rows;
 	rev_zone_info_t *rzi;
 	rev_record_row_t rev_row;
-	my_ulonglong dnsa_rows;
-	int error, i;
-	char *zonefn, *rout, *dquery, *domain;
-	const char *dnsa_query, *net_range;
-	
+	int i;
+	char *rout, *dquery, *domain;
+	const char *dnsa_query;
 	
 	if (!(dquery = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "dquery in wrzf");
-	if (!(zonefn = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "zonefn in wrzf");
-	if (!(rout = calloc(FILE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "rout in wrzf");
-	if (!(domain = calloc(CONF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "domain in wrzf");
-	if (!(rzi = malloc(sizeof(rev_zone_info_t))))
-		report_error(MALLOC_FAIL, "rzi in wrzf");
 	
 	dnsa_query = dquery;
-	net_range = rzi->net_range;
-	
-	/* Initialise MYSQL connection and query */
 	dnsa_mysql_init(dc, &dnsa);
-	
-	sprintf(dquery, "SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
+	snprintf(dquery, BUFF_S, "\
+SELECT * FROM rev_zones WHERE rev_zone_id = '%d'", reverse);
 	cmdb_mysql_query(&dnsa, dnsa_query);
-	
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, dquery);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
@@ -409,22 +335,18 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fprintf(stderr, "Multiple rows found for reverse zone id %d\n", reverse);
 		return MULTI_DOMAIN;
 	}
-	
-	/* Get the information for the reverse zone */
+	if (!(rzi = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rzi in wrzf");
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		fill_rev_zone_data(dnsa_row, rzi);
 	}
 	mysql_free_result(dnsa_res);
-	/* Start the output string with the zonefile header */
+	if (!(rout = calloc(FILE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "rout in wrzf");
 	create_rev_zone_header(rzi, rout);
-	
-	sprintf(dquery, "SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
-	error = mysql_query(&dnsa, dnsa_query);
-	
-	if ((error != 0)) {
-		fprintf(stderr, "Rev record query unsuccessful: error code %d\n", error);
-		return MY_QUERY_FAIL;
-	}
+	snprintf(dquery, BUFF_S, "\
+SELECT host, destination FROM rev_records WHERE rev_zone = '%d'", reverse);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		fprintf(stderr, "Cannot store result set\n");
 		return MY_STORE_FAIL;
@@ -433,17 +355,13 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fprintf(stderr, "No reverse records for zone %d\n", reverse);
 		return NO_RECORDS;
 	}
-	
-	/* Add the reverse zone records */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		rev_row = get_rev_row(dnsa_row);
 		add_rev_records(rout, rev_row);
 	}
-	mysql_free_result(dnsa_res);
-	/* Build the config filename from config values */
-	create_rev_zone_filename(domain, net_range, dc);
-	
-	/* Write out the reverse zone to the zonefile */
+	if (!(domain = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "domain in wrzf");
+	create_rev_zone_filename(domain, rzi->net_range, dc);
 	if (!(cnf = fopen(domain, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing\n", domain);
 		return FILE_O_FAIL;
@@ -451,37 +369,26 @@ int wrzf(int reverse, dnsa_config_t *dc)
 		fputs(rout, cnf);
 		fclose(cnf);
 	}
-	
 	for (i=0; i < FILE_S; i++)	/* zero rout file output buffer */
 		*(rout + i) = '\0';
-	
 	/* Check if the zonefile is valid. If so update the DB to say zone
 	 * is valid. */
-	get_in_addr_string(zonefn, rzi->net_range);
-	check_rev_zone(zonefn, domain, dc);
-
-	sprintf(dquery, "UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d", reverse);
-	error = mysql_query(&dnsa, dnsa_query);
+	get_in_addr_string2(rout, rzi->net_range, rzi->prefix);
+	check_rev_zone(rout, domain, dc);
+	snprintf(dquery, BUFF_S, "\
+UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = %d", reverse);
+	cmdb_mysql_query(&dnsa, dquery);
 	dnsa_rows = mysql_affected_rows(&dnsa);
 	if ((dnsa_rows == 1)) {
 		fprintf(stderr, "Rev Zone id %d set to valid in DB\n", reverse);
 	} else if ((dnsa_rows == 0)) {
-		if ((error == 0)) {
-			fprintf(stderr, "Rev zone id %d already valid in DB\n", reverse);
-		} else {
-			fprintf(stderr, "Rev Zone id %d not validated in DB\n", reverse);
-			fprintf(stderr, "Error code from query is: %d\n", error);
-		}
+		fprintf(stderr, "Rev zone id %d already valid in DB\n", reverse);
 	} else {
 		fprintf(stderr, "More than one zone update?? Multiple ID's %d??\n",
 			reverse);
 	}
-	
-	mysql_close(&dnsa);
-	mysql_library_end();
-	free(zonefn);
+	cmdb_mysql_clean_full(dnsa_res, &dnsa, dquery);
 	free(rout);
-	free(dquery);
 	free(domain);
 	free(rzi);
 	return 0;
@@ -497,15 +404,15 @@ int wrcf(dnsa_config_t *dc)
 	my_ulonglong dnsa_rows;
 	int error;
 	unsigned long int prefix;
-	char *rout, *dnsa_line, *zonefile, *tmp, *tmp2;
+	char *rout, *query, *zonefile, *tmp, *tmp2;
 	const char *dnsa_query, *syscom, *domain;
 	
 	domain = "or reverse zone that is valid ";
 	
 	if (!(rout = calloc(FILE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "rout in wrcf");
-	if (!(dnsa_line = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "dnsa_line in wrcf");
+	if (!(query = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "query in wrcf");
 	if (!(tmp = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "tmp in wrcf");
 	if (!(tmp2 = calloc(TBUFF_S, sizeof(char))))
@@ -513,29 +420,30 @@ int wrcf(dnsa_config_t *dc)
 	if (!(zonefile = calloc(CONF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefile in wrcf");
 	
-	dnsa_query = dnsa_line;
-	
-	/* Initilaise MYSQL connection and query */
-	sprintf(dnsa_line, "SELECT net_range, prefix FROM rev_zones");
+	dnsa_query = query;
+	snprintf(query, TBUFF_S, "\
+SELECT net_range, prefix FROM rev_zones");
 	dnsa_mysql_init(dc, &dnsa);
 	cmdb_mysql_query(&dnsa, dnsa_query);
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
+		cmdb_mysql_clean(&dnsa, query);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
+		cmdb_mysql_clean_full(dnsa_res, &dnsa, query);
 		report_error(NO_DOMAIN, domain);
 	}
-	
 	/* From each DB row, create the config line for the reverse zone */
 	while ((dnsa_row = mysql_fetch_row(dnsa_res))) {
 		snprintf(tmp2, CH_S, "%s", "");
 		prefix = strtoul(dnsa_row[1], NULL, 10);
 		get_in_addr_string2(tmp2, dnsa_row[0], prefix);
-		sprintf(zonefile, "%s%s", dc->dir, dnsa_row[0]);
+		snprintf(zonefile, CONF_S, "%s%s", dc->dir, dnsa_row[0]);
 		if (!(cnf = fopen(zonefile, "r"))) {
 			fprintf(stderr, "Cannot access zonefile %s\n", zonefile);
 		} else {
-			sprintf(tmp, "zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s%s\";\n\t\t};\n",
+			snprintf(tmp, TBUFF_S, "\
+zone \"%s\" {\n\t\t\ttype master;\n\t\t\tfile \"%s%s\";\n\t\t};\n",
 				tmp2, dc->dir, dnsa_row[0]);
 			len = strlen(tmp);
 			strncat(rout, tmp, len);
@@ -545,7 +453,7 @@ int wrcf(dnsa_config_t *dc)
 	mysql_free_result(dnsa_res);
 	/* Write the config file.
 	 * Check it and if successful reload bind */
-	sprintf(zonefile, "%s%s", dc->bind, dc->rev);
+	snprintf(zonefile, CONF_S, "%s%s", dc->bind, dc->rev);
 	if (!(cnf = fopen(zonefile, "w"))) {
 		fprintf(stderr, "Cannot open config file %s for writing!\n", zonefile);
 		exit(FILE_O_FAIL);
@@ -560,27 +468,21 @@ int wrcf(dnsa_config_t *dc)
 		fprintf(stderr, "Check of config file failed. Error code %d\n",
 			error);
 	} else {
-		sprintf(tmp, "%s reload", dc->rndc);
+		snprintf(tmp, TBUFF_S, "%s reload", dc->rndc);
 		error = system(syscom);
 		if ((error != 0)) {
 			fprintf(stderr, "Reload failed with error code %d\n",
 				error);
 		}
 	}
-	
 	free(zonefile);
 	free(tmp);
 	free(tmp2);
 	free(rout);
-	free(dnsa_line);
-	mysql_close(&dnsa);
-	mysql_library_end();
+	cmdb_mysql_clean(&dnsa, query);
 	return 0;
 }
 
-/** This function needs proper testing on range other than /24. This will most likely not
- ** be able to handle anything not on a /8, /16, or /24 boundary.
- */
 void add_rev_zone(char *domain, dnsa_config_t *dc, unsigned long int prefix)
 {
 	MYSQL dnsa;
@@ -641,15 +543,11 @@ rzi->retry, rzi->expire, rzi->ttl);
 	if (dnsa_rows == 1) {
 		fprintf(stderr, "New zone %s added\n", rzi->net_range);
 	} else {
-		mysql_close(&dnsa);
-		mysql_library_end();
-		free(query);
+		cmdb_mysql_clean(&dnsa, query);
 		report_error(CANNOT_INSERT_ZONE, rzi->net_range);
 	}
-	mysql_close(&dnsa);
-	mysql_library_end();
+	cmdb_mysql_clean(&dnsa, query);
 	free(rzi);
-	free(query);
 }
 
 void add_rev_config(MYSQL_ROW my_row, rev_zone_info_t *zone)
@@ -699,8 +597,8 @@ void init_dnsa_rev_record(rev_record_row_t *rev_record)
 unsigned long int get_net_range(unsigned long int prefix)
 {
 	unsigned long int range;
-	range = 256ul * 256ul * 256ul * 256ul;
-	range = range >> prefix;
+	range = (256ul * 256ul * 256ul * 256ul) - 1;
+	range = (range >> prefix) + 1;
 	return range;
 }
 
@@ -811,7 +709,7 @@ int build_rev_zone(dnsa_config_t *dc, char *domain)
 		free(rev_zone);
 		return retval;
 	}
-	printf("Reverse zone %s added into database\n", domain);
+	printf("Reverse zone %s populated in the database\n", domain);
 	delete_A_records(records);
 	free(rev_zone);
 	return retval;
@@ -970,25 +868,49 @@ int check_if_a_record_exists(rev_record_row_t *record, char *ip)
 int convert_rev_records(rev_record_row_t *records, unsigned long int prefix)
 {
 	rev_record_row_t *saved;
-	char *host;
-	
+	size_t len;
+	char *host, *tmp;
+	int i;
+
+	if (!(host = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buff in convert_rev_records");
+
 	saved = records;
 	while (saved) {
 		if (prefix == 8) {
-			host = strchr(saved->host, '.');
+			for (i = 0; i < 3; i++) {
+				tmp = strrchr(saved->host, '.');
+				tmp++;
+				host = strncat(host, tmp, 4);
+				host = strncat(host, ".", CH_S);
+				tmp--;
+				*tmp = '\0';
+			}
+			len = strlen(host);
+			host[len - 1] = '\0';
 		} else if (prefix == 16) {
-			host = strchr(saved->host, '.');
-			host = strchr(saved->host, '.');
+			for (i = 0; i < 2; i++) {
+				tmp = strrchr(saved->host, '.');
+				tmp++;
+				host = strncat(host, tmp, 4);
+				host = strncat(host, ".", CH_S);
+				tmp--;
+				*tmp = '\0';
+			}
+			len = strlen(host);
+			host[len - 1] = '\0';
 		} else if (prefix>= 24) {
 			host = strrchr(saved->host, '.');
+			host++;
 		} else {
 			printf("Prefix %lu invalid\n", prefix);
 			return 1;
 		}
-		host++;
 		snprintf(saved->host, RBUFF_S, "%s", host);
+		*host = '\0';
 		saved = saved->next;
 	}
+	free(host);
 	return 0;
 }
 int insert_rev_records(dnsa_config_t *dc, rev_record_row_t *records, rev_zone_info_t *zone)

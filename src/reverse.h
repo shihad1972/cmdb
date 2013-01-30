@@ -67,8 +67,8 @@ delete_A_records(rev_record_row_t *records);
 int
 insert_rev_records(dnsa_config_t *dc, rev_record_row_t *records, rev_zone_info_t *zone);
 /* Create the in-addr.arpa zonename from network address */
-void
-get_in_addr_string(char *in_addr, char range[]);
+/*void
+get_in_addr_string(char *in_addr, char range[]); */
 void
 get_in_addr_string2(char *in_addr, char *range, unsigned long int prefix);
 /* Return the ID of the reverse domain; -1 indicates error */
@@ -76,7 +76,7 @@ int
 get_rev_id(char *domain, dnsa_config_t *dc, short int action);
 /* Create the string for the reverse zonefile filename */
 void 
-create_rev_zone_filename (char *domain, const char *net_range, dnsa_config_t *dc);
+create_rev_zone_filename (char *domain, char *net_range, dnsa_config_t *dc);
 /* Check the rev zone for errors */
 void
 check_rev_zone(char *filename, char *domain, dnsa_config_t *dc);
