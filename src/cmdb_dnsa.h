@@ -20,6 +20,7 @@ typedef struct comm_line_t { /* Hold parsed command line args */
 } comm_line_t;
 
 typedef struct dnsa_config_t { /* Hold DNSA configuration values */
+	char dbtype[RANGE_S];
 	char db[CONF_S];
 	char user[CONF_S];
 	char pass[CONF_S];

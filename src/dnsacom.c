@@ -124,6 +124,10 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 		retval = CONF_ERR;
 	} else {
 		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DBTYPE=%s", dc->dbtype);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "PASS=%s", dc->pass);
 		}
 		rewind(cnf);
@@ -219,6 +223,7 @@ void init_config_values(dnsa_config_t *dc)
 {
 	char *buff;
 	buff = dc->socket;
+	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
 	sprintf(dc->user, "root");
 	sprintf(dc->host, "localhost");
