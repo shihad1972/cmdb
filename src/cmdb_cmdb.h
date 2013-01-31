@@ -74,6 +74,8 @@ typedef struct cmdb_hardware_t {
 	struct cmdb_hardware_t *next;
 } cmdb_hardware_t;
 
+void
+cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
 int

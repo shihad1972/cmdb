@@ -41,31 +41,29 @@
 
 int main(int argc, char *argv[])
 {
-	cmdb_comm_line_t command, *cm;
-	cmdb_config_t cmdb_c, *cmc;
+	cmdb_comm_line_t *cm;
+	cmdb_config_t *cmc;
+	char *cmdb_config;
 	int retval;
-	char *cmdb_config, *name, *uuid;
-	
-	cm = &command;
-	cmc = &cmdb_c;
-	
-	name = cm->name;
-	uuid = cm->id;
-	
+
+	if (!(cmc = malloc(sizeof(cmdb_config_t))))
+		report_error(MALLOC_FAIL, "cmc in cmdb.c");
+	if (!(cm = malloc(sizeof(cmdb_comm_line_t))))
+		report_error(MALLOC_FAIL, "cm in cmdb.c");
 	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
 	
 	init_cmdb_config_values(cmc);
 	retval = parse_cmdb_command_line(argc, argv, cm);
 	if (retval < 0) {
-		free(cmdb_config);
+		cmdb_main_free(cm, cmc, cmdb_config);
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
 	if (retval == -2) {
 		printf("Port value higher that 65535!\n");
-		free(cmdb_config);
+		cmdb_main_free(cm, cmc, cmdb_config);
 		exit (1);
 	}
 	
@@ -79,23 +77,23 @@ int main(int argc, char *argv[])
 				retval = validate_user_input(cm->name, NAME_REGEX);
 			} else {
 				printf("Both name and uuid set to NULL??\n");
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				exit (1);
 			}
 			if (retval < 0) {
 				printf("User input not valid\n");
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				exit (1);
 			}
 			if (cm->action == DISPLAY) {
-				display_server_info(name, uuid, cmc);
+				display_server_info(cm->name, cm->id, cmc);
 			} else if (cm->action == LIST_OBJ) {
 				display_all_servers(cmc);
 			} else if (cm->action == ADD_TO_DB) {
 				retval = add_server_to_database(cmc);
 				if (retval > 0) {
 					printf("Error adding to database\n");
-					free(cmdb_config);
+					cmdb_main_free(cm, cmc, cmdb_config);
 					exit(1);
 				} else {
 					printf("Added into database\n");
@@ -109,16 +107,16 @@ int main(int argc, char *argv[])
 				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
 			} else {
 				printf("Both name and coid set to NULL??\n");
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				exit (1);
 			}
 			if (retval < 0) {
 				printf("User input not valid\n");
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				exit (1);
 			}
 			if (cm->action == DISPLAY)
-				display_customer_info(name, uuid, cmc);
+				display_customer_info(cm->name, cm->id, cmc);
 			else if (cm->action == LIST_OBJ)
 				display_all_customers(cmc);
 			break;
@@ -126,6 +124,6 @@ int main(int argc, char *argv[])
 			printf("Not implemented yet :(\n");
 			break;
 	}
-	free(cmdb_config);
+	cmdb_main_free(cm, cmc, cmdb_config);
 	exit (0);
 }

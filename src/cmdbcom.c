@@ -193,3 +193,10 @@ void init_cmdb_config_values(cmdb_config_t *dc)
 	dc->port = 3306;
 	dc->cliflag = 0;
 }
+
+void cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
+{
+	free(cm);
+	free(cmc);
+	free(cmdb_config);
+}
