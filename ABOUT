@@ -1,3 +1,26 @@
+This software package will build 3 programs which are documented below.
+
+CMDB: Configuration Management Database
+
+cmdb stores information about your servers that can be useful in the
+administration of your estate of servers. For example you can assign hardware
+to the server and store other pieces of information about your servers
+(datacenter, power outlets, network ports etc). You can also assign your
+servers to customers (projects) so that they can be grouped into logical
+containers.
+
+CBC: Create Build Configuration
+
+cbc takes hardware information stored in cmdb and uses it to create a build
+script for your server, along with various options stored in CBC itself
+(build domain for IP address, Operating system / Version / Architecture) and
+also various bits of configuration that you may wish to perform on a new
+server build (NTP setup, LDAP Authentication etc. For a full list please see
+the man pages.) It will also interact with external programs needed to
+automate a build (TFTP and DHCPD for network boot). The build file will be
+placed in an apropriate sub-directory of your apache base directory for
+distribution to the building server via HTTP.
+
 DNSA: Domain Name System Administration
 
 dnsa aims to be front end administration software for the BIND DNS. It uses
@@ -7,4 +30,4 @@ files that BIND uses.
 
 For the license see the COPYING file in this directory
 
-Iain M Conochie <iain@shihad.org> 26/10/2012
+Iain M Conochie <iain-AT-thargoid.co.uk> 26/10/2012

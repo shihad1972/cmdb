@@ -1,1082 +1,2274 @@
-commit d9665a79b83d92b49e91d6cbac2f0022aa8fcffc
+commit 5341d86
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 26 18:25:30 2013 +0000
+Date:   2013-01-30
+
+    Updated reverse functions. Mostly replacing sprintf's with snprintf's.
+    convert_rev_records has also been updated to properly handle /8 and /16.
+    This required a database update as well.
+
+sql/rev_records.sql
+src/drzf.c
+src/errors.c
+src/rev_zone.c
+src/reverse.h
+
+commit 2f83266
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-30
+
+    Added DBTYPE to config file and dnsa_config_t struct
+
+conf/dnsa.conf
+src/cmdb_dnsa.h
+src/dnsacom.c
+
+commit 83d5939
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-29
+
+    Added test for sqlite3 into configure.ac
+
+configure.ac
+
+commit a2fdb14
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-29
+
+    Removed sprintf and replaces with snprintf
+
+src/forward.h
+src/fwd_zone.c
+
+commit 8fede4c
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-29
+
+    Various updates for forward zone functions. Mostly freeing pointers on error and using snprintf not sprintf
+
+src/dnsa.c
+src/dzf.c
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+
+commit 928c7b3
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-29
+
+    Updated mysql/mysql.h to mysql.h and use makefile to find include dir
+
+src/Makefile.OLD
+src/base_mysql.c
+src/build_add.c
+src/build_data_struct.c
+src/build_display.c
+src/build_info.c
+src/cbc_mysql.c
+src/cbc_mysql.h
+src/cbccom.c
+src/cmdb_cmdb.h
+src/cmdb_mysql.c
+src/cmdb_mysql.h
+src/customers.c
+src/dnsa_mysql.c
+src/dnsa_mysql.h
+src/drzf.c
+src/dzf.c
+src/forward.h
+src/fwd_zone.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/reverse.h
+src/servers.c
+
+commit 653f086
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-29
+
+    Removed un-needed struct dnsa_zone_t. Minor updates to wzf()
+
+src/forward.h
+src/fwd_zone.c
+
+commit f94ff19
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-28
+
+    Updated Makefile.am in src to include headers in SOURCES. Also fixed some compilation errors
+
+src/Makefile.am
+src/build_add.c
+src/fwd_zone.c
+
+commit 36bd75d
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-28
+
+    Removed un-needed table deinitions
+
+sql/build_files.sql
+sql/build_vars.sql
+sql/linux.sql
+sql/solaris.sql
+sql/unknown.sql
+
+commit 7d7675e
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-28
+
+    Dump from database now only has table info. Removed CC=gcc from Makefile.am
+
+Makefile.am
+sql/arch.sql
+sql/arch.sql.gz
+sql/boot_line.sql
+sql/boot_line.sql.gz
+sql/build.sql
+sql/build.sql.gz
+sql/build_domain.sql
+sql/build_domain.sql.gz
+sql/build_files.sql
+sql/build_files.sql.gz
+sql/build_ip.sql
+sql/build_ip.sql.gz
+sql/build_os.sql
+sql/build_os.sql.gz
+sql/build_type.sql
+sql/build_type.sql.gz
+sql/build_vars.sql
+sql/build_vars.sql.gz
+sql/configuration.sql
+sql/configuration.sql.gz
+sql/contacts.sql
+sql/contacts.sql.gz
+sql/customer.sql
+sql/customer.sql.gz
+sql/default_part.sql
+sql/default_part.sql.gz
+sql/disk_dev.sql
+sql/disk_dev.sql.gz
+sql/hard_type.sql
+sql/hard_type.sql.gz
+sql/hardware.sql
+sql/hardware.sql.gz
+sql/linux.sql
+sql/linux.sql.gz
+sql/locale.sql
+sql/locale.sql.gz
+sql/nohost.sql
+sql/nohost.sql.gz
+sql/options.sql
+sql/options.sql.gz
+sql/packages.sql
+sql/packages.sql.gz
+sql/records.sql
+sql/records.sql.gz
+sql/rev_records.sql
+sql/rev_records.sql.gz
+sql/rev_zones.sql
+sql/rev_zones.sql.gz
+sql/seed_part.sql
+sql/seed_part.sql.gz
+sql/seed_schemes.sql
+sql/seed_schemes.sql.gz
+sql/server.sql
+sql/server.sql.gz
+sql/service_type.sql
+sql/service_type.sql.gz
+sql/services.sql
+sql/services.sql.gz
+sql/solaris.sql
+sql/solaris.sql.gz
+sql/unknown.sql
+sql/unknown.sql.gz
+sql/users.sql
+sql/users.sql.gz
+sql/varient.sql
+sql/varient.sql.gz
+sql/vm_server_hosts.sql
+sql/vm_server_hosts.sql.gz
+sql/zones.sql
+sql/zones.sql.gz
+
+commit d0a1b39
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-28
+
+    Added the debian and ubuntu package inserts. Needs some work
+
+conf/database-update.sql
+conf/debian-packages.sql
+conf/dnsa.conf
+conf/ubuntu-packages.sql
+configure.ac
+
+commit 4bcf02f
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-28
+
+    Dump from the entire mysql database. Needs clean up
+
+sql/arch.sql.gz
+sql/boot_line.sql.gz
+sql/build.sql.gz
+sql/build_domain.sql.gz
+sql/build_files.sql.gz
+sql/build_ip.sql.gz
+sql/build_os.sql.gz
+sql/build_type.sql.gz
+sql/build_vars.sql.gz
+sql/configuration.sql.gz
+sql/contacts.sql.gz
+sql/customer.sql.gz
+sql/default_part.sql.gz
+sql/disk_dev.sql.gz
+sql/hard_type.sql.gz
+sql/hardware.sql.gz
+sql/linux.sql.gz
+sql/locale.sql.gz
+sql/nohost.sql.gz
+sql/options.sql.gz
+sql/packages.sql.gz
+sql/records.sql.gz
+sql/rev_records.sql.gz
+sql/rev_zones.sql.gz
+sql/seed_part.sql.gz
+sql/seed_schemes.sql.gz
+sql/server.sql.gz
+sql/service_type.sql.gz
+sql/services.sql.gz
+sql/solaris.sql.gz
+sql/unknown.sql.gz
+sql/users.sql.gz
+sql/varient.sql.gz
+sql/vm_server_hosts.sql.gz
+sql/zones.sql.gz
+
+commit 227adf4
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-26
+
+    Added test for HAVE_MYSQL and HAVE_PCRE in src/Makefile.am
+
+src/Makefile.am
+
+commit 3f91af0
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-26
+
+    Updated configure.ac to remove configure output errors when checking for mysql
+
+configure.ac
+
+commit df4354b
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-26
+
+    removing more fgets errors from compiler warnings
+
+ChangeLog
+README
+src/build_add.c
+src/build_display.c
+src/customers.c
+src/servers.c
+
+commit d9665a7
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-26
 
     trying to remove ignoring return value of 'fgets', declared with attribute warn_unused_result warnings
 
-commit 0cfc48bee976774800007b7a5f48960044cba7f7
+src/build_add.c
+src/servers.c
+
+commit 0cfc48b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 26 18:11:12 2013 +0000
+Date:   2013-01-26
 
     Fix buffer overflows
 
-commit 8450e3b42edf119ebd3d02cb7ab17ad760a46b25
+src/build_add.c
+src/cbccom.c
+src/servers.c
+
+commit 8450e3b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 26 17:28:31 2013 +0000
+Date:   2013-01-26
 
     Removed make clean rule. Hopefully this will be added by autotools
 
-commit 8e5b7ab2a0a3488260c27e3ba56b3aa30acd2ccd
+Makefile.am
+
+commit 8e5b7ab
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 26 15:24:15 2013 +0000
+Date:   2013-01-26
 
     Updated autoconf files.
 
-commit 7ed9bcac2c2299fc1834c87100147d906e195d0e
+Makefile.am
+configure.ac
+src/Makefile
+src/Makefile.OLD
+src/Makefile.am
+
+commit 7ed9bca
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Jan 25 19:08:54 2013 +0000
+Date:   2013-01-25
 
     Added base Makefile.am and configure.ac. Updated doc files too
 
-commit 336786d4a24eff8118b5af98764563cdc4feec28
+AUTHORS
+ChangeLog
+Makefile.am
+NEWS
+TODO
+configure.ac
+
+commit 336786d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 23 01:42:39 2013 +0000
+Date:   2013-01-23
 
     write_kickstart_config can now write out a kickstart file.
 
-commit 141848bc06ba66d8c8a97f982c5638735d184253
+conf/centos-packages.sql
+src/build_add.c
+src/build_display.c
+src/build_info.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 141848b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Jan 21 13:39:57 2013 +0000
+Date:   2013-01-21
 
     delete_build_if_exsits function created
 
-commit 40126032e6dfd82f351641fea9e4bcc493320b4c
+conf/kickstart.cfg
+src/build_info.c
+src/cbc.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 4012603
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 20 22:48:27 2013 +0000
+Date:   2013-01-20
 
     Re-arranged ldap preseed configuration
 
-commit 0df2265170f454469d72037b2ba93b6147048166
+src/build_info.c
+
+commit 0df2265
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 20 20:20:51 2013 +0000
+Date:   2013-01-20
 
     Minor updates removing unused variables
 
-commit ff9684207005b366ce9a3397eacf101244f31cc4
+src/rev_zone.c
+
+commit ff96842
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 20 20:16:31 2013 +0000
+Date:   2013-01-20
 
     build_rev_zone now updates database
 
-commit 51fb0b8719e1bcae8b3b433f8cf61a4d88bb97a2
+src/base_mysql.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/reverse.h
+
+commit 51fb0b8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 20 03:36:53 2013 +0000
+Date:   2013-01-20
 
     build_rev_zone almost ready to add reverse zone into database
 
-commit 6b32217a9b0350b4f70b282a340c2d349888eef4
+src/cmdb.h
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+src/rev_zone.c
+src/reverse.h
+
+commit 6b32217
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Jan 18 23:16:11 2013 +0000
+Date:   2013-01-18
 
     Preseed now uses OS alias for URL and security URL
 
-commit e4dab7e767e560a4f837289d43e1dc35c61933e8
+src/build_info.c
+
+commit e4dab7e
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Jan 18 15:39:21 2013 +0000
+Date:   2013-01-18
 
     cbc -c now updates database.
 
-commit e26e373966a0dd14de4e85d64fb2b3f326166167
+src/build_add.c
+src/build_info.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit e26e373
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 17 09:41:44 2013 +0000
+Date:   2013-01-17
 
     get_build_domain_ip_list function now get_build_ip
 
-commit c4a38a5a921c6356884544cad8f70ab18c2abc28
+src/build_add.c
+src/cmdb_cbc.h
+
+commit c4a38a5
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 16 20:52:17 2013 +0000
+Date:   2013-01-16
 
     Almost ready to add build config into database.
 
-commit feb6d3c9af28aeac15c115fd63b86d810750518b
+src/Makefile
+src/base_mysql.c
+src/build.h
+src/build_add.c
+src/build_data_struct.c
+src/build_display.c
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit feb6d3c
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 16 06:56:17 2013 +0000
+Date:   2013-01-16
 
     Added mysql clean up functions
 
-commit cd99b07744b51d08babde262c40b6d713701c567
+src/Makefile
+src/base_mysql.c
+src/cbc_mysql.c
+src/cmdb.h
+src/cmdb_mysql.c
+src/dnsa_mysql.c
+src/errors.c
+src/mysqlfunc.h
+
+commit cd99b07
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Jan 14 23:54:28 2013 +0000
+Date:   2013-01-14
 
     create_build_config started. Can get input from user.
 
-commit 77a502f593aee2d75fa092beabe15e9c258f9e10
+src/build_add.c
+src/build_display.c
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/checks.c
+src/checks.h
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit 77a502f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Jan 14 12:03:46 2013 +0000
+Date:   2013-01-14
 
     Updated display_cbc_usage to reflect locale. Also updated build_info query
 
-commit 6805d4b7a783e424ff5151ae29cd6714d9033f1b
+src/build_info.c
+src/errors.c
+
+commit 6805d4b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Jan 14 12:00:09 2013 +0000
+Date:   2013-01-14
 
     We can now display locales. Also some extra error handling added
 
-commit f1a58c94edbfea74c6ecf45ab7202b99d7e37897
+src/build_display.c
+src/cbc.c
+src/cbccom.c
+src/cmdb_cbc.h
+src/errors.c
+
+commit f1a58c9
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Jan 14 10:47:34 2013 +0000
+Date:   2013-01-14
 
     Small updates on get_build_info to reflect database table updates. Comments added to cmdb_cbc.h
 
-commit dd717ee9ff2571b9a8bb6e943d9cf9d6f401bd67
+conf/database-tables-with-server_id.txt
+src/build_info.c
+src/cmdb_cbc.h
+
+commit dd717ee
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 13 23:42:22 2013 +0000
+Date:   2013-01-13
 
     chomp()'ing input when it is invalid in get_(disk|network)_device
 
-commit f6a66dec750675d39a33e500f1594357710314c5
+src/servers.c
+
+commit f6a66de
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 13 23:31:47 2013 +0000
+Date:   2013-01-13
 
     Adding server in cmdb now adds server and hardware to database.
 
-commit 430c8ec1035b1f636519d45bcd27b4c47efc233d
+src/cmdb.h
+src/cmdb_cmdb.h
+src/servers.c
+
+commit 430c8ec
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 13 18:44:34 2013 +0000
+Date:   2013-01-13
 
     Solved memory leaks in get_server_hardware. Now also printing hardware entered.
 
-commit 6e5dc855ab925318b3323c0d45c31e06617f0991
+src/cmdb_cmdb.h
+src/servers.c
+
+commit 6e5dc85
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Jan 6 06:43:59 2013 +0000
+Date:   2013-01-06
 
     Adding server now gets network device and also jard disk device
 
-commit c1dd5147484feb299a674dd8389a097536140979
+src/checks.c
+src/checks.h
+src/cmdb.h
+src/cmdb_cmdb.h
+src/errors.c
+src/servers.c
+
+commit c1dd514
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 5 23:03:35 2013 +0000
+Date:   2013-01-05
 
     All input functions done for adding server into db.
 
-commit ab35358889c97e0d674e5aa668542879d91b4748
+src/build_add.c
+src/checks.c
+src/cmdb_mysql.c
+src/customers.c
+src/errors.c
+src/servers.c
+
+commit ab35358
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Jan 5 23:02:57 2013 +0000
+Date:   2013-01-05
 
     Updated header files for adding server into db
 
-commit 920bd40e5da3e08ce0353496806594722f128db2
+src/build.h
+src/checks.h
+src/cmdb.h
+src/cmdb_cmdb.h
+
+commit 920bd40
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 3 16:27:21 2013 +0000
+Date:   2013-01-03
 
     Updated command line args to use getopts. Start of add_server_to_database function in servers.c
 
-commit adafaed76400eb7c84157d594eef5c7ee0073bfe
+src/Makefile
+src/cmdb.c
+src/cmdb.h
+src/cmdb_cmdb.h
+src/cmdbcom.c
+src/errors.c
+src/servers.c
+
+commit adafaed
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 3 14:25:09 2013 +0000
+Date:   2013-01-03
 
     Updated command line args so we have optional arguments plus some code clean ups
 
-commit f0792a482450455750ce194c63b9cfd60ec7da3e
+src/build_add.c
+src/build_display.c
+src/cbc.c
+src/cbccom.c
+src/errors.c
+
+commit f0792a4
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 3 03:54:19 2013 +0000
+Date:   2013-01-03
 
     WE can now display the build varients. Cleaned up some of the build_domain display
 
-commit bf1b51ac28fff5ae558ca0d1e5b7c5d4ede9a9ae
+src/build_display.c
+src/cbc.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit bf1b51a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 3 03:41:06 2013 +0000
+Date:   2013-01-03
 
     We can now display the build domains
 
-commit 5b3f724fb7a5e15597a1d2bedc64cb4e7c8c8690
+src/build_display.c
+
+commit 5b3f724
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Jan 3 02:58:15 2013 +0000
+Date:   2013-01-03
 
     Updated output for OS version display. Now same os versions with different arch displayed on one line
 
-commit 8c24edb859e6d0a5ac247820dc0207c131c040cd
+src/build_display.c
+src/cbc.c
+src/cmdb_cbc.h
+
+commit 8c24edb
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 17:17:08 2013 +0000
+Date:   2013-01-02
 
     Updated typo's in errors.c
 
-commit 7a38f962fcb9fc922e22f90248d9ece572a00ce6
+src/errors.c
+
+commit 7a38f96
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 16:58:04 2013 +0000
+Date:   2013-01-02
 
     We can now display the OS's and versions
 
-commit aac1620a10bbccb5f1e8f3c644a0757b9c15ed97
+src/build_display.c
+src/cbc.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit aac1620
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 16:43:48 2013 +0000
+Date:   2013-01-02
 
     We can now display the operating systems (without versions)
 
-commit 3bae8027dd02791dd836b6b934d3d0b91af330c6
+src/build_display.c
+src/cbc.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 3bae802
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 16:20:28 2013 +0000
+Date:   2013-01-02
 
     Freed up linked list when adding patition scheme
 
-commit 984a3589e0e4af8575696a4ae6abe9eb5242e059
+src/build_add.c
+
+commit 984a358
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 16:09:39 2013 +0000
+Date:   2013-01-02
 
     We can now display the partitions of the schemes in the database
 
-commit 7140338a563d7c202d662dd50364eda9c5655a91
+src/Makefile
+src/build_add.c
+src/build_display.c
+src/cbc.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 7140338
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Jan 2 00:08:07 2013 +0000
+Date:   2013-01-02
 
     Updated command line options and display messages
 
-commit a42799c479720bd5aa37c151a7550546eb1ee8e6
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit a42799c
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Jan 1 20:28:02 2013 +0000
+Date:   2013-01-01
 
     Arguments now in sync with display_usage (-p to add partition; -r to display partition)
 
-commit e25b23d216938252a8c67c20e3fa45123155c1ea
+src/cbccom.c
+src/cmdb_cbc.h
+
+commit e25b23d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Jan 1 20:15:40 2013 +0000
+Date:   2013-01-01
 
     Partitions are now written to the database.
 
-commit bc51784568356674703bd45ad23ef55004dc2090
+src/build_add.c
+
+commit bc51784
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Jan 1 19:33:01 2013 +0000
+Date:   2013-01-01
 
     We can now get partition(s) from the user in a linked list
 
-commit 8f7e02046874a088f9e85566d4662a276df174a7
+src/build_add.c
+
+commit 8f7e020
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Dec 31 19:31:14 2012 +0000
+Date:   2012-12-31
 
     Starting to add partition data into DB. Adds the name in now.
 
-commit c808cb6d085d6254c618a24fd643d8580b867786
+src/Makefile
+src/build.h
+src/build_add.c
+src/build_info.c
+src/cbc.c
+src/cbc_mysql.c
+src/cbccom.c
+src/checks.c
+src/checks.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit c808cb6
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Dec 31 11:41:30 2012 +0000
+Date:   2012-12-31
 
     Updated cbc to use getopt to parse command line
 
-commit 97ff51d459128d1c54be541f80249e57a9141aff
+src/Makefile
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit 97ff51d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Dec 31 10:19:51 2012 +0000
+Date:   2012-12-31
 
     New file to keep track of database inserts (conf/database-inserts.sql)
 
-commit 63bd5265ea78185c18a780d6ee32b8cc5d2b563e
+conf/database-inserts.sql
+
+commit 63bd526
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 27 11:08:26 2012 +0000
+Date:   2012-12-27
 
     Some code tidy ups
 
-commit 2ca3e0fa9fe20479063f98260761ed088bb8d0b0
+src/cbc.c
+src/cbccom.c
+src/cmdb.c
+
+commit 2ca3e0f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 27 10:44:24 2012 +0000
+Date:   2012-12-27
 
     Malloc structs in cbc.c; fixed typo in build_info.c
 
-commit 645d6135a731d5dead8461d3848c326c523c9f6b
+src/build_info.c
+src/cbc.c
+
+commit 645d613
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 27 10:02:55 2012 +0000
+Date:   2012-12-27
 
     Fixed compile error with snprintf
 
-commit 094dc0d692c50d54f1ac80cc1cae773b0cbea0c3
+src/build_info.c
+
+commit 094dc0d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 27 10:02:44 2012 +0000
+Date:   2012-12-27
 
     SQL update statements
 
-commit d86f3a6c4003062e2468704b5a67b8ee3bb14157
+conf/config-and-build_type.sql
+conf/database-update.sql
+
+commit d86f3a6
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Dec 24 18:10:20 2012 +0000
+Date:   2012-12-24
 
     dnsa can now add reverse zones. Needs error checking though.
 
-commit 6f9618162f9fde3dc8ede59fb358b93ff17eaf17
+conf/dnsa-config-insert.sql
+src/cmdb.h
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+src/errors.c
+src/rev_zone.c
+src/reverse.h
+
+commit 6f96181
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Dec 23 20:59:50 2012 +0000
+Date:   2012-12-23
 
     Updated get_in_addr_string so valgrind does not complain. Also removed un-needed error variables
 
-commit 4a401df80804930d030e25f812544f324469a1f9
+src/dzf.c
+src/rev_zone.c
+
+commit 4a401df
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Dec 23 19:55:38 2012 +0000
+Date:   2012-12-23
 
     Removed some un-needed variables; clean up code
 
-commit 20a2f10bb67319b8fbb7c1de984370e40b4ba52a
+src/dnsa.c
+src/drzf.c
+src/rev_zone.c
+
+commit 20a2f10
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Dec 23 19:41:43 2012 +0000
+Date:   2012-12-23
 
     Updated rev_zone_info_t to use unsigned long int. Also using pointers for these structs
 
-commit 1c5a15e62224f96e58562c33d9ff0c805f8a7d4b
+src/drzf.c
+src/rev_zone.c
+src/reverse.h
+
+commit 1c5a15e
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Dec 22 16:15:19 2012 +0000
+Date:   2012-12-22
 
     Writing zonefile now updates serial number
 
-commit 04429a6b4ecfd6e954b2eefa9293f8100e1d0f77
+src/forward.h
+src/fwd_zone.c
+
+commit 04429a6
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Dec 22 14:45:31 2012 +0000
+Date:   2012-12-22
 
     Validate user input for add host function. Also update zone_info_t to use unsigned long int
 
-commit d827a3b31c0dd67fff687bdee5c07c7b447688a1
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+src/dzf.c
+src/forward.h
+src/fwd_zone.c
+
+commit d827a3b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Dec 21 16:10:02 2012 +0000
+Date:   2012-12-21
 
     Can now add single host into DB
 
-commit b57c7ab97b7af6f8bd1f739390bb4c76ca6ac93a
+src/cmdb.h
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+
+commit b57c7ab
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 20 23:19:43 2012 +0000
+Date:   2012-12-20
 
     Can now add a new zone to the database
 
-commit 5ee0cb3c9bf875f95f3c85d4e46d8a2e6ac63fe5
+conf/dnsa-config-insert.sql
+src/cmdb.h
+src/dnsa.c
+src/dnsa_mysql.c
+src/dnsacom.c
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+
+commit 5ee0cb3
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 19 10:59:44 2012 +0000
+Date:   2012-12-19
 
     updated dnsa to have better usage error when run with no arguments
 
-commit 85553f14c25fa23f7ee50100fa562acc3bc98659
+src/cmdb.h
+src/dnsa.c
+src/dnsacom.c
+src/errors.c
+
+commit 85553f1
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 19 02:10:02 2012 +0000
+Date:   2012-12-19
 
     preseed config file now written to disk
 
-commit 7c9870e3a3c0867b192fa471670a22096ac948e2
+src/build_info.c
+
+commit 7c9870e
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 19 01:40:05 2012 +0000
+Date:   2012-12-19
 
     Some DB updates. Fixed LVM disk recipie with . after definition of volume group
 
-commit bd1f0b104ccc58f705c91998a6cd818dc3ed6a66
+conf/database-update.sql
+src/build_info.c
+
+commit bd1f0b1
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 18 22:59:50 2012 +0000
+Date:   2012-12-18
 
     Application now written to the preseed file. Ready for test build!
 
-commit ca2e810a54eb7d3ea6bd92b5e4df78da038b204c
+conf/database-update.sql
+src/build_info.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit ca2e810
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 18 04:59:58 2012 +0000
+Date:   2012-12-18
 
     Added packages data using add_preseed_packages
 
-commit 399813ba01ef11ddea7117b9641b3c088622b5bf
+src/build_info.c
+src/cmdb.h
+
+commit 399813b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 18 03:36:39 2012 +0000
+Date:   2012-12-18
 
     More of the preseed file done, up to disk partitions. Now starting on packages for build varients
 
-commit e9b939f49d2b7550051fc80d7df846328464552e
+conf/database-update.sql
+src/build_info.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/errors.c
+
+commit e9b939f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Dec 14 05:59:24 2012 +0000
+Date:   2012-12-14
 
     Starting to create the preseed file. Many database updates
 
-commit 915bdadb31cd5df23772c5445199c6ebf494e2df
+conf/database-update.sql
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 915bdad
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 13 15:29:05 2012 +0000
+Date:   2012-12-13
 
     ldap_bind in build_domain now varchar(128)
 
-commit fd233b3c73c26e6b05a5db7fe3caf8e620d5abd9
+conf/database-update.sql
+
+commit fd233b3
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 13 13:22:19 2012 +0000
+Date:   2012-12-13
 
     SQL statements to alter build_domain table for various build configs (ntp, ldap, logging)
 
-commit e0ab9753f26e19f2ea4ee6212f526c50ba380946
+conf/database-update.sql
+
+commit e0ab975
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 13 05:37:09 2012 +0000
+Date:   2012-12-13
 
     Added definitions and contents for package table and debian packages
 
-commit bc7d120abd3ec7d0d5ddc89f8d46a9ff3da5830f
+conf/database-update.sql
+
+commit bc7d120
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Dec 13 02:06:26 2012 +0000
+Date:   2012-12-13
 
     Moved calls to init functions into a function
 
-commit 94e9ec9049c9b54161010744c8fdb42083c7e6a7
+src/cbc.c
+src/cbccom.c
+src/cmdb_cbc.h
+
+commit 94e9ec9
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 12 16:47:05 2012 +0000
+Date:   2012-12-12
 
     Removed case in write_tftp_config as was not needed.
 
-commit f0d0c2d08ffc3d791bcb20498345a620b46c5ae9
+src/build_info.c
+
+commit f0d0c2d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 12 15:47:18 2012 +0000
+Date:   2012-12-12
 
     Update calloc to add +1 so we have room for trailing \0
 
-commit dd61fae1fd968931cb5f3218349d5cf1f6dd3e89
+src/build_info.c
+
+commit dd61fae
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 12 15:30:52 2012 +0000
+Date:   2012-12-12
 
     DHCP config file written and backed up. Simple check for backup error
 
-commit 1a4b50d8c3783dfbe9d3e0d80c5d4d49454c9ed0
+src/build_info.c
+
+commit 1a4b50d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 12 12:19:06 2012 +0000
+Date:   2012-12-12
 
     Start of the write_dhcp_config function. We are reading in the dhcp.hosts file
 
-commit 8de2b08b38883ec1079ff82ad165f5e967b3d111
+src/build_info.c
+src/cbc.c
+src/cmdb_cbc.h
+
+commit 8de2b08
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 11 16:44:06 2012 +0000
+Date:   2012-12-11
 
     We now write the tftpboot configuration file
 
-commit 3566751702326c3a3020d7a99f973a991e7d0dec
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/cmdb_cbc.h
+
+commit 3566751
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 11 16:43:44 2012 +0000
+Date:   2012-12-11
 
     Database updates. Needed for next commit
 
-commit 0946c5097b132e2482c9a85941c25c7b19309a33
+conf/database-update.sql
+
+commit 0946c50
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 11 13:26:29 2012 +0000
+Date:   2012-12-11
 
     Getting configuration values from database
 
-commit 5b78dd6528c090d4a3d2f0bd9fdd106b8b064204
+conf/database-update.sql
+conf/dnsa.conf
+src/build_info.c
+src/cbccom.c
+src/cmdb.h
+
+commit 5b78dd6
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Dec 11 11:01:04 2012 +0000
+Date:   2012-12-11
 
     Added switch for write config. Now have HEX value of IP address for tftp
 
-commit 158b2d7cee3206939912e846cb8ff3a1e1cbd98e
+conf/database-update.sql
+src/build_info.c
+src/cbc.c
+src/cmdb_cbc.h
+
+commit 158b2d7
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Dec 10 00:01:44 2012 +0000
+Date:   2012-12-10
 
     Getting ver_alias from database
 
-commit 358d7dd00fb8f88659f1af7fd7081cbd0cd6104b
+src/build_info.c
+src/cbccom.c
+src/cmdb_cbc.h
+
+commit 358d7dd
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Dec 5 14:34:36 2012 +0000
+Date:   2012-12-05
 
     Removed type check. This should come from the database
 
-commit 392207881f3bf50005aa1f1a64f982d5e0ba57dd
+src/cbccom.c
+
+commit 3922078
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 16:56:18 2012 +0000
+Date:   2012-11-30
 
     Added UUID errors
 
-commit 741410176461505ce36ac6e3b0a73e0e382c304c
+src/errors.c
+
+commit 7414101
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 15:29:10 2012 +0000
+Date:   2012-11-30
 
     Updated command line options for cbc. Also cmdb.h should have been included in last commit.
 
-commit 7cbd5041d05cb503d2de4ce740fc257a9fd6308b
+src/cbccom.c
+src/cmdb.h
+src/errors.c
+
+commit 7cbd504
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 14:40:50 2012 +0000
+Date:   2012-11-30
 
     Added error code for no customer, server name, server id and also multiples
 
-commit 3fa27119525631896b7298f509969be4fb634ef8
+src/build_info.c
+src/errors.c
+
+commit 3fa2711
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 01:22:39 2012 +0000
+Date:   2012-11-30
 
     Added wcf and wzf into fwd_zone; same for reverse zones
 
-commit f2282e82cdea12b564333334674fdb4a1df6af66
+src/Makefile
+src/fwd_zone.c
+src/rev_zone.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit f2282e8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 01:19:05 2012 +0000
+Date:   2012-11-30
 
     Added new error - SERVER_IDS (and not ;)
 
-commit 8cad24b6659a6fd503580a64044df78f9fcb2623
+src/build_info.c
+src/cmdb.h
+
+commit 8cad24b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 30 00:38:36 2012 +0000
+Date:   2012-11-30
 
     Getting build info from the database
 
-commit 7132c3ac1487bfecdf71ddc1873b138787aa0645
+src/Makefile
+src/build_info.c
+src/cbc.c
+src/cbc_mysql.c
+src/cbc_mysql.h
+src/cmdb_cbc.h
+
+commit 7132c3a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 29 20:43:32 2012 +0000
+Date:   2012-11-29
 
     Starting with the mysql queries for cbc to get build info from DB
 
-commit 36216afd13be514a34a7cd8e3e0f365b24ffd488
+src/Makefile
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+src/cmdb_mysql.h
+
+commit 36216af
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 29 20:41:46 2012 +0000
+Date:   2012-11-29
 
     Updated errors so cbc can use this too
 
-commit 816dc06a6ca93d2716faf11bdfd4c9fecfd8ee85
+src/errors.c
+
+commit 816dc06
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 29 19:34:05 2012 +0000
+Date:   2012-11-29
 
     Added more default values for build details
 
-commit 0cbc696042a4e3be8feceb1f2fc1478250854767
+src/cbccom.c
+
+commit 0cbc696
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 29 15:52:02 2012 +0000
+Date:   2012-11-29
 
     cmdb uuid input now does rexex check on name as well as uuid
 
-commit 22335ad7f88614c3c3e8df54a60df7b12d424374
+src/cmdb.c
+
+commit 22335ad
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 27 21:39:45 2012 +0000
+Date:   2012-11-27
 
     More command line options added. Also create the struct for non DB command line options
 
-commit 9cb11ebd0f1011da3196dcf99dbc105510bb4b63
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit 9cb11eb
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 27 15:54:09 2012 +0000
+Date:   2012-11-27
 
     Added variables for kickstart and preseed denotion
 
-commit fff5697f93c70f18671ff135e9596d44c7af23e6
+conf/dnsa.conf
+src/cbc.c
+src/cbccom.c
+src/cmdb.h
+src/cmdb_cbc.h
+
+commit fff5697
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 27 07:33:29 2012 +0000
+Date:   2012-11-27
 
     Updated dnsa to use add_trailing_slash function and added error checking
 
-commit de3fd98ef7190e61d394fb34acf9969c4d52b59b
+src/cbc.c
+src/cbccom.c
+src/checks.c
+src/cmdb.h
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+
+commit de3fd98
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 27 06:44:54 2012 +0000
+Date:   2012-11-27
 
     cbc config file scanned for new values. Also added function to add trailing / for directory values
 
-commit f44a16480a098addd10315e8eaa29166579ada97
+conf/dnsa.conf
+src/cbc.c
+src/cbccom.c
+src/checks.c
+src/checks.h
+src/cmdb.h
+src/cmdb_cbc.h
+src/cmdb_cmdb.h
+
+commit f44a164
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 26 22:44:51 2012 +0000
+Date:   2012-11-26
 
     Added config values. Also updated some variable names
 
-commit 6fbcfe24dd27e229adb41316f7a89d979eeffd4e
+conf/dnsa.conf
+src/cbccom.c
+src/cmdb_cbc.h
+
+commit 6fbcfe2
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 26 22:15:18 2012 +0000
+Date:   2012-11-26
 
     Renamed cbs cbc: create build configuration
 
-commit f7841a578f238fd87c33d81a5b26764ed2c515b9
+src/Makefile
+src/cbc.c
+src/cbccom.c
+src/cbs.c
+src/cbscom.c
+src/cmdb_cbc.h
+src/cmdb_cbs.h
+
+commit f7841a5
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 26 22:08:41 2012 +0000
+Date:   2012-11-26
 
     Start of cbs - create build script
 
-commit 1a616505ca575a5e71c694c7c1013d6c676db7b6
+src/Makefile
+src/cbs.c
+src/cbscom.c
+src/cmdb_cbs.h
+
+commit 1a61650
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 26 15:47:32 2012 +0000
+Date:   2012-11-26
 
     Added input validation for dnsa. Had to change function def for validate... to use enum constant. Regex's are now array of strings, with the index based on enum
 
-commit fe9d179d7cd05b7775f98861ceea7e8df998467b
+src/Makefile
+src/checks.c
+src/checks.h
+src/cmdb.c
+src/cmdb_dnsa.h
+src/dnsa.c
+src/dnsacom.c
+src/rev_zone.c
+
+commit fe9d179
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 26 13:37:48 2012 +0000
+Date:   2012-11-26
 
     cmdb now does validation on user input for name / UUID / COID
 
-commit a530820e4c228898509754b8c0e7c2b4fa3e2d24
+src/Makefile
+src/checks.c
+src/checks.h
+src/cmdb.c
+src/cmdbcom.c
+
+commit a530820
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 24 17:34:53 2012 +0000
+Date:   2012-11-24
 
     Updated switch in cmdb.c. Also provided usage message
 
-commit b11c7e7921f94b04204de7d70bfc014a10597b48
+src/cmdb.c
+src/cmdb.h
+src/cmdbcom.c
+src/errors.c
+
+commit b11c7e7
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 23 18:18:10 2012 +0000
+Date:   2012-11-23
 
     Cleaned up mysql memory leaks in dnsa
 
-commit 1f3f3466f8d19a94ea3133b07d4f7eada9b5165b
+src/drzf.c
+src/dzf.c
+src/fwd_zone.c
+src/rev_zone.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit 1f3f346
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 23 17:19:29 2012 +0000
+Date:   2012-11-23
 
     Can now display all servers. Also made 2 separate functions to print servers based on name or uuid
 
-commit 267da70b5c7991a0475e6535dacba2776745bfcc
+src/cmdb.c
+src/cmdb_cmdb.h
+src/customers.c
+src/servers.c
+
+commit 267da70
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 23 16:30:52 2012 +0000
+Date:   2012-11-23
 
     Can now list all customers
 
-commit 58aa66b8706c815d2bcb86f4756a8ba5d3f82691
+src/cmdb.c
+src/cmdb_cmdb.h
+src/customers.c
+src/servers.c
+
+commit 58aa66b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 23 11:54:52 2012 +0000
+Date:   2012-11-23
 
     Updated id in struct cmdb_comm_line_t to use CONF_S size to hold uuid and coid's.
     Customer display now shows contacts for customers
 
-commit e099db26bd5a93bba551eb05366ac443cd071925
+src/cmdb_cmdb.h
+src/cmdbcom.c
+src/customers.c
+src/servers.c
+
+commit e099db2
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 23 11:53:32 2012 +0000
+Date:   2012-11-23
 
     Removed some whitespace from drzf.c
 
-commit 75599a7b27a14fc83e81a0c48bb64114f9cb0a29
+src/drzf.c
+
+commit 75599a7
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 19:09:51 2012 +0000
+Date:   2012-11-22
 
     Can now display customer info
 
-commit 91c6fba00bd92b7028d9b98ba1320c21c5136510
+src/Makefile
+src/cmdb.c
+src/cmdb.h
+src/cmdb_cmdb.h
+src/customers.c
+
+commit 91c6fba
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 18:55:32 2012 +0000
+Date:   2012-11-22
 
     Udated cmdb files so we can now display server info
 
-commit 4138d5dbe4becbfefd7755b26b286219275ac200
+src/cmdb_mysql.c
+src/cmdb_mysql.h
+
+commit 4138d5d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 18:54:09 2012 +0000
+Date:   2012-11-22
 
     Updates to dnsa to try to get cmdb to use some of the code
 
-commit b2b9801beaca2f7f4bad2f92a150da9c29d21e71
+src/Makefile
+src/cmdb.c
+src/cmdb.h
+src/cmdb_cmdb.h
+src/cmdb_dnsa.h
+src/cmdbcom.c
+src/dnsa.c
+src/dnsa_mysql.c
+src/dnsa_mysql.h
+src/dnsacom.c
+src/drzf.c
+src/dzf.c
+src/errors.c
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/servers.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit b2b9801
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 14:22:56 2012 +0000
+Date:   2012-11-22
 
     Updated all files to have cmdb_cmdb.h, cmdb_dnsa.h and cmdb.h
 
-commit 2abe79372e0b21e6ffd50944059b4138fdc343b9
+src/Makefile
+src/cmdb.c
+src/cmdb.h
+src/cmdb_cmdb.h
+src/cmdb_dnsa.h
+src/cmdbcom.c
+src/dnsa.c
+src/dnsa.h
+src/dnsacom.c
+src/drzf.c
+src/dzf.c
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/reverse.h
+src/servers.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit 2abe793
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 13:27:23 2012 +0000
+Date:   2012-11-22
 
     Moved from dnsa_mysql functions to cmdb_mysql functions
 
-commit 9727203ef5f603cd88c9941f10a82a28b817d66c
+src/drzf.c
+src/dzf.c
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit 9727203
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 13:10:10 2012 +0000
+Date:   2012-11-22
 
     Start of the cmdb development
 
-commit b32412f05cc296e9e1def1caab90c6d1b4297913
+src/cmdb.c
+src/cmdb.h
+src/cmdbcom.c
+
+commit b32412f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 12:46:40 2012 +0000
+Date:   2012-11-22
 
     moved commline.c to dnsacom.c
 
-commit 6981652429d2bc943c5cc79f46c9e4cec89eaa28
+src/commline.c
+src/dnsacom.c
+
+commit 6981652
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 12:45:26 2012 +0000
+Date:   2012-11-22
 
     Updated source files to use mysql/mysql.h and not use -I in compiling
 
-commit b8848682b9709dbfa9d8625ccbbd955308f42a07
+src/Makefile
+src/drzf.c
+src/dzf.c
+src/forward.h
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/reverse.h
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit b884868
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 11:43:48 2012 +0000
+Date:   2012-11-22
 
     Updated error_code in mysqlfunc.c to be my_error_code to stop double pointer free
 
-commit 165915a7fcc6298a15cdad8a6133fc3c237ae10f
+src/mysqlfunc.c
+
+commit 165915a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 22 11:35:52 2012 +0000
+Date:   2012-11-22
 
     Added $(OBJECTS) line to makefile
 
-commit 8c048eb52ec58505c471320b529c7248f883e23e
+src/Makefile
+
+commit 8c048eb
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 12 13:07:45 2012 +0000
+Date:   2012-11-12
 
     Updated get_rev_id to use || in check for domain. Also free()'ed pointers
 
-commit 8b75e2114227878664eb5ef019588a340ffe8311
+src/rev_zone.c
+
+commit 8b75e21
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 12 11:56:08 2012 +0000
+Date:   2012-11-12
 
     Updated some comments. Now all mysql access goes via dnsa_mysql* functions
 
-commit 2e026ff5c54d495f11e88800007d30c02d154d27
+src/commline.c
+src/dnsa.c
+src/drzf.c
+src/dzf.c
+src/errors.c
+src/mysqlfunc.c
+src/rev_zone.c
+src/wcf.c
+src/wrcf.c
+
+commit 2e026ff
 Merge: 0f9efa8 67d7e45
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 12 11:12:43 2012 +0000
+Date:   2012-11-12
 
     Merge branch 'dnsa-0.0.4' of ssh://shihad.org/var/git/shihad/dnsa into dnsa-0.0.4
 
-commit 67d7e45f93ab5b8590b508e6c1501c09367287ae
+commit 67d7e45
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 12 01:08:03 2012 +0000
+Date:   2012-11-12
 
     Added some file scope variables to dzf.c and drzf.c Removed mysql.h from dnsa.c
 
-commit 97dfc72f6fe775679be89eba1d991515ce403073
+src/dnsa.c
+src/drzf.c
+src/dzf.c
+
+commit 97dfc72
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Nov 11 15:32:17 2012 +0000
+Date:   2012-11-11
 
     Updated loop in main to check for forward / reverse first. Updated rev_zone.c to return 0 for none and all
 
-commit 9a73cc2cd3007b57c5539d80970ca4a3da97f425
+src/dnsa.c
+src/dnsa.h
+src/rev_zone.c
+
+commit 9a73cc2
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Nov 11 12:57:40 2012 +0000
+Date:   2012-11-11
 
     Updated type in struct comm_line_t to use short int instead of a string
 
-commit 7663d71a65f35d665fbfabb3677c20fd36956d99
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+
+commit 7663d71
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Nov 11 12:47:20 2012 +0000
+Date:   2012-11-11
 
     Updated enum action codes to add _ZONE to the end of their name; avoid name collision
 
-commit f0596a278b33235b9c652f2e9bd204bafcab81dc
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+
+commit f0596a2
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sun Nov 11 12:34:05 2012 +0000
+Date:   2012-11-11
 
     Updated action in struct comm_line_t to use short int instead of a string
 
-commit 0f9efa8e0369b96daab55f2fa3b5a0ef50d2ada1
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+
+commit 0f9efa8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 9 13:46:03 2012 +0000
+Date:   2012-11-09
 
     create_zone_header in fwd_zone now checks tmp pointer and free()'s. wzf.c uses error to check MX(s) added
 
-commit 099ef4bef53ab5417ea928c9244b739489b8ed57
+src/fwd_zone.c
+src/wzf.c
+
+commit 099ef4b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 8 18:21:45 2012 +0000
+Date:   2012-11-08
 
     Removed debugging for add_MX_A_records_to_header
 
-commit eb18ca6e4bd48d0a0d40bed3c1f6b948dd4abfdb
+src/wzf.c
+
+commit eb18ca6
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 8 17:32:27 2012 +0000
+Date:   2012-11-08
 
     Updated MY_STORE_FAIL error. Tidyed up w[r]zf.c
 
-commit 4179753a77147542c172664e3d13bf5912beef46
+src/errors.c
+src/wrzf.c
+src/wzf.c
+
+commit 4179753
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Thu Nov 8 17:26:38 2012 +0000
+Date:   2012-11-08
 
     Farmed out more of wzf.c to functions
 
-commit 4f119a8bd98db070486d1632f75c5f5ba7a2f51f
+src/errors.c
+src/forward.h
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/wrzf.c
+src/wzf.c
+
+commit 4f119a8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Nov 7 18:17:56 2012 +0000
+Date:   2012-11-07
 
     Starting to use mysql functions. Clean up of wzf code and associated functions
 
-commit 38983152e2bbdd953cdb26084bf10b812e4a4630
+src/Makefile
+src/forward.h
+src/fwd_zone.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/wrzf.c
+src/wzf.c
+
+commit 3898315
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Nov 7 17:33:14 2012 +0000
+Date:   2012-11-07
 
     Added error reporting from checkzone fail. Also added function for checking reverse zone
 
-commit 958c3c9bcaf0a69b630edf5d890282e6540ffe18
+src/dnsa.h
+src/errors.c
+src/rev_zone.c
+src/reverse.h
+src/wrzf.c
+src/wzf.c
+
+commit 958c3c9
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Nov 7 15:26:04 2012 +0000
+Date:   2012-11-07
 
     Starting to farm out some extra code to functions.
 
-commit 699466b03496c5d05ac041701be9f8aa534a39c7
+src/dzf.c
+src/errors.c
+src/mysqlfunc.c
+src/mysqlfunc.h
+src/rev_zone.c
+src/reverse.h
+src/wrzf.c
+
+commit 699466b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Nov 7 13:09:52 2012 +0000
+Date:   2012-11-07
 
     Updated order in Makefile. Removed -g for debugging
 
-commit e9334a432c02d1d925be7dd3e08ed84f46da3920
+src/Makefile
+
+commit e9334a4
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Wed Nov 7 12:36:16 2012 +0000
+Date:   2012-11-07
 
     Updated comments. Added formatting to source files
 
-commit b154fda93d1bc15af0daf64a44193471ce25d623
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+src/drzf.c
+src/dzf.c
+src/rev_zone.c
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit b154fda
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 6 23:47:16 2012 +0000
+Date:   2012-11-06
 
     Got rid of string(s) array for config; now using a struct.
 
-commit 24dcaf8a666a3b9ca13fa077085e60b5baa1a938
+conf/dnsa.conf
+src/Makefile
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+src/drzf.c
+src/dzf.c
+src/errors.c
+src/forward.h
+src/rev_zone.c
+src/reverse.h
+src/wcf.c
+src/wrcf.c
+src/wrzf.c
+src/wzf.c
+
+commit 24dcaf8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Tue Nov 6 07:30:16 2012 +0000
+Date:   2012-11-06
 
     Updated d[r]zf.c not to mix size_t and my_ulonglong definitions
 
-commit d00370b8c25051e368e62a7e68c10478cbb69959
+src/drzf.c
+src/dzf.c
+
+commit d00370b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 17:24:05 2012 +0000
+Date:   2012-11-05
 
     Comments added.
 
-commit 1fa812f83560f415309e25089eafeb923ce21b00
+src/commline.c
+src/dnsa.c
+src/drzf.c
+src/dzf.c
+src/errors.c
+src/fwd_zone.c
+src/rev_zone.c
+src/reverse.h
+src/wrzf.c
+src/wzf.c
+
+commit 1fa812f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 16:56:37 2012 +0000
+Date:   2012-11-05
 
     Added free() statements
 
-commit e9b1e9ddd83204da04ff3c3ed7a715cec1187474
+src/drzf.c
+src/dzf.c
+
+commit e9b1e9d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 16:53:54 2012 +0000
+Date:   2012-11-05
 
     Output of list command set to columns
 
-commit 8408d73917316969e48afbecd75680ccf08e6ea9
+src/drzf.c
+src/dzf.c
+
+commit 8408d73
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 16:16:11 2012 +0000
+Date:   2012-11-05
 
     Added list domain functionality for forward and reverse domains. Also cleaned up error reporting
 
-commit c1d5b04acd389d25a47522ce93a290f497063045
+src/dnsa.c
+src/dnsa.h
+src/drzf.c
+src/dzf.c
+src/errors.c
+
+commit c1d5b04
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 15:32:06 2012 +0000
+Date:   2012-11-05
 
     Added outline of functions to list forward and reverse zones in the database
 
-commit dbbb07dce06d6b5dbc8c8891dce6afb044f3cba8
+src/commline.c
+src/dnsa.c
+src/drzf.c
+src/dzf.c
+src/forward.h
+src/reverse.h
+
+commit dbbb07d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 14:46:35 2012 +0000
+Date:   2012-11-05
 
     Added some needed free() statements
 
-commit 8b2f2afd80f28683d49f1c2aa38db65693a7e2f3
+src/wrcf.c
+src/wzf.c
+
+commit 8b2f2af
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 14:35:01 2012 +0000
+Date:   2012-11-05
 
     Updated .c file names to fwd and rev _zone.c. Updated Makefile to reflect changes
 
-commit 77c0333bc5bf32b9125eccf54bf03c761ff99f2a
+src/Makefile
+src/fwd_zone.c
+src/rev_zone.c
+src/write_rev_zone.c
+src/write_zone.c
+
+commit 77c0333
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 12:42:58 2012 +0000
+Date:   2012-11-05
 
     Moved write_zone.h to forward.h and added function definition of wcf. Also updated Makefile names
 
-commit 0fa7ec0169b529a962f314b37d483a70573bdbec
+src/Makefile
+src/dnsa.c
+src/dnsa.h
+src/dzf.c
+src/forward.h
+src/write_zone.c
+src/write_zone.h
+src/wzf.c
+
+commit 0fa7ec0
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 12:34:16 2012 +0000
+Date:   2012-11-05
 
     Moved rev_zone.h to reverse.h. Added function definition for wrcf from dnsa.h
 
-commit 1074d7605d72da05119eed80e400db0948326a78
+src/Makefile
+src/dnsa.c
+src/dnsa.h
+src/drzf.c
+src/rev_zone.h
+src/reverse.h
+src/wrcf.c
+src/write_rev_zone.c
+src/wrzf.c
+
+commit 1074d76
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 12:28:08 2012 +0000
+Date:   2012-11-05
 
     Can now write the reverse zone(s) configuration file
 
-commit 279e51439a06da8c5631644ea0026eb666ba3d0e
+src/Makefile
+src/dnsa.c
+src/dnsa.h
+src/wrcf.c
+
+commit 279e514
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 11:28:02 2012 +0000
+Date:   2012-11-05
 
     Updated some comments on wcf.c wrcf.c files
 
-commit ab33daa5a749e11074e09e19f9fe338dc56e451f
+src/wcf.c
+src/wrcf.c
+
+commit ab33daa
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Nov 5 11:21:51 2012 +0000
+Date:   2012-11-05
 
     ADded functionality to write forward config file into dnsa
 
-commit 482725b18ed71440a3b4ca23f9eba189f068efb7
+src/Makefile
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+src/wcf.c
+
+commit 482725b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 16:42:57 2012 +0000
+Date:   2012-11-03
 
     Added basic parsing of -c option to generate the configs
 
-commit aa30225c1fc2275e2c83c9b0a6f7235914d0b11e
+src/commline.c
+src/dnsa.c
+
+commit aa30225
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 16:31:49 2012 +0000
+Date:   2012-11-03
 
     Removed sections to build wzf and wrzf as these are no longer needed nor will work
 
-commit b651260f0805752921846ec5cf7873c86ac9c458
+src/Makefile
+
+commit b651260
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 16:17:16 2012 +0000
+Date:   2012-11-03
 
     Can now display reverse zone
 
-commit 2de71c998303604116669bb93fd78442a2d07627
+src/Makefile
+src/dnsa.c
+src/drzf.c
+src/rev_zone.h
+src/write_rev_zone.c
+
+commit 2de71c9
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 16:14:54 2012 +0000
+Date:   2012-11-03
 
     Added some comments to dzf.c and also free()'ed pointers
 
-commit 017230a0c6afe70cad94af3846f23bd491a2dbc3
+src/dzf.c
+
+commit 017230a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 12:36:28 2012 +0000
+Date:   2012-11-03
 
     Changed output so records are ordered. Added a tab for MX record after the priority
 
-commit 354a5a4362a9f634bdd71b59d94c2398b5ac38ae
+src/dzf.c
+
+commit 354a5a4
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 12:28:01 2012 +0000
+Date:   2012-11-03
 
     Output of zonefile is now formatted along tab boundaries
 
-commit 5abcca464fc9c2e8ac0c00d59e2cd953664bfea5
+src/dzf.c
+
+commit 5abcca4
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Nov 3 11:24:55 2012 +0000
+Date:   2012-11-03
 
     Can now display the forward zone file. Output could be prettier with tabs aligned
 
-commit 6eaeb71db2e0a0e3726e8c757b7ed06c2f3b0383
+src/Makefile
+src/dnsa.c
+src/dzf.c
+src/write_zone.h
+
+commit 6eaeb71
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 2 12:13:48 2012 +0000
+Date:   2012-11-02
 
     Removed mysql_funs.[c|h] as not uses.
 
-commit 8ceca052c90cef23ed4c0b95a900bfe4495934f4
+src/Makefile
+src/dnsa.c
+src/mysql_funs.c
+src/mysql_funs.h
+
+commit 8ceca05
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 2 12:08:21 2012 +0000
+Date:   2012-11-02
 
     Memory errors were due to malloc not zero'ing memory for rout. Using calloc instead in wrzf.c
 
-commit e79f8b05288e70c646cf69934567b395ba4d07c4
+src/wrzf.c
+
+commit e79f8b0
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Nov 2 10:19:22 2012 +0000
+Date:   2012-11-02
 
     Major issues. Compiles but either core dumps or seg faults.
 
-commit cc5df21a3c25b75817f85a5bc17d67b6d46d8fd1
+src/Makefile
+src/dnsa.c
+src/dnsa.h
+src/mysql_funs.c
+src/mysql_funs.h
+src/rev_zone.h
+src/write_rev_zone.c
+
+commit cc5df21
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 22:57:22 2012 +0000
+Date:   2012-10-29
 
     UPdated report_error function. Added this function to wzf.c
 
-commit 261b8ec698363f543f8af2381616db80b9793324
+src/dnsa.h
+src/errors.c
+src/wzf.c
+
+commit 261b8ec
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 20:34:52 2012 +0000
+Date:   2012-10-29
 
     oops. Removed domain from dnsa.c. This has been added back in now
 
-commit 517f739d01ec0139025d9b3afb9d4492a8c498ba
+src/dnsa.c
+
+commit 517f739
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 20:28:16 2012 +0000
+Date:   2012-10-29
 
     Added basic error reporting
 
-commit a54492b3fe5a631150ef6748cc35c3bbcbf90876
+src/Makefile
+src/dnsa.h
+src/errors.c
+
+commit a54492b
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 18:03:01 2012 +0000
+Date:   2012-10-29
 
     Starting to have mysql functions for connections etc. File: mysql_funs.c
 
-commit 9147b110ff6330aa8f2266e42df51c7550912925
+src/mysql_funs.c
+src/mysql_funs.h
+src/write_rev_zone.c
+
+commit 9147b11
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 16:33:13 2012 +0000
+Date:   2012-10-29
 
     Updated commline.c to check for trailing /. Also get_rev_id needs config array passed to it
 
-commit 696d864a7e80800ec8d2048718c39a673ab0dfc7
+src/Makefile
+src/commline.c
+src/dnsa.c
+src/rev_zone.h
+src/write_rev_zone.c
+
+commit 696d864
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 15:47:38 2012 +0000
+Date:   2012-10-29
 
     Now using multi-dimension array config for.... configuration
 
-commit 38b8387f9c0c3f9cdea747b56f1ee4c73c67b252
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+src/rev_zone.h
+src/write_zone.h
+src/wrzf.c
+src/wzf.c
+
+commit 38b8387
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 15:26:22 2012 +0000
+Date:   2012-10-29
 
     Replace exit()'s with returns in wzf.c and wrzf.c
 
-commit d3a9b755a7f34ab8243caed5c8c4e20f904d020f
+src/wrzf.c
+src/wzf.c
+
+commit d3a9b75
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 15:19:42 2012 +0000
+Date:   2012-10-29
 
     Debug: Prints out values from config file
 
-commit 1849158101458ebaa39b2abb515a02140525441b
+src/dnsa.c
+
+commit 1849158
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 15:17:15 2012 +0000
+Date:   2012-10-29
 
     Seems to parse config file nowe and create array
 
-commit bc06e6377feae0dbacdc752f2ed3e8d19e92c99a
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+
+commit bc06e63
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 12:12:44 2012 +0000
+Date:   2012-10-29
 
     Updated config file with descriptions and check commands
 
-commit 77e1d0556bed44bb7aef12e35a617e940cf1690d
+conf/dnsa.conf
+
+commit 77e1d05
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 11:57:41 2012 +0000
+Date:   2012-10-29
 
     Updated pointer types in get_rev_id()
 
-commit 17c0c3aedf1eed5c7444ac78e5a0fa37c0cdbfe1
+src/write_rev_zone.c
+
+commit 17c0c3a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 11:54:07 2012 +0000
+Date:   2012-10-29
 
     dnsa.c had write not display in test for display.
 
-commit c74fdb0d1ddeb41bbdada1b4b690b0d23c05cc0c
+src/dnsa.c
+src/write_rev_zone.c
+
+commit c74fdb0
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 10:53:05 2012 +0000
+Date:   2012-10-29
 
     Not free()ing domain pointer. Needed!
 
-commit 692d5ad1f760fcb4dfddd51c3731cef77fac5e4c
+src/wzf.c
+
+commit 692d5ad
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 10:48:01 2012 +0000
+Date:   2012-10-29
 
     Fixed typo where command.type was command.action
 
-commit 77eaa462444b742e42a4f9a3ac0a1a435fbc4c5a
+src/dnsa.c
+
+commit 77eaa46
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 10:40:39 2012 +0000
+Date:   2012-10-29
 
     Added wzf and wrzf into dnsa
 
-commit a701a30621737b6ac636621ca281bbb2565ee5b8
+src/Makefile
+src/dnsa.c
+src/dnsa.h
+src/rev_zone.h
+src/write_rev_zone.c
+src/write_zone.h
+src/wrzf.c
+src/wzf.c
+
+commit a701a30
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Mon Oct 29 09:57:44 2012 +0000
+Date:   2012-10-29
 
     dnsa.c takes command line options. This is the start of using one binary
 
-commit 66ae58d09e2d2b0182cd69f67a48adcca97a85b6
+src/Makefile
+src/commline.c
+src/dnsa.c
+src/dnsa.h
+src/rev_zone.h
+src/write_zone.h
+
+commit 66ae58d
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Oct 27 18:12:13 2012 +0100
+Date:   2012-10-27
 
     Adding more comments ot the source files
 
-commit 39db34fb8785ff5c91c0b0afd594bc07d1b37d74
+src/wzf.c
+
+commit 39db34f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Oct 27 17:58:59 2012 +0100
+Date:   2012-10-27
 
     Added main configuration file into conf/
 
-commit 994b96acaac2b382f92064a391ffb17047c19015
+conf/dnsa.conf
+
+commit 994b96a
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Sat Oct 27 17:46:29 2012 +0100
+Date:   2012-10-27
 
     Adding comments to the source files
 
-commit 23ed4153f631189b59856ce4e2dca18490d709f0
+src/rev_zone.h
+src/wcf.c
+src/wrcf.c
+src/write_zone.h
+src/wrzf.c
+src/wzf.c
+
+commit 23ed415
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 15:30:58 2012 +0100
+Date:   2012-10-26
 
     Updated Makefile to search for libs in /usr/lib/mysql
 
-commit 51822f82f34eff5283d9e03d7a6f900508c387a1
+src/Makefile
+
+commit 51822f8
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 15:27:05 2012 +0100
+Date:   2012-10-26
 
     Added newlines at the end of all code files
 
-commit 4d76a7eecfb5de1cb444e9dabf5d80cfc9f745eb
+src/rev_zone.h
+src/wcf.c
+src/wrcf.c
+src/write_zone.c
+
+commit 4d76a7e
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 15:26:47 2012 +0100
+Date:   2012-10-26
 
     Updated TODO and install
 
-commit 1affc2fdd9f31a2675b74ff9b3a457c789cad54e
+INSTALL
+TODO
+
+commit 1affc2f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 12:18:02 2012 +0100
+Date:   2012-10-26
 
     Added INSTALL, TODO. Updated ABOUT
 
-commit 88433eae979bfab03bca6e9ddb1731614a59d961
+ABOUT
+INSTALL
+TODO
+
+commit 88433ea
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 12:10:01 2012 +0100
+Date:   2012-10-26
 
     Added ABOUT and COPYING
 
-commit 64f36e1b78adb620fea439ea30df985c4fb6e01a
+ABOUT
+COPYING
+
+commit 64f36e1
 Merge: 3695ed3 267f778
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 11:30:54 2012 +0100
+Date:   2012-10-26
 
     Merge branch 'master' of ssh://shihad.org/var/git/shihad/dnsa
 
-commit 267f778f441fa8ae522d6f261c3c8994fc19caaa
+commit 267f778
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 11:29:11 2012 +0100
+Date:   2012-10-26
 
     Moved everything into src/ directory
 
-commit 3695ed30a72214dfad3e9b60c7c236fe381a436f
+Makefile
+dnsa.h
+rev_zone.h
+src/Makefile
+src/dnsa.h
+src/rev_zone.h
+src/wcf.c
+src/wrcf.c
+src/write_rev_zone.c
+src/write_zone.c
+src/write_zone.h
+src/wrzf.c
+src/wzf.c
+wcf.c
+wrcf.c
+write_rev_zone.c
+write_zone.c
+write_zone.h
+wrzf.c
+wzf.c
+
+commit 3695ed3
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 11:19:18 2012 +0100
+Date:   2012-10-26
 
     Updated makefile so clean removes wrcf
 
-commit c6eb63fbec590e0ea6ccd3825ddc5aafa63a856c
+Makefile
+
+commit c6eb63f
 Author: Iain M Conochie <iain@shihad.org>
-Date:   Fri Oct 26 11:15:21 2012 +0100
+Date:   2012-10-26
 
     Initial Repo for dnsa
+
+Makefile
+dnsa.h
+rev_zone.h
+wcf.c
+wrcf.c
+write_rev_zone.c
+write_zone.c
+write_zone.h
+wrzf.c
+wzf.c
