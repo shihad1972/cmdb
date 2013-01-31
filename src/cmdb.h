@@ -18,6 +18,13 @@ enum {			/* Buffer Sizes */
 	BUILD_S = 65536
 };
 
+enum {			/* Database Type errors */
+	NO_DB_TYPE = 0,
+	DB_TYPE_INVALID = 1,
+	NO_MYSQL = 2,
+	NO_SQLITE = 3
+};
+
 enum {			/* dnsa error codes */
 	OK = 0,
 	ARGC_INVAL = 1,

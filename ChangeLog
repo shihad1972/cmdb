@@ -1,3 +1,46 @@
+commit 5dc6517
+Author: Iain M Conochie <iain@thargoid.co.uk>
+Date:   2013-01-31
+
+    Added cmdb_main_free function to free all pointers in main() function
+
+src/cmdb.c
+src/cmdb_cmdb.h
+src/cmdbcom.c
+
+commit 85d04cc
+Author: Iain M Conochie <iain@thargoid.co.uk>
+Date:   2013-01-31
+
+    Added license information for cbc and cmdb files
+
+src/build_add.c
+src/build_data_struct.c
+src/build_display.c
+src/build_info.c
+src/cbc.c
+src/cbccom.c
+src/cmdb.c
+src/cmdbcom.c
+src/customers.c
+src/servers.c
+
+commit b50fc88
+Author: Iain M Conochie <iain@shihad.org>
+Date:   2013-01-31
+
+    Added license information to the dnsa source files
+
+ABOUT
+COPYING
+ChangeLog
+src/dnsa.c
+src/dnsacom.c
+src/drzf.c
+src/dzf.c
+src/fwd_zone.c
+src/rev_zone.c
+
 commit 5341d86
 Author: Iain M Conochie <iain@shihad.org>
 Date:   2013-01-30

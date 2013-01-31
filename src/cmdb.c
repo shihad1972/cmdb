@@ -38,6 +38,13 @@
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "checks.h"
+#include "../config.h"
+#ifdef HAVE_MYSQL
+# include "cmdb_mysql.h"
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+# include "cmdb_sqlite.h"
+#endif /* HAVE_SQLITE3 */
 
 int main(int argc, char *argv[])
 {
@@ -61,12 +68,30 @@ int main(int argc, char *argv[])
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	if ((strncmp(cmc->dbtype, "none", RANGE_S) ==0))
+		fprintf(stderr, "No Database Driver specified\n");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmc->dbtype, "mysql", RANGE_S) == 0))
+		retval = cmdb_use_mysql(cmc, cm, retval);
+#endif
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmc->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cmdb_use_sqlite(cmc, cm);
+#endif
+	else
+		fprintf(stderr, "Unknown Database Driver %s!\n", cmc->dbtype);
+
+	cmdb_main_free(cm, cmc, cmdb_config);
+	exit (retval);
+}
+
+#ifdef HAVE_MYSQL
+int cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval)
+{	
 	if (retval == -2) {
 		printf("Port value higher that 65535!\n");
-		cmdb_main_free(cm, cmc, cmdb_config);
-		exit (1);
+		return 1;
 	}
-	
 	switch (cm->type) {
 		case SERVER:
 			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
@@ -77,24 +102,21 @@ int main(int argc, char *argv[])
 				retval = validate_user_input(cm->name, NAME_REGEX);
 			} else {
 				printf("Both name and uuid set to NULL??\n");
-				cmdb_main_free(cm, cmc, cmdb_config);
-				exit (1);
+				return 1;
 			}
 			if (retval < 0) {
 				printf("User input not valid\n");
-				cmdb_main_free(cm, cmc, cmdb_config);
-				exit (1);
+				return 1;
 			}
 			if (cm->action == DISPLAY) {
 				display_server_info(cm->name, cm->id, cmc);
 			} else if (cm->action == LIST_OBJ) {
-				display_all_servers(cmc);
+				display_all_mysql_servers(cmc);
 			} else if (cm->action == ADD_TO_DB) {
 				retval = add_server_to_database(cmc);
 				if (retval > 0) {
 					printf("Error adding to database\n");
-					cmdb_main_free(cm, cmc, cmdb_config);
-					exit(1);
+					return 1;
 				} else {
 					printf("Added into database\n");
 				}
@@ -107,13 +129,11 @@ int main(int argc, char *argv[])
 				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
 			} else {
 				printf("Both name and coid set to NULL??\n");
-				cmdb_main_free(cm, cmc, cmdb_config);
-				exit (1);
+				return 1;
 			}
 			if (retval < 0) {
 				printf("User input not valid\n");
-				cmdb_main_free(cm, cmc, cmdb_config);
-				exit (1);
+				return 1;
 			}
 			if (cm->action == DISPLAY)
 				display_customer_info(cm->name, cm->id, cmc);
@@ -124,6 +144,69 @@ int main(int argc, char *argv[])
 			printf("Not implemented yet :(\n");
 			break;
 	}
-	cmdb_main_free(cm, cmc, cmdb_config);
-	exit (0);
+	return 0;
 }
+#endif
+#ifdef HAVE_SQLITE3
+int cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm)
+{
+	int retval;
+	
+	retval = 0;
+	printf("Using sqlite database\n");
+	switch(cm->type) {
+		case SERVER:
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, UUID_REGEX);
+				if (retval < 0)
+					retval = validate_user_input(cm->id, NAME_REGEX);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, NAME_REGEX);
+			} else {
+				printf("Both name and uuid set to NULL??\n");
+				return 1;
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				return 1;
+			}			if (cm->action == DISPLAY) {
+				display_server_info(cm->name, cm->id, cmc);
+			} else if (cm->action == LIST_OBJ) {
+				display_all_sqlite_servers(cmc);
+			} else if (cm->action == ADD_TO_DB) {
+				retval = add_server_to_database(cmc);
+				if (retval > 0) {
+					printf("Error adding to database\n");
+					return 1;
+				} else {
+					printf("Added into database\n");
+				}
+			}
+			break;
+		case CUSTOMER:
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, COID_REGEX);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
+			} else {
+				printf("Both name and coid set to NULL??\n");
+				return 1;
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				return 1;
+			}
+			if (cm->action == DISPLAY)
+				display_customer_info(cm->name, cm->id, cmc);
+			else if (cm->action == LIST_OBJ)
+				display_all_customers(cmc);
+			break;
+		default:
+			printf("Not implemented yet :(\n");
+			break;
+	}
+	return 0;
+	
+	return 0;
+}
+#endif

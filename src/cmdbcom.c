@@ -34,6 +34,13 @@
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
+#include "../config.h"
+#ifdef HAVE_MYSQL
+# include "cmdb_mysql.h"
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+# include "cmdb_sqlite.h"
+#endif /* HAVE_SQLITE3 */
 
 int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 {
@@ -81,39 +88,7 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 				break;
 		}
 	}
-/*	for (i = 1; i < argc; i++) {
-		if ((strncmp(argv[i], "-s", COMM_S) == 0)) {
-			comp->type = SERVER;
-		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
-			comp->type = CUSTOMER;
-		} else if ((strncmp(argv[i], "-t", COMM_S) == 0)) {
-			comp->type = CONTACT;
-		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
-			comp->action = DISPLAY;
-		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
-			comp->action = LIST_OBJ;
-			sprintf(comp->name, "all");
-		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_NAME;
-			else if ((strncmp(argv[i], "-", 1) == 0))
-				retval = NO_NAME;
-			else
-				strncpy(comp->name, argv[i], CONF_S);
-		} else if ((strncmp(argv[i], "-i", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_ID;
-			else if ((strncmp(argv[i], "-", 1) == 0))
-				retval = NO_ID;
-			else
-				strncpy(comp->id, argv[i], CONF_S);
-		} else {
-			retval = GENERIC_ERROR;
-		}
-	} */
-	
+
 	if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
@@ -143,27 +118,31 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 		fprintf(stderr, "Using default values\n");
 		retval = -1;
 	} else {
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, RANGE_S - 1, cnf))) {
+			sscanf(buff, "DBTYPE=%s", dc->dbtype);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "PASS=%s", dc->pass);
 		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "HOST=%s", dc->host);	
 		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "USER=%s", dc->user);
 		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "DB=%s", dc->db);
 		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "SOCKET=%s", dc->socket);
 		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "PORT=%s", port);
 		}
 		retval = 0;
@@ -185,11 +164,12 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 
 void init_cmdb_config_values(cmdb_config_t *dc)
 {
-	sprintf(dc->db, "cmdb");
-	sprintf(dc->user, "root");
-	sprintf(dc->host, "localhost");
-	sprintf(dc->pass, "%s", "");
-	sprintf(dc->socket, "%s", "");
+	snprintf(dc->dbtype, RANGE_S, "none");
+	snprintf(dc->db, CONF_S, "cmdb");
+	snprintf(dc->user, CONF_S, "root");
+	snprintf(dc->host, CONF_S, "localhost");
+	snprintf(dc->pass, CONF_S, "%s", "");
+	snprintf(dc->socket, CONF_S, "%s", "");
 	dc->port = 3306;
 	dc->cliflag = 0;
 }
@@ -199,4 +179,30 @@ void cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 	free(cm);
 	free(cmc);
 	free(cmdb_config);
+}
+
+int display_server_info(char *server, char *uuid, cmdb_config_t *config)
+{
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		printf("No dbtype configured to display server info\n");
+		return DB_TYPE_INVALID;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		if ((strncmp(server, "NULL", CONF_S)))
+			display_on_name_mysql(server, config);
+		else if ((strncmp(uuid, "NULL", CONF_S)))
+			display_on_uuid_mysql(uuid, config);
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		if ((strncmp(server, "NULL", CONF_S)))
+			display_on_name_sqlite(server, config);
+		else if ((strncmp(uuid, "NULL", CONF_S)))
+			display_on_uuid_sqlite(uuid, config);
+#endif /* HAVE_SQLITE3 */
+	} else {
+		printf("Unknown DB type %s to display servers\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	return 0;
 }
