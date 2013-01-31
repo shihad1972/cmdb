@@ -1,16 +1,35 @@
-/* cmdb.c
+/* 
  *
- * Contains main() function for cmdb program
+ *  cmdb: Configuration Management Database
+ *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
- * Command line arguments:
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * -s: Choose a server
- * -c: Choose a customer
- * -t: Choose a contact
- * -d: Display details
- * -l: List <customers|contacts|servers>
- * -n <name>: Name of customer / contact / server
- * -i <id>: UUID's of servers OR COID of customer OR CONID of contact
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  
+ *  cmdb.c
+ *
+ *  Contains main() function for cmdb program
+ *
+ *  Command line arguments:
+ *
+ *  -s: Choose a server
+ *  -c: Choose a customer
+ *  -t: Choose a contact
+ *  -d: Display details
+ *  -l: List <customers|contacts|servers>
+ *  -n <name>: Name of customer / contact / server
+ *  -i <id>: UUID's of servers OR COID of customer OR CONID of contact
  */
 
 #include <stdio.h>

@@ -1,11 +1,30 @@
-/* commline.c
+/* 
+ * 
+ *  cmdb: Configuration Management Database
+ *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
- * Contains the functions to deal with command line arguments and also to
- * read the values from the configuration file
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * Part of the CMDB program
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * (C) Iain M Conochie 2012
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  commline.c
+ *
+ *  Contains the functions to deal with command line arguments and also to
+ *  read the values from the configuration file
+ *
+ *  Part of the CMDB program
+ *
+ *  (C) Iain M Conochie 2012 - 2013
  *
  */
 
