@@ -37,8 +37,10 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#include "checks.h"
 #include "../config.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /*HAVE_LIBPCRE */
 #ifdef HAVE_MYSQL
 # include "cmdb_mysql.h"
 #endif /* HAVE_MYSQL */
@@ -68,6 +70,38 @@ int main(int argc, char *argv[])
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	/* Commented out block was here */
+	switch (cm->type) {
+		case SERVER:
+#ifdef HAVE_LIBPCRE
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, UUID_REGEX);
+				if (retval < 0)
+					retval = validate_user_input(cm->id, NAME_REGEX);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, NAME_REGEX);
+			} else {
+				printf("Both name and uuid set to NULL??\n");
+				exit (NO_NAME_UUID_ID);
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				exit (USER_INPUT_INVALID);
+			}
+#endif /* HAVE_LIBPCRE */
+			if (cm->action == DISPLAY) {
+				display_server_info(cm->name, cm->id, cmc);
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
+		default:
+			display_type_error(cm->type);
+			break;
+	}
+	exit (0);
+}
+/*
 	if ((strncmp(cmc->dbtype, "none", RANGE_S) ==0))
 		fprintf(stderr, "No Database Driver specified\n");
 #ifdef HAVE_MYSQL
@@ -169,7 +203,8 @@ int cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm)
 			if (retval < 0) {
 				printf("User input not valid\n");
 				return 1;
-			}			if (cm->action == DISPLAY) {
+			}
+			if (cm->action == DISPLAY) {
 				display_server_info(cm->name, cm->id, cmc);
 			} else if (cm->action == LIST_OBJ) {
 				display_all_sqlite_servers(cmc);
@@ -206,7 +241,6 @@ int cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm)
 			break;
 	}
 	return 0;
-	
-	return 0;
 }
 #endif
+*/

@@ -22,8 +22,11 @@ void cmdb_mysql_query(MYSQL *mycmdb, const char *query)
 	int error;
 	
 	error = mysql_query(mycmdb, query);
-	if ((error != 0))
+	if ((error != 0)) {
+		mysql_close(mycmdb);
+		mysql_library_end();
 		report_error(MY_QUERY_FAIL, mysql_error(mycmdb));
+	}
 }
 
 int cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query)

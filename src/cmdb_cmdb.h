@@ -3,12 +3,6 @@
 #ifndef __CMDB_CMDB_H__
 #define __CMDB_CMDB_H__
 
-enum {			/* Display codes; use NONE from action codes */
-	SERVER = 1,
-	CUSTOMER = 2,
-	CONTACT = 3
-};
-
 typedef struct cmdb_comm_line_t { /* Hold parsed command line args */
 	short int action;
 	short int type;
@@ -19,6 +13,7 @@ typedef struct cmdb_comm_line_t { /* Hold parsed command line args */
 
 typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 	char dbtype[RANGE_S];
+	char file[CONF_S];
 	char db[CONF_S];
 	char user[CONF_S];
 	char pass[CONF_S];
@@ -58,6 +53,14 @@ typedef struct cmdb_customer_t {
 	struct cmdb_customer_t *next;
 } cmdb_customer_t;
 
+typedef struct cmdb_contact_t {
+	char name[HOST_S];
+	char phone[MAC_S];
+	char email[HOST_S];
+	unsigned long int cont_id;
+	unsigned long int cust_id;
+} cmdb_contact_t;
+
 typedef struct cmdb_hard_type_t {
 	char type[HOST_S];
 	char hclass[HOST_S];
@@ -73,6 +76,32 @@ typedef struct cmdb_hardware_t {
 	unsigned long int ht_id;
 	struct cmdb_hardware_t *next;
 } cmdb_hardware_t;
+
+typedef struct cmdb_service_t {
+	char detail[HOST_S];
+	char url[NAME_S];
+	unsigned long int service_id;
+	unsigned long int server_id;
+	unsigned long int cust_id;
+	struct cmdb_service_t *next;
+} cmdb_service_t;
+
+typedef struct cmdb_service_type_t {
+	char service[MAC_S];
+	char detail[HOST_S];
+	unsigned long int service_id;
+} cmdb_service_type_t;
+
+typedef struct cmdb_t {
+	struct cmdb_server_t *server;
+	struct cmdb_vm_host_t *vmhost;
+	struct cmdb_hardware_t *hardware;
+	struct cmdb_hard_type_t *hardtype;
+	struct cmdb_customer_t *customer;
+	struct cmdb_config_t *contact;
+	struct cmdb_service_t *service;
+	struct cmdb_service_type_t *servicetype;
+} cmdb_t;
 
 void
 cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config);

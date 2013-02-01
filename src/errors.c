@@ -370,3 +370,56 @@ void chomp(char *input)
 	if (input[len -1] == '\n')
 		input[len -1] = '\0';
 }
+
+void display_action_error(short int action)
+{
+	switch(action) {
+		case NONE:
+			fprintf(stderr, "No action specified\n");
+			break;
+		case DISPLAY:
+			fprintf(stderr, "Display failed\n");
+			break;
+		case LIST_OBJ:
+			fprintf(stderr, "Listing failed\n");
+			break;
+		case ADD_TO_DB:
+			fprintf(stderr, "Adding to DB failed\n");
+			break;
+		default:
+			fprintf(stderr, "Unknown error code %d failed\n", action);
+	}
+}
+
+void display_type_error(short int type)
+{
+	char *message;
+	
+	if (!(message = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "message in display_type_error");
+	snprintf(message, HOST_S, "\
+Unable to perform requested action on ");
+	switch(type) {
+		case SERVER:
+			strncat(message, "server\n", MAC_S);
+			fprintf(stderr, "%s", message);
+			break;
+		case CUSTOMER:
+			strncat(message, "customer\n", MAC_S);
+			fprintf(stderr, "%s", message);
+			break;
+		case CONTACT:
+			strncat(message, "contact\n", MAC_S);
+			fprintf(stderr, "%s", message);
+			break;
+		case SERVICE:
+			strncat(message, "service\n", MAC_S);
+			fprintf(stderr, "%s", message);
+			break;
+		default:
+			strncat(message, "unknown type ", MAC_S);
+			fprintf(stderr, "%s", message);
+			fprintf(stderr, "%d\n", type);
+			break;
+	}
+}

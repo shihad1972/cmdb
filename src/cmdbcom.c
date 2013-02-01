@@ -123,6 +123,10 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S - 1, cnf))) {
+			sscanf(buff, "FILE=%s", dc->file);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S - 1, cnf))) {
 			sscanf(buff, "PASS=%s", dc->pass);
 		}
 		rewind(cnf);
@@ -165,6 +169,7 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 void init_cmdb_config_values(cmdb_config_t *dc)
 {
 	snprintf(dc->dbtype, RANGE_S, "none");
+	snprintf(dc->file, CONF_S, "none");
 	snprintf(dc->db, CONF_S, "cmdb");
 	snprintf(dc->user, CONF_S, "root");
 	snprintf(dc->host, CONF_S, "localhost");

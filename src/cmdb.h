@@ -51,7 +51,8 @@ enum {			/* dnsa error codes */
 	CANNOT_ADD_A_RECORD = 27,
 	REV_BUILD_FAILED = 28,
 	MALLOC_FAIL = 40,
-	BUFFER_FULL = 41
+	BUFFER_FULL = 41,
+	USER_INPUT_INVALID = 42
 };
 
 enum {			/* cmdb error codes: start @ 101 to avoid conflict */
@@ -103,7 +104,9 @@ enum {			/* cmdb error codes: start @ 101 to avoid conflict */
 	CANNOT_INSERT_PARTITIONS = 146,
 	CANNOT_INSERT_DISK_DEVICE = 147,
 	CANNOT_DELETE_BUILD = 148,
-	NO_BOOT_PARTITION = 149
+	NO_BOOT_PARTITION = 149,
+	CANNOT_OPEN_FILE = 150,
+	SQLITE_STATEMENT_FAILED = 151
 	
 };
 
@@ -166,22 +169,34 @@ enum {			/* cmdb Action codes */
 	LIST_OBJ = 2,
 	ADD_TO_DB = 3
 };
+
+enum {			/* Display codes; use NONE from action codes */
+	SERVER = 1,
+	CUSTOMER = 2,
+	CONTACT = 4,
+	SERVICE = 8,
+	SERVICE_TYPE = 16,
+	HARDWARE = 32,
+	HARDWARE_TYPE = 64,
+	VM_HOST = 128
+};
+
 enum {			/* dnsa action codes */
-	WRITE_ZONE = 1,
-	DISPLAY_ZONE = 2,
-	CONFIGURE_ZONE = 3,
-	LIST_ZONES = 4,
-	ADD_ZONE = 5,
-	ADD_RECORD = 6,
-	ADD_HOST = 7,
-	BUILD_REV = 8
+	WRITE_ZONE = 21,
+	DISPLAY_ZONE = 22,
+	CONFIGURE_ZONE = 23,
+	LIST_ZONES = 24,
+	ADD_ZONE = 25,
+	ADD_RECORD = 26,
+	ADD_HOST = 27,
+	BUILD_REV = 28
 };
 
 enum {			/* cbc action codes */
-	WRITE_CONFIG = 1,
-	DISPLAY_CONFIG = 2,
-	ADD_CONFIG = 3,
-	CREATE_CONFIG = 4
+	WRITE_CONFIG = 11,
+	DISPLAY_CONFIG = 12,
+	ADD_CONFIG = 13,
+	CREATE_CONFIG = 14
 };
 
 enum {			/* cbc values for build type */
@@ -215,6 +230,10 @@ extern int optind, opterr, optopt;
 void 
 report_error(int error, const char *errstr);
 void
+display_action_error(short int action);
+void
+display_type_error(short int type);
+void
 get_error_string(int error, char *errstr);
 /* cmdb comand line error function */
 void
@@ -225,7 +244,6 @@ void
 display_cbc_usage(void);
 void
 display_dnsa_usage(void);
-
 void
 chomp(char *input);
 
