@@ -1,4 +1,24 @@
-/* cmdb.h: DNSA header file */
+/* 
+ *
+ *  cmdb: Configuration Management Database
+ *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  cmdb.h: Main cmdb header file 
+ */
 
 #ifndef __CMDB_H__
 #define __CMDB_H__
@@ -19,10 +39,20 @@ enum {			/* Buffer Sizes */
 };
 
 enum {			/* Database Type errors */
-	NO_DB_TYPE = 0,
-	DB_TYPE_INVALID = 1,
-	NO_MYSQL = 2,
-	NO_SQLITE = 3
+	NO_DB_TYPE = 1,
+	DB_TYPE_INVALID = 2,
+	NO_MYSQL = 3,
+	NO_SQLITE = 4
+};
+
+enum {			/* Database query codes */
+	SERVER_QUERY = 0,
+	CUSTOMER_QUERY = 1,
+	CONTACT_QUERY = 2,
+	SERVICE_QUERY = 3,
+	SERVICE_TYPE_QUERY = 4,
+	HARDWARE_QUERY = 5,
+	HARDWARE_TYPE_QUERY = 6
 };
 
 enum {			/* dnsa error codes */
@@ -55,7 +85,8 @@ enum {			/* dnsa error codes */
 	USER_INPUT_INVALID = 42
 };
 
-enum {			/* cmdb error codes: start @ 101 to avoid conflict */
+enum {			/* cmdb error codes: start @ 100 to avoid conflict */
+	NO_SERVERS = 100,
 	SERVER_NOT_FOUND = 101,
 	MULTIPLE_SERVERS = 102,
 	SERVER_ID_NOT_FOUND = 103,

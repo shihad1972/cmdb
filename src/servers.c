@@ -23,15 +23,16 @@
  *  (C) Iain M Conochie 2013
  */
 
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
+# include "cmdb_base_sql.h"
 #include "checks.h"
-#include "../config.h"
 #ifdef HAVE_MYSQL
-# include "cmdb_mysql.h"
+/* # include "cmdb_mysql.h" */
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 # include "cmdb_sqlite.h"
@@ -54,7 +55,7 @@ void display_server_from_uuid(char **server_info)
 	printf("Model: %s\n", server_info[2]);
 	printf("UUID: %s\n", server_info[4]);
 }
-
+/*
 int add_server_to_database(cmdb_config_t *config)
 {
 	char *input;
@@ -81,7 +82,6 @@ int add_server_to_database(cmdb_config_t *config)
 	server->cust_id = get_customer_for_server(config);
 	get_full_server_config(server);
 	print_server_details(server);
-	/* Check for compilation targets*/
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
 		free(input);
 		free(server);
@@ -89,18 +89,18 @@ int add_server_to_database(cmdb_config_t *config)
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
 		retval = insert_server_into_mysql(config, server);
-#endif /* HAVE_MYSQL */
+#endif *//* HAVE_MYSQL *//*
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
 		retval = insert_server_into_sqlite(config, server);
-#endif /* HAVE_SQLITE3 */
+#endif *//* HAVE_SQLITE3 */ /*
 	} else {
 		free(input);
 		free(server);
 		return DB_TYPE_INVALID;
-	}
+	} */
 /*	retval = insert_server_into_db(config, server); */
-	if (retval > 0) {
+/*	if (retval > 0) {
 		free(input);
 		free(server);
 		return retval;
@@ -132,7 +132,8 @@ int add_server_to_database(cmdb_config_t *config)
 	free(input);
 	return retval;
 }
-
+*/
+/*
 int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 {
 	cmdb_hardware_t *next;
@@ -147,11 +148,11 @@ int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 #ifdef HAVE_MYSQL
 		} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
 			retval = insert_hardware_into_mysql(config, next);
-#endif /* HAVE_MYSQL */
+#endif */ /* HAVE_MYSQL */ /*
 #ifdef HAVE_SQLITE3
 		} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
 			retval = insert_hardware_into_sqlite(config, next);
-#endif /* HAVE_SQLITE3 */
+#endif */ /* HAVE_SQLITE3 */ /*
 		} else {
 			retval = DB_TYPE_INVALID;
 			break;
@@ -165,7 +166,7 @@ int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 
 	return retval;
 }
-
+*/
 void print_server_details(cmdb_server_t *server)
 {
 	printf("Server Details:\n");
@@ -264,7 +265,7 @@ cmdb_vm_host_t *vm_host_create(void)
 	snprintf(host->type, MAC_S, "NULL");
 	return host;
 }
-
+/*
 int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id)
 {
 	int retval;
@@ -325,7 +326,7 @@ int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned l
 	
 	return retval;
 }
-
+*/
 cmdb_hardware_t *hard_node_create(void)
 {
 	cmdb_hardware_t *hard;
@@ -451,4 +452,48 @@ int get_disk_device(cmdb_hardware_t *head)
 		chomp(disk->detail);
 	}
 	return 0;
+}
+/*
+int display_server_info(char *server, char *uuid, cmdb_config_t *config)
+{
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		printf("No dbtype configured to display server info\n");
+		return DB_TYPE_INVALID;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		if ((strncmp(server, "NULL", CONF_S)))
+			display_on_name_mysql(server, config);
+		else if ((strncmp(uuid, "NULL", CONF_S)))
+			display_on_uuid_mysql(uuid, config);
+#endif  *//* HAVE_MYSQL */ /*
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		if ((strncmp(server, "NULL", CONF_S)))
+			display_on_name_sqlite(server, config);
+		else if ((strncmp(uuid, "NULL", CONF_S)))
+			display_on_uuid_sqlite(uuid, config);
+#endif *//* HAVE_SQLITE3 */ /*
+	} else {
+		printf("Unknown DB type %s to display servers\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	return 0;
+}
+*/
+int display_server_info(char *name, char *uuid, cmdb_config_t *config)
+{
+	int retval;
+	cmdb_server_t *server_list, *server;
+	cmdb_t *cmdb_list;
+	
+	retval = 0;
+	if (!(cmdb_list = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+	if (!(server_list = malloc(sizeof(cmdb_server_t)))) {
+		free(cmdb_list);
+		report_error(MALLOC_FAIL, "server_list in display_server_info");
+	}
+	cmdb_list->server = server_list;
+	retval = run_query(config, cmdb_list, SERVER);
+	return retval;
 }

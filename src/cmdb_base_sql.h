@@ -1,5 +1,4 @@
-/* 
- *
+ /*
  *  cmdb: Configuration Management Database
  *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
@@ -17,37 +16,37 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  cmdb_statements.h
+ *  cmdb_base_sql.h
  *
  *  This file contains the SQL statement list for the cmdb suite of programs
  */
 
-const char *sql_select[7] = { "\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
-FROM server","\
-SELECT cust_id, name, address, city, county, postcode, coid FROM customer","\
-SELECT cont_id, name, phone, email, cust_id FROM contacts","\
-SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
-services","\
-SELECT service_type_id, service, detail FROM service_type","\
-SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware","\
-SELECT hard_type_id, type, class FROM hard_type"
-};
+#ifndef __CMDB_BASE_SQL_H
+#define __CMDB_BASE_SQL_H
+#include "../config.h"
 
-/* Number of returned fields for the above queries */
-const unsigned int field_numbers[7] = { 8,7,5,6,3,5,3 };
+int
+run_query(cmdb_config_t *config, cmdb_t *base, int type);
 
-enum {			/* SELECT indexes */
-	SERVERS = 0,
-	CUSTOMERS,
-	CONTACTS,
-	SERVICES,
-	SERVICE_TYPES,
-	HARDWARES,
-	HARDWARE_TYPES
-};
+# ifdef HAVE_MYSQL
+#include <mysql.h>
 
+void
+cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql);
+int
+run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type);
+int
+get_query_mysql(int type, const char **query, unsigned int *fields);
+void
+store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type);
 
+# endif /* HAVE_MYSQL */
 
-	
- 
+# ifdef HAVE_SQLITE3
+
+int
+run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
+
+# endif /* HAVE_SQLITE3 */
+
+#endif /* __CMDB_BASE_SQL_H */

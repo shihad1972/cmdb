@@ -17,7 +17,8 @@
 #include "mysqlfunc.h"
 
 
-void cmdb_mysql_query(MYSQL *mycmdb, const char *query)
+void
+cmdb_mysql_query(MYSQL *mycmdb, const char *query)
 {
 	int error;
 	
@@ -29,7 +30,8 @@ void cmdb_mysql_query(MYSQL *mycmdb, const char *query)
 	}
 }
 
-int cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query)
+int
+cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query)
 {
 	int error;
 	
@@ -40,17 +42,34 @@ int cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query)
 		return 0;
 }
 
-void cmdb_mysql_clean(MYSQL *cmdb_mysql, char *query)
+void
+cmdb_mysql_clean(MYSQL *cmdb_mysql, char *query)
 {
 	mysql_close(cmdb_mysql);
 	mysql_library_end();
 	free(query);
 }
 
-void cmdb_mysql_clean_full(MYSQL_RES *cmdb_res, MYSQL *cmdb_mysql, char *query)
+void
+cmdb_mysql_clean_full(MYSQL_RES *cmdb_res, MYSQL *cmdb_mysql, char *query)
 {
 	mysql_free_result(cmdb_res);
 	mysql_close(cmdb_mysql);
 	mysql_library_end();
 	free(query);
+}
+
+void
+cmdb_mysql_cleanup(MYSQL *cmdb)
+{
+	mysql_close(cmdb);
+	mysql_library_end();
+}
+
+void
+cmdb_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res)
+{
+	mysql_free_result(res);
+	mysql_close(cmdb);
+	mysql_library_end();
 }

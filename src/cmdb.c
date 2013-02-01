@@ -32,12 +32,12 @@
  *  -i <id>: UUID's of servers OR COID of customer OR CONID of contact
  */
 
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#include "../config.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /*HAVE_LIBPCRE */

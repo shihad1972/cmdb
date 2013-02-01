@@ -28,13 +28,13 @@
  *
  */
 
+#include "../config.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#include "../config.h"
 #ifdef HAVE_MYSQL
 # include "cmdb_mysql.h"
 #endif /* HAVE_MYSQL */
@@ -186,28 +186,3 @@ void cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 	free(cmdb_config);
 }
 
-int display_server_info(char *server, char *uuid, cmdb_config_t *config)
-{
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		printf("No dbtype configured to display server info\n");
-		return DB_TYPE_INVALID;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		if ((strncmp(server, "NULL", CONF_S)))
-			display_on_name_mysql(server, config);
-		else if ((strncmp(uuid, "NULL", CONF_S)))
-			display_on_uuid_mysql(uuid, config);
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		if ((strncmp(server, "NULL", CONF_S)))
-			display_on_name_sqlite(server, config);
-		else if ((strncmp(uuid, "NULL", CONF_S)))
-			display_on_uuid_sqlite(uuid, config);
-#endif /* HAVE_SQLITE3 */
-	} else {
-		printf("Unknown DB type %s to display servers\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	return 0;
-}
