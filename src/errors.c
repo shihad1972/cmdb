@@ -59,7 +59,8 @@ void report_error(int error, const char *errstr)
 			exit(DOMAIN_LIST_FAIL);
 			break;
 		case MY_INIT_FAIL:
-			fprintf(stderr, "Initialisation of MySQL connection failed\n");
+			fprintf(stderr, "\
+Initialisation of MySQL connection failed with %s\n", errstr);
 			exit(MY_INIT_FAIL);
 			break;
 		case MY_CONN_FAIL:
@@ -194,6 +195,10 @@ void report_error(int error, const char *errstr)
 		case MULTIPLE_VARIENTS:
 			fprintf(stderr, "Multiple varients found for %s\n", errstr);
 			exit(MULTIPLE_VARIENTS);
+			break;
+		case CANNOT_OPEN_FILE:
+			fprintf(stderr, "Cannot open file %s\n", errstr);
+			exit(CANNOT_OPEN_FILE);
 			break;
 		default:
 			fprintf(stderr, "Unknown error code %d\n", error);

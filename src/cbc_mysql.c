@@ -15,26 +15,16 @@
 #include "cmdb_cbc.h"
 #include "mysqlfunc.h"
 
-const char *error_string;
-char *my_error_code;
-
 void cbc_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
 	
-	if (!(my_error_code = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "my_error_code in dnsa_mysql_init");
-	
 	unix_socket = dc->socket;
-	error_string = my_error_code;
 	
 	if (!(mysql_init(cbc_mysql))) {
-		sprintf(my_error_code, "none");
-		report_error(MY_INIT_FAIL, error_string);
+		report_error(MY_INIT_FAIL, mysql_error(cbc_mysql));
 	}
 	if (!(mysql_real_connect(cbc_mysql, dc->host, dc->user, dc->pass,
 		dc->db, dc->port, unix_socket, dc->cliflag)))
 		report_error(MY_CONN_FAIL, mysql_error(cbc_mysql));
-	
-	free(my_error_code);
 }
