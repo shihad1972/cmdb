@@ -31,26 +31,80 @@
 #include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#include "mysqlfunc.h"
-#include "cmdb_mysql.h"
-#include "checks.h"
+#include "cmdb_base_sql.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
-MYSQL cmdb;
-MYSQL_RES *cmdb_res;
-MYSQL_ROW cmdb_row;
-my_ulonglong cmdb_rows;
-const char *unix_socket, *cmdb_query;
 
-int display_customer_info(char *customer, char *coid, cmdb_config_t *config)
+int
+display_customer_info(char *name, char *coid, cmdb_config_t *config)
 {
-	if ((strncmp(customer, "NULL", CONF_S)))
-		display_customer_info_on_name(customer, config);
-	else if ((strncmp(coid, "NULL", CONF_S)))
-		display_customer_info_on_coid(coid, config);
-	mysql_library_end();
-	return 0;
+	int retval;
+	cmdb_customer_t *list;
+	cmdb_t *cmdb;
+	retval = 0;
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+
+	cmdb->customer = '\0';
+	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+		list = cmdb->customer;
+		clean_customer_list(list);
+		free(cmdb);
+		return retval;
+	}
+	list = cmdb->customer;
+	while(list) {
+		if ((strncmp(list->name, name, MAC_S) == 0)) {
+			print_customer_details(list);
+			list = list->next;
+		} else if ((strncmp(list->coid, coid, CONF_S) == 0)) {
+			print_customer_details(list);
+			list = list->next;
+		} else {
+			list = list->next;
+		}
+	}
+	list = cmdb->customer;
+	clean_customer_list(list);
+	free(cmdb);
+	return retval;
 }
 
+void
+clean_customer_list(cmdb_customer_t *list)
+{
+	int i;
+	cmdb_customer_t *customer, *next;
+
+	i = 0;
+	customer = list;
+	next = customer->next;
+	while (customer) {
+		free(customer);
+		i++;
+		customer = next;
+		if (next) {
+			next = customer->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+print_customer_details(cmdb_customer_t *cust)
+{
+	printf("Customer Details\n");
+	printf("Name:\t\t%s\n", cust->name);
+	printf("Address:\t%s\n", cust->address);
+	printf("City:\t\t%s\n", cust->city);
+	printf("County:\t\t%s\n", cust->county);
+	printf("Postcode:\t%s\n", cust->postcode);
+	printf("COID:\t\t%s\n", cust->coid);
+}
+/*
 int display_customer_info_on_coid(char *coid, cmdb_config_t *config)
 {
 	char *cquery;
@@ -135,6 +189,8 @@ int display_customer_info_on_name(char *name, cmdb_config_t *config)
 	free(cquery);
 	return 0;
 }
+*/
+/*
 void display_all_customers(cmdb_config_t *config)
 {
 	MYSQL cust;
@@ -189,7 +245,7 @@ void display_customer_from_coid(char **cust_info)
 	printf("County: %s\n", cmdb_row[2]);
 	printf("Postcode: %s\n", cmdb_row[3]);
 }
-
+*/
 cmdb_customer_t *create_customer_node(void)
 {
 	cmdb_customer_t *head;
@@ -207,7 +263,7 @@ cmdb_customer_t *create_customer_node(void)
 	
 	return head;
 }
-
+/*
 cmdb_customer_t *add_customer_node(cmdb_customer_t *head, MYSQL_ROW myrow)
 {
 	cmdb_customer_t *new, *saved;
@@ -342,4 +398,4 @@ unsigned long int get_customer_for_server(cmdb_config_t *config)
 	}
 	return 0;
 }
-
+*/

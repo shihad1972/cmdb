@@ -140,30 +140,30 @@ int
 display_server_info (char *name, char *uuid, cmdb_config_t *config);
 int
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
+/*
 int
 display_customer_info_on_coid(char *coid, cmdb_config_t *config);
 int
-display_customer_info_on_name(char *name, cmdb_config_t *config);
-void
-display_all_customers(cmdb_config_t *config);
+display_customer_info_on_name(char *name, cmdb_config_t *config); */
 /* Routines to display server data from database. */
 void
 display_server_from_name(char **server_info);
 void
 display_server_from_uuid(char **server_info);
 /* Routines to display customer data from database. */
+/*
 void
 display_customer_from_name(char **cust_info);
 void
 display_customer_from_coid(char **cust_info);
+void
+display_all_customers(cmdb_config_t *config); */
 int
 add_server_to_database(cmdb_config_t *config);
 int
 add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw);
 void
 get_full_server_config(cmdb_server_t *server);
-void
-print_server_details(cmdb_server_t *server);
 void
 print_hardware_details(cmdb_hardware_t *hard);
 /* Linked list functions for virtual machine hosts */
@@ -172,8 +172,9 @@ cmdb_vm_host_t
 /* Linked list fucntions for customers */
 cmdb_customer_t
 *create_customer_node(void);
+/*
 unsigned long int
-get_customer_for_server(cmdb_config_t *config);
+get_customer_for_server(cmdb_config_t *config); */
 /* linked list functions for hardware and hardware types */
 cmdb_hard_type_t
 *hard_type_node_create(void);
@@ -197,5 +198,14 @@ get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long 
 
 void
 clean_server_list(cmdb_server_t *list);
+void
+print_server_details(cmdb_server_t *server);
+
+/* New customer functions for linked list */
+
+void
+clean_customer_list(cmdb_customer_t *list);
+void
+print_customer_details(cmdb_customer_t *list);
 #endif
 

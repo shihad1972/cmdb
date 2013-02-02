@@ -41,6 +41,8 @@ void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int *fields);
 void
 store_server_mysql(MYSQL_ROW row, cmdb_t *base);
+void
+store_customer_mysql(MYSQL_ROW, cmdb_t *base);
 
 # endif /* HAVE_MYSQL */
 

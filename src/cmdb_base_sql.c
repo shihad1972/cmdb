@@ -176,6 +176,11 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int *fields)
 				break;
 			store_server_mysql(row, base);
 			break;
+		case CUSTOMER:
+			if (*fields != 7)
+				break;
+			store_customer_mysql(row, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type %d\n",  type);
 			break;
@@ -207,6 +212,32 @@ store_server_mysql(MYSQL_ROW row, cmdb_t *base)
 		list->next = server;
 	} else {
 		base->server = server;
+	}
+}
+
+void
+store_customer_mysql(MYSQL_ROW row, cmdb_t *base)
+{
+	cmdb_customer_t *customer, *list;
+
+	if (!(customer = malloc(sizeof(cmdb_customer_t))))
+		report_error(MALLOC_FAIL, "customer in store_customer_mysql");
+	customer->cust_id = strtoul(row[0], NULL, 10);
+	snprintf(customer->name, HOST_S, "%s", row[1]);
+	snprintf(customer->address, NAME_S, "%s", row[2]);
+	snprintf(customer->city, HOST_S, "%s", row[3]);
+	snprintf(customer->county, MAC_S, "%s", row[4]);
+	snprintf(customer->postcode, RANGE_S, "%s", row[5]);
+	snprintf(customer->coid, RANGE_S, "%s", row[6]);
+	customer->next = '\0';
+	list = base->customer;
+	if(list) {
+		while(list->next) {
+			list = list->next;
+		}
+		list->next = customer;
+	} else {
+		base->customer = customer;
 	}
 }
 

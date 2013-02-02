@@ -95,6 +95,25 @@ int main(int argc, char *argv[])
 				display_action_error(cm->action);
 			}
 			break;
+		case CUSTOMER:
+			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->id, COID_REGEX);
+			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
+			} else {
+				printf("Both name and coid set to NULL??\n");
+				return 1;
+			}
+			if (retval < 0) {
+				printf("User input not valid\n");
+				return 1;
+			}
+			if (cm->action == DISPLAY) {
+				display_customer_info(cm->name, cm->id, cmc);
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
 		default:
 			display_type_error(cm->type);
 			break;
