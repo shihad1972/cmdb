@@ -192,4 +192,10 @@ get_disk_device(cmdb_hardware_t *head);
 /* Server functions */
 int
 get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id);
+
+/* New server functions for linked list */
+
+void
+clean_server_list(cmdb_server_t *list);
 #endif
+

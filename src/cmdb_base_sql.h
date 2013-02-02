@@ -38,7 +38,9 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 int
 get_query_mysql(int type, const char **query, unsigned int *fields);
 void
-store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type);
+store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int *fields);
+void
+store_server_mysql(MYSQL_ROW row, cmdb_t *base);
 
 # endif /* HAVE_MYSQL */
 
@@ -50,3 +52,4 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 # endif /* HAVE_SQLITE3 */
 
 #endif /* __CMDB_BASE_SQL_H */
+

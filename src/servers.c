@@ -170,11 +170,11 @@ int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 void print_server_details(cmdb_server_t *server)
 {
 	printf("Server Details:\n");
-	printf("Name:\t%s\n", server->name);
-	printf("UUID:\t%s\n", server->uuid);
-	printf("Vendor:\t%s\n", server->vendor);
-	printf("Make:\t%s\n", server->make);
-	printf("Model:\t%s\n", server->model);
+	printf("Name:\t\t%s\n", server->name);
+	printf("UUID:\t\t%s\n", server->uuid);
+	printf("Vendor:\t\t%s\n", server->vendor);
+	printf("Make:\t\t%s\n", server->make);
+	printf("Model:\t\t%s\n", server->model);
 	printf("Cust id:\t%lu\n", server->cust_id);
 	printf("VM Server ID:\t%lu\n", server->vm_server_id);
 }
@@ -480,20 +480,60 @@ int display_server_info(char *server, char *uuid, cmdb_config_t *config)
 	return 0;
 }
 */
-int display_server_info(char *name, char *uuid, cmdb_config_t *config)
+int
+display_server_info(char *name, char *uuid, cmdb_config_t *config)
 {
 	int retval;
-	cmdb_server_t *server_list, *server;
-	cmdb_t *cmdb_list;
+	cmdb_server_t *list;
+	cmdb_t *cmdb;
 	
 	retval = 0;
-	if (!(cmdb_list = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
-	if (!(server_list = malloc(sizeof(cmdb_server_t)))) {
-		free(cmdb_list);
-		report_error(MALLOC_FAIL, "server_list in display_server_info");
+
+	cmdb->server = '\0';
+	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
+		list = cmdb->server;
+		clean_server_list(list);
+		free(cmdb);
+		return retval;
 	}
-	cmdb_list->server = server_list;
-	retval = run_query(config, cmdb_list, SERVER);
+	list = cmdb->server;
+	while(list) {
+		if ((strncmp(list->name, name, MAC_S) == 0)) {
+			print_server_details(list);
+			list = list->next;
+		} else if ((strncmp(list->uuid, uuid, CONF_S) == 0)) {
+			list = list->next;
+			print_server_details(list);
+		} else {
+			list = list->next;
+		}
+	}
+	list = cmdb->server;
+	clean_server_list(list);
+	free(cmdb);
 	return retval;
 }
+
+void
+clean_server_list(cmdb_server_t *list)
+{
+	int i;
+	cmdb_server_t *server, *next;
+
+	i = 0;
+	server = list;
+	next = server->next;
+	while (server) {
+		free(server);
+		i++;
+		server = next;
+		if (next) {
+			next = server->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+

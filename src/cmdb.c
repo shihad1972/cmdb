@@ -99,6 +99,9 @@ int main(int argc, char *argv[])
 			display_type_error(cm->type);
 			break;
 	}
+	free(cmc);
+	free(cm);
+	free(cmdb_config);
 	exit (0);
 }
 /*
@@ -244,3 +247,4 @@ int cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm)
 }
 #endif
 */
+

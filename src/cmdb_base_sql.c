@@ -91,14 +91,6 @@ cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql)
 int
 run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 {
-	cmdb_server_t *serl;
-	cmdb_vm_host_t *vml;
-	cmdb_hardware_t *hardl;
-	cmdb_hard_type_t *htypel;
-	cmdb_customer_t *custl;
-	cmdb_contact_t *conl;
-	cmdb_service_t *secl;
-	cmdb_service_type_t *stypel;
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
 	MYSQL_ROW cmdb_row;
@@ -108,14 +100,6 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	unsigned int fields;
 	
 	retval = 0;
-	serl = base->server;
-	vml = base->vmhost;
-	hardl = base->hardware;
-	htypel = base->hardtype;
-	custl = base->customer;
-	conl = base->contact;
-	secl = base->service;
-	stypel = base->servicetype;
 	cmdb_mysql_init(config, &cmdb);
 	if ((retval = get_query_mysql(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
@@ -134,7 +118,8 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 		report_error(NO_SERVERS, "run_query_mysql");
 	}
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
-		store_result_mysql(cmdb_row, base, type);
+		store_result_mysql(cmdb_row, base, type, &fields);
+	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
 	return 0;
 }
 
@@ -183,9 +168,46 @@ get_query_mysql(int type, const char **query, unsigned int *fields)
 }
 
 void
-store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type)
+store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int *fields)
 {
-	
+	switch(type) {
+		case SERVER:
+			if (*fields != 8)
+				break;
+			store_server_mysql(row, base);
+			break;
+		default:
+			fprintf(stderr, "Unknown type %d\n",  type);
+			break;
+	}
+			
+}
+
+void
+store_server_mysql(MYSQL_ROW row, cmdb_t *base)
+{
+	cmdb_server_t *server, *list;
+
+	if (!(server = malloc(sizeof(cmdb_server_t))))
+		report_error(MALLOC_FAIL, "server in store_server_mysql");
+	server->server_id = strtoul(row[0], NULL, 10);
+	snprintf(server->vendor, CONF_S, "%s", row[1]);
+	snprintf(server->make, CONF_S, "%s", row[2]);
+	snprintf(server->model, CONF_S, "%s", row[3]);
+	snprintf(server->uuid, CONF_S, "%s", row[4]);
+	server->cust_id = strtoul(row[5], NULL, 10);
+	server->vm_server_id = strtoul(row[6], NULL, 10);
+	snprintf(server->name, MAC_S, "%s", row[7]);
+	server->next = '\0';
+	list = base->server;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = server;
+	} else {
+		base->server = server;
+	}
 }
 
 #endif /* HAVE_MYSQL */
