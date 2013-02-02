@@ -162,22 +162,22 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 		report_error(NO_SERVERS, "run_query_mysql");
 	}
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
-		store_result_mysql(cmdb_row, base, type, &fields);
+		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
 	return 0;
 }
 
 void
-store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int *fields)
+store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
 	switch(type) {
 		case SERVER:
-			if (*fields != 8)
+			if (fields != 8)
 				break;
 			store_server_mysql(row, base);
 			break;
 		case CUSTOMER:
-			if (*fields != 7)
+			if (fields != 7)
 				break;
 			store_customer_mysql(row, base);
 			break;
@@ -262,8 +262,6 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
 	}
-	fprintf(stderr, "Running query against %s for type %d\n%s\n",
-		config->dbtype, type, query);
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(CANNOT_OPEN_FILE, file);
 	}
@@ -290,6 +288,11 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 				break;
 			store_server_sqlite(state, base);
 			break;
+		case CUSTOMER:
+			if (fields != 7)
+				break;
+			store_customer_sqlite(state, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type %d\n",  type);
 			break;
@@ -302,7 +305,7 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_t *base)
 	cmdb_server_t *server, *list;
 
 	if (!(server = malloc(sizeof(cmdb_server_t))))
-		report_error(MALLOC_FAIL, "server in store_server_mysql");
+		report_error(MALLOC_FAIL, "server in store_server_sqlite");
 	server->server_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(server->make, CONF_S, "%s", sqlite3_column_text(state, 2));
@@ -320,6 +323,32 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_t *base)
 		list->next = server;
 	} else {
 		base->server = server;
+	}
+}
+
+void
+store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_customer_t *cust, *list;
+
+	if (!(cust = malloc(sizeof(cmdb_customer_t))))
+		report_error(MALLOC_FAIL, "cust in store_customer_sqlite");
+	cust->cust_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(cust->name, HOST_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(cust->address, NAME_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(cust->city, HOST_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(cust->county, MAC_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(cust->postcode, RANGE_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(cust->coid, RANGE_S, "%s", sqlite3_column_text(state, 6));
+	cust->next = '\0';
+	list = base->customer;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = cust;
+	} else {
+		base->customer = cust;
 	}
 }
 
