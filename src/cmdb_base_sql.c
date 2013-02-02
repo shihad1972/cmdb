@@ -67,64 +67,8 @@ run_query(cmdb_config_t *config, cmdb_t *base, int type)
 	return NONE;
 }
 
-
-/* MySQL functions */
-#ifdef HAVE_MYSQL
-
-
-void
-cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql)
-{
-	const char *unix_socket;
-	
-	unix_socket = dc->socket;
-	
-	if (!(mysql_init(cmdb_mysql))) {
-		report_error(MY_INIT_FAIL, mysql_error(cmdb_mysql));
-	}
-	if (!(mysql_real_connect(cmdb_mysql, dc->host, dc->user, dc->pass,
-		dc->db, dc->port, unix_socket, dc->cliflag)))
-		report_error(MY_CONN_FAIL, mysql_error(cmdb_mysql));
-	
-}
-
 int
-run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
-{
-	MYSQL cmdb;
-	MYSQL_RES *cmdb_res;
-	MYSQL_ROW cmdb_row;
-	my_ulonglong cmdb_rows;
-	const char *query;
-	int retval;
-	unsigned int fields;
-	
-	retval = 0;
-	cmdb_mysql_init(config, &cmdb);
-	if ((retval = get_query_mysql(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
-	}
-	if ((retval = cmdb_mysql_query_with_checks(&cmdb, query)) != 0) {
-		fprintf(stderr, "Query failed with error code %d\n", retval);
-		return retval;
-	}
-	if (!(cmdb_res = mysql_store_result(&cmdb))) {
-		cmdb_mysql_cleanup(&cmdb);
-		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
-	}
-	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
-		cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
-		report_error(NO_SERVERS, "run_query_mysql");
-	}
-	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
-		store_result_mysql(cmdb_row, base, type, &fields);
-	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
-	return 0;
-}
-
-int
-get_query_mysql(int type, const char **query, unsigned int *fields)
+get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
 	
@@ -165,6 +109,62 @@ get_query_mysql(int type, const char **query, unsigned int *fields)
 	}
 	
 	return retval;
+}
+
+
+/* MySQL functions */
+#ifdef HAVE_MYSQL
+
+
+void
+cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql)
+{
+	const char *unix_socket;
+	
+	unix_socket = dc->socket;
+	
+	if (!(mysql_init(cmdb_mysql))) {
+		report_error(MY_INIT_FAIL, mysql_error(cmdb_mysql));
+	}
+	if (!(mysql_real_connect(cmdb_mysql, dc->host, dc->user, dc->pass,
+		dc->db, dc->port, unix_socket, dc->cliflag)))
+		report_error(MY_CONN_FAIL, mysql_error(cmdb_mysql));
+	
+}
+
+int
+run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	MYSQL cmdb;
+	MYSQL_RES *cmdb_res;
+	MYSQL_ROW cmdb_row;
+	my_ulonglong cmdb_rows;
+	const char *query;
+	int retval;
+	unsigned int fields;
+	
+	retval = 0;
+	cmdb_mysql_init(config, &cmdb);
+	if ((retval = get_query(type, &query, &fields)) != 0) {
+		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
+		return retval;
+	}
+	if ((retval = cmdb_mysql_query_with_checks(&cmdb, query)) != 0) {
+		fprintf(stderr, "Query failed with error code %d\n", retval);
+		return retval;
+	}
+	if (!(cmdb_res = mysql_store_result(&cmdb))) {
+		cmdb_mysql_cleanup(&cmdb);
+		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
+	}
+	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
+		cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
+		report_error(NO_SERVERS, "run_query_mysql");
+	}
+	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
+		store_result_mysql(cmdb_row, base, type, &fields);
+	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
+	return 0;
 }
 
 void
@@ -219,13 +219,77 @@ store_server_mysql(MYSQL_ROW row, cmdb_t *base)
 int
 run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 {
+	const char *query, *file;
 	int retval;
+	unsigned int fields;
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
 	
 	retval = 0;
-	fprintf(stderr, "Running query against %s for type %d\n",
-		config->dbtype, type);
+	file = config->file;
+	if ((retval = get_query(type, &query, &fields)) != 0) {
+		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
+		return retval;
+	}
+	fprintf(stderr, "Running query against %s for type %d\n%s\n",
+		config->dbtype, type, query);
+	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(cmdb, query, NAME_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
+	}
+	retval = 0;
+	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
+		store_result_sqlite(state, base, type, fields);
+	
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(cmdb);
 	
 	return 0;
+}
+
+void
+store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields)
+{
+	switch(type) {
+		case SERVER:
+			if (fields != 8)
+				break;
+			store_server_sqlite(state, base);
+			break;
+		default:
+			fprintf(stderr, "Unknown type %d\n",  type);
+			break;
+	}
+}
+
+void
+store_server_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_server_t *server, *list;
+
+	if (!(server = malloc(sizeof(cmdb_server_t))))
+		report_error(MALLOC_FAIL, "server in store_server_mysql");
+	server->server_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(server->make, CONF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(server->model, CONF_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(server->uuid, CONF_S, "%s", sqlite3_column_text(state, 4));
+	server->cust_id = (unsigned long int) sqlite3_column_int(state, 5);
+	server->vm_server_id = (unsigned long int) sqlite3_column_int(state, 6);
+	snprintf(server->name, MAC_S, "%s", sqlite3_column_text(state, 7));
+	server->next = '\0';
+	list = base->server;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = server;
+	} else {
+		base->server = server;
+	}
 }
 
 #endif /* HAVE_SQLITE3 */
