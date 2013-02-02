@@ -35,14 +35,10 @@
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#ifdef HAVE_MYSQL
-# include "cmdb_mysql.h"
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-# include "cmdb_sqlite.h"
-#endif /* HAVE_SQLITE3 */
+#include "cmdb_base_sql.h"
 
-int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
+int
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 {
 	int opt, retval;
 	
@@ -104,7 +100,8 @@ int parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	return retval;
 }
 
-int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
+int
+parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -166,7 +163,8 @@ int parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 	return retval;
 }
 
-void init_cmdb_config_values(cmdb_config_t *dc)
+void
+init_cmdb_config_values(cmdb_config_t *dc)
 {
 	snprintf(dc->dbtype, RANGE_S, "none");
 	snprintf(dc->file, CONF_S, "none");
@@ -179,7 +177,8 @@ void init_cmdb_config_values(cmdb_config_t *dc)
 	dc->cliflag = 0;
 }
 
-void cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
+void
+cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 {
 	free(cm);
 	free(cmc);

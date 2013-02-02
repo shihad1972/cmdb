@@ -474,32 +474,34 @@ int display_server_info(char *server, char *uuid, cmdb_config_t *config)
 	return 0;
 }
 */
-int
+void
 display_server_info(char *name, char *uuid, cmdb_config_t *config)
 {
-	int retval;
+	int retval, i;
 	cmdb_server_t *list;
 	cmdb_t *cmdb;
 	
-	retval = 0;
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb->server = '\0';
+	i = 0;
 	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
 		list = cmdb->server;
 		clean_server_list(list);
 		free(cmdb);
-		return retval;
+		return;
 	}
 	list = cmdb->server;
 	while(list) {
 		if ((strncmp(list->name, name, MAC_S) == 0)) {
 			print_server_details(list);
 			list = list->next;
+			i++;
 		} else if ((strncmp(list->uuid, uuid, CONF_S) == 0)) {
 			print_server_details(list);
 			list = list->next;
+			i++;
 		} else {
 			list = list->next;
 		}
@@ -507,7 +509,45 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 	list = cmdb->server;
 	clean_server_list(list);
 	free(cmdb);
-	return retval;
+	if (i == 0)
+		printf("No Server found\n");
+	return;
+}
+
+void
+display_all_servers(cmdb_config_t *config)
+{
+	int retval;
+	cmdb_server_t *server;
+	cmdb_customer_t *customer; 
+	cmdb_t *cmdb;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+
+	cmdb->server = '\0';
+	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
+		server = cmdb->server;
+		clean_server_list(server);
+		free(cmdb);
+		return;
+	}
+	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+		server = cmdb->server;
+		customer = cmdb->customer;
+		clean_server_list(server);
+		clean_customer_list(customer);
+		free(cmdb);
+		return;
+	}
+	print_all_servers(cmdb);
+
+	server = cmdb->server;
+	customer = cmdb->customer;
+	clean_server_list(server);
+	clean_customer_list(customer);
+	free(cmdb);
+	return;
 }
 
 void
@@ -542,4 +582,33 @@ print_server_details(cmdb_server_t *server)
 	printf("Model:\t\t%s\n", server->model);
 	printf("Cust id:\t%lu\n", server->cust_id);
 	printf("VM Server ID:\t%lu\n", server->vm_server_id);
+}
+
+void
+print_all_servers(cmdb_t *cmdb)
+{
+	unsigned long int id;
+	cmdb_server_t *server = cmdb->server;
+	cmdb_customer_t *cust = cmdb->customer;
+	size_t len;
+
+	printf("Server\t\t\t\tCustomer\n");
+	while (server) {
+		id = server->cust_id;
+		len = strlen(server->name);
+		while (id != cust->cust_id) {
+			cust = cust->next;
+		}
+		if (len > 23) {
+			printf("%s\t%s\n", server->name, cust->coid);
+		} else if (len > 15) {
+			printf("%s\t\t%s\n", server->name, cust->coid);
+		} else if (len > 7) {
+			printf("%s\t\t\t%s\n", server->name, cust->coid);
+		} else {
+			printf("%s\t\t\t\t%s\n", server->name, cust->coid);
+		}
+		server = server->next;
+	}
+		
 }

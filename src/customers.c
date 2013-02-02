@@ -37,13 +37,13 @@
 #endif /* HAVE_LIBPCRE */
 
 
-int
+void
 display_customer_info(char *name, char *coid, cmdb_config_t *config)
 {
-	int retval;
+	int retval, i;
 	cmdb_customer_t *list;
 	cmdb_t *cmdb;
-	retval = 0;
+	retval = i = 0;
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
@@ -52,16 +52,18 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 		list = cmdb->customer;
 		clean_customer_list(list);
 		free(cmdb);
-		return retval;
+		return;
 	}
 	list = cmdb->customer;
 	while(list) {
 		if ((strncmp(list->name, name, MAC_S) == 0)) {
 			print_customer_details(list);
 			list = list->next;
+			i++;
 		} else if ((strncmp(list->coid, coid, CONF_S) == 0)) {
 			print_customer_details(list);
 			list = list->next;
+			i++;
 		} else {
 			list = list->next;
 		}
@@ -69,7 +71,9 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	list = cmdb->customer;
 	clean_customer_list(list);
 	free(cmdb);
-	return retval;
+	if (i == 0)
+		printf("No customer found\n");
+	return;
 }
 
 void

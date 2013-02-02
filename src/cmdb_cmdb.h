@@ -138,9 +138,13 @@ cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
 int
 cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm);
 */
-int
+void
 display_server_info (char *name, char *uuid, cmdb_config_t *config);
-int
+void
+display_all_servers(cmdb_config_t *config);
+void
+print_all_servers(cmdb_t *cmdb);
+void
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 /*
 int

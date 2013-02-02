@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
 #endif /* HAVE_LIBPCRE */
 			if (cm->action == DISPLAY) {
 				display_server_info(cm->name, cm->id, cmc);
+			} else if (cm->action == LIST_OBJ) {
+				display_all_servers(cmc);
 			} else {
 				display_action_error(cm->action);
 			}
