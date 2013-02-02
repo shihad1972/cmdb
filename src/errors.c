@@ -15,7 +15,8 @@
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 
-void report_error(int error, const char *errstr)
+void
+report_error(int error, const char *errstr)
 {
 	switch (error){
 		case ARGC_INVAL:
@@ -207,7 +208,8 @@ Initialisation of MySQL connection failed with %s\n", errstr);
 	}
 }
 
-void display_cmdb_command_line_error(int retval, char *program)
+void
+display_cmdb_command_line_error(int retval, char *program)
 {
 	switch (retval){
 		case NO_NAME:
@@ -266,7 +268,8 @@ void display_cmdb_command_line_error(int retval, char *program)
 	exit (retval);
 }
 
-void display_cmdb_usage(void)
+void
+display_cmdb_usage(void)
 {
 	printf("CMDB: Configuration Management Database\n\n");
 	printf("Action options:\n");
@@ -278,7 +281,8 @@ void display_cmdb_usage(void)
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 }
 
-void display_cbc_usage(void)
+void
+display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
@@ -307,7 +311,8 @@ void display_cbc_usage(void)
 	printf("<server_specifier>\n\n");
 }
 
-void display_dnsa_usage(void)
+void
+display_dnsa_usage(void)
 {
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Action options:\n");
@@ -324,7 +329,8 @@ void display_dnsa_usage(void)
 	printf("-i: IP Address\n-t: Record type (A, MX etc)\n-h: host\n\n");
 }
 
-void get_error_string(int error, char *errstr)
+void
+get_error_string(int error, char *errstr)
 {
 	switch (error) {
 		case SERVER_NOT_FOUND:
@@ -363,7 +369,8 @@ void get_error_string(int error, char *errstr)
 	}
 }
 
-void chomp(char *input)
+void
+chomp(char *input)
 {
 	size_t len;
 	len = strlen(input);
@@ -371,7 +378,8 @@ void chomp(char *input)
 		input[len -1] = '\0';
 }
 
-void display_action_error(short int action)
+void
+display_action_error(short int action)
 {
 	switch(action) {
 		case NONE:
@@ -391,7 +399,8 @@ void display_action_error(short int action)
 	}
 }
 
-void display_type_error(short int type)
+void 
+display_type_error(short int type)
 {
 	char *message;
 	
@@ -423,3 +432,4 @@ Unable to perform requested action on ");
 			break;
 	}
 }
+

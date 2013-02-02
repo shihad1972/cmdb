@@ -29,14 +29,10 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-# include "cmdb_base_sql.h"
-#include "checks.h"
-#ifdef HAVE_MYSQL
-/* # include "cmdb_mysql.h" */
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-# include "cmdb_sqlite.h"
-#endif /* HAVE_SQLITE3 */
+#include "cmdb_base_sql.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 void display_server_from_name(char **server_info)
 {
@@ -167,18 +163,8 @@ int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 	return retval;
 }
 */
-void print_server_details(cmdb_server_t *server)
-{
-	printf("Server Details:\n");
-	printf("Name:\t\t%s\n", server->name);
-	printf("UUID:\t\t%s\n", server->uuid);
-	printf("Vendor:\t\t%s\n", server->vendor);
-	printf("Make:\t\t%s\n", server->make);
-	printf("Model:\t\t%s\n", server->model);
-	printf("Cust id:\t%lu\n", server->cust_id);
-	printf("VM Server ID:\t%lu\n", server->vm_server_id);
-}
-void print_hardware_details(cmdb_hardware_t *hard)
+void
+print_hardware_details(cmdb_hardware_t *hard)
 {
 	printf("Network Card for server ID: %lu\n", hard->server_id);
 	printf("Device: %s\tMac Address: %s\n", hard->device, hard->detail);
@@ -187,7 +173,8 @@ void print_hardware_details(cmdb_hardware_t *hard)
 	printf("Device: /dev/%s\tSize: %s\n", hard->device, hard->detail);
 }
 
-void get_full_server_config(cmdb_server_t *server)
+void
+get_full_server_config(cmdb_server_t *server)
 {
 	char *input;
 	int retval;
@@ -504,8 +491,8 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 			print_server_details(list);
 			list = list->next;
 		} else if ((strncmp(list->uuid, uuid, CONF_S) == 0)) {
-			list = list->next;
 			print_server_details(list);
+			list = list->next;
 		} else {
 			list = list->next;
 		}
@@ -537,3 +524,15 @@ clean_server_list(cmdb_server_t *list)
 	}
 }
 
+void 
+print_server_details(cmdb_server_t *server)
+{
+	printf("Server Details:\n");
+	printf("Name:\t\t%s\n", server->name);
+	printf("UUID:\t\t%s\n", server->uuid);
+	printf("Vendor:\t\t%s\n", server->vendor);
+	printf("Make:\t\t%s\n", server->make);
+	printf("Model:\t\t%s\n", server->model);
+	printf("Cust id:\t%lu\n", server->cust_id);
+	printf("VM Server ID:\t%lu\n", server->vm_server_id);
+}
