@@ -33,7 +33,7 @@
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
-
+/*
 void display_server_from_name(char **server_info)
 {
 	printf("Server %s info\n", server_info[4]);
@@ -51,7 +51,7 @@ void display_server_from_uuid(char **server_info)
 	printf("Model: %s\n", server_info[2]);
 	printf("UUID: %s\n", server_info[4]);
 }
-/*
+
 int add_server_to_database(cmdb_config_t *config)
 {
 	char *input;
@@ -240,7 +240,8 @@ get_full_server_config(cmdb_server_t *server)
 	free(input);
 }
 
-cmdb_vm_host_t *vm_host_create(void)
+cmdb_vm_host_t *
+vm_host_create(void)
 {
 	cmdb_vm_host_t *host;
 	
@@ -314,7 +315,8 @@ int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned l
 	return retval;
 }
 */
-cmdb_hardware_t *hard_node_create(void)
+cmdb_hardware_t * 
+hard_node_create(void)
 {
 	cmdb_hardware_t *hard;
 	
@@ -329,7 +331,8 @@ cmdb_hardware_t *hard_node_create(void)
 	return hard;
 }
 
-cmdb_hard_type_t *hard_type_node_create(void)
+cmdb_hard_type_t * 
+hard_type_node_create(void)
 {
 	cmdb_hard_type_t *hardtype;
 	
@@ -342,7 +345,8 @@ cmdb_hard_type_t *hard_type_node_create(void)
 	return hardtype;
 }
 
-cmdb_hard_type_t *get_network_device_id(cmdb_hard_type_t *head)
+cmdb_hard_type_t * 
+get_network_device_id(cmdb_hard_type_t *head)
 {
 	cmdb_hard_type_t *net;
 	
@@ -359,7 +363,8 @@ cmdb_hard_type_t *get_network_device_id(cmdb_hard_type_t *head)
 	return net;
 }
 
-cmdb_hard_type_t *get_disk_device_id(cmdb_hard_type_t *head)
+cmdb_hard_type_t *
+get_disk_device_id(cmdb_hard_type_t *head)
 {
 	cmdb_hard_type_t *disk;
 	
@@ -376,7 +381,8 @@ cmdb_hard_type_t *get_disk_device_id(cmdb_hard_type_t *head)
 	return disk;
 }
 
-int get_network_device(cmdb_hardware_t *head)
+int
+get_network_device(cmdb_hardware_t *head)
 {
 	char *input;
 	int retval;
@@ -407,7 +413,8 @@ int get_network_device(cmdb_hardware_t *head)
 	return 0;
 }
 
-int get_disk_device(cmdb_hardware_t *head)
+int
+get_disk_device(cmdb_hardware_t *head)
 {
 	char *input;
 	int retval;

@@ -41,12 +41,6 @@
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /*HAVE_LIBPCRE */
-#ifdef HAVE_MYSQL
-# include "cmdb_mysql.h"
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-# include "cmdb_sqlite.h"
-#endif /* HAVE_SQLITE3 */
 
 int main(int argc, char *argv[])
 {

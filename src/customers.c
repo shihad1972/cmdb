@@ -245,7 +245,7 @@ void display_customer_from_coid(char **cust_info)
 	printf("County: %s\n", cmdb_row[2]);
 	printf("Postcode: %s\n", cmdb_row[3]);
 }
-*/
+
 cmdb_customer_t *create_customer_node(void)
 {
 	cmdb_customer_t *head;
@@ -263,7 +263,7 @@ cmdb_customer_t *create_customer_node(void)
 	
 	return head;
 }
-/*
+
 cmdb_customer_t *add_customer_node(cmdb_customer_t *head, MYSQL_ROW myrow)
 {
 	cmdb_customer_t *new, *saved;

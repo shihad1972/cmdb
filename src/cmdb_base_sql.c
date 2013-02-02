@@ -35,7 +35,7 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 #ifdef HAVE_MYSQL
-# include "cmdb_mysql.h"
+# include <mysql.h>
 # include "mysqlfunc.h"
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
