@@ -46,7 +46,7 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	retval = i = 0;
 
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_t in cmdb_init_struct");
+		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
@@ -73,6 +73,34 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	free(cmdb);
 	if (i == 0)
 		printf("No customer found\n");
+	return;
+}
+
+void
+display_all_customers(cmdb_config_t *config)
+{
+	int retval;
+	cmdb_customer_t *list;
+	cmdb_t *cmdb;
+	retval = 0;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
+	cmdb_init_struct(cmdb);
+
+	cmdb->customer = '\0';
+	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+		cmdb_clean_list(cmdb);
+		free(cmdb);
+		return;
+	}
+	list = cmdb->customer;
+	while(list) {
+			printf("%s\n%s\n\n", list->name, list->coid);
+			list = list->next;
+	}
+	cmdb_clean_list(cmdb);
+	free(cmdb);
 	return;
 }
 

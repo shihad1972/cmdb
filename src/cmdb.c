@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
 			}
 			if (cm->action == DISPLAY) {
 				display_customer_info(cm->name, cm->id, cmc);
+			} else if (cm->action == LIST_OBJ) {
+				display_all_customers(cmc);
 			} else {
 				display_action_error(cm->action);
 			}

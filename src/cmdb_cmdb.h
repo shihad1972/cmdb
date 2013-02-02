@@ -142,14 +142,6 @@ cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
 int
 cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm);
 */
-void
-display_server_info (char *name, char *uuid, cmdb_config_t *config);
-void
-display_all_servers(cmdb_config_t *config);
-void
-print_all_servers(cmdb_t *cmdb);
-void
-display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 /*
 int
 display_customer_info_on_coid(char *coid, cmdb_config_t *config);
@@ -207,6 +199,18 @@ int
 get_network_device(cmdb_hardware_t *head);
 int
 get_disk_device(cmdb_hardware_t *head);
+
+
+void
+display_server_info (char *name, char *uuid, cmdb_config_t *config);
+void
+display_all_servers(cmdb_config_t *config);
+void
+print_all_servers(cmdb_t *cmdb);
+void
+display_customer_info(char *server, char *uuid, cmdb_config_t *config);
+void
+display_all_customers(cmdb_config_t *config);
 
 /* New server functions for linked list */
 
