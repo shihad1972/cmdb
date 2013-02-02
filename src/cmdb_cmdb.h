@@ -132,6 +132,10 @@ int
 parse_cmdb_config_file(cmdb_config_t *dc, char *config);
 void
 init_cmdb_config_values(cmdb_config_t *dc);
+void
+cmdb_init_struct(cmdb_t *cmdb);
+void
+cmdb_clean_list(cmdb_t *cmdb);
 /*
 int
 cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
@@ -209,7 +213,7 @@ get_disk_device(cmdb_hardware_t *head);
 void
 clean_server_list(cmdb_server_t *list);
 void
-print_server_details(cmdb_server_t *server);
+print_server_details(cmdb_server_t *server, cmdb_customer_t *customer);
 
 /* New customer functions for linked list */
 

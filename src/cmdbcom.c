@@ -178,10 +178,32 @@ init_cmdb_config_values(cmdb_config_t *dc)
 }
 
 void
+cmdb_init_struct(cmdb_t *cmdb)
+{
+	cmdb->server = '\0';
+	cmdb->customer = '\0';
+	cmdb->vmhost = '\0';
+	cmdb->hardware = '\0';
+	cmdb->hardtype = '\0';
+	cmdb->contact = '\0';
+	cmdb->service = '\0';
+	cmdb->servicetype = '\0';
+}
+void
 cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 {
 	free(cm);
 	free(cmc);
 	free(cmdb_config);
+}
+
+void
+cmdb_clean_list(cmdb_t *cmdb)
+{
+	if (cmdb->server)
+		clean_server_list(cmdb->server);
+	if (cmdb->customer)
+		clean_customer_list(cmdb->customer);
+	
 }
 

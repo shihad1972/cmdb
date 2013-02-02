@@ -478,36 +478,39 @@ void
 display_server_info(char *name, char *uuid, cmdb_config_t *config)
 {
 	int retval, i;
-	cmdb_server_t *list;
+	cmdb_server_t *server;
 	cmdb_t *cmdb;
 	
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
-	cmdb->server = '\0';
+	cmdb_init_struct(cmdb);
 	i = 0;
 	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
-		list = cmdb->server;
-		clean_server_list(list);
+		cmdb_clean_list(cmdb);
 		free(cmdb);
 		return;
 	}
-	list = cmdb->server;
-	while(list) {
-		if ((strncmp(list->name, name, MAC_S) == 0)) {
-			print_server_details(list);
-			list = list->next;
+	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+		cmdb_clean_list(cmdb);
+		free(cmdb);
+		return;
+	}
+	server = cmdb->server;
+	while(server) {
+		if ((strncmp(server->name, name, MAC_S) == 0)) {
+			print_server_details(server, cmdb->customer);
+			server = server->next;
 			i++;
-		} else if ((strncmp(list->uuid, uuid, CONF_S) == 0)) {
-			print_server_details(list);
-			list = list->next;
+		} else if ((strncmp(server->uuid, uuid, CONF_S) == 0)) {
+			print_server_details(server, cmdb->customer);
+			server = server->next;
 			i++;
 		} else {
-			list = list->next;
+			server = server->next;
 		}
 	}
-	list = cmdb->server;
-	clean_server_list(list);
+	cmdb_clean_list(cmdb);
 	free(cmdb);
 	if (i == 0)
 		printf("No Server found\n");
@@ -518,34 +521,25 @@ void
 display_all_servers(cmdb_config_t *config)
 {
 	int retval;
-	cmdb_server_t *server;
-	cmdb_customer_t *customer; 
 	cmdb_t *cmdb;
 
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
-	cmdb->server = '\0';
+	cmdb_init_struct(cmdb);
 	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
-		server = cmdb->server;
-		clean_server_list(server);
+		cmdb_clean_list(cmdb);
 		free(cmdb);
 		return;
 	}
 	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
-		server = cmdb->server;
-		customer = cmdb->customer;
-		clean_server_list(server);
-		clean_customer_list(customer);
+		cmdb_clean_list(cmdb);
 		free(cmdb);
 		return;
 	}
 	print_all_servers(cmdb);
 
-	server = cmdb->server;
-	customer = cmdb->customer;
-	clean_server_list(server);
-	clean_customer_list(customer);
+	cmdb_clean_list(cmdb);
 	free(cmdb);
 	return;
 }
@@ -572,7 +566,7 @@ clean_server_list(cmdb_server_t *list)
 }
 
 void 
-print_server_details(cmdb_server_t *server)
+print_server_details(cmdb_server_t *server, cmdb_customer_t *customer)
 {
 	printf("Server Details:\n");
 	printf("Name:\t\t%s\n", server->name);
@@ -580,7 +574,10 @@ print_server_details(cmdb_server_t *server)
 	printf("Vendor:\t\t%s\n", server->vendor);
 	printf("Make:\t\t%s\n", server->make);
 	printf("Model:\t\t%s\n", server->model);
-	printf("Cust id:\t%lu\n", server->cust_id);
+	while (server->cust_id != customer->cust_id)
+		customer = customer->next;
+	printf("Customer name:\t%s\n", customer->name);
+	printf("COID:\t\t%s\n", customer->coid);
 	printf("VM Server ID:\t%lu\n", server->vm_server_id);
 }
 

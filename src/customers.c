@@ -44,13 +44,14 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	cmdb_customer_t *list;
 	cmdb_t *cmdb;
 	retval = i = 0;
+
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+		report_error(MALLOC_FAIL, "cmdb_t in cmdb_init_struct");
+	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
 	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
-		list = cmdb->customer;
-		clean_customer_list(list);
+		cmdb_clean_list(cmdb);
 		free(cmdb);
 		return;
 	}
@@ -68,8 +69,7 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 			list = list->next;
 		}
 	}
-	list = cmdb->customer;
-	clean_customer_list(list);
+	cmdb_clean_list(cmdb);
 	free(cmdb);
 	if (i == 0)
 		printf("No customer found\n");
