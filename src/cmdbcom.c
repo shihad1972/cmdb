@@ -204,6 +204,6 @@ cmdb_clean_list(cmdb_t *cmdb)
 		clean_server_list(cmdb->server);
 	if (cmdb->customer)
 		clean_customer_list(cmdb->customer);
-	
+	free(cmdb);
 }
 

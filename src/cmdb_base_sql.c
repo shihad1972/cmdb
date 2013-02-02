@@ -68,6 +68,30 @@ run_query(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
+run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_multiple_query_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_multiple_query_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	
+	return NONE;
+}
+int
 get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
@@ -164,6 +188,19 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
+	return 0;
+}
+
+int
+run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+	if ((type & SERVER) == SERVER)
+		if ((retval = run_query_mysql(config, base, SERVER)) != 0)
+			return retval;
+	if ((type & CUSTOMER) == CUSTOMER)
+		if ((retval = run_query_mysql(config, base, CUSTOMER)) != 0)
+			return retval;
 	return 0;
 }
 
@@ -276,6 +313,19 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
 	
+	return 0;
+}
+
+int
+run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+	if ((type & SERVER) == SERVER)
+		if ((retval = run_query_sqlite(config, base, SERVER)) != 0)
+			return retval;
+	if ((type & CUSTOMER) == CUSTOMER)
+		if ((retval = run_query_sqlite(config, base, CUSTOMER)) != 0)
+			return retval;
 	return 0;
 }
 

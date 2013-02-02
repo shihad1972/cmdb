@@ -52,7 +52,6 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	cmdb->customer = '\0';
 	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
-		free(cmdb);
 		return;
 	}
 	list = cmdb->customer;
@@ -70,7 +69,6 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 		}
 	}
 	cmdb_clean_list(cmdb);
-	free(cmdb);
 	if (i == 0)
 		printf("No customer found\n");
 	return;
@@ -91,7 +89,6 @@ display_all_customers(cmdb_config_t *config)
 	cmdb->customer = '\0';
 	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
-		free(cmdb);
 		return;
 	}
 	list = cmdb->customer;
@@ -100,7 +97,6 @@ display_all_customers(cmdb_config_t *config)
 			list = list->next;
 	}
 	cmdb_clean_list(cmdb);
-	free(cmdb);
 	return;
 }
 

@@ -486,14 +486,8 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 
 	cmdb_init_struct(cmdb);
 	i = 0;
-	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
+	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
-		free(cmdb);
-		return;
-	}
-	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
-		cmdb_clean_list(cmdb);
-		free(cmdb);
 		return;
 	}
 	server = cmdb->server;
@@ -511,7 +505,6 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 		}
 	}
 	cmdb_clean_list(cmdb);
-	free(cmdb);
 	if (i == 0)
 		printf("No Server found\n");
 	return;
@@ -527,20 +520,13 @@ display_all_servers(cmdb_config_t *config)
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
-	if ((retval = run_query(config, cmdb, SERVER)) != 0) {
+	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
-		free(cmdb);
-		return;
-	}
-	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
-		cmdb_clean_list(cmdb);
-		free(cmdb);
 		return;
 	}
 	print_all_servers(cmdb);
 
 	cmdb_clean_list(cmdb);
-	free(cmdb);
 	return;
 }
 
@@ -578,7 +564,8 @@ print_server_details(cmdb_server_t *server, cmdb_customer_t *customer)
 		customer = customer->next;
 	printf("Customer name:\t%s\n", customer->name);
 	printf("COID:\t\t%s\n", customer->coid);
-	printf("VM Server ID:\t%lu\n", server->vm_server_id);
+	if (server->vm_server_id > 0)
+		printf("VM Server ID:\t%lu\n", server->vm_server_id);
 }
 
 void
