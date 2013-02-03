@@ -239,7 +239,7 @@ get_full_server_config(cmdb_server_t *server)
 	snprintf(server->name, MAC_S, "%s", input);
 	free(input);
 }
-
+/*
 cmdb_vm_host_t *
 vm_host_create(void)
 {
@@ -253,7 +253,7 @@ vm_host_create(void)
 	snprintf(host->type, MAC_S, "NULL");
 	return host;
 }
-/*
+
 int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id)
 {
 	int retval;
@@ -486,18 +486,18 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 
 	cmdb_init_struct(cmdb);
 	i = 0;
-	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER)) != 0) {
+	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER | VM_HOST)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
 	server = cmdb->server;
 	while(server) {
 		if ((strncmp(server->name, name, MAC_S) == 0)) {
-			print_server_details(server, cmdb->customer);
+			print_server_details(server, cmdb);
 			server = server->next;
 			i++;
 		} else if ((strncmp(server->uuid, uuid, CONF_S) == 0)) {
-			print_server_details(server, cmdb->customer);
+			print_server_details(server, cmdb);
 			server = server->next;
 			i++;
 		} else {
@@ -552,8 +552,10 @@ clean_server_list(cmdb_server_t *list)
 }
 
 void 
-print_server_details(cmdb_server_t *server, cmdb_customer_t *customer)
+print_server_details(cmdb_server_t *server, cmdb_t *base)
 {
+	cmdb_customer_t *customer = base->customer;
+	cmdb_vm_host_t *vmhost = base->vmhost;
 	printf("Server Details:\n");
 	printf("Name:\t\t%s\n", server->name);
 	printf("UUID:\t\t%s\n", server->uuid);
@@ -564,8 +566,12 @@ print_server_details(cmdb_server_t *server, cmdb_customer_t *customer)
 		customer = customer->next;
 	printf("Customer name:\t%s\n", customer->name);
 	printf("COID:\t\t%s\n", customer->coid);
-	if (server->vm_server_id > 0)
-		printf("VM Server ID:\t%lu\n", server->vm_server_id);
+	if (server->vm_server_id > 0) {
+		while (server->vm_server_id != vmhost->id) {
+			vmhost = vmhost->next;
+		}
+		printf("VM Server name:\t%s\n", vmhost->name);
+	}
 }
 
 void

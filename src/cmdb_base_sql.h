@@ -46,7 +46,9 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
 store_server_mysql(MYSQL_ROW row, cmdb_t *base);
 void
-store_customer_mysql(MYSQL_ROW, cmdb_t *base);
+store_customer_mysql(MYSQL_ROW row, cmdb_t *base);
+void
+store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base);
 
 # endif /* HAVE_MYSQL */
 
@@ -63,6 +65,8 @@ void
 store_server_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
 store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base);
+void
+store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base);
 
 # endif /* HAVE_SQLITE3 */
 

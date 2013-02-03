@@ -44,9 +44,10 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 } cmdb_config_t;
 
 typedef struct cmdb_vm_host_t {
-	char name[CONF_S];
+	char name[RBUFF_S];
 	char type[CONF_S];
 	unsigned long int id;
+	unsigned long int server_id;
 	struct cmdb_vm_host_t *next;
 } cmdb_vm_host_t;
 
@@ -184,9 +185,9 @@ unsigned long int
 get_customer_for_server(cmdb_config_t *config); */
 /* linked list functions for hardware and hardware types
 void
-add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead); */
+add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead); 
 cmdb_vm_host_t *
-vm_host_create(void);
+vm_host_create(void); */
 cmdb_hard_type_t *
 hard_type_node_create(void);
 cmdb_hardware_t *
@@ -217,7 +218,7 @@ display_all_customers(cmdb_config_t *config);
 void
 clean_server_list(cmdb_server_t *list);
 void
-print_server_details(cmdb_server_t *server, cmdb_customer_t *customer);
+print_server_details(cmdb_server_t *server, cmdb_t *base);
 
 /* New customer functions for linked list */
 
