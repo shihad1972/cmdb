@@ -52,6 +52,12 @@ store_contact_mysql(MYSQL_ROW row, cmdb_t *base);
 void
 store_service_mysql(MYSQL_ROW row, cmdb_t *base);
 void
+store_service_type_mysql(MYSQL_ROW row, cmdb_t *base);
+void
+store_hardware_mysql(MYSQL_ROW row, cmdb_t *base);
+void
+store_hardware_type_mysql(MYSQL_ROW row, cmdb_t *base);
+void
 store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base);
 
 # endif /* HAVE_MYSQL */
