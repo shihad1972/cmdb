@@ -44,8 +44,8 @@ enum {			/* Database Type errors */
 	NO_MYSQL = 3,
 	NO_SQLITE = 4
 };
-
-enum {			/* Database query codes */
+/*
+enum {			Database query codes
 	SERVER_QUERY = 0,
 	CUSTOMER_QUERY = 1,
 	CONTACT_QUERY = 2,
@@ -54,7 +54,7 @@ enum {			/* Database query codes */
 	HARDWARE_QUERY = 5,
 	HARDWARE_TYPE_QUERY = 6
 };
-
+*/
 enum {			/* dnsa error codes */
 	OK = 0,
 	ARGC_INVAL = 1,

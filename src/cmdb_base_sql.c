@@ -99,32 +99,36 @@ get_query(int type, const char **query, unsigned int *fields)
 	retval = NONE;
 	switch(type) {
 		case SERVER:
-			*query = sql_select[SERVER_QUERY];
-			*fields = field_numbers[SERVER_QUERY];
+			*query = sql_select[SERVERS];
+			*fields = field_numbers[SERVERS];
 			break;
 		case CUSTOMER:
-			*query = sql_select[CUSTOMER_QUERY];
-			*fields = field_numbers[CUSTOMER_QUERY];
+			*query = sql_select[CUSTOMERS];
+			*fields = field_numbers[CUSTOMERS];
 			break;
 		case CONTACT:
-			*query = sql_select[CONTACT_QUERY];
-			*fields = field_numbers[CONTACT_QUERY];
+			*query = sql_select[CONTACTS];
+			*fields = field_numbers[CONTACTS];
 			break;
 		case SERVICE:
-			*query = sql_select[SERVICE_QUERY];
-			*fields = field_numbers[SERVICE_QUERY];
+			*query = sql_select[SERVICES];
+			*fields = field_numbers[SERVICES];
 			break;
 		case SERVICE_TYPE:
-			*query = sql_select[SERVICE_TYPE_QUERY];
-			*fields = field_numbers[SERVICE_TYPE_QUERY];
+			*query = sql_select[SERVICE_TYPES];
+			*fields = field_numbers[SERVICE_TYPES];
 			break;
 		case HARDWARE:
-			*query = sql_select[HARDWARE_QUERY];
-			*fields = field_numbers[HARDWARE_QUERY];
+			*query = sql_select[HARDWARES];
+			*fields = field_numbers[HARDWARES];
 			break;
-		case HARDWARE_TYPE_QUERY:
-			*query = sql_select[HARDWARE_TYPE_QUERY];
-			*fields = field_numbers[HARDWARE_TYPE_QUERY];
+		case HARDWARE_TYPE:
+			*query = sql_select[HARDWARE_TYPES];
+			*fields = field_numbers[HARDWARES];
+			break;
+		case VM_HOST:
+			*query = sql_select[VM_HOSTS];
+			*fields = field_numbers[VM_HOSTS];
 			break;
 		default:
 			fprintf(stderr, "Unknown query type %d\n", type);
@@ -181,6 +185,7 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 		cmdb_mysql_cleanup(&cmdb);
 		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
 	}
+	fields = mysql_num_fields(cmdb_res);
 	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
 		cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
 		report_error(NO_SERVERS, "run_query_mysql");
@@ -209,12 +214,12 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
 	switch(type) {
 		case SERVER:
-			if (fields != 8)
+			if (fields != field_numbers[SERVERS])
 				break;
 			store_server_mysql(row, base);
 			break;
 		case CUSTOMER:
-			if (fields != 7)
+			if (fields != field_numbers[CUSTOMERS])
 				break;
 			store_customer_mysql(row, base);
 			break;
@@ -307,6 +312,7 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
 	}
 	retval = 0;
+	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		store_result_sqlite(state, base, type, fields);
 	
@@ -334,12 +340,12 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 {
 	switch(type) {
 		case SERVER:
-			if (fields != 8)
+			if (fields != field_numbers[SERVERS])
 				break;
 			store_server_sqlite(state, base);
 			break;
 		case CUSTOMER:
-			if (fields != 7)
+			if (fields != field_numbers[CUSTOMERS])
 				break;
 			store_customer_sqlite(state, base);
 			break;

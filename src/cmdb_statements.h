@@ -22,7 +22,7 @@
  *  This file contains the SQL statement list for the cmdb suite of programs
  */
 
-const char *sql_select[7] = { "\
+const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
 FROM server ORDER BY cust_id","\
 SELECT cust_id, name, address, city, county, postcode, coid FROM customer","\
@@ -31,11 +31,12 @@ SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
 services","\
 SELECT service_type_id, service, detail FROM service_type","\
 SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware","\
-SELECT hard_type_id, type, class FROM hard_type"
+SELECT hard_type_id, type, class FROM hard_type","\
+SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
 
 /* Number of returned fields for the above queries */
-const unsigned int field_numbers[7] = { 8,7,5,6,3,5,3 };
+const unsigned int field_numbers[] = { 8,7,5,6,3,5,3,4 };
 
 enum {			/* SELECT indexes */
 	SERVERS = 0,
@@ -44,7 +45,8 @@ enum {			/* SELECT indexes */
 	SERVICES,
 	SERVICE_TYPES,
 	HARDWARES,
-	HARDWARE_TYPES
+	HARDWARE_TYPES,
+	VM_HOSTS
 };
 
 
