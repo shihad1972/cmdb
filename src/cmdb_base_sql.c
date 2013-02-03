@@ -212,6 +212,15 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & SERVICE) == SERVICE)
 		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
 			return retval;
+	if ((type & SERVICE_TYPE) == SERVICE_TYPE)
+		if ((retval = run_query_mysql(config, base, SERVICE_TYPE)) != 0)
+			return retval;
+	if ((type & HARDWARE) == HARDWARE)
+		if ((retval = run_query_mysql(config, base, HARDWARE)) != 0)
+			return retval;
+	if ((type & HARDWARE_TYPE) == HARDWARE_TYPE)
+		if ((retval = run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
+			return retval;
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
@@ -434,6 +443,15 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 			return retval;
 	if ((type & SERVICE) == SERVICE)
 		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
+			return retval;
+	if ((type & SERVICE_TYPE) == SERVICE_TYPE)
+		if ((retval = run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
+			return retval;
+	if ((type & HARDWARE) == HARDWARE)
+		if ((retval = run_query_sqlite(config, base, HARDWARE)) != 0)
+			return retval;
+	if ((type & HARDWARE_TYPE) == HARDWARE_TYPE)
+		if ((retval = run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
