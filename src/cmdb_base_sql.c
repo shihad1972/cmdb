@@ -209,18 +209,18 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & CONTACT) == CONTACT)
 		if ((retval = run_query_mysql(config, base, CONTACT)) != 0)
 			return retval;
-	if ((type & SERVICE) == SERVICE)
-		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
-			return retval;
-	if ((type & SERVICE_TYPE) == SERVICE_TYPE)
+	if ((type & SERVICE) == SERVICE) {
 		if ((retval = run_query_mysql(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-	if ((type & HARDWARE) == HARDWARE)
-		if ((retval = run_query_mysql(config, base, HARDWARE)) != 0)
+		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
 			return retval;
-	if ((type & HARDWARE_TYPE) == HARDWARE_TYPE)
+	}
+	if ((type & HARDWARE) == HARDWARE) {
 		if ((retval = run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
+		if ((retval = run_query_mysql(config, base, HARDWARE)) != 0)
+			return retval;
+	}
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
@@ -359,6 +359,7 @@ void
 store_service_mysql(MYSQL_ROW row, cmdb_t *base)
 {
 	cmdb_service_t *service, *list;
+	cmdb_service_type_t *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_t))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
@@ -370,6 +371,14 @@ store_service_mysql(MYSQL_ROW row, cmdb_t *base)
 	snprintf(service->detail, HOST_S, "%s", row[4]);
 	snprintf(service->url, HOST_S, "%s", row[5]);
 	service->next = '\0';
+	type = base->servicetype;
+	if (type) {
+		while (service->service_type_id != type->service_id)
+			type = type->next;
+		service->servicetype = type;
+	} else {
+		service->servicetype = '\0';
+	}
 	list = base->service;
 	if (list) {
 		while (list->next) {
@@ -408,6 +417,7 @@ void
 store_hardware_mysql(MYSQL_ROW row, cmdb_t *base)
 {
 	cmdb_hardware_t *hard, *list;
+	cmdb_hard_type_t *type;
 
 	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
 		report_error(MALLOC_FAIL, "hardware in store_hardware_mysql");
@@ -418,6 +428,14 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_t *base)
 	hard->server_id = strtoul(row[3], NULL, 10);
 	hard->ht_id = strtoul(row[4], NULL, 10);
 	hard->next = '\0';
+	type = base->hardtype;
+	if (type) {
+		while (hard->ht_id != type->ht_id)
+			type = type->next;
+		hard->hardtype = type;
+	} else {
+		hard->hardtype = '\0';
+	}
 	list = base->hardware;
 	if (list) {
 		while (list->next) {
@@ -527,18 +545,18 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & CONTACT) == CONTACT)
 		if ((retval = run_query_sqlite(config, base, CONTACT)) != 0)
 			return retval;
-	if ((type & SERVICE) == SERVICE)
-		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
-			return retval;
-	if ((type & SERVICE_TYPE) == SERVICE_TYPE)
+	if ((type & SERVICE) == SERVICE) {
 		if ((retval = run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-	if ((type & HARDWARE) == HARDWARE)
-		if ((retval = run_query_sqlite(config, base, HARDWARE)) != 0)
+		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
 			return retval;
-	if ((type & HARDWARE_TYPE) == HARDWARE_TYPE)
+	}
+	if ((type & HARDWARE) == HARDWARE) {
 		if ((retval = run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
+		if ((retval = run_query_sqlite(config, base, HARDWARE)) != 0)
+			return retval;
+	}
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
@@ -677,6 +695,7 @@ void
 store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
 {
 	cmdb_service_t *service, *list;
+	cmdb_service_type_t *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_t))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
@@ -687,6 +706,14 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
 	service->service_type_id = (unsigned long int) sqlite3_column_int(state, 3);
 	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(service->url, HOST_S, "%s", sqlite3_column_text(state, 5));
+	type = base->servicetype;
+	if (type) {
+		while (service->service_type_id != type->service_id)
+			type = type->next;
+		service->servicetype = type;
+	} else {
+		service->servicetype = '\0';
+	}
 	service->next = '\0';
 	list = base->service;
 	if (list) {
@@ -726,6 +753,7 @@ void
 store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base)
 {
 	cmdb_hardware_t *hard, *list;
+	cmdb_hard_type_t *type;
 
 	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
 		report_error(MALLOC_FAIL, "hard in store_hardware_sqlite");
@@ -736,6 +764,14 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base)
 	hard->server_id = (unsigned long int) sqlite3_column_int(state, 3);
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 4);
 	hard->next = '\0';
+	type = base->hardtype;
+	if (type) {
+		while (hard->ht_id != type->ht_id)
+			type = type->next;
+		hard->hardtype = type;
+	} else {
+		hard->hardtype = '\0';
+	}
 	list = base->hardware;
 	if (list) {
 		while (list->next) {

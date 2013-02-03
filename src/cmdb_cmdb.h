@@ -43,22 +43,14 @@ typedef struct cmdb_config_t { /* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cmdb_config_t;
 
-typedef struct cmdb_vm_host_t {
-	char name[RBUFF_S];
-	char type[CONF_S];
-	unsigned long int id;
-	unsigned long int server_id;
-	struct cmdb_vm_host_t *next;
-} cmdb_vm_host_t;
-
 typedef struct cmdb_server_t {
 	char vendor[CONF_S];
 	char make[CONF_S];
 	char model[CONF_S];
 	char uuid[CONF_S];
 	char name[MAC_S];
-	unsigned long int cust_id;
 	unsigned long int server_id;
+	unsigned long int cust_id;
 	unsigned long int vm_server_id;
 	struct cmdb_server_t *next;
 } cmdb_server_t;
@@ -83,22 +75,6 @@ typedef struct cmdb_contact_t {
 	struct cmdb_contact_t *next;
 } cmdb_contact_t;
 
-typedef struct cmdb_hard_type_t {
-	char type[MAC_S];
-	char hclass[HOST_S];
-	unsigned long int ht_id;
-	struct cmdb_hard_type_t *next;
-} cmdb_hard_type_t;
-
-typedef struct cmdb_hardware_t {
-	char detail[HOST_S];
-	char device[MAC_S];
-	unsigned long int hard_id;
-	unsigned long int server_id;
-	unsigned long int ht_id;
-	struct cmdb_hardware_t *next;
-} cmdb_hardware_t;
-
 typedef struct cmdb_service_t {
 	char detail[HOST_S];
 	char url[HOST_S];
@@ -107,6 +83,7 @@ typedef struct cmdb_service_t {
 	unsigned long int cust_id;
 	unsigned long int service_type_id;
 	struct cmdb_service_t *next;
+	struct cmdb_service_type_t *servicetype;
 } cmdb_service_t;
 
 typedef struct cmdb_service_type_t {
@@ -115,6 +92,31 @@ typedef struct cmdb_service_type_t {
 	unsigned long int service_id;
 	struct cmdb_service_type_t *next;
 } cmdb_service_type_t;
+
+typedef struct cmdb_hardware_t {
+	char detail[HOST_S];
+	char device[MAC_S];
+	unsigned long int hard_id;
+	unsigned long int server_id;
+	unsigned long int ht_id;
+	struct cmdb_hardware_t *next;
+	struct cmdb_hard_type_t *hardtype;
+} cmdb_hardware_t;
+
+typedef struct cmdb_hard_type_t {
+	char type[MAC_S];
+	char hclass[HOST_S];
+	unsigned long int ht_id;
+	struct cmdb_hard_type_t *next;
+} cmdb_hard_type_t;
+
+typedef struct cmdb_vm_host_t {
+	char name[RBUFF_S];
+	char type[CONF_S];
+	unsigned long int id;
+	unsigned long int server_id;
+	struct cmdb_vm_host_t *next;
+} cmdb_vm_host_t;
 
 typedef struct cmdb_t {
 	struct cmdb_server_t *server;
