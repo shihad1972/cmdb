@@ -80,6 +80,12 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
 store_service_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
+store_service_type_sqlite(sqlite3_stmt *state, cmdb_t *base);
+void
+store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base);
+void
+store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_t *base);
+void
 store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base);
 
 # endif /* HAVE_SQLITE3 */

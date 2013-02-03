@@ -569,6 +569,21 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 				break;
 			store_service_sqlite(state, base);
 			break;
+		case SERVICE_TYPE:
+			if (fields != field_numbers[SERVICE_TYPES])
+				break;
+			store_service_type_sqlite(state, base);
+			break;
+		case HARDWARE:
+			if (fields != field_numbers[HARDWARES])
+				break;
+			store_hardware_sqlite(state, base);
+			break;
+		case HARDWARE_TYPE:
+			if (fields != field_numbers[HARDWARE_TYPES])
+				break;
+			store_hardware_type_sqlite(state, base);
+			break;
 		case VM_HOST:
 			if (fields != field_numbers[VM_HOSTS])
 				break;
@@ -681,6 +696,77 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
 		list->next = service;
 	} else {
 		base->service = service;
+	}
+}
+
+void
+store_service_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_service_type_t *service, *list;
+
+	if (!(service = malloc(sizeof(cmdb_service_type_t))))
+		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
+
+	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(service->service, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 2));
+	service->next = '\0';
+	list = base->servicetype;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = service;
+	} else {
+		base->servicetype = service;
+	}
+}
+
+void
+store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_hardware_t *hard, *list;
+
+	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
+		report_error(MALLOC_FAIL, "hard in store_hardware_sqlite");
+
+	hard->hard_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(hard->detail, HOST_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(hard->device, MAC_S, "%s", sqlite3_column_text(state, 2));
+	hard->server_id = (unsigned long int) sqlite3_column_int(state, 3);
+	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 4);
+	hard->next = '\0';
+	list = base->hardware;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = hard;
+	} else {
+		base->hardware = hard;
+	}
+}
+
+void
+store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_hard_type_t *hard, *list;
+
+	if (!(hard = malloc(sizeof(cmdb_hard_type_t))))
+		report_error(MALLOC_FAIL, "hard in store_hardware_types_sqlite");
+
+	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(hard->type, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(hard->hclass, HOST_S, "%s", sqlite3_column_text(state, 2));
+	hard->next = '\0';
+	list = base->hardtype;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = hard;
+	} else {
+		base->hardtype = hard;
 	}
 }
 
