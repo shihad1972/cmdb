@@ -209,6 +209,9 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
+	if ((type & CONTACT) == CONTACT)
+		if ((retval = run_query_mysql(config, base, CONTACT)) != 0)
+			return retval;
 	return 0;
 }
 
@@ -225,6 +228,11 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 			if (fields != field_numbers[CUSTOMERS])
 				break;
 			store_customer_mysql(row, base);
+			break;
+		case CONTACT:
+			if (fields != field_numbers[CONTACTS])
+				break;
+			store_contact_mysql(row, base);
 			break;
 		case VM_HOST:
 			if (fields != field_numbers[VM_HOSTS])
@@ -281,13 +289,37 @@ store_customer_mysql(MYSQL_ROW row, cmdb_t *base)
 	snprintf(customer->coid, RANGE_S, "%s", row[6]);
 	customer->next = '\0';
 	list = base->customer;
-	if(list) {
+	if (list) {
 		while(list->next) {
 			list = list->next;
 		}
 		list->next = customer;
 	} else {
 		base->customer = customer;
+	}
+}
+
+void
+store_contact_mysql(MYSQL_ROW row, cmdb_t *base)
+{
+	cmdb_contact_t *contact, *list;
+
+	if (!(contact = malloc(sizeof(cmdb_contact_t))))
+		report_error(MALLOC_FAIL, "contact in store_contact_mysql");
+	contact->cont_id = strtoul(row[0], NULL, 10);
+	snprintf(contact->name, HOST_S, "%s", row[1]);
+	snprintf(contact->phone, MAC_S, "%s", row[2]);
+	snprintf(contact->email, HOST_S, "%s", row[3]);
+	contact->cust_id = strtoul(row[4], NULL, 10);
+	contact->next = '\0';
+	list = base->contact;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = contact;
+	} else {
+		base->contact = contact;
 	}
 }
 
@@ -363,6 +395,9 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & CUSTOMER) == CUSTOMER)
 		if ((retval = run_query_sqlite(config, base, CUSTOMER)) != 0)
 			return retval;
+	if ((type & CONTACT) == CONTACT)
+		if ((retval = run_query_sqlite(config, base, CONTACT)) != 0)
+			return retval;
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
@@ -382,6 +417,11 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 			if (fields != field_numbers[CUSTOMERS])
 				break;
 			store_customer_sqlite(state, base);
+			break;
+		case CONTACT:
+			if(fields != field_numbers[CONTACTS])
+				break;
+			store_contact_sqlite(state, base);
 			break;
 		case VM_HOST:
 			if (fields != field_numbers[VM_HOSTS])
@@ -444,6 +484,31 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base)
 		list->next = cust;
 	} else {
 		base->customer = cust;
+	}
+}
+
+void
+store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_contact_t *contact, *list;
+
+	if (!(contact = malloc(sizeof(cmdb_contact_t))))
+		report_error(MALLOC_FAIL, "contact in store_contact_sqlite");
+
+	contact->cont_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(contact->name, HOST_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(contact->phone, MAC_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(contact->email, HOST_S, "%s", sqlite3_column_text(state, 3));
+	contact->cust_id = (unsigned long int) sqlite3_column_int(state, 4);
+	contact->next = '\0';
+	list = base->contact;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = contact;
+	} else {
+		base->contact = contact;
 	}
 }
 

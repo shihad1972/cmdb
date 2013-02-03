@@ -25,7 +25,8 @@
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
 FROM server ORDER BY cust_id","\
-SELECT cust_id, name, address, city, county, postcode, coid FROM customer","\
+SELECT cust_id, name, address, city, county, postcode, coid FROM customer \
+ORDER BY coid","\
 SELECT cont_id, name, phone, email, cust_id FROM contacts","\
 SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
 services","\

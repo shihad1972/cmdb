@@ -80,7 +80,7 @@ typedef struct cmdb_contact_t {
 	char email[HOST_S];
 	unsigned long int cont_id;
 	unsigned long int cust_id;
-	struct cmdb_config_t *next;
+	struct cmdb_contact_t *next;
 } cmdb_contact_t;
 
 typedef struct cmdb_hard_type_t {
@@ -225,6 +225,8 @@ print_server_details(cmdb_server_t *server, cmdb_t *base);
 void
 clean_customer_list(cmdb_customer_t *list);
 void
-print_customer_details(cmdb_customer_t *list);
+print_customer_details(cmdb_customer_t *list, cmdb_t *base);
+void
+print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id);
 #endif
 

@@ -586,7 +586,7 @@ print_all_servers(cmdb_t *cmdb)
 	while (server) {
 		id = server->cust_id;
 		len = strlen(server->name);
-		while (id != cust->cust_id) {
+		while (id != cust->cust_id && (cust)) {
 			cust = cust->next;
 		}
 		if (len > 23) {
@@ -599,6 +599,7 @@ print_all_servers(cmdb_t *cmdb)
 			printf("%s\t\t\t\t%s\n", server->name, cust->coid);
 		}
 		server = server->next;
+		cust = cmdb->customer;
 	}
 		
 }

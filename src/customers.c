@@ -50,18 +50,18 @@ display_customer_info(char *name, char *coid, cmdb_config_t *config)
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
-	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | CONTACT)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
 	list = cmdb->customer;
 	while(list) {
 		if ((strncmp(list->name, name, MAC_S) == 0)) {
-			print_customer_details(list);
+			print_customer_details(list, cmdb);
 			list = list->next;
 			i++;
 		} else if ((strncmp(list->coid, coid, CONF_S) == 0)) {
-			print_customer_details(list);
+			print_customer_details(list, cmdb);
 			list = list->next;
 			i++;
 		} else {
@@ -80,6 +80,7 @@ display_all_customers(cmdb_config_t *config)
 	int retval;
 	cmdb_customer_t *list;
 	cmdb_t *cmdb;
+	size_t len;
 	retval = 0;
 
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
@@ -93,7 +94,10 @@ display_all_customers(cmdb_config_t *config)
 	}
 	list = cmdb->customer;
 	while(list) {
-			printf("%s\n%s\n\n", list->name, list->coid);
+			if ((len = strlen(list->coid)) < 8)
+				printf("%s\t %s\n", list->coid, list->name);
+			else
+				printf("%s %s\n", list->coid, list->name);
 			list = list->next;
 	}
 	cmdb_clean_list(cmdb);
@@ -122,15 +126,25 @@ clean_customer_list(cmdb_customer_t *list)
 }
 
 void
-print_customer_details(cmdb_customer_t *cust)
+print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
 {
-	printf("Customer Details\n");
-	printf("Name:\t\t%s\n", cust->name);
-	printf("Address:\t%s\n", cust->address);
-	printf("City:\t\t%s\n", cust->city);
-	printf("County:\t\t%s\n", cust->county);
-	printf("Postcode:\t%s\n", cust->postcode);
-	printf("COID:\t\t%s\n", cust->coid);
+	printf("%s: Coid %s\n", cust->name, cust->coid);
+	printf("%s\n", cust->address);
+	printf("%s, %s\n", cust->city, cust->postcode);
+	print_customer_contacts(cmdb->contact, cust->cust_id);
+}
+
+void
+print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
+{
+	cmdb_contact_t *list;
+	list = contacts;
+	while (list) {
+		if (list->cust_id == cust_id) {
+			printf("%s, %s, %s\n", list->name, list->phone, list->email);
+		}
+		list = list->next;
+	}
 }
 /*
 int display_customer_info_on_coid(char *coid, cmdb_config_t *config)
