@@ -84,7 +84,7 @@ typedef struct cmdb_contact_t {
 } cmdb_contact_t;
 
 typedef struct cmdb_hard_type_t {
-	char type[HOST_S];
+	char type[MAC_S];
 	char hclass[HOST_S];
 	unsigned long int ht_id;
 	struct cmdb_hard_type_t *next;
