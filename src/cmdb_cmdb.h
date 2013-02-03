@@ -101,10 +101,11 @@ typedef struct cmdb_hardware_t {
 
 typedef struct cmdb_service_t {
 	char detail[HOST_S];
-	char url[NAME_S];
+	char url[HOST_S];
 	unsigned long int service_id;
 	unsigned long int server_id;
 	unsigned long int cust_id;
+	unsigned long int service_type_id;
 	struct cmdb_service_t *next;
 } cmdb_service_t;
 
@@ -112,6 +113,7 @@ typedef struct cmdb_service_type_t {
 	char service[MAC_S];
 	char detail[HOST_S];
 	unsigned long int service_id;
+	struct cmdb_service_type_t *next;
 } cmdb_service_type_t;
 
 typedef struct cmdb_t {
@@ -135,8 +137,6 @@ void
 init_cmdb_config_values(cmdb_config_t *dc);
 void
 cmdb_init_struct(cmdb_t *cmdb);
-void
-cmdb_clean_list(cmdb_t *cmdb);
 /*
 int
 cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
@@ -213,17 +213,34 @@ display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 void
 display_all_customers(cmdb_config_t *config);
 
-/* New server functions for linked list */
+/* New clean functions for linked list */
 
 void
+cmdb_clean_list(cmdb_t *cmdb);
+void
 clean_server_list(cmdb_server_t *list);
+void
+clean_customer_list(cmdb_customer_t *list);
+void
+clean_contact_list(cmdb_contact_t *list);
+void
+clean_service_list(cmdb_service_t *list);
+void
+clean_service_type_list(cmdb_service_type_t *list);
+void
+clean_hardware_list(cmdb_hardware_t *list);
+void
+clean_hardware_type_list(cmdb_hard_type_t *list);
+void
+clean_vmhost_list(cmdb_vm_host_t *list);
+
+/* New server functions for linked list */
+
 void
 print_server_details(cmdb_server_t *server, cmdb_t *base);
 
 /* New customer functions for linked list */
 
-void
-clean_customer_list(cmdb_customer_t *list);
 void
 print_customer_details(cmdb_customer_t *list, cmdb_t *base);
 void

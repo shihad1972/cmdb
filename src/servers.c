@@ -530,27 +530,6 @@ display_all_servers(cmdb_config_t *config)
 	return;
 }
 
-void
-clean_server_list(cmdb_server_t *list)
-{
-	int i;
-	cmdb_server_t *server, *next;
-
-	i = 0;
-	server = list;
-	next = server->next;
-	while (server) {
-		free(server);
-		i++;
-		server = next;
-		if (next) {
-			next = server->next;
-		} else {
-			next = '\0';
-		}
-	}
-}
-
 void 
 print_server_details(cmdb_server_t *server, cmdb_t *base)
 {

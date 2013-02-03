@@ -206,11 +206,14 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & CUSTOMER) == CUSTOMER)
 		if ((retval = run_query_mysql(config, base, CUSTOMER)) != 0)
 			return retval;
-	if ((type & VM_HOST) == VM_HOST)
-		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
-			return retval;
 	if ((type & CONTACT) == CONTACT)
 		if ((retval = run_query_mysql(config, base, CONTACT)) != 0)
+			return retval;
+	if ((type & SERVICE) == SERVICE)
+		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
+			return retval;
+	if ((type & VM_HOST) == VM_HOST)
+		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
 	return 0;
 }
@@ -233,6 +236,11 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 			if (fields != field_numbers[CONTACTS])
 				break;
 			store_contact_mysql(row, base);
+			break;
+		case SERVICE:
+			if (fields != field_numbers[SERVICES])
+				break;
+			store_service_mysql(row, base);
 			break;
 		case VM_HOST:
 			if (fields != field_numbers[VM_HOSTS])
@@ -324,6 +332,32 @@ store_contact_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
+store_service_mysql(MYSQL_ROW row, cmdb_t *base)
+{
+	cmdb_service_t *service, *list;
+
+	if (!(service = malloc(sizeof(cmdb_service_t))))
+		report_error(MALLOC_FAIL, "service in store_service_sqlite");
+
+	service->service_id = strtoul(row[0], NULL, 10);
+	service->server_id = strtoul(row[1], NULL, 10);
+	service->cust_id = strtoul(row[2], NULL, 10);
+	service->service_type_id = strtoul(row[3], NULL, 10);
+	snprintf(service->detail, HOST_S, "%s", row[4]);
+	snprintf(service->url, HOST_S, "%s", row[5]);
+	service->next = '\0';
+	list = base->service;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = service;
+	} else {
+		base->service = service;
+	}
+}
+
+void
 store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base)
 {
 	cmdb_vm_host_t *vmhost, *list;
@@ -398,6 +432,9 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & CONTACT) == CONTACT)
 		if ((retval = run_query_sqlite(config, base, CONTACT)) != 0)
 			return retval;
+	if ((type & SERVICE) == SERVICE)
+		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
+			return retval;
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
@@ -422,6 +459,11 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 			if(fields != field_numbers[CONTACTS])
 				break;
 			store_contact_sqlite(state, base);
+			break;
+		case SERVICE:
+			if (fields != field_numbers[SERVICES])
+				break;
+			store_service_sqlite(state, base);
 			break;
 		case VM_HOST:
 			if (fields != field_numbers[VM_HOSTS])
@@ -509,6 +551,32 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base)
 		list->next = contact;
 	} else {
 		base->contact = contact;
+	}
+}
+
+void
+store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
+{
+	cmdb_service_t *service, *list;
+
+	if (!(service = malloc(sizeof(cmdb_service_t))))
+		report_error(MALLOC_FAIL, "service in store_service_sqlite");
+
+	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
+	service->server_id = (unsigned long int) sqlite3_column_int(state, 1);
+	service->cust_id = (unsigned long int) sqlite3_column_int(state, 2);
+	service->service_type_id = (unsigned long int) sqlite3_column_int(state, 3);
+	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(service->url, HOST_S, "%s", sqlite3_column_text(state, 5));
+	service->next = '\0';
+	list = base->service;
+	if (list) {
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = service;
+	} else {
+		base->service = service;
 	}
 }
 

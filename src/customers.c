@@ -105,27 +105,6 @@ display_all_customers(cmdb_config_t *config)
 }
 
 void
-clean_customer_list(cmdb_customer_t *list)
-{
-	int i;
-	cmdb_customer_t *customer, *next;
-
-	i = 0;
-	customer = list;
-	next = customer->next;
-	while (customer) {
-		free(customer);
-		i++;
-		customer = next;
-		if (next) {
-			next = customer->next;
-		} else {
-			next = '\0';
-		}
-	}
-}
-
-void
 print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
 {
 	printf("%s: Coid %s\n", cust->name, cust->coid);

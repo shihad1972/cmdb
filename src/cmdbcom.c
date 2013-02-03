@@ -204,6 +204,168 @@ cmdb_clean_list(cmdb_t *cmdb)
 		clean_server_list(cmdb->server);
 	if (cmdb->customer)
 		clean_customer_list(cmdb->customer);
+	if (cmdb->contact)
+		clean_contact_list(cmdb->contact);
+	if (cmdb->service)
+		clean_service_list(cmdb->service);
+	if (cmdb->servicetype)
+		clean_service_type_list(cmdb->servicetype);
+	if (cmdb->hardware)
+		clean_hardware_list(cmdb->hardware);
+	if (cmdb->hardtype)
+		clean_hardware_type_list(cmdb->hardtype);
+	if (cmdb->vmhost)
+		clean_vmhost_list(cmdb->vmhost);
 	free(cmdb);
+}
+
+void
+clean_server_list(cmdb_server_t *list)
+{
+	int i;
+	cmdb_server_t *server, *next;
+
+	i = 0;
+	server = list;
+	next = server->next;
+	while (server) {
+		free(server);
+		i++;
+		server = next;
+		if (next) {
+			next = server->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_customer_list(cmdb_customer_t *list)
+{
+	int i;
+	cmdb_customer_t *customer, *next;
+
+	i = 0;
+	customer = list;
+	next = customer->next;
+	while (customer) {
+		free(customer);
+		i++;
+		customer = next;
+		if (next) {
+			next = customer->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_contact_list(cmdb_contact_t *list)
+{
+	cmdb_contact_t *contact, *next;
+
+	contact = list;
+	next = contact->next;
+	while(contact) {
+		free(contact);
+		contact = next;
+		if (next) {
+			next = contact->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_service_list(cmdb_service_t *list)
+{
+	cmdb_service_t *service, *next;
+
+	service = list;
+	next = service->next;
+	while (service) {
+		free(service);
+		service = next;
+		if (next) {
+			next = service->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_service_type_list(cmdb_service_type_t *list)
+{
+	cmdb_service_type_t *service, *next;
+
+	service = list;
+	next = service->next;
+	while (service) {
+		free(service);
+		service = next;
+		if (next) {
+			next = service->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_hardware_list(cmdb_hardware_t *list)
+{
+	cmdb_hardware_t *hardware, *next;
+
+	hardware = list;
+	next = hardware->next;
+	while(hardware) {
+		free(hardware);
+		hardware = next;
+		if (next) {
+			next = hardware->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_hardware_type_list(cmdb_hard_type_t *list)
+{
+	cmdb_hard_type_t *hardware, *next;
+
+	hardware = list;
+	next = hardware->next;
+	while(hardware) {
+		free(hardware);
+		hardware = next;
+		if (next) {
+			next = hardware->next;
+		} else {
+			next = '\0';
+		}
+	}
+}
+
+void
+clean_vmhost_list(cmdb_vm_host_t *list)
+{
+	cmdb_vm_host_t *vmhost, *next;
+
+	vmhost = list;
+	next = vmhost->next;
+	while (vmhost) {
+		free(vmhost);
+		vmhost = next;
+		if (next) {
+			next = vmhost->next;
+		} else {
+			next = '\0';
+		}
+	}
 }
 

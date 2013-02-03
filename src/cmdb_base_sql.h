@@ -50,6 +50,8 @@ store_customer_mysql(MYSQL_ROW row, cmdb_t *base);
 void
 store_contact_mysql(MYSQL_ROW row, cmdb_t *base);
 void
+store_service_mysql(MYSQL_ROW row, cmdb_t *base);
+void
 store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base);
 
 # endif /* HAVE_MYSQL */
@@ -69,6 +71,8 @@ void
 store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
 store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base);
+void
+store_service_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
 store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base);
 
