@@ -534,7 +534,6 @@ display_all_servers(cmdb_config_t *config)
 void 
 print_server_details(cmdb_server_t *server, cmdb_t *base)
 {
-	int i = 0;
 	cmdb_customer_t *customer = base->customer;
 	cmdb_vm_host_t *vmhost = base->vmhost;
 	cmdb_hardware_t *hard = base->hardware;
@@ -556,27 +555,9 @@ print_server_details(cmdb_server_t *server, cmdb_t *base)
 		}
 		printf("VM Server:\t%s\n", vmhost->name);
 	}
-	while (hard) {
-		if (hard->server_id == server->server_id) {
-			i++;
-			if (i == 1)
-				printf("\nHardware details:\n");
-			printf("%s\t%s\t%s\n",
-hard->hardtype->hclass, hard->device, hard->detail);
-		}
-		hard = hard->next;
-	}
-	i = 0;
-	while (service) {
-		if (service->server_id == server->server_id) {
-			i++;
-			if (i == 1)
-				printf("\nService Details:\n");
-			printf("%s\t%s\t%s\n",
-service->servicetype->detail, service->detail, service->url);
-		}
-		service = service->next;
-	}
+	print_hardware(hard, server->server_id);
+	print_services(service, server->server_id, SERVER);
+	
 }
 
 void
@@ -605,6 +586,52 @@ print_all_servers(cmdb_t *cmdb)
 		}
 		server = server->next;
 		cust = cmdb->customer;
+	}		
+}
+
+void
+print_hardware(cmdb_hardware_t *hard, unsigned long int id)
+{
+	int i = 0;
+
+	while (hard) {
+		if (hard->server_id == id) {
+			i++;
+			if (i == 1)
+				printf("\nHardware details:\n");
+			printf("%s\t%s\t%s\n",
+hard->hardtype->hclass, hard->device, hard->detail);
+		}
+		hard = hard->next;
 	}
-		
+}
+
+void
+print_services(cmdb_service_t *service, unsigned long int id, int type)
+{
+	int i = 0;
+
+	if (type == SERVER) {
+		while (service) {
+			if (service->server_id == id) {
+				i++;
+				if (i == 1)
+					printf("\nService Details:\n");
+				printf("%s\t%s\t%s\n",
+service->servicetype->detail, service->detail, service->url);
+			}
+			service = service->next;
+		}
+	} else if (type == CUSTOMER) {
+		while (service) {
+			if (service->cust_id == id) {
+				i++;
+				if (i == 1)
+					printf("\nService Details:\n");
+				printf("%s\t%s\t%s\n",
+service->servicetype->service, service->detail, service->url);
+			}
+			service = service->next;
+		}
+	}
 }

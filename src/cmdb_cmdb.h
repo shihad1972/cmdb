@@ -87,8 +87,8 @@ typedef struct cmdb_service_t {
 } cmdb_service_t;
 
 typedef struct cmdb_service_type_t {
-	char service[MAC_S];
-	char detail[HOST_S];
+	char service[RANGE_S];
+	char detail[MAC_S];
 	unsigned long int service_id;
 	struct cmdb_service_type_t *next;
 } cmdb_service_type_t;
@@ -240,6 +240,10 @@ clean_vmhost_list(cmdb_vm_host_t *list);
 
 void
 print_server_details(cmdb_server_t *server, cmdb_t *base);
+void
+print_services(cmdb_service_t *service, unsigned long int id, int type);
+void
+print_hardware(cmdb_hardware_t *hard, unsigned long int id);
 
 /* New customer functions for linked list */
 

@@ -399,8 +399,8 @@ store_service_type_mysql(MYSQL_ROW row, cmdb_t *base)
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = strtoul(row[0], NULL, 10);
-	snprintf(service->service, MAC_S, "%s", row[1]);
-	snprintf(service->detail, HOST_S, "%s", row[2]);
+	snprintf(service->service, RANGE_S, "%s", row[1]);
+	snprintf(service->detail, MAC_S, "%s", row[2]);
 	service->next = '\0';
 	list = base->servicetype;
 	if (list) {

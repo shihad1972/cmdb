@@ -32,7 +32,7 @@ SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
 services ORDER BY service_type_id","\
 SELECT service_type_id, service, detail FROM service_type","\
 SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
-ORDER BY device","\
+ORDER BY device DESC","\
 SELECT hard_type_id, type, class FROM hard_type","\
 SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
