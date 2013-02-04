@@ -617,8 +617,12 @@ print_services(cmdb_service_t *service, unsigned long int id, int type)
 				i++;
 				if (i == 1)
 					printf("\nService Details:\n");
-				printf("%s\t%s\t%s\n",
-service->servicetype->detail, service->detail, service->url);
+				if ((strlen(service->servicetype->service)) < 7)
+					printf("%s\t\t%s\n",
+service->servicetype->service, service->url);
+				else
+					printf("%s\t%s\n",
+service->servicetype->service, service->url);
 			}
 			service = service->next;
 		}
@@ -628,8 +632,12 @@ service->servicetype->detail, service->detail, service->url);
 				i++;
 				if (i == 1)
 					printf("\nService Details:\n");
-				printf("%s\t%s\t%s\n",
-service->servicetype->service, service->detail, service->url);
+				if ((strlen(service->servicetype->service)) < 7)
+					printf("%s\t\t%s\n",
+service->servicetype->service, service->url);
+				else
+					printf("%s\t%s\n",
+service->servicetype->service, service->url);
 			}
 			service = service->next;
 		}
