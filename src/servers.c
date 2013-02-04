@@ -486,7 +486,8 @@ display_server_info(char *name, char *uuid, cmdb_config_t *config)
 
 	cmdb_init_struct(cmdb);
 	i = 0;
-	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER | VM_HOST)) != 0) {
+	if ((retval = run_multiple_query(config,
+cmdb, SERVER | CUSTOMER | HARDWARE |  SERVICE | VM_HOST)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -533,8 +534,12 @@ display_all_servers(cmdb_config_t *config)
 void 
 print_server_details(cmdb_server_t *server, cmdb_t *base)
 {
+	int i = 0;
 	cmdb_customer_t *customer = base->customer;
 	cmdb_vm_host_t *vmhost = base->vmhost;
+	cmdb_hardware_t *hard = base->hardware;
+	cmdb_service_t *service = base->service;
+
 	printf("Server Details:\n");
 	printf("Name:\t\t%s\n", server->name);
 	printf("UUID:\t\t%s\n", server->uuid);
@@ -543,13 +548,34 @@ print_server_details(cmdb_server_t *server, cmdb_t *base)
 	printf("Model:\t\t%s\n", server->model);
 	while (server->cust_id != customer->cust_id)
 		customer = customer->next;
-	printf("Customer name:\t%s\n", customer->name);
+	printf("Customer:\t%s\n", customer->name);
 	printf("COID:\t\t%s\n", customer->coid);
 	if (server->vm_server_id > 0) {
 		while (server->vm_server_id != vmhost->id) {
 			vmhost = vmhost->next;
 		}
-		printf("VM Server name:\t%s\n", vmhost->name);
+		printf("VM Server:\t%s\n", vmhost->name);
+	}
+	while (hard) {
+		if (hard->server_id == server->server_id) {
+			i++;
+			if (i == 1)
+				printf("\nHardware details:\n");
+			printf("%s\t%s\t%s\n",
+hard->hardtype->hclass, hard->device, hard->detail);
+		}
+		hard = hard->next;
+	}
+	i = 0;
+	while (service) {
+		if (service->server_id == server->server_id) {
+			i++;
+			if (i == 1)
+				printf("\nService Details:\n");
+			printf("%s\t%s\t%s\n",
+service->servicetype->detail, service->detail, service->url);
+		}
+		service = service->next;
 	}
 }
 
