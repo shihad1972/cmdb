@@ -34,23 +34,6 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 /*
-void display_server_from_name(char **server_info)
-{
-	printf("Server %s info\n", server_info[4]);
-	printf("Vendor: %s\n", server_info[0]);
-	printf("Make: %s\n", server_info[1]);
-	printf("Model: %s\n", server_info[2]);
-	printf("UUID: %s\n", server_info[3]);
-}
-
-void display_server_from_uuid(char **server_info)
-{
-	printf("Server %s info\n", server_info[3]);
-	printf("Vendor: %s\n", server_info[0]);
-	printf("Make: %s\n", server_info[1]);
-	printf("Model: %s\n", server_info[2]);
-	printf("UUID: %s\n", server_info[4]);
-}
 
 int add_server_to_database(cmdb_config_t *config)
 {
@@ -447,33 +430,7 @@ get_disk_device(cmdb_hardware_t *head)
 	}
 	return 0;
 }
-/*
-int display_server_info(char *server, char *uuid, cmdb_config_t *config)
-{
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		printf("No dbtype configured to display server info\n");
-		return DB_TYPE_INVALID;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		if ((strncmp(server, "NULL", CONF_S)))
-			display_on_name_mysql(server, config);
-		else if ((strncmp(uuid, "NULL", CONF_S)))
-			display_on_uuid_mysql(uuid, config);
-#endif  *//* HAVE_MYSQL */ /*
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		if ((strncmp(server, "NULL", CONF_S)))
-			display_on_name_sqlite(server, config);
-		else if ((strncmp(uuid, "NULL", CONF_S)))
-			display_on_uuid_sqlite(uuid, config);
-#endif *//* HAVE_SQLITE3 */ /*
-	} else {
-		printf("Unknown DB type %s to display servers\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	return 0;
-}
-*/
+
 void
 display_server_info(char *name, char *uuid, cmdb_config_t *config)
 {
