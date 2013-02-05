@@ -156,7 +156,15 @@ enum {			/* cmdb return codes */
 	NO_RECORD_TYPE = -11,
 	NO_PREFIX = -12,
 	NO_PARTITION_SCHEMES = -13,
-	NO_UUID = -14
+	NO_UUID = -14,
+	NO_MAKE = -15,
+	NO_MODEL = -16,
+	NO_VENDOR = -17,
+	NO_ADDRESS = -18,
+	NO_CITY = -19,
+	NO_COUNTY = -20,
+	NO_POSTCODE = -21,
+	NO_COID = -22
 };
 
 enum {			/* cmdb config file error codes */

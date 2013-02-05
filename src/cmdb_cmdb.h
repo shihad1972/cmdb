@@ -133,7 +133,9 @@ typedef struct cmdb_t {
 void
 cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config);
 int
-parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm, cmdb_t *base);
+int
+check_cmdb_comm_options(cmdb_comm_line_t *conf, cmdb_t *cmdb);
 int
 parse_cmdb_config_file(cmdb_config_t *dc, char *config);
 void
@@ -142,6 +144,10 @@ void
 init_cmdb_config_values(cmdb_config_t *dc);
 void
 cmdb_init_struct(cmdb_t *cmdb);
+void
+cmdb_init_server_t(cmdb_server_t *server);
+void
+cmdb_init_customer_t(cmdb_customer_t *cust);
 /*
 int
 cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);

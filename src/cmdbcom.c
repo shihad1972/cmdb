@@ -38,7 +38,7 @@
 #include "cmdb_base_sql.h"
 
 int
-parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *base)
 {
 	int opt, retval;
 	
@@ -50,18 +50,20 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	strncpy(comp->name, "NULL", CONF_S);
 	strncpy(comp->id, "NULL", RANGE_S);
 	strncpy(comp->vmhost, "NULL", COMM_S);
-	
-	while ((opt = getopt(argc, argv, "n:i:v:dlatsceh")) != -1) {
+	if (!(base->server = malloc(sizeof(cmdb_server_t))))
+		report_error(MALLOC_FAIL, "base->server in parse_cmdb_comm_line");
+	if (!(base->customer = malloc(sizeof(cmdb_customer_t))))
+		report_error(MALLOC_FAIL, "base->customer in parse_cmdb_comm_line");
+	if (!(base->contact = malloc(sizeof(cmdb_contact_t))))
+		report_error(MALLOC_FAIL, "base->contact in parse_cmdb_comm_line");
+	if (!(base->hardware = malloc(sizeof(cmdb_hardware_t))))
+		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
+	if (!(base->service = malloc(sizeof(cmdb_service_t))))
+		report_error(MALLOC_FAIL, "base->service in parse_cmdb_comm_line");
+	cmdb_init_server_t(base->server);
+	cmdb_init_customer_t(base->customer);
+	while ((opt = getopt(argc, argv, "n:i:v:V:M:O:C:U:A:T:Y:P:dlatsceh")) != -1) {
 		switch (opt) {
-			case 'n':
-				snprintf(comp->name, CONF_S, "%s", optarg);
-				break;
-			case 'i':
-				snprintf(comp->id, CONF_S, "%s", optarg);
-				break;
-			case 'v':
-				snprintf(comp->vmhost, NAME_S, "%s", optarg);
-				break;
 			case 's':
 				comp->type = SERVER;
 				break;
@@ -86,15 +88,65 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 				break;
 			case 'a':
 				comp->action = ADD_TO_DB;
-				snprintf(comp->name, MAC_S, "none");
+				if ((comp->type != HARDWARE) &&
+				 (comp->type != SERVICE) &&
+				 (comp->type != CONTACT))
+					snprintf(comp->name, MAC_S, "none");
+				break;
+			case 'n':
+				snprintf(comp->name, CONF_S, "%s", optarg);
+				break;
+			case 'i':
+				snprintf(comp->id, CONF_S, "%s", optarg);
+				break;
+			case 'v':
+				snprintf(comp->vmhost, NAME_S, "%s", optarg);
+				break;
+			case 'V':
+				snprintf(base->server->vendor, CONF_S, "%s", optarg);
+				break;
+			case 'M':
+				snprintf(base->server->make, CONF_S, "%s", optarg);
+				break;
+			case 'O':
+				snprintf(base->server->model, CONF_S, "%s", optarg);
+				break;
+			case 'U':
+				snprintf(base->server->uuid, CONF_S, "%s", optarg);
+				break;
+			case 'C':
+				snprintf(base->customer->coid, RANGE_S, "%s", optarg);
+				break;
+			case 'A':
+				snprintf(base->customer->address, NAME_S, "%s", optarg);
+				break;
+			case 'T':
+				snprintf(base->customer->city, HOST_S, "%s", optarg);
+				break;
+			case 'Y':
+				snprintf(base->customer->county, MAC_S, "%s", optarg);
+				break;
+			case 'P':
+				snprintf(base->customer->postcode, RANGE_S, "%s", optarg);
 				break;
 			default:
 				printf("Unknown option: %c\n", opt);
 				retval = DISPLAY_USAGE;
+				return retval;
 				break;
 		}
 	}
 
+	retval = check_cmdb_comm_options(comp, base);
+	return retval;
+}
+
+int
+check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
+{
+	int retval;
+
+	retval = NONE;
 	if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
@@ -107,6 +159,30 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
 		(comp->type == NONE && comp->action == NONE))
 		retval = DISPLAY_USAGE;
+	else if (comp->action == ADD_TO_DB)
+		if (comp->type == SERVER) {
+			if (strncmp(base->server->make, "NULL", COMM_S) == 0)
+				retval = NO_MAKE;
+			else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
+				retval = NO_MODEL;
+			else if (strncmp(base->server->vendor, "NULL", COMM_S) == 0)
+				retval = NO_VENDOR;
+			else if (strncmp(base->server->uuid, "NULL", COMM_S) == 0)
+				retval = NO_UUID;
+			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
+				retval = NO_COID;
+		} else if (comp->type == CUSTOMER) {
+			if (strncmp(base->customer->address, "NULL", COMM_S) == 0)
+				retval = NO_ADDRESS;
+			else if (strncmp(base->customer->city, "NULL", COMM_S) == 0)
+				retval = NO_CITY;
+			else if (strncmp(base->customer->county, "NULL", COMM_S) == 0)
+				retval = NO_COUNTY;
+			else if (strncmp(base->customer->postcode, "NULL", COMM_S) == 0)
+				retval = NO_POSTCODE;
+			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
+				retval = NO_COID;
+		}
 	return retval;
 }
 
@@ -210,6 +286,28 @@ cmdb_init_struct(cmdb_t *cmdb)
 	cmdb->service = '\0';
 	cmdb->servicetype = '\0';
 }
+
+void
+cmdb_init_server_t(cmdb_server_t *server)
+{
+	snprintf(server->vendor, COMM_S, "NULL");
+	snprintf(server->make, COMM_S, "NULL");
+	snprintf(server->model, COMM_S, "NULL");
+	snprintf(server->uuid, COMM_S, "NULL");
+	snprintf(server->name, COMM_S, "NULL");
+}
+
+void
+cmdb_init_customer_t(cmdb_customer_t *cust)
+{
+	snprintf(cust->address, COMM_S, "NULL");
+	snprintf(cust->city, COMM_S, "NULL");
+	snprintf(cust->county, COMM_S, "NULL");
+	snprintf(cust->postcode, COMM_S, "NULL");
+	snprintf(cust->coid, COMM_S, "NULL");
+	snprintf(cust->name, COMM_S, "NULL");
+}
+
 void
 cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 {

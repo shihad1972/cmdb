@@ -211,6 +211,10 @@ Initialisation of MySQL connection failed with %s\n", errstr);
 void
 display_cmdb_command_line_error(int retval, char *program)
 {
+	if (strrchr(program, '/')) {
+		program = strrchr(program, '/');
+		program++;
+	}
 	switch (retval){
 		case NO_NAME:
 			fprintf(stderr, "No name specified with -n\n");
@@ -242,6 +246,33 @@ display_cmdb_command_line_error(int retval, char *program)
 		case NO_RECORD_TYPE:
 			fprintf(stderr, "No record type specified on command line\n");
 			break;
+		case NO_UUID:
+			fprintf(stderr, "No UUID specified on command line\n");
+			break;
+		case NO_MAKE:
+			fprintf(stderr, "No make specified on command line\n");
+			break;
+		case NO_MODEL:
+			fprintf(stderr, "No model specified on command line\n");
+			break;
+		case NO_VENDOR:
+			fprintf(stderr, "No vendor specified on command line\n");
+			break;
+		case NO_ADDRESS:
+			fprintf(stderr, "No address specified on command line\n");
+			break;
+		case NO_CITY:
+			fprintf(stderr, "No city specified on command line\n");
+			break;
+		case NO_COUNTY:
+			fprintf(stderr, "No county specified on command line\n");
+			break;
+		case NO_POSTCODE:
+			fprintf(stderr, "No postcode specified on command line\n");
+			break;
+		case NO_COID:
+			fprintf(stderr, "No coid specified on command line\n");
+			break;
 		case DISPLAY_USAGE:
 			if ((strncmp(program, "cmdb", CONF_S) == 0))
 				display_cmdb_usage();
@@ -256,7 +287,7 @@ display_cmdb_command_line_error(int retval, char *program)
 			break;
 	}
 	if ((strncmp(program, "cmdb", CONF_S) == 0))
-		printf("Usage: %s [-s | -c | -t ] [-d | -l | -a ] [-n <name> | -i <id> ]\n",
+		printf("Usage: run %s on its own or check man pages\n",
 	       program);
 	else if ((strncmp(program, "cbc", CONF_S) == 0))
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
@@ -282,12 +313,12 @@ display_cmdb_usage(void)
 	printf("-v: vmhost server name for adding a server\n");
 	printf("Adding options:\n");
 	printf("For server (with -s)\n");
-	printf("-V: Vendor\t-M: Make\t-O: Model\t-C: COID\n");
+	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
 	printf("For customer (with -c)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-P: Postcode\t-C: COID\n");
-	printf("For services (with -s OR -c)\n");
-	printf("-D: Detail\t-U: URL\t-I service_id\n");
-	printf("For hardware (with -s)\n");
+	printf("For services (-i COID for customer, -n name for server)\n");
+	printf("-D: Detail\t-L: URL\t-I service_id\n");
+	printf("For hardware (with -n name to specify server)\n");
 	printf("-D: Detail\t-V: Device\t-I: hardware_id\n");
 }
 

@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 {
 	cmdb_comm_line_t *cm;
 	cmdb_config_t *cmc;
+	cmdb_t *base;
 	char *cmdb_config;
 	int retval;
 
@@ -53,12 +54,14 @@ int main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cmdb.c");
 	if (!(cm = malloc(sizeof(cmdb_comm_line_t))))
 		report_error(MALLOC_FAIL, "cm in cmdb.c");
+	if (!(base = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "base in cmdb.c");
 	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
 	
 	init_cmdb_comm_line_values(cm);
 	init_cmdb_config_values(cmc);
-	retval = parse_cmdb_command_line(argc, argv, cm);
+	retval = parse_cmdb_command_line(argc, argv, cm, base);
 	if (retval < 0) {
 		cmdb_main_free(cm, cmc, cmdb_config);
 		display_cmdb_command_line_error(retval, argv[0]);
