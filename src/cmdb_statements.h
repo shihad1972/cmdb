@@ -52,10 +52,19 @@ INSERT INTO hard_type (type, class) VALUES (?,?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
 };
 
+const char *sql_search[] = { "\
+SELECT server_id FROM server WHERE name = ?","\
+SELECT cust_id FROM customer WHERE coid = ?"
+};
+
 /* Number of returned fields for the above SELECT queries */
 const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
+
+const unsigned int search_fileds[] = { 1,1 };
+
+const unsigned int search_args[] = { 1,1 };
 
 enum {			/* SELECT indexes */
 	SERVERS = 0,
@@ -66,6 +75,11 @@ enum {			/* SELECT indexes */
 	HARDWARES,
 	HARDWARE_TYPES,
 	VM_HOSTS
+};
+
+enum {			/* Search indexes */
+	SERVER_ID_ON_NAME = 0,
+	CUST_ID_ON_COID
 };
 
 

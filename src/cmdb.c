@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 	init_cmdb_config_values(cmc);
 	retval = parse_cmdb_command_line(argc, argv, cm, base);
 	if (retval < 0) {
+		cmdb_clean_list(base);
 		cmdb_main_free(cm, cmc, cmdb_config);
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
 			} else if (cm->action == LIST_OBJ) {
 				display_all_servers(cmc);
 			} else if (cm->action == ADD_TO_DB) {
-				retval = add_server_to_database(cmc, cm);
+				retval = add_server_to_database(cmc, cm, base);
 				if (retval > 0) {
 					printf("Error adding to database\n");
 					return 1;
@@ -104,9 +105,9 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case CUSTOMER:
-			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+			if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
 				retval = validate_user_input(cm->id, COID_REGEX);
-			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+			} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
 				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
 			} else {
 				printf("Both name and coid set to NULL??\n");
@@ -142,6 +143,7 @@ int main(int argc, char *argv[])
 			display_type_error(cm->type);
 			break;
 	}
+	cmdb_clean_list(base);
 	free(cmc);
 	free(cm);
 	free(cmdb_config);

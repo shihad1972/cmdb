@@ -228,7 +228,7 @@ display_hardware_types(cmdb_config_t *config);
 
 /* New user input functions */
 int
-add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm);
+add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb);
 int
 check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
 int

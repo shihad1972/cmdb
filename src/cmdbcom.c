@@ -91,7 +91,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 				if ((comp->type != HARDWARE) &&
 				 (comp->type != SERVICE) &&
 				 (comp->type != CONTACT))
-					snprintf(comp->name, MAC_S, "none");
+					snprintf(comp->id, MAC_S, "NOCOID");
 				break;
 			case 'n':
 				snprintf(comp->name, CONF_S, "%s", optarg);
@@ -159,8 +159,9 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
 		(comp->type == NONE && comp->action == NONE))
 		retval = DISPLAY_USAGE;
-	else if (comp->action == ADD_TO_DB)
+	else if (comp->action == ADD_TO_DB) {
 		if (comp->type == SERVER) {
+			snprintf(base->server->name, MAC_S, "%s", comp->name);
 			if (strncmp(base->server->make, "NULL", COMM_S) == 0)
 				retval = NO_MAKE;
 			else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
@@ -171,7 +172,10 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 				retval = NO_UUID;
 			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
 				retval = NO_COID;
+			else if (strncmp(base->server->name, "NULL", COMM_S) == 0)
+				retval = NO_NAME;
 		} else if (comp->type == CUSTOMER) {
+			snprintf(base->customer->name, CONF_S, "%s", comp->name);
 			if (strncmp(base->customer->address, "NULL", COMM_S) == 0)
 				retval = NO_ADDRESS;
 			else if (strncmp(base->customer->city, "NULL", COMM_S) == 0)
@@ -182,7 +186,10 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 				retval = NO_POSTCODE;
 			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
 				retval = NO_COID;
+			else if (strncmp(comp->name, "NULL", COMM_S) == 0)
+				retval = NO_NAME;
 		}
+	}
 	return retval;
 }
 

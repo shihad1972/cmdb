@@ -91,6 +91,33 @@ run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type)
 	
 	return NONE;
 }
+
+int
+run_search(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+
+	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_search_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_search_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
 int
 get_query(int type, const char **query, unsigned int *fields)
 {
@@ -248,6 +275,13 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
+	return 0;
+}
+
+int
+run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	printf("Dummy search of mysql database\n");
 	return 0;
 }
 
@@ -591,6 +625,13 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((type & VM_HOST) == VM_HOST)
 		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
+	return 0;
+}
+
+int
+run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	printf("Dummy search of sqlite database\n");
 	return 0;
 }
 

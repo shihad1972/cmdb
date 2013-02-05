@@ -34,23 +34,23 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 
-int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm)
+int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb)
 {
 	char *input;
 	int retval;
-	cmdb_t *cmdb;
 	
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb in add_server_to_database");
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
 
 	retval = 0;
-	cmdb_init_struct(cmdb);
-	if (!(cmdb->server = malloc(sizeof(cmdb_server_t))))
-		report_error(MALLOC_FAIL,
-		  "cmdb->server in add_server_to_database");
-	printf("***CMDB: Add server into the database***\n\n");
+	printf("Details provided:\n");
+	printf("Name: %s\n", cmdb->server->name);
+	printf("Vendor: %s\n", cmdb->server->vendor);
+	printf("Make: %s\n", cmdb->server->make);
+	printf("Model: %s\n", cmdb->server->model);
+	printf("UUID: %s\n", cmdb->server->uuid);
+	printf("COID: %s\n", cmdb->customer->coid);
+/*	printf("***CMDB: Add server into the database***\n\n");
 	printf("Is this server a virtual machine? (y/n): ");
 	input = fgets(input, CONF_S, stdin);
 	chomp(input);
@@ -76,8 +76,7 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm)
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0))
 		run_insert(config, cmdb, SERVER);
 	else
-		printf("Not what you want eh?\n");
-	cmdb_clean_list(cmdb);
+		printf("Not what you want eh?\n"); */
 	free(input);
 	return 0;
 }

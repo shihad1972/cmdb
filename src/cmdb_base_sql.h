@@ -32,6 +32,8 @@ run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
 get_query(int type, const char **query, unsigned int *fields);
 int
+run_search(cmdb_config_t *config, cmdb_t *base, int type);
+int
 run_insert(cmdb_config_t *config, cmdb_t *base, int type);
 
 # ifdef HAVE_MYSQL
@@ -45,6 +47,8 @@ int
 run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type);
+int
+run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
@@ -75,6 +79,8 @@ int
 run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
+int
+run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields);
 void
