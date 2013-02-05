@@ -256,7 +256,7 @@ display_cmdb_command_line_error(int retval, char *program)
 			break;
 	}
 	if ((strncmp(program, "cmdb", CONF_S) == 0))
-		printf("Usage: %s [-s | -c ] [-d | -l | -a | -t ] [-n <name> | -i <id> ]\n",
+		printf("Usage: %s [-s | -c | -t ] [-d | -l | -a ] [-n <name> | -i <id> ]\n",
 	       program);
 	else if ((strncmp(program, "cbc", CONF_S) == 0))
 		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
@@ -271,14 +271,24 @@ display_cmdb_command_line_error(int retval, char *program)
 void
 display_cmdb_usage(void)
 {
-	printf("CMDB: Configuration Management Database\n\n");
+	printf("CMDB: Configuration Management Database\n");
 	printf("Action options:\n");
 	printf("-d: display\n-l: list\n-a: add\n");
-	printf("-t: add contact (when specified with -c for customer)\n\n");
 	printf("Type options:\n");
-	printf("-s: server\n-c: customer\n\n");
+	printf("-s: server\n-c: customer\n-t: contact\n");
+	printf("-e: services\n-h: hardware\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
+	printf("-v: vmhost server name for adding a server\n");
+	printf("Adding options:\n");
+	printf("For server (with -s)\n");
+	printf("-V: Vendor\t-M: Make\t-O: Model\t-C: COID\n");
+	printf("For customer (with -c)\n");
+	printf("-A: Address\t-T: City\t-Y: County\t-P: Postcode\t-C: COID\n");
+	printf("For services (with -s OR -c)\n");
+	printf("-D: Detail\t-U: URL\t-I service_id\n");
+	printf("For hardware (with -s)\n");
+	printf("-D: Detail\t-V: Device\t-I: hardware_id\n");
 }
 
 void

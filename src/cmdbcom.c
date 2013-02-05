@@ -50,7 +50,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	strncpy(comp->name, "NULL", CONF_S - 1);
 	strncpy(comp->id, "NULL", RANGE_S - 1);
 	
-	while ((opt = getopt(argc, argv, "n:i:dlatsc")) != -1) {
+	while ((opt = getopt(argc, argv, "n:i:v:dlatsceh")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(comp->name, CONF_S, "%s", optarg);
@@ -58,11 +58,23 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 			case 'i':
 				snprintf(comp->id, CONF_S, "%s", optarg);
 				break;
+			case 'v':
+				snprintf(comp->vmhost, NAME_S, "%s", optarg);
+				break;
 			case 's':
 				comp->type = SERVER;
 				break;
 			case 'c':
 				comp->type = CUSTOMER;
+				break;
+			case 't':
+				comp->type = CONTACT;
+				break;
+			case 'e':
+				comp->type = SERVICE;
+				break;
+			case 'h':
+				comp->type = HARDWARE;
 				break;
 			case 'd':
 				comp->action = DISPLAY;
@@ -74,9 +86,6 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 			case 'a':
 				comp->action = ADD_TO_DB;
 				snprintf(comp->name, MAC_S, "none");
-				break;
-			case 't':
-				comp->type = CONTACT;
 				break;
 			default:
 				printf("Unknown option: %c\n", opt);
@@ -161,6 +170,17 @@ parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 	}
 	
 	return retval;
+}
+
+void
+init_cmdb_comm_line_values(cmdb_comm_line_t *cm)
+{
+	cm->action = 0;
+	cm->type = 0;
+	snprintf(cm->config, CONF_S, "NULL");
+	snprintf(cm->name, CONF_S, "NULL");
+	snprintf(cm->id, CONF_S, "NULL");
+	snprintf(cm->vmhost, NAME_S, "NULL");
 }
 
 void

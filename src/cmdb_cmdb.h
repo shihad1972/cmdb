@@ -29,6 +29,7 @@ typedef struct cmdb_comm_line_t { /* Hold parsed command line args */
 	char config[CONF_S];
 	char name[CONF_S];
 	char id[CONF_S];
+	char vmhost[NAME_S];
 } cmdb_comm_line_t;
 
 typedef struct cmdb_config_t { /* Hold CMDB configuration values */
@@ -136,6 +137,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comm);
 int
 parse_cmdb_config_file(cmdb_config_t *dc, char *config);
 void
+init_cmdb_comm_line_values(cmdb_comm_line_t *cm);
+void
 init_cmdb_config_values(cmdb_config_t *dc);
 void
 cmdb_init_struct(cmdb_t *cmdb);
@@ -166,9 +169,7 @@ display_customer_from_name(char **cust_info);
 void
 display_customer_from_coid(char **cust_info);
 void
-display_all_customers(cmdb_config_t *config); 
-int
-add_server_to_database(cmdb_config_t *config); 
+display_all_customers(cmdb_config_t *config);  
 int
 add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw); */
 void
@@ -214,6 +215,20 @@ void
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 void
 display_all_customers(cmdb_config_t *config);
+
+/* New user input functions */
+int
+add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm);
+int
+check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
+int
+check_for_coid(cmdb_config_t *config, cmdb_t *cmdb, char *coid);
+int
+get_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
+int
+get_customer(cmdb_config_t *config, cmdb_t *cmdb, char *coid);
+void
+print_vm_hosts(cmdb_vm_host_t *vmhost);
 
 /* New clean functions for linked list */
 

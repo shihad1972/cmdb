@@ -131,6 +131,43 @@ print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
 		list = list->next;
 	}
 }
+
+int
+get_customer(cmdb_config_t *config, cmdb_t *cmdb, char *coid)
+{
+	int retval;
+	cmdb_customer_t *cust, *next;
+
+	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0)
+		return retval;
+
+	cust = cmdb->customer;
+	next = cust->next;
+	while (cust) {
+		if (strncmp(coid, cust->coid, RANGE_S) != 0) {
+			free(cust);
+			cust = next;
+			if (cust)
+				next = cust->next;
+		} else {
+			break;
+		}
+	}
+	if (cust) {
+		cmdb->customer = cust;
+		cust = cust->next;
+		while (cust) {
+			next = cust->next;
+			free(cust);
+			cust = next;
+		}
+	} else {
+		cmdb->customer = '\0';
+		return CUSTOMER_NOT_FOUND;
+	}
+	cmdb->customer->next = '\0';
+	return 0;
+}
 /*
 
 cmdb_customer_t *create_customer_node(void)

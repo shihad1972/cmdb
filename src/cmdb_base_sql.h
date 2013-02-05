@@ -23,7 +23,7 @@
 
 #ifndef __CMDB_BASE_SQL_H
 #define __CMDB_BASE_SQL_H
-#include "../config.h"
+# include "../config.h"
 
 int
 run_query(cmdb_config_t *config, cmdb_t *base, int type);
@@ -31,9 +31,11 @@ int
 run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
 get_query(int type, const char **query, unsigned int *fields);
+int
+run_insert(cmdb_config_t *config, cmdb_t *base, int type);
 
 # ifdef HAVE_MYSQL
-# include <mysql.h>
+#  include <mysql.h>
 
 void
 cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql);
@@ -41,6 +43,8 @@ int
 run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type);
+int
+run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
@@ -63,12 +67,14 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base);
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
-# include <sqlite3.h>
+#  include <sqlite3.h>
 
 int
 run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
+int
+run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields);
 void

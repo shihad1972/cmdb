@@ -100,35 +100,35 @@ get_query(int type, const char **query, unsigned int *fields)
 	switch(type) {
 		case SERVER:
 			*query = sql_select[SERVERS];
-			*fields = field_numbers[SERVERS];
+			*fields = select_fields[SERVERS];
 			break;
 		case CUSTOMER:
 			*query = sql_select[CUSTOMERS];
-			*fields = field_numbers[CUSTOMERS];
+			*fields = select_fields[CUSTOMERS];
 			break;
 		case CONTACT:
 			*query = sql_select[CONTACTS];
-			*fields = field_numbers[CONTACTS];
+			*fields = select_fields[CONTACTS];
 			break;
 		case SERVICE:
 			*query = sql_select[SERVICES];
-			*fields = field_numbers[SERVICES];
+			*fields = select_fields[SERVICES];
 			break;
 		case SERVICE_TYPE:
 			*query = sql_select[SERVICE_TYPES];
-			*fields = field_numbers[SERVICE_TYPES];
+			*fields = select_fields[SERVICE_TYPES];
 			break;
 		case HARDWARE:
 			*query = sql_select[HARDWARES];
-			*fields = field_numbers[HARDWARES];
+			*fields = select_fields[HARDWARES];
 			break;
 		case HARDWARE_TYPE:
 			*query = sql_select[HARDWARE_TYPES];
-			*fields = field_numbers[HARDWARES];
+			*fields = select_fields[HARDWARES];
 			break;
 		case VM_HOST:
 			*query = sql_select[VM_HOSTS];
-			*fields = field_numbers[VM_HOSTS];
+			*fields = select_fields[VM_HOSTS];
 			break;
 		default:
 			fprintf(stderr, "Unknown query type %d\n", type);
@@ -139,6 +139,30 @@ get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
+int
+run_insert(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_insert_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_insert_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	
+	return NONE;
+}
 
 /* MySQL functions */
 #ifdef HAVE_MYSQL
@@ -227,47 +251,54 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	return 0;
 }
 
+int
+run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	printf("Dummy insert into mysql database\n");
+	return 0;
+}
+
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
 	switch(type) {
 		case SERVER:
-			if (fields != field_numbers[SERVERS])
+			if (fields != select_fields[SERVERS])
 				break;
 			store_server_mysql(row, base);
 			break;
 		case CUSTOMER:
-			if (fields != field_numbers[CUSTOMERS])
+			if (fields != select_fields[CUSTOMERS])
 				break;
 			store_customer_mysql(row, base);
 			break;
 		case CONTACT:
-			if (fields != field_numbers[CONTACTS])
+			if (fields != select_fields[CONTACTS])
 				break;
 			store_contact_mysql(row, base);
 			break;
 		case SERVICE:
-			if (fields != field_numbers[SERVICES])
+			if (fields != select_fields[SERVICES])
 				break;
 			store_service_mysql(row, base);
 			break;
 		case SERVICE_TYPE:
-			if (fields != field_numbers[SERVICE_TYPES])
+			if (fields != select_fields[SERVICE_TYPES])
 				break;
 			store_service_type_mysql(row, base);
 			break;
 		case HARDWARE:
-			if (fields != field_numbers[HARDWARES])
+			if (fields != select_fields[HARDWARES])
 				break;
 			store_hardware_mysql(row, base);
 			break;
 		case HARDWARE_TYPE:
-			if (fields != field_numbers[HARDWARE_TYPES])
+			if (fields != select_fields[HARDWARE_TYPES])
 				break;
 			store_hardware_type_mysql(row, base);
 			break;
 		case VM_HOST:
-			if (fields != field_numbers[VM_HOSTS])
+			if (fields != select_fields[VM_HOSTS])
 				break;
 			store_vm_hosts_mysql(row, base);
 			break;
@@ -563,47 +594,54 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	return 0;
 }
 
+int
+run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	printf("Dummy insert into sqlite database\n");
+	return 0;
+}
+
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields)
 {
 	switch(type) {
 		case SERVER:
-			if (fields != field_numbers[SERVERS])
+			if (fields != select_fields[SERVERS])
 				break;
 			store_server_sqlite(state, base);
 			break;
 		case CUSTOMER:
-			if (fields != field_numbers[CUSTOMERS])
+			if (fields != select_fields[CUSTOMERS])
 				break;
 			store_customer_sqlite(state, base);
 			break;
 		case CONTACT:
-			if(fields != field_numbers[CONTACTS])
+			if(fields != select_fields[CONTACTS])
 				break;
 			store_contact_sqlite(state, base);
 			break;
 		case SERVICE:
-			if (fields != field_numbers[SERVICES])
+			if (fields != select_fields[SERVICES])
 				break;
 			store_service_sqlite(state, base);
 			break;
 		case SERVICE_TYPE:
-			if (fields != field_numbers[SERVICE_TYPES])
+			if (fields != select_fields[SERVICE_TYPES])
 				break;
 			store_service_type_sqlite(state, base);
 			break;
 		case HARDWARE:
-			if (fields != field_numbers[HARDWARES])
+			if (fields != select_fields[HARDWARES])
 				break;
 			store_hardware_sqlite(state, base);
 			break;
 		case HARDWARE_TYPE:
-			if (fields != field_numbers[HARDWARE_TYPES])
+			if (fields != select_fields[HARDWARE_TYPES])
 				break;
 			store_hardware_type_sqlite(state, base);
 			break;
 		case VM_HOST:
-			if (fields != field_numbers[VM_HOSTS])
+			if (fields != select_fields[VM_HOSTS])
 				break;
 			store_vm_hosts_sqlite(state, base);
 			break;

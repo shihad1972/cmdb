@@ -33,6 +33,54 @@
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
+
+int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm)
+{
+	char *input;
+	int retval;
+	cmdb_t *cmdb;
+	
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb in add_server_to_database");
+	if (!(input = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in add_server_to_database");
+
+	retval = 0;
+	cmdb_init_struct(cmdb);
+	if (!(cmdb->server = malloc(sizeof(cmdb_server_t))))
+		report_error(MALLOC_FAIL,
+		  "cmdb->server in add_server_to_database");
+	printf("***CMDB: Add server into the database***\n\n");
+	printf("Is this server a virtual machine? (y/n): ");
+	input = fgets(input, CONF_S, stdin);
+	chomp(input);
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
+		if ((retval = check_for_vm_host(config, cmdb, cm->vmhost)) != 0) {
+			free (input);
+			cmdb_clean_list(cmdb);
+			return NO_VM_HOSTS;
+		}
+	}
+	if ((retval = check_for_coid(config, cmdb, cm->id)) != 0) {
+			free(input);
+			cmdb_clean_list(cmdb);
+			return NO_CUSTOMERS;
+	}
+	cmdb->server->vm_server_id = cmdb->vmhost->id;
+	cmdb->server->cust_id = cmdb->customer->cust_id;
+	get_full_server_config(cmdb->server);
+	print_server_details(cmdb->server, cmdb);
+	printf("Do you wish to continue? (y/n): \n");
+	input = fgets(input, CONF_S, stdin);
+	chomp(input);
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0))
+		run_insert(config, cmdb, SERVER);
+	else
+		printf("Not what you want eh?\n");
+	cmdb_clean_list(cmdb);
+	free(input);
+	return 0;
+}
 /*
 
 int add_server_to_database(cmdb_config_t *config)
@@ -221,6 +269,86 @@ get_full_server_config(cmdb_server_t *server)
 	}
 	snprintf(server->name, MAC_S, "%s", input);
 	free(input);
+}
+
+int
+check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost)
+{
+	int retval;
+	if ((strncmp(vmhost, "NULL", MAC_S)) == 0) {
+		printf("\
+Please supply the name of the vmhost with the -v option\n");
+		return 1;
+	}
+	if ((retval = get_vm_host(config, cmdb, vmhost)) != 0)
+		return retval;
+	return 0;
+}
+
+int
+check_for_coid(cmdb_config_t *config, cmdb_t *cmdb, char *coid)
+{
+	int retval;
+	if ((strncmp(coid, "NULL", MAC_S)) == 0) {
+		printf("\
+Please supply the coid of the customer with the -i option\n");
+		return 1;
+	}
+	if ((retval = get_customer(config, cmdb, coid)) != 0)
+		return retval;
+	return 0;
+}
+
+int
+get_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost)
+{
+	int retval;
+	cmdb_vm_host_t *vm, *next;
+
+	if ((retval = run_query(config, cmdb, VM_HOST)) != 0)
+		return retval;
+
+	vm = cmdb->vmhost;
+	next = vm->next;
+	while (vm) {
+		if (strncmp(vmhost, vm->name, NAME_S) != 0) {
+			free(vm);
+			vm = next;
+			next = vm->next;
+		} else {
+			break;
+		}
+	}
+	if (vm) {
+		cmdb->vmhost = vm;
+		vm = vm->next;
+		while (vm) {
+			next = vm->next;
+			free(vm);
+			vm = next;
+		}
+	} else {
+		cmdb->vmhost = '\0';
+		return NO_VM_HOSTS;
+	}
+	cmdb->vmhost->next = '\0';
+	return 0;
+}
+
+void
+print_vm_hosts(cmdb_vm_host_t *vmhost)
+{
+	if (vmhost) {
+		printf("Virtual Machine Hosts\n");
+		printf("ID\tType\tName\n");
+		while (vmhost) {
+			printf("%lu\t%s\t%s\n", 
+			 vmhost->id, vmhost->type, vmhost->name);
+			vmhost = vmhost->next;
+		}
+	} else {
+		printf("No virtual machine hosts\n");
+	}
 }
 /*
 cmdb_vm_host_t *
@@ -511,6 +639,13 @@ print_server_details(cmdb_server_t *server, cmdb_t *base)
 			vmhost = vmhost->next;
 		}
 		printf("VM Server:\t%s\n", vmhost->name);
+	} else {
+		while ((server->server_id != vmhost->server_id) && (vmhost)) {
+			vmhost = vmhost->next;
+		}
+		if (server->server_id == vmhost->server_id) {
+			printf("VM Server host type %s\n", vmhost->type);
+		}
 	}
 	print_hardware(hard, server->server_id);
 	print_services(service, server->server_id, SERVER);

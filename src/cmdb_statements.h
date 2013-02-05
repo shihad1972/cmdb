@@ -37,8 +37,25 @@ SELECT hard_type_id, type, class FROM hard_type","\
 SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
 
-/* Number of returned fields for the above queries */
-const unsigned int field_numbers[] = { 8,7,5,6,3,5,3,4 };
+const char *sql_insert[] = { "\
+INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
+(?,?,?,?,?,?)","\
+INSERT INTO customer (name, address, city, postcode, coid) VALUES \
+(?,?,?,?,?)","\
+INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
+INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
+VALUES (?,?,?,?,?)","\
+INSERT INTO service_type (service, detail) VALUES (?,?)","\
+INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
+(?,?,?,?)","\
+INSERT INTO hard_type (type, class) VALUES (?,?)","\
+INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
+};
+
+/* Number of returned fields for the above SELECT queries */
+const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
+
+const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
 
 enum {			/* SELECT indexes */
 	SERVERS = 0,

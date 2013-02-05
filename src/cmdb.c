@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
 	
+	init_cmdb_comm_line_values(cm);
 	init_cmdb_config_values(cmc);
 	retval = parse_cmdb_command_line(argc, argv, cm);
 	if (retval < 0) {
@@ -68,11 +69,11 @@ int main(int argc, char *argv[])
 	switch (cm->type) {
 		case SERVER:
 #ifdef HAVE_LIBPCRE
-			if ((strncmp(cm->name, "NULL", CONF_S) == 0)) {
+			if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
 				retval = validate_user_input(cm->id, UUID_REGEX);
 				if (retval < 0)
 					retval = validate_user_input(cm->id, NAME_REGEX);
-			} else if ((strncmp(cm->id, "NULL", CONF_S) == 0)) {
+			} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
 				retval = validate_user_input(cm->name, NAME_REGEX);
 			} else {
 				printf("Both name and uuid set to NULL??\n");
@@ -87,6 +88,14 @@ int main(int argc, char *argv[])
 				display_server_info(cm->name, cm->id, cmc);
 			} else if (cm->action == LIST_OBJ) {
 				display_all_servers(cmc);
+			} else if (cm->action == ADD_TO_DB) {
+				retval = add_server_to_database(cmc, cm);
+				if (retval > 0) {
+					printf("Error adding to database\n");
+					return 1;
+				} else {
+					printf("Added into database\n");
+				}
 			} else {
 				display_action_error(cm->action);
 			}
