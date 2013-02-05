@@ -616,6 +616,44 @@ display_all_servers(cmdb_config_t *config)
 	return;
 }
 
+void
+display_hardware_types(cmdb_config_t *config)
+{
+	int retval;
+	cmdb_t *cmdb;
+	cmdb_hard_type_t *list;
+	size_t len;
+
+	retval = 0;
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+
+	cmdb_init_struct(cmdb);
+	cmdb->hardtype = '\0';
+	if ((retval = run_query(config, cmdb, HARDWARE_TYPE)) != 0) {
+		cmdb_clean_list(cmdb);
+		return;
+	}
+	list = cmdb->hardtype;
+	printf("ID\tType\t\t\tClass\n");
+	while (list) {
+		if ((len = strlen(list->type)) < 8) {
+			printf("%lu\t%s\t\t\t%s\n",
+			 list->ht_id, list->type, list->hclass);
+		} else if ((len = strlen(list->type)) < 16) {
+			printf("%lu\t%s\t\t%s\n",
+			 list->ht_id, list->type, list->hclass);
+		} else {
+			printf("%lu\t%s\t%s\n",
+			 list->ht_id, list->type, list->hclass);
+		}
+		list = list->next;
+	}
+
+	cmdb_clean_list(cmdb);
+	return;
+}
+
 void 
 print_server_details(cmdb_server_t *server, cmdb_t *base)
 {

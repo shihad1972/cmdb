@@ -26,6 +26,7 @@ enum {			/* Buffer Sizes */
 	CH_S = 2,
 	COMM_S = 8,
 	RANGE_S = 16,
+	TYPE_S = 24,
 	MAC_S = 32,
 	HOST_S = 64,
 	CONF_S = 80,

@@ -46,9 +46,10 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp)
 	
 	comp->action = NONE;
 	comp->type = NONE;
-	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
-	strncpy(comp->name, "NULL", CONF_S - 1);
-	strncpy(comp->id, "NULL", RANGE_S - 1);
+	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
+	strncpy(comp->name, "NULL", CONF_S);
+	strncpy(comp->id, "NULL", RANGE_S);
+	strncpy(comp->vmhost, "NULL", COMM_S);
 	
 	while ((opt = getopt(argc, argv, "n:i:v:dlatsceh")) != -1) {
 		switch (opt) {

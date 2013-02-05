@@ -95,11 +95,45 @@ display_all_customers(cmdb_config_t *config)
 	}
 	list = cmdb->customer;
 	while(list) {
-			if ((len = strlen(list->coid)) < 8)
-				printf("%s\t %s\n", list->coid, list->name);
-			else
-				printf("%s %s\n", list->coid, list->name);
-			list = list->next;
+		if ((len = strlen(list->coid)) < 8)
+			printf("%s\t %s\n", list->coid, list->name);
+		else
+			printf("%s %s\n", list->coid, list->name);
+		list = list->next;
+	}
+	cmdb_clean_list(cmdb);
+	return;
+}
+
+void
+display_service_types(cmdb_config_t *config)
+{
+	int retval;
+	cmdb_service_type_t *list;
+	size_t len;
+	cmdb_t *cmdb;
+
+	retval = 0;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
+	cmdb_init_struct(cmdb);
+
+	cmdb->servicetype = '\0';
+	if ((retval = run_query(config, cmdb, SERVICE_TYPE)) != 0) {
+		cmdb_clean_list(cmdb);
+		return;
+	}
+	list = cmdb->servicetype;
+	printf("ID\tService\t\tDescription\n");
+	while(list) {
+		if ((len = strlen(list->service)) < 8)
+			printf("%lu\t%s\t\t%s\n",
+			list->service_id, list->service, list->detail);
+		else
+			printf("%lu\t%s\t%s\n",
+			list->service_id, list->service, list->detail);
+		list = list->next;
 	}
 	cmdb_clean_list(cmdb);
 	return;

@@ -121,6 +121,20 @@ int main(int argc, char *argv[])
 				display_action_error(cm->action);
 			}
 			break;
+		case SERVICE:
+			if (cm->action == LIST_OBJ) {
+				display_service_types(cmc);
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
+		case HARDWARE:
+			if (cm->action == LIST_OBJ) {
+				display_hardware_types(cmc);
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
 		default:
 			display_type_error(cm->type);
 			break;

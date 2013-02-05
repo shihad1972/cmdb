@@ -215,6 +215,10 @@ void
 display_customer_info(char *server, char *uuid, cmdb_config_t *config);
 void
 display_all_customers(cmdb_config_t *config);
+void
+display_service_types(cmdb_config_t *config);
+void
+display_hardware_types(cmdb_config_t *config);
 
 /* New user input functions */
 int
