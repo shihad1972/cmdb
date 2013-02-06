@@ -33,8 +33,11 @@ extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 
+# ifdef HAVE_MYSQL
+extern const int mysql_inserts[8][7];
+# endif /* HAVE_MYSQL */
 
-enum {			/* SELECT indexes */
+enum {			/* SELECT and INSERT indexes */
 	SERVERS = 0,
 	CUSTOMERS,
 	CONTACTS,
@@ -77,6 +80,10 @@ int
 run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type);
+void
+setup_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base);
+void
+setup_mysql_bind_buffer(int type, void **input, cmdb_t *base, unsigned int i);
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void

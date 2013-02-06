@@ -158,6 +158,8 @@ void
 cmdb_init_hardtype_t(cmdb_hard_type_t *type);
 void
 cmdb_init_servicetype_t(cmdb_service_type_t *type);
+void
+cmdb_init_vmhost_t(cmdb_vm_host_t *type);
 /*
 int
 cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);

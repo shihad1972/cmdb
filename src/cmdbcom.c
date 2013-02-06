@@ -355,6 +355,12 @@ cmdb_init_servicetype_t(cmdb_service_type_t *type)
 }
 
 void
+cmdb_init_vmhost_t(cmdb_vm_host_t *type)
+{
+	type->next = '\0';
+}
+
+void
 cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 {
 	free(cm);

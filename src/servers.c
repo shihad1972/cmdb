@@ -45,6 +45,7 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_t))))
 		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
 
+	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
 	retval = 0;
 	printf("Details provided:\n");
@@ -75,7 +76,8 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *
 	} else {
 		printf("No vmhost supplied. This should be a stand alone server\n");
 	}
-	cmdb->server->cust_id = cmdb->customer->cust_id;	
+	cmdb->server->cust_id = cmdb->customer->cust_id;
+	cmdb->server->vm_server_id = cmdb->vmhost->id;	
 	printf("Are these detail correct? (y/n): ");
 	input = fgets(input, CONF_S, stdin);
 	chomp(input);

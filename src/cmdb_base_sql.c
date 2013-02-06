@@ -40,6 +40,14 @@
 #ifdef HAVE_SQLITE3
 # include "cmdb_sqlite.h"
 #endif /* HAVE_SQLITE3 */
+const struct cmdb_server_t servers;
+const struct cmdb_customer_t customers;
+const struct cmdb_contact_t contacts;
+const struct cmdb_service_t services;
+const struct cmdb_service_type_t servtypes;
+const struct cmdb_hardware_t hardwares;
+const struct cmdb_hard_type_t hardtypes;
+const struct cmdb_vm_host_t vmhosts;
 
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
@@ -57,8 +65,8 @@ SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
 
 const char *sql_insert[] = { "\
-INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
-(?,?,?,?,?,?)","\
+INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
+(?,?,?,?,?,?,?)","\
 INSERT INTO customer (name, address, city, postcode, coid) VALUES \
 (?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
@@ -71,6 +79,32 @@ INSERT INTO hard_type (type, class) VALUES (?,?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
 };
 
+#ifdef HAVE_MYSQL
+
+const int mysql_inserts[8][7] = {
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG},
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0},
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , 0 , 0 , 0} ,
+{MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0} ,
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG, 0 , 0 , 0} ,
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG, 0 , 0 , 0 , 0}
+};
+
+#endif /* HAVE_MYSQL */
+
+const size_t insert_lengths[8][7] = {
+	{sizeof(servers.name), sizeof(servers.vendor), sizeof(servers.make), sizeof(servers.model), sizeof(servers.uuid), sizeof(servers.cust_id), sizeof(servers.vm_server_id) } , 
+	{sizeof(customers.name), sizeof(customers.address), sizeof(customers.city), sizeof(customers.postcode), sizeof(customers.coid), 0, 0} ,
+	{sizeof(contacts.name), sizeof(contacts.phone), sizeof(contacts.email), sizeof(contacts.cust_id), 0, 0, 0} ,
+	{sizeof(services.server_id), sizeof(services.cust_id), sizeof(services.service_type_id), sizeof(services.detail), sizeof(services.url), 0, 0} ,
+	{sizeof(servtypes.service), sizeof(servtypes.detail), 0, 0, 0, 0, 0} ,
+	{sizeof(hardwares.detail), sizeof(hardwares.device), sizeof(hardwares.server_id), sizeof(hardwares.ht_id), 0, 0, 0} ,
+	{sizeof(hardtypes.type), sizeof(hardtypes.hclass), 0, 0, 0, 0, 0} ,
+	{sizeof(vmhosts.name), sizeof(vmhosts.type), sizeof(vmhosts.server_id), 0, 0, 0, 0}
+};
+
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
@@ -80,7 +114,7 @@ SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
 /* Number of returned fields for the above SELECT queries */
 const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
-const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 7,5,4,5,2,4,2,3 };
 
 const unsigned int search_fields[] = { 1,1,1 };
 
@@ -408,12 +442,72 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	MYSQL_BIND my_bind[insert_fields[type]];
 	const char *query;
 	int retval;
+	unsigned int i;
 
 	memset(my_bind, 0, sizeof(my_bind));
+	for (i=0; i<insert_fields[type]; i++) 
+		setup_mysql_bind(&my_bind[i], i, type, base);
+
+	query = sql_insert[type];
+	cmdb_mysql_init(config, &cmdb);
+	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	
+	mysql_stmt_close(cmdb_stmt);
+	cmdb_mysql_cleanup(&cmdb);
 	return 0;
 }
 
+void
+setup_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
+{
+	void *buffer;
+	bind->buffer_type = mysql_inserts[type][i];
+	if (bind->buffer_type == MYSQL_TYPE_STRING)
+		bind->is_unsigned = 0;
+	else if (bind->buffer_type == MYSQL_TYPE_LONG)
+		bind->is_unsigned = 1;
+	else
+		bind->is_unsigned = 0;
+	bind->is_null = 0;
+	bind->length = 0;
+	setup_mysql_bind_buffer(type, &buffer, base, i);
+	bind->buffer = buffer;
+	if (bind->buffer_type == MYSQL_TYPE_LONG)
+		bind->buffer_length = sizeof(unsigned long int);
+	else if (bind->buffer_type == MYSQL_TYPE_STRING)
+		bind->buffer_length = strlen(buffer);
+/*	bind->buffer_length = insert_lengths[type][i]; */
+}
+
+void
+setup_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
+{
+	switch(type) {
+		case SERVERS:
+			if (i == 0)
+				*buffer = &(base->server->name);
+			else if (i == 1)
+				*buffer = &(base->server->vendor);
+			else if (i == 2)
+				*buffer = &(base->server->make);
+			else if (i == 3)
+				*buffer = &(base->server->model);
+			else if (i == 4)
+				*buffer = &(base->server->uuid);
+			else if (i == 5)
+				*buffer = &(base->server->cust_id);
+			else if (i == 6)
+				*buffer = &(base->server->vm_server_id);
+			break;
+	}
+}
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
