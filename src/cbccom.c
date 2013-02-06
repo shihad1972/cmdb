@@ -35,7 +35,6 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "checks.h"
-#include "cbc_mysql.h"
 
 int
 get_db_config(cbc_config_t *cct, char *search);

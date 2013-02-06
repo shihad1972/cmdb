@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
-#include "cmdb_statements.h"
 #include "cmdb_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
@@ -41,6 +40,51 @@
 #ifdef HAVE_SQLITE3
 # include "cmdb_sqlite.h"
 #endif /* HAVE_SQLITE3 */
+
+const char *sql_select[] = { "\
+SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
+FROM server ORDER BY cust_id","\
+SELECT cust_id, name, address, city, county, postcode, coid FROM customer \
+ORDER BY coid","\
+SELECT cont_id, name, phone, email, cust_id FROM contacts","\
+SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
+services ORDER BY service_type_id","\
+SELECT service_type_id, service, detail FROM service_type","\
+SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
+ORDER BY device DESC","\
+SELECT hard_type_id, type, class FROM hard_type","\
+SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
+};
+
+const char *sql_insert[] = { "\
+INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
+(?,?,?,?,?,?)","\
+INSERT INTO customer (name, address, city, postcode, coid) VALUES \
+(?,?,?,?,?)","\
+INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
+INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
+VALUES (?,?,?,?,?)","\
+INSERT INTO service_type (service, detail) VALUES (?,?)","\
+INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
+(?,?,?,?)","\
+INSERT INTO hard_type (type, class) VALUES (?,?)","\
+INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
+};
+
+const char *sql_search[] = { "\
+SELECT server_id FROM server WHERE name = ?","\
+SELECT cust_id FROM customer WHERE coid = ?"
+};
+
+/* Number of returned fields for the above SELECT queries */
+const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
+
+const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
+
+const unsigned int search_fields[] = { 1,1 };
+
+const unsigned int search_args[] = { 1,1 };
+
 
 int
 run_query(cmdb_config_t *config, cmdb_t *base, int type)
@@ -166,6 +210,27 @@ get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
+void
+get_search(int type, const char **query, size_t *fields, size_t *args, void **input, void **output, cmdb_t *base)
+{
+	*query = sql_search[type];
+	switch (type) {
+		case SERVER_ID_ON_NAME:
+			*input = &(base->server->name);
+			*output = &(base->server->server_id);
+			break;
+		case CUST_ID_ON_COID:
+			*input = &(base->customer->coid);
+			*output = &(base->customer->cust_id);
+			*fields = strlen(base->customer->coid);
+			*args = sizeof(base->customer->cust_id);
+			break;
+		default:
+			fprintf(stderr, "Unknown query %d\n", type);
+			exit (NO_QUERY);
+	}
+}
+
 int
 run_insert(cmdb_config_t *config, cmdb_t *base, int type)
 {
@@ -281,7 +346,51 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 int
 run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 {
-	printf("Dummy search of mysql database\n");
+	MYSQL cmdb;
+	MYSQL_STMT *cmdb_stmt;
+	MYSQL_BIND my_bind[2];
+	const char *query;
+	int retval;
+	size_t arg_len, res_len;
+	void *input, *output;
+	unsigned long int in_len, out_len;
+	
+	cmdb_mysql_init(config, &cmdb);
+	memset(my_bind, 0, sizeof(my_bind));
+/* Will need to check if we have char or int here */
+	get_search(type, &query, &arg_len, &res_len, &input, &output, base);
+	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
+	my_bind[0].buffer = input;
+	my_bind[0].buffer_length = arg_len;
+	my_bind[0].is_unsigned = 0;
+	my_bind[0].is_null = 0;
+	my_bind[0].length = 0;
+	my_bind[1].buffer_type = MYSQL_TYPE_LONG;
+	my_bind[1].buffer = output;
+	my_bind[1].buffer_length = res_len;
+	my_bind[1].is_unsigned = 1;
+	my_bind[1].is_null = 0;
+	my_bind[1].length = 0;
+	
+	
+	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_result(cmdb_stmt, &my_bind[1])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_store_result(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_fetch(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+
+	mysql_stmt_free_result(cmdb_stmt);
+	mysql_stmt_close(cmdb_stmt);
+	cmdb_mysql_cleanup(&cmdb);
 	return 0;
 }
 

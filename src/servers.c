@@ -50,6 +50,8 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *
 	printf("Model: %s\n", cmdb->server->model);
 	printf("UUID: %s\n", cmdb->server->uuid);
 	printf("COID: %s\n", cmdb->customer->coid);
+	retval = run_search(config, cmdb, CUST_ID_ON_COID);
+	printf("We have a cust_id of %lu\n", cmdb->customer->cust_id);
 /*	printf("***CMDB: Add server into the database***\n\n");
 	printf("Is this server a virtual machine? (y/n): ");
 	input = fgets(input, CONF_S, stdin);

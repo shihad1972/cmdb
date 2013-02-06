@@ -25,12 +25,39 @@
 #define __CMDB_BASE_SQL_H
 # include "../config.h"
 
+extern const char *sql_select[];
+extern const char *sql_insert[];
+extern const char *sql_search[];
+extern const unsigned int select_fields[];
+extern const unsigned int insert_fields[];
+extern const unsigned int search_fields[];
+extern const unsigned int search_args[];
+
+
+enum {			/* SELECT indexes */
+	SERVERS = 0,
+	CUSTOMERS,
+	CONTACTS,
+	SERVICES,
+	SERVICE_TYPES,
+	HARDWARES,
+	HARDWARE_TYPES,
+	VM_HOSTS
+};
+
+enum {			/* Search indexes and queries */
+	SERVER_ID_ON_NAME = 0,
+	CUST_ID_ON_COID
+};
+
 int
 run_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
 get_query(int type, const char **query, unsigned int *fields);
+void
+get_search(int type, const char **query, size_t *fields, size_t *args, void **input, void **ouput, cmdb_t *base);
 int
 run_search(cmdb_config_t *config, cmdb_t *base, int type);
 int

@@ -80,6 +80,14 @@ Initialisation of MySQL connection failed with %s\n", errstr);
 			fprintf(stderr, "Unable to insert into MySQL db:\n%s\n", errstr);
 			exit(MY_INSERT_FAIL);
 			break;
+		case MY_STATEMENT_FAIL:
+			fprintf(stderr, "DB statment failed with %s\n", errstr);
+			exit(MY_STATEMENT_FAIL);
+			break;
+		case MY_BIND_FAIL:
+			fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
+			exit (MY_BIND_FAIL);
+			break;
 		case FILE_O_FAIL:
 			fprintf(stderr, "Unable to open file %s\n", errstr);
 			exit(FILE_O_FAIL);
@@ -202,7 +210,7 @@ Initialisation of MySQL connection failed with %s\n", errstr);
 			exit(CANNOT_OPEN_FILE);
 			break;
 		default:
-			fprintf(stderr, "Unknown error code %d\n", error);
+			fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
 			exit(error);
 			break;
 	}

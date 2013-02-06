@@ -22,6 +22,9 @@
  *  This file contains the SQL statement list for the cmdb suite of programs
  */
 
+#ifndef __CMDB_STATEMENTS_H__
+# define __CMDB_STATEMENTS_H__
+
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
 FROM server ORDER BY cust_id","\
@@ -62,7 +65,7 @@ const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
 
-const unsigned int search_fileds[] = { 1,1 };
+const unsigned int search_fields[] = { 1,1 };
 
 const unsigned int search_args[] = { 1,1 };
 
@@ -77,12 +80,12 @@ enum {			/* SELECT indexes */
 	VM_HOSTS
 };
 
-enum {			/* Search indexes */
+enum {			/* Search indexes and queries */
 	SERVER_ID_ON_NAME = 0,
 	CUST_ID_ON_COID
 };
 
-
+#endif /* __CMDB_STATEMENTS_H__ */
 
 	
  

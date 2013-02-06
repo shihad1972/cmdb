@@ -348,15 +348,12 @@ cmdb_clean_list(cmdb_t *cmdb)
 void
 clean_server_list(cmdb_server_t *list)
 {
-	int i;
 	cmdb_server_t *server, *next;
 
-	i = 0;
 	server = list;
 	next = server->next;
 	while (server) {
 		free(server);
-		i++;
 		server = next;
 		if (next) {
 			next = server->next;
@@ -369,15 +366,12 @@ clean_server_list(cmdb_server_t *list)
 void
 clean_customer_list(cmdb_customer_t *list)
 {
-	int i;
 	cmdb_customer_t *customer, *next;
 
-	i = 0;
 	customer = list;
 	next = customer->next;
 	while (customer) {
 		free(customer);
-		i++;
 		customer = next;
 		if (next) {
 			next = customer->next;
