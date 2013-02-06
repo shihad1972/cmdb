@@ -189,13 +189,13 @@ display_customer_from_coid(char **cust_info);
 void
 display_all_customers(cmdb_config_t *config);  
 int
-add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw); */
+add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw);
 void
 get_full_server_config(cmdb_server_t *server);
 void
 print_hardware_details(cmdb_hardware_t *hard);
-/* Linked list functions for virtual machine hosts */
-/*
+ Linked list functions for virtual machine hosts
+
 cmdb_vm_host_t *
 get_vm_host(cmdb_config_t *config); */
 /* Linked list fucntions for customers 
@@ -208,7 +208,7 @@ get_customer_for_server(cmdb_config_t *config); */
 void
 add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead); 
 cmdb_vm_host_t *
-vm_host_create(void); */
+vm_host_create(void);
 cmdb_hard_type_t *
 hard_type_node_create(void);
 cmdb_hardware_t *
@@ -220,7 +220,7 @@ get_disk_device_id(cmdb_hard_type_t *head);
 int
 get_network_device(cmdb_hardware_t *head);
 int
-get_disk_device(cmdb_hardware_t *head);
+get_disk_device(cmdb_hardware_t *head); */
 
 
 void

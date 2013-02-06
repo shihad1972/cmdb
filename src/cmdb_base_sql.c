@@ -94,17 +94,6 @@ const int mysql_inserts[8][7] = {
 
 #endif /* HAVE_MYSQL */
 
-const size_t insert_lengths[8][7] = {
-	{sizeof(servers.name), sizeof(servers.vendor), sizeof(servers.make), sizeof(servers.model), sizeof(servers.uuid), sizeof(servers.cust_id), sizeof(servers.vm_server_id) } , 
-	{sizeof(customers.name), sizeof(customers.address), sizeof(customers.city), sizeof(customers.postcode), sizeof(customers.coid), 0, 0} ,
-	{sizeof(contacts.name), sizeof(contacts.phone), sizeof(contacts.email), sizeof(contacts.cust_id), 0, 0, 0} ,
-	{sizeof(services.server_id), sizeof(services.cust_id), sizeof(services.service_type_id), sizeof(services.detail), sizeof(services.url), 0, 0} ,
-	{sizeof(servtypes.service), sizeof(servtypes.detail), 0, 0, 0, 0, 0} ,
-	{sizeof(hardwares.detail), sizeof(hardwares.device), sizeof(hardwares.server_id), sizeof(hardwares.ht_id), 0, 0, 0} ,
-	{sizeof(hardtypes.type), sizeof(hardtypes.hclass), 0, 0, 0, 0, 0} ,
-	{sizeof(vmhosts.name), sizeof(vmhosts.type), sizeof(vmhosts.server_id), 0, 0, 0, 0}
-};
-
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
@@ -446,7 +435,7 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i=0; i<insert_fields[type]; i++) 
-		setup_mysql_bind(&my_bind[i], i, type, base);
+		setup_insert_mysql_bind(&my_bind[i], i, type, base);
 
 	query = sql_insert[type];
 	cmdb_mysql_init(config, &cmdb);
@@ -465,7 +454,7 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 void
-setup_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
+setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
 {
 	void *buffer;
 	bind->buffer_type = mysql_inserts[type][i];
@@ -477,17 +466,16 @@ setup_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
 		bind->is_unsigned = 0;
 	bind->is_null = 0;
 	bind->length = 0;
-	setup_mysql_bind_buffer(type, &buffer, base, i);
+	setup_insert_mysql_bind_buffer(type, &buffer, base, i);
 	bind->buffer = buffer;
 	if (bind->buffer_type == MYSQL_TYPE_LONG)
 		bind->buffer_length = sizeof(unsigned long int);
 	else if (bind->buffer_type == MYSQL_TYPE_STRING)
 		bind->buffer_length = strlen(buffer);
-/*	bind->buffer_length = insert_lengths[type][i]; */
 }
 
 void
-setup_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
 {
 	switch(type) {
 		case SERVERS:

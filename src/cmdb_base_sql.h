@@ -81,9 +81,9 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type);
 void
-setup_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base);
+setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base);
 void
-setup_mysql_bind_buffer(int type, void **input, cmdb_t *base, unsigned int i);
+setup_insert_mysql_bind_buffer(int type, void **input, cmdb_t *base, unsigned int i);
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void

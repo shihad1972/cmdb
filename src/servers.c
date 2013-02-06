@@ -230,7 +230,7 @@ int add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw)
 
 	return retval;
 }
-*/
+
 void
 print_hardware_details(cmdb_hardware_t *hard)
 {
@@ -240,7 +240,7 @@ print_hardware_details(cmdb_hardware_t *hard)
 	printf("Hard Disk for server ID: %lu\n", hard->server_id);
 	printf("Device: /dev/%s\tSize: %s\n", hard->device, hard->detail);
 }
-/*
+
 void
 get_full_server_config(cmdb_server_t *server)
 {
@@ -446,7 +446,7 @@ int get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned l
 	
 	return retval;
 }
-*/
+
 cmdb_hardware_t * 
 hard_node_create(void)
 {
@@ -579,7 +579,7 @@ get_disk_device(cmdb_hardware_t *head)
 	}
 	return 0;
 }
-
+*/
 void
 display_server_info(char *name, char *uuid, cmdb_config_t *config)
 {
