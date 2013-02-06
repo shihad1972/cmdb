@@ -62,7 +62,10 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 		report_error(MALLOC_FAIL, "base->service in parse_cmdb_comm_line");
 	cmdb_init_server_t(base->server);
 	cmdb_init_customer_t(base->customer);
-	while ((opt = getopt(argc, argv, "n:i:v:V:M:O:C:U:A:T:Y:P:dlatsceh")) != -1) {
+	cmdb_init_service_t(base->service);
+	cmdb_init_hardware_t(base->hardware);
+	cmdb_init_contact_t(base->contact);
+	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:P:dlatscehv")) != -1) {
 		switch (opt) {
 			case 's':
 				comp->type = SERVER;
@@ -78,6 +81,9 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 				break;
 			case 'h':
 				comp->type = HARDWARE;
+				break;
+			case 'v':
+				comp->type = VM_HOST;
 				break;
 			case 'd':
 				comp->action = DISPLAY;
@@ -99,7 +105,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 			case 'i':
 				snprintf(comp->id, CONF_S, "%s", optarg);
 				break;
-			case 'v':
+			case 'm':
 				snprintf(comp->vmhost, NAME_S, "%s", optarg);
 				break;
 			case 'V':
@@ -302,6 +308,8 @@ cmdb_init_server_t(cmdb_server_t *server)
 	snprintf(server->model, COMM_S, "NULL");
 	snprintf(server->uuid, COMM_S, "NULL");
 	snprintf(server->name, COMM_S, "NULL");
+	server->vm_server_id = 0;
+	server->next = '\0';
 }
 
 void
@@ -313,6 +321,37 @@ cmdb_init_customer_t(cmdb_customer_t *cust)
 	snprintf(cust->postcode, COMM_S, "NULL");
 	snprintf(cust->coid, COMM_S, "NULL");
 	snprintf(cust->name, COMM_S, "NULL");
+	cust->next = '\0';
+}
+
+void
+cmdb_init_service_t(cmdb_service_t *service)
+{
+	service->next = '\0';
+}
+
+void
+cmdb_init_hardware_t(cmdb_hardware_t *hard)
+{
+	hard->next = '\0';
+}
+
+void
+cmdb_init_contact_t(cmdb_contact_t *cont)
+{
+	cont->next = '\0';
+}
+
+void
+cmdb_init_hardtype_t(cmdb_hard_type_t *type)
+{
+	type->next = '\0';
+}
+
+void
+cmdb_init_servicetype_t(cmdb_service_type_t *type)
+{
+	type->next = '\0';
 }
 
 void

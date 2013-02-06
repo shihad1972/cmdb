@@ -38,10 +38,14 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *
 {
 	char *input;
 	int retval;
+	cmdb_vm_host_t *vmhost;
 	
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
+	if (!(vmhost = malloc(sizeof(cmdb_vm_host_t))))
+		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
 
+	cmdb->vmhost = vmhost;
 	retval = 0;
 	printf("Details provided:\n");
 	printf("Name: %s\n", cmdb->server->name);
@@ -50,8 +54,38 @@ int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *
 	printf("Model: %s\n", cmdb->server->model);
 	printf("UUID: %s\n", cmdb->server->uuid);
 	printf("COID: %s\n", cmdb->customer->coid);
-	retval = run_search(config, cmdb, CUST_ID_ON_COID);
-	printf("We have a cust_id of %lu\n", cmdb->customer->cust_id);
+	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
+		printf("Unable to retrieve cust_id for COID %s\n",
+		 cmdb->customer->coid);
+		free(input);
+		return retval;
+	}
+/*	printf("We have a cust_id of %lu\n", cmdb->server->cust_id); */
+	if ((strncmp(cm->vmhost, "NULL", COMM_S)) != 0) {
+		printf("VM host: %s\n", cm->vmhost);
+		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
+		if ((retval = run_search(config, cmdb, VM_ID_ON_NAME)) != 0) {
+			printf("Unable to retrieve vmhost %s id\n",
+			 cm->vmhost);
+			free(input);
+			return retval;
+		}
+/*		printf("We have a vm_host_id of %lu\n",
+		 cmdb->vmhost->id); */
+	} else {
+		printf("No vmhost supplied. This should be a stand alone server\n");
+	}
+	cmdb->server->cust_id = cmdb->customer->cust_id;	
+	printf("Are these detail correct? (y/n): ");
+	input = fgets(input, CONF_S, stdin);
+	chomp(input);
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
+		retval = run_insert(config, cmdb, SERVERS);
+	} else {
+		retval = 1;
+	}
+	free(input);
+	return retval;
 /*	printf("***CMDB: Add server into the database***\n\n");
 	printf("Is this server a virtual machine? (y/n): ");
 	input = fgets(input, CONF_S, stdin);
@@ -204,7 +238,7 @@ print_hardware_details(cmdb_hardware_t *hard)
 	printf("Hard Disk for server ID: %lu\n", hard->server_id);
 	printf("Device: /dev/%s\tSize: %s\n", hard->device, hard->detail);
 }
-
+/*
 void
 get_full_server_config(cmdb_server_t *server)
 {
@@ -278,7 +312,7 @@ check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost)
 	int retval;
 	if ((strncmp(vmhost, "NULL", MAC_S)) == 0) {
 		printf("\
-Please supply the name of the vmhost with the -v option\n");
+Please supply the name of the vmhost with the -m option\n");
 		return 1;
 	}
 	if ((retval = get_vm_host(config, cmdb, vmhost)) != 0)
@@ -336,22 +370,6 @@ get_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost)
 	return 0;
 }
 
-void
-print_vm_hosts(cmdb_vm_host_t *vmhost)
-{
-	if (vmhost) {
-		printf("Virtual Machine Hosts\n");
-		printf("ID\tType\tName\n");
-		while (vmhost) {
-			printf("%lu\t%s\t%s\n", 
-			 vmhost->id, vmhost->type, vmhost->name);
-			vmhost = vmhost->next;
-		}
-	} else {
-		printf("No virtual machine hosts\n");
-	}
-}
-/*
 cmdb_vm_host_t *
 vm_host_create(void)
 {
@@ -718,6 +736,44 @@ print_all_servers(cmdb_t *cmdb)
 		server = server->next;
 		cust = cmdb->customer;
 	}		
+}
+
+void
+display_vm_hosts(cmdb_config_t *config)
+{
+	int retval;
+	cmdb_t *cmdb;
+	cmdb_vm_host_t *list;
+
+	retval = 0;
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+
+	cmdb_init_struct(cmdb);
+	cmdb->vmhost = '\0';
+	if ((retval = run_query(config, cmdb, VM_HOST)) != 0) {
+		cmdb_clean_list(cmdb);
+		return;
+	}
+	list = cmdb->vmhost;
+	print_vm_hosts(list);
+	cmdb_clean_list(cmdb);
+}
+
+void
+print_vm_hosts(cmdb_vm_host_t *vmhost)
+{
+	if (vmhost) {
+		printf("Virtual Machine Hosts\n");
+		printf("ID\tType\tName\n");
+		while (vmhost) {
+			printf("%lu\t%s\t%s\n",
+			 vmhost->id, vmhost->type, vmhost->name);
+			vmhost = vmhost->next;
+		}
+	} else {
+		printf("No virtual machine hosts\n");
+	}
 }
 
 void

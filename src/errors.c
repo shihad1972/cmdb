@@ -315,14 +315,14 @@ display_cmdb_usage(void)
 	printf("-d: display\n-l: list\n-a: add\n");
 	printf("Type options:\n");
 	printf("-s: server\n-c: customer\n-t: contact\n");
-	printf("-e: services\n-h: hardware\n");
+	printf("-e: services\n-h: hardware\n-v: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
-	printf("-v: vmhost server name for adding a server\n");
+	printf("-m: vmhost server name for adding a server\n");
 	printf("Adding options:\n");
-	printf("For server (with -s)\n");
+	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
-	printf("For customer (with -c)\n");
+	printf("For customer (with -c; need -n for name)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-P: Postcode\t-C: COID\n");
 	printf("For services (-i COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t-I service_id\n");

@@ -73,7 +73,8 @@ INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
 
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
-SELECT cust_id FROM customer WHERE coid = ?"
+SELECT cust_id FROM customer WHERE coid = ?","\
+SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -81,9 +82,9 @@ const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 6,5,4,5,2,4,2,3 };
 
-const unsigned int search_fields[] = { 1,1 };
+const unsigned int search_fields[] = { 1,1,1 };
 
-const unsigned int search_args[] = { 1,1 };
+const unsigned int search_args[] = { 1,1,1 };
 
 
 int
@@ -163,6 +164,31 @@ run_search(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
+run_insert(cmdb_config_t *config, cmdb_t *base, int type)
+{
+	int retval;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_insert_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_insert_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
 get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
@@ -225,35 +251,16 @@ get_search(int type, const char **query, size_t *fields, size_t *args, void **in
 			*fields = strlen(base->customer->coid);
 			*args = sizeof(base->customer->cust_id);
 			break;
+		case VM_ID_ON_NAME:
+			*input = &(base->vmhost->name);
+			*output = &(base->vmhost->id);
+			*fields = strlen(base->vmhost->name);
+			*args = sizeof(base->vmhost->id);
+			break;
 		default:
 			fprintf(stderr, "Unknown query %d\n", type);
 			exit (NO_QUERY);
 	}
-}
-
-int
-run_insert(cmdb_config_t *config, cmdb_t *base, int type)
-{
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_insert_mysql(config, base, type);
-		return retval;
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_insert_sqlite(config, base, type);
-		return retval;
-#endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	
-	return NONE;
 }
 
 /* MySQL functions */
@@ -353,7 +360,6 @@ run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	int retval;
 	size_t arg_len, res_len;
 	void *input, *output;
-	unsigned long int in_len, out_len;
 	
 	cmdb_mysql_init(config, &cmdb);
 	memset(my_bind, 0, sizeof(my_bind));
@@ -397,7 +403,14 @@ run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 int
 run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 {
-	printf("Dummy insert into mysql database\n");
+	MYSQL cmdb;
+	MYSQL_STMT *cmdb_stmt;
+	MYSQL_BIND my_bind[insert_fields[type]];
+	const char *query;
+	int retval;
+
+	memset(my_bind, 0, sizeof(my_bind));
+	
 	return 0;
 }
 
@@ -537,7 +550,6 @@ store_service_mysql(MYSQL_ROW row, cmdb_t *base)
 
 	if (!(service = malloc(sizeof(cmdb_service_t))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
-
 	service->service_id = strtoul(row[0], NULL, 10);
 	service->server_id = strtoul(row[1], NULL, 10);
 	service->cust_id = strtoul(row[2], NULL, 10);

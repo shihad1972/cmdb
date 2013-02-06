@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "base in cmdb.c");
 	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
-	
+	cmdb_init_struct(base);
 	init_cmdb_comm_line_values(cm);
 	init_cmdb_config_values(cmc);
 	retval = parse_cmdb_command_line(argc, argv, cm, base);
@@ -135,6 +135,13 @@ int main(int argc, char *argv[])
 		case HARDWARE:
 			if (cm->action == LIST_OBJ) {
 				display_hardware_types(cmc);
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
+		case VM_HOST:
+			if (cm->action == LIST_OBJ) {
+				display_vm_hosts(cmc);
 			} else {
 				display_action_error(cm->action);
 			}

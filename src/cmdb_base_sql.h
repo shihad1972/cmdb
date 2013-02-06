@@ -47,7 +47,8 @@ enum {			/* SELECT indexes */
 
 enum {			/* Search indexes and queries */
 	SERVER_ID_ON_NAME = 0,
-	CUST_ID_ON_COID
+	CUST_ID_ON_COID,
+	VM_ID_ON_NAME
 };
 
 int

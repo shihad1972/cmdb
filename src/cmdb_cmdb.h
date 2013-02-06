@@ -148,6 +148,16 @@ void
 cmdb_init_server_t(cmdb_server_t *server);
 void
 cmdb_init_customer_t(cmdb_customer_t *cust);
+void
+cmdb_init_service_t(cmdb_service_t *service);
+void
+cmdb_init_hardware_t(cmdb_hardware_t *hard);
+void
+cmdb_init_contact_t(cmdb_contact_t *cont);
+void
+cmdb_init_hardtype_t(cmdb_hard_type_t *type);
+void
+cmdb_init_servicetype_t(cmdb_service_type_t *type);
 /*
 int
 cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
@@ -225,6 +235,8 @@ void
 display_service_types(cmdb_config_t *config);
 void
 display_hardware_types(cmdb_config_t *config);
+void
+display_vm_hosts(cmdb_config_t *config);
 
 /* New user input functions */
 int
