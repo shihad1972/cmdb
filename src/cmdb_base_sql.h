@@ -61,7 +61,7 @@ run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
 get_query(int type, const char **query, unsigned int *fields);
 void
-get_search(int type, const char **query, size_t *fields, size_t *args, void **input, void **ouput, cmdb_t *base);
+get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, cmdb_t *base);
 int
 run_search(cmdb_config_t *config, cmdb_t *base, int type);
 int
@@ -116,6 +116,8 @@ int
 run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
+void
+setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *base, int type);
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields);
 void

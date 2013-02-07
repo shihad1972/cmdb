@@ -260,9 +260,8 @@ get_query(int type, const char **query, unsigned int *fields)
 }
 
 void
-get_search(int type, const char **query, size_t *fields, size_t *args, void **input, void **output, cmdb_t *base)
+get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_t *base)
 {
-	*query = sql_search[type];
 	switch (type) {
 		case SERVER_ID_ON_NAME:
 			*input = &(base->server->name);
@@ -386,8 +385,12 @@ run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	
 	cmdb_mysql_init(config, &cmdb);
 	memset(my_bind, 0, sizeof(my_bind));
-/* Will need to check if we have char or int here */
-	get_search(type, &query, &arg_len, &res_len, &input, &output, base);
+/* 
+Will need to check if we have char or int here. Hard coded char for search,
+and int for result, which is OK when searching on name and returning id
+*/	
+	query = sql_search[type];
+	get_search(type, &arg_len, &res_len, &input, &output, base);
 	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
 	my_bind[0].buffer = input;
 	my_bind[0].buffer_length = arg_len;
@@ -785,13 +788,12 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(CANNOT_OPEN_FILE, file);
 	}
-	if ((retval = sqlite3_prepare_v2(cmdb, query, NAME_S, &state, NULL)) > 0) {
+	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
 	}
-	retval = 0;
 	fields = (unsigned int) sqlite3_column_count(state);
-	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
+	if ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		store_result_sqlite(state, base, type, fields);
 	
 	retval = sqlite3_finalize(state);
@@ -834,15 +836,117 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 int
 run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 {
-	printf("Dummy search of sqlite database\n");
-	return 0;
+	const char *query, *file;
+	int retval;
+	unsigned long int result;
+	size_t fields, args;
+	void *input, *output;
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
+
+	retval = 0;
+	file = config->file;
+	query = sql_search[type];
+
+	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+/*
+   As in the MySQL function we assume that we are sending text and recieving
+   numerical data. Searching on name for ID is ok for this
+*/
+	get_search(type, &fields, &args, &input, &output, base);
+	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_BIND_FAILED, "run_search_sqlite");
+	}
+	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
+		result = (unsigned long int)sqlite3_column_int(state, 0);
+	}
+	switch (type) {
+		case SERVER_ID_ON_NAME:
+			base->server->server_id = result;
+			break;
+		case CUST_ID_ON_COID:
+			base->customer->cust_id = result;
+			break;
+		case VM_ID_ON_NAME:
+			base->vmhost->id = result;
+			break;
+	}
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(cmdb);
+	return retval;
 }
 
 int
 run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 {
-	printf("Dummy insert into sqlite database\n");
-	return 0;
+	const char *query, *file;
+	int retval;
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
+
+	retval = 0;
+	query = sql_insert[type];
+	file = config->file;
+	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+	setup_insert_sqlite_bind(state, base, type);
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
+		retval = SQLITE_INSERT_FAILED;
+	}
+	if (retval == SQLITE_DONE)
+		return 0;
+	return retval;
+}
+
+void
+setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
+{
+	int retval;
+	switch (type) {
+		case SERVERS:
+			if ((retval = sqlite3_bind_text(
+state, 1, cmdb->server->name, (int)strlen(cmdb->server->name), SQLITE_STATIC)) > 0) {
+				printf("Cannot bind %s\n", cmdb->server->name);
+				break;
+			}
+			if ((retval = sqlite3_bind_text(
+state, 2, cmdb->server->vendor, (int)strlen(cmdb->server->vendor), SQLITE_STATIC)) > 0) {
+				printf("Cannot bind %s\n", cmdb->server->vendor);
+			}
+			if ((retval = sqlite3_bind_text(
+state, 3, cmdb->server->make, (int)strlen(cmdb->server->make), SQLITE_STATIC)) > 0) {
+				printf("Cannot bind %s\n", cmdb->server->make);
+			}
+			if ((retval = sqlite3_bind_text(
+state, 4, cmdb->server->model, (int)strlen(cmdb->server->model), SQLITE_STATIC)) > 0) {
+				printf("Cannot bind %s\n", cmdb->server->model);
+			}
+			if ((retval = sqlite3_bind_text(
+state, 5, cmdb->server->uuid, (int)strlen(cmdb->server->uuid), SQLITE_STATIC)) > 0) {
+				printf("Cannot bind %s\n", cmdb->server->uuid);
+			}
+			if ((retval = sqlite3_bind_int(
+state, 6, (int)cmdb->server->cust_id)) > 0) {
+				printf("Cannot bind %lu\n", cmdb->server->cust_id);
+			}
+			if ((retval = sqlite3_bind_int(
+state, 7, (int)cmdb->server->vm_server_id)) > 0) {
+				printf("Cannot bind %lu\n", cmdb->server->vm_server_id);
+			}
+	}
 }
 
 void
