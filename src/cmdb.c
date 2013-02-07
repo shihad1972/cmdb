@@ -136,6 +136,15 @@ int main(int argc, char *argv[])
 				display_action_error(cm->action);
 			}
 			break;
+		case CONTACT:
+			if (cm->action == DISPLAY) {
+				if (strncmp(cm->id, "NULL", CONF_S) != 0) {
+					display_customer_contacts(cmc, cm->id);
+				}
+			} else {
+				display_action_error(cm->action);
+			}
+			break;
 		case SERVICE:
 			if (cm->action == LIST_OBJ) {
 				display_service_types(cmc);

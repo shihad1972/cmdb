@@ -147,7 +147,7 @@ display_service_types(cmdb_config_t *config)
 	retval = 0;
 
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
+		report_error(MALLOC_FAIL, "cmdb_t in display_service_types");
 	cmdb_init_struct(cmdb);
 
 	cmdb->servicetype = '\0';
@@ -179,25 +179,64 @@ display_customer_services(cmdb_config_t *config, char *coid)
 	cmdb_service_t *service;
 
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb in display server services");
+		report_error(MALLOC_FAIL, "cmdb in display_customer_services");
 
 	cmdb_init_struct(cmdb);
 	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | SERVICE)) != 0) {
 		cmdb_clean_list(cmdb);
-		printf("Query for server %s services failed\n", coid);
+		printf("Query for customer %s services failed\n", coid);
 		return;
 	}
 	cust = cmdb->customer;
 	service = cmdb->service;
 	printf("Customer %s\n", coid);
 	while (cust) {
-		if ((strncmp(cust->coid, coid, MAC_S) == 0)) {
-			print_services(service, cust->cust_id, CUSTOMER);
+		if ((strncmp(cust->coid, coid, COMM_S) == 0)) {
+			retval = print_services(service, cust->cust_id, CUSTOMER);
 			cust = cust->next;
 		} else {
 			cust = cust->next;
 		}
 	}
+	if (retval == 0)
+		printf("No services\n");
+	cmdb_clean_list(cmdb);
+}
+
+void
+display_customer_contacts(cmdb_config_t *config, char *coid)
+{
+	int retval, i;
+	cmdb_t *cmdb;
+	cmdb_customer_t *cust;
+	cmdb_contact_t *contact;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb in display_customer_contacts");
+
+	i = 0;
+	cmdb_init_struct(cmdb);
+	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | CONTACT)) != 0) {
+		cmdb_clean_list(cmdb);
+		printf("Query for customer %s contacts failed\n", coid);
+		return;
+	}
+	cust = cmdb->customer;
+	contact = cmdb->contact;
+	while (cust) {
+		if (strncmp(cust->coid, coid, COMM_S) == 0) {
+			if (i == 0) {
+				printf("Customer %s\n", coid);
+			}
+			i++;
+			retval = print_customer_contacts(contact, cust->cust_id);
+			cust = cust->next;
+		} else {
+			cust = cust->next;
+		}
+	}
+	if (retval == 0)
+		printf("No contacts\n");
 	cmdb_clean_list(cmdb);
 }
 
@@ -211,7 +250,7 @@ print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
 	print_services(cmdb->service, cust->cust_id, CUSTOMER);
 }
 
-void
+int
 print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
 {
 	int i = 0;
@@ -226,6 +265,7 @@ print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
 		}
 		list = list->next;
 	}
+	return i;
 }
 
 int

@@ -244,6 +244,8 @@ display_server_services(cmdb_config_t *config, char *name);
 void
 display_customer_services(cmdb_config_t *config, char *coid);
 void
+display_customer_contacts(cmdb_config_t *config, char *coid);
+void
 display_vm_hosts(cmdb_config_t *config);
 
 /* New user input functions */
@@ -288,7 +290,7 @@ clean_vmhost_list(cmdb_vm_host_t *list);
 
 void
 print_server_details(cmdb_server_t *server, cmdb_t *base);
-void
+int
 print_services(cmdb_service_t *service, unsigned long int id, int type);
 void
 print_hardware(cmdb_hardware_t *hard, unsigned long int id);
@@ -297,7 +299,7 @@ print_hardware(cmdb_hardware_t *hard, unsigned long int id);
 
 void
 print_customer_details(cmdb_customer_t *list, cmdb_t *base);
-void
+int
 print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id);
 #endif
 

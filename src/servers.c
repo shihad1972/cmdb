@@ -856,7 +856,7 @@ hard->hardtype->hclass, hard->device, hard->detail);
 	}
 }
 
-void
+int
 print_services(cmdb_service_t *service, unsigned long int id, int type)
 {
 	int i = 0;
@@ -892,4 +892,5 @@ service->servicetype->service, service->url);
 			service = service->next;
 		}
 	}
+	return i;
 }
