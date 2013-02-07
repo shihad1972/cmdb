@@ -157,6 +157,8 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
 		retval = NO_ACTION;
+	else if ((comp->action == NONE) && (comp->type == NONE))
+		retval = NO_ACTION;
 	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
 		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
 		(comp->type != NONE || comp->action != NONE))

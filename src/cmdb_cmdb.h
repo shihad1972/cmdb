@@ -292,7 +292,7 @@ void
 print_server_details(cmdb_server_t *server, cmdb_t *base);
 int
 print_services(cmdb_service_t *service, unsigned long int id, int type);
-void
+int
 print_hardware(cmdb_hardware_t *hard, unsigned long int id);
 
 /* New customer functions for linked list */

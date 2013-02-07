@@ -697,12 +697,14 @@ display_server_hardware(cmdb_config_t *config, char *name)
 	printf("Server %s\n", name);
 	while (server) {
 		if ((strncmp(server->name, name, MAC_S) == 0)) {
-			print_hardware(hardware, server->server_id);
+			retval = print_hardware(hardware, server->server_id);
 			server = server->next;
 		} else {
 			server = server->next;
 		}
 	}
+	if (retval == 0)
+		printf("No hardware\n");
 	cmdb_clean_list(cmdb);
 }
 
@@ -728,12 +730,14 @@ display_server_services(cmdb_config_t *config, char *name)
 	printf("Server %s\n", name);
 	while (server) {
 		if ((strncmp(server->name, name, MAC_S) == 0)) {
-			print_services(service, server->server_id, SERVER);
+			retval = print_services(service, server->server_id, SERVER);
 			server = server->next;
 		} else {
 			server = server->next;
 		}
 	}
+	if (retval == 0)
+		printf("No services\n");
 	cmdb_clean_list(cmdb);
 }
 
@@ -839,7 +843,7 @@ print_vm_hosts(cmdb_vm_host_t *vmhost)
 	}
 }
 
-void
+int
 print_hardware(cmdb_hardware_t *hard, unsigned long int id)
 {
 	int i = 0;
@@ -854,6 +858,7 @@ hard->hardtype->hclass, hard->device, hard->detail);
 		}
 		hard = hard->next;
 	}
+	return i;
 }
 
 int
