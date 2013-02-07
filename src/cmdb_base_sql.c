@@ -67,8 +67,8 @@ SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 const char *sql_insert[] = { "\
 INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
 (?,?,?,?,?,?,?)","\
-INSERT INTO customer (name, address, city, postcode, coid) VALUES \
-(?,?,?,?,?)","\
+INSERT INTO customer (name, address, city, county, postcode, coid) VALUES \
+(?,?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
 INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
 VALUES (?,?,?,?,?)","\
@@ -83,7 +83,7 @@ INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
 
 const int mysql_inserts[8][7] = {
 {MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG},
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0},
+{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0},
 {MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , 0 , 0 , 0} ,
 {MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0} ,
 {MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
@@ -103,7 +103,7 @@ SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
 /* Number of returned fields for the above SELECT queries */
 const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
-const unsigned int insert_fields[] = { 7,5,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
 
 const unsigned int search_fields[] = { 1,1,1 };
 
@@ -480,7 +480,7 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base
 void
 setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
 {
-	switch(type) {
+/*	switch(type) {
 		case SERVERS:
 			if (i == 0)
 				*buffer = &(base->server->name);
@@ -497,8 +497,49 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned i
 			else if (i == 6)
 				*buffer = &(base->server->vm_server_id);
 			break;
-	}
+	} */
+	if (type == SERVERS)
+		setup_insert_mysql_bind_buff_server(buffer, base, i);
+	else if (type == CUSTOMERS)
+		setup_insert_mysql_bind_buff_customer(buffer, base, i);
 }
+
+void
+setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->server->name);
+	else if (i == 1)
+		*buffer = &(base->server->vendor);
+	else if (i == 2)
+		*buffer = &(base->server->make);
+	else if (i == 3)
+		*buffer = &(base->server->model);
+	else if (i == 4)
+		*buffer = &(base->server->uuid);
+	else if (i == 5)
+		*buffer = &(base->server->cust_id);
+	else if (i == 6)
+		*buffer = &(base->server->vm_server_id);
+}
+
+void
+setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->customer->name);
+	else if (i == 1)
+		*buffer = &(base->customer->address);
+	else if (i == 2)
+		*buffer = &(base->customer->city);
+	else if (i == 3)
+		*buffer = &(base->customer->county);
+	else if (i == 4)
+		*buffer = &(base->customer->postcode);
+	else if (i == 5)
+		*buffer = &(base->customer->coid);
+}
+	
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
@@ -793,7 +834,7 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
 	}
 	fields = (unsigned int) sqlite3_column_count(state);
-	if ((retval = sqlite3_step(state)) == SQLITE_ROW)
+	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		store_result_sqlite(state, base, type, fields);
 	
 	retval = sqlite3_finalize(state);
@@ -923,6 +964,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 	int retval;
 	if (type == SERVERS) {
 		retval = setup_bind_sqlite_server(state, cmdb->server);
+	} else if (type == CUSTOMERS) {
+		retval = setup_bind_sqlite_customer(state, cmdb->customer);
 	}
 	return retval;
 }
@@ -1238,4 +1281,42 @@ state, 7, (int)server->vm_server_id)) > 0) {
 	return retval;
 }
 
+int
+setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_t *cust)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, cust->name, (int)strlen(cust->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer name %s\n", cust->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, cust->address, (int)strlen(cust->address), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer address %s\n", cust->address);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, cust->city, (int)strlen(cust->city), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer city %s\n", cust->city);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, cust->county, (int)strlen(cust->county), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer county %s\n", cust->county);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, cust->postcode, (int)strlen(cust->postcode), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer postcode %s\n", cust->postcode);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind customer coid %s\n", cust->coid);
+		return retval;
+	}
+	return retval;
+}
 #endif /* HAVE_SQLITE3 */

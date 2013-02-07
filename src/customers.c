@@ -105,6 +105,37 @@ display_all_customers(cmdb_config_t *config)
 	return;
 }
 
+int
+add_customer_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+{
+	char *input;
+	int retval;
+	cmdb_customer_t *cust;
+
+	if (!(input = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in add_customer_to_database");
+	retval = 0;
+	cust = cmdb->customer;
+	printf("Details provided:\n");
+	printf("Name:\t\t%s\n", cust->name);
+	printf("Address:\t%s\n", cust->address);
+	printf("City:\t\t%s\n", cust->city);
+	printf("County:\t\t%s\n", cust->county);
+	printf("Postcode:\t%s\n", cust->postcode);
+	printf("COID:\t\t%s\n", cust->coid);
+	printf("Are these detail correct? (y/n): ");
+	input = fgets(input, CONF_S, stdin);
+	chomp(input);
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
+		retval = run_insert(config, cmdb, CUSTOMERS);
+	} else {
+		retval = 1;
+	}
+	free(input);
+
+	return retval;
+}
+
 void
 display_service_types(cmdb_config_t *config)
 {

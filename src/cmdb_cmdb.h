@@ -244,11 +244,14 @@ display_vm_hosts(cmdb_config_t *config);
 int
 add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb);
 int
+add_customer_to_database(cmdb_config_t *config, cmdb_t *cmdb);
+int
 check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
 int
 check_for_coid(cmdb_config_t *config, cmdb_t *cmdb, char *coid);
+/*
 int
-get_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
+get_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost); */
 int
 get_customer(cmdb_config_t *config, cmdb_t *cmdb, char *coid);
 void

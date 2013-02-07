@@ -121,6 +121,17 @@ int main(int argc, char *argv[])
 				display_customer_info(cm->name, cm->id, cmc);
 			} else if (cm->action == LIST_OBJ) {
 				display_all_customers(cmc);
+			} else if (cm->action == ADD_TO_DB) {
+				retval = add_customer_to_database(cmc, base);
+				if (retval != 0) {
+					free(cmc);
+					free(cm);
+					free(cmdb_config);
+					cmdb_clean_list(base);
+					report_error(retval, " adding customer to DB");
+				} else {
+					printf("Added %s to database\n", base->customer->name);
+				}	
 			} else {
 				display_action_error(cm->action);
 			}

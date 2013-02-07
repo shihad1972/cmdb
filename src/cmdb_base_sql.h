@@ -85,6 +85,10 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base
 void
 setup_insert_mysql_bind_buffer(int type, void **input, cmdb_t *base, unsigned int i);
 void
+setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int i);
+void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
 store_server_mysql(MYSQL_ROW row, cmdb_t *base);
@@ -138,6 +142,8 @@ void
 store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base);
 int
 setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_t *server);
+int
+setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_t *customer);
 
 # endif /* HAVE_SQLITE3 */
 
