@@ -59,7 +59,7 @@ SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
 services ORDER BY service_type_id","\
 SELECT service_type_id, service, detail FROM service_type","\
 SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
-ORDER BY device DESC","\
+ORDER BY device DESC, hard_type_id","\
 SELECT hard_type_id, type, class FROM hard_type","\
 SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
@@ -97,6 +97,7 @@ const int mysql_inserts[8][7] = {
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
+SELECT service_type_id FROM service_type WHERE service = ?","\
 SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
 };
 
@@ -105,9 +106,9 @@ const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
 
-const unsigned int search_fields[] = { 1,1,1 };
+const unsigned int search_fields[] = { 1,1,1,1 };
 
-const unsigned int search_args[] = { 1,1,1 };
+const unsigned int search_args[] = { 1,1,1,1 };
 
 
 int
@@ -266,6 +267,8 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 		case SERVER_ID_ON_NAME:
 			*input = &(base->server->name);
 			*output = &(base->server->server_id);
+			*fields = strlen(base->server->name);
+			*args = sizeof(base->server->server_id);
 			break;
 		case CUST_ID_ON_COID:
 			*input = &(base->customer->coid);

@@ -51,6 +51,7 @@ enum {			/* SELECT and INSERT indexes */
 enum {			/* Search indexes and queries */
 	SERVER_ID_ON_NAME = 0,
 	CUST_ID_ON_COID,
+	SERV_TYPE_ID_ON_SERVICE,
 	VM_ID_ON_NAME
 };
 

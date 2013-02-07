@@ -139,6 +139,11 @@ int main(int argc, char *argv[])
 		case SERVICE:
 			if (cm->action == LIST_OBJ) {
 				display_service_types(cmc);
+			} else if (cm->action == DISPLAY) {
+				if ((strncmp(cm->name, "NULL", CONF_S) != 0))
+					display_server_services(cmc, cm->name);
+				else if ((strncmp(cm->id, "NULL", CONF_S) != 0))
+					display_customer_services(cmc, cm->id);
 			} else {
 				display_action_error(cm->action);
 			}
@@ -146,6 +151,8 @@ int main(int argc, char *argv[])
 		case HARDWARE:
 			if (cm->action == LIST_OBJ) {
 				display_hardware_types(cmc);
+			} else if (cm->action == DISPLAY) {
+				display_server_hardware(cmc, cm->name);
 			} else {
 				display_action_error(cm->action);
 			}

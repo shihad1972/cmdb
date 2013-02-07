@@ -238,6 +238,12 @@ display_service_types(cmdb_config_t *config);
 void
 display_hardware_types(cmdb_config_t *config);
 void
+display_server_hardware(cmdb_config_t *config, char *server);
+void
+display_server_services(cmdb_config_t *config, char *name);
+void
+display_customer_services(cmdb_config_t *config, char *coid);
+void
 display_vm_hosts(cmdb_config_t *config);
 
 /* New user input functions */

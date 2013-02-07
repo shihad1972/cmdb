@@ -171,6 +171,37 @@ display_service_types(cmdb_config_t *config)
 }
 
 void
+display_customer_services(cmdb_config_t *config, char *coid)
+{
+	int retval;
+	cmdb_t *cmdb;
+	cmdb_customer_t *cust;
+	cmdb_service_t *service;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb in display server services");
+
+	cmdb_init_struct(cmdb);
+	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | SERVICE)) != 0) {
+		cmdb_clean_list(cmdb);
+		printf("Query for server %s services failed\n", coid);
+		return;
+	}
+	cust = cmdb->customer;
+	service = cmdb->service;
+	printf("Customer %s\n", coid);
+	while (cust) {
+		if ((strncmp(cust->coid, coid, MAC_S) == 0)) {
+			print_services(service, cust->cust_id, CUSTOMER);
+			cust = cust->next;
+		} else {
+			cust = cust->next;
+		}
+	}
+	cmdb_clean_list(cmdb);
+}
+
+void
 print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
 {
 	printf("%s: Coid %s\n", cust->name, cust->coid);

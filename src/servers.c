@@ -647,7 +647,7 @@ display_hardware_types(cmdb_config_t *config)
 
 	retval = 0;
 	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
+		report_error(MALLOC_FAIL, "cmdb in display_server_info");
 
 	cmdb_init_struct(cmdb);
 	cmdb->hardtype = '\0';
@@ -673,6 +673,68 @@ display_hardware_types(cmdb_config_t *config)
 
 	cmdb_clean_list(cmdb);
 	return;
+}
+
+void
+display_server_hardware(cmdb_config_t *config, char *name)
+{
+	int retval;
+	cmdb_t *cmdb;
+	cmdb_server_t *server;
+	cmdb_hardware_t *hardware;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb in display server hardware");
+
+	cmdb_init_struct(cmdb);
+	if ((retval = run_multiple_query(config, cmdb, SERVER | HARDWARE)) != 0) {
+		cmdb_clean_list(cmdb);
+		printf("Query for server %s hardware failed\n", name);
+		return;
+	}
+	server = cmdb->server;
+	hardware = cmdb->hardware;
+	printf("Server %s\n", name);
+	while (server) {
+		if ((strncmp(server->name, name, MAC_S) == 0)) {
+			print_hardware(hardware, server->server_id);
+			server = server->next;
+		} else {
+			server = server->next;
+		}
+	}
+	cmdb_clean_list(cmdb);
+}
+
+void
+display_server_services(cmdb_config_t *config, char *name)
+{
+	int retval;
+	cmdb_t *cmdb;
+	cmdb_server_t *server;
+	cmdb_service_t *service;
+
+	if (!(cmdb = malloc(sizeof(cmdb_t))))
+		report_error(MALLOC_FAIL, "cmdb in display server services");
+
+	cmdb_init_struct(cmdb);
+	if ((retval = run_multiple_query(config, cmdb, SERVER | SERVICE)) != 0) {
+		cmdb_clean_list(cmdb);
+		printf("Query for server %s services failed\n", name);
+		return;
+	}
+	server = cmdb->server;
+	service = cmdb->service;
+	printf("Server %s\n", name);
+	while (server) {
+		if ((strncmp(server->name, name, MAC_S) == 0)) {
+			print_services(service, server->server_id, SERVER);
+			server = server->next;
+		} else {
+			server = server->next;
+		}
+	}
+	cmdb_clean_list(cmdb);
 }
 
 void 
@@ -708,7 +770,6 @@ print_server_details(cmdb_server_t *server, cmdb_t *base)
 	}
 	print_hardware(hard, server->server_id);
 	print_services(service, server->server_id, SERVER);
-	
 }
 
 void
