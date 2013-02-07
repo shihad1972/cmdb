@@ -901,52 +901,30 @@ run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
 	}
-	setup_insert_sqlite_bind(state, base, type);
+	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
+		printf("Error binding result! %d\n", retval);
+		sqlite3_close(cmdb);
+	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
+		retval = sqlite3_finalize(state);
+		retval = sqlite3_close(cmdb);
 		retval = SQLITE_INSERT_FAILED;
+		return retval;
 	}
-	if (retval == SQLITE_DONE)
-		return 0;
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(cmdb);
 	return retval;
 }
 
-void
+int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 {
 	int retval;
-	switch (type) {
-		case SERVERS:
-			if ((retval = sqlite3_bind_text(
-state, 1, cmdb->server->name, (int)strlen(cmdb->server->name), SQLITE_STATIC)) > 0) {
-				printf("Cannot bind %s\n", cmdb->server->name);
-				break;
-			}
-			if ((retval = sqlite3_bind_text(
-state, 2, cmdb->server->vendor, (int)strlen(cmdb->server->vendor), SQLITE_STATIC)) > 0) {
-				printf("Cannot bind %s\n", cmdb->server->vendor);
-			}
-			if ((retval = sqlite3_bind_text(
-state, 3, cmdb->server->make, (int)strlen(cmdb->server->make), SQLITE_STATIC)) > 0) {
-				printf("Cannot bind %s\n", cmdb->server->make);
-			}
-			if ((retval = sqlite3_bind_text(
-state, 4, cmdb->server->model, (int)strlen(cmdb->server->model), SQLITE_STATIC)) > 0) {
-				printf("Cannot bind %s\n", cmdb->server->model);
-			}
-			if ((retval = sqlite3_bind_text(
-state, 5, cmdb->server->uuid, (int)strlen(cmdb->server->uuid), SQLITE_STATIC)) > 0) {
-				printf("Cannot bind %s\n", cmdb->server->uuid);
-			}
-			if ((retval = sqlite3_bind_int(
-state, 6, (int)cmdb->server->cust_id)) > 0) {
-				printf("Cannot bind %lu\n", cmdb->server->cust_id);
-			}
-			if ((retval = sqlite3_bind_int(
-state, 7, (int)cmdb->server->vm_server_id)) > 0) {
-				printf("Cannot bind %lu\n", cmdb->server->vm_server_id);
-			}
+	if (type == SERVERS) {
+		retval = setup_bind_sqlite_server(state, cmdb->server);
 	}
+	return retval;
 }
 
 void
@@ -1213,6 +1191,51 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base)
 	} else {
 		base->vmhost = vmhost;
 	}
+}
+
+int
+setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_t *server)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, server->name, (int)strlen(server->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, server->vendor, (int)strlen(server->vendor), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->vendor);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, server->make, (int)strlen(server->make), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->make);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, server->model, (int)strlen(server->model), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->model);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, server->uuid, (int)strlen(server->uuid), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->uuid);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)server->cust_id)) > 0) {
+		printf("Cannot bind %lu\n", server->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 7, (int)server->vm_server_id)) > 0) {
+		printf("Cannot bind %lu\n", server->vm_server_id);
+		return retval;
+		
+	}
+	return retval;
 }
 
 #endif /* HAVE_SQLITE3 */

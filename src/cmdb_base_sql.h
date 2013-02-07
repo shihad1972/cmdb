@@ -116,7 +116,7 @@ int
 run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
 int
 run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type);
-void
+int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *base, int type);
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields);
@@ -136,6 +136,8 @@ void
 store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_t *base);
 void
 store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base);
+int
+setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_t *server);
 
 # endif /* HAVE_SQLITE3 */
 
