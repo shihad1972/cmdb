@@ -199,11 +199,12 @@ add_service_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 			 cmdb->servicetype->service);
 			free(input);
 			return retval;
+		} else {
+			cmdb->service->service_type_id = cmdb->servicetype->service_id;
 		}
 	}
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
-	cmdb->service->service_type_id = cmdb->servicetype->service_id;
 	printf("Details Provided:\n");
 	printf("Server:\t\t%s, id %lu\n", cmdb->server->name, cmdb->service->server_id);
 	printf("Customer:\t%s, id %lu\n", cmdb->customer->coid, cmdb->service->cust_id);
