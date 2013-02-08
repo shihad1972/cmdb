@@ -62,7 +62,6 @@ add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb
 		free(input);
 		return retval;
 	}
-/*	printf("We have a cust_id of %lu\n", cmdb->server->cust_id); */
 	if ((strncmp(cm->vmhost, "NULL", COMM_S)) != 0) {
 		printf("VM host: %s\n", cm->vmhost);
 		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
@@ -72,8 +71,6 @@ add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb
 			free(input);
 			return retval;
 		}
-/*		printf("We have a vm_host_id of %lu\n",
-		 cmdb->vmhost->id); */
 	} else {
 		printf("No vmhost supplied. This should be a stand alone server\n");
 	}
@@ -89,36 +86,55 @@ add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb
 	}
 	free(input);
 	return retval;
-/*	printf("***CMDB: Add server into the database***\n\n");
-	printf("Is this server a virtual machine? (y/n): ");
+}
+
+int
+add_hardware_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+{
+	char *input;
+	int retval;
+
+	if (!(input = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in add_hardware_to_database");
+	retval = 0;
+	printf("Adding to the DB...\n");
+	if ((retval = run_search(config, cmdb, SERVER_ID_ON_NAME)) != 0) {
+		printf("Unable to retrieve server_id for server %s\n",
+		 cmdb->server->name);
+		free(input);
+		return retval;
+	} else {
+		cmdb->hardware->server_id = cmdb->server->server_id;
+	}
+	if (strncmp(cmdb->hardtype->hclass, "NULL", COMM_S) != 0) {
+		if ((retval = run_search(config, cmdb, HARD_TYPE_ID_ON_HCLASS)) != 0) {
+			printf("Unable to retrieve ht_id for class %s\n",
+			 cmdb->hardtype->hclass);
+			free(input);
+			return retval;
+		} else {
+			cmdb->hardware->ht_id = cmdb->hardtype->ht_id;
+		}
+	}
+	printf("Details Provided\n");
+	printf("Server name:\t%s, id %lu\n", cmdb->server->name, cmdb->hardware->server_id);
+	printf("Detail:\t\t%s\n", cmdb->hardware->detail);
+	if (strlen(cmdb->hardware->device) != 0)
+		printf("Device:\t%s\n", cmdb->hardware->device);
+	printf("Class:\t\t%s, id %lu\n", cmdb->hardtype->hclass, cmdb->hardware->ht_id);
+	printf("Are these detail correct? (y/n): ");
 	input = fgets(input, CONF_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
-		if ((retval = check_for_vm_host(config, cmdb, cm->vmhost)) != 0) {
-			free (input);
-			cmdb_clean_list(cmdb);
-			return NO_VM_HOSTS;
-		}
+		printf("Adding to DB....\n");
+		retval = run_insert(config, cmdb, HARDWARES);
+	} else {
+		retval = 1;
 	}
-	if ((retval = check_for_coid(config, cmdb, cm->id)) != 0) {
-			free(input);
-			cmdb_clean_list(cmdb);
-			return NO_CUSTOMERS;
-	}
-	cmdb->server->vm_server_id = cmdb->vmhost->id;
-	cmdb->server->cust_id = cmdb->customer->cust_id;
-	get_full_server_config(cmdb->server);
-	print_server_details(cmdb->server, cmdb);
-	printf("Do you wish to continue? (y/n): \n");
-	input = fgets(input, CONF_S, stdin);
-	chomp(input);
-	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0))
-		run_insert(config, cmdb, SERVER);
-	else
-		printf("Not what you want eh?\n"); */
 	free(input);
-	return 0;
+	return retval;
 }
+
 /*
 
 int add_server_to_database(cmdb_config_t *config)
@@ -854,7 +870,11 @@ print_hardware(cmdb_hardware_t *hard, unsigned long int id)
 			i++;
 			if (i == 1)
 				printf("\nHardware details:\n");
-			printf("%s\t%s\t%s\n",
+			if (strlen(hard->hardtype->hclass) < 8)
+				printf("%s\t\t%s\t%s\n",
+hard->hardtype->hclass, hard->device, hard->detail);
+			else
+				printf("%s\t%s\t%s\n",
 hard->hardtype->hclass, hard->device, hard->detail);
 		}
 		hard = hard->next;

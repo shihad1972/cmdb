@@ -98,6 +98,7 @@ const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
 SELECT service_type_id FROM service_type WHERE service = ?","\
+SELECT hard_type_id FROM hard_type WHERE class = ?","\
 SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
 };
 
@@ -106,9 +107,9 @@ const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
 
-const unsigned int search_fields[] = { 1,1,1,1 };
+const unsigned int search_fields[] = { 1,1,1,1,1 };
 
-const unsigned int search_args[] = { 1,1,1,1 };
+const unsigned int search_args[] = { 1,1,1,1,1 };
 
 
 int
@@ -281,6 +282,12 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 			*output = &(base->servicetype->service_id);
 			*fields = strlen(base->servicetype->service);
 			*args = sizeof(base->servicetype->service_id);
+			break;
+		case HARD_TYPE_ID_ON_HCLASS:
+			*input = &(base->hardtype->hclass);
+			*output = &(base->hardtype->ht_id);
+			*fields = strlen(base->hardtype->hclass);
+			*args = sizeof(base->hardtype->ht_id);
 			break;
 		case VM_ID_ON_NAME:
 			*input = &(base->vmhost->name);
@@ -505,6 +512,8 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned i
 		setup_insert_mysql_bind_buff_contact(buffer, base, i);
 	else if (type == SERVICES)
 		setup_insert_mysql_bind_buff_service(buffer, base, i);
+	else if (type == HARDWARES)
+		setup_insert_mysql_bind_buff_hardware(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -574,6 +583,18 @@ setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i
 		*buffer = &(base->service->url);
 }
 
+void
+setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->hardware->detail);
+	else if (i == 1)
+		*buffer = &(base->hardware->device);
+	else if (i == 2)
+		*buffer = &(base->hardware->server_id);
+	else if (i == 3)
+		*buffer = &(base->hardware->ht_id);
+}
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
@@ -952,6 +973,9 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		case SERV_TYPE_ID_ON_SERVICE:
 			base->servicetype->service_id = result;
 			break;
+		case HARD_TYPE_ID_ON_HCLASS:
+			base->hardtype->ht_id = result;
+			break;
 		case VM_ID_ON_NAME:
 			base->vmhost->id = result;
 			break;
@@ -1007,6 +1031,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 		retval = setup_bind_sqlite_contact(state, cmdb->contact);
 	} else if (type == SERVICES) {
 		retval = setup_bind_sqlite_service(state, cmdb->service);
+	} else if (type == HARDWARES) {
+		retval = setup_bind_sqlite_hardware(state, cmdb->hardware);
 	} else {
 		retval = NO_TYPE;
 	}
@@ -1426,4 +1452,32 @@ state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
 	return retval;
 }
 
+int
+setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_t *hard)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, hard->detail, (int)strlen(hard->detail), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind hardware detail %s\n", hard->detail);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, hard->device, (int)strlen(hard->device), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind hardware device %s\n", hard->device);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 3, (int)hard->server_id)) > 0) {
+		printf("Cannot bind hardware server id %lu\n", hard->server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 4, (int)hard->ht_id)) > 0) {
+		printf("Cannot bind hardware ht_id %lu\n", hard->ht_id);
+		return retval;
+	}
+	return retval;
+}
 #endif /* HAVE_SQLITE3 */

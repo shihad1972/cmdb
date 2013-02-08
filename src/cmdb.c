@@ -151,8 +151,8 @@ int main(int argc, char *argv[])
 					free(cmc);
 					free(cm);
 					free(cmdb_config);
-					cmdb_clean_list(base);
 					printf("Error %d adding contact to DB\n", retval);
+					cmdb_clean_list(base);
 					exit(DB_INSERT_FAILED);
 				} else {
 					printf("Added %s to database\n", base->contact->name);
@@ -174,9 +174,9 @@ int main(int argc, char *argv[])
 					free(cmc);
 					free(cm);
 					free(cmdb_config);
-					cmdb_clean_list(base);
 					printf("Error %d adding service %s to DB\n",
 					 retval, base->service->detail);
+					cmdb_clean_list(base);
 					exit(DB_INSERT_FAILED);
 				} else {
 					printf("Service %s added to database\n", base->service->detail);
@@ -190,6 +190,19 @@ int main(int argc, char *argv[])
 				display_hardware_types(cmc);
 			} else if (cm->action == DISPLAY) {
 				display_server_hardware(cmc, cm->name);
+			} else if (cm->action == ADD_TO_DB) {
+				if ((retval = add_hardware_to_database(cmc, base)) != 0) {
+					free(cmc);
+					free(cm);
+					free(cmdb_config);
+					printf("Error %d adding hardware %s to DB\n",
+					 retval, base->hardtype->hclass);
+					cmdb_clean_list(base);
+					exit(DB_INSERT_FAILED);
+				} else {
+					printf("\
+Hardware for server %s added to database\n",base->server->name);
+				}
 			} else {
 				display_action_error(cm->action);
 			}

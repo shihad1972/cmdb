@@ -62,13 +62,17 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 		report_error(MALLOC_FAIL, "base->servicetype in parse_cmdb_comm_line");
 	if (!(base->hardware = malloc(sizeof(cmdb_hardware_t))))
 		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
+	if (!(base->hardtype = malloc(sizeof(cmdb_hard_type_t))))
+		report_error(MALLOC_FAIL, "base->hardtype in parse_cmdb_comm_line");
 	cmdb_init_server_t(base->server);
 	cmdb_init_customer_t(base->customer);
 	cmdb_init_service_t(base->service);
 	cmdb_init_servicetype_t(base->servicetype);
 	cmdb_init_hardware_t(base->hardware);
 	cmdb_init_contact_t(base->contact);
-	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:dlatscehv")) != -1) {
+	cmdb_init_hardtype_t(base->hardtype);
+	while ((opt = getopt(argc, argv,
+	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:dlatscehv")) != -1) {
 		switch (opt) {
 			case 's':
 				comp->type = SERVER;
@@ -180,6 +184,9 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 			case 'S':
 				snprintf(base->servicetype->service, RANGE_S, "%s", optarg);
 				break;
+			case 'H':
+				snprintf(base->hardtype->hclass, HOST_S, "%s", optarg);
+				break;
 			default:
 				printf("Unknown option: %c\n", opt);
 				retval = DISPLAY_USAGE;
@@ -265,6 +272,22 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 				retval = NO_EMAIL;
 			} else {
 				snprintf(base->customer->coid, RANGE_S, "%s", comp->id);
+			}
+		} else if (comp->type == HARDWARE) {
+			if (strncmp(comp->name, "NULL", COMM_S) == 0) {
+				retval = NO_NAME;
+			} else if (strncmp(base->hardware->detail, "NULL", COMM_S) == 0) {
+				retval = NO_DETAIL;
+			} else if (strncmp(base->hardware->device, "NULL", COMM_S) == 0) {
+				*(base->hardware->device) = '\0';
+				snprintf(base->server->name, MAC_S, "%s", comp->name);
+			} else {
+				snprintf(base->server->name, MAC_S, "%s", comp->name);
+			}
+			if (strncmp(base->hardtype->hclass, "NULL", COMM_S) == 0) {
+				if (base->hardware->ht_id == 0) {
+					retval = NO_CLASS;
+				}
 			}
 		}
 	}
@@ -399,12 +422,23 @@ cmdb_init_customer_t(cmdb_customer_t *cust)
 void
 cmdb_init_service_t(cmdb_service_t *service)
 {
+	snprintf(service->detail, COMM_S, "NULL");
+	snprintf(service->url, COMM_S, "NULL");
+	service->service_id = 0;
+	service->server_id = 0;
+	service->cust_id = 0;
+	service->service_type_id = 0;
 	service->next = '\0';
 }
 
 void
 cmdb_init_hardware_t(cmdb_hardware_t *hard)
 {
+	snprintf(hard->detail, COMM_S, "NULL");
+	snprintf(hard->device, COMM_S, "NULL");
+	hard->hard_id = 0;
+	hard->server_id = 0;
+	hard->ht_id = 0;
 	hard->next = '\0';
 }
 
@@ -420,6 +454,9 @@ cmdb_init_contact_t(cmdb_contact_t *cont)
 void
 cmdb_init_hardtype_t(cmdb_hard_type_t *type)
 {
+	snprintf(type->type, COMM_S, "NULL");
+	snprintf(type->hclass, COMM_S, "NULL");
+	type->ht_id = 0;
 	type->next = '\0';
 }
 
@@ -434,6 +471,10 @@ cmdb_init_servicetype_t(cmdb_service_type_t *type)
 void
 cmdb_init_vmhost_t(cmdb_vm_host_t *type)
 {
+	snprintf(type->name, COMM_S, "NULL");
+	snprintf(type->type, COMM_S, "NULL");
+	type->id = 0;
+	type->server_id = 0;
 	type->next = '\0';
 }
 

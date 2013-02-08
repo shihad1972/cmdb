@@ -52,6 +52,7 @@ enum {			/* Search indexes and queries */
 	SERVER_ID_ON_NAME = 0,
 	CUST_ID_ON_COID,
 	SERV_TYPE_ID_ON_SERVICE,
+	HARD_TYPE_ID_ON_HCLASS,
 	VM_ID_ON_NAME
 };
 
@@ -93,6 +94,8 @@ void
 setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i);
 void
 setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_t *base, unsigned int i);
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
@@ -153,6 +156,8 @@ int
 setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_t *cont);
 int
 setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_t *service);
+int
+setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_t *hard);
 
 # endif /* HAVE_SQLITE3 */
 

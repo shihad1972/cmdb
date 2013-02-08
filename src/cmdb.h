@@ -174,7 +174,9 @@ enum {			/* cmdb return codes */
 	NO_NAME_COID = -23,
 	NO_PHONE = -24,
 	NO_EMAIL = -25,
-	NO_CONT_NAME = -26
+	NO_CONT_NAME = -26,
+	NO_DETAIL = -27,
+	NO_CLASS = 28
 };
 
 enum {			/* cmdb config file error codes */
