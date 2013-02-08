@@ -56,16 +56,19 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 		report_error(MALLOC_FAIL, "base->customer in parse_cmdb_comm_line");
 	if (!(base->contact = malloc(sizeof(cmdb_contact_t))))
 		report_error(MALLOC_FAIL, "base->contact in parse_cmdb_comm_line");
-	if (!(base->hardware = malloc(sizeof(cmdb_hardware_t))))
-		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
 	if (!(base->service = malloc(sizeof(cmdb_service_t))))
 		report_error(MALLOC_FAIL, "base->service in parse_cmdb_comm_line");
+	if (!(base->servicetype = malloc(sizeof(cmdb_service_type_t))))
+		report_error(MALLOC_FAIL, "base->servicetype in parse_cmdb_comm_line");
+	if (!(base->hardware = malloc(sizeof(cmdb_hardware_t))))
+		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
 	cmdb_init_server_t(base->server);
 	cmdb_init_customer_t(base->customer);
 	cmdb_init_service_t(base->service);
+	cmdb_init_servicetype_t(base->servicetype);
 	cmdb_init_hardware_t(base->hardware);
 	cmdb_init_contact_t(base->contact);
-	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:dlatscehv")) != -1) {
+	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:dlatscehv")) != -1) {
 		switch (opt) {
 			case 's':
 				comp->type = SERVER;
@@ -146,6 +149,37 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 			case 'E':
 				snprintf(base->contact->email, HOST_S, "%s", optarg);
 				break;
+			case 'D':
+				if (comp->type == SERVICE) {
+					snprintf(base->service->detail, HOST_S, "%s", optarg);
+				} else if (comp->type == HARDWARE) {
+					snprintf(base->hardware->detail, HOST_S, "%s", optarg);
+				} else {
+					printf("Please supply type before adding options\n");
+					retval = NO_TYPE;
+					return retval;
+				}
+				break;
+			case 'I':
+				if (comp->type == SERVICE) {
+					base->service->service_type_id = strtoul(optarg, NULL, 10);
+				} else if (comp->type == HARDWARE) {
+					base->hardware->ht_id = strtoul(optarg, NULL, 10);
+				} else {
+					printf("Please supply type before adding options\n");
+					retval = NO_TYPE;
+					return retval;
+				}
+				break;
+			case 'L':
+				snprintf(base->service->url, HOST_S, "%s", optarg);
+				break;
+			case 'B':
+				snprintf(base->hardware->device, MAC_S, "%s", optarg);
+				break;
+			case 'S':
+				snprintf(base->servicetype->service, RANGE_S, "%s", optarg);
+				break;
 			default:
 				printf("Unknown option: %c\n", opt);
 				retval = DISPLAY_USAGE;
@@ -209,13 +243,16 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 			else if (strncmp(comp->name, "NULL", COMM_S) == 0)
 				retval = NO_NAME;
 		} else if (comp->type == SERVICE) {
-			if ((strncmp(comp->name, "NULL", COMM_S) == 0) || 
+			if ((strncmp(comp->name, "NULL", COMM_S) == 0) && 
 			   (strncmp(comp->id, "NULL", COMM_S) == 0)) {
 				retval = NO_NAME_COID;
 			} else if (strncmp(comp->name, "NULL", COMM_S) == 0) {
 				retval = NO_NAME;
 			} else if (strncmp(comp->id, "NULL", COMM_S) == 0) {
 				retval = NO_COID;
+			} else {
+				snprintf(base->server->name, MAC_S, "%s", comp->name);
+				snprintf(base->customer->coid, RANGE_S, "%s", comp->id);
 			}
 		} else if (comp->type == CONTACT) {
 			if (strncmp(comp->id, "NULL", COMM_S) == 0) {
@@ -389,6 +426,8 @@ cmdb_init_hardtype_t(cmdb_hard_type_t *type)
 void
 cmdb_init_servicetype_t(cmdb_service_type_t *type)
 {
+	snprintf(type->service, COMM_S, "NULL");
+	snprintf(type->detail, COMM_S, "NULL");
 	type->next = '\0';
 }
 

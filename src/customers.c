@@ -172,6 +172,54 @@ add_contact_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 	return retval;
 }
 
+int
+add_service_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+{
+	char *input;
+	int retval;
+
+	if (!(input = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "input in add_customer_to_database");
+	retval = 0;
+	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
+		printf("Unable to retrieve cust_id for COID %s\n",
+		 cmdb->customer->coid);
+		free(input);
+		return retval;
+	}
+	if ((retval = run_search(config, cmdb, SERVER_ID_ON_NAME)) != 0) {
+		printf("Unable to retrieve server_id for server %s\n",
+		 cmdb->server->name);
+		free(input);
+		return retval;
+	}
+	if ((retval = strncmp(cmdb->servicetype->service, "NULL", COMM_S)) != 0) {
+		if ((retval = run_search(config, cmdb, SERV_TYPE_ID_ON_SERVICE)) != 0) {
+			printf("Unable to retrieve service_type_id for %s\n",
+			 cmdb->servicetype->service);
+			free(input);
+			return retval;
+		}
+	}
+	cmdb->service->server_id = cmdb->server->server_id;
+	cmdb->service->cust_id = cmdb->customer->cust_id;
+	cmdb->service->service_type_id = cmdb->servicetype->service_id;
+	printf("Details Provided:\n");
+	printf("Server:\t\t%s, id %lu\n", cmdb->server->name, cmdb->service->server_id);
+	printf("Customer:\t%s, id %lu\n", cmdb->customer->coid, cmdb->service->cust_id);
+	printf("Service:\t%s, id %lu\n", cmdb->servicetype->service, cmdb->service->service_type_id);
+	printf("Are these detail correct? (y/n): ");
+	input = fgets(input, CONF_S, stdin);
+	chomp(input);
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
+		printf("Adding....\n");
+		retval = run_insert(config, cmdb, SERVICES);
+	} else {
+		retval = 1;
+	}
+
+	return retval;
+}
 void
 display_service_types(cmdb_config_t *config)
 {

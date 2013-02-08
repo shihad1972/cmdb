@@ -276,6 +276,12 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 			*fields = strlen(base->customer->coid);
 			*args = sizeof(base->customer->cust_id);
 			break;
+		case SERV_TYPE_ID_ON_SERVICE:
+			*input = &(base->servicetype->service);
+			*output = &(base->servicetype->service_id);
+			*fields = strlen(base->servicetype->service);
+			*args = sizeof(base->servicetype->service_id);
+			break;
 		case VM_ID_ON_NAME:
 			*input = &(base->vmhost->name);
 			*output = &(base->vmhost->id);
@@ -491,30 +497,14 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned i
 	int retval;
 
 	retval = 0;
-/*	switch(type) {
-		case SERVERS:
-			if (i == 0)
-				*buffer = &(base->server->name);
-			else if (i == 1)
-				*buffer = &(base->server->vendor);
-			else if (i == 2)
-				*buffer = &(base->server->make);
-			else if (i == 3)
-				*buffer = &(base->server->model);
-			else if (i == 4)
-				*buffer = &(base->server->uuid);
-			else if (i == 5)
-				*buffer = &(base->server->cust_id);
-			else if (i == 6)
-				*buffer = &(base->server->vm_server_id);
-			break;
-	} */
 	if (type == SERVERS)
 		setup_insert_mysql_bind_buff_server(buffer, base, i);
 	else if (type == CUSTOMERS)
 		setup_insert_mysql_bind_buff_customer(buffer, base, i);
 	else if (type == CONTACTS)
 		setup_insert_mysql_bind_buff_contact(buffer, base, i);
+	else if (type == SERVICES)
+		setup_insert_mysql_bind_buff_service(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -567,6 +557,21 @@ setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i
 		*buffer = &(base->contact->email);
 	else if (i == 3)
 		*buffer = &(base->contact->cust_id);
+}
+
+void
+setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->service->server_id);
+	else if (i == 1)
+		*buffer = &(base->service->cust_id);
+	else if (i == 2)
+		*buffer = &(base->service->service_type_id);
+	else if (i == 3)
+		*buffer = &(base->service->detail);
+	else if (i == 4)
+		*buffer = &(base->service->url);
 }
 
 void
@@ -944,6 +949,9 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		case CUST_ID_ON_COID:
 			base->customer->cust_id = result;
 			break;
+		case SERV_TYPE_ID_ON_SERVICE:
+			base->servicetype->service_id = result;
+			break;
 		case VM_ID_ON_NAME:
 			base->vmhost->id = result;
 			break;
@@ -997,6 +1005,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 		retval = setup_bind_sqlite_customer(state, cmdb->customer);
 	} else if (type == CONTACTS) {
 		retval = setup_bind_sqlite_contact(state, cmdb->contact);
+	} else if (type == SERVICES) {
+		retval = setup_bind_sqlite_service(state, cmdb->service);
 	} else {
 		retval = NO_TYPE;
 	}
@@ -1377,6 +1387,40 @@ state, 3, cont->email, (int)strlen(cont->email), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_int(
 state, 4, (int)cont->cust_id)) > 0) {
 		printf("Cannot bind cust_id %lu\n", cont->cust_id);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_t *service)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_int(
+state, 1, (int)service->server_id)) > 0) {
+		printf("Cannot bind server id %lu\n", service->server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 2, (int)service->cust_id)) > 0) {
+		printf("Cannot bind cust id %lu\n", service->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 3, (int)service->service_type_id)) > 0) {
+		printf("Cannot bind service type id %lu\n", service->service_type_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, service->detail, (int)strlen(service->detail), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind service detail %s\n", service->detail);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind service url %s\n", service->url);
 		return retval;
 	}
 	return retval;

@@ -92,6 +92,8 @@ setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int 
 void
 setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i);
 void
+setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i);
+void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields);
 void
 store_server_mysql(MYSQL_ROW row, cmdb_t *base);
@@ -149,6 +151,8 @@ int
 setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_t *customer);
 int
 setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_t *cont);
+int
+setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_t *service);
 
 # endif /* HAVE_SQLITE3 */
 

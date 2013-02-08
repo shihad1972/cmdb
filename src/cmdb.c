@@ -169,6 +169,18 @@ int main(int argc, char *argv[])
 					display_server_services(cmc, cm->name);
 				else if ((strncmp(cm->id, "NULL", CONF_S) != 0))
 					display_customer_services(cmc, cm->id);
+			} else if (cm->action == ADD_TO_DB) {
+				if ((retval = add_service_to_database(cmc, base)) != 0) {
+					free(cmc);
+					free(cm);
+					free(cmdb_config);
+					cmdb_clean_list(base);
+					printf("Error %d adding service %s to DB\n",
+					 retval, base->service->detail);
+					exit(DB_INSERT_FAILED);
+				} else {
+					printf("Service %s added to database\n", base->service->detail);
+				}
 			} else {
 				display_action_error(cm->action);
 			}

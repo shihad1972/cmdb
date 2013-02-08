@@ -256,6 +256,8 @@ add_customer_to_database(cmdb_config_t *config, cmdb_t *cmdb);
 int
 add_contact_to_database(cmdb_config_t *config, cmdb_t *base);
 int
+add_service_to_database(cmdb_config_t *config, cmdb_t *cmdb);
+int
 check_for_vm_host(cmdb_config_t *config, cmdb_t *cmdb, char *vmhost);
 int
 check_for_coid(cmdb_config_t *config, cmdb_t *cmdb, char *coid);
