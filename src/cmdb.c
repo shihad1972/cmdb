@@ -95,8 +95,12 @@ int main(int argc, char *argv[])
 			} else if (cm->action == ADD_TO_DB) {
 				retval = add_server_to_database(cmc, cm, base);
 				if (retval > 0) {
-					printf("Error adding to database\n");
-					return 1;
+					free(cmc);
+					free(cm);
+					free(cmdb_config);
+					cmdb_clean_list(base);
+					printf("Error adding server to database\n");
+					exit(DB_INSERT_FAILED);
 				} else {
 					printf("Added into database\n");
 				}
@@ -111,11 +115,11 @@ int main(int argc, char *argv[])
 				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
 			} else {
 				printf("Both name and coid set to NULL??\n");
-				return 1;
+				exit(NO_NAME_UUID_ID);
 			}
 			if (retval < 0) {
 				printf("User input not valid\n");
-				return 1;
+				exit(USER_INPUT_INVALID);
 			}
 			if (cm->action == DISPLAY) {
 				display_customer_info(cm->name, cm->id, cmc);
@@ -128,7 +132,8 @@ int main(int argc, char *argv[])
 					free(cm);
 					free(cmdb_config);
 					cmdb_clean_list(base);
-					report_error(retval, " adding customer to DB");
+					printf("Error %d adding customer to DB\n", retval);
+					exit(DB_INSERT_FAILED);
 				} else {
 					printf("Added %s to database\n", base->customer->name);
 				}	
@@ -140,6 +145,17 @@ int main(int argc, char *argv[])
 			if (cm->action == DISPLAY) {
 				if (strncmp(cm->id, "NULL", CONF_S) != 0) {
 					display_customer_contacts(cmc, cm->id);
+				}
+			} else if (cm->action == ADD_TO_DB) {
+				if ((retval = add_contact_to_database(cmc, base)) != 0) {
+					free(cmc);
+					free(cm);
+					free(cmdb_config);
+					cmdb_clean_list(base);
+					printf("Error %d adding contact to DB\n", retval);
+					exit(DB_INSERT_FAILED);
+				} else {
+					printf("Added %s to database\n", base->contact->name);
 				}
 			} else {
 				display_action_error(cm->action);
@@ -181,7 +197,7 @@ int main(int argc, char *argv[])
 	free(cmc);
 	free(cm);
 	free(cmdb_config);
-	exit (0);
+	exit (retval);
 }
 /*
 	if ((strncmp(cmc->dbtype, "none", RANGE_S) ==0))

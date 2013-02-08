@@ -34,7 +34,8 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 
-int add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb)
+int
+add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb)
 {
 	char *input;
 	int retval;

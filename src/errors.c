@@ -281,6 +281,18 @@ display_cmdb_command_line_error(int retval, char *program)
 		case NO_COID:
 			fprintf(stderr, "No coid specified on command line\n");
 			break;
+		case NO_NAME_COID:
+			fprintf(stderr, "No server name or customer coid was specified\n");
+			break;
+		case NO_CONT_NAME:
+			fprintf(stderr, "No name specified with -N\n");
+			break;
+		case NO_PHONE:
+			fprintf(stderr, "No phone no. specified with -P\n");
+			break;
+		case NO_EMAIL:
+			fprintf(stderr, "No email address specified with -E\n");
+			break;
 		case DISPLAY_USAGE:
 			if ((strncmp(program, "cmdb", CONF_S) == 0))
 				display_cmdb_usage();
@@ -323,11 +335,13 @@ display_cmdb_usage(void)
 	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
 	printf("For customer (with -c; need -n for name)\n");
-	printf("-A: Address\t-T: City\t-Y: County\t-P: Postcode\t-C: COID\n");
+	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
 	printf("For services (-i COID for customer, -n name for server)\n");
-	printf("-D: Detail\t-L: URL\t-I service_id\n");
+	printf("-D: Detail\t-L: URL\t\t-I service_id\n");
 	printf("For hardware (with -n name to specify server)\n");
 	printf("-D: Detail\t-V: Device\t-I: hardware_id\n");
+	printf("For Contact (with -i coid to specify customer)\n");
+	printf("-N: Name\t-P: Phone\t-E: email\n");
 }
 
 void

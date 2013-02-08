@@ -441,8 +441,8 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i=0; i<insert_fields[type]; i++) 
-		setup_insert_mysql_bind(&my_bind[i], i, type, base);
-
+		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
+			return retval;
 	query = sql_insert[type];
 	cmdb_mysql_init(config, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
@@ -456,12 +456,15 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 	
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
-	return 0;
+	return retval;
 }
 
-void
+int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
 {
+	int retval;
+
+	retval = 0;
 	void *buffer;
 	bind->buffer_type = mysql_inserts[type][i];
 	if (bind->buffer_type == MYSQL_TYPE_STRING)
@@ -472,17 +475,22 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base
 		bind->is_unsigned = 0;
 	bind->is_null = 0;
 	bind->length = 0;
-	setup_insert_mysql_bind_buffer(type, &buffer, base, i);
+	if ((retval = setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
+		return retval;
 	bind->buffer = buffer;
 	if (bind->buffer_type == MYSQL_TYPE_LONG)
 		bind->buffer_length = sizeof(unsigned long int);
 	else if (bind->buffer_type == MYSQL_TYPE_STRING)
 		bind->buffer_length = strlen(buffer);
+	return retval;
 }
 
-void
+int
 setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
 {
+	int retval;
+
+	retval = 0;
 /*	switch(type) {
 		case SERVERS:
 			if (i == 0)
@@ -505,6 +513,11 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned i
 		setup_insert_mysql_bind_buff_server(buffer, base, i);
 	else if (type == CUSTOMERS)
 		setup_insert_mysql_bind_buff_customer(buffer, base, i);
+	else if (type == CONTACTS)
+		setup_insert_mysql_bind_buff_contact(buffer, base, i);
+	else
+		retval = NO_TYPE;
+	return retval;
 }
 
 void
@@ -542,7 +555,20 @@ setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int 
 	else if (i == 5)
 		*buffer = &(base->customer->coid);
 }
-	
+
+void
+setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->contact->name);
+	else if (i == 1)
+		*buffer = &(base->contact->phone);
+	else if (i == 2)
+		*buffer = &(base->contact->email);
+	else if (i == 3)
+		*buffer = &(base->contact->cust_id);
+}
+
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
@@ -969,6 +995,10 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 		retval = setup_bind_sqlite_server(state, cmdb->server);
 	} else if (type == CUSTOMERS) {
 		retval = setup_bind_sqlite_customer(state, cmdb->customer);
+	} else if (type == CONTACTS) {
+		retval = setup_bind_sqlite_contact(state, cmdb->contact);
+	} else {
+		retval = NO_TYPE;
 	}
 	return retval;
 }
@@ -1322,4 +1352,34 @@ state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
 	}
 	return retval;
 }
+
+int
+setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_t *cont)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, cont->name, (int)strlen(cont->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind cotact name %s\n", cont->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, cont->phone, (int)strlen(cont->phone), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind contact phone number %s\n", cont->phone);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, cont->email, (int)strlen(cont->email), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind contact email %s\n", cont->email);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 4, (int)cont->cust_id)) > 0) {
+		printf("Cannot bind cust_id %lu\n", cont->cust_id);
+		return retval;
+	}
+	return retval;
+}
+
 #endif /* HAVE_SQLITE3 */

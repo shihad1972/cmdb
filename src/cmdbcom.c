@@ -65,7 +65,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 	cmdb_init_service_t(base->service);
 	cmdb_init_hardware_t(base->hardware);
 	cmdb_init_contact_t(base->contact);
-	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:P:dlatscehv")) != -1) {
+	while ((opt = getopt(argc, argv, "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:dlatscehv")) != -1) {
 		switch (opt) {
 			case 's':
 				comp->type = SERVER;
@@ -95,8 +95,10 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 			case 'a':
 				comp->action = ADD_TO_DB;
 				if ((comp->type != HARDWARE) &&
-				 (comp->type != SERVICE) &&
-				 (comp->type != CONTACT))
+				 (comp->type != SERVICE) && /*
+				 (comp->type != CONTACT) && */
+				 (comp->type != NONE) &&
+				 (strncmp(comp->id, "NULL", COMM_S) == 0))
 					snprintf(comp->id, MAC_S, "NOCOID");
 				break;
 			case 'n':
@@ -132,8 +134,17 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 			case 'Y':
 				snprintf(base->customer->county, MAC_S, "%s", optarg);
 				break;
-			case 'P':
+			case 'Z':
 				snprintf(base->customer->postcode, RANGE_S, "%s", optarg);
+				break;
+			case 'N':
+				snprintf(base->contact->name, HOST_S, "%s", optarg);
+				break;
+			case 'P':
+				snprintf(base->contact->phone, MAC_S, "%s", optarg);
+				break;
+			case 'E':
+				snprintf(base->contact->email, HOST_S, "%s", optarg);
 				break;
 			default:
 				printf("Unknown option: %c\n", opt);
@@ -153,7 +164,11 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 	int retval;
 
 	retval = NONE;
-	if ((comp->type == NONE) && (comp->action != NONE))
+	if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
+		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
+		(comp->type == NONE && comp->action == NONE))
+		retval = DISPLAY_USAGE;
+	else if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
 		retval = NO_ACTION;
@@ -161,12 +176,9 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 		retval = NO_ACTION;
 	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
 		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
-		(comp->type != NONE || comp->action != NONE))
+		(comp->type != NONE || comp->action != NONE) &&
+		(comp->type != CONTACT))
 		retval = NO_NAME_OR_ID;
-	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
-		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
-		(comp->type == NONE && comp->action == NONE))
-		retval = DISPLAY_USAGE;
 	else if (comp->action == ADD_TO_DB) {
 		if (comp->type == SERVER) {
 			snprintf(base->server->name, MAC_S, "%s", comp->name);
@@ -196,6 +208,27 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 				retval = NO_COID;
 			else if (strncmp(comp->name, "NULL", COMM_S) == 0)
 				retval = NO_NAME;
+		} else if (comp->type == SERVICE) {
+			if ((strncmp(comp->name, "NULL", COMM_S) == 0) || 
+			   (strncmp(comp->id, "NULL", COMM_S) == 0)) {
+				retval = NO_NAME_COID;
+			} else if (strncmp(comp->name, "NULL", COMM_S) == 0) {
+				retval = NO_NAME;
+			} else if (strncmp(comp->id, "NULL", COMM_S) == 0) {
+				retval = NO_COID;
+			}
+		} else if (comp->type == CONTACT) {
+			if (strncmp(comp->id, "NULL", COMM_S) == 0) {
+				retval = NO_COID;
+			} else if (strncmp(base->contact->name, "NULL", COMM_S) == 0) {
+				retval = NO_CONT_NAME;
+			} else if (strncmp(base->contact->phone, "NULL", COMM_S) == 0) {
+				retval = NO_PHONE;
+			} else if (strncmp(base->contact->email, "NULL", COMM_S) == 0) {
+				retval = NO_EMAIL;
+			} else {
+				snprintf(base->customer->coid, RANGE_S, "%s", comp->id);
+			}
 		}
 	}
 	return retval;
@@ -341,6 +374,9 @@ cmdb_init_hardware_t(cmdb_hardware_t *hard)
 void
 cmdb_init_contact_t(cmdb_contact_t *cont)
 {
+	snprintf(cont->name, COMM_S, "NULL");
+	snprintf(cont->phone, COMM_S, "NULL");
+	snprintf(cont->email, COMM_S, "NULL");
 	cont->next = '\0';
 }
 

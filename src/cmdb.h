@@ -143,7 +143,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	CANNOT_OPEN_FILE = 150,
 	SQLITE_STATEMENT_FAILED = 151,
 	SQLITE_BIND_FAILED = 152,
-	SQLITE_INSERT_FAILED = 153
+	SQLITE_INSERT_FAILED = 153,
+	DB_INSERT_FAILED = 154
 	
 };
 
@@ -169,7 +170,11 @@ enum {			/* cmdb return codes */
 	NO_CITY = -19,
 	NO_COUNTY = -20,
 	NO_POSTCODE = -21,
-	NO_COID = -22
+	NO_COID = -22,
+	NO_NAME_COID = -23,
+	NO_PHONE = -24,
+	NO_EMAIL = -25,
+	NO_CONT_NAME = -26
 };
 
 enum {			/* cmdb config file error codes */
