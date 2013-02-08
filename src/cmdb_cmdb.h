@@ -160,68 +160,6 @@ void
 cmdb_init_servicetype_t(cmdb_service_type_t *type);
 void
 cmdb_init_vmhost_t(cmdb_vm_host_t *type);
-/*
-int
-cmdb_use_mysql(cmdb_config_t *cmc, cmdb_comm_line_t *cm, int retval);
-int
-cmdb_use_sqlite(cmdb_config_t *cmc, cmdb_comm_line_t *cm);
-*/
-/*
-int
-display_customer_info_on_coid(char *coid, cmdb_config_t *config);
-int
-display_customer_info_on_name(char *name, cmdb_config_t *config); */
-/* Routines to display server data from database.
-void
-display_server_from_name(char **server_info);
-void
-display_server_from_uuid(char **server_info);
-Server functions */
-/*
-int
-get_server_hardware(cmdb_config_t *config, cmdb_hardware_t *head, unsigned long int id); */
-
-/*  Routines to display customer data from database.
-void
-display_customer_from_name(char **cust_info);
-void
-display_customer_from_coid(char **cust_info);
-void
-display_all_customers(cmdb_config_t *config);  
-int
-add_hardware_to_db(cmdb_config_t *config, cmdb_hardware_t *hw);
-void
-get_full_server_config(cmdb_server_t *server);
-void
-print_hardware_details(cmdb_hardware_t *hard);
- Linked list functions for virtual machine hosts
-
-cmdb_vm_host_t *
-get_vm_host(cmdb_config_t *config); */
-/* Linked list fucntions for customers 
-cmdb_customer_t
-*create_customer_node(void);
-
-unsigned long int
-get_customer_for_server(cmdb_config_t *config); */
-/* linked list functions for hardware and hardware types
-void
-add_hardware_types(cmdb_config_t *config, cmdb_hard_type_t *hthead); 
-cmdb_vm_host_t *
-vm_host_create(void);
-cmdb_hard_type_t *
-hard_type_node_create(void);
-cmdb_hardware_t *
-hard_node_create(void);
-cmdb_hard_type_t *
-get_network_device_id(cmdb_hard_type_t *head);
-cmdb_hard_type_t *
-get_disk_device_id(cmdb_hard_type_t *head);
-int
-get_network_device(cmdb_hardware_t *head);
-int
-get_disk_device(cmdb_hardware_t *head); */
-
 
 void
 display_server_info (char *name, char *uuid, cmdb_config_t *config);
