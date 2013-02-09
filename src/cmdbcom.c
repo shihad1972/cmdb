@@ -236,7 +236,7 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 			else if (strncmp(base->server->name, "NULL", COMM_S) == 0)
 				retval = NO_NAME;
 		} else if (comp->type == CUSTOMER) {
-			snprintf(base->customer->name, CONF_S, "%s", comp->name);
+			snprintf(base->customer->name, HOST_S, "%s", comp->name);
 			if (strncmp(base->customer->address, "NULL", COMM_S) == 0)
 				retval = NO_ADDRESS;
 			else if (strncmp(base->customer->city, "NULL", COMM_S) == 0)
