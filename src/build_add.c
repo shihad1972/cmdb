@@ -1189,6 +1189,7 @@ get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd)
 	
 	iplist = bd->iplist;
 	for (ip = bd->start_ip; ip <= bd->end_ip; ip++) {
+		found = 0;
 		if (ip == iplist->ip) {
 			if ((strncmp(iplist->hostname, "free", COMM_S)) == 0) {
 				break;
