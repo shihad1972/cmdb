@@ -962,23 +962,23 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		result = (unsigned long int)sqlite3_column_int(state, 0);
-	}
-	switch (type) {
-		case SERVER_ID_ON_NAME:
-			base->server->server_id = result;
-			break;
-		case CUST_ID_ON_COID:
-			base->customer->cust_id = result;
-			break;
-		case SERV_TYPE_ID_ON_SERVICE:
-			base->servicetype->service_id = result;
-			break;
-		case HARD_TYPE_ID_ON_HCLASS:
-			base->hardtype->ht_id = result;
-			break;
-		case VM_ID_ON_NAME:
-			base->vmhost->id = result;
-			break;
+		switch (type) {
+			case SERVER_ID_ON_NAME:
+				base->server->server_id = result;
+				break;
+			case CUST_ID_ON_COID:
+				base->customer->cust_id = result;
+				break;
+			case SERV_TYPE_ID_ON_SERVICE:
+				base->servicetype->service_id = result;
+				break;
+			case HARD_TYPE_ID_ON_HCLASS:
+				base->hardtype->ht_id = result;
+				break;
+			case VM_ID_ON_NAME:
+				base->vmhost->id = result;
+				break;
+		}
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
