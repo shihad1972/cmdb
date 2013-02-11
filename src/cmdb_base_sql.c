@@ -1211,8 +1211,8 @@ store_service_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
-	snprintf(service->service, MAC_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(service->service, RANGE_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(service->detail, MAC_S, "%s", sqlite3_column_text(state, 2));
 	service->next = '\0';
 	list = base->servicetype;
 	if (list) {
