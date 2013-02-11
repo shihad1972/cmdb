@@ -1,0 +1,7 @@
+ The configure script will build the 3 programs (cbc, dnsa and cmdb)
+in the src/ directory and make install will install them into /usr/local
+(unless you specify a differnt location using the --prefix options
+to './configure'. 
+
+ Currently you need to configure the database manually. Check out the sql
+directory for for the table definitions.

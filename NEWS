@@ -1,3 +1,12 @@
+---- Monday 11th February 2012 ---
+
+Release version 0.2.1 contains the new look cmdb. The database interface
+has been modularised so that either sqlite or mysql can be used, and
+also starting to use prepared statements.
+There have been some other code clean ups too.
+The 0.2.x branch will concentrate on the modularised structure for 
+cbc and dnsa.
+
 ---- Friday 25th January 2013 ----
 
 To celebrate Burns night this is the first release of the cmdb programs
