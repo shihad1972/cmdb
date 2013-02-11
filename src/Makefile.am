@@ -24,5 +24,5 @@ endif
 
 if HAVE_SQLITE3
 AM_CFLAGS += $(SQLITE3_CFLAGS)
-AM_LDFLAGS += $(SQLITE3_LDFLAGS)
+LIBS += -lsqlite3
 endif
