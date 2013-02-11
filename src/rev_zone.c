@@ -917,8 +917,9 @@ int convert_rev_records(rev_record_row_t *records, unsigned long int prefix)
 			len = strlen(host);
 			host[len - 1] = '\0';
 		} else if (prefix>= 24) {
-			host = strrchr(saved->host, '.');
-			host++;
+			tmp = strrchr(saved->host, '.');
+			tmp++;
+			snprintf(host, 4, "%s", tmp);
 		} else {
 			printf("Prefix %lu invalid\n", prefix);
 			return 1;
