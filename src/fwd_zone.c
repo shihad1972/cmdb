@@ -563,7 +563,6 @@ int wzf (char *domain, dnsa_config_t *dc)
 	record_row_t row_data;
 	size_t len, offset;
 	zone_info_t zone_info, *zi;
-	int error;
 	char *zout, *zout2, *tmp, *zonefilename;
 	const char *dnsa_query;
 
@@ -661,7 +660,7 @@ OR zone = %d AND type = 'CNAME'", zi->id, zi->id);
 	check_fwd_zone(zonefilename, zi->name, dc);
 	snprintf(tmp, BUFF_S,
 "UPDATE zones SET updated = 'no', valid = 'yes' WHERE name = '%s'", zi->name);
-	error = mysql_query(&dnsa, dnsa_query);
+	cmdb_mysql_query(&dnsa, dnsa_query);
 	dnsa_rows = mysql_affected_rows(&dnsa);
 	if (dnsa_rows == 1)
 		fprintf(stderr, "DB updated as zone validated\n");
