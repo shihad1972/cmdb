@@ -88,6 +88,12 @@ int main(int argc, char *argv[])
 			list_rev_zones(dc);
 		}
 	}
+
+	free(domain);
+	free(cm);
+	free(dc);
+	exit(0);
+}
 		/*
 		if (cm->action == WRITE_ZONE) {
 			wzf(domain, dc);
@@ -150,9 +156,3 @@ int main(int argc, char *argv[])
 		free(domain);
 		exit(retval);
 	} */
-	
-	free(domain);
-	free(cm);
-	free(dc);
-	exit(0);
-}

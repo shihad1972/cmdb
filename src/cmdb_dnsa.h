@@ -144,5 +144,13 @@ void
 list_zones (dnsa_config_t *dc);
 void
 list_rev_zones(dnsa_config_t *dc);
+void
+dnsa_clean_zones(zone_info_t *zone);
+void
+dnsa_clean_rev_zones(rev_zone_info_t *rev);
+void
+dnsa_clean_records(record_row_t *rec);
+void
+dnsa_clean_rev_records(rev_record_row_t *rev);
 
 #endif /* __CMDB_DNSA_H__ */

@@ -347,4 +347,117 @@ init_rev_record_struct(rev_record_row_t *rev)
 void
 dnsa_clean_list(dnsa_t *dnsa)
 {
+	if (dnsa->zones)
+		dnsa_clean_zones(dnsa->zones);
+	if (dnsa->rev_zones)
+		dnsa_clean_rev_zones(dnsa->rev_zones);
+	if (dnsa->records)
+		dnsa_clean_records(dnsa->records);
+	if (dnsa->rev_records)
+		dnsa_clean_rev_records(dnsa->rev_records);
+	free(dnsa);
+}
+
+void
+dnsa_clean_zones(zone_info_t *list)
+{
+	zone_info_t *zone, *next;
+
+	if (list)
+		zone = list;
+	else
+		return;
+	if (zone->next)
+		next = zone->next;
+	else
+		next = '\0';
+	while (zone) {
+		free(zone);
+		if (next)
+			zone = next;
+		else
+			return;
+		if (zone->next)
+			next = zone->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_rev_zones(rev_zone_info_t *list)
+{
+	rev_zone_info_t *zone, *next;
+
+	if (list)
+		zone = list;
+	else
+		return;
+	if (zone->next)
+		next = zone->next;
+	else
+		next = '\0';
+	while (zone) {
+		free(zone);
+		if (next)
+			zone = next;
+		else
+			return;
+		if (zone->next)
+			next = zone->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_records(record_row_t *list)
+{
+	record_row_t *rec, *next;
+
+	if (list)
+		rec = list;
+	else
+		return;
+	if (rec->next)
+		next = rec->next;
+	else
+		next = '\0';
+	while (rec) {
+		free(rec);
+		if (next)
+			rec = next;
+		else
+			return;
+		if (rec->next)
+			next = rec->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_rev_records(rev_record_row_t *list)
+{
+	rev_record_row_t *rec, *next;
+
+	if (list)
+		rec = list;
+	else
+		return;
+	if (rec->next)
+		next = rec->next;
+	else
+		next = '\0';
+	while (rec) {
+		free(rec);
+		if (next)
+			rec = next;
+		else
+			return;
+		if (rec->next)
+			next = rec->next;
+		else
+			next = '\0';
+	}
 }

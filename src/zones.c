@@ -70,6 +70,7 @@ list_zones (dnsa_config_t *dc)
 		else
 			zone = '\0';
 	}
+	dnsa_clean_list(dnsa);
 }
 
 void
@@ -98,4 +99,5 @@ list_rev_zones(dnsa_config_t *dc)
 		else
 			rev = '\0';
 	}
+	dnsa_clean_list(dnsa);
 }
