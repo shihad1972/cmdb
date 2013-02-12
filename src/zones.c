@@ -70,5 +70,32 @@ list_zones (dnsa_config_t *dc)
 		else
 			zone = '\0';
 	}
-	return;
+}
+
+void
+list_rev_zones(dnsa_config_t *dc)
+{
+	int retval;
+	dnsa_t *dnsa;
+	rev_zone_info_t *rev;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in list_zones");
+
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0) {
+		dnsa_clean_list(dnsa);
+		return;
+	}
+	rev = dnsa->rev_zones;
+	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
+	printf("Range\t\tprefix\tvalid\n");
+	while (rev) {
+		printf("%s\t/%lu\t%s\n", rev->net_range, rev->prefix, rev->valid);
+		if (rev->next)
+			rev = rev->next;
+		else
+			rev = '\0';
+	}
 }

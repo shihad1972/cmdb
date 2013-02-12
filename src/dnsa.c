@@ -83,6 +83,11 @@ int main(int argc, char *argv[])
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
 		}
+	} else if (cm->type == REVERSE_ZONE) {
+		if (cm->action == LIST_ZONES) {
+			list_rev_zones(dc);
+		}
+	}
 		/*
 		if (cm->action == WRITE_ZONE) {
 			wzf(domain, dc);
@@ -143,8 +148,8 @@ int main(int argc, char *argv[])
 		retval = WRONG_TYPE;
 		printf("We have an invalid type id %d\n", cm->type);
 		free(domain);
-		exit(retval); */
-	}
+		exit(retval);
+	} */
 	
 	free(domain);
 	free(cm);
