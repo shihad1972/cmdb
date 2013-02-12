@@ -80,6 +80,32 @@ run_query(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
+run_multiple_query(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+	retval = NONE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_multiple_query_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_multiple_query_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	
+	return retval;
+}
+
+int
 get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
@@ -162,6 +188,26 @@ run_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 		store_result_mysql(dnsa_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&dnsa, dnsa_res);
 	return 0;
+}
+
+int
+run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+	retval = NONE;
+	if ((type & ZONE) == ZONE)
+		if ((retval = run_query_mysql(config, base, ZONE)) != 0)
+			return retval;
+	if ((type & REV_ZONE) == REV_ZONE)
+		if ((retval = run_query_mysql(config, base, REV_ZONE)) != 0)
+			return retval;
+	if ((type & RECORD) == RECORD)
+		if ((retval = run_query_mysql(config, base, RECORD)) != 0)
+			return retval;
+	if ((type & REV_RECORD) == REV_RECORD)
+		if ((retval = run_query_mysql(config, base, REV_RECORD)) != 0)
+			return retval;
+	return retval;
 }
 
 void
@@ -342,6 +388,26 @@ run_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	retval = sqlite3_close(dnsa);
 	
 	return 0;
+}
+
+int
+run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+	retval = NONE;
+	if ((type & ZONE) == ZONE)
+		if ((retval = run_query_sqlite(config, base, ZONE)) != 0)
+			return retval;
+	if ((type & REV_ZONE) == REV_ZONE)
+		if ((retval = run_query_sqlite(config, base, REV_ZONE)) != 0)
+			return retval;
+	if ((type & RECORD) == RECORD)
+		if ((retval = run_query_sqlite(config, base, RECORD)) != 0)
+			return retval;
+	if ((type & REV_RECORD) == REV_RECORD)
+		if ((retval = run_query_sqlite(config, base, REV_RECORD)) != 0)
+			return retval;
+	return retval;
 }
 
 void
