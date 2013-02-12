@@ -1,6 +1,6 @@
 bin_PROGRAMS = dnsa cmdb cbc
 
-dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c\
+dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c zones.c\
 		mysqlfunc.h cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h
 cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
 		cmdb_base_sql.c base_sql.c\

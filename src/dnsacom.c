@@ -25,13 +25,16 @@
  * 
  * 
  */
-
+#include "../config.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 int
 parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
@@ -260,6 +263,7 @@ init_config_values(dnsa_config_t *dc)
 {
 	char *buff;
 	buff = dc->socket;
+	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
 	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
 	sprintf(dc->user, "root");
@@ -338,4 +342,9 @@ init_rev_record_struct(rev_record_row_t *rev)
 	snprintf(rev->dest, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");
 	rev->next = '\0';
+}
+
+void
+dnsa_clean_list(dnsa_t *dnsa)
+{
 }

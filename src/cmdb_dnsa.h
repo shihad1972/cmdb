@@ -126,7 +126,7 @@ parse_dnsa_config_error(int error);
 /* Validate command line input */
 int
 validate_comm_line(comm_line_t *comm);
-/* Struct initialisation functions */
+/* Struct initialisation and clean functions */
 void
 init_dnsa_struct(dnsa_t *dnsa);
 void
@@ -137,5 +137,10 @@ void
 init_record_struct(record_row_t *record);
 void
 init_rev_record_struct(rev_record_row_t *revrecord);
+void
+dnsa_clean_list(dnsa_t *dnsa);
+/* Zone Functions */
+void
+list_zones (dnsa_config_t *dc);
 
 #endif /* __CMDB_DNSA_H__ */

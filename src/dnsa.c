@@ -21,15 +21,19 @@
  *
  * 
  */
-
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
+/*
 #include "forward.h"
 #include "reverse.h"
-#include "checks.h"
+*/
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 int main(int argc, char *argv[])
 {
@@ -55,17 +59,18 @@ int main(int argc, char *argv[])
 	}
 	/* Get config values from config file */	
 	init_config_values(dc);
-	retval = parse_dnsa_config_file(dc, cm->config);
-	if (retval > 1) {
+	id = parse_dnsa_config_file(dc, cm->config);
+	if (id > 1) {
 		parse_dnsa_config_error(retval);
 		free(domain);
 		free(dc);
 		free(cm);
-		exit(retval);
+		exit(id);
 	}
-	retval = 0;
+	retval = id = 0;
 	strncpy(domain, cm->domain, CONF_S);
-/*	if (cm->type == FORWARD_ZONE) {
+	if (cm->type == FORWARD_ZONE) {
+#ifdef HAVE_LIBPCRE
 		retval = validate_user_input(domain, DOMAIN_REGEX);
 		if (retval < 0) {
 			printf("User input not valid!\n");
@@ -74,6 +79,11 @@ int main(int argc, char *argv[])
 			free(cm);
 			exit (retval);
 		}
+#endif /* HAVE_LIBPCRE */
+		if (cm->action == LIST_ZONES) {
+			list_zones(dc);
+		}
+		/*
 		if (cm->action == WRITE_ZONE) {
 			wzf(domain, dc);
 		} else if (cm->action == DISPLAY_ZONE) {
@@ -133,8 +143,8 @@ int main(int argc, char *argv[])
 		retval = WRONG_TYPE;
 		printf("We have an invalid type id %d\n", cm->type);
 		free(domain);
-		exit(retval);
-	} */
+		exit(retval); */
+	}
 	
 	free(domain);
 	free(cm);
