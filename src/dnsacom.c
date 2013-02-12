@@ -332,6 +332,7 @@ init_record_struct(record_row_t *record)
 void
 init_rev_record_struct(rev_record_row_t *rev)
 {
+	rev->record_id = 0;
 	rev->rev_zone = 0;
 	snprintf(rev->host, COMM_S, "NULL");
 	snprintf(rev->dest, COMM_S, "NULL");

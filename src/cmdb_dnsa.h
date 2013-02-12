@@ -39,27 +39,27 @@ typedef struct dnsa_config_t { /* Hold DNSA configuration values */
 } dnsa_config_t;
 
 typedef struct record_row_t { /* Hold dns record */
-	int id;
-	int pri;
-	int zone;
 	char dest[RBUFF_S];
 	char host[RBUFF_S];
-	char type[RBUFF_S];
-	char valid[RBUFF_S];
+	char type[RANGE_S];
+	char valid[RANGE_S];
+	unsigned long int id;
+	unsigned long int pri;
+	unsigned long int zone;
 	struct record_row_t *next;
 } record_row_t;
 
 typedef struct zone_info_t { /* Hold DNS zone */
-	int id;
-	int owner;
 	char name[RBUFF_S];
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
-	char valid[RBUFF_S];
-	char updated[RBUFF_S];
+	char valid[RANGE_S];
+	char updated[RANGE_S];
 	char web_ip[RANGE_S];
 	char ftp_ip[RANGE_S];
 	char mail_ip[RANGE_S];
+	unsigned long int id;
+	unsigned long int owner;
 	unsigned long int serial;
 	unsigned long int refresh;
 	unsigned long int retry;
@@ -69,16 +69,16 @@ typedef struct zone_info_t { /* Hold DNS zone */
 } zone_info_t;
 
 typedef struct rev_zone_info_t { /* Hold DNS zone */
-	int rev_zone_id;
-	int owner;
 	char net_range[RANGE_S];
 	char net_start[RANGE_S];
 	char net_finish[RANGE_S];
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
-	char valid[RBUFF_S];
-	char updated[RBUFF_S];
+	char valid[RANGE_S];
+	char updated[RANGE_S];
 	char hostmaster[RBUFF_S];
+	unsigned long int rev_zone_id;
+	unsigned long int owner;
 	unsigned long int prefix;
 	unsigned long int start_ip;
 	unsigned long int end_ip;
@@ -93,7 +93,8 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 typedef struct rev_record_row_t { /* Hold dns record */
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
-	char valid[RBUFF_S];
+	char valid[RANGE_S];
+	unsigned long int record_id;
 	unsigned long int rev_zone;
 	struct rev_record_row_t *next;
 } rev_record_row_t;

@@ -198,21 +198,114 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 void
 store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	zone_info_t *zone, *list;
+	
+	if (!(zone = malloc(sizeof(zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in store_zone_mysql");
+	init_zone_struct(zone);
+	zone->id = strtoul(row[0], NULL, 10);
+	snprintf(zone->name, RBUFF_S, "%s", row[1]);
+	snprintf(zone->pri_dns, RBUFF_S, "%s", row[2]);
+	snprintf(zone->sec_dns, RBUFF_S, "%s", row[3]);
+	zone->serial = strtoul(row[4], NULL, 10);
+	zone->refresh = strtoul(row[5], NULL, 10);
+	zone->retry = strtoul(row[6], NULL, 10);
+	zone->expire = strtoul(row[7], NULL, 10);
+	zone->ttl = strtoul(row[8], NULL, 10);
+	snprintf(zone->valid, RANGE_S, "%s", row[9]);
+	zone->owner = strtoul(row[10], NULL, 10);
+	snprintf(zone->updated, RANGE_S, "%s", row[11]);
+	list = base->zones;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = zone;
+	} else {
+		base->zones = zone;
+	}
 }
 
 void
 store_record_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	record_row_t *rec, *list;
+	
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "rec in store_record_mysql");
+	init_record_struct(rec);
+	rec->id = strtoul(row[0], NULL, 10);
+	rec->zone = strtoul(row[1], NULL, 10);
+	snprintf(rec->host, RBUFF_S, "%s", row[2]);
+	snprintf(rec->type, RANGE_S, "%s", row[3]);
+	rec->pri = strtoul(row[4], NULL, 10);
+	snprintf(rec->dest, RBUFF_S, "%s", row[5]);
+	snprintf(rec->valid, RANGE_S, "%s", row[6]);
+	list = base->records;
+	if (list) {
+		while(list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
+	}
 }
 
 void
 store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	rev_zone_info_t *rev, *list;
+	
+	if (!(rev = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rev in store_rev_zone_mysql");
+	init_rev_zone_struct(rev);
+	rev->rev_zone_id = strtoul(row[0], NULL, 10);
+	snprintf(rev->net_range, RANGE_S, "%s", row[1]);
+	rev->prefix = strtoul(row[2], NULL, 10);
+	snprintf(rev->net_start, RANGE_S, "%s", row[3]);
+	snprintf(rev->net_finish, RANGE_S, "%s", row[4]);
+	rev->start_ip = strtoul(row[5], NULL, 10);
+	rev->end_ip = strtoul(row[6], NULL, 10);
+	snprintf(rev->pri_dns, RBUFF_S, "%s", row[7]);
+	snprintf(rev->sec_dns, RBUFF_S, "%s", row[8]);
+	rev->serial = strtoul(row[9], NULL, 10);
+	rev->refresh = strtoul(row[10], NULL, 10);
+	rev->retry = strtoul(row[11], NULL, 10);
+	rev->expire = strtoul(row[12], NULL, 10);
+	rev->ttl = strtoul(row[13], NULL, 10);
+	snprintf(rev->valid, RANGE_S, "%s", row[14]);
+	rev->owner = strtoul(row[15], NULL, 10);
+	snprintf(rev->updated, RANGE_S, "%s", row[16]);
+	list = base->rev_zones;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rev;
+	} else {
+		base->rev_zones = rev;
+	}
 }
 
 void
 store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	rev_record_row_t *rev, *list;
+	
+	if (!(rev = malloc(sizeof(rev_record_row_t))))
+		report_error(MALLOC_FAIL, "rev in store_rev_record_mysql");
+	init_rev_record_struct(rev);
+	rev->record_id = strtoul(row[0], NULL, 10);
+	rev->rev_zone = strtoul(row[1], NULL, 10);
+	snprintf(rev->host, RBUFF_S, "%s", row[2]);
+	snprintf(rev->dest, RBUFF_S, "%s", row[3]);
+	snprintf(rev->valid, RANGE_S, "%s", row[4]);
+	list = base->rev_records;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rev;
+	} else {
+		base->rev_records = rev;
+	}
 }
 
 #endif /* HAVE_MYSQL */
@@ -285,21 +378,113 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 void
 store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	zone_info_t *zone, *list;
+	
+	if (!(zone = malloc(sizeof(zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in store_zone_sqlite");
+	init_zone_struct(zone);
+	zone->id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(zone->pri_dns, RBUFF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(zone->sec_dns, RBUFF_S, "%s", sqlite3_column_text(state, 3));
+	zone->serial = (unsigned long int) sqlite3_column_int(state, 4);
+	zone->refresh = (unsigned long int) sqlite3_column_int(state, 5);
+	zone->retry = (unsigned long int) sqlite3_column_int(state, 6);
+	zone->expire = (unsigned long int) sqlite3_column_int(state, 7);
+	zone->ttl = (unsigned long int) sqlite3_column_int(state, 8);
+	snprintf(zone->valid, RANGE_S, "%s", sqlite3_column_text(state, 9));
+	zone->owner = (unsigned long int) sqlite3_column_int(state, 10);
+	snprintf(zone->updated, RANGE_S, "%s", sqlite3_column_text(state, 11));
+	list = base->zones;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = zone;
+	} else {
+		base->zones = zone;
+	}
 }
 
 void
 store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	rev_zone_info_t *rev, *list;
+	
+	if (!(rev = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rev in store_rev_zone_sqlite");
+	init_rev_zone_struct(rev);
+	rev->rev_zone_id = (unsigned long int) sqlite3_column_int(state, 0);
+	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));
+	rev->prefix = (unsigned long int) sqlite3_column_int(state, 2);
+	snprintf(rev->net_start, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(rev->net_finish, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	rev->start_ip = (unsigned long int) sqlite3_column_int(state, 5);
+	rev->end_ip = (unsigned long int) sqlite3_column_int(state, 6);
+	snprintf(rev->pri_dns, RBUFF_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(rev->sec_dns, RBUFF_S, "%s", sqlite3_column_text(state, 8));
+	rev->serial = (unsigned long int) sqlite3_column_int(state, 9);
+	rev->refresh = (unsigned long int) sqlite3_column_int(state, 10);
+	rev->retry = (unsigned long int) sqlite3_column_int(state, 11);
+	rev->expire = (unsigned long int) sqlite3_column_int(state, 12);
+	rev->ttl = (unsigned long int) sqlite3_column_int(state, 13);
+	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 14));
+	rev->owner = (unsigned long int) sqlite3_column_int(state, 15);
+	snprintf(rev->updated, RANGE_S, "%s", sqlite3_column_text(state, 16));
+	list = base->rev_zones;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rev;
+	} else {
+		base->rev_zones = rev;
+	}
 }
 
 void
 store_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	record_row_t *rec, *list;
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "rec in store_record_sqlite");
+	init_record_struct(rec);
+	rec->id = (unsigned long int) sqlite3_column_int(state, 0);
+	rec->zone = (unsigned long int) sqlite3_column_int(state, 1);
+	snprintf(rec->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(rec->type, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	rec->pri = (unsigned long int) sqlite3_column_int(state, 4);
+	snprintf(rec->dest, RBUFF_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 6));
+	list = base->records;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
+	}
 }
 
 void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	rev_record_row_t *rev, *list;
+
+	if (!(rev = malloc(sizeof(rev_record_row_t))))
+		report_error(MALLOC_FAIL, "rev in store_rev_record_sqlite");
+	init_rev_record_struct(rev);
+	rev->record_id = (unsigned long int) sqlite3_column_int(state, 0);
+	rev->rev_zone = (unsigned long int) sqlite3_column_int(state, 1);
+	snprintf(rev->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(rev->dest, RBUFF_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	list = base->rev_records;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rev;
+	} else {
+		base->rev_records = rev;
+	}
 }
 
 
