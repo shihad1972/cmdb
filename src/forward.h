@@ -6,23 +6,6 @@
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 
-typedef struct zone_info_t { /* Hold DNS zone */
-	int id;
-	int owner;
-	char name[RBUFF_S];
-	char pri_dns[RBUFF_S];
-	char sec_dns[RBUFF_S];
-	char valid[RBUFF_S];
-	char updated[RBUFF_S];
-	char web_ip[RANGE_S];
-	char ftp_ip[RANGE_S];
-	char mail_ip[RANGE_S];
-	unsigned long int serial;
-	unsigned long int refresh;
-	unsigned long int retry;
-	unsigned long int expire;
-	unsigned long int ttl;
-} zone_info_t;
 
 /* Return struct containing the DNS zone data */
 zone_info_t

@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	}
 	retval = 0;
 	strncpy(domain, cm->domain, CONF_S);
-	if (cm->type == FORWARD_ZONE) {
+/*	if (cm->type == FORWARD_ZONE) {
 		retval = validate_user_input(domain, DOMAIN_REGEX);
 		if (retval < 0) {
 			printf("User input not valid!\n");
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 		printf("We have an invalid type id %d\n", cm->type);
 		free(domain);
 		exit(retval);
-	}
+	} */
 	
 	free(domain);
 	free(cm);

@@ -28,14 +28,14 @@ all:	$(bin_PROGRAMS)
 
 dnsa:
 	$(ECHO) Building dnsa : $(MAKE) $(MFLAGS)
-	cd $(DIR); $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) dnsa
 
 cmdb:
 	$(ECHO) Building cmdb : $(MAKE) $(MFLAGS)
-	cd $(DIR); $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cmdb
 
 cbc:
 	$(ECHO) Building cbc : $(MAKE) $(MFLAGS)
-	cd $(DIR); $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cbc
 
 

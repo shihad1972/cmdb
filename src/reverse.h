@@ -6,39 +6,6 @@
 #ifndef __REV_ZONE_H__
 #define __REV_ZONE_H__
 
-typedef struct rev_zone_info_t { /* Hold DNS zone */
-	int rev_zone_id;
-	int owner;
-	char net_range[16];
-	char net_start[16];
-	char net_finish[16];
-	char pri_dns[RBUFF_S];
-	char sec_dns[RBUFF_S];
-	char valid[RBUFF_S];
-	char updated[RBUFF_S];
-	char hostmaster[RBUFF_S];
-	unsigned long int prefix;
-	unsigned long int start_ip;
-	unsigned long int end_ip;
-	unsigned long int serial;
-	unsigned long int refresh;
-	unsigned long int retry;
-	unsigned long int expire;
-	unsigned long int ttl;
-} rev_zone_info_t;
-
-typedef struct rev_record_row_t { /* Hold dns record */
-	char host[RBUFF_S];
-	char dest[RBUFF_S];
-	struct rev_record_row_t *next;
-} rev_record_row_t;
-
-typedef struct dnsa_config_and_reverse {
-	dnsa_config_t *dc;
-	rev_record_row_t *record;
-	rev_zone_info_t *zone;
-} dnsa_config_and_reverse;
-
 /* Return the data for one reverse zone */
 void
 fill_rev_zone_data(MYSQL_ROW my_row, rev_zone_info_t *rzi);

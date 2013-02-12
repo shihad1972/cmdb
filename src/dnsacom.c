@@ -17,7 +17,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  commline.c:
+ *  dnsacom.c:
  *  Contains functions to deal with command line arguments and also
  *  to read the values from the configuration file.
  *
@@ -33,7 +33,8 @@
 #include "cmdb_dnsa.h"
 #include "checks.h"
 
-int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
+int
+parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 {
 	int i, retval;
 	
@@ -123,7 +124,8 @@ int parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 	return retval;
 }
 
-int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
+int
+parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -221,7 +223,8 @@ int parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	return retval;
 }
 
-void parse_dnsa_config_error(int error)
+void
+parse_dnsa_config_error(int error)
 {
 	switch(error) {
 		case PORT_ERR:
@@ -236,7 +239,24 @@ void parse_dnsa_config_error(int error)
 		}
 }
 
-void init_config_values(dnsa_config_t *dc)
+int
+validate_comm_line(comm_line_t *comm)
+{
+	int retval;
+	
+	retval = 0;
+	
+	retval = validate_user_input(comm->host, NAME_REGEX);
+	if (retval < 0)
+		return retval;
+	retval = validate_user_input(comm->dest, IP_REGEX);
+	if (retval < 0)
+		return retval;
+	return retval;
+}
+
+void
+init_config_values(dnsa_config_t *dc)
 {
 	char *buff;
 	buff = dc->socket;
@@ -255,17 +275,66 @@ void init_config_values(dnsa_config_t *dc)
 	sprintf(buff, "%s", "");
 }
 
-int validate_comm_line(comm_line_t *comm)
+void
+init_dnsa_struct(dnsa_t *dnsa)
 {
-	int retval;
-	
-	retval = 0;
-	
-	retval = validate_user_input(comm->host, NAME_REGEX);
-	if (retval < 0)
-		return retval;
-	retval = validate_user_input(comm->dest, IP_REGEX);
-	if (retval < 0)
-		return retval;
-	return retval;
+	dnsa->zones = '\0';
+	dnsa->rev_zones = '\0';
+	dnsa->records = '\0';
+	dnsa->rev_records = '\0';
+}
+
+void
+init_zone_struct(zone_info_t *zone)
+{
+	zone->id = zone->owner = 0;
+	zone->serial = zone->expire = zone->retry = 0;
+	zone->refresh = zone->ttl = 0;
+	snprintf(zone->name, COMM_S, "NULL");
+	snprintf(zone->pri_dns, COMM_S, "NULL");
+	snprintf(zone->sec_dns, COMM_S, "NULL");
+	snprintf(zone->valid, COMM_S, "NULL");
+	snprintf(zone->updated, COMM_S, "NULL");
+	snprintf(zone->web_ip, COMM_S, "NULL");
+	snprintf(zone->ftp_ip, COMM_S, "NULL");
+	snprintf(zone->mail_ip, COMM_S, "NULL");
+	zone->next = '\0';
+}
+
+void
+init_rev_zone_struct(rev_zone_info_t *rev)
+{
+	rev->rev_zone_id = rev->owner = 0;
+	rev->prefix = rev->serial = rev->refresh = rev->retry = rev->ttl = 0;
+	rev->start_ip = rev->end_ip = rev->expire = 0;
+	snprintf(rev->net_range, COMM_S, "NULL");
+	snprintf(rev->net_start, COMM_S, "NULL");
+	snprintf(rev->net_finish, COMM_S, "NULL");
+	snprintf(rev->pri_dns, COMM_S, "NULL");
+	snprintf(rev->sec_dns, COMM_S, "NULL");
+	snprintf(rev->updated, COMM_S, "NULL");
+	snprintf(rev->valid, COMM_S, "NULL");
+	snprintf(rev->hostmaster, COMM_S, "NULL");
+	rev->next = '\0';
+}
+
+void
+init_record_struct(record_row_t *record)
+{
+	record->id = record->pri = record->zone = 0;
+	snprintf(record->dest, COMM_S, "NULL");
+	snprintf(record->host, COMM_S, "NULL");
+	snprintf(record->type, COMM_S, "NULL");
+	snprintf(record->valid, COMM_S, "NULL");
+	record->next = '\0';
+}
+
+void
+init_rev_record_struct(rev_record_row_t *rev)
+{
+	rev->rev_zone = 0;
+	snprintf(rev->host, COMM_S, "NULL");
+	snprintf(rev->dest, COMM_S, "NULL");
+	snprintf(rev->valid, COMM_S, "NULL");
+	rev->next = '\0';
 }
