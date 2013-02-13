@@ -99,6 +99,11 @@ typedef struct rev_record_row_t { /* Hold dns record */
 	struct rev_record_row_t *next;
 } rev_record_row_t;
 
+typedef struct zone_file_t {
+	char out[RBUFF_S];
+	struct zone_file_t *next;
+} zone_file_t;
+
 typedef struct dnsa_config_and_reverse {
 	dnsa_config_t *dc;
 	rev_record_row_t *record;
@@ -110,6 +115,7 @@ typedef struct dnsa_t {
 	struct rev_zone_info_t *rev_zones;
 	struct record_row_t *records;
 	struct rev_record_row_t *rev_records;
+	struct zone_file_t *file;
 } dnsa_t;
 
 /* Get command line args and pass them. Put actions into the struct */
@@ -141,9 +147,17 @@ void
 dnsa_clean_list(dnsa_t *dnsa);
 /* Zone Functions */
 void
-list_zones (dnsa_config_t *dc);
+list_zones(dnsa_config_t *dc);
 void
 list_rev_zones(dnsa_config_t *dc);
+void
+display_zone(char *domain, dnsa_config_t *dc);
+void
+print_zone(dnsa_t *dnsa, char *domain);
+void
+display_rev_zone(char *domain, dnsa_config_t *dc);
+void
+print_rev_zone(dnsa_t *dnsa, char *domain);
 void
 dnsa_clean_zones(zone_info_t *zone);
 void

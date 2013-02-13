@@ -101,3 +101,106 @@ list_rev_zones(dnsa_config_t *dc)
 	}
 	dnsa_clean_list(dnsa);
 }
+
+void
+display_zone(char *domain, dnsa_config_t *dc)
+{
+	int retval;
+	dnsa_t *dnsa;
+	
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in display_zone");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return;
+	}
+	print_zone(dnsa, domain);
+	dnsa_clean_list(dnsa);
+}
+
+void
+print_zone(dnsa_t *dnsa, char *domain)
+{
+	unsigned int i, j;
+	record_row_t *records = dnsa->records;
+	zone_info_t *zone = dnsa->zones;
+	i = j = 0;
+	while (zone) {
+		if (strncmp(zone->name, domain, RBUFF_S) == 0) {
+			printf("%s.\t%s\thostmaster.%s\t%lu\n",
+zone->name, zone->pri_dns, zone->name, zone->serial);
+			j++;
+			break;
+		} else {
+			zone = zone->next;
+		}
+	}
+	if (j == 0) {
+		printf("No zone %s found\n", domain);
+		return;
+	}
+	while (records) {
+		if (zone->id == records->zone) {
+			if (strlen(records->host) < 8)
+				printf("%s\t\t\tIN\t%s\t%s\n",
+records->host, records->type, records->dest);
+			else if (strlen(records->host) < 16)
+				printf("%s\t\tIN\t%s\t%s\n",
+records->host, records->type, records->dest);
+			else if (strlen(records->host) < 24)
+				printf("%s\tIN\t%s\t%s\n",
+records->host, records->type, records->dest);
+			else
+				printf("%s\n\t\t\tIN\t%s\t%s\n",
+records->host, records->type, records->dest);
+			i++;
+			records = records->next;
+		} else {
+			records = records->next;
+		}
+	}
+	printf("\n%u records\n", i);
+}
+
+void
+display_rev_zone(char *domain, dnsa_config_t *dc)
+{
+	int retval;
+	dnsa_t *dnsa;
+	
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return;
+	}
+	print_rev_zone(dnsa, domain);
+	dnsa_clean_list(dnsa);
+}
+
+void
+print_rev_zone(dnsa_t *dnsa, char *domain)
+{
+	unsigned int i, j;
+	rev_record_row_t *records = dnsa->rev_records;
+	rev_zone_info_t *zone = dnsa->rev_zones;
+	i = j = 0;
+	while (zone) {
+		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
+			printf("%s\t%s\t%lu\n",
+zone->net_range, zone->pri_dns, zone->serial);
+			j++;
+			break;
+		} else {
+			zone = zone->next;
+		}
+	}
+	if (j == 0) {
+		printf("Zone %s not found\n", domain);
+		return;
+	}
+}

@@ -154,6 +154,10 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 		}
 		rewind(cnf);
 		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "FILE=%s", dc->file);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
 			sscanf(buff, "HOST=%s", dc->host);	
 		}
 		rewind(cnf);
@@ -286,6 +290,7 @@ init_dnsa_struct(dnsa_t *dnsa)
 	dnsa->rev_zones = '\0';
 	dnsa->records = '\0';
 	dnsa->rev_records = '\0';
+	dnsa->file = '\0';
 }
 
 void

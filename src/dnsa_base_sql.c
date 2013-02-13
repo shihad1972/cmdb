@@ -47,7 +47,8 @@ valid, owner, updated FROM zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
 owner, updated FROM rev_zones ORDER BY start_ip","\
-SELECT id, zone, host, type, pri, destination, valid FROM records","\
+SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
+BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records"
 };
 

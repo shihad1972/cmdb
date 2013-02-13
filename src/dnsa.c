@@ -82,10 +82,14 @@ int main(int argc, char *argv[])
 #endif /* HAVE_LIBPCRE */
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
+		} else if (cm->action == DISPLAY_ZONE) {
+			display_zone(domain, dc);
 		}
 	} else if (cm->type == REVERSE_ZONE) {
 		if (cm->action == LIST_ZONES) {
 			list_rev_zones(dc);
+		} else if (cm->action == DISPLAY_ZONE) {
+			display_rev_zone(domain, dc);
 		}
 	}
 
