@@ -52,7 +52,8 @@ enum {			/* SELECT and INSERT indexes */
 };
 
 enum {			/* Search indexes and queries */
-	ZONE_ID_ON_NAME = 0
+	ZONE_ID_ON_NAME = 0,
+	REV_ZONE_ID_ON_NET_RANGE
 };
 
 int
@@ -64,7 +65,7 @@ get_query(int type, const char **query, unsigned int *fields);
 void
 get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, dnsa_t *base);
 int
-run_search(dnsa_config_t *config, dnsa_t *base, int type);
+run_search(dnsa_config_t *config, dbdata_t *base, int type);
 int
 run_insert(dnsa_config_t *config, dnsa_t *base, int type);
 
@@ -80,7 +81,7 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
-run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type);
+run_search_mysql(dnsa_config_t *config, dbdata_t *base, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base);
 int
@@ -134,7 +135,7 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
-run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
+run_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type);
 void

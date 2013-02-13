@@ -52,8 +52,26 @@ BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records"
 };
 
+const char *sql_search[] = { "\
+SELECT id FROM zones WHERE name = ?","\
+SELECT rev_zone_id FROM rev_zones WHERE net_range = ?"
+};
+
 const unsigned int select_fields[] = { 12, 17, 7, 5 };
 
+const unsigned int search_fields[] = { 1, 1 };
+
+const unsigned int search_args[] = { 1, 1 };
+
+const unsigned int search_field_type[][1] = { /* What we are selecting */
+	{ DBINT } ,
+	{ DBINT }
+};
+
+const unsigned int search_arg_type[][1] = { /* What we are searching on */
+	{ DBTEXT } ,
+	{ DBTEXT }
+};
 
 int
 run_query(dnsa_config_t *config, dnsa_t *base, int type)
@@ -136,6 +154,32 @@ get_query(int type, const char **query, unsigned int *fields)
 	}
 	
 	return retval;
+}
+
+int
+run_search(dnsa_config_t *config, dbdata_t *base, int type)
+{
+	int retval;
+
+	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_search_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_search_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
 }
 
 #ifdef HAVE_MYSQL
@@ -355,6 +399,12 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 	}
 }
 
+int
+run_search_mysql(dnsa_config_t *config, dbdata_t *data, int type)
+{
+	return 0;
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -554,5 +604,10 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	}
 }
 
+int
+run_search_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
+{
+	return 0;
+}
 
 #endif /* HAVE_SQLITE3 */

@@ -185,9 +185,12 @@ display_rev_zone(char *domain, dnsa_config_t *dc)
 void
 print_rev_zone(dnsa_t *dnsa, char *domain)
 {
+	char *in_addr;
 	unsigned int i, j;
 	rev_record_row_t *records = dnsa->rev_records;
 	rev_zone_info_t *zone = dnsa->rev_zones;
+	if (!(in_addr = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "in_addr in print rev zone");
 	i = j = 0;
 	while (zone) {
 		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
@@ -203,4 +206,17 @@ zone->net_range, zone->pri_dns, zone->serial);
 		printf("Zone %s not found\n", domain);
 		return;
 	}
+	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
+	while (records) {
+		if (records->rev_zone == zone->rev_zone_id) {
+			printf("%s.%s\t%s\n", records->host, in_addr, records->dest);
+			records = records->next;
+			i++;
+		} else {
+			records = records->next;
+		}
+	}
+	if (i == 0)
+		printf("No reverse records for range %s\n", zone->net_range);
 }
+

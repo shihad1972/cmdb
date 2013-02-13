@@ -46,6 +46,11 @@ enum {			/* Database Type errors */
 	NO_SQLITE = 4
 };
 
+enum {			/* Database colum types */
+	DBTEXT = 1,
+	DBINT = 2
+};
+
 enum {			/* dnsa error codes */
 	OK = 0,
 	ARGC_INVAL = 1,

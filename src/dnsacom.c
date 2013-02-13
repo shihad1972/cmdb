@@ -294,6 +294,12 @@ init_dnsa_struct(dnsa_t *dnsa)
 }
 
 void
+init_dbdata_struct(dbdata_t *data)
+{
+	data->next = '\0';
+}
+
+void
 init_zone_struct(zone_info_t *zone)
 {
 	zone->id = zone->owner = 0;
@@ -465,4 +471,102 @@ dnsa_clean_rev_records(rev_record_row_t *list)
 		else
 			next = '\0';
 	}
+}
+
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
+{
+	size_t len;
+	char *tmp, *line, *classless;
+	char louisa[] = ".in-addr.arpa";
+	int c, i;
+
+	c = '.';
+	i = 0;
+	tmp = 0;
+	len = strlen(range);
+	len++;/* Got to remember the terminating \0 :) */
+	if (!(line = calloc(len, sizeof(char))))
+		report_error(MALLOC_FAIL, "line in get_in_addr_string2");
+	if (!(classless = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "classless in get_in_addr_string2");
+
+	snprintf(line, len, "%s", range);
+	switch (prefix) {
+		case 24:
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			while ((tmp = strrchr(line, c))) {
+				++tmp;
+				len = strlen(tmp);
+				strncat(in_addr, tmp, len);
+				strncat(in_addr, ".", 1);
+				--tmp;
+				*tmp = '\0';
+				i++;
+			}
+			break;
+		case 16:
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			while ((tmp = strrchr(line, c))) {
+				++tmp;
+				len = strlen(tmp);
+				strncat(in_addr, tmp, len);
+				strncat(in_addr, ".", 1);
+				--tmp;
+				*tmp = '\0';
+				i++;
+			}
+			break;
+		case 8:
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			tmp = strrchr(line, c);
+			*tmp = '\0';
+			while ((tmp = strrchr(line, c))) {
+				++tmp;
+				len = strlen(tmp);
+				strncat(in_addr, tmp, len);
+				strncat(in_addr, ".", 1);
+				--tmp;
+				*tmp = '\0';
+				i++;
+			}
+			break;
+		case 25: case 26: case 27: case 28: case 29: case 30:
+		case 31: case 32:
+			tmp = strrchr(line, c);
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strncat(in_addr, ".", 1);
+			--tmp;
+			*tmp = '\0';
+			snprintf(classless, CONF_S, "/%lu.", prefix);
+			len = strlen(classless);
+			strncat(in_addr, classless, len);
+			while ((tmp = strrchr(line, c))) {
+				++tmp;
+				len = strlen(tmp);
+				strncat(in_addr, tmp, len);
+				strncat(in_addr, ".", 1);
+				--tmp;
+				*tmp = '\0';
+				i++;
+			}
+			break;
+		default:
+			break;
+	}
+	len = strlen(line);
+	strncat(in_addr, line, len);
+	len = strlen(louisa);
+	strncat(in_addr, louisa, len);
+	free(line);
+	free(classless);
 }

@@ -118,6 +118,17 @@ typedef struct dnsa_t {
 	struct zone_file_t *file;
 } dnsa_t;
 
+typedef union dbdata_u {
+	char text[256];
+	unsigned long int number;
+} dbdata_u;
+
+typedef struct dbdata_t {
+	union dbdata_u fields;
+	union dbdata_u args;
+	struct dbdata_t *next;
+} dbdata_t;
+
 /* Get command line args and pass them. Put actions into the struct */
 int
 parse_dnsa_command_line(int argc, char **argv, comm_line_t *comm);
@@ -166,5 +177,7 @@ void
 dnsa_clean_records(record_row_t *rec);
 void
 dnsa_clean_rev_records(rev_record_row_t *rev);
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 
 #endif /* __CMDB_DNSA_H__ */
