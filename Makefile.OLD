@@ -1,0 +1,41 @@
+#
+#
+# Makefile for DNSA c programs
+#
+#
+RM = rm -f
+ECHO = echo
+DIR = src
+SUBDIRS = src
+bin_PROGRAMS = dnsa cmdb cbc
+
+dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
+		src/dnsa-base_sql.c src/base_sql.c\
+		src/mysqlfunc.h src/cmdb_dnsa.h src/cmdb.h src/checks.h
+
+cbc_SOURCES =	src/cbc.c src/cbc_mysql.c src/errors.c src/checks.c src/cbccom.c\
+		src/build_info.c src/build_add.c src/build_display.c src/base_sql.c\
+		src/build_data_struct.c\
+		src/build.h src/cbc_mysql.h src/cmdb_cbc.h src/cmdb.h src/mysqlfunc.h
+
+cmdb_SOURCES =	src/cmdb.c src/cmdbcom.c src/errors.c src/servers.c src/customers.c\
+		src/checks.c src/base_sql.c src/cmdb_base_sql.c\
+		src/mysqlfunc.h src/cmdb_cmdb.h src/cmdb_base_sql.h src/cmdb.h src/checks.h
+
+all:	$(bin_PROGRAMS)
+
+dnsa:
+	$(ECHO) Building dnsa : $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) dnsa
+
+cmdb:
+	$(ECHO) Building cmdb : $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cmdb
+
+cbc:
+	$(ECHO) Building cbc : $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cbc
+
+clean :
+	$(ECHO) Making Clean
+	cd $(DIR); $(MAKE) clean
