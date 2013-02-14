@@ -196,5 +196,7 @@ void
 create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
 size_t
 add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+int
+check_zone(char *filename, char *domain, dnsa_config_t *dc);
 
 #endif /* __CMDB_DNSA_H__ */
