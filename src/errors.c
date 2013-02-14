@@ -398,17 +398,17 @@ display_dnsa_usage(void)
 {
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Action options:\n");
-	printf("-d: display zone\n-w: write zone\n-l: list zones\n");
-	printf("-c: write configuration file\n-z: Add zone\n-a: Add host record\n");
+	printf("-d: display zone\n-l: list zones\n");
+	printf("-c: commit valid zones on nameserver\n-z: add zone\n-a: add host record\n");
 	printf("-b: build reverse zone\n\n");
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");
 	printf("-n: zone-name\n\n");
-	printf("Zone options for use with adding a zone:\n");
+	printf("Zone options for use with adding a reverse zone:\n");
 	printf("-p: prefix\n\n");
 	printf("Host options for use with adding a host record:\n");
-	printf("-i: IP Address\n-t: Record type (A, MX etc)\n-h: host\n\n");
+	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host\n\n");
 }
 
 void
@@ -515,3 +515,56 @@ Unable to perform requested action on ");
 	}
 }
 
+int
+add_trailing_slash(char *member)
+{
+	size_t len;
+	int retval;
+	
+	retval = 0;
+	len = strlen(member);
+	if ((member[len - 1] != '/') && len < CONF_S) {
+		member[len] = '/';
+		member[len + 1] = '\0';
+	} else if ((member[len - 1] == '/')) {
+		retval = NONE;
+	} else {
+		retval = -1;
+	}
+	
+	return retval;
+}
+
+int
+add_trailing_dot(char *member)
+{
+	size_t len;
+	int retval;
+	
+	retval = 0;
+	len = strlen(member);
+	if (member[len - 1] != '.') {
+		member[len] = '.';
+		member[len +1] = '\0';
+	} else if (member[len - 1] == '.') {
+		retval = NONE;
+	} else {
+		retval = -1;
+	}
+	return retval;
+}
+
+int
+write_file(char *filename, char *output)
+{
+	int retval;
+	FILE *zonefile;
+	if (!(zonefile = fopen(filename, "w"))) {
+		retval = FILE_O_FAIL;
+	} else {
+		fputs(output, zonefile);
+		fclose(zonefile);
+		retval = NONE;
+	}
+	return retval;
+}

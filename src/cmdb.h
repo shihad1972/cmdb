@@ -181,7 +181,10 @@ enum {			/* cmdb config file error codes */
 
 enum {			/* dnsa config file error codes */
 	DIR_ERR = 3,
-	BIND_ERR = 4
+	BIND_ERR = 4,
+	HOSTM_ERR = 5,
+	PRINS_ERR = 6,
+	SECNS_ERR = 7
 };
 
 enum {			/* cbc config file error codes */
@@ -210,13 +213,6 @@ enum {			/* cbc config file error codes */
 	MULTI_DHCP_ERR = 25
 };
 
-enum {			/* cmdb Action codes */
-	NONE = 0,
-	DISPLAY = 1,
-	LIST_OBJ = 2,
-	ADD_TO_DB = 3
-};
-
 enum {			/* Display codes; use NONE from action codes */
 	SERVER = 1,
 	CUSTOMER = 2,
@@ -228,15 +224,11 @@ enum {			/* Display codes; use NONE from action codes */
 	VM_HOST = 128
 };
 
-enum {			/* dnsa action codes */
-	WRITE_ZONE = 21,
-	DISPLAY_ZONE = 22,
-	CONFIGURE_ZONE = 23,
-	LIST_ZONES = 24,
-	ADD_ZONE = 25,
-	ADD_RECORD = 26,
-	ADD_HOST = 27,
-	BUILD_REV = 28
+enum {			/* cmdb Action codes */
+	NONE = 0,
+	DISPLAY = 1,
+	LIST_OBJ = 2,
+	ADD_TO_DB = 3
 };
 
 enum {			/* cbc action codes */
@@ -244,6 +236,15 @@ enum {			/* cbc action codes */
 	DISPLAY_CONFIG = 12,
 	ADD_CONFIG = 13,
 	CREATE_CONFIG = 14
+};
+
+enum {			/* dnsa action codes */
+	DISPLAY_ZONE = 21,
+	LIST_ZONES = 22,
+	COMMIT_ZONES = 23,
+	ADD_ZONE = 24,
+	ADD_HOST = 25,
+	BUILD_REV = 26
 };
 
 enum {			/* cbc values for build type */
@@ -293,5 +294,10 @@ void
 display_dnsa_usage(void);
 void
 chomp(char *input);
-
+int
+add_trailing_slash(char *member);
+int
+add_trailing_dot(char *member);
+int
+write_file(char *filename, char *output);
 #endif

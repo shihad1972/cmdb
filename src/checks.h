@@ -50,7 +50,4 @@ enum {			/* regex search codes */
 int
 validate_user_input(char *input, int test);
 
-int
-add_trailing_slash(char *member);
-
 #endif

@@ -289,6 +289,7 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 void
 store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	int retval;
 	zone_info_t *zone, *list;
 	
 	if (!(zone = malloc(sizeof(zone_info_t))))
@@ -296,8 +297,13 @@ store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 	init_zone_struct(zone);
 	zone->id = strtoul(row[0], NULL, 10);
 	snprintf(zone->name, RBUFF_S, "%s", row[1]);
-	snprintf(zone->pri_dns, RBUFF_S, "%s", row[2]);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", row[3]);
+	snprintf(zone->pri_dns, RBUFF_S - 1, "%s", row[2]);
+	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	snprintf(zone->sec_dns, RBUFF_S - 1, "%s", row[3]);
+	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	zone->serial = strtoul(row[4], NULL, 10);
 	zone->refresh = strtoul(row[5], NULL, 10);
 	zone->retry = strtoul(row[6], NULL, 10);
@@ -344,6 +350,7 @@ store_record_mysql(MYSQL_ROW row, dnsa_t *base)
 void
 store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
+	int retval;
 	rev_zone_info_t *rev, *list;
 	
 	if (!(rev = malloc(sizeof(rev_zone_info_t))))
@@ -356,8 +363,13 @@ store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 	snprintf(rev->net_finish, RANGE_S, "%s", row[4]);
 	rev->start_ip = strtoul(row[5], NULL, 10);
 	rev->end_ip = strtoul(row[6], NULL, 10);
-	snprintf(rev->pri_dns, RBUFF_S, "%s", row[7]);
-	snprintf(rev->sec_dns, RBUFF_S, "%s", row[8]);
+	snprintf(rev->pri_dns, RBUFF_S - 1, "%s", row[7]);
+	if ((retval = add_trailing_dot(rev->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	snprintf(rev->sec_dns, RBUFF_S - 1, "%s", row[8]);
+	if (strncmp(rev->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(rev->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	rev->serial = strtoul(row[9], NULL, 10);
 	rev->refresh = strtoul(row[10], NULL, 10);
 	rev->retry = strtoul(row[11], NULL, 10);
@@ -495,6 +507,7 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 void
 store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	int retval;
 	zone_info_t *zone, *list;
 	
 	if (!(zone = malloc(sizeof(zone_info_t))))
@@ -502,8 +515,13 @@ store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	init_zone_struct(zone);
 	zone->id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(zone->pri_dns, RBUFF_S, "%s", sqlite3_column_text(state, 2));
-	snprintf(zone->sec_dns, RBUFF_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(zone->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 2));
+	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	snprintf(zone->sec_dns, RBUFF_S - 1, "%s", sqlite3_column_text(state, 3));
+	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	zone->serial = (unsigned long int) sqlite3_column_int(state, 4);
 	zone->refresh = (unsigned long int) sqlite3_column_int(state, 5);
 	zone->retry = (unsigned long int) sqlite3_column_int(state, 6);
@@ -525,6 +543,7 @@ store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 void
 store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {
+	int retval;
 	rev_zone_info_t *rev, *list;
 	
 	if (!(rev = malloc(sizeof(rev_zone_info_t))))
@@ -537,8 +556,13 @@ store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	snprintf(rev->net_finish, RANGE_S, "%s", sqlite3_column_text(state, 4));
 	rev->start_ip = (unsigned long int) sqlite3_column_int(state, 5);
 	rev->end_ip = (unsigned long int) sqlite3_column_int(state, 6);
-	snprintf(rev->pri_dns, RBUFF_S, "%s", sqlite3_column_text(state, 7));
-	snprintf(rev->sec_dns, RBUFF_S, "%s", sqlite3_column_text(state, 8));
+	snprintf(rev->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 7));
+	if ((retval = add_trailing_dot(rev->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	snprintf(rev->sec_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 8));
+	if (strncmp(rev->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(rev->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	rev->serial = (unsigned long int) sqlite3_column_int(state, 9);
 	rev->refresh = (unsigned long int) sqlite3_column_int(state, 10);
 	rev->retry = (unsigned long int) sqlite3_column_int(state, 11);

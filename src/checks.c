@@ -34,7 +34,8 @@ const char *regexps[14] = {
 	"^[0-9]*\\ [TGM]B$",
 	"^[0-9]*\\.[0-9]*$"
 };
-int validate_user_input(char *input, int regex_test)
+int
+validate_user_input(char *input, int regex_test)
 {
 	pcre *regexp;
 	const char *error;
@@ -80,22 +81,3 @@ int validate_user_input(char *input, int regex_test)
 	return 1;
 }
 
-
-int add_trailing_slash(char *member)
-{
-	size_t len;
-	int retval;
-	
-	retval = 0;
-	len = strlen(member);
-	if ((member[len - 1] != '/') && len < CONF_S) {
-		member[len] = '/';
-		member[len + 1] = '\0';
-	} else if ((member[len - 1] == '/')) {
-		retval = NONE;
-	} else {
-		retval = -1;
-	}
-	
-	return retval;
-}

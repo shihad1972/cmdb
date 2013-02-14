@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> /* For sleep() */
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "dnsa_base_sql.h"
@@ -220,3 +221,139 @@ zone->net_range, zone->pri_dns, zone->serial);
 		printf("No reverse records for range %s\n", zone->net_range);
 }
 
+int
+commit_fwd_zones(dnsa_config_t *dc)
+{
+	char *zonefile, *filename;
+	int retval;
+	size_t len;
+	dnsa_t *dnsa;
+	zone_info_t *zone;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
+	if (!(zonefile = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "zonefile in commit_fwd_zones");
+	if (!(filename = calloc(NAME_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "filename in commit_fwd_zones");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return MY_QUERY_FAIL;
+	}
+	if (dnsa->zones)
+		zone = dnsa->zones;
+	else
+		return DOMAIN_LIST_FAIL;
+	while (zone) {
+		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
+			create_fwd_zone_header(dnsa, dc->hostmaster, zone->id, zonefile);
+			len = add_records_to_fwd_zonefile(dnsa, zone->id, &zonefile);
+			fprintf(stderr, "%s file is up to %zd\n", zone->name, len);
+			snprintf(filename, NAME_S, "%s%s", dc->dir, zone->name);
+			if ((retval = write_file(filename, zonefile)) != 0)
+				printf("Unable to write %s zonefile\n", zone->name);
+			zone = zone->next;
+		} else {
+			zone = zone->next;
+		}
+	}
+	free(zonefile);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+commit_rev_zones(dnsa_config_t *dc)
+{
+	int retval;
+	dnsa_t *dnsa;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return MY_QUERY_FAIL;
+	}
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+void
+create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile)
+{
+	char *buffer;
+	
+	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in create_zone_header");
+	zone_info_t *zone = dnsa->zones;
+	record_row_t *record = dnsa->records;
+	while (zone->id != id)
+		zone = zone->next;
+	snprintf(zonefile, BUILD_S, "\
+$TTL %lu\n\
+@\tIN\tSOA\t%s\t%s (\n\
+\t\t\t\t%lu\t; Serial\n\
+\t\t\t\t%lu\t\t; Refresh\n\
+\t\t\t\t%lu\t\t; Retry\n\
+\t\t\t\t%lu\t\t; Expire\n\
+\t\t\t\t%lu\t\t); Cache TTL\n\
+;\n\
+\t\tNS\t%s\n",
+	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
+	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
+	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0) {
+		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
+			 zone->sec_dns);
+		strncat(zonefile, buffer, strlen(buffer));
+	}
+	while (record) {
+		if ((record->zone == id) && 
+			(strncmp(record->type, "MX", COMM_S) == 0)) {
+			snprintf(buffer, RBUFF_S + COMM_S, "\
+\t\tMX %lu\t%s\n", record->pri, record->dest);
+			strncat(zonefile, buffer, strlen(buffer));
+			record = record->next;
+		} else {
+			record = record->next;
+		}
+	}
+	free(buffer);
+}
+
+size_t
+add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
+{
+	char *buffer;
+	size_t len, size;
+	record_row_t *record = dnsa->records;
+	len = BUILD_S;
+	if (!(buffer = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
+	
+	while (record) {
+		if (record->zone != id) {
+			record = record->next;
+		} else if (strncmp(record->type, "MX", COMM_S) == 0) {
+			record = record->next;
+		} else if (strncmp(record->type, "NS", COMM_S) == 0) {
+			record = record->next;
+		} else {
+			snprintf(buffer, BUFF_S, "\
+%s\t%s\t%s\n", record->host, record->type, record->dest);
+			size = strlen(*zonefile);
+			if (strlen(buffer) + size > len) {
+				len = len + BUILD_S;
+				if (!(realloc(*zonefile, len))) {
+					report_error(MALLOC_FAIL, "realloc of zonefile");
+				}
+			}
+			strncat(*zonefile, buffer, strlen(buffer));
+			record = record->next;
+		}
+	}
+	return len;
+}

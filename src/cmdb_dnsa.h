@@ -34,6 +34,15 @@ typedef struct dnsa_config_t { /* Hold DNSA configuration values */
 	char chkz[CONF_S];
 	char chkc[CONF_S];
 	char socket[CONF_S];
+	char hostmaster[RBUFF_S];
+	char prins[RBUFF_S];
+	char secns[RBUFF_S];
+	char pridns[MAC_S];
+	char secdns[MAC_S];
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
 	unsigned int port;
 	unsigned long int cliflag;
 } dnsa_config_t;
@@ -161,6 +170,10 @@ void
 list_zones(dnsa_config_t *dc);
 void
 list_rev_zones(dnsa_config_t *dc);
+int
+commit_fwd_zones(dnsa_config_t *dc);
+int
+commit_rev_zones(dnsa_config_t *dc);
 void
 display_zone(char *domain, dnsa_config_t *dc);
 void
@@ -179,5 +192,9 @@ void
 dnsa_clean_rev_records(rev_record_row_t *rev);
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
+void
+create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
+size_t
+add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
 
 #endif /* __CMDB_DNSA_H__ */

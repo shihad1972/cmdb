@@ -55,15 +55,14 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
 			comp->action = DISPLAY_ZONE;
-		} else if ((strncmp(argv[i], "-w", COMM_S) == 0)) {
-			comp->action = WRITE_ZONE;
 		} else if ((strncmp(argv[i], "-z", COMM_S) == 0)) {
 			comp->action = ADD_ZONE;
 		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
-			comp->action = CONFIGURE_ZONE;
+			comp->action = COMMIT_ZONES;
 			strncpy(comp->domain, "none", CONF_S);
 		} else if ((strncmp(argv[i], "-a", COMM_S) == 0)) {
 			comp->action = ADD_HOST;
+			comp->type = FORWARD_ZONE;
 		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
 			comp->action = LIST_ZONES;
 			strncpy(comp->domain, "all", CONF_S);
@@ -130,12 +129,16 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 int
 parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 {
-	FILE *cnf;	/* File handle for config file */
+	char buff[RBUFF_S] = "";
+	char port[RANGE_S] = "";
+	char refresh[MAC_S] = "";
+	char retry[MAC_S] = "";
+	char expire[MAC_S] = "";
+	char ttl[MAC_S] = "";
+	char *hostmaster;
 	int retval;
 	unsigned long int portno;
-
-	char buff[CONF_S] = "";
-	char port[CONF_S] = "";
+	FILE *cnf;	/* File handle for config file */
 
 	dc->port = 3306;
 	dc->cliflag = 0;
@@ -145,65 +148,78 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 		fprintf(stderr, "Using default values\n");
 		retval = CONF_ERR;
 	} else {
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DBTYPE=%s", dc->dbtype);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PASS=%s", dc->pass);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "FILE=%s", dc->file);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "HOST=%s", dc->host);	
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "USER=%s", dc->user);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DB=%s", dc->db);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "SOCKET=%s", dc->socket);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PORT=%s", port);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DIR=%s", dc->dir);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "BIND=%s", dc->bind);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "REV=%s", dc->rev);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DNSA=%s", dc->dnsa);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "RNDC=%s", dc->rndc);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "CHKZ=%s", dc->chkz);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "CHKC=%s", dc->chkc);
-		}
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "REFRESH=%s", refresh);
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "RETRY=%s", retry);
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "EXPIRE=%s", expire);
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "TTL=%s", ttl);
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "PRIDNS=%s", dc->pridns);
+		rewind(cnf);
+		while ((fgets(buff, MAC_S, cnf)))
+			sscanf(buff, "SECDNS=%s", dc->secdns);
+		rewind(cnf);
+		while ((fgets(buff, RBUFF_S - 1, cnf)))
+			sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
+		rewind(cnf);
+		while ((fgets(buff, RBUFF_S - 1, cnf)))
+			sscanf(buff, "PRINS=%s", dc->prins);
+		rewind(cnf);
+		while ((fgets(buff, RBUFF_S - 1, cnf)))
+			sscanf(buff, "SECNS=%s", dc->secns);
+		rewind(cnf);
 		retval = NONE;
 		fclose(cnf);
 	}
@@ -217,7 +233,12 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	} else {
 		dc->port = (unsigned int) portno;
 	}
-	
+	dc->refresh = strtoul(refresh, NULL, 10);
+	dc->retry = strtoul(retry, NULL, 10);
+	dc->expire = strtoul(expire, NULL, 10);
+	dc->ttl = strtoul(ttl, NULL, 10);
+	hostmaster = strchr(dc->hostmaster, '@');
+	*hostmaster = '.';
 	/* The next 2 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
@@ -226,7 +247,12 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 		retval = DIR_ERR;
 	if ((retval = add_trailing_slash(dc->bind)) != 0)
 		retval = BIND_ERR;
-	
+	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
+		retval = HOSTM_ERR;
+	if ((retval = add_trailing_dot(dc->prins)) != 0)
+		retval = PRINS_ERR;
+	if ((retval = add_trailing_dot(dc->secns)) != 0)
+		retval = SECNS_ERR;
 	return retval;
 }
 
