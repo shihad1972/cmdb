@@ -201,16 +201,18 @@ int
 create_fwd_config(dnsa_config_t *dc, zone_info_t *zone, char *config);
 void
 create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
-size_t
+void
 add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
 /* Reverse zone functions */
 int
 create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone);
 void
 create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile);
-size_t
+void
 add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
 int
 check_rev_zone(char *filename, char *domain, dnsa_config_t *dc);
+int
+create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile);
 
 #endif /* __CMDB_DNSA_H__ */

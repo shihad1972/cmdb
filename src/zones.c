@@ -307,7 +307,7 @@ create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zo
 	char *buffer;
 	
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_zone_header");
+		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
 	zone_info_t *zone = dnsa->zones;
 	record_row_t *record = dnsa->records;
 	while (zone->id != id)
@@ -343,7 +343,7 @@ $TTL %lu\n\
 	free(buffer);
 }
 
-size_t
+void
 add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 {
 	char *buffer;
@@ -375,7 +375,6 @@ add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 		}
 	}
 	free(buffer);
-	return len;
 }
 
 int
@@ -383,22 +382,17 @@ create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone)
 {
 	int retval;
 	char *zonefile, *buffer, *filename;
-	size_t len;
 	
 	if (!(zonefile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "zonefile in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "zonefile in create_and_write_fwd_zone");
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "buffer in create_and_write_fwd_zone");
 	filename = buffer;
 	retval = 0;
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 		create_fwd_zone_header(
 			dnsa, dc->hostmaster, zone->id, zonefile);
-		len = add_records_to_fwd_zonefile(
-			dnsa, zone->id, &zonefile);
-		if (len > BUILD_S)
-			fprintf(stderr, "%s file is up to %zd\n",
-				zone->name, len);
+		add_records_to_fwd_zonefile(dnsa, zone->id, &zonefile);
 		snprintf(filename, NAME_S, "%s%s",
 			 dc->dir, zone->name);
 		if ((retval = write_file(filename, zonefile)) != 0)
@@ -420,7 +414,7 @@ create_fwd_config(dnsa_config_t *dc, zone_info_t *zone, char *configfile)
 	size_t len;
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
 	len = TBUFF_S;
 	retval = 0;
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -429,8 +423,10 @@ zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", zone->name, dc->dir, zone->name);
-		if (sizeof(configfile) + sizeof(buffer) < len)
+		if (strlen(configfile) + strlen(buffer) < len)
 			strncat(configfile, buffer, strlen(buffer));
+		else
+			retval = BUFFER_FULL;
 	}
 	free(buffer);
 	return retval;
@@ -439,17 +435,18 @@ zone \"%s\" {\n\
 int
 commit_rev_zones(dnsa_config_t *dc)
 {
-	char *configfile, *buffer;
+	char *configfile, *buffer, *filename;
 	int retval;
 	dnsa_t *dnsa;
 	rev_zone_info_t *zone;
 
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
-		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "dnsa in commit_rev_zones");
 	if (!(configfile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "zonefile in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "zonefile in commit_rev_zones");
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "buffer in commit_rev_zones");
+	filename = buffer;
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	if ((retval = run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
@@ -459,8 +456,20 @@ commit_rev_zones(dnsa_config_t *dc)
 	zone = dnsa->rev_zones;
 	while (zone) {
 		create_and_write_rev_zone(dnsa, dc, zone);
+		if ((retval = create_rev_config(dc, zone, configfile)) != 0) {
+			fprintf(stderr, "Config file too big!\n");
+			break;
+		}
 		zone = zone->next;
 	}
+	snprintf(filename, TBUFF_S, "%s%s", dc->bind, dc->rev);
+	if ((retval = write_file(filename, configfile)) != 0)
+		fprintf(stderr, "Writing %s failed with %d\n", buffer, retval);
+	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
+	if ((retval = system(buffer)) != 0)
+		fprintf(stderr, "%s failed with %d\n", buffer, retval);
+	free(buffer);
+	free(configfile);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -471,7 +480,6 @@ create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone
 	int retval;
 	char *zonefile, *buffer, *filename;
 	unsigned long int id;
-	size_t len;
 	
 	if (!(zonefile = calloc(BUILD_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefile in create_rev_zones");
@@ -483,7 +491,7 @@ create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 		create_rev_zone_header(
 			dnsa, dc->hostmaster, id, zonefile);
-		len = add_records_to_rev_zonefile(dnsa, id, &zonefile);
+		add_records_to_rev_zonefile(dnsa, id, &zonefile);
 		snprintf(filename, NAME_S, "%s%s",
 			 dc->dir, zone->net_range);
 		if ((retval = write_file(filename, zonefile)) != 0)
@@ -526,7 +534,7 @@ $TTL %lu\n\
 	}
 }
 
-size_t
+void
 add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 {
 	char *buffer;
@@ -554,5 +562,33 @@ add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 		}
 	}
 	free(buffer);
-	return len;
+}
+
+int
+create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile)
+{
+	int retval;
+	char *buffer, *in_addr;
+	size_t len = BUILD_S;
+	
+	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in create_rev_config");
+	if (!(in_addr = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "in_addr in create_rev_config");
+	retval = 0;
+	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
+	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
+		snprintf(buffer, TBUFF_S, "\
+zone \"%s\" {\n\
+\t\t\ttype master;\n\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n\n", in_addr, dc->dir, zone->net_range);
+		if (strlen(configfile) + strlen(buffer) < len)
+			strncat(configfile, buffer, strlen(buffer));
+		else
+			retval = BUFFER_FULL;
+	}
+	free(buffer);
+	free(in_addr);
+	return retval;
 }
