@@ -88,6 +88,8 @@ int main(int argc, char *argv[])
 			retval = commit_fwd_zones(dc);
 		} else if (cm->action == ADD_HOST) {
 			retval = add_host(dc, cm);
+		} else if (cm->action == ADD_ZONE) {
+			retval = add_fwd_zone(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
@@ -106,7 +108,7 @@ int main(int argc, char *argv[])
 	free(domain);
 	free(cm);
 	free(dc);
-	exit(0);
+	exit(retval);
 }
 		/*
 		if (cm->action == WRITE_ZONE) {

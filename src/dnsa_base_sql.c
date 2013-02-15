@@ -68,6 +68,12 @@ INSERT INTO records (zone, host, type, pri, destination) VALUES \
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)"
 };
 
+const char *sql_update[] = {"\
+UPDATE zones SET valid = 'yes' WHERE id = ?","\
+UPDATE zones SET updated = 'yes' WHERE id = ?","\
+UPDATE zones SET updated = 'no' WHERE id = ?"
+};
+
 #ifdef HAVE_MYSQL
 
 const int mysql_inserts[][13] = {
@@ -102,6 +108,18 @@ const unsigned int search_field_type[][1] = { /* What we are selecting */
 const unsigned int search_arg_type[][1] = { /* What we are searching on */
 	{ DBTEXT } ,
 	{ DBTEXT }
+};
+
+const unsigned int update_field_type[][1] = {
+	{ NONE } ,
+	{ NONE } ,
+	{ NONE }
+};
+
+const unsigned int update_arg_type[][1] = {
+	{ DBINT } ,
+	{ DBINT } ,
+	{ DBINT } 
 };
 
 int
@@ -607,6 +625,8 @@ setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned in
 	
 	if (type == RECORDS)
 		setup_insert_mysql_bind_buff_record(input, base, i);
+	else if (type == ZONES)
+		setup_insert_mysql_bind_buff_zone(input, base, i);
 	else
 		retval = WRONG_TYPE;
 	
@@ -626,6 +646,27 @@ setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i)
 		*input = &(base->records->pri);
 	else if (i == 4)
 		*input = &(base->records->dest);
+}
+
+void
+setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i)
+{
+	if (i == 0)
+		*input = &(base->zones->name);
+	else if (i == 1)
+		*input = &(base->zones->pri_dns);
+	else if (i == 2)
+		*input = &(base->zones->sec_dns);
+	else if (i == 3)
+		*input = &(base->zones->serial);
+	else if (i == 4)
+		*input = &(base->zones->refresh);
+	else if (i == 5)
+		*input = &(base->zones->retry);
+	else if (i == 6)
+		*input = &(base->zones->expire);
+	else if (i == 7)
+		*input = &(base->zones->ttl);
 }
 
 #endif /* HAVE_MYSQL */
@@ -906,6 +947,7 @@ run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
 		sqlite3_close(dnsa);
+		return retval;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
@@ -925,8 +967,10 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 	int retval;
 	if (type == RECORDS) {
 		retval = setup_bind_sqlite_records(state, base->records);
+	} else if (type == ZONES) {
+		retval = setup_bind_sqlite_zones(state, base->zones);
 	} else {
-		retval = NO_TYPE;
+		retval = WRONG_TYPE;
 	}
 	return retval;
 }
@@ -935,7 +979,7 @@ int
 setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record)
 {
 	int retval;
-	
+
 	retval = 0;
 	if ((retval = sqlite3_bind_int(state, 1, (int)record->zone)) > 0) {
 		fprintf(stderr, "Cannot bind zone %lu\n", record->zone);
@@ -963,4 +1007,47 @@ state, 5, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 	return retval;
 }
 
+int
+setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_t *zone)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, zone->name, (int)strlen(zone->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind name %s\n", zone->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, zone->pri_dns, (int)strlen(zone->pri_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind primary dns %s\n", zone->pri_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind primary dns %s\n", zone->sec_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 4, (int)zone->serial)) > 0) {
+		fprintf(stderr, "Cannot bind serial %lu\n", zone->serial);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 5, (int)zone->refresh)) > 0) {
+		fprintf(stderr, "Cannot bind refresh %lu\n", zone->refresh);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 6, (int)zone->retry)) > 0) {
+		fprintf(stderr, "Cannot bind retry %lu\n", zone->retry);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 7, (int)zone->expire)) > 0) {
+		fprintf(stderr, "Cannot bind serial %lu\n", zone->expire);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 8, (int)zone->ttl)) > 0) {
+		fprintf(stderr, "Cannot bind serial %lu\n", zone->ttl);
+		return retval;
+	}
+	return retval;
+}
 #endif /* HAVE_SQLITE3 */

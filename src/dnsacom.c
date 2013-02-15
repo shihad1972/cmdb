@@ -252,11 +252,11 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	if ((retval = add_trailing_slash(dc->bind)) != 0)
 		retval = BIND_ERR;
 	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
-		retval = HOSTM_ERR;
+		retval = HOSTM_ERR; /*
 	if ((retval = add_trailing_dot(dc->prins)) != 0)
 		retval = PRINS_ERR;
 	if ((retval = add_trailing_dot(dc->secns)) != 0)
-		retval = SECNS_ERR;
+		retval = SECNS_ERR; */
 	return retval;
 }
 

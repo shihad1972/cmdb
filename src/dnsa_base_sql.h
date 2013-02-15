@@ -28,10 +28,15 @@
 extern const char *sql_select[];
 extern const char *sql_insert[];
 extern const char *sql_search[];
+extern const char *sql_update[];
 extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
+extern const unsigned int search_field_type[][1];
+extern const unsigned int search_arg_type[][1];
+extern const unsigned int update_field_type[][1];
+extern const unsigned int update_arg_type[][1];
 
 # ifdef HAVE_MYSQL
 extern const int mysql_inserts[][13];
@@ -88,6 +93,8 @@ int
 setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned int i);
 void
 setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i);
 /*
 void
 setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i);
@@ -152,6 +159,8 @@ void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 int
 setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record);
+int
+setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_t *zone);
 /*
 void
 store_server_sqlite(sqlite3_stmt *state, cmdb_t *base);

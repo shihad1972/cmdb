@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "dnsa_base_sql.h"
@@ -623,6 +624,111 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 	snprintf(record->type, RBUFF_S, "%s", cm->rtype);
 	record->zone = zone->id;
 	record->pri = cm->prefix;
-	run_insert(dc, dnsa, RECORDS);
+	retval = run_insert(dc, dnsa, RECORDS);
+	dnsa_clean_list(dnsa);
 	return retval;
+}
+
+int
+add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	zone_info_t *zone;
+	
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
+	if (!(zone = malloc(sizeof(zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
+	
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	init_zone_struct(zone);
+	dnsa->zones = zone;
+	fill_zone_info(zone, cm, dc);
+	if ((retval = run_insert(dc, dnsa, ZONES)) != 0) {
+		fprintf(stderr, "Unable to add zone %s\n", zone->name);
+		dnsa_clean_list(dnsa);
+		return CANNOT_INSERT_ZONE;
+	} else {
+		fprintf(stderr, "Added zone %s\n", zone->name);
+	}
+	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa)
+{
+	char command[NAME_S], *buffer;
+	int retval;
+
+	retval = 0;
+	buffer = &command[0];
+	snprintf(zone->valid, COMM_S, "yes");
+	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
+	if ((retval = run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
+		printf("Unable to get ID of zone %s\n", zone->name);
+		return ID_INVALID;
+	}
+	if ((retval = create_and_write_fwd_zone(dnsa, dc, zone)) != 0) {
+		fprintf(stderr, "Unable to write the zonefile for %s\n",
+			zone->name);
+		return FILE_O_FAIL;
+	}
+	snprintf(buffer, NAME_S, "%s %s %s%s", 
+		 dc->chkz, zone->name, dc->dir, zone->name);
+	if ((retval = system(command)) != 0) {
+		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
+		return CHKZONE_FAIL;
+	}
+	return retval;
+}
+
+unsigned long int
+get_zone_serial(void)
+{
+	time_t now;
+	struct tm *lctime;
+	char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[RANGE_S];
+	unsigned long int serial;
+	
+	now = time(0);
+	lctime = localtime(&now);
+	snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
+	if (lctime->tm_mon < 9)
+		snprintf(smonth, COMM_S, "0%d", lctime->tm_mon + 1);
+	else
+		snprintf(smonth, COMM_S, "%d", lctime->tm_mon + 1);
+	if (lctime->tm_mday < 10)
+		snprintf(sday, COMM_S, "0%d", lctime->tm_mday);
+	else
+		snprintf(sday, COMM_S, "%d", lctime->tm_mday);
+	snprintf(sserial, RANGE_S, "%s%s%s01",
+		 syear,
+		 smonth,
+		 sday);
+	serial = strtoul(sserial, NULL, 10);
+	return serial;
+}
+
+void
+fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
+{
+	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
+	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
+	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	zone->serial = get_zone_serial();
+	zone->refresh = dc->refresh;
+	zone->retry = dc->retry;
+	zone->expire = dc->expire;
+	zone->ttl = dc->ttl;
 }

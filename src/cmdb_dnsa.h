@@ -194,6 +194,14 @@ void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 int
 add_host(dnsa_config_t *dc, comm_line_t *cm);
+int
+add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
+int
+validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa);
+void
+fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
+unsigned long int
+get_zone_serial(void);
 /* Forward zone functions */
 int
 check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc);
