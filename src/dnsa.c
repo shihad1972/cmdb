@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
 			list_rev_zones(dc);
 		} else if (cm->action == DISPLAY_ZONE) {
 			display_rev_zone(domain, dc);
+		} else if (cm->action == COMMIT_ZONES) {
+			retval = commit_rev_zones(dc);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

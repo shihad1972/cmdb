@@ -192,9 +192,9 @@ void
 dnsa_clean_rev_records(rev_record_row_t *rev);
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
-int
-check_zone(char *filename, char *domain, dnsa_config_t *dc);
 /* Forward zone functions */
+int
+check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc);
 int
 create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone);
 int
@@ -203,5 +203,14 @@ void
 create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
 size_t
 add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+/* Reverse zone functions */
+int
+create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone);
+void
+create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile);
+size_t
+add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+int
+check_rev_zone(char *filename, char *domain, dnsa_config_t *dc);
 
 #endif /* __CMDB_DNSA_H__ */
