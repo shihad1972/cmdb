@@ -57,7 +57,38 @@ SELECT id FROM zones WHERE name = ?","\
 SELECT rev_zone_id FROM rev_zones WHERE net_range = ?"
 };
 
+const char *sql_insert[] = {"\
+INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
+ttl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
+finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl) VALUES \
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO records (zone, host, type, pri, destination) VALUES \
+(?, ?, ?, ?, ?)","\
+INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)"
+};
+
+#ifdef HAVE_MYSQL
+
+const int mysql_inserts[][13] = {
+{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, 
+    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
+    0, 0, 0, 0, 0} ,
+{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 
+    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
+    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
+    MYSQL_TYPE_LONG} , 
+{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
+    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0}, 
+{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0}
+};
+
+#endif /* HAVE_MYSQL */
+
 const unsigned int select_fields[] = { 12, 17, 7, 5 };
+
+const unsigned int insert_fields[] = { 8, 13, 5, 3 };
 
 const unsigned int search_fields[] = { 1, 1 };
 
@@ -125,6 +156,57 @@ run_multiple_query(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
+run_search(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+
+	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_search_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_search_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
+run_insert(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_insert_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_insert_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
 get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
@@ -156,30 +238,26 @@ get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
-int
-run_search(dnsa_config_t *config, dbdata_t *base, int type)
+void
+get_search(int type, size_t *fields, size_t *args, void **input, void **output, dnsa_t *base)
 {
-	int retval;
-
-	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_search_mysql(config, base, type);
-		return retval;
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_search_sqlite(config, base, type);
-		return retval;
-#endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
+	switch(type) {
+		case ZONE_ID_ON_NAME:
+			*input = &(base->zones->name);
+			*output = &(base->zones->id);
+			*fields = strlen(base->zones->name);
+			*args = sizeof(base->zones->id);
+			break;
+		case REV_ZONE_ID_ON_NET_RANGE:
+			*input = &(base->rev_zones->net_range);
+			*output = &(base->rev_zones->rev_zone_id);
+			*fields = strlen(base->rev_zones->net_range);
+			*args = sizeof(base->rev_zones->rev_zone_id);
+			break;
+		default:
+			fprintf(stderr, "Unknown query %d\n", type);
+			exit (NO_QUERY);
 	}
-
-	return NONE;
 }
 
 #ifdef HAVE_MYSQL
@@ -412,9 +490,142 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 int
-run_search_mysql(dnsa_config_t *config, dbdata_t *data, int type)
+run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 {
-	return 0;
+	MYSQL dnsa;
+	MYSQL_STMT *dnsa_stmt;
+	MYSQL_BIND my_bind[2];
+	const char *query;
+	int retval;
+	size_t arg, res;
+	void *input, *output;
+
+	retval = 0;
+	cmdb_mysql_init(config, &dnsa);
+	memset(my_bind, 0, sizeof(my_bind));
+/* 
+Will need to check if we have char or int here. Hard coded char for search,
+and int for result, which is OK when searching on name and returning id
+*/
+	query = sql_search[type];
+	get_search(type, &arg, &res, &input, &output, base);
+	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
+	my_bind[0].buffer = input;
+	my_bind[0].buffer_length = arg;
+	my_bind[0].is_unsigned = 0;
+	my_bind[0].is_null = 0;
+	my_bind[0].length = 0;
+	my_bind[1].buffer_type = MYSQL_TYPE_LONG;
+	my_bind[1].buffer = output;
+	my_bind[1].buffer_length = res;
+	my_bind[1].is_unsigned = 1;
+	my_bind[1].is_null = 0;
+	my_bind[1].length = 0;
+	
+	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_result(dnsa_stmt, &my_bind[1])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_store_result(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_fetch(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+
+	mysql_stmt_free_result(dnsa_stmt);
+	mysql_stmt_close(dnsa_stmt);
+	cmdb_mysql_cleanup(&dnsa);
+	return retval;
+}
+
+int
+run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	MYSQL dnsa;
+	MYSQL_STMT *dnsa_stmt;
+	MYSQL_BIND my_bind[insert_fields[type]];
+	const char *query;
+	int retval;
+	unsigned int i;
+
+	retval = 0;
+	memset(my_bind, 0, sizeof(my_bind));
+	for (i = 0; i < insert_fields[type]; i++)
+		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
+			return retval;
+	query = sql_insert[type];
+	cmdb_mysql_init(config, &dnsa);
+	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	
+	mysql_stmt_close(dnsa_stmt);
+	cmdb_mysql_cleanup(&dnsa);
+	
+	return retval;
+}
+
+int
+setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base)
+{
+	int retval;
+
+	retval = 0;
+	void *buffer;
+	bind->buffer_type = mysql_inserts[type][i];
+	bind->is_null = 0;
+	bind->length = 0;
+	if ((retval = setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
+		return retval;
+	bind->buffer = buffer;
+	if (bind->buffer_type == MYSQL_TYPE_STRING) {
+		bind->is_unsigned = 0;
+		bind->buffer_length = strlen(buffer);
+	} else if (bind->buffer_type == MYSQL_TYPE_LONG) {
+		bind->is_unsigned = 1;
+		bind->buffer_length = sizeof(unsigned long int);
+	} else {
+		retval = WRONG_TYPE;
+	}
+	return retval;
+}
+
+int
+setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned int i)
+{
+	int retval = 0;
+	
+	if (type == RECORDS)
+		setup_insert_mysql_bind_buff_record(input, base, i);
+	else
+		retval = WRONG_TYPE;
+	
+	return retval;
+}
+
+void
+setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i)
+{
+	if (i == 0)
+		*input = &(base->records->zone);
+	else if (i == 1)
+		*input = &(base->records->host);
+	else if (i == 2)
+		*input = &(base->records->type);
+	else if (i == 3)
+		*input = &(base->records->pri);
+	else if (i == 4)
+		*input = &(base->records->dest);
 }
 
 #endif /* HAVE_MYSQL */
@@ -629,9 +840,127 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 int
-run_search_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
+run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 {
-	return 0;
+	const char *query, *file;
+	int retval;
+	unsigned long int result;
+	size_t fields, args;
+	void *input, *output;
+	sqlite3 *dnsa;
+	sqlite3_stmt *state;
+	
+	retval = 0;
+	query = sql_search[type];
+	file = config->file;
+	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(dnsa);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+/*
+   As in the MySQL function we assume that we are sending text and recieving
+   numerical data. Searching on name for ID is ok for this
+*/
+	get_search(type, &fields, &args, &input, &output, base);
+	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
+		retval = sqlite3_close(dnsa);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
+		result = (unsigned long int)sqlite3_column_int(state, 0);
+		switch(type) {
+			case ZONE_ID_ON_NAME:
+				base->zones->id = result;
+				break;
+			case REV_ZONE_ID_ON_NET_RANGE:
+				base->rev_zones->rev_zone_id = result;
+				break;
+		}
+	}
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(dnsa);
+	return retval;
+}
+
+int
+run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	const char *query, *file;
+	int retval;
+	sqlite3 *dnsa;
+	sqlite3_stmt *state;
+
+	retval = 0;
+	query = sql_insert[type];
+	file = config->file;
+	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(dnsa);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
+		printf("Error binding result! %d\n", retval);
+		sqlite3_close(dnsa);
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
+		retval = sqlite3_finalize(state);
+		retval = sqlite3_close(dnsa);
+		retval = SQLITE_INSERT_FAILED;
+		return retval;
+	}
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(dnsa);
+	return retval;
+}
+
+int
+setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
+{
+	int retval;
+	if (type == RECORDS) {
+		retval = setup_bind_sqlite_records(state, base->records);
+	} else {
+		retval = NO_TYPE;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record)
+{
+	int retval;
+	
+	retval = 0;
+	if ((retval = sqlite3_bind_int(state, 1, (int)record->zone)) > 0) {
+		fprintf(stderr, "Cannot bind zone %lu\n", record->zone);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, record->host, (int)strlen(record->host), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind host %s\n", record->host);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, record->type, (int)strlen(record->type), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind type %s\n", record->type);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 4, (int)record->pri)) > 0) {
+		fprintf(stderr, "Cannot bind pri %lu\n", record->pri);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind destination %s\n", record->dest);
+		return retval;
+	}
+	return retval;
 }
 
 #endif /* HAVE_SQLITE3 */

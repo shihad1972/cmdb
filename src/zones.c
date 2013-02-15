@@ -286,7 +286,10 @@ commit_fwd_zones(dnsa_config_t *dc)
 	zone = dnsa->zones;
 	while (zone) {
 		create_and_write_fwd_zone(dnsa, dc, zone);
-		create_fwd_config(dc, zone, configfile);
+		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
+			printf("Buffer Full!\n");
+			break;
+		}
 		zone = zone->next;
 	}
 	snprintf(filename, NAME_S, "%s%s", dc->bind, dc->dnsa);
@@ -415,7 +418,7 @@ create_fwd_config(dnsa_config_t *dc, zone_info_t *zone, char *configfile)
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
-	len = TBUFF_S;
+	len = BUILD_S;
 	retval = 0;
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 			snprintf(buffer, TBUFF_S, "\
@@ -590,5 +593,36 @@ zone \"%s\" {\n\
 	}
 	free(buffer);
 	free(in_addr);
+	return retval;
+}
+
+int
+add_host(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	zone_info_t *zone;
+	record_row_t *record;
+	
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in add_host");
+	if (!(zone = malloc(sizeof(zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in add_host");
+	if (!(record = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "record in add_host");
+
+	init_dnsa_struct(dnsa);
+	dnsa->zones = zone;
+	dnsa->records = record;
+	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
+	retval = 0;
+	retval = run_search(dc, dnsa, ZONE_ID_ON_NAME);
+	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
+	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
+	snprintf(record->host, RBUFF_S, "%s", cm->host);
+	snprintf(record->type, RBUFF_S, "%s", cm->rtype);
+	record->zone = zone->id;
+	record->pri = cm->prefix;
+	run_insert(dc, dnsa, RECORDS);
 	return retval;
 }

@@ -34,7 +34,7 @@ extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][17];
+extern const int mysql_inserts[][13];
 # endif /* HAVE_MYSQL */
 
 enum {			/* SELECT statements to use in multiple */
@@ -65,7 +65,7 @@ get_query(int type, const char **query, unsigned int *fields);
 void
 get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, dnsa_t *base);
 int
-run_search(dnsa_config_t *config, dbdata_t *base, int type);
+run_search(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert(dnsa_config_t *config, dnsa_t *base, int type);
 
@@ -81,11 +81,13 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
-run_search_mysql(dnsa_config_t *config, dbdata_t *base, int type);
+run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base);
 int
 setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i);
 /*
 void
 setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i);
@@ -135,7 +137,7 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
-run_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type);
+run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type);
 void
@@ -148,6 +150,8 @@ void
 store_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
+int
+setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record);
 /*
 void
 store_server_sqlite(sqlite3_stmt *state, cmdb_t *base);

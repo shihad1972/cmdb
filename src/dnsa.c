@@ -86,6 +86,8 @@ int main(int argc, char *argv[])
 			display_zone(domain, dc);
 		} else if (cm->action == COMMIT_ZONES) {
 			retval = commit_fwd_zones(dc);
+		} else if (cm->action == ADD_HOST) {
+			retval = add_host(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

@@ -123,6 +123,10 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		retval = NO_RECORD_TYPE;
 	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
 		retval = NO_PREFIX;
+	else if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
+		comp->prefix = 100;
+		fprintf(stderr, "No priority specified for MX record, using 100\n");
+	}
 	return retval;
 }
 

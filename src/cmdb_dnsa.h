@@ -165,6 +165,14 @@ void
 init_rev_record_struct(rev_record_row_t *revrecord);
 void
 dnsa_clean_list(dnsa_t *dnsa);
+void
+dnsa_clean_zones(zone_info_t *zone);
+void
+dnsa_clean_rev_zones(rev_zone_info_t *rev);
+void
+dnsa_clean_records(record_row_t *rec);
+void
+dnsa_clean_rev_records(rev_record_row_t *rev);
 /* Zone Functions */
 void
 list_zones(dnsa_config_t *dc);
@@ -183,15 +191,9 @@ display_rev_zone(char *domain, dnsa_config_t *dc);
 void
 print_rev_zone(dnsa_t *dnsa, char *domain);
 void
-dnsa_clean_zones(zone_info_t *zone);
-void
-dnsa_clean_rev_zones(rev_zone_info_t *rev);
-void
-dnsa_clean_records(record_row_t *rec);
-void
-dnsa_clean_rev_records(rev_record_row_t *rev);
-void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
+int
+add_host(dnsa_config_t *dc, comm_line_t *cm);
 /* Forward zone functions */
 int
 check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc);

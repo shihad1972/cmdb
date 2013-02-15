@@ -408,7 +408,8 @@ display_dnsa_usage(void)
 	printf("Zone options for use with adding a reverse zone:\n");
 	printf("-p: prefix\n\n");
 	printf("Host options for use with adding a host record:\n");
-	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host\n\n");
+	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host");
+	printf("\n-p: priority (for MX record)\n\n");
 }
 
 void
