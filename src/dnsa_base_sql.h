@@ -36,7 +36,7 @@ extern const unsigned int search_args[];
 extern const unsigned int update_args[];
 extern const unsigned int search_field_type[][1];
 extern const unsigned int search_arg_type[][1];
-extern const unsigned int update_arg_type[][1];
+extern const unsigned int update_arg_type[][2];
 
 # ifdef HAVE_MYSQL
 extern const int mysql_inserts[][13];
@@ -64,7 +64,8 @@ enum {			/* Search indexes and queries */
 enum {			/* Update indexes */
 	ZONE_VALID_YES = 0,
 	ZONE_UPDATED_YES,
-	ZONE_UPDATED_NO
+	ZONE_UPDATED_NO,
+	ZONE_SERIAL
 };
 
 int

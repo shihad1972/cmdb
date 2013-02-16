@@ -223,43 +223,35 @@ zone->net_range, zone->pri_dns, zone->serial);
 }
 
 int
-check_fwd_zone(char *domain, char *filename, dnsa_config_t *dc)
+check_fwd_zone(char *domain, dnsa_config_t *dc)
 {
-	char *command;
-	const char *syscom;
+	char *command, syscom[RBUFF_S];
 	int error, retval;
 	
-	if (!(command = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "command in check_fwd_zone");
-	syscom = command;
+	command = &syscom[0];
 	
-	snprintf(command, RBUFF_S, "%s %s %s", dc->chkz, domain, filename);
+	snprintf(command, RBUFF_S, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
 	error = system(syscom);
 	if (error != 0)
 		retval = CHKZONE_FAIL;
 	else
 		retval = NONE;
-	free(command);
 	return retval;
 }
 
 int
-check_rev_zone(char *domain, char *filename, dnsa_config_t *dc)
+check_rev_zone(char *domain, dnsa_config_t *dc)
 {
-	char *command;
-	const char *syscom;
+	char *command, syscom[RBUFF_S];
 	int error, retval;
 	
-	if (!(command = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "command in check_rev_zone");
-	syscom = command;
-	snprintf(command, RBUFF_S, "%s %s %s", dc->chkz, domain, filename);
+	command = &syscom[0];
+	snprintf(command, RBUFF_S, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
 	error = system(syscom);
 	if (error != 0)
 		retval = CHKZONE_FAIL;
 	else
 		retval = NONE;
-	free(command);
 	return retval;
 }
 
@@ -286,6 +278,7 @@ commit_fwd_zones(dnsa_config_t *dc)
 	}
 	zone = dnsa->zones;
 	while (zone) {
+		check_for_updated_fwd_zone(dc, zone);
 		create_and_write_fwd_zone(dnsa, dc, zone);
 		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
 			printf("Buffer Full!\n");
@@ -402,7 +395,7 @@ create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone)
 		if ((retval = write_file(filename, zonefile)) != 0)
 			printf("Unable to write %s zonefile\n",
 			       zone->name);
-		else if ((retval = check_fwd_zone(zone->name, filename, dc)) !=0)
+		else if ((retval = check_fwd_zone(zone->name, dc)) !=0)
 			snprintf(zone->valid, COMM_S, "no");
 	}
 	free(zonefile);
@@ -434,6 +427,33 @@ zone \"%s\" {\n\
 	}
 	free(buffer);
 	return retval;
+}
+
+void
+check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone)
+{
+	int retval;
+	unsigned long int serial;
+	dbdata_t serial_data, id_data;
+
+	retval = 0;
+	if (strncmp("yes", zone->updated, COMM_S) == 0) {
+		serial = get_zone_serial();
+		if (serial > zone->serial)
+			zone->serial = serial;
+		else
+			zone->serial++;
+		init_dbdata(&serial_data);
+		init_dbdata(&id_data);
+		serial_data.args.number = zone->serial;
+		id_data.args.number = zone->id;
+		serial_data.next = &id_data;
+		if ((retval = run_update(dc, &serial_data, ZONE_SERIAL)) != 0)
+			fprintf(stderr, "Cannot update zone serial in database!\n");
+		else
+			fprintf(stderr, "Serial number updated\n");
+		run_update(dc, &id_data, ZONE_UPDATED_NO);
+	}
 }
 
 int
@@ -501,7 +521,7 @@ create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone
 		if ((retval = write_file(filename, zonefile)) != 0)
 			printf("Unable to write %s zonefile\n",
 			       zone->net_range);
-		else if ((retval = check_rev_zone(buffer, filename, dc)) != 0)
+		else if ((retval = check_rev_zone(zone->net_range, dc)) != 0)
 			snprintf(zone->valid, COMM_S, "no");
 	}
 	free(zonefile);
@@ -604,6 +624,7 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 	dnsa_t *dnsa;
 	zone_info_t *zone;
 	record_row_t *record;
+	dbdata_t data;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in add_host");
@@ -613,6 +634,7 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 		report_error(MALLOC_FAIL, "record in add_host");
 
 	init_dnsa_struct(dnsa);
+	init_dbdata(&data);
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
@@ -622,9 +644,11 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
 	snprintf(record->host, RBUFF_S, "%s", cm->host);
 	snprintf(record->type, RBUFF_S, "%s", cm->rtype);
-	record->zone = zone->id;
+	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
-	retval = run_insert(dc, dnsa, RECORDS);
+	if ((retval = run_insert(dc, dnsa, RECORDS)) != 0)
+		fprintf(stderr, "Cannot insert record\n");
+	retval = run_update(dc, &data, ZONE_UPDATED_YES);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -632,8 +656,6 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 int
 add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 {
-	char *buffer, *configfile;
-	char filename[NAME_S];
 	int retval;
 	dnsa_t *dnsa;
 	zone_info_t *zone;
@@ -643,15 +665,16 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
 	if (!(zone = malloc(sizeof(zone_info_t))))
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
-	if (!(configfile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
-	
 	retval = 0;
-	buffer = &filename[0];
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
-	dnsa->zones = zone;
 	fill_zone_info(zone, cm, dc);
+	dnsa->zones = zone;
+	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
+		printf("Zone %s already exists in database\n", zone->name);
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
 	if ((retval = run_insert(dc, dnsa, ZONES)) != 0) {
 		fprintf(stderr, "Unable to add zone %s\n", zone->name);
 		dnsa_clean_list(dnsa);
@@ -671,9 +694,25 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 		printf("Zone marked as valid in the database\n");
 	dnsa_clean_zones(zone);
 	dnsa->zones = '\0';
-/* Could put this into a function */
-	run_query(dc, dnsa, ZONE);
+	retval = create_and_write_fwd_config(dc, dnsa);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa)
+{
+	char *configfile, *buffer, filename[NAME_S];
+	int retval;
+	zone_info_t *zone;
+
+	buffer = &filename[0];
+	retval = 0;
+	if ((retval = run_query(dc, dnsa, ZONE)) != 0)
+		return retval;
 	zone = dnsa->zones;
+	if (!(configfile = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
 	while (zone) {
 		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
 			printf("Buffer Full!\n");
@@ -687,8 +726,6 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	dnsa_clean_list(dnsa);
-	free(configfile);
 	return retval;
 }
 
@@ -731,7 +768,7 @@ get_zone_serial(void)
 	struct tm *lctime;
 	char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[RANGE_S];
 	unsigned long int serial;
-	
+
 	now = time(0);
 	lctime = localtime(&now);
 	snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
@@ -751,6 +788,25 @@ get_zone_serial(void)
 	return serial;
 }
 
+int
+check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type)
+{
+	int retval;
+
+	retval = 0;
+	if (type == FORWARD_ZONE) {
+		if ((retval = run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
+			return retval;
+		else if (dnsa->zones->id != 0)
+			return ZONE_ALREADY_EXISTS;
+	} else if (type == REVERSE_ZONE) {
+		if ((retval = run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) !=0)
+			return retval;
+		else if (dnsa->rev_zones->rev_zone_id != 0)
+			return ZONE_ALREADY_EXISTS;
+	}
+	return retval;
+}
 void
 fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
 {

@@ -204,9 +204,11 @@ void
 fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
 unsigned long int
 get_zone_serial(void);
+int
+check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
 /* Forward zone functions */
 int
-check_fwd_zone(char *filename, char *domain, dnsa_config_t *dc);
+check_fwd_zone(char *domain, dnsa_config_t *dc);
 int
 create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone);
 int
@@ -215,6 +217,10 @@ void
 create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
 void
 add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+int
+create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa);
+void
+check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone);
 /* Reverse zone functions */
 int
 create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone);
@@ -223,7 +229,7 @@ create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zo
 void
 add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
 int
-check_rev_zone(char *filename, char *domain, dnsa_config_t *dc);
+check_rev_zone(char *domain, dnsa_config_t *dc);
 int
 create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile);
 

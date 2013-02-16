@@ -71,7 +71,8 @@ INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)"
 const char *sql_update[] = {"\
 UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
 UPDATE zones SET updated = 'yes' WHERE id = ?","\
-UPDATE zones SET updated = 'no' WHERE id = ?"
+UPDATE zones SET updated = 'no' WHERE id = ?","\
+UPDATE zones SET serial = ? WHERE id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -112,10 +113,11 @@ const unsigned int search_arg_type[][1] = { /* What we are searching on */
 	{ DBTEXT }
 };
 
-const unsigned int update_arg_type[][1] = {
-	{ DBINT } ,
-	{ DBINT } ,
-	{ DBINT } 
+const unsigned int update_arg_type[][2] = {
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, DBINT }
 };
 
 int
@@ -1055,12 +1057,12 @@ run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 	for (i = 1; i <= update_args[type]; i++) {
 		if (!list)
 			break;
-		if (update_arg_type[type][i] == DBTEXT) {
+		if (update_arg_type[type][i - 1] == DBTEXT) {
 			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
 				fprintf(stderr, "Cannot bind arg\n");
 				return retval;
 			}
-		} else if (update_arg_type[type][i] == DBINT) {
+		} else if (update_arg_type[type][i - 1] == DBINT) {
 			if ((sqlite3_bind_int(state, (int)i, (int)list->args.number)) > 0) {
 				fprintf(stderr, "Cannot binid arg\n");
 				return retval;
