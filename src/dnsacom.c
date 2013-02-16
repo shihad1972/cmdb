@@ -386,6 +386,12 @@ init_rev_record_struct(rev_record_row_t *rev)
 }
 
 void
+init_dbdata(dbdata_t *data)
+{
+	data->next = '\0';
+}
+
+void
 dnsa_clean_list(dnsa_t *dnsa)
 {
 	if (dnsa->zones)

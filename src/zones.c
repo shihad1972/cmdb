@@ -632,16 +632,22 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 int
 add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 {
+	char *buffer, *configfile;
+	char filename[NAME_S];
 	int retval;
 	dnsa_t *dnsa;
 	zone_info_t *zone;
+	dbdata_t data;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
 	if (!(zone = malloc(sizeof(zone_info_t))))
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
+	if (!(configfile = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
 	
 	retval = 0;
+	buffer = &filename[0];
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
 	dnsa->zones = zone;
@@ -657,7 +663,32 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
+	init_dbdata(&data);
+	data.args.number = zone->id;
+	if ((retval = run_update(dc, &data, ZONE_VALID_YES)) != 0)
+		printf("Unable to mark zone as valid in database\n");
+	else
+		printf("Zone marked as valid in the database\n");
+	dnsa_clean_zones(zone);
+	dnsa->zones = '\0';
+/* Could put this into a function */
+	run_query(dc, dnsa, ZONE);
+	zone = dnsa->zones;
+	while (zone) {
+		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
+			printf("Buffer Full!\n");
+			break;
+		}
+		zone = zone->next;
+	}
+	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->dnsa);
+	if ((retval = write_file(filename, configfile)) != 0)
+		fprintf(stderr, "Unable to write config file %s\n", filename);
+	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
+	if ((retval = system(filename)) != 0)
+		fprintf(stderr, "%s failed with %d\n", filename, retval);
 	dnsa_clean_list(dnsa);
+	free(configfile);
 	return retval;
 }
 

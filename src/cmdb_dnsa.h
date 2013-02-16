@@ -164,6 +164,8 @@ init_record_struct(record_row_t *record);
 void
 init_rev_record_struct(rev_record_row_t *revrecord);
 void
+init_dbdata(dbdata_t *data);
+void
 dnsa_clean_list(dnsa_t *dnsa);
 void
 dnsa_clean_zones(zone_info_t *zone);

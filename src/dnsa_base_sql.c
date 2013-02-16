@@ -69,7 +69,7 @@ INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)"
 };
 
 const char *sql_update[] = {"\
-UPDATE zones SET valid = 'yes' WHERE id = ?","\
+UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
 UPDATE zones SET updated = 'yes' WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?"
 };
@@ -100,6 +100,8 @@ const unsigned int search_fields[] = { 1, 1 };
 
 const unsigned int search_args[] = { 1, 1 };
 
+const unsigned int update_args[] = { 1, 1, 1 };
+
 const unsigned int search_field_type[][1] = { /* What we are selecting */
 	{ DBINT } ,
 	{ DBINT }
@@ -108,12 +110,6 @@ const unsigned int search_field_type[][1] = { /* What we are selecting */
 const unsigned int search_arg_type[][1] = { /* What we are searching on */
 	{ DBTEXT } ,
 	{ DBTEXT }
-};
-
-const unsigned int update_field_type[][1] = {
-	{ NONE } ,
-	{ NONE } ,
-	{ NONE }
 };
 
 const unsigned int update_arg_type[][1] = {
@@ -214,6 +210,31 @@ run_insert(dnsa_config_t *config, dnsa_t *base, int type)
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
 		retval = run_insert_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
+run_update(dnsa_config_t *config, dbdata_t *data, int type)
+{
+	int retval;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_update_mysql(config, data, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_update_sqlite(config, data, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -586,10 +607,59 @@ run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+
+	mysql_stmt_close(dnsa_stmt);
+	cmdb_mysql_cleanup(&dnsa);
+
+	return retval;
+}
+
+int
+run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type)
+{
+	MYSQL dnsa;
+	MYSQL_STMT *dnsa_stmt;
+	MYSQL_BIND my_bind[update_args[type]];
+	const char *query;
+	int retval;
+	unsigned int i;
+	dbdata_t *list;
+
+	list = data;
+	retval = 0;
+	memset(my_bind, 0, sizeof(my_bind));
+	for (i = 0; i < update_args[type]; i++) {
+		if (update_arg_type[type][i] == DBINT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
+			my_bind[i].is_null = 0;
+			my_bind[i].length = 0;
+			my_bind[i].is_unsigned = 1;
+			my_bind[i].buffer = &(list->args.number);
+			my_bind[i].buffer_length = sizeof(unsigned long int);
+			list = list->next;
+		} else if (update_arg_type[type][i] == DBTEXT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
+			my_bind[i].is_null = 0;
+			my_bind[i].length = 0;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.text);
+			my_bind[i].buffer_length = strlen(list->args.text);
+			list = list->next;
+		}
+	}
+	query = sql_update[type];
+	cmdb_mysql_init(config, &dnsa);
+	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	
 	mysql_stmt_close(dnsa_stmt);
 	cmdb_mysql_cleanup(&dnsa);
-	
 	return retval;
 }
 
@@ -959,6 +1029,56 @@ run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(dnsa);
 	return retval;
+}
+
+int
+run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
+{
+	const char *query, *file;
+	int retval;
+	unsigned int i;
+	dbdata_t *list;
+	sqlite3 *dnsa;
+	sqlite3_stmt *state;
+
+	retval = 0;
+	list = data;
+	query = sql_update[type];
+	file = config->file;
+	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(dnsa);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+	for (i = 1; i <= update_args[type]; i++) {
+		if (!list)
+			break;
+		if (update_arg_type[type][i] == DBTEXT) {
+			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
+				fprintf(stderr, "Cannot bind arg\n");
+				return retval;
+			}
+		} else if (update_arg_type[type][i] == DBINT) {
+			if ((sqlite3_bind_int(state, (int)i, (int)list->args.number)) > 0) {
+				fprintf(stderr, "Cannot binid arg\n");
+				return retval;
+			}
+		}
+		list = list->next;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
+		retval = sqlite3_finalize(state);
+		retval = sqlite3_close(dnsa);
+		retval = SQLITE_INSERT_FAILED;
+		return retval;
+	}
+	if (retval == SQLITE_DONE)
+		return NONE;
+	else
+		return retval;
 }
 
 int

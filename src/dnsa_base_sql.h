@@ -33,9 +33,9 @@ extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
+extern const unsigned int update_args[];
 extern const unsigned int search_field_type[][1];
 extern const unsigned int search_arg_type[][1];
-extern const unsigned int update_field_type[][1];
 extern const unsigned int update_arg_type[][1];
 
 # ifdef HAVE_MYSQL
@@ -61,6 +61,12 @@ enum {			/* Search indexes and queries */
 	REV_ZONE_ID_ON_NET_RANGE
 };
 
+enum {			/* Update indexes */
+	ZONE_VALID_YES = 0,
+	ZONE_UPDATED_YES,
+	ZONE_UPDATED_NO
+};
+
 int
 run_query(dnsa_config_t *config, dnsa_t *base, int type);
 int
@@ -73,6 +79,8 @@ int
 run_search(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_insert(dnsa_config_t *config, dnsa_t *base, int type);
+int
+run_update(dnsa_config_t *config, dbdata_t *data, int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
@@ -87,6 +95,8 @@ int
 run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type);
+int
+run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base);
 int
@@ -145,6 +155,8 @@ int
 run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
+int
+run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type);
 void

@@ -139,7 +139,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	SQLITE_STATEMENT_FAILED = 151,
 	SQLITE_BIND_FAILED = 152,
 	SQLITE_INSERT_FAILED = 153,
-	DB_INSERT_FAILED = 154
+	DB_INSERT_FAILED = 154,
+	DB_UPDATE_FAILED = 155
 	
 };
 
