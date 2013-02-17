@@ -54,19 +54,19 @@ list_zones (dnsa_config_t *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\n");
+	printf("Name\t\t\t\tValid\tSerial\n");
 	while (zone) {
 		len = strlen(zone->name);
 		if (len < 8)
-			printf("%s\t\t\t\t%s\n", zone->name, zone->valid);
+			printf("%s\t\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
 		else if (len < 16)
-			printf("%s\t\t\t%s\n", zone->name, zone->valid);
+			printf("%s\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
 		else if (len < 24)
-			printf("%s\t\t%s\n", zone->name, zone->valid);
+			printf("%s\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
 		else if (len < 32)
-			printf("%s\t%s\n", zone->name, zone->valid);
+			printf("%s\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
 		else
-			printf("%s\n\t\t\t\t%s\n", zone->name, zone->valid);
+			printf("%s\n\t\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -163,7 +163,10 @@ records->host, records->type, records->dest);
 			records = records->next;
 		}
 	}
-	printf("\n%u records\n", i);
+	if (i == 1)
+		printf("\n%u record\n", i);
+	else
+		printf("\n%u records\n", i);
 }
 
 void

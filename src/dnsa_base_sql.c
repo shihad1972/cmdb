@@ -575,9 +575,13 @@ and int for result, which is OK when searching on name and returning id
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_store_result(dnsa_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-	if ((retval = mysql_stmt_fetch(dnsa_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-
+	if ((retval = mysql_stmt_fetch(dnsa_stmt)) != 0) {
+		if (retval != MYSQL_NO_DATA) {
+			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+		} else {
+			retval = NONE;
+		}
+	}
 	mysql_stmt_free_result(dnsa_stmt);
 	mysql_stmt_close(dnsa_stmt);
 	cmdb_mysql_cleanup(&dnsa);
