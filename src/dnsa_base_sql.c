@@ -72,7 +72,8 @@ const char *sql_update[] = {"\
 UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
 UPDATE zones SET updated = 'yes' WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
-UPDATE zones SET serial = ? WHERE id = ?"
+UPDATE zones SET serial = ? WHERE id = ?","\
+UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -117,7 +118,8 @@ const unsigned int update_arg_type[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
-	{ DBINT, DBINT }
+	{ DBINT, DBINT } ,
+	{ DBINT, NONE }
 };
 
 int
@@ -703,6 +705,8 @@ setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned in
 		setup_insert_mysql_bind_buff_record(input, base, i);
 	else if (type == ZONES)
 		setup_insert_mysql_bind_buff_zone(input, base, i);
+	else if (type == REV_ZONES)
+		setup_insert_mysql_bind_buff_rev_zone(input, base, i);
 	else
 		retval = WRONG_TYPE;
 	
@@ -743,6 +747,37 @@ setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i)
 		*input = &(base->zones->expire);
 	else if (i == 7)
 		*input = &(base->zones->ttl);
+}
+
+void
+setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i)
+{
+	if (i == 0)
+		*input = &(base->rev_zones->net_range);
+	else if (i == 1)
+		*input = &(base->rev_zones->prefix);
+	else if (i == 2)
+		*input = &(base->rev_zones->net_start);
+	else if (i == 3)
+		*input = &(base->rev_zones->net_finish);
+	else if (i == 4)
+		*input = &(base->rev_zones->start_ip);
+	else if (i == 5)
+		*input = &(base->rev_zones->end_ip);
+	else if (i == 6)
+		*input = &(base->rev_zones->pri_dns);
+	else if (i == 7)
+		*input = &(base->rev_zones->sec_dns);
+	else if (i == 8)
+		*input = &(base->rev_zones->serial);
+	else if (i == 9)
+		*input = &(base->rev_zones->refresh);
+	else if (i == 10)
+		*input = &(base->rev_zones->retry);
+	else if (i == 11)
+		*input = &(base->rev_zones->expire);
+	else if (i == 12)
+		*input = &(base->rev_zones->ttl);
 }
 
 #endif /* HAVE_MYSQL */
@@ -841,7 +876,7 @@ store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (!(zone = malloc(sizeof(zone_info_t))))
 		report_error(MALLOC_FAIL, "zone in store_zone_sqlite");
 	init_zone_struct(zone);
-	zone->id = (unsigned long int) sqlite3_column_int(state, 0);
+	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(zone->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 2));
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
@@ -850,11 +885,11 @@ store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	zone->serial = (unsigned long int) sqlite3_column_int(state, 4);
-	zone->refresh = (unsigned long int) sqlite3_column_int(state, 5);
-	zone->retry = (unsigned long int) sqlite3_column_int(state, 6);
-	zone->expire = (unsigned long int) sqlite3_column_int(state, 7);
-	zone->ttl = (unsigned long int) sqlite3_column_int(state, 8);
+	zone->serial = (unsigned long int) sqlite3_column_int64(state, 4);
+	zone->refresh = (unsigned long int) sqlite3_column_int64(state, 5);
+	zone->retry = (unsigned long int) sqlite3_column_int64(state, 6);
+	zone->expire = (unsigned long int) sqlite3_column_int64(state, 7);
+	zone->ttl = (unsigned long int) sqlite3_column_int64(state, 8);
 	snprintf(zone->valid, RANGE_S, "%s", sqlite3_column_text(state, 9));
 	zone->owner = (unsigned long int) sqlite3_column_int(state, 10);
 	snprintf(zone->updated, RANGE_S, "%s", sqlite3_column_text(state, 11));
@@ -877,13 +912,13 @@ store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (!(rev = malloc(sizeof(rev_zone_info_t))))
 		report_error(MALLOC_FAIL, "rev in store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
-	rev->rev_zone_id = (unsigned long int) sqlite3_column_int(state, 0);
+	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));
 	rev->prefix = (unsigned long int) sqlite3_column_int(state, 2);
 	snprintf(rev->net_start, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(rev->net_finish, RANGE_S, "%s", sqlite3_column_text(state, 4));
-	rev->start_ip = (unsigned long int) sqlite3_column_int(state, 5);
-	rev->end_ip = (unsigned long int) sqlite3_column_int(state, 6);
+	rev->start_ip = (unsigned long int) sqlite3_column_int64(state, 5);
+	rev->end_ip = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(rev->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 7));
 	if ((retval = add_trailing_dot(rev->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
@@ -891,11 +926,11 @@ store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (strncmp(rev->sec_dns, "(null)", COMM_S) != 0)
 		if ((retval = add_trailing_dot(rev->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	rev->serial = (unsigned long int) sqlite3_column_int(state, 9);
-	rev->refresh = (unsigned long int) sqlite3_column_int(state, 10);
-	rev->retry = (unsigned long int) sqlite3_column_int(state, 11);
-	rev->expire = (unsigned long int) sqlite3_column_int(state, 12);
-	rev->ttl = (unsigned long int) sqlite3_column_int(state, 13);
+	rev->serial = (unsigned long int) sqlite3_column_int64(state, 9);
+	rev->refresh = (unsigned long int) sqlite3_column_int64(state, 10);
+	rev->retry = (unsigned long int) sqlite3_column_int64(state, 11);
+	rev->expire = (unsigned long int) sqlite3_column_int64(state, 12);
+	rev->ttl = (unsigned long int) sqlite3_column_int64(state, 13);
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 14));
 	rev->owner = (unsigned long int) sqlite3_column_int(state, 15);
 	snprintf(rev->updated, RANGE_S, "%s", sqlite3_column_text(state, 16));
@@ -916,8 +951,8 @@ store_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (!(rec = malloc(sizeof(record_row_t))))
 		report_error(MALLOC_FAIL, "rec in store_record_sqlite");
 	init_record_struct(rec);
-	rec->id = (unsigned long int) sqlite3_column_int(state, 0);
-	rec->zone = (unsigned long int) sqlite3_column_int(state, 1);
+	rec->id = (unsigned long int) sqlite3_column_int64(state, 0);
+	rec->zone = (unsigned long int) sqlite3_column_int64(state, 1);
 	snprintf(rec->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(rec->type, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	rec->pri = (unsigned long int) sqlite3_column_int(state, 4);
@@ -941,8 +976,8 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	if (!(rev = malloc(sizeof(rev_record_row_t))))
 		report_error(MALLOC_FAIL, "rev in store_rev_record_sqlite");
 	init_rev_record_struct(rev);
-	rev->record_id = (unsigned long int) sqlite3_column_int(state, 0);
-	rev->rev_zone = (unsigned long int) sqlite3_column_int(state, 1);
+	rev->record_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	rev->rev_zone = (unsigned long int) sqlite3_column_int64(state, 1);
 	snprintf(rev->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(rev->dest, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 4));
@@ -987,7 +1022,7 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
-		result = (unsigned long int)sqlite3_column_int(state, 0);
+		result = (unsigned long int)sqlite3_column_int64(state, 0);
 		switch(type) {
 			case ZONE_ID_ON_NAME:
 				base->zones->id = result;
@@ -1067,8 +1102,8 @@ run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 				return retval;
 			}
 		} else if (update_arg_type[type][i - 1] == DBINT) {
-			if ((sqlite3_bind_int(state, (int)i, (int)list->args.number)) > 0) {
-				fprintf(stderr, "Cannot binid arg\n");
+			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
+				fprintf(stderr, "Cannot bind arg\n");
 				return retval;
 			}
 		}
@@ -1095,6 +1130,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 		retval = setup_bind_sqlite_records(state, base->records);
 	} else if (type == ZONES) {
 		retval = setup_bind_sqlite_zones(state, base->zones);
+	} else if (type == REV_ZONES) {
+		retval = setup_bind_sqlite_rev_zones(state, base->rev_zones);
 	} else {
 		retval = WRONG_TYPE;
 	}
@@ -1107,7 +1144,7 @@ setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record)
 	int retval;
 
 	retval = 0;
-	if ((retval = sqlite3_bind_int(state, 1, (int)record->zone)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 1, (sqlite3_int64)record->zone)) > 0) {
 		fprintf(stderr, "Cannot bind zone %lu\n", record->zone);
 		return retval;
 	}
@@ -1121,7 +1158,7 @@ state, 3, record->type, (int)strlen(record->type), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind type %s\n", record->type);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 4, (int)record->pri)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 4, (sqlite3_int64)record->pri)) > 0) {
 		fprintf(stderr, "Cannot bind pri %lu\n", record->pri);
 		return retval;
 	}
@@ -1154,26 +1191,93 @@ state, 3, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind primary dns %s\n", zone->sec_dns);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 4, (int)zone->serial)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 4, (sqlite3_int64)zone->serial)) > 0) {
 		fprintf(stderr, "Cannot bind serial %lu\n", zone->serial);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 5, (int)zone->refresh)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)zone->refresh)) > 0) {
 		fprintf(stderr, "Cannot bind refresh %lu\n", zone->refresh);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 6, (int)zone->retry)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)zone->retry)) > 0) {
 		fprintf(stderr, "Cannot bind retry %lu\n", zone->retry);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 7, (int)zone->expire)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 7, (sqlite3_int64)zone->expire)) > 0) {
 		fprintf(stderr, "Cannot bind serial %lu\n", zone->expire);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int(state, 8, (int)zone->ttl)) > 0) {
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)zone->ttl)) > 0) {
 		fprintf(stderr, "Cannot bind serial %lu\n", zone->ttl);
 		return retval;
 	}
 	return retval;
 }
+
+int
+setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_t *zone)
+{
+	int retval;
+	
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, zone->net_range, (int)strlen(zone->net_range), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind net_range %s\n", zone->net_range);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 2, (int)zone->prefix)) > 0) {
+		fprintf(stderr, "Cannot bind prefix %lu\n", zone->prefix);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, zone->net_start, (int)strlen(zone->net_start), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind net_start %s\n", zone->net_start);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, zone->net_finish, (int)strlen(zone->net_finish), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind net_finish %s\n", zone->net_finish);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)zone->start_ip)) > 0) {
+		fprintf(stderr, "Cannot bind start_ip %lu\n", zone->start_ip);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)zone->end_ip)) > 0) {
+		fprintf(stderr, "Cannot bind end_ip %lu\n", zone->end_ip);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 7, zone->pri_dns, (int)strlen(zone->pri_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind pri_dns %s\n", zone->pri_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 8, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind sec_dns %s\n", zone->sec_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 9, (sqlite3_int64)zone->serial)) > 0) {
+		fprintf(stderr, "Cannot bind serial %lu\n", zone->serial);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 10, (sqlite3_int64)zone->refresh)) > 0) {
+		fprintf(stderr, "Cannot bind refresh %lu\n", zone->refresh);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 11, (sqlite3_int64)zone->retry)) > 0) {
+		fprintf(stderr, "Cannot bind retry %lu\n", zone->retry);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 12, (sqlite3_int64)zone->expire)) > 0) {
+		fprintf(stderr, "Cannot bind expire %lu\n", zone->expire);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 13, (sqlite3_int64)zone->ttl)) > 0) {
+		fprintf(stderr, "Cannot bind ttl %lu\n", zone->ttl);
+		return retval;
+	}
+	return retval;
+}
+
 #endif /* HAVE_SQLITE3 */

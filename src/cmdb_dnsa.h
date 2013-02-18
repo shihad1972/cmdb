@@ -196,12 +196,6 @@ void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 int
 add_host(dnsa_config_t *dc, comm_line_t *cm);
-int
-add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
-int
-validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa);
-void
-fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
 unsigned long int
 get_zone_serial(void);
 int
@@ -221,7 +215,15 @@ int
 create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa);
 void
 check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone);
+int
+add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
+int
+validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa);
+void
+fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
 /* Reverse zone functions */
+void 
+print_rev_zone_info(rev_zone_info_t *zone);
 int
 create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone);
 void
@@ -232,5 +234,15 @@ int
 check_rev_zone(char *domain, dnsa_config_t *dc);
 int
 create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile);
+int
+add_rev_zone(dnsa_config_t *dc, comm_line_t *cm);
+void
+fill_rev_zone_info(rev_zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
+unsigned long int
+get_net_range(unsigned long int prefix);
+int
+validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa);
+int
+create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa);
 
 #endif /* __CMDB_DNSA_H__ */

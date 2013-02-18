@@ -28,6 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "dnsa_base_sql.h"
@@ -671,7 +672,7 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
-	fill_zone_info(zone, cm, dc);
+	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
 		printf("Zone %s already exists in database\n", zone->name);
@@ -698,6 +699,53 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 	dnsa_clean_zones(zone);
 	dnsa->zones = '\0';
 	retval = create_and_write_fwd_config(dc, dnsa);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+add_rev_zone(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	rev_zone_info_t *zone;
+	dbdata_t data;
+	
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
+	if (!(zone = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	init_rev_zone_struct(zone);
+	fill_rev_zone_info(zone, cm, dc);
+	dnsa->rev_zones = zone;
+	print_rev_zone_info(zone);
+	if ((retval = check_for_zone_in_db(dc, dnsa, REVERSE_ZONE)) != 0) {
+		printf("Zone %s already exists in database\n", zone->net_range);
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	if ((retval = run_insert(dc, dnsa, REV_ZONES)) != 0) {
+		fprintf(stderr, "Unable to add zone %s\n", zone->net_range);
+		dnsa_clean_list(dnsa);
+		return CANNOT_INSERT_ZONE;
+	} else {
+		fprintf(stderr, "Added zone %s\n", zone->net_range);
+	}
+	if ((retval = validate_rev_zone(dc, zone, dnsa)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	init_dbdata(&data);
+	data.args.number = zone->rev_zone_id;
+	if ((retval = run_update(dc, &data, REV_ZONE_VALID_YES)) != 0)
+		printf("Unable to mark rev_zone %s as valid\n", zone->net_range);
+	else
+		printf("Rev zone %s marked as valid\n", zone->net_range);
+	dnsa_clean_rev_zones(zone);
+	dnsa->rev_zones = '\0';
+	retval = create_and_write_rev_config(dc, dnsa);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -733,6 +781,36 @@ create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa)
 }
 
 int
+create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa)
+{
+	char *configfile, *buffer, filename[NAME_S];
+	int retval;
+	rev_zone_info_t *zone;
+	
+	buffer = &filename[0];
+	retval = 0;
+	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0)
+		return retval;
+	zone = dnsa->rev_zones;
+	if (!(configfile = calloc(BUILD_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
+	while (zone) {
+		if ((retval = create_rev_config(dc, zone, configfile)) != 0) {
+			printf("Buffer Full!\n");
+			break;
+		}
+		zone = zone->next;
+	}
+	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->rev);
+	if ((retval = write_file(filename, configfile)) != 0)
+		fprintf(stderr, "Unable to write config file %s\n", filename);
+	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
+	if ((retval = system(filename)) != 0)
+		fprintf(stderr, "%s failed with %d\n", filename, retval);
+	return retval;
+}
+
+int
 validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa)
 {
 	char command[NAME_S], *buffer;
@@ -759,6 +837,38 @@ validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa)
 		 dc->chkz, zone->name, dc->dir, zone->name);
 	if ((retval = system(command)) != 0) {
 		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
+		return CHKZONE_FAIL;
+	}
+	return retval;
+}
+
+int
+validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
+{
+	char command[NAME_S], *buffer;
+	int retval;
+	
+	retval = 0;
+	buffer = &command[0];
+	snprintf(zone->valid, COMM_S, "yes");
+	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
+	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
+	if ((retval = run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
+		printf("Unable to get ID of zone %s\n", zone->net_range);
+		return ID_INVALID;
+	}
+	if ((retval = create_and_write_rev_zone(dnsa, dc, zone)) != 0) {
+		fprintf(stderr, "Unable to write the zonefile for %s\n",
+			zone->net_range);
+		return FILE_O_FAIL;
+	}
+	snprintf(buffer, NAME_S, "%s %s %s%s", 
+		 dc->chkz, zone->net_range, dc->dir, zone->net_range);
+	if ((retval = system(command)) != 0) {
+		fprintf(stderr, "Checkzone of %s failed\n", zone->net_range);
 		return CHKZONE_FAIL;
 	}
 	return retval;
@@ -811,7 +921,7 @@ check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type)
 	return retval;
 }
 void
-fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
+fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
 {
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
@@ -821,4 +931,42 @@ fill_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
+}
+
+void
+fill_rev_zone_info(rev_zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
+{
+	char address[RANGE_S], *addr;
+	uint32_t ip_addr;
+	unsigned long int range;
+
+	addr = &(address[0]);
+	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
+	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	snprintf(zone->net_range, RANGE_S, "%s", cm->domain);
+	snprintf(zone->net_start, RANGE_S, "%s", cm->domain);
+	zone->prefix = cm->prefix;
+	zone->serial = get_zone_serial();
+	zone->refresh = dc->refresh;
+	zone->retry = dc->retry;
+	zone->expire = dc->expire;
+	zone->ttl = dc->ttl;
+	inet_pton(AF_INET, zone->net_range, &ip_addr);
+	ip_addr = htonl(ip_addr);
+	zone->start_ip = ip_addr;
+	range = get_net_range(cm->prefix);
+	zone->end_ip = ip_addr + range - 1;
+	ip_addr = htonl((uint32_t)zone->end_ip);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	snprintf(zone->net_finish, RANGE_S, "%s", addr);
+	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
+}
+
+unsigned long int
+get_net_range(unsigned long int prefix)
+{
+	unsigned long int range;
+	range = (256ul * 256ul * 256ul * 256ul) - 1;
+	range = (range >> prefix) + 1;
+	return range;
 }

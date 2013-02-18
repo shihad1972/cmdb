@@ -65,7 +65,8 @@ enum {			/* Update indexes */
 	ZONE_VALID_YES = 0,
 	ZONE_UPDATED_YES,
 	ZONE_UPDATED_NO,
-	ZONE_SERIAL
+	ZONE_SERIAL,
+	REV_ZONE_VALID_YES
 };
 
 int
@@ -106,6 +107,8 @@ void
 setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i);
 void
 setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i);
 /*
 void
 setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i);
@@ -174,6 +177,8 @@ int
 setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record);
 int
 setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_t *zone);
+int
+setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_t *zone);
 /*
 void
 store_server_sqlite(sqlite3_stmt *state, cmdb_t *base);

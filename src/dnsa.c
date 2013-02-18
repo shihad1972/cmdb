@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
 			display_rev_zone(domain, dc);
 		} else if (cm->action == COMMIT_ZONES) {
 			retval = commit_rev_zones(dc);
+		} else if (cm->action == ADD_ZONE) {
+			retval = add_rev_zone(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
