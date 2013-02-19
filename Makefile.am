@@ -10,7 +10,7 @@ SUBDIRS = src
 bin_PROGRAMS = dnsa cmdb cbc
 
 dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
-		src/dnsa-base_sql.c src/base_sql.c\
+		src/dnsa_base_sql.c src/base_sql.c\
 		src/mysqlfunc.h src/cmdb_dnsa.h src/cmdb.h src/checks.h
 
 cbc_SOURCES =	src/cbc.c src/cbc_mysql.c src/errors.c src/checks.c src/cbccom.c\
