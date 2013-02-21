@@ -58,8 +58,11 @@ SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destinatio
 const char *sql_search[] = { "\
 SELECT id FROM zones WHERE name = ?","\
 SELECT rev_zone_id FROM rev_zones WHERE net_range = ?","\
-SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
 SELECT prefix FROM rev_zones WHERE net_range = ?"
+};
+
+const char *sql_extended_search[] = { "\
+SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id"
 };
 
 const char *sql_insert[] = {"\
@@ -103,23 +106,21 @@ const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2 };
 
 const unsigned int insert_fields[] = { 8, 13, 5, 3 };
 
-const unsigned int search_fields[] = { 1, 1, 3, 1 };
+const unsigned int search_fields[] = { 1, 1, 1 };
 
 const unsigned int search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int update_args[] = { 1, 1, 1 };
 
-const unsigned int search_field_type[][3] = { /* What we are selecting */
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT } ,
-	{ DBINT, NONE, NONE }
+const unsigned int extended_search_fields[] = { 3 };
+
+const unsigned int extended_search_args[] = { 1 };
+
+const unsigned int ext_search_field_type[][3] = { /* What we are selecting */
+	{ DBTEXT, DBTEXT, DBINT }
 };
 
-const unsigned int search_arg_type[][1] = { /* What we are searching on */
-	{ DBTEXT } ,
-	{ DBTEXT } ,
-	{ DBTEXT } ,
+const unsigned int ext_search_arg_type[][1] = { /* What we are searching on */
 	{ DBTEXT }
 };
 
@@ -198,6 +199,32 @@ run_search(dnsa_config_t *config, dnsa_t *base, int type)
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
 		retval = run_search_sqlite(config, base, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
+run_extended_search(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+
+	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = run_extended_search_mysql(config, base, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = run_extended_search_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -635,6 +662,16 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
+run_extended_search_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+
+	retval = 0;
+
+	return retval;
+}
+
+int
 run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 {
 	MYSQL dnsa;
@@ -904,6 +941,11 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 				break;
 			store_rev_record_sqlite(state, base);
 			break;
+		case DUPLICATE_A_RECORD:
+			if (fields != select_fields[DUPLICATE_A_RECORDS])
+				break;
+			store_duplicate_a_record_sqlite(state, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type %d\n",  type);
 			break;
@@ -1035,6 +1077,26 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	}
 }
 
+void
+store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
+{
+	record_row_t *rec, *list;
+
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "store_duplicate_a_record_mysql");
+	init_record_struct(rec);
+	snprintf(rec->dest, RANGE_S, "%s", sqlite3_column_text(state, 0));
+	rec->id = (unsigned long int) sqlite3_column_int64(state, 1);
+	list = base->records;
+	if (list) {
+		while(list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
+	}
+}
+
 int
 run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 {
@@ -1074,10 +1136,22 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 			case REV_ZONE_ID_ON_NET_RANGE:
 				base->rev_zones->rev_zone_id = result;
 				break;
+			case REV_ZONE_PREFIX:
+				base->rev_zones->prefix = result;
 		}
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(dnsa);
+	return retval;
+}
+
+int
+run_extended_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+{
+	int retval;
+
+	retval = 0;
+
 	return retval;
 }
 

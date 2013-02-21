@@ -28,14 +28,17 @@
 extern const char *sql_select[];
 extern const char *sql_insert[];
 extern const char *sql_search[];
+extern const char *sql_extended_search[];
 extern const char *sql_update[];
 extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
+extern const unsigned int extended_search_fields[];
+extern const unsigned int extended_search_args[];
+extern const unsigned int ext_search_field_type[][3];
+extern const unsigned int ext_search_arg_type[][1];
 extern const unsigned int update_args[];
-extern const unsigned int search_field_type[][3];
-extern const unsigned int search_arg_type[][1];
 extern const unsigned int update_arg_type[][2];
 
 # ifdef HAVE_MYSQL
@@ -63,7 +66,6 @@ enum {			/* SELECT and INSERT indexes */
 enum {			/* Search indexes and queries */
 	ZONE_ID_ON_NAME = 0,
 	REV_ZONE_ID_ON_NET_RANGE,
-	MULTIPLE_A_RECORDS,
 	REV_ZONE_PREFIX
 };
 
@@ -86,6 +88,8 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, d
 int
 run_search(dnsa_config_t *config, dnsa_t *base, int type);
 int
+run_extended_search(dnsa_config_t *config, dnsa_t *base, int type);
+int
 run_insert(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_update(dnsa_config_t *config, dbdata_t *data, int type);
@@ -103,6 +107,8 @@ int
 run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type);
+int
+run_extended_search_mysql(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type);
 int
@@ -168,6 +174,8 @@ run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
 int
+run_extended_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type);
+int
 run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type);
@@ -181,6 +189,8 @@ void
 store_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
+void
+store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 int
 setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record);
 int

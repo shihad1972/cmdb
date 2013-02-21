@@ -176,7 +176,7 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 	int retval;
 	dnsa_t *dnsa;
 	rev_zone_info_t *rzone;
-	record_row_t *records;
+	record_row_t *records, *list;
 
 	retval = 0;
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
@@ -195,19 +195,23 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		printf("Net range %s does not exist in database\n", cm->domain);
 		return NO_DOMAIN;
 	}
-	printf("Zone is %s with prefix %lu\n", cm->domain, rzone->prefix);
-	printf("Start IP is %lu; last ip is %lu\n", rzone->start_ip, rzone->end_ip);
 	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
 	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
 	records = dnsa->records;
+	dnsa->records = '\0';
+	if (!records)
+		printf("No duplicate entries for range %s\n", cm->domain);
 	while (records) {
+		
 		printf("Destination %s has %lu records\n",
 		       records->dest, records->id);
 		records = records->next;
 	}
+	dnsa_clean_records(records);
+	dnsa_clean_list(dnsa);
 	return retval;
 }
 void
@@ -1011,8 +1015,8 @@ get_net_range(unsigned long int prefix)
 	return range;
 }
 /*
- * In this function we need 3 counters; prev, tmp and list. This is so we can
- * remove entries from the linked list. The first entry does NOT have a
+ * In this function we need 4 counters; prev, next, tmp and list. This is so we
+ * can remove entries from the linked list. The first entry does NOT have a
  * previous entry (obviously) so we have to check for this when we update the
  * list. We also have an issue if the first entry in the list is to be deleted
  * hence we send a pointer to a pointer for records into this function so we
@@ -1024,18 +1028,21 @@ get_net_range(unsigned long int prefix)
 void
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 {
-	record_row_t *rec, *list, *tmp, *prev;
+	record_row_t *rec, *list, *tmp, *prev, *next;
 	uint32_t ip_addr;
 	unsigned long int ip;
 	list = *records;
 	rec = prev = list;
+	next = rec->next;
 	while (rec) {
 		tmp = rec;
 		inet_pton(AF_INET, rec->dest, &ip_addr);
 		ip = (unsigned long int) htonl(ip_addr);
 		if (ip < zone->start_ip || ip > zone->end_ip) {
 			free (rec);
-			rec = rec->next;
+			rec = next;
+			if (rec)
+				next = rec->next;
 			if (tmp == list)
 				list = prev = rec;
 			else
@@ -1043,7 +1050,9 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 		} else {
 			if (prev != rec)
 				prev = prev->next;
-			rec = rec->next;
+			rec = next;
+			if (rec)
+				next = rec->next;
 		}
 	}
 	if (*records != list)
