@@ -170,6 +170,46 @@ records->host, records->type, records->dest);
 		printf("\n%u records\n", i);
 }
 
+int
+display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	rev_zone_info_t *rzone;
+	record_row_t *records;
+
+	retval = 0;
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in display_multi_a_records");
+	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
+	dnsa->rev_zones = rzone;
+	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
+	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	cm->prefix = rzone->prefix;
+	fill_rev_zone_info(rzone, cm, dc);
+	if (rzone->prefix == NONE) {
+		printf("Net range %s does not exist in database\n", cm->domain);
+		return NO_DOMAIN;
+	}
+	printf("Zone is %s with prefix %lu\n", cm->domain, rzone->prefix);
+	printf("Start IP is %lu; last ip is %lu\n", rzone->start_ip, rzone->end_ip);
+	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
+	records = dnsa->records;
+	while (records) {
+		printf("Destination %s has %lu records\n",
+		       records->dest, records->id);
+		records = records->next;
+	}
+	return retval;
+}
 void
 display_rev_zone(char *domain, dnsa_config_t *dc)
 {
@@ -969,4 +1009,43 @@ get_net_range(unsigned long int prefix)
 	range = (256ul * 256ul * 256ul * 256ul) - 1;
 	range = (range >> prefix) + 1;
 	return range;
+}
+/*
+ * In this function we need 3 counters; prev, tmp and list. This is so we can
+ * remove entries from the linked list. The first entry does NOT have a
+ * previous entry (obviously) so we have to check for this when we update the
+ * list. We also have an issue if the first entry in the list is to be deleted
+ * hence we send a pointer to a pointer for records into this function so we
+ * can point to a new start. We update list when we delete the first entry
+ * tmp keeps a counter of the record we are dealing with, while prev is the
+ * previous entry. This will have to be modified if we remove a record so it's
+ * ->next pointer points somewhere sane.
+ */
+void
+get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
+{
+	record_row_t *rec, *list, *tmp, *prev;
+	uint32_t ip_addr;
+	unsigned long int ip;
+	list = *records;
+	rec = prev = list;
+	while (rec) {
+		tmp = rec;
+		inet_pton(AF_INET, rec->dest, &ip_addr);
+		ip = (unsigned long int) htonl(ip_addr);
+		if (ip < zone->start_ip || ip > zone->end_ip) {
+			free (rec);
+			rec = rec->next;
+			if (tmp == list)
+				list = prev = rec;
+			else
+				prev->next = rec;
+		} else {
+			if (prev != rec)
+				prev = prev->next;
+			rec = rec->next;
+		}
+	}
+	if (*records != list)
+		*records = list;
 }

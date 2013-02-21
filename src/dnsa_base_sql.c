@@ -23,10 +23,11 @@
  *  supplied. Will also contian conditional code base on database type.
  */
 #include "../config.h"
-#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "dnsa_base_sql.h"
@@ -49,12 +50,16 @@ finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
 owner, updated FROM rev_zones ORDER BY start_ip","\
 SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
-SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records"
+SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
+SELECT name, host, destination, r.id FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
+SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1"
 };
 
 const char *sql_search[] = { "\
 SELECT id FROM zones WHERE name = ?","\
-SELECT rev_zone_id FROM rev_zones WHERE net_range = ?"
+SELECT rev_zone_id FROM rev_zones WHERE net_range = ?","\
+SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
+SELECT prefix FROM rev_zones WHERE net_range = ?"
 };
 
 const char *sql_insert[] = {"\
@@ -94,22 +99,26 @@ const int mysql_inserts[][13] = {
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int select_fields[] = { 12, 17, 7, 5 };
+const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2 };
 
 const unsigned int insert_fields[] = { 8, 13, 5, 3 };
 
-const unsigned int search_fields[] = { 1, 1 };
+const unsigned int search_fields[] = { 1, 1, 3, 1 };
 
-const unsigned int search_args[] = { 1, 1 };
+const unsigned int search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int update_args[] = { 1, 1, 1 };
 
-const unsigned int search_field_type[][1] = { /* What we are selecting */
-	{ DBINT } ,
-	{ DBINT }
+const unsigned int search_field_type[][3] = { /* What we are selecting */
+	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT } ,
+	{ DBINT, NONE, NONE }
 };
 
 const unsigned int search_arg_type[][1] = { /* What we are searching on */
+	{ DBTEXT } ,
+	{ DBTEXT } ,
 	{ DBTEXT } ,
 	{ DBTEXT }
 };
@@ -272,6 +281,10 @@ get_query(int type, const char **query, unsigned int *fields)
 			*query = sql_select[REV_RECORDS];
 			*fields = select_fields[REV_RECORDS];
 			break;
+		case DUPLICATE_A_RECORD:
+			*query = sql_select[DUPLICATE_A_RECORDS];
+			*fields = select_fields[DUPLICATE_A_RECORDS];
+			break;
 		default:
 			fprintf(stderr, "Unknown query type %d\n", type);
 			retval = 1;
@@ -296,6 +309,12 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 			*output = &(base->rev_zones->rev_zone_id);
 			*fields = strlen(base->rev_zones->net_range);
 			*args = sizeof(base->rev_zones->rev_zone_id);
+			break;
+		case REV_ZONE_PREFIX:
+			*input = &(base->rev_zones->net_range);
+			*output = &(base->rev_zones->prefix);
+			*fields = strlen(base->rev_zones->net_range);
+			*args = sizeof(base->rev_zones->prefix);
 			break;
 		default:
 			fprintf(stderr, "Unknown query %d\n", type);
@@ -400,8 +419,13 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 				break;
 			store_rev_record_mysql(row, base);
 			break;
+		case DUPLICATE_A_RECORD:
+			if (fields != select_fields[DUPLICATE_A_RECORDS])
+				break;
+			store_duplicate_a_record_mysql(row, base);
+			break;
 		default:
-			fprintf(stderr, "Unknown type %d\n",  type);
+			fprintf(stderr, "Unknown type for storing %d\n",  type);
 			break;
 	}
 			
@@ -529,6 +553,26 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 		list->next = rev;
 	} else {
 		base->rev_records = rev;
+	}
+}
+
+void
+store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *base)
+{
+	record_row_t *rec, *list;
+
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "store_duplicate_a_record_mysql");
+	init_record_struct(rec);
+	snprintf(rec->dest, RANGE_S, "%s", row[0]);
+	rec->id = strtoul(row[1], NULL, 10);
+	list = base->records;
+	if (list) {
+		while(list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
 	}
 }
 
@@ -672,24 +716,24 @@ run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base)
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_t *base)
 {
 	int retval;
 
 	retval = 0;
 	void *buffer;
-	bind->buffer_type = mysql_inserts[type][i];
-	bind->is_null = 0;
-	bind->length = 0;
+	mybind->buffer_type = mysql_inserts[type][i];
+	mybind->is_null = 0;
+	mybind->length = 0;
 	if ((retval = setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
 		return retval;
-	bind->buffer = buffer;
-	if (bind->buffer_type == MYSQL_TYPE_STRING) {
-		bind->is_unsigned = 0;
-		bind->buffer_length = strlen(buffer);
-	} else if (bind->buffer_type == MYSQL_TYPE_LONG) {
-		bind->is_unsigned = 1;
-		bind->buffer_length = sizeof(unsigned long int);
+	mybind->buffer = buffer;
+	if (mybind->buffer_type == MYSQL_TYPE_STRING) {
+		mybind->is_unsigned = 0;
+		mybind->buffer_length = strlen(buffer);
+	} else if (mybind->buffer_type == MYSQL_TYPE_LONG) {
+		mybind->is_unsigned = 1;
+		mybind->buffer_length = sizeof(unsigned long int);
 	} else {
 		retval = WRONG_TYPE;
 	}

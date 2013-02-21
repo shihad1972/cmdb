@@ -102,6 +102,8 @@ int main(int argc, char *argv[])
 			retval = commit_rev_zones(dc);
 		} else if (cm->action == ADD_ZONE) {
 			retval = add_rev_zone(dc, cm);
+		} else if (cm->action == MULTIPLE_A) {
+			retval = display_multi_a_records(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

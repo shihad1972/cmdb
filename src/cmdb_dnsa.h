@@ -200,6 +200,10 @@ unsigned long int
 get_zone_serial(void);
 int
 check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
+int
+display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
+void
+get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
 /* Forward zone functions */
 int
 check_fwd_zone(char *domain, dnsa_config_t *dc);

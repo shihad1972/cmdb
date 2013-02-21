@@ -246,7 +246,8 @@ enum {			/* dnsa action codes */
 	COMMIT_ZONES = 23,
 	ADD_ZONE = 24,
 	ADD_HOST = 25,
-	BUILD_REV = 26
+	BUILD_REV = 26,
+	MULTIPLE_A = 27
 };
 
 enum {			/* cbc values for build type */

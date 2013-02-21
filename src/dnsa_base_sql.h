@@ -34,7 +34,7 @@ extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 extern const unsigned int update_args[];
-extern const unsigned int search_field_type[][1];
+extern const unsigned int search_field_type[][3];
 extern const unsigned int search_arg_type[][1];
 extern const unsigned int update_arg_type[][2];
 
@@ -46,19 +46,25 @@ enum {			/* SELECT statements to use in multiple */
 	ZONE = 1,
 	REV_ZONE = 2,
 	RECORD = 4,
-	REV_RECORD = 8
+	REV_RECORD = 8,
+	ALL_A_RECORD = 16,
+	DUPLICATE_A_RECORD = 32
 };
 
 enum {			/* SELECT and INSERT indexes */
 	ZONES = 0,
 	REV_ZONES,
 	RECORDS,
-	REV_RECORDS
+	REV_RECORDS,
+	ALL_A_RECORDS,
+	DUPLICATE_A_RECORDS
 };
 
 enum {			/* Search indexes and queries */
 	ZONE_ID_ON_NAME = 0,
-	REV_ZONE_ID_ON_NET_RANGE
+	REV_ZONE_ID_ON_NET_RANGE,
+	MULTIPLE_A_RECORDS,
+	REV_ZONE_PREFIX
 };
 
 enum {			/* Update indexes */
@@ -130,6 +136,8 @@ void
 store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base);
 void
 store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base);
+void
+store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *dnsa);
 /*
 void
 store_customer_mysql(MYSQL_ROW row, cmdb_t *base);
