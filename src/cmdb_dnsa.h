@@ -164,7 +164,7 @@ init_record_struct(record_row_t *record);
 void
 init_rev_record_struct(rev_record_row_t *revrecord);
 void
-init_dbdata(dbdata_t *data);
+init_dbdata_struct(dbdata_t *data);
 void
 dnsa_clean_list(dnsa_t *dnsa);
 void
@@ -175,6 +175,8 @@ void
 dnsa_clean_records(record_row_t *rec);
 void
 dnsa_clean_rev_records(rev_record_row_t *rev);
+void
+dnsa_clean_dbdata_list(dbdata_t *data);
 /* Zone Functions */
 void
 list_zones(dnsa_config_t *dc);
@@ -202,7 +204,7 @@ int
 check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
 int
 display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
-void
+int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
 /* Forward zone functions */
 int

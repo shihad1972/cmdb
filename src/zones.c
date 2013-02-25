@@ -173,16 +173,33 @@ records->host, records->type, records->dest);
 int
 display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 {
-	int retval;
+	int retval, i, j;
 	dnsa_t *dnsa;
+	dbdata_t *data, *dlist, *start;
 	rev_zone_info_t *rzone;
-	record_row_t *records, *list;
+	record_row_t *records;
 
 	retval = 0;
+	data = dlist = '\0';
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in display_multi_a_records");
 	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
 		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
+	init_dnsa_struct(dnsa);
+	init_rev_zone_struct(rzone);
+	for (i = 0; (unsigned)i < extended_search_fields[RECORDS_ON_DEST_AND_ID]; i++) {
+		if (!(data = malloc(sizeof(dbdata_t))))
+			report_error(MALLOC_FAIL, "Data in disp_multi_a");
+		init_dbdata_struct(data);
+		if (!(dlist)) {
+			start = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
+	dlist = start;
 	dnsa->rev_zones = rzone;
 	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
 	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
@@ -193,23 +210,42 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 	fill_rev_zone_info(rzone, cm, dc);
 	if (rzone->prefix == NONE) {
 		printf("Net range %s does not exist in database\n", cm->domain);
+		dnsa_clean_list(dnsa);
+		dnsa_clean_dbdata_list(start);
 		return NO_DOMAIN;
 	}
 	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
+	i = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
 	records = dnsa->records;
-	dnsa->records = '\0';
 	if (!records)
 		printf("No duplicate entries for range %s\n", cm->domain);
 	while (records) {
-		
+		dlist = start;
 		printf("Destination %s has %lu records\n",
 		       records->dest, records->id);
+		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
+		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+		for (j = 0; j < i; j++) {
+			printf("%s.", dlist->fields.text);
+			dlist = dlist->next;
+			printf("%s\n", dlist->fields.text);
+			dlist = dlist->next;
+			dlist = dlist->next;
+		}
+		printf("\n");
 		records = records->next;
+		dlist = start->next;
+		dlist = dlist->next;
+		dlist = dlist->next;
+		dnsa_clean_dbdata_list(dlist);
+		dlist = start->next;
+		dlist = dlist->next;
+		dlist->next = '\0';
 	}
+	dnsa_clean_dbdata_list(start);
 	dnsa_clean_records(records);
 	dnsa_clean_list(dnsa);
 	return retval;
@@ -491,8 +527,8 @@ check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone)
 			zone->serial = serial;
 		else
 			zone->serial++;
-		init_dbdata(&serial_data);
-		init_dbdata(&id_data);
+		init_dbdata_struct(&serial_data);
+		init_dbdata_struct(&id_data);
 		serial_data.args.number = zone->serial;
 		id_data.args.number = zone->id;
 		serial_data.next = &id_data;
@@ -682,7 +718,7 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 		report_error(MALLOC_FAIL, "record in add_host");
 
 	init_dnsa_struct(dnsa);
-	init_dbdata(&data);
+	init_dbdata_struct(&data);
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
@@ -734,7 +770,7 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	init_dbdata(&data);
+	init_dbdata_struct(&data);
 	data.args.number = zone->id;
 	if ((retval = run_update(dc, &data, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
@@ -781,7 +817,7 @@ add_rev_zone(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	init_dbdata(&data);
+	init_dbdata_struct(&data);
 	data.args.number = zone->rev_zone_id;
 	if ((retval = run_update(dc, &data, REV_ZONE_VALID_YES)) != 0)
 		printf("Unable to mark rev_zone %s as valid\n", zone->net_range);
@@ -1016,19 +1052,19 @@ get_net_range(unsigned long int prefix)
 }
 /*
  * In this function we need 4 counters; prev, next, tmp and list. This is so we
- * can remove entries from the linked list. The first entry does NOT have a
- * previous entry (obviously) so we have to check for this when we update the
- * list. We also have an issue if the first entry in the list is to be deleted
- * hence we send a pointer to a pointer for records into this function so we
- * can point to a new start. We update list when we delete the first entry
- * tmp keeps a counter of the record we are dealing with, while prev is the
- * previous entry. This will have to be modified if we remove a record so it's
- * ->next pointer points somewhere sane.
+ * can remove entries from the linked list. list tracks the head node, and tmp
+ * is only used to check if the head node is deleted so we can set list
+ * accordingly. Once we have a head node, prev tracks the previous entry so
+ * when we delete a member, the list can be updated (i.e. prev->next is set to
+ * the member after the one deleted). Next tracks the next member so if we
+ * free the current node we know where the next one is. Finally if the head
+ * node is changed we set *records to list, the new head memeber
  */
-void
+int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 {
 	record_row_t *rec, *list, *tmp, *prev, *next;
+	int i = 0;
 	uint32_t ip_addr;
 	unsigned long int ip;
 	list = *records;
@@ -1048,6 +1084,7 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 			else
 				prev->next = rec;
 		} else {
+			i++;
 			if (prev != rec)
 				prev = prev->next;
 			rec = next;
@@ -1057,4 +1094,5 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 	}
 	if (*records != list)
 		*records = list;
+	return i;
 }

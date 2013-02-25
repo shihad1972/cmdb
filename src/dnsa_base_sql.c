@@ -210,7 +210,7 @@ run_search(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_extended_search(dnsa_config_t *config, dnsa_t *base, int type)
+run_extended_search(dnsa_config_t *config, dbdata_t *base, int type)
 {
 	int retval;
 
@@ -662,7 +662,7 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
-run_extended_search_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+run_extended_search_mysql(dnsa_config_t *config, dbdata_t *base, int type)
 {
 	int retval;
 
@@ -1146,13 +1146,39 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_extended_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+run_extended_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type)
 {
-	int retval;
+	const char *query, *file;
+	int retval, i;
+	dbdata_t *list;
+	sqlite3 *dnsa;
+	sqlite3_stmt *state;
 
 	retval = 0;
+	list = base;
+	query = sql_extended_search[type];
+	file = config->file;
+	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
+		report_error(CANNOT_OPEN_FILE, file);
+	}
+	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(dnsa);
+		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+	}
+	for (i = 0; (unsigned long)i < extended_search_args[type]; i++) {
+		setup_bind_extended_sqlite(state, list, type, i);
+		list = list->next;
+	}
+	list = base;
+	i = 0;
+	while ((sqlite3_step(state)) == SQLITE_ROW) {
+		get_extended_results_sqlite(state, list, type, i);
+		i++;
+	}
 
-	return retval;
+	retval = sqlite3_finalize(state);
+	retval = sqlite3_close(dnsa);
+	return i;
 }
 
 int
@@ -1253,6 +1279,71 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 	} else {
 		retval = WRONG_TYPE;
 	}
+	return retval;
+}
+
+int
+setup_bind_extended_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i)
+{
+	int retval;
+
+	retval = 0;
+	if (ext_search_arg_type[type][i] == DBTEXT) {
+		if ((retval = sqlite3_bind_text(
+state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
+			fprintf(stderr, "Cannot bind extended text arg %s\n",
+				list->args.text);
+			return retval;
+		}
+	} else if (ext_search_arg_type[type][i] == DBINT) {
+		if ((retval = sqlite3_bind_int64(
+state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
+			fprintf(stderr, "Cannot bind extended number arg %lu\n",
+				list->args.number);
+			return retval;
+		}
+	}
+	return retval;
+}
+
+int
+get_extended_results_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i)
+{
+	int retval, j, k;
+	unsigned int u;
+	dbdata_t *data;
+
+	data = list;
+	retval = 0;
+	if (i > 0) {
+		for (k = 1; k <= i; k++) {
+			for (u = 1; u <= extended_search_fields[type]; u++)
+				if ((u != extended_search_fields[type]) || (k != i))
+					list = list->next;
+		}
+		for (j = 0; (unsigned)j < extended_search_fields[type]; j++) {
+			if (!(data = malloc(sizeof(dbdata_t))))
+				report_error(MALLOC_FAIL, "data in get_ext_results_sqlite");
+			init_dbdata_struct(data);
+			if (ext_search_field_type[type][j] == DBTEXT) {
+				snprintf(data->fields.text, RBUFF_S, "%s", sqlite3_column_text(state, j));
+			} else if (ext_search_field_type[type][j] == DBINT) {
+				data->fields.number = (unsigned long int)sqlite3_column_int64(state, j);
+			}
+			list->next = data;
+			list = list->next;
+		}
+	} else {
+		for (j = 0; (unsigned)j < extended_search_fields[type]; j++) {
+			if (ext_search_field_type[type][j] == DBTEXT) {
+				snprintf(list->fields.text, RBUFF_S, "%s", sqlite3_column_text(state, j));
+			} else if (ext_search_field_type[type][j] == DBINT) {
+				list->fields.number = (unsigned long int)sqlite3_column_int64(state, j);
+			}
+			list = list->next;
+		}
+	}
+	
 	return retval;
 }
 

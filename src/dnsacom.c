@@ -389,12 +389,6 @@ init_rev_record_struct(rev_record_row_t *rev)
 }
 
 void
-init_dbdata(dbdata_t *data)
-{
-	data->next = '\0';
-}
-
-void
 dnsa_clean_list(dnsa_t *dnsa)
 {
 	if (dnsa->zones)
@@ -507,6 +501,32 @@ dnsa_clean_rev_records(rev_record_row_t *list)
 			return;
 		if (rec->next)
 			next = rec->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_dbdata_list(dbdata_t *list)
+{
+	dbdata_t *data, *next;
+	
+	if (list)
+		data = list;
+	else
+		return;
+	if (data->next)
+		next = data->next;
+	else
+		next = '\0';
+	while (data) {
+		free(data);
+		if (next)
+			data = next;
+		else
+			return;
+		if (data->next)
+			next = data->next;
 		else
 			next = '\0';
 	}
