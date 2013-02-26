@@ -207,6 +207,8 @@ check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
 int
 display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
 void
+select_specific_ip(dnsa_t *dnsa, comm_line_t *cm);
+void
 print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, record_row_t *records);
 int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);

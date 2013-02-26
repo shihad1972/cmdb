@@ -186,13 +186,20 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
 
 	init_dnsa_struct(dnsa);
+	init_rev_zone_struct(rzone);
+	dnsa->rev_zones = rzone;
 	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	init_rev_zone_struct(rzone);
 	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
-	dnsa->rev_zones = rzone;
+	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
+		select_specific_ip(dnsa, cm);
+		print_multiple_a_records(dc, start, dnsa->records);
+		dnsa_clean_dbdata_list(start);
+		dnsa_clean_list(dnsa);
+		return NONE;
+	}
 	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
 	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -1053,6 +1060,31 @@ get_net_range(unsigned long int prefix)
 	range = (range >> prefix) + 1;
 	return range;
 }
+
+void
+select_specific_ip(dnsa_t *dnsa, comm_line_t *cm)
+{
+	record_row_t *records, *next, *ip;
+	
+	records = dnsa->records;
+	next = records->next;
+	while (records) {
+		if (strncmp(records->dest, cm->dest, RANGE_S) == 0) {
+			ip = records;
+			records = records->next;
+			if (records)
+				next = records->next;
+		} else {
+			free(records);
+			records = next;
+			if (records)
+				next = records->next;
+		}
+	}
+	dnsa->records = ip;
+	ip->next = '\0';
+}
+
 /*
  * In this function we need 4 counters; prev, next, tmp and list. This is so we
  * can remove entries from the linked list. list tracks the head node, and tmp
