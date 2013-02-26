@@ -312,6 +312,9 @@ display_cmdb_command_line_error(int retval, char *program)
 		case NO_EMAIL:
 			fprintf(stderr, "No email address specified with -E\n");
 			break;
+		case DOMAIN_AND_IP_GIVEN:
+			fprintf(stderr, "Both domain name and IP given on command line\n");
+			break;
 		case DISPLAY_USAGE:
 			if ((strncmp(program, "cmdb", CONF_S) == 0))
 				display_cmdb_usage();
@@ -404,7 +407,8 @@ display_dnsa_usage(void)
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");
-	printf("-n: zone-name\n\n");
+	printf("-n: zone-name / network range\n");
+	printf("-i: IP Address\n\n");
 	printf("Zone options for use with adding a reverse zone:\n");
 	printf("-p: prefix\n\n");
 	printf("Host options for use with adding a host record:\n");

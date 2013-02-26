@@ -173,7 +173,8 @@ enum {			/* cmdb return codes */
 	NO_EMAIL = -25,
 	NO_CONT_NAME = -26,
 	NO_DETAIL = -27,
-	NO_CLASS = 28
+	NO_CLASS = -28,
+	DOMAIN_AND_IP_GIVEN = -29
 };
 
 enum {			/* cmdb config file error codes */
