@@ -184,7 +184,6 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		report_error(MALLOC_FAIL, "dnsa in display_multi_a_records");
 	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
 		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
-
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
 	dnsa->rev_zones = rzone;
@@ -195,7 +194,11 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
 		select_specific_ip(dnsa, cm);
-		print_multiple_a_records(dc, start, dnsa->records);
+		if (!(dnsa->records))
+			fprintf(stderr, "No multiple A records for IP %s\n",
+				cm->dest);
+		else
+			print_multiple_a_records(dc, start, dnsa->records);
 		dnsa_clean_dbdata_list(start);
 		dnsa_clean_list(dnsa);
 		return NONE;
@@ -217,7 +220,6 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 	records = dnsa->records;
 	if (!records)
 		printf("No duplicate entries for range %s\n", cm->domain);
-/*	print_multiple_a_records(dc, start, records); */
 	while (records) {
 		printf("Destination %s has %lu records\n",
 		       records->dest, records->id);
@@ -1068,7 +1070,8 @@ void
 select_specific_ip(dnsa_t *dnsa, comm_line_t *cm)
 {
 	record_row_t *records, *next, *ip;
-	
+
+	ip = '\0';
 	records = dnsa->records;
 	next = records->next;
 	while (records) {
@@ -1085,7 +1088,8 @@ select_specific_ip(dnsa_t *dnsa, comm_line_t *cm)
 		}
 	}
 	dnsa->records = ip;
-	ip->next = '\0';
+	if (ip)
+		ip->next = '\0';
 }
 
 /*

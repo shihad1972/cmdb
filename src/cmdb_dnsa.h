@@ -58,6 +58,15 @@ typedef struct record_row_t { /* Hold dns record */
 	struct record_row_t *next;
 } record_row_t;
 
+typedef struct rev_record_row_t { /* Hold dns record */
+	char host[RBUFF_S];
+	char dest[RBUFF_S];
+	char valid[RANGE_S];
+	unsigned long int record_id;
+	unsigned long int rev_zone;
+	struct rev_record_row_t *next;
+} rev_record_row_t;
+
 typedef struct zone_info_t { /* Hold DNS zone */
 	char name[RBUFF_S];
 	char pri_dns[RBUFF_S];
@@ -98,15 +107,6 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 	unsigned long int ttl;
 	struct rev_zone_info_t *next;
 } rev_zone_info_t;
-
-typedef struct rev_record_row_t { /* Hold dns record */
-	char host[RBUFF_S];
-	char dest[RBUFF_S];
-	char valid[RANGE_S];
-	unsigned long int record_id;
-	unsigned long int rev_zone;
-	struct rev_record_row_t *next;
-} rev_record_row_t;
 
 typedef struct zone_file_t {
 	char out[RBUFF_S];
