@@ -664,11 +664,54 @@ and int for result, which is OK when searching on name and returning id
 int
 run_extended_search_mysql(dnsa_config_t *config, dbdata_t *base, int type)
 {
-	int retval;
+	MYSQL dnsa;
+	MYSQL_STMT *dnsa_stmt;
+	MYSQL_BIND args_bind[extended_search_args[type]];
+	MYSQL_BIND fields_bind[extended_search_fields[type]];
+	const char *query;
+	int retval, j;
+	unsigned int i;
 
-	retval = 0;
-
-	return retval;
+	retval = j = 0;
+	memset(args_bind, 0, sizeof(args_bind));
+	memset(fields_bind, 0, sizeof(fields_bind));
+	for (i = 0; i < extended_search_args[type]; i++) 
+		if ((retval = setup_bind_ext_mysql_args(&args_bind[i], i, type, base)) != 0)
+			return retval;
+	for (i = 0; i < extended_search_fields[type]; i++)
+		if ((retval = setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base)) != 0)
+			return retval;
+	query = sql_extended_search[type];
+	cmdb_mysql_init(config, &dnsa);
+	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &args_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_bind_result(dnsa_stmt, &fields_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	if ((retval = mysql_stmt_store_result(dnsa_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	while ((retval = mysql_stmt_fetch(dnsa_stmt)) == 0) {
+		j++;
+		for (i = 0; i < extended_search_fields[type]; i++)
+			if ((retval = setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base)) != 0)
+				return retval;
+		if ((retval = mysql_stmt_bind_result(dnsa_stmt, &fields_bind[0])) != 0)
+			report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
+	}
+	if (retval != MYSQL_NO_DATA) {
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
+	} else {
+		retval = NONE;
+	}
+	mysql_stmt_free_result(dnsa_stmt);
+	mysql_stmt_close(dnsa_stmt);
+	cmdb_mysql_cleanup(&dnsa);
+	return j;
 }
 
 int
@@ -774,6 +817,79 @@ setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_t *ba
 	} else {
 		retval = WRONG_TYPE;
 	}
+	return retval;
+}
+
+int
+setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_t *base)
+{
+	int retval;
+	unsigned int j;
+	void *buffer;
+	dbdata_t *list = base;
+	
+	retval = 0;
+	mybind->is_null = 0;
+	mybind->length = 0;
+	for (j = 0; j < i; j++)
+		list = list->next;
+	if (ext_search_arg_type[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
+		buffer = &(list->args.number);
+		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (ext_search_arg_type[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
+		buffer = &(list->args.text);
+		mybind->buffer_length = strlen(buffer);
+	} else {
+		return WRONG_TYPE;
+	}
+	mybind->buffer = buffer;
+	return retval;
+}
+
+int
+setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_t *base)
+{
+	int retval, j;
+	static int m = 0;
+	void *buffer;
+	dbdata_t *list, *new;
+	list = base;
+	
+	retval = 0;
+	mybind->is_null = 0;
+	mybind->length = 0;
+	if (k > 0) {
+		if (!(new = malloc(sizeof(dbdata_t))))
+			report_error(MALLOC_FAIL, "new in setup_bind_ext_mysql_fields");
+		init_dbdata_struct(new);
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = new;
+		list = base;
+	}
+	for (j = 0; j < m; j++)
+		list = list->next;
+	if (ext_search_field_type[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
+		buffer = &(list->fields.number);
+		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (ext_search_field_type[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
+		buffer = &(list->fields.text);
+		mybind->buffer_length = RBUFF_S;
+	} else {
+		return WRONG_TYPE;
+	}
+	mybind->buffer = buffer;
+	m++;
+
 	return retval;
 }
 

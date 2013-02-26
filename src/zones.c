@@ -223,8 +223,11 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		       records->dest, records->id);
 		records = records->next;
 	}
-	printf("If you want to see the A records for a specific IP use the ");
-	printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
+	records = dnsa->records;
+	if (records) {
+		printf("If you want to see the A records for a specific IP use the ");
+		printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
+	}
 	dnsa_clean_dbdata_list(start);
 	dnsa_clean_list(dnsa);
 	return retval;
@@ -242,7 +245,7 @@ print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, record_row_t *recor
 		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
 		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
 		for (j = 0; j < i; j++) {
-			printf("%s.", dlist->fields.text);
+			printf("\t%s.", dlist->fields.text);
 			dlist = dlist->next;
 			printf("%s\n", dlist->fields.text);
 			dlist = dlist->next;

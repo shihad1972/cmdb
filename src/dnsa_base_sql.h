@@ -118,6 +118,10 @@ run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base);
 int
+setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_t *base);
+int
+setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int j, int type, dbdata_t *base);
+int
 setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned int i);
 void
 setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i);
