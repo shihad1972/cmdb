@@ -327,12 +327,6 @@ init_dnsa_struct(dnsa_t *dnsa)
 }
 
 void
-init_dbdata_struct(dbdata_t *data)
-{
-	data->next = '\0';
-}
-
-void
 init_zone_struct(zone_info_t *zone)
 {
 	zone->id = zone->owner = 0;
@@ -386,6 +380,12 @@ init_rev_record_struct(rev_record_row_t *rev)
 	snprintf(rev->dest, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");
 	rev->next = '\0';
+}
+
+void
+init_dbdata_struct(dbdata_t *data)
+{
+	data->next = '\0';
 }
 
 void

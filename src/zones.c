@@ -173,33 +173,21 @@ records->host, records->type, records->dest);
 int
 display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 {
-	int retval, i, j;
+	int retval;
 	dnsa_t *dnsa;
-	dbdata_t *data, *dlist, *start;
+	dbdata_t *start;
 	rev_zone_info_t *rzone;
 	record_row_t *records;
 
 	retval = 0;
-	data = dlist = '\0';
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in display_multi_a_records");
 	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
 		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
-	for (i = 0; (unsigned)i < extended_search_fields[RECORDS_ON_DEST_AND_ID]; i++) {
-		if (!(data = malloc(sizeof(dbdata_t))))
-			report_error(MALLOC_FAIL, "Data in disp_multi_a");
-		init_dbdata_struct(data);
-		if (!(dlist)) {
-			start = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-	}
-	dlist = start;
+	start = '\0';
+	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	dnsa->rev_zones = rzone;
 	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
 	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
@@ -218,14 +206,25 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	i = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
+	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
 	records = dnsa->records;
 	if (!records)
 		printf("No duplicate entries for range %s\n", cm->domain);
+	print_multiple_a_records(dc, start, records);
+	dnsa_clean_dbdata_list(start);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+void
+print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, record_row_t *records)
+{
+	int i, j;
+	dbdata_t *dlist;
 	while (records) {
 		dlist = start;
 		printf("Destination %s has %lu records\n",
-		       records->dest, records->id);
+		records->dest, records->id);
 		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
 		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
 		for (j = 0; j < i; j++) {
@@ -245,11 +244,8 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 		dlist = dlist->next;
 		dlist->next = '\0';
 	}
-	dnsa_clean_dbdata_list(start);
-	dnsa_clean_records(records);
-	dnsa_clean_list(dnsa);
-	return retval;
 }
+
 void
 display_rev_zone(char *domain, dnsa_config_t *dc)
 {
@@ -1095,4 +1091,24 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 	if (*records != list)
 		*records = list;
 	return i;
+}
+
+void
+init_initial_dbdata(dbdata_t **list, int type)
+{
+	unsigned int i = 0;
+	dbdata_t *data, *dlist;
+	dlist = *list;
+	for (i = 0; i < extended_search_fields[type]; i++) {
+		if (!(data = malloc(sizeof(dbdata_t))))
+			report_error(MALLOC_FAIL, "Data in disp_multi_a");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
 }
