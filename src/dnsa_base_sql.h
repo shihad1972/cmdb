@@ -131,6 +131,8 @@ void
 setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i);
 void
 setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i);
+void
+setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_t *base, unsigned int i);
 /*
 void
 setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i);
@@ -215,6 +217,8 @@ int
 setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_t *zone);
 int
 setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_t *zone);
+int
+setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_t *prefer);
 /*
 void
 store_server_sqlite(sqlite3_stmt *state, cmdb_t *base);

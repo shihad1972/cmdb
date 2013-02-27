@@ -740,12 +740,21 @@ mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
 		return retval;
 	}
 	select_specific_ip(dnsa, cm);
-	if (!(dnsa->records))
+	if (!(dnsa->records)) {
 		fprintf(stderr, "No multiple A records for IP %s\n",
 			cm->dest);
-	else
+		return CANNOT_ADD_A_RECORD;
+	} else {
 		retval = get_preferred_a_record(dc, cm, dnsa);
-	
+	}
+	if (retval != 0)
+		return retval;
+	printf("IP: %s\tIP Addr: %lu\tRecord ID: %lu\n",
+	       dnsa->prefer->ip, dnsa->prefer->ip_addr, dnsa->prefer->record_id);
+	if ((retval = run_insert(dc, dnsa, PREFERRED_AS)) != 0)
+		fprintf(stderr, "Cannot insert preferred A record\n");
+	else
+		printf("Database updated with preferred A record\n");
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -778,6 +787,20 @@ get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
 		else
 			rec = '\0';
 	}
+	snprintf(start->args.text, RANGE_S, "%s", name);
+	i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+	list = start;
+	name = &fqdn[0];
+	i = 0;
+	while (list) {
+		snprintf(name, RBUFF_S, "%s.%s",
+list->fields.text, list->next->fields.text);
+		if (strncmp(name, cm->domain, RBUFF_S) == 0) {
+			i++;
+			prefer->record_id = list->next->next->fields.number;
+		}
+		list = list->next->next->next;
+	}
 	if (i == 0) {
 		fprintf(stderr,
 "You FQDN is not associated with this IP address\n\
@@ -785,18 +808,6 @@ If you it associated with this IP address, please add it as an A record\n\
 Curently you cannot add FQDN's not authoritative on this DNS server\n");
 		return CANNOT_ADD_A_RECORD;
 	}
-	snprintf(start->args.text, RANGE_S, "%s", name);
-	i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
-	list = start;
-	name = &fqdn[0];
-	while (list) {
-		snprintf(name, RBUFF_S, "%s.%s",
-list->fields.text, list->next->fields.text);
-		if (strncmp(name, cm->domain, RBUFF_S) == 0)
-			prefer->record_id = list->next->next->fields.number;
-		list = list->next->next->next;
-	}
-	printf("Record ID is %lu\n", prefer->record_id);
 	return NONE;
 }
 

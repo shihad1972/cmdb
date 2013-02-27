@@ -52,7 +52,8 @@ SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
 SELECT name, host, destination, r.id FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
-SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1"
+SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
+SELECT prefa_id, ip, ip_addr, record_id FROM preferred_a"
 };
 
 const char *sql_search[] = { "\
@@ -73,7 +74,10 @@ finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO records (zone, host, type, pri, destination) VALUES \
 (?, ?, ?, ?, ?)","\
-INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)"
+INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
+INSERT","\
+INSERT","\
+INSERT INTO preferred_a (ip, ip_addr, record_id) VALUES (?, ?, ?)"
 };
 
 const char *sql_update[] = {"\
@@ -95,16 +99,20 @@ const int mysql_inserts[][13] = {
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
     MYSQL_TYPE_LONG} , 
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0}, 
+    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0} , 
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0}
+    0, 0, 0, 0} ,
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0}
 };
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2 };
+const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2, 4 };
 
-const unsigned int insert_fields[] = { 8, 13, 5, 3 };
+const unsigned int insert_fields[] = { 8, 13, 5, 3, 0, 0, 3 };
 
 const unsigned int search_fields[] = { 1, 1, 1 };
 
@@ -312,6 +320,10 @@ get_query(int type, const char **query, unsigned int *fields)
 			*query = sql_select[DUPLICATE_A_RECORDS];
 			*fields = select_fields[DUPLICATE_A_RECORDS];
 			break;
+		case PREFERRED_A:
+			*query = sql_select[PREFERRED_AS];
+			*fields = select_fields[PREFERRED_AS];
+			break;
 		default:
 			fprintf(stderr, "Unknown query type %d\n", type);
 			retval = 1;
@@ -407,17 +419,20 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 {
 	int retval;
 	retval = NONE;
-	if ((type & ZONE) == ZONE)
+	if (type & ZONE)
 		if ((retval = run_query_mysql(config, base, ZONE)) != 0)
 			return retval;
-	if ((type & REV_ZONE) == REV_ZONE)
+	if (type & REV_ZONE)
 		if ((retval = run_query_mysql(config, base, REV_ZONE)) != 0)
 			return retval;
-	if ((type & RECORD) == RECORD)
+	if (type & RECORD)
 		if ((retval = run_query_mysql(config, base, RECORD)) != 0)
 			return retval;
-	if ((type & REV_RECORD) == REV_RECORD)
+	if (type & REV_RECORD)
 		if ((retval = run_query_mysql(config, base, REV_RECORD)) != 0)
+			return retval;
+	if (type & PREFERRED_A)
+		if ((retval = run_query_mysql(config, base, PREFERRED_A)) != 0)
 			return retval;
 	return retval;
 }
@@ -450,6 +465,11 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 			if (fields != select_fields[DUPLICATE_A_RECORDS])
 				break;
 			store_duplicate_a_record_mysql(row, base);
+			break;
+		case PREFERRED_A:
+			if (fields != select_fields[PREFERRED_AS])
+				break;
+			store_preferred_a_mysql(row, base);
 			break;
 		default:
 			fprintf(stderr, "Unknown type for storing %d\n",  type);
@@ -580,6 +600,28 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 		list->next = rev;
 	} else {
 		base->rev_records = rev;
+	}
+}
+
+void
+store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *base)
+{
+	preferred_a_t *prefer, *list;
+	
+	if (!(prefer = malloc(sizeof(preferred_a_t))))
+		report_error(MALLOC_FAIL, "prefer in store_preferred_a_sqlite");
+	init_preferred_a_struct(prefer);
+	prefer->prefa_id = strtoul(row[0], NULL, 10);
+	snprintf(prefer->ip, RANGE_S, "%s", row[1]);
+	prefer->ip_addr = strtoul(row[2], NULL, 10);
+	prefer->record_id = strtoul(row[3], NULL, 10);
+	list = base->prefer;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = prefer;
+	} else {
+		base->prefer = prefer;
 	}
 }
 
@@ -904,6 +946,8 @@ setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned in
 		setup_insert_mysql_bind_buff_zone(input, base, i);
 	else if (type == REV_ZONES)
 		setup_insert_mysql_bind_buff_rev_zone(input, base, i);
+	else if (type == PREFERRED_AS)
+		setup_insert_mysql_bind_buff_pref_a(input, base, i);
 	else
 		retval = WRONG_TYPE;
 	
@@ -977,6 +1021,17 @@ setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i
 		*input = &(base->rev_zones->ttl);
 }
 
+void
+setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_t *base, unsigned int i)
+{
+	if (i == 0)
+		*input = &(base->prefer->ip);
+	else if (i == 1)
+		*input = &(base->prefer->ip_addr);
+	else if (i == 2)
+		*input = &(base->prefer->record_id);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1018,17 +1073,20 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 {
 	int retval;
 	retval = NONE;
-	if ((type & ZONE) == ZONE)
+	if (type & ZONE)
 		if ((retval = run_query_sqlite(config, base, ZONE)) != 0)
 			return retval;
-	if ((type & REV_ZONE) == REV_ZONE)
+	if (type & REV_ZONE)
 		if ((retval = run_query_sqlite(config, base, REV_ZONE)) != 0)
 			return retval;
-	if ((type & RECORD) == RECORD)
+	if (type & RECORD)
 		if ((retval = run_query_sqlite(config, base, RECORD)) != 0)
 			return retval;
-	if ((type & REV_RECORD) == REV_RECORD)
+	if (type & REV_RECORD)
 		if ((retval = run_query_sqlite(config, base, REV_RECORD)) != 0)
+			return retval;
+	if (type & PREFERRED_A)
+		if ((retval = run_query_sqlite(config, base, PREFERRED_A)) != 0)
 			return retval;
 	return retval;
 }
@@ -1061,6 +1119,11 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 			if (fields != select_fields[DUPLICATE_A_RECORDS])
 				break;
 			store_duplicate_a_record_sqlite(state, base);
+			break;
+		case PREFERRED_A:
+			if (fields != select_fields[PREFERRED_AS])
+				break;
+			store_preferred_a_sqlite(state, base);
 			break;
 		default:
 			fprintf(stderr, "Unknown type %d\n",  type);
@@ -1190,6 +1253,28 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 		list->next = rev;
 	} else {
 		base->rev_records = rev;
+	}
+}
+
+void
+store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base)
+{
+	preferred_a_t *prefer, *list;
+	
+	if (!(prefer = malloc(sizeof(preferred_a_t))))
+		report_error(MALLOC_FAIL, "prefer in store_preferred_a_sqlite");
+	init_preferred_a_struct(prefer);
+	prefer->prefa_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(prefer->ip, RANGE_S, "%s", sqlite3_column_text(state, 1));
+	prefer->ip_addr = (unsigned long int) sqlite3_column_int64(state, 2);
+	prefer->record_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	list = base->prefer;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = prefer;
+	} else {
+		base->prefer = prefer;
 	}
 }
 
@@ -1386,15 +1471,16 @@ int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 {
 	int retval;
-	if (type == RECORDS) {
+	if (type == RECORDS)
 		retval = setup_bind_sqlite_records(state, base->records);
-	} else if (type == ZONES) {
+	else if (type == ZONES)
 		retval = setup_bind_sqlite_zones(state, base->zones);
-	} else if (type == REV_ZONES) {
+	else if (type == REV_ZONES)
 		retval = setup_bind_sqlite_rev_zones(state, base->rev_zones);
-	} else {
+	else if (type == PREFERRED_AS)
+		retval = setup_bind_sqlite_prefer_a(state, base->prefer);
+	else
 		retval = WRONG_TYPE;
-	}
 	return retval;
 }
 
@@ -1605,4 +1691,25 @@ state, 8, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 	return retval;
 }
 
+int
+setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_t *prefer)
+{
+	int retval;
+
+	retval = 0;
+	if ((retval = sqlite3_bind_text(
+state, 1, prefer->ip, (int)strlen(prefer->ip), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind ip %s\n", prefer->ip);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 2, (sqlite3_int64)prefer->ip_addr)) > 0) {
+		fprintf(stderr, "Cannot bind ip_addr %lu\n", prefer->ip_addr);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 3, (sqlite3_int64)prefer->record_id)) > 0) {
+		fprintf(stderr, "Cannot bin record_id %lu\n", prefer->record_id);
+		return retval;
+	}
+	return retval;
+}
 #endif /* HAVE_SQLITE3 */
