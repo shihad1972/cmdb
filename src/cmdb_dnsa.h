@@ -108,6 +108,14 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 	struct rev_zone_info_t *next;
 } rev_zone_info_t;
 
+typedef struct preferred_a_t { /* Hold the preferred A records for reverse */
+	unsigned long int prefa_id;
+	unsigned long int ip_addr;
+	unsigned long int record_id;
+	char ip[RANGE_S];
+	struct preferred_a_t *next;
+} preferred_a_t;
+
 typedef struct zone_file_t {
 	char out[RBUFF_S];
 	struct zone_file_t *next;
@@ -124,6 +132,7 @@ typedef struct dnsa_t {
 	struct rev_zone_info_t *rev_zones;
 	struct record_row_t *records;
 	struct rev_record_row_t *rev_records;
+	struct preferred_a_t *prefer;
 	struct zone_file_t *file;
 } dnsa_t;
 
@@ -164,6 +173,8 @@ init_record_struct(record_row_t *record);
 void
 init_rev_record_struct(rev_record_row_t *revrecord);
 void
+init_preferred_a_struct(preferred_a_t *prefer);
+void
 init_dbdata_struct(dbdata_t *data);
 void
 init_initial_dbdata(dbdata_t **list, int type);
@@ -178,16 +189,29 @@ dnsa_clean_records(record_row_t *rec);
 void
 dnsa_clean_rev_records(rev_record_row_t *rev);
 void
+dnsa_clean_prefer(preferred_a_t *list);
+void
 dnsa_clean_dbdata_list(dbdata_t *data);
-/* Zone Functions */
-void
-list_zones(dnsa_config_t *dc);
-void
-list_rev_zones(dnsa_config_t *dc);
+/* Zone action Functions */
+int
+add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
+int
+add_rev_zone(dnsa_config_t *dc, comm_line_t *cm);
 int
 commit_fwd_zones(dnsa_config_t *dc);
 int
 commit_rev_zones(dnsa_config_t *dc);
+int
+add_host(dnsa_config_t *dc, comm_line_t *cm);
+int
+display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
+int
+mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm);
+/* Zone display functions */
+void
+list_zones(dnsa_config_t *dc);
+void
+list_rev_zones(dnsa_config_t *dc);
 void
 display_zone(char *domain, dnsa_config_t *dc);
 void
@@ -197,19 +221,18 @@ display_rev_zone(char *domain, dnsa_config_t *dc);
 void
 print_rev_zone(dnsa_t *dnsa, char *domain);
 void
-get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
+print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, record_row_t *records);
 int
-add_host(dnsa_config_t *dc, comm_line_t *cm);
+get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa);
+/* Various zone functions */
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 unsigned long int
 get_zone_serial(void);
 int
 check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
-int
-display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
 void
 select_specific_ip(dnsa_t *dnsa, comm_line_t *cm);
-void
-print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, record_row_t *records);
 int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
 /* Forward zone functions */
@@ -228,8 +251,6 @@ create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa);
 void
 check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone);
 int
-add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
-int
 validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa);
 void
 fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
@@ -246,8 +267,6 @@ int
 check_rev_zone(char *domain, dnsa_config_t *dc);
 int
 create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile);
-int
-add_rev_zone(dnsa_config_t *dc, comm_line_t *cm);
 void
 fill_rev_zone_info(rev_zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
 unsigned long int

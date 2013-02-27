@@ -72,6 +72,9 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-m", COMM_S) == 0)) {
 			comp->action = MULTIPLE_A;
 			comp->type = REVERSE_ZONE;
+		} else if ((strncmp(argv[i], "-e", COMM_S) == 0)) {
+			comp->action = ADD_PREFER_A;
+			comp->type = REVERSE_ZONE;
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			comp->type = FORWARD_ZONE;
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {
@@ -332,6 +335,7 @@ init_dnsa_struct(dnsa_t *dnsa)
 	dnsa->rev_zones = '\0';
 	dnsa->records = '\0';
 	dnsa->rev_records = '\0';
+	dnsa->prefer = '\0';
 	dnsa->file = '\0';
 }
 
@@ -392,8 +396,20 @@ init_rev_record_struct(rev_record_row_t *rev)
 }
 
 void
+init_preferred_a_struct(preferred_a_t *prefer)
+{
+	prefer->prefa_id = 0;
+	prefer->ip_addr = 0;
+	prefer->record_id = 0;
+	snprintf(prefer->ip, COMM_S, "NULL");
+	prefer->next = '\0';
+}
+
+void
 init_dbdata_struct(dbdata_t *data)
 {
+	data->fields.number = 0;
+	data->args.number = 0;
 	data->next = '\0';
 }
 
@@ -408,6 +424,8 @@ dnsa_clean_list(dnsa_t *dnsa)
 		dnsa_clean_records(dnsa->records);
 	if (dnsa->rev_records)
 		dnsa_clean_rev_records(dnsa->rev_records);
+	if (dnsa->prefer)
+		dnsa_clean_prefer(dnsa->prefer);
 	free(dnsa);
 }
 
@@ -510,6 +528,32 @@ dnsa_clean_rev_records(rev_record_row_t *list)
 			return;
 		if (rec->next)
 			next = rec->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_prefer(preferred_a_t *list)
+{
+	preferred_a_t *prefer, *next;
+
+	if (list)
+		prefer = list;
+	else
+		return;
+	if (prefer->next)
+		next = prefer->next;
+	else
+		next = '\0';
+	while (prefer) {
+		free(prefer);
+		if (next)
+			prefer = next;
+		else
+			return;
+		if (prefer->next)
+			next = prefer->next;
 		else
 			next = '\0';
 	}

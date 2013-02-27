@@ -104,6 +104,8 @@ int main(int argc, char *argv[])
 			retval = add_rev_zone(dc, cm);
 		} else if (cm->action == MULTIPLE_A) {
 			retval = display_multi_a_records(dc, cm);
+		} else if (cm->action == ADD_PREFER_A) {
+			retval = mark_preferred_a_record(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

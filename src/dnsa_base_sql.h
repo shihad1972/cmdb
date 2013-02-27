@@ -51,7 +51,8 @@ enum {			/* SELECT statements to use in multiple */
 	RECORD = 4,
 	REV_RECORD = 8,
 	ALL_A_RECORD = 16,
-	DUPLICATE_A_RECORD = 32
+	DUPLICATE_A_RECORD = 32,
+	PREFERRED_A = 64
 };
 
 enum {			/* SELECT and INSERT indexes */
@@ -60,7 +61,8 @@ enum {			/* SELECT and INSERT indexes */
 	RECORDS,
 	REV_RECORDS,
 	ALL_A_RECORDS,
-	DUPLICATE_A_RECORDS
+	DUPLICATE_A_RECORDS,
+	PREFERRED_AS
 };
 
 enum {			/* Extended searches */
@@ -151,6 +153,8 @@ store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base);
 void
 store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base);
 void
+store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *dnsa);
+void
 store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *dnsa);
 /*
 void
@@ -201,6 +205,8 @@ void
 store_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
+void
+store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void
 store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 int

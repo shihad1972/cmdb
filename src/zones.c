@@ -717,6 +717,90 @@ zone \"%s\" {\n\
 }
 
 int
+mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
+{
+/*	char *domain; */
+	int retval;
+	dnsa_t *dnsa;
+	zone_info_t *zone;
+
+	retval = 0; /*
+	domain = strtok(cm->domain, ".");
+	domain++;
+	printf("Domain is %s\n", domain); */
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in mark_preferred_a_record");
+	if (!(zone = malloc(sizeof(zone_info_t))))
+		report_error(MALLOC_FAIL, "zone in mark_preferred_a_record");
+	init_dnsa_struct(dnsa);
+	init_zone_struct(zone);
+	dnsa->zones = zone;
+	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	select_specific_ip(dnsa, cm);
+	if (!(dnsa->records))
+		fprintf(stderr, "No multiple A records for IP %s\n",
+			cm->dest);
+	else
+		retval = get_preferred_a_record(dc, cm, dnsa);
+	
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
+{
+	char *name = cm->dest;
+	char fqdn[RBUFF_S];
+	int i = 0;
+	uint32_t ip_addr;
+	dbdata_t *start, *list;
+	preferred_a_t *prefer;
+	record_row_t *rec = dnsa->records;
+
+	if (!(prefer = malloc(sizeof(preferred_a_t))))
+		report_error(MALLOC_FAIL, "prefer in add_preferred_a_record");
+	init_preferred_a_struct(prefer);
+	dnsa->prefer = prefer;
+	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	while (rec) {
+		if (strncmp(name, rec->dest, RBUFF_S) == 0) {
+			snprintf(prefer->ip, RANGE_S, "%s", cm->dest);
+			inet_pton(AF_INET, rec->dest, &ip_addr);
+			prefer->ip_addr = (unsigned long int) htonl(ip_addr);
+			i++;
+		}
+		if (rec->next)
+			rec = rec->next;
+		else
+			rec = '\0';
+	}
+	if (i == 0) {
+		fprintf(stderr,
+"You FQDN is not associated with this IP address\n\
+If you it associated with this IP address, please add it as an A record\n\
+Curently you cannot add FQDN's not authoritative on this DNS server\n");
+		return CANNOT_ADD_A_RECORD;
+	}
+	snprintf(start->args.text, RANGE_S, "%s", name);
+	i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+	list = start;
+	name = &fqdn[0];
+	while (list) {
+		snprintf(name, RBUFF_S, "%s.%s",
+list->fields.text, list->next->fields.text);
+		if (strncmp(name, cm->domain, RBUFF_S) == 0)
+			prefer->record_id = list->next->next->fields.number;
+		list = list->next->next->next;
+	}
+	printf("Record ID is %lu\n", prefer->record_id);
+	return NONE;
+}
+
+int
 add_host(dnsa_config_t *dc, comm_line_t *cm)
 {
 	int retval;

@@ -248,7 +248,8 @@ enum {			/* dnsa action codes */
 	ADD_ZONE = 24,
 	ADD_HOST = 25,
 	BUILD_REV = 26,
-	MULTIPLE_A = 27
+	MULTIPLE_A = 27,
+	ADD_PREFER_A = 28
 };
 
 enum {			/* cbc values for build type */
