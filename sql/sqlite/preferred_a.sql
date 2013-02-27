@@ -1,4 +1,4 @@
-CREATE TABLE prefered_a (
+CREATE TABLE preferred_a (
 	prefa_id INTEGER PRIMARY KEY,
 	ip VARCHAR(15) NOT NULL DEFAULT '0.0.0.0',
 	ip_addr INTEGER NOT NULL DEFAULT 0,
