@@ -38,7 +38,7 @@
 # include "mysqlfunc.h"
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-# include "cmdb_sqlite.h"
+# include <sqlite3.h>
 #endif /* HAVE_SQLITE3 */
 const struct cmdb_server_t servers;
 const struct cmdb_customer_t customers;
