@@ -633,7 +633,7 @@ create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zo
 {
 	char *buffer;
 	
-	if (!(buffer = calloc(RBUFF_S, sizeof(char))))
+	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer ins create_rev_zone_header");
 	rev_zone_info_t *zone = dnsa->rev_zones;
 	while (zone->rev_zone_id != id)
@@ -826,7 +826,7 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
 	snprintf(record->host, RBUFF_S, "%s", cm->host);
-	snprintf(record->type, RBUFF_S, "%s", cm->rtype);
+	snprintf(record->type, RANGE_S, "%s", cm->rtype);
 	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
 	if ((retval = run_insert(dc, dnsa, RECORDS)) != 0)
