@@ -319,6 +319,10 @@ get_query(int type, const char **query, unsigned int *fields)
 			*query = sql_select[REV_RECORDS];
 			*fields = select_fields[REV_RECORDS];
 			break;
+		case ALL_A_RECORD:
+			*query = sql_select[ALL_A_RECORDS];
+			*fields = select_fields[ALL_A_RECORDS];
+			break;
 		case DUPLICATE_A_RECORD:
 			*query = sql_select[DUPLICATE_A_RECORDS];
 			*fields = select_fields[DUPLICATE_A_RECORDS];
@@ -369,9 +373,9 @@ void
 cmdb_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
 {
 	const char *unix_socket;
-	
+
 	unix_socket = dc->socket;
-	
+
 	if (!(mysql_init(dnsa_mysql))) {
 		report_error(MY_INIT_FAIL, mysql_error(dnsa_mysql));
 	}
@@ -391,7 +395,7 @@ run_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 	const char *query;
 	int retval;
 	unsigned int fields;
-	
+
 	retval = 0;
 	cmdb_mysql_init(config, &dnsa);
 	if ((retval = get_query(type, &query, &fields)) != 0) {
@@ -434,6 +438,9 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 	if (type & REV_RECORD)
 		if ((retval = run_query_mysql(config, base, REV_RECORD)) != 0)
 			return retval;
+	if (type & ALL_A_RECORD)
+		if ((retval = run_query_mysql(config, base, ALL_A_RECORD)) != 0)
+			return retval;
 	if (type & DUPLICATE_A_RECORD)
 		if ((retval = run_query_mysql(config, base, DUPLICATE_A_RECORD)) != 0)
 			return retval;
@@ -467,6 +474,11 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 				break;
 			store_rev_record_mysql(row, base);
 			break;
+		case ALL_A_RECORD:
+			if (fields != select_fields[ALL_A_RECORDS])
+				break;
+			store_all_a_records_mysql(row, base);
+			break;
 		case DUPLICATE_A_RECORD:
 			if (fields != select_fields[DUPLICATE_A_RECORDS])
 				break;
@@ -489,7 +501,7 @@ store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
 	int retval;
 	zone_info_t *zone, *list;
-	
+
 	if (!(zone = malloc(sizeof(zone_info_t))))
 		report_error(MALLOC_FAIL, "zone in store_zone_mysql");
 	init_zone_struct(zone);
@@ -524,7 +536,7 @@ void
 store_record_mysql(MYSQL_ROW row, dnsa_t *base)
 {
 	record_row_t *rec, *list;
-	
+
 	if (!(rec = malloc(sizeof(record_row_t))))
 		report_error(MALLOC_FAIL, "rec in store_record_mysql");
 	init_record_struct(rec);
@@ -550,7 +562,7 @@ store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 {
 	int retval;
 	rev_zone_info_t *rev, *list;
-	
+
 	if (!(rev = malloc(sizeof(rev_zone_info_t))))
 		report_error(MALLOC_FAIL, "rev in store_rev_zone_mysql");
 	init_rev_zone_struct(rev);
@@ -590,7 +602,7 @@ void
 store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 {
 	rev_record_row_t *rev, *list;
-	
+
 	if (!(rev = malloc(sizeof(rev_record_row_t))))
 		report_error(MALLOC_FAIL, "rev in store_rev_record_mysql");
 	init_rev_record_struct(rev);
@@ -610,10 +622,31 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
+store_all_a_records_mysql(MYSQL_ROW row, dnsa_t *base)
+{
+	record_row_t *rec, *list;
+
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "rec in store_all_a_records_mysql");
+	init_record_struct(rec);
+	snprintf(rec->host, RBUFF_S, "%s.%s", row[1], row[0]);
+	snprintf(rec->dest, RANGE_S, "%s", row[2]);
+	rec->id = strtoul(row[3], NULL, 10);
+	list = base->records;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
+	}
+}
+
+void
 store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *base)
 {
 	preferred_a_t *prefer, *list;
-	
+
 	if (!(prefer = malloc(sizeof(preferred_a_t))))
 		report_error(MALLOC_FAIL, "prefer in store_preferred_a_sqlite");
 	init_preferred_a_struct(prefer);
@@ -1094,6 +1127,9 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	if (type & REV_RECORD)
 		if ((retval = run_query_sqlite(config, base, REV_RECORD)) != 0)
 			return retval;
+	if (type & ALL_A_RECORD)
+		if ((retval = run_query_sqlite(config, base, ALL_A_RECORD)) != 0)
+			return retval;
 	if (type & DUPLICATE_A_RECORD)
 		if ((retval = run_query_sqlite(config, base, DUPLICATE_A_RECORD)) != 0)
 			return retval;
@@ -1126,6 +1162,11 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 			if (fields != select_fields[REV_RECORDS])
 				break;
 			store_rev_record_sqlite(state, base);
+			break;
+		case ALL_A_RECORD:
+			if (fields != select_fields[ALL_A_RECORDS])
+				break;
+			store_all_a_records_sqlite(state, base);
 			break;
 		case DUPLICATE_A_RECORD:
 			if (fields != select_fields[DUPLICATE_A_RECORDS])
@@ -1268,6 +1309,27 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	}
 }
 
+void
+store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_t *base)
+{
+	record_row_t *rec, *list;
+
+	if (!(rec = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "rec in store_all_a_records");
+	init_record_struct(rec);
+	snprintf(rec->host, RBUFF_S, "%s.%s",
+		 sqlite3_column_text(state, 1), sqlite3_column_text(state, 0));
+	snprintf(rec->dest, RANGE_S, "%s", sqlite3_column_text(state, 2));
+	rec->id = (unsigned long int) sqlite3_column_int64(state, 3);
+	list = base->records;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = rec;
+	} else {
+		base->records = rec;
+	}
+}
 void
 store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base)
 {

@@ -155,6 +155,8 @@ store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base);
 void
 store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base);
 void
+store_all_a_records_mysql(MYSQL_ROW row, dnsa_t *base);
+void
 store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *dnsa);
 void
 store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *dnsa);
@@ -207,6 +209,8 @@ void
 store_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void
 store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base);
+void
+store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_t *dnsa);
 void
 store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base);
 void

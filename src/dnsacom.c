@@ -377,7 +377,7 @@ init_rev_zone_struct(rev_zone_info_t *rev)
 void
 init_record_struct(record_row_t *record)
 {
-	record->id = record->pri = record->zone = 0;
+	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
 	snprintf(record->host, COMM_S, "NULL");
 	snprintf(record->type, COMM_S, "NULL");
@@ -388,8 +388,7 @@ init_record_struct(record_row_t *record)
 void
 init_rev_record_struct(rev_record_row_t *rev)
 {
-	rev->record_id = 0;
-	rev->rev_zone = 0;
+	rev->record_id = rev->rev_zone = rev->ip_addr = 0;
 	snprintf(rev->host, COMM_S, "NULL");
 	snprintf(rev->dest, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");

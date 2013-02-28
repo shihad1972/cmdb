@@ -55,6 +55,7 @@ typedef struct record_row_t { /* Hold dns record */
 	unsigned long int id;
 	unsigned long int pri;
 	unsigned long int zone;
+	unsigned long int ip_addr;
 	struct record_row_t *next;
 } record_row_t;
 
@@ -64,6 +65,7 @@ typedef struct rev_record_row_t { /* Hold dns record */
 	char valid[RANGE_S];
 	unsigned long int record_id;
 	unsigned long int rev_zone;
+	unsigned long int ip_addr;
 	struct rev_record_row_t *next;
 } rev_record_row_t;
 
@@ -208,6 +210,16 @@ int
 display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
 int
 mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm);
+int
+build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm);
+int
+get_correct_rev_zone_and_preferred_records(comm_line_t *cm, dnsa_t *dnsa);
+int
+get_rev_zone(comm_line_t *cm, dnsa_t *dnsa);
+void
+get_duplicate_a_records(comm_line_t *cm, dnsa_t *dnsa);
+int
+get_rev_records_for_range(rev_record_row_t **rev, rev_zone_info_t *zone);
 /* Zone display functions */
 void
 list_zones(dnsa_config_t *dc);
@@ -236,6 +248,8 @@ void
 select_specific_ip(dnsa_t *dnsa, comm_line_t *cm);
 int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
+int
+get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev);
 /* Forward zone functions */
 int
 check_fwd_zone(char *domain, dnsa_config_t *dc);

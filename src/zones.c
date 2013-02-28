@@ -786,7 +786,7 @@ get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
 	record_row_t *rec = dnsa->records;
 
 	if (!(prefer = malloc(sizeof(preferred_a_t))))
-		report_error(MALLOC_FAIL, "prefer in add_preferred_a_record");
+		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
 	init_preferred_a_struct(prefer);
 	dnsa->prefer = prefer;
 	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
@@ -1080,6 +1080,145 @@ validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
 	return retval;
 }
 
+int
+build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval, a_rec, rev_rec;
+	dnsa_t *dnsa;
+	record_row_t *rec;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
+	retval = 0;
+	init_dnsa_struct(dnsa);
+	if ((retval = run_multiple_query(
+	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	if ((retval = get_correct_rev_zone_and_preferred_records(cm, dnsa)) > 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	} else if (retval < 0) {
+		/* No Duplicate records. Just convert all A records */
+		printf("\
+Just using A records for net range %s\n", dnsa->rev_zones->net_range);
+		dnsa_clean_records(dnsa->records);
+		dnsa_clean_prefer(dnsa->prefer);
+		dnsa->records = '\0';
+		dnsa->prefer = '\0';
+	}
+	rec = dnsa->records; /* Holds duplicate A records */
+	dnsa->records = '\0';
+	if ((retval = run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
+		dnsa_clean_records(rec);
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	if ((a_rec = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones)) == 0) {
+		dnsa_clean_records(rec);
+		dnsa_clean_list(dnsa);
+		printf("\
+No A records for net_range %s\n", dnsa->rev_zones->net_range);
+		return NO_RECORDS;
+	}
+	rev_rec = get_rev_records_for_range(&(dnsa->rev_records), dnsa->rev_zones);
+	printf("We have %d A records and %d rev records\n", a_rec, rev_rec);
+	dnsa_clean_records(rec);
+	dnsa_clean_list(dnsa);
+	return NONE;
+}
+
+int
+get_correct_rev_zone_and_preferred_records(comm_line_t *cm, dnsa_t *dnsa)
+{
+	int retval = 0;
+	if ((retval = get_rev_zone(cm, dnsa)) != 0) {
+		return retval;
+	}
+	if ((retval = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones)) == 0) {
+		printf("No Duplicate records for net range %s\n",
+		      dnsa->rev_zones->net_range);
+		return -1;
+	} else {
+		printf("Got %d duplicate records\n", retval);
+		retval = NONE;
+		if ((retval = get_pref_a_for_range(&(dnsa->prefer), dnsa->rev_zones)) == 0) {
+			printf("No preferred A records\n");
+		} else {
+			printf("Got %d prefered records\n", retval);
+			retval = NONE;
+		}
+	}
+	return retval;
+}
+
+int
+get_rev_zone(comm_line_t *cm, dnsa_t *dnsa)
+{
+	rev_zone_info_t *rev, *list, *next;
+	rev = dnsa->rev_zones;
+	list = '\0';
+	if (rev->next)
+		next = rev->next;
+	else
+		next = '\0';
+	while (rev) {
+		if (strncmp(rev->net_range, cm->domain, RANGE_S) == 0) {
+			list = rev;
+			rev = next;
+		} else {
+			free(rev);
+			rev = next;
+		}
+		if (next)
+			next = rev->next;
+	}
+	dnsa->rev_zones = list;
+	if (list) {
+		list->next = '\0';
+		return NONE;
+	}
+	fprintf(stderr, "Reverse domain %s not found\n", cm->domain);
+	return NO_DOMAIN;
+}
+
+int
+get_rev_records_for_range(rev_record_row_t **records, rev_zone_info_t *zone)
+{
+	int i = 0;
+	rev_record_row_t *list, *prev, *next, *tmp, *rec;
+	list = *records;
+	rec = prev = list;
+	if (rec)
+		next = rec->next;
+	else
+		return NONE;
+	while (rec) {
+		tmp = rec;
+		if (zone->rev_zone_id != rec->rev_zone) {
+			free(rec);
+			rec = next;
+			if (rec)
+				next = rec->next;
+			if (tmp == list)
+				list = prev = rec;
+			else
+				prev->next = rec;
+		} else {
+			i++;
+			if (prev != rec)
+				prev = prev->next;
+			rec = next;
+			if (rec)
+				next = rec->next;
+		}
+	}
+	if (*records != list)
+		*records = list;
+	return i;
+}
+
 unsigned long int
 get_zone_serial(void)
 {
@@ -1250,6 +1389,42 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 	}
 	if (*records != list)
 		*records = list;
+	return i;
+}
+
+int
+get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev)
+{
+	preferred_a_t *pref, *list, *tmp, *prev, *next;
+	int i = 0;
+	list = *prefer;
+	pref = prev = list;
+	if (pref)
+		next = pref->next;
+	else
+		return NONE;
+	while (pref) {
+		tmp = pref;
+		if (pref->ip_addr < rev->start_ip || pref->ip_addr > rev->end_ip) {
+			free(pref);
+			pref = next;
+			if (pref)
+				next = pref->next;
+			if (tmp == list)
+				list = prev = pref;
+			else
+				prev = prev->next;
+		} else {
+			i++;
+			if (prev != pref)
+				prev = prev->next;
+			pref = next;
+			if (pref)
+				next = pref->next;
+		}
+	}
+	if (*prefer != list)
+		*prefer = list;
 	return i;
 }
 
