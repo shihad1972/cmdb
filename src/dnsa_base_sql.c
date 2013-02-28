@@ -53,7 +53,7 @@ BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
 SELECT name, host, destination, r.id FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
-SELECT prefa_id, ip, ip_addr, record_id FROM preferred_a"
+SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a"
 };
 
 const char *sql_search[] = { "\
@@ -63,7 +63,8 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
 };
 
 const char *sql_extended_search[] = { "\
-SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id"
+SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id" /*,"\
+SELECT fqdn FROM preferred_a WHERE ip = ?" */
 };
 
 const char *sql_insert[] = {"\
@@ -77,7 +78,7 @@ INSERT INTO records (zone, host, type, pri, destination) VALUES \
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
 INSERT","\
 INSERT","\
-INSERT INTO preferred_a (ip, ip_addr, record_id) VALUES (?, ?, ?)"
+INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)"
 };
 
 const char *sql_update[] = {"\
@@ -110,9 +111,9 @@ const int mysql_inserts[][13] = {
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2, 4 };
+const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2, 5 };
 
-const unsigned int insert_fields[] = { 8, 13, 5, 3, 0, 0, 3 };
+const unsigned int insert_fields[] = { 8, 13, 5, 3, 0, 0, 4 };
 
 const unsigned int search_fields[] = { 1, 1, 1 };
 
@@ -120,16 +121,18 @@ const unsigned int search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int update_args[] = { 1, 1, 1 };
 
-const unsigned int extended_search_fields[] = { 3 };
+const unsigned int extended_search_fields[] = { 3 /*, 1*/ };
 
-const unsigned int extended_search_args[] = { 1 };
+const unsigned int extended_search_args[] = { 1/* , 1 */ };
 
 const unsigned int ext_search_field_type[][3] = { /* What we are selecting */
-	{ DBTEXT, DBTEXT, DBINT }
+	{ DBTEXT, DBTEXT, DBINT }/* ,
+	{ DBTEXT, NONE, NONE } */
 };
 
 const unsigned int ext_search_arg_type[][1] = { /* What we are searching on */
-	{ DBTEXT }
+	{ DBTEXT } /*,
+	{ DBTEXT } */
 };
 
 const unsigned int update_arg_type[][2] = {
@@ -431,6 +434,9 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 	if (type & REV_RECORD)
 		if ((retval = run_query_mysql(config, base, REV_RECORD)) != 0)
 			return retval;
+	if (type & DUPLICATE_A_RECORD)
+		if ((retval = run_query_mysql(config, base, DUPLICATE_A_RECORD)) != 0)
+			return retval;
 	if (type & PREFERRED_A)
 		if ((retval = run_query_mysql(config, base, PREFERRED_A)) != 0)
 			return retval;
@@ -615,6 +621,7 @@ store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *base)
 	snprintf(prefer->ip, RANGE_S, "%s", row[1]);
 	prefer->ip_addr = strtoul(row[2], NULL, 10);
 	prefer->record_id = strtoul(row[3], NULL, 10);
+	snprintf(prefer->fqdn, RBUFF_S, "%s", row[4]);
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1030,6 +1037,8 @@ setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_t *base, unsigned int i)
 		*input = &(base->prefer->ip_addr);
 	else if (i == 2)
 		*input = &(base->prefer->record_id);
+	else if (i == 3)
+		*input = &(base->prefer->fqdn);
 }
 
 #endif /* HAVE_MYSQL */
@@ -1084,6 +1093,9 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 			return retval;
 	if (type & REV_RECORD)
 		if ((retval = run_query_sqlite(config, base, REV_RECORD)) != 0)
+			return retval;
+	if (type & DUPLICATE_A_RECORD)
+		if ((retval = run_query_sqlite(config, base, DUPLICATE_A_RECORD)) != 0)
 			return retval;
 	if (type & PREFERRED_A)
 		if ((retval = run_query_sqlite(config, base, PREFERRED_A)) != 0)
@@ -1268,6 +1280,7 @@ store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	snprintf(prefer->ip, RANGE_S, "%s", sqlite3_column_text(state, 1));
 	prefer->ip_addr = (unsigned long int) sqlite3_column_int64(state, 2);
 	prefer->record_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(prefer->fqdn, RBUFF_S, "%s", sqlite3_column_text(state, 4));
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1707,7 +1720,12 @@ state, 1, prefer->ip, (int)strlen(prefer->ip), SQLITE_STATIC)) > 0) {
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(state, 3, (sqlite3_int64)prefer->record_id)) > 0) {
-		fprintf(stderr, "Cannot bin record_id %lu\n", prefer->record_id);
+		fprintf(stderr, "Cannot bind record_id %lu\n", prefer->record_id);
+		return retval;
+	}
+	if ((retval - sqlite3_bind_text(
+state, 4, prefer->fqdn, (int)strlen(prefer->fqdn), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind fqdn %s\n", prefer->fqdn);
 		return retval;
 	}
 	return retval;

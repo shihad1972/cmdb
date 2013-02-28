@@ -170,101 +170,6 @@ records->host, records->type, records->dest);
 		printf("\n%u records\n", i);
 }
 
-int
-display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
-{
-	int retval;
-	dnsa_t *dnsa;
-	dbdata_t *start;
-	rev_zone_info_t *rzone;
-	record_row_t *records;
-
-	retval = 0;
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
-		report_error(MALLOC_FAIL, "dnsa in display_multi_a_records");
-	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
-		report_error(MALLOC_FAIL, "rzone in display_multi_a_records");
-	init_dnsa_struct(dnsa);
-	init_rev_zone_struct(rzone);
-	dnsa->rev_zones = rzone;
-	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
-	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
-		select_specific_ip(dnsa, cm);
-		if (!(dnsa->records))
-			fprintf(stderr, "No multiple A records for IP %s\n",
-				cm->dest);
-		else
-			print_multiple_a_records(dc, start, dnsa->records);
-		dnsa_clean_dbdata_list(start);
-		dnsa_clean_list(dnsa);
-		return NONE;
-	}
-	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
-	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-	cm->prefix = rzone->prefix;
-	fill_rev_zone_info(rzone, cm, dc);
-	if (rzone->prefix == NONE) {
-		printf("Net range %s does not exist in database\n", cm->domain);
-		dnsa_clean_list(dnsa);
-		dnsa_clean_dbdata_list(start);
-		return NO_DOMAIN;
-	}
-	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
-	records = dnsa->records;
-	if (!records)
-		printf("No duplicate entries for range %s\n", cm->domain);
-	while (records) {
-		printf("Destination %s has %lu records\n",
-		       records->dest, records->id);
-		records = records->next;
-	}
-	records = dnsa->records;
-	if (records) {
-		printf("If you want to see the A records for a specific IP use the ");
-		printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
-	}
-	dnsa_clean_dbdata_list(start);
-	dnsa_clean_list(dnsa);
-	return retval;
-}
-
-void
-print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, record_row_t *records)
-{
-	int i, j;
-	dbdata_t *dlist;
-	while (records) {
-		dlist = start;
-		printf("Destination %s has %lu records\n",
-		records->dest, records->id);
-		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
-		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
-		for (j = 0; j < i; j++) {
-			printf("\t%s.", dlist->fields.text);
-			dlist = dlist->next;
-			printf("%s\n", dlist->fields.text);
-			dlist = dlist->next;
-			dlist = dlist->next;
-		}
-		printf("\n");
-		records = records->next;
-		dlist = start->next;
-		dlist = dlist->next;
-		dlist = dlist->next;
-		dnsa_clean_dbdata_list(dlist);
-		dlist = start->next;
-		dlist = dlist->next;
-		dlist->next = '\0';
-	}
-}
-
 void
 display_rev_zone(char *domain, dnsa_config_t *dc)
 {
@@ -717,17 +622,127 @@ zone \"%s\" {\n\
 }
 
 int
+display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	dbdata_t *start;
+	rev_zone_info_t *rzone;
+	record_row_t *records;
+	preferred_a_t *prefer;
+
+	retval = 0;
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in disp_multi_a");
+	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
+		report_error(MALLOC_FAIL, "rzone in disp_multi_a");
+	init_dnsa_struct(dnsa);
+	init_rev_zone_struct(rzone);
+	dnsa->rev_zones = rzone;
+	if ((retval = run_multiple_query(
+		dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
+		select_specific_ip(dnsa, cm);
+		if (!(dnsa->records))
+			fprintf(stderr, "No multiple A records for IP %s\n",
+				cm->dest);
+		else
+			print_multiple_a_records(dc, start, dnsa);
+		dnsa_clean_dbdata_list(start);
+		dnsa_clean_list(dnsa);
+		return NONE;
+	}
+	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
+	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	cm->prefix = rzone->prefix;
+	fill_rev_zone_info(rzone, cm, dc);
+	if (rzone->prefix == NONE) {
+		printf("Net range %s does not exist in database\n", cm->domain);
+		dnsa_clean_list(dnsa);
+		dnsa_clean_dbdata_list(start);
+		return NO_DOMAIN;
+	}
+	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
+	records = dnsa->records;
+	if (!records)
+		printf("No duplicate entries for range %s\n", cm->domain);
+	while (records) {
+		prefer = dnsa->prefer;
+		printf("Destination %s has %lu records",
+		       records->dest, records->id);
+		while (prefer) {
+			if (strncmp(prefer->ip, records->dest, RANGE_S) == 0)
+				printf("; preferred PTR is %s", prefer->fqdn);
+			prefer = prefer->next;
+		}
+		printf("\n");
+		records = records->next;
+	}
+	records = dnsa->records;
+	if (records) {
+		printf("If you want to see the A records for a specific IP use the ");
+		printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
+	}
+	dnsa_clean_dbdata_list(start);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+void
+print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, dnsa_t *dnsa)
+{
+	int i, j, k;
+	char name[RBUFF_S], *fqdn;
+	dbdata_t *dlist;
+	record_row_t *records = dnsa->records;
+	preferred_a_t *prefer = dnsa->prefer;
+	fqdn = &name[0];
+	while (records) {
+		dlist = start;
+		printf("Destination %s has %lu records; * denotes preferred PTR record\n",
+		records->dest, records->id);
+		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
+		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+		for (j = 0; j < i; j++) {
+			snprintf(fqdn, RBUFF_S, "%s.%s",
+				 dlist->fields.text, dlist->next->fields.text);
+			prefer = dnsa->prefer;
+			k = 0;
+			while (prefer) {
+				if (strncmp(fqdn, prefer->fqdn, RBUFF_S) == 0) {
+					printf("     *  %s\n", fqdn);
+					k++;
+				}
+				prefer=prefer->next;
+			}
+			if (k == 0)
+				printf("\t%s\n", fqdn);
+			dlist = dlist->next->next->next;
+		}
+		printf("\n");
+		records = records->next;
+		dlist = start->next->next->next;
+		dnsa_clean_dbdata_list(dlist);
+		dlist = start->next->next;
+		dlist->next = '\0';
+	}
+}
+
+int
 mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
 {
-/*	char *domain; */
 	int retval;
 	dnsa_t *dnsa;
 	zone_info_t *zone;
 
-	retval = 0; /*
-	domain = strtok(cm->domain, ".");
-	domain++;
-	printf("Domain is %s\n", domain); */
+	retval = 0;
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in mark_preferred_a_record");
 	if (!(zone = malloc(sizeof(zone_info_t))))
@@ -798,6 +813,7 @@ list->fields.text, list->next->fields.text);
 		if (strncmp(name, cm->domain, RBUFF_S) == 0) {
 			i++;
 			prefer->record_id = list->next->next->fields.number;
+			snprintf(prefer->fqdn, RBUFF_S, "%s", name);
 		}
 		list = list->next->next->next;
 	}
@@ -1206,7 +1222,10 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 	unsigned long int ip;
 	list = *records;
 	rec = prev = list;
-	next = rec->next;
+	if (rec)
+		next = rec->next;
+	else
+		return NONE;
 	while (rec) {
 		tmp = rec;
 		inet_pton(AF_INET, rec->dest, &ip_addr);

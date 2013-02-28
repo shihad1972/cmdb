@@ -113,6 +113,7 @@ typedef struct preferred_a_t { /* Hold the preferred A records for reverse */
 	unsigned long int ip_addr;
 	unsigned long int record_id;
 	char ip[RANGE_S];
+	char fqdn[RBUFF_S];
 	struct preferred_a_t *next;
 } preferred_a_t;
 
@@ -221,7 +222,7 @@ display_rev_zone(char *domain, dnsa_config_t *dc);
 void
 print_rev_zone(dnsa_t *dnsa, char *domain);
 void
-print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, record_row_t *records);
+print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, dnsa_t *dnsa);
 int
 get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa);
 /* Various zone functions */

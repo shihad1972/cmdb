@@ -257,7 +257,8 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 	dc->expire = strtoul(expire, NULL, 10);
 	dc->ttl = strtoul(ttl, NULL, 10);
 	hostmaster = strchr(dc->hostmaster, '@');
-	*hostmaster = '.';
+	if (hostmaster)
+		*hostmaster = '.';
 	/* The next 2 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
@@ -402,6 +403,7 @@ init_preferred_a_struct(preferred_a_t *prefer)
 	prefer->ip_addr = 0;
 	prefer->record_id = 0;
 	snprintf(prefer->ip, COMM_S, "NULL");
+	snprintf(prefer->fqdn, COMM_S, "NULL");
 	prefer->next = '\0';
 }
 
