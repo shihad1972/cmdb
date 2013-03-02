@@ -17,7 +17,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *   
- *  zones.c: functions that deal with zones for the dnsa program
+ *  zones.c: functions that deal with zones and records for the dnsa program
  *
  * 
  */
@@ -1086,13 +1086,14 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 	int retval, a_rec, rev_rec;
 	dnsa_t *dnsa;
 	record_row_t *rec;
+	rev_record_row_t *add, *delete;
 
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	if ((retval = run_multiple_query(
-	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE)) != 0) {
+	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE | ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
@@ -1100,9 +1101,9 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	} else if (retval < 0) {
-		/* No Duplicate records. Just convert all A records */
+		/* No Duplicate records. Just convert all A records
 		printf("\
-Just using A records for net range %s\n", dnsa->rev_zones->net_range);
+Just using A records for net range %s\n", dnsa->rev_zones->net_range); */
 		dnsa_clean_records(dnsa->records);
 		dnsa_clean_prefer(dnsa->prefer);
 		dnsa->records = '\0';
@@ -1123,7 +1124,9 @@ No A records for net_range %s\n", dnsa->rev_zones->net_range);
 		return NO_RECORDS;
 	}
 	rev_rec = get_rev_records_for_range(&(dnsa->rev_records), dnsa->rev_zones);
-	printf("We have %d A records and %d rev records\n", a_rec, rev_rec);
+/*	printf("We have %d A records and %d rev records\n", a_rec, rev_rec); */
+	add_int_ip_to_records(dnsa);
+	retval = rev_records_to_add(dnsa, rec, &add);
 	dnsa_clean_records(rec);
 	dnsa_clean_list(dnsa);
 	return NONE;
@@ -1137,16 +1140,17 @@ get_correct_rev_zone_and_preferred_records(comm_line_t *cm, dnsa_t *dnsa)
 		return retval;
 	}
 	if ((retval = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones)) == 0) {
-		printf("No Duplicate records for net range %s\n",
-		      dnsa->rev_zones->net_range);
+/*		printf("No Duplicate records for net range %s\n",
+		      dnsa->rev_zones->net_range); */
 		return -1;
 	} else {
-		printf("Got %d duplicate records\n", retval);
+/*		printf("Got %d duplicate records\n", retval); */
 		retval = NONE;
 		if ((retval = get_pref_a_for_range(&(dnsa->prefer), dnsa->rev_zones)) == 0) {
-			printf("No preferred A records\n");
+/*			printf("No preferred A records\n"); */
+			return retval;
 		} else {
-			printf("Got %d prefered records\n", retval);
+/*			printf("Got %d prefered records\n", retval); */
 			retval = NONE;
 		}
 	}
@@ -1217,6 +1221,324 @@ get_rev_records_for_range(rev_record_row_t **records, rev_zone_info_t *zone)
 	if (*records != list)
 		*records = list;
 	return i;
+}
+
+/* Build a list of the reverse records we need to add to the database. */
+int
+rev_records_to_add(dnsa_t *dnsa, record_row_t *rec, rev_record_row_t **rev)
+{
+	int i, j, k;
+	record_row_t *fwd = dnsa->records; /* List of A records */
+	record_row_t *dups, *list, *tmp, *fwd_list, *prev;
+	rev_record_row_t *rev_list;
+	preferred_a_t *prefer;
+
+	dups = '\0';
+	fwd_list = prev = fwd;
+	j = 0;
+/* 
+ * Run through the list of forward records for this network range. Delete
+ * any duplicate forward records from this list that we find, but add them
+ * to the 2nd list of forward records which is the list of duplicates.
+ * Once we have a list of duplicates we then need to decide which of
+ * these duplicates to use for the PTR record. Check the preferred_a list
+ * and use that if it exists. If not, use the first one we come across. 
+ */
+	while (fwd) {
+		i = k = 0;
+		list = rec; /* List of duplicate IP address in the net range */
+		tmp = fwd->next;
+		while (list) {
+			if (strncmp(list->dest, fwd->dest, RANGE_S) == 0) {
+				if (check_for_duplicate(fwd->dest, dups)) {
+					if (fwd_list == fwd)
+						fwd_list = prev = tmp;
+					else
+						prev->next = tmp;
+					free(fwd);
+					fwd = '\0';
+					break;
+				}
+				i++;
+				add_a_to_duplicate(&dups, fwd);
+				break;
+			} else {
+				list = list->next;
+			}
+		}
+		if (!fwd) {
+			fwd = tmp;
+			continue;
+		}
+		j++; /* Count number of memebers we have in modified list */
+		rev_list = dnsa->rev_records;
+		while (dups) {
+			i = 0;
+			tmp = dups->next;
+			prefer = dnsa->prefer;
+			while (prefer) {
+				if (strncmp(dups->dest, prefer->ip, RANGE_S) == 0) {
+					i++;
+					break;
+				} else {
+					prefer = prefer->next;
+				}
+			}
+			if (i == 0)
+				add_dup_to_prefer_list(dnsa, dups);
+			free(dups);
+			dups = tmp;
+		}
+		i = 0;
+		while (rev_list) { /* check in rev list ?? */
+			if (rev_list->ip_addr == fwd->ip_addr) {
+				i++;
+				break;
+			} else {
+				rev_list = rev_list->next;
+			}
+		}
+		if (i == 0) {
+			prefer = dnsa->prefer;
+			while (prefer) {
+				if (fwd->ip_addr == prefer->ip_addr)
+					k++; /* there is a preferred A for this IP */
+				if (strncmp(fwd->host, prefer->fqdn, RBUFF_S) == 0) {
+					if ((insert_into_rev_add_list(dnsa, fwd, rev)) == 0) {
+						return 1;
+					} else {
+						i++;
+						break;
+					}
+				}
+				prefer = prefer->next;
+			}
+			if (k == 0) { 
+/* If no preferred A for this IP add the first one we see */
+				printf("\
+Adding record %s as PTR for %s. If you do not want to \n\
+use this please setup a preferred A record for another host\n", fwd->host, fwd->dest);
+				if ((insert_into_rev_add_list(dnsa, fwd, rev)) == 0) {
+					return 1;
+				}
+			}
+		}
+		if (prev != fwd)
+			prev = prev->next;
+		fwd = fwd->next;
+	}
+/*	printf("Modified forward records now have %d members\n", j); */
+	if (fwd_list != dnsa->records)
+		dnsa->records = fwd_list;
+	return NONE;
+}
+
+void
+add_a_to_duplicate(record_row_t **dups, record_row_t *fwd)
+{
+	record_row_t *new, *tmp;
+
+	if (!(new = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "new in add_a_to_duplicate");
+	init_record_struct(new);
+	snprintf(new->dest, RANGE_S, "%s", fwd->dest);
+	snprintf(new->host, RBUFF_S, "%s", fwd->host);
+	tmp = *dups;
+	if (!tmp) {
+		*dups = new;
+	} else {
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = new;
+	}
+}
+
+int
+insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev)
+{
+	char rev_host[RANGE_S];
+	rev_record_row_t *new, *list;
+	zone_info_t *zones = dnsa->zones;
+
+	if (!(new = malloc(sizeof(rev_record_row_t))))
+		report_error(MALLOC_FAIL, "new in insert_into_rev_add_list");
+	list = *rev;
+	init_rev_record_struct(new);
+	new->rev_zone = dnsa->rev_zones->rev_zone_id;
+	while (zones) {
+		if (fwd->zone == zones->id)
+			break;
+		else
+			zones = zones->next;
+	}
+	if (!zones) { /* fwd record belongs to non-existent zone */
+		free(new);
+		return 0;
+	}
+	snprintf(new->dest, RBUFF_S, "%s.", fwd->host);
+	if (get_rev_host(dnsa->rev_zones->prefix, rev_host, fwd->dest) != 0)
+		return 0;
+	else
+		snprintf(new->host, 11, "%s", rev_host);
+	printf("Adding record for %s -> %s\n", new->dest, new->host);
+	if (!list) {
+		*rev = new;
+	} else {
+		while (list->next)
+			list = list->next;
+		list->next = new;
+	}
+	return 1;
+}
+
+void
+add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd)
+{
+	preferred_a_t *new, *list;
+
+	if (!(new = malloc(sizeof(preferred_a_t))))
+		report_error(MALLOC_FAIL, "new in add_dup_to_prefer_list");
+	init_preferred_a_struct(new);
+	list = dnsa->prefer;
+	snprintf(new->ip, RANGE_S, "%s", fwd->dest);
+	snprintf(new->fqdn, RBUFF_S, "%s", fwd->host);
+	new->record_id = fwd->id;
+	new->ip_addr = fwd->ip_addr;
+	if (!list) {
+		dnsa->prefer = new;
+	} else {
+		while (list->next)
+			list = list->next;
+		list->next = new;
+	}
+}
+
+int
+check_for_duplicate(char *destination, record_row_t *duplicates)
+{
+	while (duplicates) {
+		if (strncmp(destination, duplicates->dest, RANGE_S) == 0)
+			return 1;
+		else
+			duplicates = duplicates->next;
+	}
+	return 0;
+}
+
+int
+get_rev_host(unsigned long int prefix, char *rev_host, char *host)
+{
+	char *tmp;
+	int i;
+	size_t len;
+
+	*rev_host = '\0';
+	if (prefix == 8) {
+		for (i = 0; i < 3; i++) {
+			tmp = strrchr(host, '.');
+			tmp++;
+			rev_host = strncat(rev_host, tmp, 4);
+			rev_host = strncat(rev_host, ".", CH_S);
+			tmp--;
+			*tmp = '\0';
+		}
+		len = strlen(rev_host);
+		rev_host[len - 1] = '\0';
+	} else if (prefix == 16) {
+		for (i = 0; i < 2; i++) {
+			tmp = strrchr(host, '.');
+			tmp++;
+			rev_host = strncat(rev_host, tmp, 4);
+			rev_host = strncat(rev_host, ".", CH_S);
+			tmp--;
+			*tmp = '\0';
+		}
+		len = strlen(rev_host);
+		rev_host[len - 1] = '\0';
+	} else if (prefix >= 24) {
+		tmp = strrchr(host, '.');
+		tmp++;
+		strncpy(rev_host, tmp, 4);
+	} else {
+		printf("Prefix %lu invalid\n", prefix);
+			return 1;
+	}
+	return 0;
+}
+
+void
+add_int_ip_to_records(dnsa_t *dnsa)
+{
+	if (dnsa->records)
+		add_int_ip_to_fwd_records(dnsa->records);
+	if (dnsa->rev_records)
+		add_int_ip_to_rev_records(dnsa);
+}
+
+void
+add_int_ip_to_fwd_records(record_row_t *records)
+{
+	uint32_t ip;
+	while (records) {
+		if (inet_pton(AF_INET, records->dest, &ip))
+			records->ip_addr = (unsigned long int) htonl(ip);
+		else
+			records->ip_addr = 0;
+		records = records->next;
+	}
+}
+
+int
+add_int_ip_to_rev_records(dnsa_t *dnsa)
+{
+	char address[RANGE_S], host[RANGE_S], *ip_addr, *tmp;
+	int i;
+	uint32_t ip;
+	unsigned long int prefix = dnsa->rev_zones->prefix;
+	rev_record_row_t *rev = dnsa->rev_records;
+	ip_addr = address;
+	while (rev) {
+		strncpy(ip_addr, dnsa->rev_zones->net_range, RANGE_S);
+		strncpy(host, rev->host, RANGE_S);
+		if (prefix == 8) {
+			for (i = 0; i < 3; i++) {
+				tmp = strrchr(ip_addr, '.');
+				*tmp = '\0';
+			}
+			for (i = 0; i < 2; i++) {
+				tmp = strrchr(host, '.');
+				ip_addr = strncat(ip_addr, tmp, 4);
+				*tmp = '\0';
+			}
+			ip_addr = strncat(ip_addr, ".", CH_S);
+			strncat(ip_addr, host, 4);
+		} else if (prefix == 16) {
+			for (i = 0; i < 2; i++) {
+				tmp = strrchr(ip_addr, '.');
+				*tmp = '\0';
+			}
+			tmp = strrchr(host, '.');
+			ip_addr = strncat(ip_addr, tmp, 4);
+			*tmp = '\0';
+			ip_addr = strncat(ip_addr, ".", CH_S);
+			ip_addr = strncat(ip_addr, host, 4);
+		} else if (prefix >= 24) {
+			tmp= strrchr(ip_addr, '.');
+			*tmp = '\0';
+			ip_addr = strncat(ip_addr, ".", CH_S);
+			ip_addr = strncat(ip_addr, host, 4);
+		} else {
+			return 1;
+		}
+		if (inet_pton(AF_INET, ip_addr, &ip)) {
+			rev->ip_addr = (unsigned long int) htonl(ip);
+		} else {
+			rev->ip_addr = 0;
+			return 1;
+		}
+		rev = rev->next;
+	}
+	return NONE;
 }
 
 unsigned long int
@@ -1413,7 +1735,7 @@ get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev)
 			if (tmp == list)
 				list = prev = pref;
 			else
-				prev = prev->next;
+				prev->next = pref;
 		} else {
 			i++;
 			if (prev != pref)

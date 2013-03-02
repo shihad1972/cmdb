@@ -51,7 +51,7 @@ owner, updated FROM rev_zones ORDER BY start_ip","\
 SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
-SELECT name, host, destination, r.id FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
+SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a"
 };
@@ -111,7 +111,7 @@ const int mysql_inserts[][13] = {
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int select_fields[] = { 12, 17, 7, 5, 4, 2, 5 };
+const unsigned int select_fields[] = { 12, 17, 7, 5, 5, 2, 5 };
 
 const unsigned int insert_fields[] = { 8, 13, 5, 3, 0, 0, 4 };
 
@@ -632,6 +632,7 @@ store_all_a_records_mysql(MYSQL_ROW row, dnsa_t *base)
 	snprintf(rec->host, RBUFF_S, "%s.%s", row[1], row[0]);
 	snprintf(rec->dest, RANGE_S, "%s", row[2]);
 	rec->id = strtoul(row[3], NULL, 10);
+	rec->zone = strtoul(row[4], NULL, 10);
 	list = base->records;
 	if (list) {
 		while (list->next)
@@ -1321,6 +1322,7 @@ store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_t *base)
 		 sqlite3_column_text(state, 1), sqlite3_column_text(state, 0));
 	snprintf(rec->dest, RANGE_S, "%s", sqlite3_column_text(state, 2));
 	rec->id = (unsigned long int) sqlite3_column_int64(state, 3);
+	rec->zone = (unsigned long int) sqlite3_column_int64(state, 4);
 	list = base->records;
 	if (list) {
 		while (list->next)

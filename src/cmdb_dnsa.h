@@ -250,6 +250,12 @@ int
 get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
 int
 get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev);
+void
+add_int_ip_to_records(dnsa_t *dnsa);
+void
+add_int_ip_to_fwd_records(record_row_t *records);
+int
+add_int_ip_to_rev_records(dnsa_t *dnsa);
 /* Forward zone functions */
 int
 check_fwd_zone(char *domain, dnsa_config_t *dc);
@@ -290,5 +296,16 @@ int
 validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa);
 int
 create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa);
-
+int
+rev_records_to_add(dnsa_t *dnsa, record_row_t *rec, rev_record_row_t **rev);
+void
+add_a_to_duplicate(record_row_t **dups, record_row_t *list);
+int
+insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev);
+void
+add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd);
+int
+check_for_duplicate(char *destination, record_row_t *duplicates);
+int
+get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
 #endif /* __CMDB_DNSA_H__ */
