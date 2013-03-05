@@ -1083,7 +1083,7 @@ validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
 int
 build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 {
-	int retval, a_rec, rev_rec;
+	int retval, a_rec;
 	unsigned long int serial;
 	dnsa_t *dnsa;
 	dbdata_t serial_d, zone_info_d, *data;
@@ -1127,7 +1127,7 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 		printf("No A records for net_range %s\n", cm->domain);
 		return NO_RECORDS;
 	}
-	rev_rec = get_rev_records_for_range(&(dnsa->rev_records), dnsa->rev_zones);
+	get_rev_records_for_range(&(dnsa->rev_records), dnsa->rev_zones);
 	add_int_ip_to_records(dnsa);
 	trim_forward_record_list(dnsa, rec);
 	retval = rev_records_to_add(dnsa, &add);
