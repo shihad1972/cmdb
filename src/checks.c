@@ -9,14 +9,14 @@
  * 
  * Part of the cmdb program
  */
+#ifdef HAVE_LIBPCRE
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <pcre.h>
+# include "cmdb.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pcre.h>
-#include "cmdb.h"
-
-#define OVECCOUNT 18    /* should be a multiple of 3 */
+# define OVECCOUNT 18    /* should be a multiple of 3 */
 
 const char *regexps[14] = {
 	"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
@@ -81,3 +81,4 @@ validate_user_input(char *input, int regex_test)
 	return 1;
 }
 
+#endif /* HAVE_LIBPCRE */

@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "cmdb_base_sql.h"
