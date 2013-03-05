@@ -408,11 +408,14 @@ display_dnsa_usage(void)
 	printf("-b: build reverse zone\n\t-n\n");
 	printf("-m: display IP's with multiple A records\n\t-n\n");
 	printf("-e: Add preferred A record for reverse DNS");
-	printf("\n\t-n <fqdn> -i\n\n");
+	printf("\n\t-h -n -i\n");
+	printf("-d: Delete record\n\t-h -n\n");
+	printf("-g: Delete preferred A record\n\t -i\n");
+	printf("-x: Delete zone [-f|-r] -n\n\n");
 	printf("Zone type:\n");
 	printf("-f: forward zone\n-r: reverse zone\n\n");
 	printf("Name options:\n");
-	printf("-n: zone-name / network range (with -e option this is the fqdn)\n");
+	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");
 	printf("Zone options for use with adding a reverse zone:\n");
 	printf("-p: prefix\n\n");

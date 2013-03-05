@@ -850,6 +850,49 @@ Curently you cannot add FQDN's not authoritative on this DNS server\n");
 }
 
 int
+delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm)
+{
+	char *ip_addr = cm->dest;
+	int retval = 0;
+	int i = 0;
+	dnsa_t *dnsa;
+	dbdata_t data;
+	preferred_a_t *prefer;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in delete_preferred_a");
+	init_dnsa_struct(dnsa);
+	init_dbdata_struct(&data);
+	if ((retval = run_query(dc, dnsa, PREFERRED_A)) != 0) {
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	prefer = dnsa->prefer;
+	while (prefer) {
+		if (strncmp(ip_addr, prefer->ip, RANGE_S) == 0) {
+			printf("Found IP address %s in preferred list\n",
+			       ip_addr);
+			i++;
+			break;
+		}
+		prefer = prefer->next;
+	}
+	if (i == 0) {
+		fprintf(stderr, "IP %s does not have a preferred A record\n",
+			ip_addr);
+		dnsa_clean_list(dnsa);
+		return USER_INPUT_INVALID;
+	}
+	data.args.number = prefer->prefa_id;
+	if ((retval = run_delete(dc, &data, PREFERRED_AS)) != 1)
+		printf("Unable to delete IP %s from preferred list\n", ip_addr);
+	else
+		printf("Deleted IP %s from preferred list\n", ip_addr);
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
 add_host(dnsa_config_t *dc, comm_line_t *cm)
 {
 	int retval;

@@ -249,7 +249,10 @@ enum {			/* dnsa action codes */
 	ADD_HOST = 25,
 	BUILD_REV = 26,
 	MULTIPLE_A = 27,
-	ADD_PREFER_A = 28
+	ADD_PREFER_A = 28,
+	DELETE_ZONE = 29,
+	DELETE_RECORD = 30,
+	DELETE_PREFERRED = 31
 };
 
 enum {			/* cbc values for build type */

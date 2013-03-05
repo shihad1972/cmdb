@@ -108,6 +108,8 @@ int main(int argc, char *argv[])
 			retval = mark_preferred_a_record(dc, cm);
 		} else if (cm->action == BUILD_REV) {
 			retval = build_reverse_zone(dc, cm);
+		} else if (cm->action == DELETE_PREFERRED) {
+			retval = delete_preferred_a(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

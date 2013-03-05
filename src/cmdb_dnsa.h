@@ -256,6 +256,10 @@ void
 add_int_ip_to_fwd_records(record_row_t *records);
 int
 add_int_ip_to_rev_records(dnsa_t *dnsa);
+/* Added 05/03/2013 */
+int
+delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm);
+/* End add 05/03/2013 */
 /* Forward zone functions */
 int
 check_fwd_zone(char *domain, dnsa_config_t *dc);

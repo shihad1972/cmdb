@@ -116,8 +116,8 @@ const int mysql_inserts[][13] = {
     0, 0, 0, 0} ,
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0}
+{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, 0, 0,
+    0, 0, 0, 0, 0, 0, 0}
 };
 
 #endif /* HAVE_MYSQL */
@@ -130,7 +130,7 @@ const unsigned int search_fields[] = { 1, 1, 1 };
 
 const unsigned int search_args[] = { 1, 1, 1, 1 };
 
-const unsigned int delete_args[] = { 1, 1, 1, 1 };
+const unsigned int delete_args[] = { 1, 1, 1, 1, 0, 0, 1 };
 
 const unsigned int update_args[] = { 1, 1, 1, 2, 1, 2 };
 

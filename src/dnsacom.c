@@ -75,6 +75,14 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		} else if ((strncmp(argv[i], "-e", COMM_S) == 0)) {
 			comp->action = ADD_PREFER_A;
 			comp->type = REVERSE_ZONE;
+		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
+			comp->action = DELETE_RECORD;
+			comp->type = FORWARD_ZONE;
+		} else if ((strncmp(argv[i], "-g", COMM_S) == 0)) {
+			comp->action = DELETE_PREFERRED;
+			comp->type = REVERSE_ZONE;
+		} else if ((strncmp(argv[i], "-x", COMM_S) == 0)) {
+			comp->action = DELETE_ZONE;
 		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
 			comp->type = FORWARD_ZONE;
 		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {
@@ -120,7 +128,7 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) &&
-		(comp->action != MULTIPLE_A))
+		(comp->action != MULTIPLE_A && comp->action != DELETE_PREFERRED))
 		retval = NO_DOMAIN_NAME;
 	else if (comp->action == MULTIPLE_A && 
 		strncmp(comp->domain, "NULL", COMM_S) == 0 &&
@@ -132,7 +140,8 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST && strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if ((comp->action == ADD_HOST && strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	else if (((comp->action == ADD_HOST || comp->action == DELETE_RECORD)
+	      && strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;
