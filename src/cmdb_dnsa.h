@@ -309,11 +309,6 @@ insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev);
 int
 rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev);
 /* End 04/03/2013 */
-/*
-void
-add_a_to_duplicate(record_row_t **dups, record_row_t *list);
-int
-check_for_duplicate(char *destination, record_row_t *duplicates); */
 int
 insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev);
 void

@@ -53,7 +53,7 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
 	
 	for (i = 1; i < argc; i++) {
-		if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
+		if ((strncmp(argv[i], "-s", COMM_S) == 0)) {
 			comp->action = DISPLAY_ZONE;
 		} else if ((strncmp(argv[i], "-z", COMM_S) == 0)) {
 			comp->action = ADD_ZONE;

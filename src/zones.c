@@ -739,8 +739,11 @@ int
 mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
 {
 	int retval;
+	uint32_t ip_addr;
+	unsigned long int ip;
 	dnsa_t *dnsa;
 	zone_info_t *zone;
+	preferred_a_t *prefer;
 
 	retval = 0;
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
@@ -750,11 +753,27 @@ mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
 	dnsa->zones = zone;
-	if ((retval = run_query(dc, dnsa, DUPLICATE_A_RECORD)) != 0) {
+	if ((retval = run_multiple_query(dc, dnsa,
+		 DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
 	select_specific_ip(dnsa, cm);
+	prefer = dnsa->prefer;
+	if (inet_pton(AF_INET, cm->dest, &ip_addr))
+		ip = (unsigned long int)htonl(ip_addr);
+	else
+		return USER_INPUT_INVALID;
+	while (prefer) {
+		if (prefer->ip_addr == ip) {
+			printf("IP %s already has preferred A record %s\n",
+			       cm->dest, prefer->fqdn);
+			dnsa_clean_list(dnsa);
+			return NONE;
+		} else {
+			prefer = prefer->next;
+		}
+	}
 	if (!(dnsa->records)) {
 		fprintf(stderr, "No multiple A records for IP %s\n",
 			cm->dest);
@@ -778,7 +797,7 @@ int
 get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
 {
 	char *name = cm->dest;
-	char fqdn[RBUFF_S];
+	char fqdn[RBUFF_S], cl_fqdn[RBUFF_S], *cl_name;
 	int i = 0;
 	uint32_t ip_addr;
 	dbdata_t *start, *list;
@@ -805,12 +824,15 @@ get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
 	snprintf(start->args.text, RANGE_S, "%s", name);
 	i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
 	list = start;
-	name = &fqdn[0];
+	name = fqdn;
+	cl_name = cl_fqdn;
 	i = 0;
 	while (list) {
 		snprintf(name, RBUFF_S, "%s.%s",
 list->fields.text, list->next->fields.text);
-		if (strncmp(name, cm->domain, RBUFF_S) == 0) {
+		snprintf(cl_name, RBUFF_S, "%s.%s",
+cm->host, cm->domain);
+		if (strncmp(name, cl_name, RBUFF_S) == 0) {
 			i++;
 			prefer->record_id = list->next->next->fields.number;
 			snprintf(prefer->fqdn, RBUFF_S, "%s", name);
@@ -1483,39 +1505,6 @@ insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev)
 	}
 }
 
-/*
-void
-add_a_to_duplicate(record_row_t **dups, record_row_t *fwd)
-{
-	record_row_t *new, *tmp;
-
-	if (!(new = malloc(sizeof(record_row_t))))
-		report_error(MALLOC_FAIL, "new in add_a_to_duplicate");
-	init_record_struct(new);
-	strncpy(new->dest, fwd->dest, RANGE_S);
-	strncpy(new->host, fwd->host, RBUFF_S);
-	tmp = *dups;
-	if (!tmp) {
-		*dups = new;
-	} else {
-		while (tmp->next)
-			tmp = tmp->next;
-		tmp->next = new;
-	}
-}
-
-int
-check_for_duplicate(char *destination, record_row_t *duplicates)
-{
-	while (duplicates) {
-		if (strncmp(destination, duplicates->dest, RANGE_S) == 0)
-			return 1;
-		else
-			duplicates = duplicates->next;
-	}
-	return 0;
-}
-*/
 int
 get_rev_host(unsigned long int prefix, char *rev_host, char *host)
 {
