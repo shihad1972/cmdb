@@ -1091,6 +1091,8 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
 	retval = 0;
+/* Set to NULL so we can check if there are no records to add / delete */
+	add = delete = '\0';
 	init_dnsa_struct(dnsa);
 	if ((retval = run_multiple_query(
 	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE | ZONE)) != 0) {
@@ -1101,9 +1103,7 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	} else if (retval < 0) {
-		/* No Duplicate records. Just convert all A records
-		printf("\
-Just using A records for net range %s\n", dnsa->rev_zones->net_range); */
+/* No Duplicate records. Just convert all A records */
 		dnsa_clean_records(dnsa->records);
 		dnsa_clean_prefer(dnsa->prefer);
 		dnsa->records = '\0';
@@ -1119,14 +1119,16 @@ Just using A records for net range %s\n", dnsa->rev_zones->net_range); */
 	if ((a_rec = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones)) == 0) {
 		dnsa_clean_records(rec);
 		dnsa_clean_list(dnsa);
-		printf("\
-No A records for net_range %s\n", dnsa->rev_zones->net_range);
+		printf("No A records for net_range %s\n", cm->domain);
 		return NO_RECORDS;
 	}
 	rev_rec = get_rev_records_for_range(&(dnsa->rev_records), dnsa->rev_zones);
-/*	printf("We have %d A records and %d rev records\n", a_rec, rev_rec); */
 	add_int_ip_to_records(dnsa);
-	retval = rev_records_to_add(dnsa, rec, &add);
+	trim_forward_record_list(dnsa, rec);
+	retval = rev_records_to_add(dnsa, &add);
+	retval = rev_records_to_delete(dnsa, &delete);
+	dnsa_clean_rev_records(add);
+	dnsa_clean_rev_records(delete);
 	dnsa_clean_records(rec);
 	dnsa_clean_list(dnsa);
 	return NONE;
@@ -1140,17 +1142,12 @@ get_correct_rev_zone_and_preferred_records(comm_line_t *cm, dnsa_t *dnsa)
 		return retval;
 	}
 	if ((retval = get_a_records_for_range(&(dnsa->records), dnsa->rev_zones)) == 0) {
-/*		printf("No Duplicate records for net range %s\n",
-		      dnsa->rev_zones->net_range); */
 		return -1;
 	} else {
-/*		printf("Got %d duplicate records\n", retval); */
 		retval = NONE;
 		if ((retval = get_pref_a_for_range(&(dnsa->prefer), dnsa->rev_zones)) == 0) {
-/*			printf("No preferred A records\n"); */
 			return retval;
 		} else {
-/*			printf("Got %d prefered records\n", retval); */
 			retval = NONE;
 		}
 	}
@@ -1223,134 +1220,114 @@ get_rev_records_for_range(rev_record_row_t **records, rev_zone_info_t *zone)
 	return i;
 }
 
-/* Build a list of the reverse records we need to add to the database. */
-int
-rev_records_to_add(dnsa_t *dnsa, record_row_t *rec, rev_record_row_t **rev)
+void
+trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec)
 {
-	int i, j, k;
+	char host[RBUFF_S], *newhost;
+	int retval;
 	record_row_t *fwd = dnsa->records; /* List of A records */
-	record_row_t *dups, *list, *tmp, *fwd_list, *prev;
-	rev_record_row_t *rev_list;
-	preferred_a_t *prefer;
-
-	dups = '\0';
+	record_row_t *list, *tmp, *fwd_list, *prev;
 	fwd_list = prev = fwd;
-	j = 0;
-/* 
- * Run through the list of forward records for this network range. Delete
- * any duplicate forward records from this list that we find, but add them
- * to the 2nd list of forward records which is the list of duplicates.
- * Once we have a list of duplicates we then need to decide which of
- * these duplicates to use for the PTR record. Check the preferred_a list
- * and use that if it exists. If not, use the first one we come across. 
- */
 	while (fwd) {
-		i = k = 0;
+/* Get rid of @. in the start of these types of A records */
+		newhost = host;
+		snprintf(newhost, RBUFF_S, "%s", fwd->host);
+		if (host[0] == '@') {
+			newhost = strchr(host, '.');
+			newhost++;
+			snprintf(fwd->host, RBUFF_S, "%s", newhost);
+		}
 		list = rec; /* List of duplicate IP address in the net range */
 		tmp = fwd->next;
-		while (list) {
-			if (strncmp(list->dest, fwd->dest, RANGE_S) == 0) {
-				if (check_for_duplicate(fwd->dest, dups)) {
-					if (fwd_list == fwd)
-						fwd_list = prev = tmp;
-					else
-						prev->next = tmp;
-					free(fwd);
-					fwd = '\0';
-					break;
-				}
-				i++;
-				add_a_to_duplicate(&dups, fwd);
-				break;
+/* Check if in duplicate and prefer list */
+		if ((retval = check_dup_and_pref_list(list, fwd, dnsa)) > 0) {
+			if (fwd_list == fwd) {
+				fwd_list = prev = tmp;
+				free(fwd);
 			} else {
-				list = list->next;
+				free(fwd);
+				prev->next = tmp;
 			}
-		}
-		if (!fwd) {
+/* As we are deleting this record, then no more checks should be performed.
+ * Therefore, we should continue the loop */
+			if ((prev->next != fwd) && (prev->next != tmp))
+				prev = prev->next;
 			fwd = tmp;
 			continue;
-		}
-		j++; /* Count number of memebers we have in modified list */
-		rev_list = dnsa->rev_records;
-		while (dups) {
-			i = 0;
-			tmp = dups->next;
-			prefer = dnsa->prefer;
-			while (prefer) {
-				if (strncmp(dups->dest, prefer->ip, RANGE_S) == 0) {
-					i++;
-					break;
-				} else {
-					prefer = prefer->next;
-				}
-			}
-			if (i == 0)
-				add_dup_to_prefer_list(dnsa, dups);
-			free(dups);
-			dups = tmp;
-		}
-		i = 0;
-		while (rev_list) { /* check in rev list ?? */
-			if (rev_list->ip_addr == fwd->ip_addr) {
-				i++;
-				break;
-			} else {
-				rev_list = rev_list->next;
-			}
-		}
-		if (i == 0) {
-			prefer = dnsa->prefer;
-			while (prefer) {
-				if (fwd->ip_addr == prefer->ip_addr)
-					k++; /* there is a preferred A for this IP */
-				if (strncmp(fwd->host, prefer->fqdn, RBUFF_S) == 0) {
-					if ((insert_into_rev_add_list(dnsa, fwd, rev)) == 0) {
-						return 1;
-					} else {
-						i++;
-						break;
-					}
-				}
-				prefer = prefer->next;
-			}
-			if (k == 0) { 
-/* If no preferred A for this IP add the first one we see */
-				printf("\
-Adding record %s as PTR for %s. If you do not want to \n\
-use this please setup a preferred A record for another host\n", fwd->host, fwd->dest);
-				if ((insert_into_rev_add_list(dnsa, fwd, rev)) == 0) {
-					return 1;
-				}
-			}
 		}
 		if (prev != fwd)
 			prev = prev->next;
 		fwd = fwd->next;
 	}
-/*	printf("Modified forward records now have %d members\n", j); */
 	if (fwd_list != dnsa->records)
 		dnsa->records = fwd_list;
+}
+
+/* Build a list of the reverse records we need to add to the database. */
+int
+rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev)
+{
+	int i;
+	size_t len;
+	record_row_t *fwd = dnsa->records; /* List of A records */
+	rev_record_row_t *rev_list;
+
+	while (fwd) {
+/* Now check if the forward record is in the reverse list */
+		i = 0;
+		rev_list = dnsa->rev_records;
+		while (rev_list) {
+			if (rev_list->ip_addr == fwd->ip_addr) {
+				len = strlen(fwd->host);
+				if (strncmp(fwd->host, rev_list->dest, len) == 0)
+					i++;
+				break;
+			} else {
+				rev_list = rev_list->next;
+			}
+		}
+		if (i == 0)
+			if ((insert_into_rev_add_list(dnsa, fwd, rev)) == 0)
+				return 1;
+		fwd = fwd->next;
+	}
 	return NONE;
 }
 
-void
-add_a_to_duplicate(record_row_t **dups, record_row_t *fwd)
+int
+check_dup_and_pref_list(record_row_t *list, record_row_t *fwd, dnsa_t *dnsa)
 {
-	record_row_t *new, *tmp;
-
-	if (!(new = malloc(sizeof(record_row_t))))
-		report_error(MALLOC_FAIL, "new in add_a_to_duplicate");
-	init_record_struct(new);
-	snprintf(new->dest, RANGE_S, "%s", fwd->dest);
-	snprintf(new->host, RBUFF_S, "%s", fwd->host);
-	tmp = *dups;
-	if (!tmp) {
-		*dups = new;
-	} else {
-		while (tmp->next)
-			tmp = tmp->next;
-		tmp->next = new;
+	preferred_a_t *prefer;
+	while (list) {
+		prefer = dnsa->prefer;
+/* Check if this is IP is in the duplicate list */
+		if (strncmp(list->dest, fwd->dest, RANGE_S) == 0) {
+/* Yes is is, so check if this has a preferred A record */
+			while (prefer) {
+/* Move preferred list to correct IP address for forward A record */
+				if (fwd->ip_addr != prefer->ip_addr) {
+					prefer = prefer->next;
+					continue;
+				}
+/* If this is the correct record, return none and we will keep it.
+ * If this is not the correct record, return 1 and we will delete it from
+ * the forward list
+ */
+				if (fwd->id != prefer->record_id) {
+					return 1;
+				} else {
+					return NONE;
+				}
+			}
+/* We did not find a preferred record for this duplicate IP address so add
+ * it to the preferred list.
+ */
+			add_dup_to_prefer_list(dnsa, fwd);
+		}
+		list = list->next;
 	}
+/* Not in the duplicate list, so return NONE and use this A record */
+	return NONE;
 }
 
 int
@@ -1411,6 +1388,80 @@ add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd)
 			list = list->next;
 		list->next = new;
 	}
+	fprintf(stderr, "\
+***\nDuplicate IP %s does not have a preferred A record\n", fwd->dest);
+	fprintf(stderr, "\
+Using %s for this PTR.\n\
+If this is not what you want, please set up a preferred record for this PTR\n",
+		fwd->host);
+	fprintf(stderr, "***\n");
+}
+
+/* Build list of the reverse records we need to delete from the database */
+int
+rev_records_to_delete(dnsa_t *dnsa, rev_record_row_t **rev)
+{
+	int i = 0;
+	size_t len;
+	rev_record_row_t *list = dnsa->rev_records;
+	record_row_t *fwd;
+
+	while (list) {
+		fwd = dnsa->records;
+		while (fwd) {
+			if (list->ip_addr == fwd->ip_addr) {
+				len = strlen(fwd->host);
+				if (strncmp(fwd->host, list->dest, len) != 0) {
+					insert_into_rev_del_list(list, rev);
+					i++;
+				}
+			}
+			fwd = fwd->next;
+		}
+		list = list->next;
+	}
+	return i;
+}
+
+void
+insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev)
+{
+	rev_record_row_t *new, *list;
+
+	if (!(new = malloc(sizeof(rev_record_row_t))))
+		report_error(MALLOC_FAIL, "new in insert_into_rev_add_list");
+	list = *rev;
+	init_rev_record_struct(new);
+	new->record_id = record->record_id;
+	printf("Deleting record id %lu; %s\n", new->record_id, record->dest);
+	if (!list) {
+		*rev = new;
+	} else {
+		while (list->next)
+			list = list->next;
+		list->next = new;
+	}
+}
+
+/*
+void
+add_a_to_duplicate(record_row_t **dups, record_row_t *fwd)
+{
+	record_row_t *new, *tmp;
+
+	if (!(new = malloc(sizeof(record_row_t))))
+		report_error(MALLOC_FAIL, "new in add_a_to_duplicate");
+	init_record_struct(new);
+	strncpy(new->dest, fwd->dest, RANGE_S);
+	strncpy(new->host, fwd->host, RBUFF_S);
+	tmp = *dups;
+	if (!tmp) {
+		*dups = new;
+	} else {
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = new;
+	}
 }
 
 int
@@ -1424,7 +1475,7 @@ check_for_duplicate(char *destination, record_row_t *duplicates)
 	}
 	return 0;
 }
-
+*/
 int
 get_rev_host(unsigned long int prefix, char *rev_host, char *host)
 {

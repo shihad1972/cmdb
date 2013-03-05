@@ -296,16 +296,28 @@ int
 validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa);
 int
 create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa);
+/* 04/03/2013 functions add */
+void
+trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec);
 int
-rev_records_to_add(dnsa_t *dnsa, record_row_t *rec, rev_record_row_t **rev);
+check_dup_and_pref_list(record_row_t *list, record_row_t *fwd, dnsa_t *dnsa);
+int
+rev_records_to_delete(dnsa_t *dnsa, rev_record_row_t **rev);
+void
+insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev);
+/* Updated / modified functions */
+int
+rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev);
+/* End 04/03/2013 */
+/*
 void
 add_a_to_duplicate(record_row_t **dups, record_row_t *list);
+int
+check_for_duplicate(char *destination, record_row_t *duplicates); */
 int
 insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev);
 void
 add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd);
-int
-check_for_duplicate(char *destination, record_row_t *duplicates);
 int
 get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
 #endif /* __CMDB_DNSA_H__ */
