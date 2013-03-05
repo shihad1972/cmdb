@@ -30,6 +30,7 @@ extern const char *sql_insert[];
 extern const char *sql_search[];
 extern const char *sql_extended_search[];
 extern const char *sql_update[];
+extern const char *sql_delete[];
 extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
@@ -40,6 +41,8 @@ extern const unsigned int ext_search_field_type[][3];
 extern const unsigned int ext_search_arg_type[][1];
 extern const unsigned int update_args[];
 extern const unsigned int update_arg_type[][2];
+extern const unsigned int delete_args[];
+extern const unsigned int delete_arg_type[][1];
 
 # ifdef HAVE_MYSQL
 extern const int mysql_inserts[][13];
@@ -99,6 +102,8 @@ int
 run_insert(dnsa_config_t *config, dnsa_t *base, int type);
 int
 run_update(dnsa_config_t *config, dbdata_t *data, int type);
+int
+run_delete(dnsa_config_t *config, dbdata_t *data, int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
@@ -117,6 +122,8 @@ int
 run_extended_search_mysql(dnsa_config_t *config, dbdata_t *base, int type);
 int
 run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type);
+int
+run_delete_mysql(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_t *base);
 int
@@ -193,6 +200,8 @@ int
 run_extended_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type);
 int
 run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type);
+int
+run_delete_sqlite(dnsa_config_t *config, dbdata_t *data, int type);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type);
 int
