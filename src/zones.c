@@ -1084,16 +1084,21 @@ int
 build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 {
 	int retval, a_rec, rev_rec;
+	unsigned long int serial;
 	dnsa_t *dnsa;
+	dbdata_t serial_d, zone_info_d, *data;
 	record_row_t *rec;
-	rev_record_row_t *add, *delete;
+	rev_record_row_t *add, *delete, *list;
 
 	if (!(dnsa = malloc(sizeof(dnsa_t))))
 		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
+	if (!(data = malloc(sizeof(dbdata_t))))
+		report_error(MALLOC_FAIL, "data in build_reverse_zone");
 	retval = 0;
 /* Set to NULL so we can check if there are no records to add / delete */
 	add = delete = '\0';
 	init_dnsa_struct(dnsa);
+	init_dbdata_struct(data);
 	if ((retval = run_multiple_query(
 	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE | ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -1127,7 +1132,42 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 	trim_forward_record_list(dnsa, rec);
 	retval = rev_records_to_add(dnsa, &add);
 	retval = rev_records_to_delete(dnsa, &delete);
-	dnsa_clean_rev_records(add);
+	dnsa_clean_rev_records (dnsa->rev_records);
+	list = delete;
+	while (list) {
+		data->args.number = list->record_id;
+		printf("Deleting record %lu\n", data->args.number);
+		run_delete(dc, data, REV_RECORDS);
+		list = list->next;
+	}
+	dnsa->rev_records = list = add;
+	retval = 0;
+	while (dnsa->rev_records) {
+		printf("Adding PTR record for %s\n", dnsa->rev_records->host);
+		retval += run_insert(dc, dnsa, REV_RECORDS);
+		dnsa->rev_records = dnsa->rev_records->next;
+	}
+	if (add || delete) {
+		serial = get_zone_serial();
+		if (serial > dnsa->rev_zones->serial)
+			dnsa->rev_zones->serial = serial;
+		else
+			dnsa->rev_zones->serial++;
+		init_dbdata_struct(&serial_d);
+		init_dbdata_struct(&zone_info_d);
+		serial_d.args.number = dnsa->rev_zones->serial;
+		zone_info_d.args.number = dnsa->rev_zones->rev_zone_id;
+		serial_d.next = &zone_info_d;
+		if ((retval = run_update(dc, &serial_d, REV_ZONE_SERIAL)) != 0)
+			fprintf(stderr, "Cannot update rev zone serial!\n");
+		else
+			fprintf(stderr, "Rev zone serial number updated\n");
+	} else {
+		printf("No rev records to add / delete for range %s\n",
+		       dnsa->rev_zones->net_range);
+	}
+	dnsa->rev_records = add;
+	dnsa_clean_dbdata_list(data);
 	dnsa_clean_rev_records(delete);
 	dnsa_clean_records(rec);
 	dnsa_clean_list(dnsa);
@@ -1250,7 +1290,7 @@ trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec)
 			}
 /* As we are deleting this record, then no more checks should be performed.
  * Therefore, we should continue the loop */
-			if ((prev->next != fwd) && (prev->next != tmp))
+			if ((prev->next != fwd) && (prev->next != tmp) && (prev != tmp))
 				prev = prev->next;
 			fwd = tmp;
 			continue;

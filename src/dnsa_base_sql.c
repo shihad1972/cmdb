@@ -86,7 +86,8 @@ UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
 UPDATE zones SET updated = 'yes' WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
 UPDATE zones SET serial = ? WHERE id = ?","\
-UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?"
+UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?","\
+UPDATE rev_zones SET serial = ? WHERE rev_zone_id = ?"
 };
 
 const char *sql_delete[] = {"\
@@ -131,7 +132,7 @@ const unsigned int search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int delete_args[] = { 1, 1, 1, 1 };
 
-const unsigned int update_args[] = { 1, 1, 1 };
+const unsigned int update_args[] = { 1, 1, 1, 2, 1, 2 };
 
 const unsigned int extended_search_fields[] = { 3 /*, 1*/ };
 
@@ -152,7 +153,8 @@ const unsigned int update_arg_type[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, DBINT } ,
-	{ DBINT, NONE }
+	{ DBINT, NONE } ,
+	{ DBINT, DBINT }
 };
 
 const unsigned int delete_arg_type[][1] = {
@@ -1084,6 +1086,8 @@ setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned in
 		setup_insert_mysql_bind_buff_zone(input, base, i);
 	else if (type == REV_ZONES)
 		setup_insert_mysql_bind_buff_rev_zone(input, base, i);
+	else if (type == REV_RECORDS)
+		setup_insert_mysql_bind_buff_rev_records(input, base, i);
 	else if (type == PREFERRED_AS)
 		setup_insert_mysql_bind_buff_pref_a(input, base, i);
 	else
@@ -1157,6 +1161,17 @@ setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i
 		*input = &(base->rev_zones->expire);
 	else if (i == 12)
 		*input = &(base->rev_zones->ttl);
+}
+
+void
+setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_t *base, unsigned int i)
+{
+	if (i == 0)
+		*input = &(base->rev_records->rev_zone);
+	else if (i == 1)
+		*input = &(base->rev_records->host);
+	else if (i == 2)
+		*input = &(base->rev_records->dest);
 }
 
 void
@@ -1705,6 +1720,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 		retval = setup_bind_sqlite_zones(state, base->zones);
 	else if (type == REV_ZONES)
 		retval = setup_bind_sqlite_rev_zones(state, base->rev_zones);
+	else if (type == REV_RECORDS)
+		retval = setup_bind_sqlite_rev_records(state, base->rev_records);
 	else if (type == PREFERRED_AS)
 		retval = setup_bind_sqlite_prefer_a(state, base->prefer);
 	else
@@ -1857,7 +1874,7 @@ int
 setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_t *zone)
 {
 	int retval;
-	
+
 	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, zone->net_range, (int)strlen(zone->net_range), SQLITE_STATIC)) > 0) {
@@ -1914,6 +1931,28 @@ state, 8, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int64(state, 13, (sqlite3_int64)zone->ttl)) > 0) {
 		fprintf(stderr, "Cannot bind ttl %lu\n", zone->ttl);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_rev_records(sqlite3_stmt *state, rev_record_row_t *rev)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(state, 1, (sqlite3_int64)rev->rev_zone)) > 0) {
+		fprintf(stderr, "Cannot bind rev_zone %lu\n", rev->rev_zone);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, rev->host, (int)strlen(rev->host), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind host %s\n", rev->host);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, rev->dest, (int)strlen(rev->dest), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind dest %s\n", rev->dest);
 		return retval;
 	}
 	return retval;
