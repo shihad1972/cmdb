@@ -90,6 +90,8 @@ int main(int argc, char *argv[])
 			retval = add_host(dc, cm);
 		} else if (cm->action == ADD_ZONE) {
 			retval = add_fwd_zone(dc, cm);
+		} else if (cm->action == DELETE_RECORD) {
+			retval = delete_record(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

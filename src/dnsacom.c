@@ -127,8 +127,9 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) &&
-		(comp->action != MULTIPLE_A && comp->action != DELETE_PREFERRED))
+	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) && 
+		comp->action != DELETE_RECORD && 
+		comp->action != MULTIPLE_A && comp->action != DELETE_PREFERRED)
 		retval = NO_DOMAIN_NAME;
 	else if (comp->action == MULTIPLE_A && 
 		strncmp(comp->domain, "NULL", COMM_S) == 0 &&

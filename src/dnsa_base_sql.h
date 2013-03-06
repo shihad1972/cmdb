@@ -37,7 +37,7 @@ extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 extern const unsigned int extended_search_fields[];
 extern const unsigned int extended_search_args[];
-extern const unsigned int ext_search_field_type[][3];
+extern const unsigned int ext_search_field_type[][5];
 extern const unsigned int ext_search_arg_type[][1];
 extern const unsigned int update_args[];
 extern const unsigned int update_arg_type[][2];
@@ -55,7 +55,8 @@ enum {			/* SELECT statements to use in multiple */
 	REV_RECORD = 8,
 	ALL_A_RECORD = 16,
 	DUPLICATE_A_RECORD = 32,
-	PREFERRED_A = 64
+	PREFERRED_A = 64,
+	RECORDS_ON_CNAME_TYPE = 128
 };
 
 enum {			/* SELECT and INSERT indexes */
@@ -65,11 +66,13 @@ enum {			/* SELECT and INSERT indexes */
 	REV_RECORDS,
 	ALL_A_RECORDS,
 	DUPLICATE_A_RECORDS,
-	PREFERRED_AS
+	PREFERRED_AS,
+	RECORDS_ON_CNAME_TYPES
 };
 
 enum {			/* Extended searches */
-	RECORDS_ON_DEST_AND_ID = 0
+	RECORDS_ON_DEST_AND_ID = 0,
+	RECORDS_ON_ZONE
 };
 
 enum {			/* Search indexes and queries */

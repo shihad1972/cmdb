@@ -213,9 +213,25 @@ mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm);
 int
 build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm);
 int
-get_correct_rev_zone_and_preferred_records(comm_line_t *cm, dnsa_t *dnsa);
+get_correct_rev_zone_and_preferred_records(dnsa_t *dnsa, comm_line_t *cm);
+/* Added 06/03/2013 */
 int
-get_rev_zone(comm_line_t *cm, dnsa_t *dnsa);
+compare_fwd_ns_records_with_host(dnsa_t *dnsa, comm_line_t *cm);
+int
+compare_host_with_record_destination(dnsa_t *dnsa, comm_line_t *cm);
+int
+compare_host_with_fqdn_cname(dnsa_t *dnsa, comm_line_t *cm);
+void
+get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn);
+void
+get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn);
+int
+get_fwd_zone(dnsa_t *dnsa, comm_line_t *cm);
+int
+get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm);
+/* End addition 06/03/2013 */
+int
+get_rev_zone(dnsa_t *dnsa, comm_line_t *cm);
 void
 get_duplicate_a_records(comm_line_t *cm, dnsa_t *dnsa);
 int
@@ -259,6 +275,8 @@ add_int_ip_to_rev_records(dnsa_t *dnsa);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm);
+int
+delete_record(dnsa_config_t *dc, comm_line_t *cm);
 /* End add 05/03/2013 */
 /* Forward zone functions */
 int

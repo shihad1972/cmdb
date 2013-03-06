@@ -42,6 +42,15 @@
 # include <sqlite3.h>
 #endif /* HAVE_SQLITE3 */
 
+/**
+ * These SQL searches require the dnsa_t struct. Each search will fill one of
+ * the structs pointed to within dnsa_t.
+ * The stucts within dnsa will be malloc'ed by the database store function so
+ * only dnsa_t needs to be malloc'ed and initialised.
+ * These searches return multiple members.
+ * Helper functions need to be created for earch search to populate the member
+ * of dnsa_t used.
+ */
 const char *sql_select[] = { "\
 SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, \
 valid, owner, updated FROM zones ORDER BY name","\
@@ -53,17 +62,37 @@ BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
 SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
-SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a"
+SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
+SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
 };
-
+/**
+ * These SQL searches require the struct within dnsa_t to be initialised, as
+ * the arguments for the query are contained within them. 
+ * These searches will only return 1 member, regardless of the number of
+ * search results. This can lead to bugs if the database is not in order e.g.
+ * if there are multiple zones with the same id.
+ */
 const char *sql_search[] = { "\
 SELECT id FROM zones WHERE name = ?","\
 SELECT rev_zone_id FROM rev_zones WHERE net_range = ?","\
 SELECT prefix FROM rev_zones WHERE net_range = ?"
 };
-
+/**
+ * These SQL searches return an unknown number of members, with a variable
+ * number and type of fields and arguments in the query. The data is sent
+ * and returned in a list of dbdata_t structs. The inital list must be created
+ * to hold at least the greater of extended_search_fields OR 
+ * extended_search_args. The helper function init_initial_dbdata will do this.
+ * To ascertain the argument, fields and types thereof, we use the following 
+ * arrays and matrices:
+ *   extended_search_fields[]
+ *   extended_search_args[]
+ *   ext_search_field_type[][]
+ *   ext_search_arg_type[][]
+ */
 const char *sql_extended_search[] = { "\
-SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id" /*,"\
+SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
+SELECT id, host, type, pri, destination FROM records WHERE zone = ?" /*,"\
 SELECT fqdn FROM preferred_a WHERE ip = ?" */
 };
 
@@ -97,7 +126,8 @@ DELETE FROM records WHERE id = ?","\
 DELETE FROM rev_records WHERE rev_record_id = ?","\
 DELETE","\
 DELETE","\
-DELETE FROM preferred_a WHERE prefa_id = ?"
+DELETE FROM preferred_a WHERE prefa_id = ?","\
+DELETE FROM records WHERE zone = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -134,17 +164,19 @@ const unsigned int delete_args[] = { 1, 1, 1, 1, 0, 0, 1 };
 
 const unsigned int update_args[] = { 1, 1, 1, 2, 1, 2 };
 
-const unsigned int extended_search_fields[] = { 3 /*, 1*/ };
+const unsigned int extended_search_fields[] = { 3, 5 /*, 1*/ };
 
-const unsigned int extended_search_args[] = { 1/* , 1 */ };
+const unsigned int extended_search_args[] = { 1, 1/* , 1 */ };
 
-const unsigned int ext_search_field_type[][3] = { /* What we are selecting */
-	{ DBTEXT, DBTEXT, DBINT }/* ,
+const unsigned int ext_search_field_type[][5] = { /* What we are selecting */
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT }/* ,
 	{ DBTEXT, NONE, NONE } */
 };
 
 const unsigned int ext_search_arg_type[][1] = { /* What we are searching on */
-	{ DBTEXT } /*,
+	{ DBTEXT } ,
+	{ DBINT } /*,
 	{ DBTEXT } */
 };
 
@@ -414,6 +446,26 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 		default:
 			fprintf(stderr, "Unknown query %d\n", type);
 			exit (NO_QUERY);
+	}
+}
+
+void
+init_initial_dbdata(dbdata_t **list, int type)
+{
+	unsigned int i = 0;
+	dbdata_t *data, *dlist;
+	dlist = *list = '\0';
+	for (i = 0; i < extended_search_fields[type]; i++) {
+		if (!(data = malloc(sizeof(dbdata_t))))
+			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
 	}
 }
 
