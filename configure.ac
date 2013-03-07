@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([cmdb], [0.2.5], [iain-at-thargoid-dot-co-dot-uk])
-AC_CONFIG_SRCDIR([src/build_display.c])
+AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
 
