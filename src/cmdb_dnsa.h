@@ -229,6 +229,8 @@ int
 get_fwd_zone(dnsa_t *dnsa, comm_line_t *cm);
 int
 get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm);
+int
+delete_reverse_zone(dnsa_config_t *dc, comm_line_t *cm);
 /* End addition 06/03/2013 */
 int
 get_rev_zone(dnsa_t *dnsa, comm_line_t *cm);

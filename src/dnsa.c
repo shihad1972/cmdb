@@ -112,6 +112,8 @@ int main(int argc, char *argv[])
 			retval = build_reverse_zone(dc, cm);
 		} else if (cm->action == DELETE_PREFERRED) {
 			retval = delete_preferred_a(dc, cm);
+		} else if (cm->action == DELETE_ZONE) {
+			retval = delete_reverse_zone(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

@@ -127,6 +127,7 @@ DELETE FROM rev_records WHERE rev_record_id = ?","\
 DELETE","\
 DELETE","\
 DELETE FROM preferred_a WHERE prefa_id = ?","\
+DELETE FROM rev_records WHERE rev_zone = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
@@ -196,6 +197,8 @@ const unsigned int delete_arg_type[][1] = {
 	{ DBINT } ,
 	{ NONE } ,
 	{ NONE } ,
+	{ DBINT } ,
+	{ DBINT } ,
 	{ DBINT }
 };
 

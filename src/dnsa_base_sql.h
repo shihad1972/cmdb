@@ -70,6 +70,11 @@ enum {			/* SELECT and INSERT indexes */
 	RECORDS_ON_CNAME_TYPES
 };
 
+enum {			/* Delete indexes that diverge from SELECT */
+	REV_RECORDS_ON_REV_ZONE = 7,
+	RECORDS_ON_FWD_ZONE = 8
+};
+
 enum {			/* Extended searches */
 	RECORDS_ON_DEST_AND_ID = 0,
 	RECORDS_ON_ZONE

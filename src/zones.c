@@ -1076,6 +1076,42 @@ add_rev_zone(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
+delete_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
+{
+	int retval;
+	dnsa_t *dnsa;
+	dbdata_t *data;
+	rev_zone_info_t *rev;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in delete_reverse_zone");
+	if (!(data = malloc(sizeof(dbdata_t))))
+		report_error(MALLOC_FAIL, "data in delete_reverse_zone");
+	init_dnsa_struct(dnsa);
+	init_dbdata_struct(data);
+	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0) {
+		printf("Query to get reverse zones from DB failed\n");
+		dnsa_clean_list(dnsa);
+		return NO_DOMAIN;
+	}
+	rev = dnsa->rev_zones;
+	while (rev) {
+		if (strncmp(cm->domain, rev->net_range, RANGE_S) == 0) {
+			data->args.number = rev->rev_zone_id;
+		}
+		rev = rev->next;
+	}
+	printf("Deleting record from reverse zone %s\n", cm->domain);
+	retval = run_delete(dc, data, REV_RECORDS_ON_REV_ZONE);
+	printf("%d records deleted\n\n", retval);
+	printf("Deleting reverse zone %s\n", cm->domain);
+	retval = run_delete(dc, data, REV_ZONES);
+	printf("%d zone(s) deleted\n", retval);
+
+	return NONE;
+}
+
+int
 create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa)
 {
 	char *configfile, *buffer, filename[NAME_S];
