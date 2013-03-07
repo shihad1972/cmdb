@@ -31,12 +31,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <mysql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "checks.h"
+
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
+
 #include "cbc_mysql.h"
-#include "mysqlfunc.h"
 
 int
 get_db_config(cbc_config_t *cct, char *search);
@@ -79,6 +81,33 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 			sscanf(buff, "PORT=%s", port);
 		}
 		rewind (cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "TMPDIR=%s", cbc->tmpdir);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "TFTPDIR=%s", cbc->tftpdir);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PXE=%s", cbc->pxe);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "TOPLEVELOS=%s", cbc->toplevelos);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "PRESEED=%s", cbc->preseed);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "KICKSTART=%s", cbc->kickstart);
+		}
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf))) {
+			sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
+		}
 		retval = 0;
 		fclose(cnf);
 	}
@@ -94,7 +123,7 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		cbc->port = (unsigned int) portno;
 	}
 	
-	sprintf(buff, "cbctmpdir");
+/*	sprintf(buff, "cbctmpdir");
 	retval = get_db_config(cbc, buff);
 	if (retval == 0) {
 		sprintf(cbc->tmpdir, "%s", buff);
@@ -192,7 +221,7 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 				break;
 		}
 	}
-	
+*/
 		
 	if ((retval = add_trailing_slash(cbc->tmpdir)) != 0)
 		retval = TMP_ERR;
@@ -297,7 +326,7 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	return retval;
 	
 }
-
+/*
 int get_db_config(cbc_config_t *cct, char *search)
 {
 	MYSQL cbc;
@@ -340,6 +369,7 @@ int get_db_config(cbc_config_t *cct, char *search)
 	free(query);
 	return 0;
 }
+*/
 void parse_cbc_config_error(int error)
 {
 	switch(error) {

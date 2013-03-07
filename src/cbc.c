@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	}
 	
 /*	print_cbc_command_line_values(cml); */
-	switch (cml->action) {
+/*	switch (cml->action) {
 		case WRITE_CONFIG:
 			if ((retval = get_server_name(cml, cmc)) != 0) {
 				free(cmc);
@@ -89,8 +89,6 @@ int main(int argc, char *argv[])
 		case DISPLAY_CONFIG:
 			if ((cml->server > 0) && 
 			 (strncmp(cml->action_type, "NULL", MAC_S) == 0)) {
-		/*	print_cbc_config(cmc); 
-			print_cbc_command_line_values(cml); */
 				retval = get_server_name(cml, cmc);
 				retval = get_build_info(cmc, cbt, cml->server_id);
 				print_cbc_build_values(cbt);
@@ -144,7 +142,7 @@ int main(int argc, char *argv[])
 		default:
 			printf("Case %d not implemented yet\n", cml->action);
 			break;
-	}
+	} */
 	free(cmc);
 	free(cml);
 	free(cbt);
