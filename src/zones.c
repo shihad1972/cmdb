@@ -1934,10 +1934,10 @@ compare_host_with_fqdn_cname(dnsa_t *dnsa, char *hname)
 	else
 		return NO_RECORDS;
 	while (list) {
-		get_fqdn_for_record_dest(dnsa, list, rfqdn);
+		get_fqdn_for_record_dest(dnsa, list, rname);
 		if (strncmp(rfqdn, hname, RBUFF_S) == 0) {
 			printf("\
-We have a record in zone id %lu whose destination FQDN is %s\n", list->zone, rfqdn);
+We have a record in zone id %lu whose destination FQDN is %s\n", list->zone, rname);
 			return REFUSE_TO_DELETE_A_RECORD_DEST;
 		}
 		list = list->next;
@@ -1950,7 +1950,7 @@ get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 {
 	char *tmp;
 	int i;
-	zone_info_t *zone, *next;
+	zone_info_t *zone;
 
 	tmp = fqdn;
 	for (i = 0; i < RBUFF_S; i++) {
@@ -1961,10 +1961,6 @@ get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 		zone = dnsa->zones;
 	else
 		return;
-	if (zone->next)
-		next = zone->next;
-	else
-		next = '\0';
 	while (zone) {
 		if (zone->id == fwd->zone) {
 			snprintf(fqdn, RBUFF_S, "%s.%s.", fwd->dest, zone->name);
@@ -1979,7 +1975,7 @@ get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 {
 	char *tmp;
 	int i;
-	zone_info_t *zone, *next;
+	zone_info_t *zone;
 
 	tmp = fqdn;
 	for (i = 0; i < RBUFF_S; i++) {
@@ -1990,10 +1986,6 @@ get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 		zone = dnsa->zones;
 	else
 		return;
-	if (zone->next)
-		next = zone->next;
-	else
-		next = '\0';
 	while (zone) {
 		if (zone->id == fwd->zone) {
 			snprintf(fqdn, RBUFF_S, "%s.%s.", fwd->host, zone->name);
@@ -2140,7 +2132,7 @@ get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm)
 	char hfqdn[RBUFF_S], rfqdn[RBUFF_S], *hname, *rname;
 	int retval = 0;
 	dbdata_t *data;
-	record_row_t *list, *next;
+	record_row_t *list;
 
 	if (!(data = malloc(sizeof(dbdata_t))))
 		report_error(MALLOC_FAIL, "data in get_record_id_and_delete");
@@ -2152,10 +2144,6 @@ get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm)
 		list = dnsa->records;
 	else
 		return NO_RECORDS;
-	if (list->next)
-		next = list->next;
-	else
-		next = '\0';
 	while (list) {
 		get_fqdn_for_record_host(dnsa, list, rname);
 		if (strncmp(rfqdn, hfqdn, RBUFF_S) == 0) {
