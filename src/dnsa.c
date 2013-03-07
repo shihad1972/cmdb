@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
 			retval = add_fwd_zone(dc, cm);
 		} else if (cm->action == DELETE_RECORD) {
 			retval = delete_record(dc, cm);
+		} else if (cm->action == DELETE_ZONE) {
+			retval = delete_fwd_zone(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}

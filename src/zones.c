@@ -55,19 +55,24 @@ list_zones (dnsa_config_t *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\tSerial\n");
+	printf("Name\t\t\t\tValid\tSerial\t\tID\n");
 	while (zone) {
 		len = strlen(zone->name);
 		if (len < 8)
-			printf("%s\t\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
+			printf("%s\t\t\t\t%s\t%lu\t%lu\n",
+			       zone->name, zone->valid, zone->serial, zone->id);
 		else if (len < 16)
-			printf("%s\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
+			printf("%s\t\t\t%s\t%lu\t%lu\n",
+			       zone->name, zone->valid, zone->serial, zone->id);
 		else if (len < 24)
-			printf("%s\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
+			printf("%s\t\t%s\t%lu\t%lu\n",
+			       zone->name, zone->valid, zone->serial, zone->id);
 		else if (len < 32)
-			printf("%s\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
+			printf("%s\t%s\t%lu\t%lu\n",
+			       zone->name, zone->valid, zone->serial, zone->id);
 		else
-			printf("%s\n\t\t\t\t%s\t%lu\n", zone->name, zone->valid, zone->serial);
+			printf("%s\n\t\t\t\t%s\t%lu\t%lu\n",
+			       zone->name, zone->valid, zone->serial, zone->id);
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -931,6 +936,7 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 int
 delete_record(dnsa_config_t *dc, comm_line_t *cm)
 {
+	char fqdn[RBUFF_S], *name;
 	int retval = 0;
 	dnsa_t *dnsa;
 
@@ -942,35 +948,12 @@ delete_record(dnsa_config_t *dc, comm_line_t *cm)
 		dnsa_clean_list(dnsa);
 		return NO_RECORDS;
 	}
-/**
- * If the record we want to delete is marked as an NS record for any zone
- * then refuse to delete.
- */
-	if ((retval = compare_fwd_ns_records_with_host(dnsa, cm)) != 0) {
+	name = fqdn;
+	snprintf(name, RBUFF_S, "%s.%s.", cm->host, cm->domain);
+	if ((retval = check_for_fwd_record_use(dnsa, name)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-/**
- * If the record is a destination for any other record then refuse to delete
- */
-	if ((retval = compare_host_with_record_destination(dnsa, cm)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-/**
- * CNAMES that the destination is not a Fully Qualified Domain Name will have
- * been missed in the above search. So we need to search for them. If they
- * exist, refuse to delete
- */
-	if ((retval = compare_host_with_fqdn_cname(dnsa, cm)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-/**
- * Now the checks have been complete, we can finally delete this record. First
- * get the id, and then delete it. If we find multiple records, delete them 
- * all.
- */
 	if ((retval = get_record_id_and_delete(dc, dnsa, cm)) == 0) {
 		dnsa_clean_list(dnsa);
 		printf("Cannot find a record ID for %s.%s\n",
@@ -1025,6 +1008,84 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 	dnsa->zones = '\0';
 	retval = create_and_write_fwd_config(dc, dnsa);
 	dnsa_clean_list(dnsa);
+	return retval;
+}
+
+int
+delete_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
+{
+	char fqdn[RBUFF_S], *name;
+	int retval, i = 0;
+	dnsa_t *dnsa;
+	dbdata_t *data;
+	record_row_t *fwd, *other, *list;
+	zone_info_t *zone;
+
+	if (!(dnsa = malloc(sizeof(dnsa_t))))
+		report_error(MALLOC_FAIL, "dnsa in delete_fwd_zone");
+	if (!(data = malloc(sizeof(dbdata_t))))
+		report_error(MALLOC_FAIL, "data in delete_fwd_zone");
+	init_dnsa_struct(dnsa);
+	init_dbdata_struct(data);
+	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+		printf("Database query for zones and records failed\n");
+		dnsa_clean_list(dnsa);
+		return retval;
+	}
+	zone = dnsa->zones;
+	fwd = other = '\0';
+	name = fqdn;
+	while (zone) {
+		if (strncmp(cm->domain, zone->name, RBUFF_S) == 0)
+			break;
+		else
+			zone = zone->next;
+	}
+	if (!dnsa->records) {
+		printf("There are no forward records for this domain\n");
+	} else if (!zone) {
+		printf("The domain %s does not exist\n", cm->domain);
+		return NO_DOMAIN;
+	} else {
+		split_fwd_record_list(zone, dnsa->records, &fwd, &other);
+		dnsa->records = other;
+		list = fwd;
+		while (list) {
+			snprintf(name, RBUFF_S, "%s.%s.", list->host, cm->domain);
+			if ((retval = check_for_fwd_record_use(dnsa, name)) != 0)
+				i++;
+			list = list->next;
+		}
+		if (i != 0) {
+			printf("\n\
+You seem to have some forward records for the domain %s\n\
+that are used elsewhere\n\
+These records have been displayed. \n\
+Please delete them and then try to delete the zone again.\n", cm->domain);
+			return retval;
+		}
+	}
+	data->args.number = zone->id;
+	if ((retval = run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
+		printf("Unable to delete records in forward zone %s\n", cm->domain);
+		dnsa_clean_dbdata_list(data);
+		dnsa_clean_list(dnsa);
+		return CANNOT_DELETE_RECORD;
+	} else {
+		printf("%d Records for zone %s deleted\n", retval, cm->domain);
+	}
+	if ((retval = run_delete(dc, data, ZONES)) == 0) {
+		retval = CANNOT_DELETE_ZONE;
+		printf("Unable to delete forward zone %s in database\n", cm->domain);
+	} else if (retval == 1) {
+		printf("Zone %s deleted\n", cm->domain);
+		retval = NONE;
+	} else {
+		printf("More than one zone deleted??\n");
+		retval = MULTIPLE_ZONE_DELETED;
+	}
+	dnsa_clean_list(dnsa);
+	dnsa_clean_dbdata_list(data);
 	return retval;
 }
 
@@ -1233,6 +1294,34 @@ validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
 		return CHKZONE_FAIL;
 	}
 	return retval;
+}
+
+int
+check_for_fwd_record_use(dnsa_t *dnsa, char *name)
+{
+	int retval;
+/**
+ * If the record we want to delete is marked as an NS record for any zone
+ * then refuse to delete.
+ */
+	if ((retval = compare_fwd_ns_records_with_host(dnsa, name)) != 0) {
+		return retval;
+	}
+/**
+ * If the record is a destination for any other record then refuse to delete
+ */
+	if ((retval = compare_host_with_record_destination(dnsa, name)) != 0) {
+		return retval;
+	}
+/**
+ * CNAMES that the destination is not a Fully Qualified Domain Name will have
+ * been missed in the above search. So we need to search for them. If they
+ * exist, refuse to delete
+ */
+	if ((retval = compare_host_with_fqdn_cname(dnsa, name)) != 0) {
+		return retval;
+	}
+	return NONE;
 }
 
 int
@@ -1785,13 +1874,11 @@ add_int_ip_to_rev_records(dnsa_t *dnsa)
 }
 
 int
-compare_fwd_ns_records_with_host(dnsa_t *dnsa, comm_line_t *cm)
+compare_fwd_ns_records_with_host(dnsa_t *dnsa, char *name)
 {
-	char fqdn[RBUFF_S], *name;
+	int retval = NONE;
 	zone_info_t *list, *next;
 
-	name = fqdn;
-	snprintf(name, RBUFF_S, "%s.%s.", cm->host, cm->domain);
 	if (dnsa->zones)
 		list = dnsa->zones;
 	else
@@ -1803,29 +1890,26 @@ compare_fwd_ns_records_with_host(dnsa_t *dnsa, comm_line_t *cm)
 	while (list) {
 		if (strncmp(name, list->pri_dns, RBUFF_S) == 0) {
 			printf("\
-Zone %s has primary NS server of %s. You want to delete %s\n",
+Zone %s has primary NS server of %s You want to delete %s\n",
 			  list->name, list->pri_dns, name);
-			return REFUSE_TO_DELETE_NS_RECORD;
+			retval = REFUSE_TO_DELETE_NS_RECORD;
 		}
 		if (strncmp(name, list->sec_dns, RBUFF_S) == 0) {
 			printf("\
 Zone %s has secondary NS server of %s You want to delete %s\n",
 			  list->name, list->sec_dns, name);
-			return REFUSE_TO_DELETE_NS_RECORD;
+			retval = REFUSE_TO_DELETE_NS_RECORD;
 		}
 		list = list->next;
 	}
-	return NONE;
+	return retval;
 }
 
 int
-compare_host_with_record_destination(dnsa_t *dnsa, comm_line_t *cm)
+compare_host_with_record_destination(dnsa_t *dnsa, char *name)
 {
-	char fqdn[RBUFF_S], *name;
 	record_row_t *list, *next;
 
-	name = fqdn;
-	snprintf(name, RBUFF_S, "%s.%s.", cm->host, cm->domain);
 	if (dnsa->records)
 		list = dnsa->records;
 	else
@@ -1837,7 +1921,8 @@ compare_host_with_record_destination(dnsa_t *dnsa, comm_line_t *cm)
 	while (list) {
 		if (strncmp(name, list->dest, RBUFF_S) == 0) {
 			printf("\
-We have a record type %s with destination %s\n", list->type, name);
+We have a record type %s in zone ID %lu with destination %s\n",
+			       list->type, list->zone, name);
 			return REFUSE_TO_DELETE_A_RECORD_DEST;
 		}
 		list = list->next;
@@ -1846,14 +1931,12 @@ We have a record type %s with destination %s\n", list->type, name);
 }
 
 int
-compare_host_with_fqdn_cname(dnsa_t *dnsa, comm_line_t *cm)
+compare_host_with_fqdn_cname(dnsa_t *dnsa, char *hname)
 {
-	char hfqdn[RBUFF_S], rfqdn[RBUFF_S], *hname, *rname;
+	char rfqdn[RBUFF_S], *rname;
 	record_row_t *list, *next;
 
-	hname = hfqdn;
 	rname = rfqdn;
-	snprintf(hname, RBUFF_S, "%s.%s.", cm->host, cm->domain);
 	if (dnsa->records)
 		list = dnsa->records;
 	else
@@ -1864,9 +1947,9 @@ compare_host_with_fqdn_cname(dnsa_t *dnsa, comm_line_t *cm)
 		next = '\0';
 	while (list) {
 		get_fqdn_for_record_dest(dnsa, list, rfqdn);
-		if (strncmp(rfqdn, hfqdn, RBUFF_S) == 0) {
+		if (strncmp(rfqdn, hname, RBUFF_S) == 0) {
 			printf("\
-We have a record whose destination FQDN is %s\n", rfqdn);
+We have a record in zone id %lu whose destination FQDN is %s\n", list->zone, rfqdn);
 			return REFUSE_TO_DELETE_A_RECORD_DEST;
 		}
 		list = list->next;
@@ -1929,6 +2012,40 @@ get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 			return;
 		}
 		zone = zone->next;
+	}
+}
+
+void
+split_fwd_record_list(zone_info_t *zone, record_row_t *rec, record_row_t **fwd, record_row_t **other)
+{
+	record_row_t *list, *next;
+
+	while (rec) {
+		next = rec->next;
+		if (rec->zone == zone->id) {
+			if (!(*fwd)) {
+				*fwd = rec;
+				rec->next = '\0';
+			} else {
+				list = *fwd;
+				while (list->next)
+					list = list->next;
+				list->next = rec;
+				rec->next = '\0';
+			}
+		} else {
+			if (!(*other)) {
+				*other = rec;
+				rec->next = '\0';
+			} else {
+				list = *other;
+				while (list->next)
+					list = list->next;
+				list->next = rec;
+				rec->next = '\0';
+			}
+		}
+		rec = next;
 	}
 }
 
