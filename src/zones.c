@@ -1877,16 +1877,12 @@ int
 compare_fwd_ns_records_with_host(dnsa_t *dnsa, char *name)
 {
 	int retval = NONE;
-	zone_info_t *list, *next;
+	zone_info_t *list;
 
 	if (dnsa->zones)
 		list = dnsa->zones;
 	else
 		return DOMAIN_LIST_FAIL;
-	if (list->next)
-		next = list->next;
-	else
-		next = '\0';
 	while (list) {
 		if (strncmp(name, list->pri_dns, RBUFF_S) == 0) {
 			printf("\
@@ -1908,16 +1904,12 @@ Zone %s has secondary NS server of %s You want to delete %s\n",
 int
 compare_host_with_record_destination(dnsa_t *dnsa, char *name)
 {
-	record_row_t *list, *next;
+	record_row_t *list;
 
 	if (dnsa->records)
 		list = dnsa->records;
 	else
 		return NO_RECORDS;
-	if (list->next)
-		next = list->next;
-	else
-		next = '\0';
 	while (list) {
 		if (strncmp(name, list->dest, RBUFF_S) == 0) {
 			printf("\
@@ -1934,17 +1926,13 @@ int
 compare_host_with_fqdn_cname(dnsa_t *dnsa, char *hname)
 {
 	char rfqdn[RBUFF_S], *rname;
-	record_row_t *list, *next;
+	record_row_t *list;
 
 	rname = rfqdn;
 	if (dnsa->records)
 		list = dnsa->records;
 	else
 		return NO_RECORDS;
-	if (list->next)
-		next = list->next;
-	else
-		next = '\0';
 	while (list) {
 		get_fqdn_for_record_dest(dnsa, list, rfqdn);
 		if (strncmp(rfqdn, hname, RBUFF_S) == 0) {
