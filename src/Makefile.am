@@ -6,7 +6,6 @@ cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
 		cmdb_base_sql.c base_sql.c\
 		mysqlfunc.h cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h
 cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
-		build_data_struct.c\
 		mysqlfunc.h cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h build.h 
 
 AM_CFLAGS = -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
