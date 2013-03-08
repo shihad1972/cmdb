@@ -171,6 +171,18 @@ typedef struct cbc_seed_scheme_t {
 	struct cbc_seed_scheme_t *next;
 } cbc_seed_scheme_t;
 
+typedef struct cbc_server_t {
+	char vendor[CONF_S];
+	char make[CONF_S];
+	char model[CONF_S];
+	char uuid[CONF_S];
+	char name[MAC_S];
+	unsigned long int server_id;
+	unsigned long int cust_id;
+	unsigned long int vm_server_id;
+	struct cbc_server_t *next;
+} cbc_server_t;
+
 typedef struct cbc_varient_t {
 	char varient[HOST_S];
 	char valias[MAC_S];
@@ -199,9 +211,13 @@ typedef struct cbc_t {
 	struct cbc_pre_part_t *dpart;
 	struct cbc_pre_part_t *spart;
 	struct cbc_seed_scheme_t *sscheme;
+	struct cbc_server_t *server;
 	struct cbc_varient_t *varient;
 	struct cbc_vm_server_hosts *vmhost;
 } cbc_t;
+
+void
+init_cbc_struct (cbc_t *cbc);
 
 void
 init_boot_line(cbc_boot_line_t *boot);
@@ -235,6 +251,9 @@ init_package(cbc_package_t *pack);
 
 void
 init_seed_scheme(cbc_seed_scheme_t *seed);
+
+void
+init_cbc_server(cbc_server_t *server);
 
 void
 init_varient(cbc_varient_t *vari);
