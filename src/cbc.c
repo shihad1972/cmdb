@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 {
 	cbc_config_t *cmc;
 	cbc_comm_line_t *cml;
-	cbc_build_t *cbt;
+/*	cbc_build_t *cbt; */
 	char *cbc_config, sretval[MAC_S];
 	int retval;
 	
@@ -47,18 +47,18 @@ int main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_t))))
 		report_error(MALLOC_FAIL, "cml in cbc.c");
-	if (!(cbt = malloc(sizeof(cbc_build_t))))
-		report_error(MALLOC_FAIL, "cbt in cbc.c");
+/*	if (!(cbt = malloc(sizeof(cbc_build_t))))
+		report_error(MALLOC_FAIL, "cbt in cbc.c"); */
 	
 	strncpy(cbc_config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	
-	init_all_config(cmc, cml, cbt);
+	init_all_config(cmc, cml/*, cbt*/);
 	
 	retval = parse_cbc_command_line(argc, argv, cml);
 	if (retval < 0) {
 		free(cmc);
 		free(cml);
-		free(cbt);
+/*		free(cbt); */
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
 	retval = parse_cbc_config_file(cmc, cbc_config);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		free(cml);
 		free(cmc);
-		free(cbt);
+/*		free(cbt); */
 		exit(retval);
 	}
 	
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	} */
 	free(cmc);
 	free(cml);
-	free(cbt);
+/*	free(cbt); */
 	if (retval == DISPLAY_USAGE)
 		retval = NONE;
 	if (retval != NONE)

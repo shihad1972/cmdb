@@ -38,10 +38,9 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 
-int
-get_db_config(cbc_config_t *cct, char *search);
 
-int parse_cbc_config_file(cbc_config_t *cbc, char *config)
+int
+parse_cbc_config_file(cbc_config_t *cbc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -120,107 +119,7 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 	} else {
 		cbc->port = (unsigned int) portno;
 	}
-	
-/*	sprintf(buff, "cbctmpdir");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->tmpdir, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_TMP_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_TMP_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbctftpdir");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->tftpdir, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_TFTP_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_TFTP_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbcpxe");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->pxe, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_PXE_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_PXE_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbctlos");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->toplevelos, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_OS_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_OS_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbcdhcp");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->dhcpconf, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_DHCP_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_DHCP_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbcpreseed");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->preseed, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_PRESEED_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_PRESEED_ERR;
-				break;
-		}
-	}
-	sprintf(buff, "cbckickstart");
-	retval = get_db_config(cbc, buff);
-	if (retval == 0) {
-		sprintf(cbc->kickstart, "%s", buff);
-	} else {
-		switch (retval) {
-			case NO_ERR:
-				return NO_KICKSTART_ERR;
-				break;
-			case MULTI_ERR:
-				return MULTI_KICKSTART_ERR;
-				break;
-		}
-	}
-*/
-		
+
 	if ((retval = add_trailing_slash(cbc->tmpdir)) != 0)
 		retval = TMP_ERR;
 	if ((retval = add_trailing_slash(cbc->tftpdir)) != 0)
@@ -233,11 +132,12 @@ int parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		retval = PRESEED_ERR;
 	if ((retval = add_trailing_slash(cbc->kickstart)) !=0)
 		retval = KICKSTART_ERR;
-	
+
 	return retval;
 }
 
-int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
+int
+parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 {
 	int retval, opt;
 	
@@ -324,51 +224,9 @@ int parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	return retval;
 	
 }
-/*
-int get_db_config(cbc_config_t *cct, char *search)
-{
-	MYSQL cbc;
-	MYSQL_RES *cbc_res;
-	MYSQL_ROW cbc_row;
-	my_ulonglong cbc_rows;
-	char *query;
-	const char *cbc_query;
-	
-	if (!(query = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "query in get_db_config");
-	
-	cbc_query = query;
-	sprintf(query, "SELECT value FROM configuration WHERE config = '%s'", search);
-	cbc_mysql_init(cct, &cbc);
-	cmdb_mysql_query(&cbc, cbc_query);
-	if (!(cbc_res = mysql_store_result(&cbc))) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
-		report_error(MY_STORE_FAIL, mysql_error(&cbc));
-	}
-	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)){
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
-		return NO_ERR;
-	} else  if (cbc_rows > 1) {
-		mysql_close(&cbc);
-		mysql_library_end();
-		free(query);
-		return MULTI_ERR;
-	} else {
-		cbc_row = mysql_fetch_row(cbc_res);
-		strncpy(search, cbc_row[0], CONF_S);
-		mysql_free_result(cbc_res);
-	}
-	mysql_close(&cbc);
-	mysql_library_end();
-	free(query);
-	return 0;
-}
-*/
-void parse_cbc_config_error(int error)
+
+void
+parse_cbc_config_error(int error)
 {
 	switch(error) {
 		case PORT_ERR:
@@ -398,14 +256,16 @@ void parse_cbc_config_error(int error)
 	}
 }
 
-void init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt, cbc_build_t *cbt)
+void
+init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/)
 {
 	init_cbc_config_values(cct);
 	init_cbc_comm_values(cclt);
-	init_cbc_build_values(cbt);
+/*	init_cbc_build_values(cbt); */
 }
 
-void init_cbc_config_values(cbc_config_t *cbc)
+void
+init_cbc_config_values(cbc_config_t *cbc)
 {
 	sprintf(cbc->db, "cmdb");
 	sprintf(cbc->user, "root");
@@ -423,7 +283,8 @@ void init_cbc_config_values(cbc_config_t *cbc)
 	cbc->cliflag = 0;
 }
 
-void init_cbc_comm_values(cbc_comm_line_t *cbt)
+void
+init_cbc_comm_values(cbc_comm_line_t *cbt)
 {
 	cbt->action = NONE;
 	cbt->server_id = NONE;
@@ -441,8 +302,9 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	snprintf(cbt->arch, MAC_S, "NULL");
 	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
 }
-
-void init_cbc_build_values(cbc_build_t *build_config)
+/*
+void
+init_cbc_build_values(cbc_build_t *build_config)
 {
 	snprintf(build_config->ip_address, COMM_S, "NULL");
 	snprintf(build_config->mac_address, COMM_S, "NULL");
@@ -483,7 +345,8 @@ void init_cbc_build_values(cbc_build_t *build_config)
 	build_config->build_dom = '\0';
 }
 
-void print_cbc_build_ids(cbc_build_t *build)
+void
+print_cbc_build_ids(cbc_build_t *build)
 {
 	fprintf(stderr, "Server: %lu\n", build->server_id);
 	fprintf(stderr, "Build domain: %lu\n", build->bd_id);
@@ -494,7 +357,8 @@ void print_cbc_build_ids(cbc_build_t *build)
 	fprintf(stderr, "Partition Scheme: %lu\n", build->def_scheme_id);
 }
 
-void print_cbc_build_values(cbc_build_t *build_config)
+void
+print_cbc_build_values(cbc_build_t *build_config)
 {
 	fprintf(stderr, "########\nBuild Values\n");
 	fprintf(stderr, "DISK DEVICE: %s\n", build_config->diskdev);
@@ -533,8 +397,9 @@ void print_cbc_build_values(cbc_build_t *build_config)
 	fprintf(stderr, "KEYMAP: %s\n", build_config->keymap);
 	fprintf(stderr, "\n");
 }
-
-void print_cbc_command_line_values(cbc_comm_line_t *command_line)
+*/
+void
+print_cbc_command_line_values(cbc_comm_line_t *command_line)
 {
 	fprintf(stderr, "########\nCommand line Values\n");
 	switch (command_line->action) {
@@ -570,7 +435,8 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 	fprintf(stderr, "\n");
 }
 
-void print_cbc_config(cbc_config_t *cbc)
+void
+print_cbc_config(cbc_config_t *cbc)
 {
 	fprintf(stderr, "########\nConfig Values\n");
 	fprintf(stderr, "DB: %s\n", cbc->db);

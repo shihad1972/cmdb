@@ -64,8 +64,8 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	unsigned int port;
 	unsigned long int cliflag;
 } cbc_config_t;
-
-typedef struct cbc_build_dom_t {		/* Hold net info for build domain */
+/*
+typedef struct cbc_build_dom_t {
 	unsigned long int start_ip;
 	unsigned long int end_ip;
 	unsigned long int netmask;
@@ -74,7 +74,7 @@ typedef struct cbc_build_dom_t {		/* Hold net info for build domain */
 	struct cbc_domain_ip_t *iplist;
 } cbc_build_dom_t;
 
-typedef struct cbc_build_t {		/* Hold build configuration values */
+typedef struct cbc_build_t {
 	char ip_address[RANGE_S];
 	char gateway[RANGE_S];
 	char nameserver[RANGE_S];
@@ -115,7 +115,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	struct cbc_build_dom_t *build_dom;
 } cbc_build_t;
 
-typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
+typedef struct pre_disk_part_t {
 	char mount_point[HOST_S + 1];
 	char filesystem[RANGE_S + 1];
 	char log_vol[RANGE_S + 1];
@@ -126,46 +126,46 @@ typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
 	struct pre_disk_part_t *nextpart;
 } pre_disk_part_t;
 
-typedef struct partition_schemes_t {	/* Linked list for partition schemes */
+typedef struct partition_schemes_t {
 	unsigned long int id;
 	char name[CONF_S];
 	unsigned long int lvm;
 	struct partition_schemes_t *next;
 } partition_schemes_t;
-
+*/
 int
 parse_cbc_config_file(cbc_config_t *dc, char *config);
 
 void
-init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt, cbc_build_t *cbt);
+init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/);
 
 void
 init_cbc_config_values(cbc_config_t *dc);
 
 void
 init_cbc_comm_values(cbc_comm_line_t *cbt);
-
+/*
 void
 init_cbc_build_values(cbc_build_t *build_config);
-
+*/
 void
 parse_cbc_config_error(int error);
 
 void
 print_cbc_config(cbc_config_t *cbc);
-
+/*
 void
 print_cbc_build_values(cbc_build_t *build_config);
 
 void
 print_cbc_build_ids(cbc_build_t *build_config);
-
+*/
 void
 print_cbc_command_line_values(cbc_comm_line_t *command_line);
 
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
-
+/*
 int
 get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 
@@ -285,5 +285,5 @@ insert_build_partitions(cbc_config_t *config, cbc_build_t *cbt);
 
 int
 insert_disk_device(cbc_config_t *config, cbc_build_t *cbt);
-
+*/
 #endif
