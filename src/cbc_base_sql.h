@@ -26,14 +26,69 @@
 # define __CBC_BASE_SQL_H
 # include "../config.h"
 
+extern const char *sql_select[];
+extern const char *sql_insert[];
+extern const char *sql_search[];
+extern const char *sql_update[];
+extern const char *sql_delete[];
+extern const unsigned int select_fields[];
+extern const unsigned int insert_fields[];
+extern const unsigned int search_args[];
+extern const unsigned int search_fields[];
+extern const unsigned int update_args[];
+extern const unsigned int update_fields[];
+extern const unsigned int delete_args[];
+extern const unsigned int delete_fields[];
 
+# ifdef HAVE_MYSQL
+extern const int mysql_inserts[][25];
+# endif /* HAVE_MYSQL */
+
+enum {			/* SELECT statements */
+	BOOT_LINE = 1,
+	BUILD = 2,
+	BUILD_DOMAIN = 4,
+	BUILD_IP = 8,
+	BUILD_OS = 16,
+	BUILD_TYPE = 32,
+	DISK_DEV = 64,
+	LOCALE = 128,
+	BPACKAGE = 256,
+	DPART = 512,
+	SPART = 1024,
+	SSCHEME = 2048,
+	CSERVER = 4096,
+	VARIENT = 8192,
+	VMHOST = 16384
+};
+
+enum {			/* SELECT and INSERT Indices */
+	BOOT_LINES = 0,
+	BUILDS,
+	BUILD_DOMAINS,
+	BUILD_IPS,
+	BUILD_OSS,
+	BUILD_TYPES,
+	DISK_DEVS,
+	LOCALES,
+	BPACKAGES,
+	DPARTS,
+	SPARTS,
+	SSCHEMES,
+	CSERVERS,
+	VARIENTS,
+	VMHOSTS
+};
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
-
 void
 cmdb_mysql_init(cbc_config_t *dc, MYSQL *cmdb_mysql);
 
 # endif /* HAVE_MYSQL */
 
+# ifdef HAVE_SQLITE3
+#  include <sqlite3.h>
+
+# endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */
