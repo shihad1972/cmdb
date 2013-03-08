@@ -17,10 +17,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  cbc_base_sql.c:
+ *  cbc_data.c:
  *
- *  Contains functions which will fill up data structs based on the parameters
- *  supplied. Will also contian conditional code base on database type.
+ *  Contains functions to initalise the various data structs and clean them up.
  */
 
 #include "../config.h"
@@ -52,6 +51,41 @@ init_cbc_struct (cbc_t *cbc)
 }
 
 void
+clean_cbc_struct (cbc_t *cbc)
+{
+	if (cbc->bootl)
+		clean_boot_line(cbc->bootl);
+	if (cbc->build)
+		clean_build_struct(cbc->build);
+	if (cbc->bdom)
+		clean_build_domain(cbc->bdom);
+	if (cbc->bip)
+		clean_build_ip(cbc->bip);
+	if (cbc->bos)
+		clean_build_os(cbc->bos);
+	if (cbc->btype)
+		clean_build_type(cbc->btype);
+	if (cbc->diskd)
+		clean_disk_dev(cbc->diskd);
+	if (cbc->locale)
+		clean_locale(cbc->locale);
+	if (cbc->package)
+		clean_package(cbc->package);
+	if (cbc->dpart)
+		clean_pre_part(cbc->dpart);
+	if (cbc->spart)
+		clean_pre_part(cbc->spart);
+	if (cbc->sscheme)
+		clean_seed_scheme(cbc->sscheme);
+	if (cbc->server)
+		clean_cbc_server(cbc->server);
+	if (cbc->varient)
+		clean_varient(cbc->varient);
+	if (cbc->vmhost)
+		clean_vm_hosts(cbc->vmhost);
+}
+
+void
 init_boot_line(cbc_boot_line_t *boot)
 {
 	boot->boot_id = NONE;
@@ -60,6 +94,26 @@ init_boot_line(cbc_boot_line_t *boot)
 	snprintf(boot->os_ver, COMM_S, "NULL");
 	snprintf(boot->boot_line, COMM_S, "NULL");
 	boot->next = '\0';
+}
+
+void
+clean_boot_line(cbc_boot_line_t *boot)
+{
+	cbc_boot_line_t *list, *next;
+
+	if (boot)
+		list = boot;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -75,6 +129,26 @@ init_build_struct(cbc_build_t *build)
 	build->ip_id = NONE;
 	build->locale_id = NONE;
 	build->next = '\0';
+}
+
+void
+clean_build_struct(cbc_build_t *build)
+{
+	cbc_build_t *list, *next;
+
+	if (build)
+		list = build;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -110,6 +184,26 @@ init_build_domain(cbc_build_domain_t *dom)
 }
 
 void
+clean_build_domain(cbc_build_domain_t *dom)
+{
+	cbc_build_domain_t *list, *next;
+
+	if (dom)
+		list = dom;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_build_ip(cbc_build_ip_t *ip)
 {
 	snprintf(ip->host, COMM_S, "NULL");
@@ -118,6 +212,26 @@ init_build_ip(cbc_build_ip_t *ip)
 	ip->ip_id = NONE;
 	ip->bd_id = NONE;
 	ip->next = '\0';
+}
+
+void
+clean_build_ip(cbc_build_ip_t *ip)
+{
+	cbc_build_ip_t *list, *next;
+
+	if (ip)
+		list = ip;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -135,6 +249,26 @@ init_build_os(cbc_build_os_t *os)
 }
 
 void
+clean_build_os(cbc_build_os_t *os)
+{
+	cbc_build_os_t *list, *next;
+
+	if (os)
+		list = os;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_build_type(cbc_build_type_t *type)
 {
 	snprintf(type->alias, COMM_S, "NULL");
@@ -144,6 +278,26 @@ init_build_type(cbc_build_type_t *type)
 	snprintf(type->mirror, COMM_S, "NULL");
 	type->bt_id = NONE;
 	type->next = '\0';
+}
+
+void
+clean_build_type(cbc_build_type_t *type)
+{
+	cbc_build_type_t *list, *next;
+
+	if (type)
+		list = type;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -162,6 +316,26 @@ init_pre_part(cbc_pre_part_t *prep)
 }
 
 void
+clean_pre_part(cbc_pre_part_t *prep)
+{
+	cbc_pre_part_t *list, *next;
+
+	if (prep)
+		list = prep;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_disk_dev(cbc_disk_dev_t *disk)
 {
 	snprintf(disk->device, COMM_S, "NULL");
@@ -169,6 +343,26 @@ init_disk_dev(cbc_disk_dev_t *disk)
 	disk->disk_id = NONE;
 	disk->server_id = NONE;
 	disk->next = '\0';
+}
+
+void
+clean_disk_dev(cbc_disk_dev_t *disk)
+{
+	cbc_disk_dev_t *list, *next;
+
+	if (disk)
+		list = disk;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -186,6 +380,26 @@ init_locale(cbc_locale_t *locale)
 }
 
 void
+clean_locale(cbc_locale_t *locale)
+{
+	cbc_locale_t *list, *next;
+
+	if (locale)
+		list = locale;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_package(cbc_package_t *pack)
 {
 	snprintf(pack->package, COMM_S, "NULL");
@@ -196,12 +410,52 @@ init_package(cbc_package_t *pack)
 }
 
 void
+clean_package(cbc_package_t *pack)
+{
+	cbc_package_t *list, *next;
+
+	if (pack)
+		list = pack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_seed_scheme(cbc_seed_scheme_t *seed)
 {
 	snprintf(seed->name, COMM_S, "NULL");
 	seed->lvm = NONE;
 	seed->def_scheme_id = NONE;
 	seed->next = '\0';
+}
+
+void
+clean_seed_scheme(cbc_seed_scheme_t *seed)
+{
+	cbc_seed_scheme_t *list, *next;
+
+	if (seed)
+		list = seed;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -219,12 +473,52 @@ init_cbc_server(cbc_server_t *server)
 }
 
 void
+clean_cbc_server(cbc_server_t *server)
+{
+	cbc_server_t *list, *next;
+
+	if (server)
+		list = server;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
 init_varient(cbc_varient_t *vari)
 {
 	snprintf(vari->varient, COMM_S, "NULL");
 	snprintf(vari->valias, COMM_S, "NULL");
 	vari->varient_id = NONE;
 	vari->next = '\0';
+}
+
+void
+clean_varient(cbc_varient_t *vari)
+{
+	cbc_varient_t *list, *next;
+
+	if (vari)
+		list = vari;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }
 
 void
@@ -235,4 +529,24 @@ init_vm_hosts(cbc_vm_server_hosts *vm)
 	vm->vm_s_id = NONE;
 	vm->server_id = NONE;
 	vm->next = '\0';
+}
+
+void
+clean_vm_hosts(cbc_vm_server_hosts *vm)
+{
+	cbc_vm_server_hosts *list, *next;
+
+	if (vm)
+		list = vm;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
 }

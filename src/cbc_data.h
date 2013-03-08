@@ -220,45 +220,90 @@ void
 init_cbc_struct (cbc_t *cbc);
 
 void
+clean_cbc_struct (cbc_t *cbc);
+
+void
 init_boot_line(cbc_boot_line_t *boot);
+
+void
+clean_boot_line(cbc_boot_line_t *boot);
 
 void
 init_build_struct(cbc_build_t *build);
 
 void
+clean_build_struct(cbc_build_t *build);
+
+void
 init_build_domain(cbc_build_domain_t *dom);
+
+void
+clean_build_domain(cbc_build_domain_t *dom);
 
 void
 init_build_ip(cbc_build_ip_t *ip);
 
 void
+clean_build_ip(cbc_build_ip_t *ip);
+
+void
 init_build_os(cbc_build_os_t *os);
+
+void
+clean_build_os(cbc_build_os_t *os);
 
 void
 init_build_type(cbc_build_type_t *type);
 
 void
+clean_build_type(cbc_build_type_t *type);
+
+void
 init_pre_part(cbc_pre_part_t *prep);
+
+void
+clean_pre_part(cbc_pre_part_t *prep);
 
 void
 init_disk_dev(cbc_disk_dev_t *disk);
 
 void
+clean_disk_dev(cbc_disk_dev_t *disk);
+
+void
 init_locale(cbc_locale_t *locale);
+
+void
+clean_locale(cbc_locale_t *locale);
 
 void
 init_package(cbc_package_t *pack);
 
 void
+clean_package(cbc_package_t *pack);
+
+void
 init_seed_scheme(cbc_seed_scheme_t *seed);
+
+void
+clean_seed_scheme(cbc_seed_scheme_t *seed);
 
 void
 init_cbc_server(cbc_server_t *server);
 
 void
+clean_cbc_server(cbc_server_t *server);
+
+void
 init_varient(cbc_varient_t *vari);
 
 void
+clean_varient(cbc_varient_t *vari);
+
+void
 init_vm_hosts(cbc_vm_server_hosts *vm);
+
+void
+clean_vm_hosts(cbc_vm_server_hosts *vm);
 
 #endif /* __CBC_DATA_H__ */
