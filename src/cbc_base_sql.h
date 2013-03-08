@@ -41,7 +41,7 @@ extern const unsigned int delete_args[];
 extern const unsigned int delete_fields[];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][25];
+extern const int mysql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
 enum {			/* SELECT statements */
@@ -80,15 +80,57 @@ enum {			/* SELECT and INSERT Indices */
 	VMHOSTS
 };
 
+int
+run_query(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_multiple_query(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_insert(cbc_config_t *config, cbc_t *base, int type);
+
+int
+get_query(int type, const char **query, unsigned int *fields);
+
+int
+run_multiple_query(cbc_config_t *config, cbc_t *base, int type);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
 cmdb_mysql_init(cbc_config_t *dc, MYSQL *cmdb_mysql);
 
+int
+run_query_mysql(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_insert_mysql(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type);
+
+void
+store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields);
+
+void
+store_boot_line_mysql(MYSQL_ROW row, cbc_t *base);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
 #  include <sqlite3.h>
+
+int
+run_query_sqlite(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type);
+
+int
+run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type);
+
+void
+store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fields);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

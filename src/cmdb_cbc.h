@@ -49,6 +49,8 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 } cbc_comm_line_t;
 
 typedef struct cbc_config_t {		/* Hold CMDB configuration values */
+	char dbtype[RANGE_S];
+	char file[CONF_S];
 	char db[CONF_S];
 	char user[CONF_S];
 	char pass[CONF_S];
