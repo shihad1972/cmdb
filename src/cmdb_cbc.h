@@ -42,7 +42,6 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 	char action_type[MAC_S];
 	char arch[MAC_S];
 	short int action;
-	short int usedb;
 	short int server;
 	unsigned long int server_id;
 	unsigned long int os_id;
@@ -66,20 +65,14 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cbc_config_t;
 
-typedef struct cbc_domain_ip_t {
-	unsigned long int ip;
-	char hostname[CONF_S];
-	struct cbc_domain_ip_t *next;
-} cbc_domain_ip_t;
-
-typedef struct cbc_build_domain_t {		/* Hold net info for build domain */
+typedef struct cbc_build_dom_t {		/* Hold net info for build domain */
 	unsigned long int start_ip;
 	unsigned long int end_ip;
 	unsigned long int netmask;
 	unsigned long int gateway;
 	unsigned long int ns;
-	cbc_domain_ip_t *iplist;
-} cbc_build_domain_t;
+	struct cbc_domain_ip_t *iplist;
+} cbc_build_dom_t;
 
 typedef struct cbc_build_t {		/* Hold build configuration values */
 	char ip_address[RANGE_S];
@@ -119,7 +112,7 @@ typedef struct cbc_build_t {		/* Hold build configuration values */
 	unsigned long int boot_id;
 	unsigned long int locale_id;
 	unsigned long int ip_id;
-	cbc_build_domain_t *build_dom;
+	struct cbc_build_dom_t *build_dom;
 } cbc_build_t;
 
 typedef struct pre_disk_part_t {	/* Linked list for disk partitions */
@@ -139,22 +132,6 @@ typedef struct partition_schemes_t {	/* Linked list for partition schemes */
 	unsigned long int lvm;
 	struct partition_schemes_t *next;
 } partition_schemes_t;
-
-typedef struct pre_app_config_t {	/* Linked list for preseed extra */
-	char ldap_url[URL_S];		/* application config */
-	char ldap_dn[URL_S];
-	char ldap_bind[URL_S];
-	char ldap_host[URL_S];
-	char log_server[CONF_S];
-	char nfs_domain[CONF_S];
-	char smtp_server[CONF_S];
-	char xymon_server[CONF_S];
-	short int ldap_ssl;
-	unsigned long int config_ldap;
-	unsigned long int config_log;
-	unsigned long int config_email;
-	unsigned long int config_xymon;
-} pre_app_config_t;
 
 int
 parse_cbc_config_file(cbc_config_t *dc, char *config);
@@ -289,10 +266,10 @@ int
 insert_build_into_database(cbc_config_t *config, cbc_build_t *cbt);
 
 int
-get_build_domain_info_on_id(cbc_config_t *config, cbc_build_domain_t *cbt, unsigned long int id);
+get_build_domain_info_on_id(cbc_config_t *config, cbc_build_dom_t *cbt, unsigned long int id);
 
 int
-get_build_ip(cbc_config_t *config, cbc_build_domain_t *bd);
+get_build_ip(cbc_config_t *config, cbc_build_dom_t *bd);
 
 void
 convert_build_ip_address(cbc_build_t *cbt);

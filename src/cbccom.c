@@ -428,7 +428,6 @@ void init_cbc_comm_values(cbc_comm_line_t *cbt)
 	cbt->action = NONE;
 	cbt->server_id = NONE;
 	cbt->server = NONE;
-	cbt->usedb = 1;
 	cbt->locale = 0;
 	cbt->os_id = 0;
 	snprintf(cbt->name, CONF_S, "NULL");
@@ -553,17 +552,6 @@ void print_cbc_command_line_values(cbc_comm_line_t *command_line)
 			break;
 		default:
 			fprintf(stderr, "Action: Unknown!!\n");
-	}
-	switch (command_line->usedb) {
-		case FALSE:
-			fprintf(stderr, "Usedb: No\n");
-			break;
-		case TRUE:
-			fprintf(stderr, "Usedb: Yes\n");
-			break;
-		default:
-			fprintf(stderr, "Usedb: Unknown!!\n");
-			break;
 	}
 	fprintf(stderr, "Config: %s\n", command_line->config);
 	fprintf(stderr, "Name: %s\n", command_line->name);

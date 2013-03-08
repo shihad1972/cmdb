@@ -14,13 +14,14 @@ dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 		src/mysqlfunc.h src/cmdb_dnsa.h src/dnsa_base_sql.h src/cmdb.h src/checks.h
 
 cbc_SOURCES =	src/cbc.c src/cbccom.c src/errors.c src/checks.c src/base_sql.c\
-		src/cbc_base_sql.c\
+		src/cbc_base_sql.c src/cbc_data.c\
 		src/mysqlfunc.h src/cmdb_cbc.h src/cbc_base_sql.h src/cmdb.h\
-		src/checks.h src/build.h 
+		src/checks.h src/build.h src/cbc_data.h
 
 cmdb_SOURCES =	src/cmdb.c src/cmdbcom.c src/errors.c src/servers.c src/customers.c\
 		src/checks.c src/base_sql.c src/cmdb_base_sql.c\
-		src/mysqlfunc.h src/cmdb_cmdb.h src/cmdb_base_sql.h src/cmdb.h src/checks.h
+		src/mysqlfunc.h src/cmdb_cmdb.h src/cmdb_base_sql.h src/cmdb.h src/checks.h\
+		src/cbc_data.h
 
 all:	$(bin_PROGRAMS)
 
