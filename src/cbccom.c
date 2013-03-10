@@ -54,57 +54,50 @@ parse_cbc_config_file(cbc_config_t *cbc, char *config)
 		fprintf(stderr, "Using default values\n");
 		retval = CONF_ERR;
 	} else {
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
+			sscanf(buff, "DBTYPE=%s", cbc->dbtype);
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PASS=%s", cbc->pass);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
+			sscanf(buff, "FILE=%s", cbc->file);
+		rewind(cnf);
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "HOST=%s", cbc->host);	
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "USER=%s", cbc->user);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DB=%s", cbc->db);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "SOCKET=%s", cbc->socket);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PORT=%s", port);
-		}
 		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "TMPDIR=%s", cbc->tmpdir);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "TFTPDIR=%s", cbc->tftpdir);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PXE=%s", cbc->pxe);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "TOPLEVELOS=%s", cbc->toplevelos);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "PRESEED=%s", cbc->preseed);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "KICKSTART=%s", cbc->kickstart);
-		}
 		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf))) {
+		while ((fgets(buff, CONF_S, cnf)))
 			sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
-		}
 		retval = 0;
 		fclose(cnf);
 	}

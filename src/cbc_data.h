@@ -113,29 +113,6 @@ typedef struct cbc_build_type_t {
 	struct cbc_build_type_t *next;
 } cbc_build_type_t;
 
-typedef union part_id_u {
-	unsigned long int def_part_id;
-	unsigned long int part_id;
-} part_id_u;
-
-typedef union scheme_id_u {
-	unsigned long int def_scheme_id;
-	unsigned long int server_id;
-} scheme_id_u;
-
-typedef struct cbc_pre_part_t {
-	char mount[HOST_S];
-	char fs[RANGE_S];
-	char log_vol[MAC_S];
-	unsigned long int min;
-	unsigned long int max;
-	unsigned long int pri;
-	unsigned long int server_id;
-	union part_id_u id;
-	union scheme_id_u link_id;
-	struct cbc_pre_part_t *next;
-} cbc_pre_part_t;
-
 typedef struct cbc_disk_dev_t {
 	char device[HOST_S];
 	short int lvm;
@@ -163,6 +140,29 @@ typedef struct cbc_package_t {
 	unsigned long int os_id;
 	struct cbc_package_t *next;
 } cbc_package_t;
+
+typedef union part_id_u {
+	unsigned long int def_part_id;
+	unsigned long int part_id;
+} part_id_u;
+
+typedef union scheme_id_u {
+	unsigned long int def_scheme_id;
+	unsigned long int server_id;
+} scheme_id_u;
+
+typedef struct cbc_pre_part_t {
+	char mount[HOST_S];
+	char fs[RANGE_S];
+	char log_vol[MAC_S];
+	unsigned long int min;
+	unsigned long int max;
+	unsigned long int pri;
+	unsigned long int server_id;
+	union part_id_u id;
+	union scheme_id_u link_id;
+	struct cbc_pre_part_t *next;
+} cbc_pre_part_t;
 
 typedef struct cbc_seed_scheme_t {
 	char name[CONF_S];

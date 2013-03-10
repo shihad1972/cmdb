@@ -83,6 +83,7 @@ clean_cbc_struct (cbc_t *cbc)
 		clean_varient(cbc->varient);
 	if (cbc->vmhost)
 		clean_vm_hosts(cbc->vmhost);
+	free(cbc);
 }
 
 void
@@ -301,41 +302,6 @@ clean_build_type(cbc_build_type_t *type)
 }
 
 void
-init_pre_part(cbc_pre_part_t *prep)
-{
-	snprintf(prep->mount, COMM_S, "NULL");
-	snprintf(prep->fs, COMM_S, "NULL");
-	snprintf(prep->log_vol, COMM_S, "NULL");
-	prep->min = NONE;
-	prep->max = NONE;
-	prep->pri = NONE;
-	prep->server_id = NONE;
-	prep->id.part_id = NONE;
-	prep->link_id.server_id = NONE;
-	prep->next = '\0';
-}
-
-void
-clean_pre_part(cbc_pre_part_t *prep)
-{
-	cbc_pre_part_t *list, *next;
-
-	if (prep)
-		list = prep;
-	else
-		return;
-	next = list->next;
-	while (list) {
-		free(list);
-		list = next;
-		if (next)
-			next = next->next;
-		else
-			next = '\0';
-	}
-}
-
-void
 init_disk_dev(cbc_disk_dev_t *disk)
 {
 	snprintf(disk->device, COMM_S, "NULL");
@@ -416,6 +382,41 @@ clean_package(cbc_package_t *pack)
 
 	if (pack)
 		list = pack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+init_pre_part(cbc_pre_part_t *prep)
+{
+	snprintf(prep->mount, COMM_S, "NULL");
+	snprintf(prep->fs, COMM_S, "NULL");
+	snprintf(prep->log_vol, COMM_S, "NULL");
+	prep->min = NONE;
+	prep->max = NONE;
+	prep->pri = NONE;
+	prep->server_id = NONE;
+	prep->id.part_id = NONE;
+	prep->link_id.server_id = NONE;
+	prep->next = '\0';
+}
+
+void
+clean_pre_part(cbc_pre_part_t *prep)
+{
+	cbc_pre_part_t *list, *next;
+
+	if (prep)
+		list = prep;
 	else
 		return;
 	next = list->next;

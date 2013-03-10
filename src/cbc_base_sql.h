@@ -112,8 +112,33 @@ run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type);
 void
 store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields);
 
+int
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base);
+
 void
 store_boot_line_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_build_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_build_domain_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_build_ip_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_build_os_mysql(MYSQL_ROW row, cbc_t *base);
+
+
+void
+store_build_type_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_locale_mysql(MYSQL_ROW row, cbc_t *base);
 
 # endif /* HAVE_MYSQL */
 
@@ -131,6 +156,33 @@ run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type);
 
 void
 store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fields);
+
+int
+setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type);
+
+void
+store_boot_line_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_build_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_build_domain_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_build_ip_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_build_os_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_build_type_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_locale_sqlite(sqlite3_stmt *state, cbc_t *base);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

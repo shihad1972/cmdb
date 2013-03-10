@@ -190,7 +190,7 @@ run_query(cbc_config_t *config, cbc_t *base, int type)
 		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
 		return DB_TYPE_INVALID;
 	}
-	
+
 	return NONE;
 }
 
@@ -216,7 +216,7 @@ run_multiple_query(cbc_config_t *config, cbc_t *base, int type)
 		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
 		return DB_TYPE_INVALID;
 	}
-	
+
 	return retval;
 }
 
@@ -249,7 +249,7 @@ int
 get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
-	
+
 	retval = NONE;
 	switch(type) {
 		case BOOT_LINE:
@@ -327,7 +327,7 @@ void
 cmdb_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
-	
+
 	unix_socket = dc->socket;
 	
 	if (!(mysql_init(cbc_mysql))) {
@@ -468,18 +468,58 @@ store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
 				break;
 			store_boot_line_mysql(row, base);
 			break;
+		case BUILD:
+			if (fields != select_fields[BUILDS])
+				break;
+			store_build_mysql(row, base);
+			break;
+		case BUILD_DOMAIN:
+			if (fields != select_fields[BUILD_DOMAINS])
+				break;
+			store_build_domain_mysql(row, base);
+			break;
+		case BUILD_IP:
+			if (fields != select_fields[BUILD_IPS])
+				break;
+			store_build_ip_mysql(row, base);
+			break;
+		case BUILD_OS:
+			if (fields != select_fields[BUILD_OSS])
+				break;
+			store_build_os_mysql(row, base);
+			break;
+		case BUILD_TYPE:
+			if (fields != select_fields[BUILD_TYPES])
+				break;
+			store_build_type_mysql(row, base);
+			break;
+		case DISK_DEV:
+			if (fields != select_fields[DISK_DEVS])
+				break;
+			store_disk_dev_mysql(row, base);
+			break;
+		case LOCALE:
+			if (fields != select_fields[LOCALES])
+				break;
+			store_locale_mysql(row, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type for storing %d\n",  type);
 			break;
 	}
 }
 
+int
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base)
+{
+	return NONE;
+}
+
 void
 store_boot_line_mysql(MYSQL_ROW row, cbc_t *base)
 {
-	int retval;
 	cbc_boot_line_t *boot, *list;
-	
+
 	if (!(boot = malloc(sizeof(cbc_boot_line_t))))
 		report_error(MALLOC_FAIL, "boot in store_boot_line_mysql");
 	init_boot_line(boot);
@@ -488,7 +528,231 @@ store_boot_line_mysql(MYSQL_ROW row, cbc_t *base)
 	snprintf(boot->os_ver, MAC_S, "%s", row[2]);
 	boot->bt_id = strtoul(row[3], NULL, 10);
 	snprintf(boot->boot_line, RBUFF_S, "%s", row[4]);
-	
+	list = base->bootl;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = boot;
+	} else {
+		base->bootl = boot;
+	}
+}
+
+void
+store_build_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_build_t *build, *list;
+
+	if (!(build = malloc(sizeof(cbc_build_t))))
+		report_error(MALLOC_FAIL, "build in store_build_mysql");
+	init_build_struct(build);
+	build->build_id = strtoul(row[0], NULL, 10);
+	snprintf(build->mac_addr, TYPE_S, "%s", row[1]);
+	build->varient_id = strtoul(row[2], NULL, 10);
+	snprintf(build->net_int, RANGE_S, "%s", row[3]);
+	build->server_id = strtoul(row[4], NULL, 10);
+	build->os_id = strtoul(row[5], NULL, 10);
+	build->boot_id = strtoul(row[6], NULL, 10);
+	build->ip_id = strtoul(row[7], NULL, 10);
+	build->locale_id = strtoul(row[8], NULL, 10);
+	list = base->build;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = build;
+	} else {
+		base->build = build;
+	}
+}
+
+void
+store_build_domain_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_build_domain_t *dom, *list;
+
+	if (!(dom = malloc(sizeof(cbc_build_domain_t))))
+		report_error(MALLOC_FAIL, "dom in store_build_domain_mysql");
+	init_build_domain(dom);
+	dom->bd_id = strtoul(row[0], NULL, 10);
+	dom->start_ip = strtoul(row[1], NULL, 10);
+	dom->end_ip = strtoul(row[2], NULL, 10);
+	dom->netmask = strtoul(row[3], NULL, 10);
+	dom->gateway = strtoul(row[4], NULL, 10);
+	dom->ns = strtoul(row[5], NULL, 10);
+	snprintf(dom->domain, RBUFF_S, "%s", row[6]);
+	snprintf(dom->country, RANGE_S, "%s", row[7]);
+	snprintf(dom->language, RANGE_S, "%s", row[8]);
+	snprintf(dom->keymap, RANGE_S, "%s", row[9]);
+	if (strncmp("0", row[11], CH_S) == 0) {
+		dom->config_ntp = 0;
+	} else {
+		snprintf(dom->ntp_server, HOST_S, "%s", row[10]);
+		dom->config_ntp = 1;
+	}
+	if (strncmp("0", row[17], CH_S) == 0) {
+		dom->config_ldap = 0;
+	} else {
+		snprintf(dom->ldap_server, URL_S, "%s", row[12]);
+		snprintf(dom->ldap_url, URL_S, "%s", row[13]);
+		snprintf(dom->ldap_dn, URL_S, "%s", row[15]);
+		snprintf(dom->ldap_bind, URL_S, "%s", row[16]);
+		dom->config_ldap = 1;
+	}
+	if (strncmp("0", row[14], CH_S) == 0)
+		dom->ldap_ssl = 0;
+	else
+		dom->ldap_ssl = 1;
+	if (strncmp("0", row[19], CH_S) == 0) {
+		dom->config_log = 0;
+	} else {
+		snprintf(dom->log_server, CONF_S, "%s", row[18]);
+		dom->config_log = 1;
+	}
+	if (strncmp("0", row[21], CH_S) == 0) {
+		dom->config_email = 0;
+	} else {
+		snprintf(dom->smtp_server, CONF_S, "%s", row[20]);
+		dom->config_email = 1;
+	}
+	if (strncmp("0", row[23], CH_S) == 0) {
+		dom->config_xymon = 0;
+	} else {
+		snprintf(dom->xymon_server, CONF_S, "%s", row[22]);
+		dom->config_xymon = 1;
+	}
+	snprintf(dom->nfs_domain, CONF_S, "%s", row[24]);
+	list = base->bdom;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = dom;
+	} else {
+		base->bdom = dom;
+	}
+}
+
+void
+store_build_ip_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_build_ip_t *ip, *list;
+
+	if (!(ip = malloc(sizeof(cbc_build_ip_t))))
+		report_error(MALLOC_FAIL, "ip in store_build_ip_mysql");
+	init_build_ip(ip);
+	ip->ip_id = strtoul(row[0], NULL, 10);
+	ip->ip = strtoul(row[1], NULL, 10);
+	snprintf(ip->host, MAC_S, "%s", row[2]);
+	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
+	ip->bd_id = strtoul(row[4], NULL, 10);
+	list = base->bip;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = ip;
+	} else {
+		base->bip = ip;
+	}
+}
+
+void
+store_build_os_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_build_os_t *os, *list;
+
+	if (!(os = malloc(sizeof(cbc_build_os_t))))
+		report_error(MALLOC_FAIL, "os in store_build_os_mysql");
+	init_build_os(os);
+	os->os_id = strtoul(row[0], NULL, 10);
+	snprintf(os->os, MAC_S, "%s", row[1]);
+	snprintf(os->version, MAC_S, "%s", row[2]);
+	snprintf(os->alias, MAC_S, "%s", row[3]);
+	snprintf(os->ver_alias, MAC_S, "%s", row[4]);
+	snprintf(os->arch, MAC_S, "%s", row[5]);
+	os->boot_id = strtoul(row[6], NULL, 10);
+	os->bt_id = strtoul(row[7], NULL, 10);
+	list = base->bos;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = os;
+	} else {
+		base->bos = os;
+	}
+}
+
+void
+store_build_type_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_build_type_t *type, *list;
+
+	if (!(type = malloc(sizeof(cbc_build_type_t))))
+		report_error(MALLOC_FAIL, "type in store_build_type_mysql");
+	init_build_type(type);
+	type->bt_id = strtoul(row[0], NULL, 10);
+	snprintf(type->alias, MAC_S, "%s", row[1]);
+	snprintf(type->build_type, MAC_S, "%s", row[2]);
+	snprintf(type->arg, RANGE_S, "%s", row[3]);
+	snprintf(type->url, CONF_S, "%s", row[4]);
+	snprintf(type->mirror, CONF_S, "%s", row[5]);
+	list = base->btype;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = type;
+	} else {
+		base->btype = type;
+	}
+}
+
+void
+store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_disk_dev_t *disk, *list;
+
+	if (!(disk = malloc(sizeof(cbc_disk_dev_t))))
+		report_error(MALLOC_FAIL, "disk in store_disk_dev_mysql");
+	init_disk_dev(disk);
+	disk->disk_id = strtoul(row[0], NULL, 10);
+	disk->server_id = strtoul(row[1], NULL, 10);
+	snprintf(disk->device, HOST_S, "%s", row[2]);
+	if (strncmp(row[3], "0", CH_S) == 0)
+		disk->lvm = 0;
+	else
+		disk->lvm = 1;
+	list = base->diskd;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = disk;
+	} else {
+		base->diskd = disk;
+	}
+}
+
+void
+store_locale_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_locale_t *loc, *list;
+
+	if (!(loc = malloc(sizeof(cbc_locale_t))))
+		report_error(MALLOC_FAIL, "loc in store_locale_mysql");
+	init_locale(loc);
+	loc->locale_id = strtoul(row[0], NULL, 10);
+	snprintf(loc->locale, MAC_S, "%s", row[1]);
+	snprintf(loc->country, RANGE_S, "%s", row[2]);
+	snprintf(loc->language, RANGE_S, "%s", row[3]);
+	snprintf(loc->keymap, RANGE_S, "%s", row[4]);
+	loc->os_id = strtoul(row[5], NULL, 10);
+	loc->bt_id = strtoul(row[6], NULL, 10);
+	snprintf(loc->timezone, HOST_S, "%s", row[7]);
+	list = base->locale;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = loc;
+	} else {
+		base->locale = loc;
+	}
 }
 
 #endif /* HAVE_MYSQL */
@@ -503,7 +767,7 @@ run_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
 	unsigned int fields;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
-	
+
 	retval = 0;
 	file = config->file;
 	if ((retval = get_query(type, &query, &fields)) != 0) {
@@ -624,9 +888,274 @@ store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fie
 				break;
 			store_boot_line_sqlite(state, base);
 			break;
+		case BUILD:
+			if (fields != select_fields[BUILDS])
+				break;
+			store_build_sqlite(state, base);
+			break;
+		case BUILD_DOMAIN:
+			if (fields != select_fields[BUILD_DOMAINS])
+				break;
+			store_build_domain_sqlite(state, base);
+			break;
+		case BUILD_IP:
+			if (fields != select_fields[BUILD_IPS])
+				break;
+			store_build_ip_sqlite(state, base);
+			break;
+		case BUILD_OS:
+			if (fields != select_fields[BUILD_OSS])
+				break;
+			store_build_os_sqlite(state, base);
+			break;
+		case BUILD_TYPE:
+			if (fields != select_fields[BUILD_TYPES])
+				break;
+			store_build_type_sqlite(state, base);
+			break;
+		case DISK_DEV:
+			if (fields != select_fields[DISK_DEVS])
+				break;
+			store_disk_dev_sqlite(state, base);
+			break;
+		case LOCALE:
+			if (fields != select_fields[LOCALES])
+				break;
+			store_locale_sqlite(state, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type for storing %d\n",  type);
 			break;
+	}
+}
+
+int
+setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type)
+{
+	return NONE;
+}
+
+void
+store_boot_line_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_boot_line_t *boot, *list;
+
+	if (!(boot = malloc(sizeof(cbc_boot_line_t))))
+		report_error(MALLOC_FAIL, "boot in store_boot_line_sqlite");
+	init_boot_line(boot);
+	boot->boot_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(boot->os, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(boot->os_ver, MAC_S, "%s", sqlite3_column_text(state, 2));
+	boot->bt_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(boot->boot_line, MAC_S, "%s", sqlite3_column_text(state, 4));
+	list = base->bootl;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = boot;
+	} else {
+		base->bootl = boot;
+	}
+}
+
+void
+store_build_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_build_t *build, *list;
+
+	if (!(build = malloc(sizeof(cbc_build_t))))
+		report_error(MALLOC_FAIL, "build in store_build_sqlite");
+	init_build_struct(build);
+	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(build->mac_addr, TYPE_S, "%s", sqlite3_column_text(state, 1));
+	build->varient_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	snprintf(build->net_int, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	build->server_id = (unsigned long int) sqlite3_column_int64(state, 4);
+	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	build->boot_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 8);
+	list = base->build;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = build;
+	} else {
+		base->build = build;
+	}
+}
+
+void
+store_build_domain_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_build_domain_t *dom, *list;
+
+	if (!(dom = malloc(sizeof(cbc_build_domain_t))))
+		report_error(MALLOC_FAIL, "dom in store_build_domain_sqlite");
+	init_build_domain(dom);
+	dom->bd_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	dom->start_ip = (unsigned long int) sqlite3_column_int64(state, 1);
+	dom->end_ip = (unsigned long int) sqlite3_column_int64(state, 2);
+	dom->netmask = (unsigned long int) sqlite3_column_int64(state, 3);
+	dom->gateway = (unsigned long int) sqlite3_column_int64(state, 4);
+	dom->ns = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(dom->domain, RBUFF_S, "%s", sqlite3_column_text(state, 6));
+	snprintf(dom->country, RBUFF_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(dom->language, RBUFF_S, "%s", sqlite3_column_text(state, 8));
+	snprintf(dom->keymap, RBUFF_S, "%s", sqlite3_column_text(state, 9));
+	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 11)) != 0)
+		snprintf(dom->ntp_server, RBUFF_S, "%s",
+		 sqlite3_column_text(state, 10));
+	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 17)) != 0) {
+		snprintf(dom->ldap_server, URL_S, "%s", 
+			 sqlite3_column_text(state, 12));
+		snprintf(dom->ldap_url, URL_S, "%s", 
+			 sqlite3_column_text(state, 13));
+		snprintf(dom->ldap_dn, URL_S, "%s",
+			 sqlite3_column_text(state, 15));
+		snprintf(dom->ldap_bind, URL_S, "%s",
+			 sqlite3_column_text(state, 16));
+	}
+	dom->ldap_ssl = (short int) sqlite3_column_int(state, 14);
+	if ((dom->config_log = (short int) sqlite3_column_int(state, 19)) != 0)
+		snprintf(dom->log_server, CONF_S, "%s",
+			 sqlite3_column_text(state, 18));
+	if ((dom->config_email = (short int) sqlite3_column_int(state, 21)) != 0)
+		snprintf(dom->smtp_server, CONF_S, "%s",
+			 sqlite3_column_text(state, 20));
+	if ((dom->config_xymon = (short int) sqlite3_column_int(state, 23)) != 0)
+		snprintf(dom->xymon_server, CONF_S, "%s",
+			 sqlite3_column_text(state, 22));
+	snprintf(dom->nfs_domain, CONF_S, "%s",
+		 sqlite3_column_text(state, 24));
+	list = base->bdom;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = dom;
+	} else {
+		base->bdom = dom;
+	}
+}
+
+void
+store_build_ip_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_build_ip_t *ip, *list;
+
+	if (!(ip = malloc(sizeof(cbc_build_ip_t))))
+		report_error(MALLOC_FAIL, "ip in store_build_ip_sqlite");
+	init_build_ip(ip);
+	ip->ip_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	ip->ip = (unsigned long int) sqlite3_column_int64(state, 1);
+	snprintf(ip->host, MAC_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(ip->domain, RBUFF_S, "%s", sqlite3_column_text(state, 3));
+	ip->bd_id = (unsigned long int) sqlite3_column_int64(state, 4);
+	list = base->bip;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = ip;
+	} else {
+		base->bip = ip;
+	}
+}
+
+void
+store_build_os_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_build_os_t *os, *list;
+
+	if (!(os = malloc(sizeof(cbc_build_os_t))))
+		report_error(MALLOC_FAIL, "os in store_build_os_sqlite");
+	init_build_os(os);
+	os->os_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(os->os, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(os->version, MAC_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(os->alias, MAC_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(os->ver_alias, MAC_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(os->arch, MAC_S, "%s", sqlite3_column_text(state, 5));
+	os->boot_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	list = base->bos;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = os;
+	} else {
+		base->bos = os;
+	}
+}
+
+void
+store_build_type_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_build_type_t *type, *list;
+
+	if (!(type = malloc(sizeof(cbc_build_type_t))))
+		report_error(MALLOC_FAIL, "type in store_build_type_sqlite");
+	init_build_type(type);
+	type->bt_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(type->alias, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(type->build_type, MAC_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(type->arg, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(type->url, CONF_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(type->mirror, RBUFF_S, "%s", sqlite3_column_text(state, 5));
+	list = base->btype;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = type;
+	} else {
+		base->btype = type;
+	}
+}
+
+void
+store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_disk_dev_t *disk, *list;
+
+	if (!(disk = malloc(sizeof(cbc_disk_dev_t))))
+		report_error(MALLOC_FAIL, "disk in store_disk_dev_sqlite");
+	init_disk_dev(disk);
+	disk->disk_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	disk->server_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	snprintf(disk->device, HOST_S, "%s", sqlite3_column_text(state, 2));
+	disk->lvm = (short int) sqlite3_column_int(state, 3);
+	list = base->diskd;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = disk;
+	} else {
+		base->diskd = disk;
+	}
+}
+
+void
+store_locale_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_locale_t *loc, *list;
+
+	if (!(loc = malloc(sizeof(cbc_locale_t))))
+		report_error(MALLOC_FAIL, "loc in store_locale_sqlite");
+	init_locale(loc);
+	loc->locale_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(loc->locale, MAC_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(loc->country, RANGE_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(loc->language, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(loc->keymap, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	loc->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	loc->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 7));
+	list = base->locale;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = loc;
+	} else {
+		base->locale = loc;
 	}
 }
 
