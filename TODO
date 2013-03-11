@@ -1,16 +1,33 @@
-Currently we can query a mysql database. Values can be taken from a config
-file, which for the moment has to be /etc/dnsa/dnsa/conf
+*** CMDB ***
+We can add, delete, list and display servers, customers, services. We can also
+do this for contacts for customers and also vm_host_servers. 
+
+*** DNSA ***
+
+Currently we can query a mysql OR SQLite database. Values can be taken from a 
+config file, which for the moment has to be /etc/dnsa/dnsa/conf
 
 So we can write the zone files (forward and reverse) and also write the
 config files for these forward and reverse zones. This includes some sanity
 checking of the zonefiles and config files.
 
 **** Features *****
-** Add records to the database - use ncurses?
+** Add records to the database - use ncurses? Done - commit 7622adc
 ** Automatically create reverse zone(s) in the database (via cron??) Done - commit 0df2265
 ** Specify different config file on command line
-** Add install script (/usr/local most likely)
+** Add install script (/usr/local most likely) Done - using autotools
 
 **** Coding *****
 ** Farm out config file reading to a separate function in a lib.
 
+*** CBC ***
+I want to split out the various parts of the build configuration into separate
+commands, so for example to add / delete / display build domains use
+cbcbuilddomain, or perhaps cbcbuildd or cbcbdom, cbcos for OS's etc
+
+*** ALL ***
+Need to sort out and install script for the database and decide what tables
+to populate at install time, and how to get the default values from the user
+Currently I am thinking make postinstall or perhaps make dbinstall
+
+Also I will need to write man pages for each command....
