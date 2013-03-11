@@ -43,6 +43,7 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 	char arch[MAC_S];
 	short int action;
 	short int server;
+	short int package;
 	unsigned long int server_id;
 	unsigned long int os_id;
 	unsigned long int locale;

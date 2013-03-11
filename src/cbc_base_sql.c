@@ -503,6 +503,41 @@ store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
 				break;
 			store_locale_mysql(row, base);
 			break;
+		case BPACKAGE:
+			if (fields != select_fields[BPACKAGES])
+				break;
+			store_package_mysql(row, base);
+			break;
+		case DPART:
+			if (fields != select_fields[DPARTS])
+				break;
+			store_dpart_mysql(row, base);
+			break;
+		case SPART:
+			if (fields != select_fields[SPARTS])
+				break;
+			store_spart_mysql(row, base);
+			break;
+		case SSCHEME:
+			if (fields != select_fields[SSCHEMES])
+				break;
+			store_seed_scheme_mysql(row, base);
+			break;
+		case CSERVER:
+			if (fields != select_fields[CSERVERS])
+				break;
+			store_server_mysql(row, base);
+			break;
+		case VARIENT:
+			if (fields != select_fields[VARIENTS])
+				break;
+			store_varient_mysql(row, base);
+			break;
+		case VMHOST:
+			if (fields != select_fields[VMHOSTS])
+				break;
+			store_vmhost_mysql(row, base);
+			break;
 		default:
 			fprintf(stderr, "Unknown type for storing %d\n",  type);
 			break;
@@ -755,6 +790,173 @@ store_locale_mysql(MYSQL_ROW row, cbc_t *base)
 	}
 }
 
+void
+store_package_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_package_t *pack, *list;
+
+	if (!(pack = malloc(sizeof(cbc_package_t))))
+		report_error(MALLOC_FAIL, "pack in store_package_mysql");
+	init_package(pack);
+	pack->pack_id = strtoul(row[0], NULL, 10);
+	snprintf(pack->package, HOST_S, "%s", row[1]);
+	pack->vari_id = strtoul(row[2], NULL, 10);
+	pack->os_id = strtoul(row[3], NULL, 10);
+	list = base->package;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = pack;
+	} else {
+		base->package = pack;
+	}
+}
+
+void
+store_dpart_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_pre_part_t *part, *list;
+
+	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
+	init_pre_part(part);
+	part->id.def_part_id = strtoul(row[0], NULL, 10);
+	part->min= strtoul(row[1], NULL, 10);
+	part->max = strtoul(row[2], NULL, 10);
+	part->pri = strtoul(row[3], NULL, 10);
+	snprintf(part->mount, HOST_S, "%s", row[4]);
+	snprintf(part->fs, RANGE_S, "%s", row[5]);
+	part->link_id.def_scheme_id = strtoul(row[6], NULL, 10);
+	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	list = base->dpart;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = part;
+	} else {
+		base->dpart = part;
+	}
+}
+
+void
+store_spart_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_pre_part_t *part, *list;
+
+	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
+	init_pre_part(part);
+	part->id.part_id = strtoul(row[0], NULL, 10);
+	part->min= strtoul(row[1], NULL, 10);
+	part->max = strtoul(row[2], NULL, 10);
+	part->pri = strtoul(row[3], NULL, 10);
+	snprintf(part->mount, HOST_S, "%s", row[4]);
+	snprintf(part->fs, RANGE_S, "%s", row[5]);
+	part->link_id.server_id = strtoul(row[6], NULL, 10);
+	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	list = base->spart;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = part;
+	} else {
+		base->spart = part;
+	}
+}
+
+void
+store_seed_scheme_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_seed_scheme_t *seed, *list;
+
+	if (!(seed = malloc(sizeof(cbc_seed_scheme_t))))
+		report_error(MALLOC_FAIL, "seed in store_seed_scheme_mysql");
+	init_seed_scheme(seed);
+	seed->def_scheme_id = strtoul(row[0], NULL, 10);
+	snprintf(seed->name, CONF_S, "%s", row[1]);
+	if (strncmp(row[2], "0", CH_S) == 0)
+		seed->lvm = 0;
+	else
+		seed->lvm = 1;
+	list = base->sscheme;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = seed;
+	} else {
+		base->sscheme = seed;
+	}
+}
+
+void
+store_server_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_server_t *server, *list;
+
+	if (!(server = malloc(sizeof(cbc_server_t))))
+		report_error(MALLOC_FAIL, "server in store_server_mysql");
+	init_cbc_server(server);
+	server->server_id = strtoul(row[0], NULL, 10);
+	snprintf(server->vendor, CONF_S, "%s", row[1]);
+	snprintf(server->make, CONF_S, "%s", row[2]);
+	snprintf(server->model, CONF_S, "%s", row[3]);
+	snprintf(server->uuid, CONF_S, "%s", row[4]);
+	server->cust_id = strtoul(row[5], NULL, 10);
+	server->vm_server_id = strtoul(row[6], NULL, 10);
+	snprintf(server->name, MAC_S, "%s", row[7]);
+	list = base->server;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = server;
+	} else {
+		base->server = server;
+	}
+}
+
+void
+store_varient_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_varient_t *vari, *list;
+
+	if (!(vari = malloc(sizeof(cbc_varient_t))))
+		report_error(MALLOC_FAIL, "vari in store_varient_mysql");
+	init_varient(vari);
+	vari->varient_id = strtoul(row[0], NULL, 10);
+	snprintf(vari->varient, HOST_S, "%s", row[1]);
+	snprintf(vari->valias, MAC_S, "%s", row[2]);
+	list = base->varient;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = vari;
+	} else {
+		base->varient = vari;
+	}
+}
+
+void
+store_vmhost_mysql(MYSQL_ROW row, cbc_t *base)
+{
+	cbc_vm_server_hosts *vmhost, *list;
+
+	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts))))
+		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
+	init_vm_hosts(vmhost);
+	vmhost->vm_s_id = strtoul(row[0], NULL, 10);
+	snprintf(vmhost->vm_server, RBUFF_S, "%s", row[1]);
+	snprintf(vmhost->type, HOST_S, "%s", row[2]);
+	vmhost->server_id = strtoul(row[4], NULL, 10);
+	list = base->vmhost;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = vmhost;
+	} else {
+		base->vmhost = vmhost;
+	}
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -922,6 +1124,41 @@ store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fie
 			if (fields != select_fields[LOCALES])
 				break;
 			store_locale_sqlite(state, base);
+			break;
+		case BPACKAGE:
+			if (fields != select_fields[BPACKAGES])
+				break;
+			store_package_sqlite(state, base);
+			break;
+		case DPART:
+			if (fields != select_fields[DPARTS])
+				break;
+			store_dpart_sqlite(state, base);
+			break;
+		case SPART:
+			if (fields != select_fields[SPARTS])
+				break;
+			store_spart_sqlite(state, base);
+			break;
+		case SSCHEME:
+			if (fields != select_fields[SSCHEMES])
+				break;
+			store_seed_scheme_sqlite(state, base);
+			break;
+		case CSERVER:
+			if (fields != select_fields[CSERVERS])
+				break;
+			store_server_sqlite(state, base);
+			break;
+		case VARIENT:
+			if (fields != select_fields[VARIENTS])
+				break;
+			store_varient_sqlite(state, base);
+			break;
+		case VMHOST:
+			if (fields != select_fields[VMHOSTS])
+				break;
+			store_vmhost_sqlite(state, base);
 			break;
 		default:
 			fprintf(stderr, "Unknown type for storing %d\n",  type);
@@ -1156,6 +1393,182 @@ store_locale_sqlite(sqlite3_stmt *state, cbc_t *base)
 		list->next = loc;
 	} else {
 		base->locale = loc;
+	}
+}
+
+void
+store_package_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_package_t *pack, *list;
+
+	if (!(pack = malloc(sizeof(cbc_package_t))))
+		report_error(MALLOC_FAIL, "pack in store_package_sqlite");
+	init_package(pack);
+	pack->pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(pack->package, HOST_S, "%s", sqlite3_column_text(state, 1));
+	pack->vari_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	pack->os_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	list = base->package;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = pack;
+	} else {
+		base->package = pack;
+	}
+}
+
+void
+store_dpart_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_pre_part_t *part, *list;
+
+	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
+	init_pre_part(part);
+	part->id.def_part_id = 
+		(unsigned long int) sqlite3_column_int64(state, 0);
+	part->min = (unsigned long int) sqlite3_column_int64(state, 1);
+	part->max = (unsigned long int) sqlite3_column_int64(state, 2);
+	part->pri = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(part->mount, HOST_S, "%s",
+		 sqlite3_column_text(state, 4));
+	snprintf(part->fs, RANGE_S, "%s", 
+		 sqlite3_column_text(state, 5));
+	part->link_id.def_scheme_id = 
+		(unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(part->log_vol, MAC_S, "%s", 
+		 sqlite3_column_text(state, 7));
+	list = base->dpart;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = part;
+	} else {
+		base->dpart = part;
+	}
+}
+
+void
+store_spart_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_pre_part_t *part, *list;
+
+	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
+	init_pre_part(part);
+	part->id.part_id = 
+		(unsigned long int) sqlite3_column_int64(state, 0);
+	part->min = (unsigned long int) sqlite3_column_int64(state, 1);
+	part->max = (unsigned long int) sqlite3_column_int64(state, 2);
+	part->pri = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(part->mount, HOST_S, "%s",
+		 sqlite3_column_text(state, 4));
+	snprintf(part->fs, RANGE_S, "%s", 
+		 sqlite3_column_text(state, 5));
+	part->link_id.server_id = 
+		(unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(part->log_vol, MAC_S, "%s", 
+		 sqlite3_column_text(state, 7));
+	list = base->spart;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = part;
+	} else {
+		base->spart = part;
+	}
+}
+
+void
+store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_seed_scheme_t *seed, *list;
+
+	if (!(seed = malloc(sizeof(cbc_seed_scheme_t))))
+		report_error(MALLOC_FAIL, "seed in store_seed_scheme_sqlite");
+	init_seed_scheme(seed);
+	seed->def_scheme_id = 
+	   (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(seed->name, CONF_S, "%s",
+		 sqlite3_column_text(state, 1));
+	seed->lvm = (short int) sqlite3_column_int(state, 2);
+	list = base->sscheme;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = seed;
+	} else {
+		base->sscheme = seed;
+	}
+}
+
+void
+store_server_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_server_t *server, *list;
+
+	if (!(server = malloc(sizeof(cbc_server_t))))
+		report_error(MALLOC_FAIL, "server in store_server_sqlite");
+	init_cbc_server(server);
+	server->server_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(server->make, CONF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(server->model, CONF_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(server->uuid, CONF_S, "%s", sqlite3_column_text(state, 4));
+	server->cust_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	server->vm_server_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(server->name, MAC_S, "%s", sqlite3_column_text(state, 7));
+	list = base->server;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = server;
+	} else {
+		base->server = server;
+	}
+}
+
+void
+store_varient_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_varient_t *vari, *list;
+
+	if (!(vari = malloc(sizeof(cbc_varient_t))))
+		report_error(MALLOC_FAIL, "vari in store_varient_sqlite");
+	init_varient(vari);
+	vari->varient_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(vari->varient, HOST_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(vari->valias, MAC_S, "%s", sqlite3_column_text(state, 2));
+	list = base->varient;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = vari;
+	} else {
+		base->varient = vari;
+	}
+}
+
+void
+store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base)
+{
+	cbc_vm_server_hosts *vmhost, *list;
+
+	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts))))
+		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
+	init_vm_hosts(vmhost);
+	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(vmhost->vm_server, RBUFF_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(vmhost->type, HOST_S, "%s", sqlite3_column_text(state, 2));
+	vmhost->server_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	list = base->vmhost;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = vmhost;
+	} else {
+		base->vmhost = vmhost;
 	}
 }
 

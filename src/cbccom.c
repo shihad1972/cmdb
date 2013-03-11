@@ -136,7 +136,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::r:wdac")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::t::wdacg")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -152,31 +152,37 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'p':
 				snprintf(cb->action_type, MAC_S, "partition");
-				snprintf(cb->partition, CONF_S, "%s", optarg);
+				if (optarg)
+					snprintf(cb->partition, CONF_S, "%s", optarg);
 				break;
 			case 'o':
 				snprintf(cb->action_type, MAC_S, "os");
-				snprintf(cb->os, CONF_S, "%s", optarg);
+				if (optarg)
+					snprintf(cb->os, CONF_S, "%s", optarg);
 				break;
 			case 'v':
 				snprintf(cb->action_type, MAC_S, "os_version");
-				snprintf(cb->os_version, MAC_S, "%s", optarg);
+				if (optarg)
+					snprintf(cb->os_version, MAC_S, "%s", optarg);
 				break;
 			case 'b':
 				snprintf(cb->action_type, MAC_S, "build_domain");
-				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+				if (optarg)
+					snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 				break;
 			case 'x':
 				snprintf(cb->action_type, MAC_S, "varient");
-				snprintf(cb->varient, CONF_S, "%s", optarg);
+				if (optarg)
+					snprintf(cb->varient, CONF_S, "%s", optarg);
 				break;
 			case 'l':
 				snprintf(cb->action_type, MAC_S, "locale");
 				if (optarg)
 					cb->locale = strtoul(optarg, NULL, 10);
 				break;
-			case 'r':
-				snprintf(cb->arch, MAC_S, "%s", optarg);
+			case 't':
+				if (optarg)
+					snprintf(cb->arch, MAC_S, "%s", optarg);
 				break;
 			case 'w':
 				cb->action = WRITE_CONFIG;
@@ -190,6 +196,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 			case 'c':
 				cb->action = CREATE_CONFIG;
 				break;
+			case 'g':
+				cb->package = TRUE;
 			default:
 				printf("Unknown option: %c\n", opt);
 				retval = DISPLAY_USAGE;
@@ -284,6 +292,7 @@ init_cbc_comm_values(cbc_comm_line_t *cbt)
 	cbt->server = NONE;
 	cbt->locale = 0;
 	cbt->os_id = 0;
+	cbt->package = 0;
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");

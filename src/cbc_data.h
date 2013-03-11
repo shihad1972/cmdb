@@ -158,7 +158,6 @@ typedef struct cbc_pre_part_t {
 	unsigned long int min;
 	unsigned long int max;
 	unsigned long int pri;
-	unsigned long int server_id;
 	union part_id_u id;
 	union scheme_id_u link_id;
 	struct cbc_pre_part_t *next;
@@ -229,10 +228,16 @@ void
 clean_boot_line(cbc_boot_line_t *boot);
 
 void
+display_boot_line(cbc_t *base);
+
+void
 init_build_struct(cbc_build_t *build);
 
 void
 clean_build_struct(cbc_build_t *build);
+
+void
+display_build_struct(cbc_t *base);
 
 void
 init_build_domain(cbc_build_domain_t *dom);
@@ -241,10 +246,16 @@ void
 clean_build_domain(cbc_build_domain_t *dom);
 
 void
+display_build_domain(cbc_t *base);
+
+void
 init_build_ip(cbc_build_ip_t *ip);
 
 void
 clean_build_ip(cbc_build_ip_t *ip);
+
+void
+display_build_ip(cbc_t *base);
 
 void
 init_build_os(cbc_build_os_t *os);
@@ -253,10 +264,16 @@ void
 clean_build_os(cbc_build_os_t *os);
 
 void
+display_build_os(cbc_t *base);
+
+void
 init_build_type(cbc_build_type_t *type);
 
 void
 clean_build_type(cbc_build_type_t *type);
+
+void
+display_build_type(cbc_t *base);
 
 void
 init_pre_part(cbc_pre_part_t *prep);
@@ -265,10 +282,19 @@ void
 clean_pre_part(cbc_pre_part_t *prep);
 
 void
+display_def_part(cbc_t *base);
+
+void
+display_seed_part(cbc_t *base);
+
+void
 init_disk_dev(cbc_disk_dev_t *disk);
 
 void
 clean_disk_dev(cbc_disk_dev_t *disk);
+
+void
+display_disk_dev(cbc_t *base);
 
 void
 init_locale(cbc_locale_t *locale);
@@ -277,10 +303,16 @@ void
 clean_locale(cbc_locale_t *locale);
 
 void
+display_locale(cbc_t *base);
+
+void
 init_package(cbc_package_t *pack);
 
 void
 clean_package(cbc_package_t *pack);
+
+void
+display_package(cbc_t *base);
 
 void
 init_seed_scheme(cbc_seed_scheme_t *seed);
@@ -289,10 +321,16 @@ void
 clean_seed_scheme(cbc_seed_scheme_t *seed);
 
 void
+display_seed_scheme(cbc_t *base);
+
+void
 init_cbc_server(cbc_server_t *server);
 
 void
 clean_cbc_server(cbc_server_t *server);
+
+void
+display_cbc_server(cbc_t *base);
 
 void
 init_varient(cbc_varient_t *vari);
@@ -301,9 +339,15 @@ void
 clean_varient(cbc_varient_t *vari);
 
 void
+display_varient(cbc_t *base);
+
+void
 init_vm_hosts(cbc_vm_server_hosts *vm);
 
 void
 clean_vm_hosts(cbc_vm_server_hosts *vm);
+
+void
+display_vm_hosts(cbc_t *base);
 
 #endif /* __CBC_DATA_H__ */

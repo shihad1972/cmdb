@@ -404,7 +404,6 @@ init_pre_part(cbc_pre_part_t *prep)
 	prep->min = NONE;
 	prep->max = NONE;
 	prep->pri = NONE;
-	prep->server_id = NONE;
 	prep->id.part_id = NONE;
 	prep->link_id.server_id = NONE;
 	prep->next = '\0';

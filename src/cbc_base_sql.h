@@ -130,7 +130,6 @@ store_build_ip_mysql(MYSQL_ROW row, cbc_t *base);
 void
 store_build_os_mysql(MYSQL_ROW row, cbc_t *base);
 
-
 void
 store_build_type_mysql(MYSQL_ROW row, cbc_t *base);
 
@@ -139,6 +138,27 @@ store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base);
 
 void
 store_locale_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_package_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_dpart_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_spart_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_seed_scheme_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_server_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_varient_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+store_vmhost_mysql(MYSQL_ROW row, cbc_t *base);
 
 # endif /* HAVE_MYSQL */
 
@@ -183,6 +203,27 @@ store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base);
 
 void
 store_locale_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_package_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_dpart_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_spart_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_server_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_varient_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+void
+store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */
