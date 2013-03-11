@@ -98,7 +98,7 @@ run_multiple_query(cbc_config_t *config, cbc_t *base, int type);
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
-cmdb_mysql_init(cbc_config_t *dc, MYSQL *cmdb_mysql);
+cbc_mysql_init(cbc_config_t *dc, MYSQL *cmdb_mysql);
 
 int
 run_query_mysql(cbc_config_t *config, cbc_t *base, int type);

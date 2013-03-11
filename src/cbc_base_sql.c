@@ -324,7 +324,7 @@ get_query(int type, const char **query, unsigned int *fields)
 #ifdef HAVE_MYSQL
 
 void
-cmdb_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
+cbc_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
 
@@ -350,7 +350,7 @@ run_query_mysql(cbc_config_t *config, cbc_t *base, int type)
 	unsigned int fields;
 
 	retval = 0;
-	cmdb_mysql_init(config, &cbc);
+	cbc_mysql_init(config, &cbc);
 	if ((retval = get_query(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
@@ -390,7 +390,7 @@ run_insert_mysql(cbc_config_t *config, cbc_t *base, int type)
 		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
 			return retval;
 	query = sql_insert[type];
-	cmdb_mysql_init(config, &cbc);
+	cbc_mysql_init(config, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
 		return MY_STATEMENT_FAIL;
 	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
