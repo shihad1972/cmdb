@@ -461,7 +461,7 @@ get_error_string(int error, char *errstr)
 			break;
 		case SERVER_BUILD_NOT_FOUND:
 			snprintf(errstr, MAC_S,
-			 "Cannot find a build for the server");
+			 "No server build");
 			break;
 		default:
 			snprintf(errstr, MAC_S,

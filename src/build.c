@@ -50,7 +50,7 @@ display_build_config(cbc_config_t *cbt, cbc_comm_line_t *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | SPART | SSCHEME | VARIENT;
+	  CSERVER | LOCALE | SPART | VARIENT;
 	if ((retval = run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
