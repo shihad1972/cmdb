@@ -48,6 +48,7 @@ display_build_config(cbc_config_t *cbt, cbc_comm_line_t *cml)
 	if (!(details = malloc(sizeof(cbc_t))))
 		report_error(MALLOC_FAIL, "details in display_build_config");
 	init_cbc_struct(cbc);
+	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
 	  CSERVER | LOCALE | SPART | SSCHEME | VARIENT;
 	if ((retval = run_multiple_query(cbt, cbc, query)) != 0) {
@@ -179,26 +180,43 @@ cbc_get_build_details(cbc_t *cbc, cbc_t *details)
 void
 print_build_config(cbc_t *details)
 {
+	char *name = details->server->name;
 	unsigned long int sid = details->server->server_id;
 	char ip[RANGE_S], *addr;
 	uint32_t ip_addr;
 	cbc_pre_part_t *part = details->spart;
 
 	addr = ip;
-	ip_addr = htonl((uint32_t)details->bip->ip);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	if (details->bip) {
+		ip_addr = htonl((uint32_t)details->bip->ip);
+		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	}
 	printf("Build details for server %s\n\n", details->server->name);
 	printf("Build domain:\t%s\n", details->bdom->domain);
-	printf("Build type:\t%s\n", details->btype->build_type);
-	printf("OS:\t\t%s, version %s, arch %s\n", details->bos->os,
-	       details->bos->version, details->bos->arch);
-	printf("Build varient:\t%s\n", details->varient->varient);
-	printf("IP address:\t%s\n", addr);
-	printf("Partition information:\n");
-	while (part) {
-		if (part->link_id.server_id == sid)
-			printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,
-			       part->mount);
-		part = part->next;
+	if (details->btype)
+		printf("Build type:\t%s\n", details->btype->build_type);
+	else
+		printf("No build type associated with %s\n", name);
+	if (details->bos)
+		printf("OS:\t\t%s, version %s, arch %s\n", details->bos->os,
+		 details->bos->version, details->bos->arch);
+	else
+		printf("No build os associated with server %s\n", name);
+	if (details->varient) 
+		printf("Build varient:\t%s\n", details->varient->varient);
+	else
+		printf("No build varient associated with %s\n", name);
+	if (details->bip)
+		printf("IP address:\t%s\n", addr);
+	else
+		printf("No build IP associated with server %s\n", name);
+	if (part) {
+		printf("Partition information:\n");
+		while (part) {
+			if (part->link_id.server_id == sid)
+				printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,
+				 part->mount);
+			part = part->next;
+		}
 	}
 }

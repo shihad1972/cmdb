@@ -459,6 +459,10 @@ get_error_string(int error, char *errstr)
 			snprintf(errstr, MAC_S,
 			 "Cannot insert build IP into DB");
 			break;
+		case SERVER_BUILD_NOT_FOUND:
+			snprintf(errstr, MAC_S,
+			 "Cannot find a build for the server");
+			break;
 		default:
 			snprintf(errstr, MAC_S,
 			 "Unknown error %d", error);

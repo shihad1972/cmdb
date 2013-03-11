@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 		exit(retval);
 	}
 	if (cml->action == DISPLAY_CONFIG)
-		display_build_config(cmc, cml);
+		retval = display_build_config(cmc, cml);
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 /*	print_cbc_command_line_values(cml); */
@@ -151,7 +151,9 @@ int main(int argc, char *argv[])
 	free(cml);
 	if (retval == DISPLAY_USAGE)
 		retval = NONE;
-	if (retval != NONE)
-		printf("Exit with %d\n", retval);
+	if (retval != NONE) {
+		get_error_string(retval, sretval);
+		report_error(CREATE_BUILD_FAILED, sretval);
+	}
 	exit(retval);
 }
