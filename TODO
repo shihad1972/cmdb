@@ -31,3 +31,6 @@ to populate at install time, and how to get the default values from the user
 Currently I am thinking make postinstall or perhaps make dbinstall
 
 Also I will need to write man pages for each command....
+
+I need to write a proper error function if the fields in the SELECT statement
+are not equal to the specified fields. At the moment it just breaks the loop
