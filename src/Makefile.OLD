@@ -14,10 +14,10 @@ LIBS = -lmysqlclient -lpcre -lsqlite3
 DOBJECTS = dnsa.o dnsacom.o errors.o checks.o base_sql.o dnsa_base_sql.o zones.o
 COBJECTS = cmdb.o cmdbcom.o errors.o checks.o servers.o customers.o cmdb_base_sql.o base_sql.o
 #BOBJECTS = cbc.o cbc_base_sql.o errors.o checks.o cbccom.o build_info.o build_add.o build_display.o base_sql.o build_data_struct.o
-BOBJECTS = cbc.o cbccom.o errors.o checks.o base_sql.o cbc_base_sql.o cbc_data.o
+BOBJECTS = cbc.o cbccom.o errors.o checks.o base_sql.o cbc_base_sql.o cbc_data.o build.o
 DHEADERS = mysqlfunc.h cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h
 CHEADERS = mysqlfunc.h cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h
-BHEADERS = mysqlfunc.h cmdb_cbc.h cmdb.h checks.h
+BHEADERS = mysqlfunc.h cmdb_cbc.h cbc_base_sql.h build.h cmdb.h checks.h
 
 all:	dnsa cmdb cbc
 

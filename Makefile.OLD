@@ -16,8 +16,9 @@ dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 
 cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c\
 		src/build_info.c src/build_add.c src/build_display.c\
-		src/base_sql.c src/cbc_data.c\
-		src/cmdb_cbc.h src/cmdb.h src/mysqlfunc.h src/cbc_data.h
+		src/base_sql.c src/cbc_data.c src/build.c\
+		src/cmdb_cbc.h src/cmdb.h src/mysqlfunc.h src/cbc_data.h\
+		src/build.h
 
 cmdb_SOURCES =	src/cmdb.c src/cmdbcom.c src/errors.c src/servers.c\
 		src/customers.c src/checks.c src/base_sql.c\

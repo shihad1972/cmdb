@@ -136,7 +136,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::t::wdacg")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::t::wdac")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -196,8 +196,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 			case 'c':
 				cb->action = CREATE_CONFIG;
 				break;
-			case 'g':
-				cb->package = TRUE;
 			default:
 				printf("Unknown option: %c\n", opt);
 				retval = DISPLAY_USAGE;

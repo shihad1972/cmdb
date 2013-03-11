@@ -31,17 +31,16 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
-/* Added for testing */
+#include "build.h"
+/* Added for testing
 #include "cbc_base_sql.h"
-/* End testing additions */
+ End testing additions */
 #include "checks.h"
 
 int main(int argc, char *argv[])
 {
 	cbc_config_t *cmc;
 	cbc_comm_line_t *cml;
-	cbc_t *cbc;
-/*	cbc_build_t *cbt; */
 	char *cbc_config, sretval[MAC_S];
 	int retval;
 	
@@ -52,21 +51,16 @@ int main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_t))))
 		report_error(MALLOC_FAIL, "cml in cbc.c");
-	if (!(cbc = malloc(sizeof(cbc_t))))
-		report_error(MALLOC_FAIL, "cbc in cbc.c");
-/*	if (!(cbt = malloc(sizeof(cbc_build_t))))
-		report_error(MALLOC_FAIL, "cbt in cbc.c"); */
 	
 	strncpy(cbc_config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	
-	init_all_config(cmc, cml/*, cbt*/);
-	init_cbc_struct(cbc);
+	init_all_config(cmc, cml);
 	
 	retval = parse_cbc_command_line(argc, argv, cml);
 	if (retval < 0) {
 		free(cmc);
 		free(cml);
-/*		free(cbt); */
+		free(cbc_config);
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
 	retval = parse_cbc_config_file(cmc, cbc_config);
@@ -76,10 +70,12 @@ int main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		free(cml);
 		free(cmc);
-/*		free(cbt); */
 		exit(retval);
 	}
-	
+	if (cml->action == DISPLAY_CONFIG)
+		display_build_config(cmc, cml);
+	else
+		printf("Case %d not implemented yet\n", cml->action);
 /*	print_cbc_command_line_values(cml); */
 /*	switch (cml->action) {
 		case WRITE_CONFIG:
@@ -151,13 +147,8 @@ int main(int argc, char *argv[])
 			printf("Case %d not implemented yet\n", cml->action);
 			break;
 	} */
-/* Added for testing 10/03/2013 */
-	run_query(cmc, cbc, 4);
-	clean_cbc_struct(cbc);
-/* End of testing */
 	free(cmc);
 	free(cml);
-/*	free(cbt); */
 	if (retval == DISPLAY_USAGE)
 		retval = NONE;
 	if (retval != NONE)

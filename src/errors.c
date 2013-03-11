@@ -372,8 +372,10 @@ display_cbc_usage(void)
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
 	printf("-w: write build files\n-d: display build details\n");
-	printf("-a: add build options\n-c: create build in database\n\n");
-	printf("Add, display and create options:\n");
+	printf("-m: Modify build options\n-c: create build in database\n\n");
+	printf("Display and write ptions:\n");
+	printf("cbc [ -d | -w ] [ -n | -i |  -u ] <server specifier>\n\n");
+/*	printf("Add, display and create options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-t: arch\n");
 	printf("-b: build domain\n-l: locale\n-x: varient\n-g: packages\n\n");
 	printf("Name options:\n");
@@ -388,8 +390,8 @@ display_cbc_usage(void)
 	printf("One option from at least one group must be provided\n");
 	printf("You can also present one option from both groups\n");
 	printf("cbc -d [-p | -o | -b | -x (-g) | -l ] [-n | -i | -u ] ");
-	printf("[<server_specifier>]\n\n");
-	printf("Create Options:\n");
+	printf("[<server_specifier>]\n\n"); */
+	printf("Create and modify options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
 	printf("<varient> -l<locale_id> -r<arch> [-n | -i | -u ] ");
