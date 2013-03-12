@@ -143,6 +143,7 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	CANNOT_INSERT_DISK_DEVICE = 147,
 	CANNOT_DELETE_BUILD = 148,
 	NO_BOOT_PARTITION = 149,
+	FIELDS_MISMATCH = 150,
 	SQLITE_STATEMENT_FAILED = 151,
 	SQLITE_BIND_FAILED = 152,
 	SQLITE_INSERT_FAILED = 153,
@@ -222,17 +223,6 @@ enum {			/* cbc config file error codes */
 	MULTI_DHCP_ERR = 25
 };
 
-enum {			/* Display codes; use NONE from action codes */
-	SERVER = 1,
-	CUSTOMER = 2,
-	CONTACT = 4,
-	SERVICE = 8,
-	SERVICE_TYPE = 16,
-	HARDWARE = 32,
-	HARDWARE_TYPE = 64,
-	VM_HOST = 128
-};
-
 enum {			/* cmdb Action codes */
 	NONE = 0,
 	DISPLAY = 1,
@@ -306,6 +296,14 @@ void
 display_cbc_usage(void);
 void
 display_dnsa_usage(void);
+/* Database fields query mismatch error functions */
+void
+cbc_query_mismatch(int fields, int required, int query);
+void
+cmdb_query_mismatch(int fields, int required, int query);
+void
+dnsa_query_mismatch(int fields, int required, int query);
+/* Miscellaneous  */
 void
 chomp(char *input);
 int

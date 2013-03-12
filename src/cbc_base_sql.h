@@ -44,42 +44,6 @@ extern const unsigned int delete_fields[];
 extern const int mysql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
-enum {			/* SELECT statements */
-	BOOT_LINE = 1,
-	BUILD = 2,
-	BUILD_DOMAIN = 4,
-	BUILD_IP = 8,
-	BUILD_OS = 16,
-	BUILD_TYPE = 32,
-	DISK_DEV = 64,
-	LOCALE = 128,
-	BPACKAGE = 256,
-	DPART = 512,
-	SPART = 1024,
-	SSCHEME = 2048,
-	CSERVER = 4096,
-	VARIENT = 8192,
-	VMHOST = 16384
-};
-
-enum {			/* SELECT and INSERT Indices */
-	BOOT_LINES = 0,
-	BUILDS,
-	BUILD_DOMAINS,
-	BUILD_IPS,
-	BUILD_OSS,
-	BUILD_TYPES,
-	DISK_DEVS,
-	LOCALES,
-	BPACKAGES,
-	DPARTS,
-	SPARTS,
-	SSCHEMES,
-	CSERVERS,
-	VARIENTS,
-	VMHOSTS
-};
-
 int
 run_query(cbc_config_t *config, cbc_t *base, int type);
 

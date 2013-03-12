@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
+#include "base_sql.h"
 #include "cmdb_base_sql.h"
 
 int
@@ -73,125 +74,92 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 	cmdb_init_hardtype_t(base->hardtype);
 	while ((opt = getopt(argc, argv,
 	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:dlatscehv")) != -1) {
-		switch (opt) {
-			case 's':
-				comp->type = SERVER;
-				break;
-			case 'c':
-				comp->type = CUSTOMER;
-				break;
-			case 't':
-				comp->type = CONTACT;
-				break;
-			case 'e':
-				comp->type = SERVICE;
-				break;
-			case 'h':
-				comp->type = HARDWARE;
-				break;
-			case 'v':
-				comp->type = VM_HOST;
-				break;
-			case 'd':
-				comp->action = DISPLAY;
-				break;
-			case 'l':
-				comp->action = LIST_OBJ;
-				snprintf(comp->name, MAC_S, "all");
-				break;
-			case 'a':
-				comp->action = ADD_TO_DB;
-				if ((comp->type != HARDWARE) &&
-				 (comp->type != SERVICE) && /*
-				 (comp->type != CONTACT) && */
-				 (comp->type != NONE) &&
-				 (strncmp(comp->id, "NULL", COMM_S) == 0))
-					snprintf(comp->id, MAC_S, "NOCOID");
-				break;
-			case 'n':
-				snprintf(comp->name, CONF_S, "%s", optarg);
-				break;
-			case 'i':
-				snprintf(comp->id, CONF_S, "%s", optarg);
-				break;
-			case 'm':
-				snprintf(comp->vmhost, NAME_S, "%s", optarg);
-				break;
-			case 'V':
-				snprintf(base->server->vendor, CONF_S, "%s", optarg);
-				break;
-			case 'M':
-				snprintf(base->server->make, CONF_S, "%s", optarg);
-				break;
-			case 'O':
-				snprintf(base->server->model, CONF_S, "%s", optarg);
-				break;
-			case 'U':
-				snprintf(base->server->uuid, CONF_S, "%s", optarg);
-				break;
-			case 'C':
-				snprintf(base->customer->coid, RANGE_S, "%s", optarg);
-				break;
-			case 'A':
-				snprintf(base->customer->address, NAME_S, "%s", optarg);
-				break;
-			case 'T':
-				snprintf(base->customer->city, HOST_S, "%s", optarg);
-				break;
-			case 'Y':
-				snprintf(base->customer->county, MAC_S, "%s", optarg);
-				break;
-			case 'Z':
-				snprintf(base->customer->postcode, RANGE_S, "%s", optarg);
-				break;
-			case 'N':
-				snprintf(base->contact->name, HOST_S, "%s", optarg);
-				break;
-			case 'P':
-				snprintf(base->contact->phone, MAC_S, "%s", optarg);
-				break;
-			case 'E':
-				snprintf(base->contact->email, HOST_S, "%s", optarg);
-				break;
-			case 'D':
-				if (comp->type == SERVICE) {
-					snprintf(base->service->detail, HOST_S, "%s", optarg);
-				} else if (comp->type == HARDWARE) {
-					snprintf(base->hardware->detail, HOST_S, "%s", optarg);
-				} else {
-					printf("Please supply type before adding options\n");
-					retval = NO_TYPE;
-					return retval;
-				}
-				break;
-			case 'I':
-				if (comp->type == SERVICE) {
-					base->service->service_type_id = strtoul(optarg, NULL, 10);
-				} else if (comp->type == HARDWARE) {
-					base->hardware->ht_id = strtoul(optarg, NULL, 10);
-				} else {
-					printf("Please supply type before adding options\n");
-					retval = NO_TYPE;
-					return retval;
-				}
-				break;
-			case 'L':
-				snprintf(base->service->url, HOST_S, "%s", optarg);
-				break;
-			case 'B':
-				snprintf(base->hardware->device, MAC_S, "%s", optarg);
-				break;
-			case 'S':
-				snprintf(base->servicetype->service, RANGE_S, "%s", optarg);
-				break;
-			case 'H':
-				snprintf(base->hardtype->hclass, HOST_S, "%s", optarg);
-				break;
-			default:
-				printf("Unknown option: %c\n", opt);
-				retval = DISPLAY_USAGE;
+		if (opt == 's') {
+			comp->type = SERVER;
+		} else if (opt == 'c') {
+			comp->type = CUSTOMER;
+		} else if (opt == 't') {
+			comp->type = CONTACT;
+		} else if (opt == 'e') {
+			comp->type = SERVICE;
+		} else if (opt == 'h') {
+			comp->type = HARDWARE;
+		} else if (opt == 'v') {
+			comp->type = VM_HOST;
+		} else if (opt == 'd') {
+			comp->action = DISPLAY;
+		} else if (opt == 'l') {
+			comp->action = LIST_OBJ;
+			snprintf(comp->name, MAC_S, "all");
+		} else if (opt == 'a') {
+			comp->action = ADD_TO_DB;
+			if ((comp->type != HARDWARE) &&
+			 (comp->type != SERVICE) && 
+			 (comp->type != NONE) &&
+			 (strncmp(comp->id, "NULL", COMM_S) == 0))
+				snprintf(comp->id, MAC_S, "NOCOID");
+		} else if (opt == 'n') {
+			snprintf(comp->name, CONF_S, "%s", optarg);
+		} else if (opt == 'i') {
+			snprintf(comp->id, CONF_S, "%s", optarg);
+		} else if (opt == 'm') {
+			snprintf(comp->vmhost, NAME_S, "%s", optarg);
+		} else if (opt == 'V') {
+			snprintf(base->server->vendor, CONF_S, "%s", optarg);
+		} else if (opt == 'M') {
+			snprintf(base->server->make, CONF_S, "%s", optarg);
+		} else if (opt == 'O') {
+			snprintf(base->server->model, CONF_S, "%s", optarg);
+		} else if (opt == 'U') {
+			snprintf(base->server->uuid, CONF_S, "%s", optarg);
+		} else if (opt == 'C') {
+			snprintf(base->customer->coid, RANGE_S, "%s", optarg);
+		} else if (opt == 'A') {
+			snprintf(base->customer->address, NAME_S, "%s", optarg);
+		} else if (opt == 'T') {
+			snprintf(base->customer->city, HOST_S, "%s", optarg);
+		} else if (opt == 'Y') {
+			snprintf(base->customer->county, MAC_S, "%s", optarg);
+		} else if (opt == 'Z') {
+			snprintf(base->customer->postcode, RANGE_S, "%s", optarg);
+		} else if (opt == 'N') {
+			snprintf(base->contact->name, HOST_S, "%s", optarg);
+		} else if (opt == 'P') {
+			snprintf(base->contact->phone, MAC_S, "%s", optarg);
+		} else if (opt == 'E') {
+			snprintf(base->contact->email, HOST_S, "%s", optarg);
+		} else if (opt == 'D') {
+			if (comp->type == SERVICE) {
+				snprintf(base->service->detail, HOST_S, "%s", optarg);
+			} else if (comp->type == HARDWARE) {
+				snprintf(base->hardware->detail, HOST_S, "%s", optarg);
+			} else {
+				printf("Please supply type before adding options\n");
+				retval = NO_TYPE;
 				return retval;
-				break;
+			}
+		} else if (opt == 'I') {
+			if (comp->type == SERVICE) {
+				base->service->service_type_id = strtoul(optarg, NULL, 10);
+			} else if (comp->type == HARDWARE) {
+				base->hardware->ht_id = strtoul(optarg, NULL, 10);
+			} else {
+				printf("Please supply type before adding options\n");
+				retval = NO_TYPE;
+				return retval;
+			}
+		} else if (opt == 'L') {
+			snprintf(base->service->url, HOST_S, "%s", optarg);
+		} else if (opt == 'B') {
+			snprintf(base->hardware->device, MAC_S, "%s", optarg);
+		} else if (opt == 'S') {
+			snprintf(base->servicetype->service, RANGE_S, "%s", optarg);
+		} else if (opt == 'H') {
+			snprintf(base->hardtype->hclass, HOST_S, "%s", optarg);
+		} else {
+			printf("Unknown option: %c\n", opt);
+			retval = DISPLAY_USAGE;
+			return retval;
 		}
 	}
 

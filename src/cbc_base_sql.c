@@ -32,6 +32,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "base_sql.h"
 #include "cbc_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
@@ -251,73 +252,55 @@ get_query(int type, const char **query, unsigned int *fields)
 	int retval;
 
 	retval = NONE;
-	switch(type) {
-		case BOOT_LINE:
-			*query = sql_select[BOOT_LINES];
-			*fields = select_fields[BOOT_LINES];
-			break;
-		case BUILD:
-			*query = sql_select[BUILDS];
-			*fields = select_fields[BUILDS];
-			break;
-		case BUILD_DOMAIN:
-			*query = sql_select[BUILD_DOMAINS];
-			*fields = select_fields[BUILD_DOMAINS];
-			break;
-		case BUILD_IP:
-			*query = sql_select[BUILD_IPS];
-			*fields = select_fields[BUILD_IPS];
-			break;
-		case BUILD_OS:
-			*query = sql_select[BUILD_OSS];
-			*fields = select_fields[BUILD_OSS];
-			break;
-		case BUILD_TYPE:
-			*query = sql_select[BUILD_TYPES];
-			*fields = select_fields[BUILD_TYPES];
-			break;
-		case DISK_DEV:
-			*query = sql_select[DISK_DEVS];
-			*fields = select_fields[DISK_DEVS];
-			break;
-		case LOCALE:
-			*query = sql_select[LOCALES];
-			*fields = select_fields[LOCALES];
-			break;
-		case BPACKAGE:
-			*query = sql_select[BPACKAGES];
-			*fields = select_fields[BPACKAGES];
-			break;
-		case DPART:
-			*query = sql_select[DPARTS];
-			*fields = select_fields[DPARTS];
-			break;
-		case SPART:
-			*query = sql_select[SPARTS];
-			*fields = select_fields[SPARTS];
-			break;
-		case SSCHEME:
-			*query = sql_select[SSCHEMES];
-			*fields = select_fields[SSCHEMES];
-			break;
-		case CSERVER:
-			*query = sql_select[CSERVERS];
-			*fields = select_fields[CSERVERS];
-			break;
-		case VARIENT:
-			*query = sql_select[VARIENTS];
-			*fields = select_fields[VARIENTS];
-			break;
-		case VMHOST:
-			*query = sql_select[VMHOSTS];
-			*fields = select_fields[VMHOSTS];
-			break;
-		default:
-			fprintf(stderr, "Unknown query type %d\n", type);
-			retval = 1;
-			break;
+	if (type == BOOT_LINE) {
+		*query = sql_select[BOOT_LINES];
+		*fields = select_fields[BOOT_LINES];
+	} else if (type == BUILD) {
+		*query = sql_select[BUILDS];
+		*fields = select_fields[BUILDS];
+	} else if (type == BUILD_DOMAIN) {
+		*query = sql_select[BUILD_DOMAINS];
+		*fields = select_fields[BUILD_DOMAINS];
+	} else if (type == BUILD_IP) {
+		*query = sql_select[BUILD_IPS];
+		*fields = select_fields[BUILD_IPS];
+	} else if (type == BUILD_OS) {
+		*query = sql_select[BUILD_OSS];
+		*fields = select_fields[BUILD_OSS];
+	} else if (type == BUILD_TYPE) {
+		*query = sql_select[BUILD_TYPES];
+		*fields = select_fields[BUILD_TYPES];
+	} else if (type == DISK_DEV) {
+		*query = sql_select[DISK_DEVS];
+		*fields = select_fields[DISK_DEVS];
+	} else if (type == LOCALE) {
+		*query = sql_select[LOCALES];
+		*fields = select_fields[LOCALES];
+	} else if (type == BPACKAGE) {
+		*query = sql_select[BPACKAGES];
+		*fields = select_fields[BPACKAGES];
+	} else if (type == DPART) {
+		*query = sql_select[DPARTS];
+		*fields = select_fields[DPARTS];
+	} else if (type == SPART) {
+		*query = sql_select[SPARTS];
+		*fields = select_fields[SPARTS];
+	} else if (type == SSCHEME) {
+		*query = sql_select[SSCHEMES];
+		*fields = select_fields[SSCHEMES];
+	} else if (type == CSERVER) {
+		*query = sql_select[CSERVERS];
+		*fields = select_fields[CSERVERS];
+	} else if (type == VARIENT) {
+		*query = sql_select[VARIENTS];
+		*fields = select_fields[VARIENTS];
+	} else if (type == VMHOST) {
+		*query = sql_select[VMHOSTS];
+		*fields = select_fields[VMHOSTS];
+	} else {
+		fprintf(stderr, "Unknown query type %d\n", type);
+		retval = 1;
 	}
-	
 	return retval;
 }
 

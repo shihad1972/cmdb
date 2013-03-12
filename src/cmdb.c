@@ -38,6 +38,7 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
+#include "base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /*HAVE_LIBPCRE */

@@ -48,53 +48,6 @@ extern const unsigned int delete_arg_type[][1];
 extern const int mysql_inserts[][13];
 # endif /* HAVE_MYSQL */
 
-enum {			/* SELECT statements to use in multiple */
-	ZONE = 1,
-	REV_ZONE = 2,
-	RECORD = 4,
-	REV_RECORD = 8,
-	ALL_A_RECORD = 16,
-	DUPLICATE_A_RECORD = 32,
-	PREFERRED_A = 64,
-	RECORDS_ON_CNAME_TYPE = 128
-};
-
-enum {			/* SELECT and INSERT indexes */
-	ZONES = 0,
-	REV_ZONES,
-	RECORDS,
-	REV_RECORDS,
-	ALL_A_RECORDS,
-	DUPLICATE_A_RECORDS,
-	PREFERRED_AS,
-	RECORDS_ON_CNAME_TYPES
-};
-
-enum {			/* Delete indexes that diverge from SELECT */
-	REV_RECORDS_ON_REV_ZONE = 7,
-	RECORDS_ON_FWD_ZONE = 8
-};
-
-enum {			/* Extended searches */
-	RECORDS_ON_DEST_AND_ID = 0,
-	RECORDS_ON_ZONE
-};
-
-enum {			/* Search indexes and queries */
-	ZONE_ID_ON_NAME = 0,
-	REV_ZONE_ID_ON_NET_RANGE,
-	REV_ZONE_PREFIX
-};
-
-enum {			/* Update indexes */
-	ZONE_VALID_YES = 0,
-	ZONE_UPDATED_YES,
-	ZONE_UPDATED_NO,
-	ZONE_SERIAL,
-	REV_ZONE_VALID_YES,
-	REV_ZONE_SERIAL
-};
-
 int
 run_query(dnsa_config_t *config, dnsa_t *base, int type);
 int

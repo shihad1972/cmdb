@@ -33,153 +33,111 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
+#include "base_sql.h"
 
 void
 report_error(int error, const char *errstr)
 {
 	if (error == ARGC_INVAL) {
 		fprintf(stderr, "Argc is invalid\n");
-		exit(ARGC_INVAL);
 	} else if (error == ARGV_INVAL) {
 		fprintf(stderr, "Argv is invalid\n");
-		exit(ARGV_INVAL);
 	} else if (error == NO_DOMAIN) {
 		fprintf(stderr, "No domain %s was found\n", errstr);
-		exit(NO_DOMAIN);
 	} else if (error == MULTI_DOMAIN) {
 		fprintf(stderr, "Multiple records found for %s\n", errstr);
-		exit(MULTI_DOMAIN);
 	} else if (error == NO_DELIM) {
 		fprintf(stderr, "No delimiter %s found in string\n", errstr);
-		exit(NO_DELIM);
 	} else if (error == NO_RECORDS) {
 		fprintf(stderr, "No records found for the zone %s\n", errstr);
-		exit(NO_RECORDS);
 	} else if (error == NO_FORWARD_RECORDS) {
 		fprintf(stderr, "No records found for forward zone %s\n", errstr);
-		exit(NO_FORWARD_RECORDS);
 	} else if (error == WRONG_ACTION) {
 		fprintf(stderr, "Incorrect action specified\n");
-		exit(WRONG_ACTION);
 	} else if (error == WRONG_TYPE) {
 		fprintf(stderr, "Incorrect domain type specified\n");
-		exit(WRONG_TYPE);
 	} else if (error == DOMAIN_LIST_FAIL) {
 		fprintf(stderr, "No domains were found to list from the database\n");
-		exit(DOMAIN_LIST_FAIL);
 	} else if (error == MY_INIT_FAIL) {
 		fprintf(stderr, "DB initialisation failed with %s\n", errstr);
-		exit(MY_INIT_FAIL);
 	} else if (error == MY_CONN_FAIL) {
 		fprintf(stderr, "Unable to connect to database: %s\n", errstr);
-		exit(MY_CONN_FAIL);
 	} else if (error == MY_QUERY_FAIL) {
 		fprintf(stderr, "Query to database failed with error %s\n", errstr);
-		exit(MY_QUERY_FAIL);
 	} else if (error == MY_STORE_FAIL) {
 		fprintf(stderr, "Unable to store DB result set: %s\n", errstr);
-		exit(MY_STORE_FAIL);
 	} else if (error == MY_INSERT_FAIL) {
 		fprintf(stderr, "Unable to insert into DB:\n%s\n", errstr);
-		exit(MY_INSERT_FAIL);
 	} else if (error == MY_STATEMENT_FAIL) {
 		fprintf(stderr, "DB statment failed with %s\n", errstr);
-		exit(MY_STATEMENT_FAIL);
 	} else if (error == MY_BIND_FAIL) {
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
-		exit (MY_BIND_FAIL);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
-		exit(FILE_O_FAIL);
 	} else if (error == CHKZONE_FAIL) {
 		fprintf(stderr, "Checking the zone %s failed\n", errstr);
-		exit(CHKZONE_FAIL);
 	} else if (error == NO_ZONE_CONFIGURATION) {
 		fprintf(stderr, "There are no dnsa configuration values in the database\n");
-		exit(NO_ZONE_CONFIGURATION);
 	} else if (error == CANNOT_INSERT_ZONE) {
 		fprintf(stderr, "Unable to add zone %s to database", errstr);
-		exit(CANNOT_INSERT_ZONE);
 	} else if (error == CANNOT_INSERT_RECORD) {
 		fprintf(stderr, "Unable to add record %s to database", errstr);
-		exit(CANNOT_INSERT_RECORD);
 	} else if (error == MALLOC_FAIL) {
 		fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
-		exit(MALLOC_FAIL);
 	} else if (error == SERVER_NOT_FOUND) {
 		fprintf(stderr, "Server %s not found in database\n", errstr);
-		exit(SERVER_NOT_FOUND);
 	} else if (error == MULTIPLE_SERVERS) {
 		fprintf(stderr, "Multiple servers with name %s found in database\n", errstr);
-		exit(MULTIPLE_SERVERS);
 	} else if (error == SERVER_ID_NOT_FOUND) {
 		fprintf(stderr, "Server with id %s not found in database\n", errstr);
-		exit(SERVER_ID_NOT_FOUND);
 	} else if (error == MULTIPLE_SERVER_IDS) {
 		fprintf(stderr, "Multiple servers with id %s in database\n\
 		THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
-		exit(MULTIPLE_SERVER_IDS);
 	} else if (error == SERVER_UUID_NOT_FOUND) {
 		fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
-		exit(SERVER_UUID_NOT_FOUND);
 	} else if (error == MULTIPLE_SERVER_UUIDS) {
 		fprintf(stderr, "Multiple servers with uuid %s in database\n\
 		THIS SHOULD NOT HAPPEN. Check your database!\n", errstr);
 	} else if (error == CUSTOMER_NOT_FOUND) {
 		fprintf(stderr, "Customer %s not found\n", errstr);
-		exit(CUSTOMER_NOT_FOUND);
 	} else if (error == MULTIPLE_CUSTOMERS) {
 		fprintf(stderr, "Multiple customers found for %s\n", errstr);
-		exit(MULTIPLE_CUSTOMERS);
 	} else if (error == SERVER_BUILD_NOT_FOUND) {
 		fprintf(stderr, "Build for server id %s not found\n", errstr);
-		exit(SERVER_BUILD_NOT_FOUND);
 	} else if (error == MULTIPLE_SERVER_BUILDS) {
 		fprintf(stderr, "Multiple builds found for server id %s\n", errstr);
-		exit(MULTIPLE_SERVER_BUILDS);
 	} else if (error == SERVER_PART_NOT_FOUND) {
 		fprintf(stderr, "No partition information for server id %s\n", errstr);
-		exit(SERVER_PART_NOT_FOUND);
 	} else if (error == OS_NOT_FOUND) {
 		fprintf(stderr, "No build Operating Systems were found\n");
-		exit(OS_NOT_FOUND);
 	} else if (error == NO_PARTITION_SCHEMES) {
 		fprintf(stderr, "No partition schemes were found\n");
-		exit(NO_PARTITION_SCHEMES);
 	} else if (error == NO_VM_HOSTS) {
 		fprintf(stderr, "No VM server hosts were found\n");
-		exit(NO_VM_HOSTS);
 	} else if (error == NO_CUSTOMERS) {
 		fprintf(stderr, "No customers were found\n");
-		exit(NO_CUSTOMERS);
 	} else if (error == NO_HARDWARE_TYPES) {
 		fprintf(stderr, "No Hardware types were found\n");
-		exit(NO_HARDWARE_TYPES);
 	} else if (error == BUILD_DOMAIN_NOT_FOUND) {
 		fprintf(stderr, "No build domains found\n");
-		exit(BUILD_DOMAIN_NOT_FOUND);
 	} else if (error == CREATE_BUILD_FAILED) {
 		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
-		exit(CREATE_BUILD_FAILED);
 	} else if (error == ID_INVALID) {
 		fprintf(stderr, "ID Invalid\n");
-		exit(ID_INVALID);
 	} else if (error == NAME_INVALID) {
 		fprintf(stderr, "Name %s invalid\n", errstr);
-		exit(NAME_INVALID);
 	} else if (error == NO_LOCALE_FOR_OS) {
 		fprintf(stderr, "No locale for OS %s\n", errstr);
-		exit(NO_LOCALE_FOR_OS);
 	} else if (error == VARIENT_NOT_FOUND) {
 		fprintf(stderr, "No varient %s found\n", errstr);
-		exit(VARIENT_NOT_FOUND);
 	} else if (error == MULTIPLE_VARIENTS) {
 		fprintf(stderr, "Multiple varients found for %s\n", errstr);
-		exit(MULTIPLE_VARIENTS);
+	} else if (error == FIELDS_MISMATCH) {
+		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
-		exit(error);
 	}
+	exit(error);
 }
 
 void
@@ -368,6 +326,21 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "No server build");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
+}
+
+void
+cbc_query_mismatch(int fields, int required, int query)
+{
+}
+
+void
+cmdb_query_mismatch(int fields, int required, int query)
+{
+}
+
+void
+dnsa_query_mismatch(int fields, int required, int query)
+{
 }
 
 void

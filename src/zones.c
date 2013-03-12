@@ -31,6 +31,7 @@
 #include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
+#include "base_sql.h"
 #include "dnsa_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"

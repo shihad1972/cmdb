@@ -137,66 +137,51 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	retval = NONE;
 
 	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::a::wdc")) != -1) {
-		switch (opt) {
-			case 'n':
-				snprintf(cb->name, CONF_S, "%s", optarg);
-				cb->server = TRUE;
-				break;
-			case 'u':
-				snprintf(cb->uuid, CONF_S, "%s", optarg);
-				cb->server = TRUE;
-				break;
-			case 'i':
-				cb->server_id = strtoul(optarg, NULL, 10);
-				cb->server = TRUE;
-				break;
-			case 'p':
-				snprintf(cb->action_type, MAC_S, "partition");
-				if (optarg)
-					snprintf(cb->partition, CONF_S, "%s", optarg);
-				break;
-			case 'o':
-				snprintf(cb->action_type, MAC_S, "os");
-				if (optarg)
-					snprintf(cb->os, CONF_S, "%s", optarg);
-				break;
-			case 'v':
-				snprintf(cb->action_type, MAC_S, "os_version");
-				if (optarg)
-					snprintf(cb->os_version, MAC_S, "%s", optarg);
-				break;
-			case 'b':
-				snprintf(cb->action_type, MAC_S, "build_domain");
-				if (optarg)
-					snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
-				break;
-			case 'x':
-				snprintf(cb->action_type, MAC_S, "varient");
-				if (optarg)
-					snprintf(cb->varient, CONF_S, "%s", optarg);
-				break;
-			case 'l':
-				snprintf(cb->action_type, MAC_S, "locale");
-				if (optarg)
-					cb->locale = strtoul(optarg, NULL, 10);
-				break;
-			case 'a':
-				if (optarg)
-					snprintf(cb->arch, MAC_S, "%s", optarg);
-				break;
-			case 'w':
-				cb->action = WRITE_CONFIG;
-				break;
-			case 'd':
-				cb->action = DISPLAY_CONFIG;
-				break;
-			case 'c':
-				cb->action = CREATE_CONFIG;
-				break;
-			default:
-				printf("Unknown option: %c\n", opt);
-				retval = DISPLAY_USAGE;
-				break; 
+		if (opt == 'n') {
+			snprintf(cb->name, CONF_S, "%s", optarg);
+			cb->server = TRUE;
+		} else if (opt == 'u') {
+			snprintf(cb->uuid, CONF_S, "%s", optarg);
+			cb->server = TRUE;
+		} else if (opt == 'i') {
+			cb->server_id = strtoul(optarg, NULL, 10);
+			cb->server = TRUE;
+		} else if (opt == 'p') {
+			snprintf(cb->action_type, MAC_S, "partition");
+			if (optarg)
+				snprintf(cb->partition, CONF_S, "%s", optarg);
+		} else if (opt == 'o') {
+			snprintf(cb->action_type, MAC_S, "os");
+			if (optarg)
+				snprintf(cb->os, CONF_S, "%s", optarg);
+		} else if (opt == 'v') {
+			snprintf(cb->action_type, MAC_S, "os_version");
+			if (optarg)
+				snprintf(cb->os_version, MAC_S, "%s", optarg);
+		} else if (opt == 'b') {
+			snprintf(cb->action_type, MAC_S, "build_domain");
+			if (optarg)
+				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+		} else if (opt == 'x') {
+			snprintf(cb->action_type, MAC_S, "varient");
+			if (optarg)
+				snprintf(cb->varient, CONF_S, "%s", optarg);
+		} else if (opt == 'l') {
+			snprintf(cb->action_type, MAC_S, "locale");
+			if (optarg)
+				cb->locale = strtoul(optarg, NULL, 10);
+		} else if (opt == 'a') {
+			if (optarg)
+				snprintf(cb->arch, MAC_S, "%s", optarg);
+		} else if (opt == 'w') {
+			cb->action = WRITE_CONFIG;
+		} else if (opt == 'd') {
+			cb->action = DISPLAY_CONFIG;
+		} else if (opt == 'c') {
+			cb->action = CREATE_CONFIG;
+		} else {
+			printf("Unknown option: %c\n", opt);
+			retval = DISPLAY_USAGE;
 		}
 	}
 	if ((cb->action == NONE) && 
@@ -224,32 +209,22 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 void
 parse_cbc_config_error(int error)
 {
-	switch(error) {
-		case PORT_ERR:
-			fprintf(stderr, "Port higher than 65535!\n");
-			break;
-		case TMP_ERR:
-			fprintf(stderr, "Cannot add trailing / to TMPDIR: > 79 characters\n");
-			break;
-		case TFTP_ERR:
-			fprintf(stderr, "Cannot add trailing / to TFTPDIR: > 79 characters\n");
-			break;
-		case PXE_ERR:
-			fprintf(stderr, "Cannot add trailing / to PXE: > 79 characters\n");
-			break;
-		case OS_ERR:
-			fprintf(stderr, "Cannot add trailing / to TOPLEVELOS: > 79 characters\n");
-			break;
-		case PRESEED_ERR:
-			fprintf(stderr, "Cannot add trailing / to PRESEED: > 79 characters\n");
-			break;
-		case KICKSTART_ERR:
-			fprintf(stderr, "Cannot add trailing / to KICKSTART: > 79 characters\n");
-			break;
-		default:
-			fprintf(stderr, "Unkown error code: %d\n", error);
-			break;
-	}
+	if (error == PORT_ERR)
+		fprintf(stderr, "Port higher than 65535!\n");
+	else if (error == TMP_ERR)
+		fprintf(stderr, "Cannot add trailing / to TMPDIR: > 79 characters\n");
+	else if (error == TFTP_ERR)
+		fprintf(stderr, "Cannot add trailing / to TFTPDIR: > 79 characters\n");
+	else if (error == PXE_ERR)
+		fprintf(stderr, "Cannot add trailing / to PXE: > 79 characters\n");
+	else if (error == OS_ERR)
+		fprintf(stderr, "Cannot add trailing / to TOPLEVELOS: > 79 characters\n");
+	else if (error == PRESEED_ERR)
+		fprintf(stderr, "Cannot add trailing / to PRESEED: > 79 characters\n");
+	else if (error == KICKSTART_ERR)
+		fprintf(stderr, "Cannot add trailing / to KICKSTART: > 79 characters\n");
+	else
+		fprintf(stderr, "Unkown error code: %d\n", error);
 }
 
 void
@@ -396,38 +371,32 @@ print_cbc_build_values(cbc_build_t *build_config)
 }
 */
 void
-print_cbc_command_line_values(cbc_comm_line_t *command_line)
+print_cbc_command_line_values(cbc_comm_line_t *cml)
 {
 	fprintf(stderr, "########\nCommand line Values\n");
-	switch (command_line->action) {
-		case WRITE_CONFIG:
-			fprintf(stderr, "Action: Write configuration file\n");
-			break;
-		case DISPLAY_CONFIG:
-			fprintf(stderr, "Action: Display configuration\n");
-			break;
-		case ADD_CONFIG:
-			fprintf(stderr, "Action: Add configuration for build\n");
-			break;
-		case CREATE_CONFIG:
-			fprintf(stderr, "Action: Create build configuration\n");
-			break;
-		default:
-			fprintf(stderr, "Action: Unknown!!\n");
-	}
-	fprintf(stderr, "Config: %s\n", command_line->config);
-	fprintf(stderr, "Name: %s\n", command_line->name);
-	fprintf(stderr, "UUID: %s\n", command_line->uuid);
-	fprintf(stderr, "Server ID: %ld\n", command_line->server_id);
-	fprintf(stderr, "OS ID: %lu\n", command_line->os_id);
-	fprintf(stderr, "OS: %s\n", command_line->os);
-	fprintf(stderr, "OS Version: %s\n", command_line->os_version);
-	fprintf(stderr, "Architecture: %s\n", command_line->arch);
-	fprintf(stderr, "Locale ID: %lu\n", command_line->locale);
-	fprintf(stderr, "Build Domain: %s\n", command_line->build_domain);
-	fprintf(stderr, "Action Type: %s\n", command_line->action_type);
-	fprintf(stderr, "Partition: %s\n", command_line->partition);
-	fprintf(stderr, "Varient: %s\n", command_line->varient);
+	if (cml->action == WRITE_CONFIG)
+		fprintf(stderr, "Action: Write configuration file\n");
+	else if (cml->action == DISPLAY_CONFIG)
+		fprintf(stderr, "Action: Display configuration\n");
+	else if (cml->action == ADD_CONFIG)
+		fprintf(stderr, "Action: Add configuration for build\n");
+	else if (cml->action == CREATE_CONFIG)
+		fprintf(stderr, "Action: Create build configuration\n");
+	else
+		fprintf(stderr, "Action: Unknown!!\n");
+	fprintf(stderr, "Config: %s\n", cml->config);
+	fprintf(stderr, "Name: %s\n", cml->name);
+	fprintf(stderr, "UUID: %s\n", cml->uuid);
+	fprintf(stderr, "Server ID: %ld\n", cml->server_id);
+	fprintf(stderr, "OS ID: %lu\n", cml->os_id);
+	fprintf(stderr, "OS: %s\n", cml->os);
+	fprintf(stderr, "OS Version: %s\n", cml->os_version);
+	fprintf(stderr, "Architecture: %s\n", cml->arch);
+	fprintf(stderr, "Locale ID: %lu\n", cml->locale);
+	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
+	fprintf(stderr, "Action Type: %s\n", cml->action_type);
+	fprintf(stderr, "Partition: %s\n", cml->partition);
+	fprintf(stderr, "Varient: %s\n", cml->varient);
 	
 	fprintf(stderr, "\n");
 }

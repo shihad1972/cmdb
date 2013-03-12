@@ -37,25 +37,6 @@ extern const unsigned int search_args[];
 extern const int mysql_inserts[8][7];
 # endif /* HAVE_MYSQL */
 
-enum {			/* SELECT and INSERT indexes */
-	SERVERS = 0,
-	CUSTOMERS,
-	CONTACTS,
-	SERVICES,
-	SERVICE_TYPES,
-	HARDWARES,
-	HARDWARE_TYPES,
-	VM_HOSTS
-};
-
-enum {			/* Search indexes and queries */
-	SERVER_ID_ON_NAME = 0,
-	CUST_ID_ON_COID,
-	SERV_TYPE_ID_ON_SERVICE,
-	HARD_TYPE_ID_ON_HCLASS,
-	VM_ID_ON_NAME
-};
-
 int
 run_query(cmdb_config_t *config, cmdb_t *base, int type);
 int
