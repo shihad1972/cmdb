@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `seed_schemes`;
 CREATE TABLE `seed_schemes` (
   `def_scheme_id` int(7) NOT NULL AUTO_INCREMENT,
   `scheme_name` varchar(79) NOT NULL,
-  `lvm` int(4) unsigned NOT NULL DEFAULT '0',
+  `lvm` smallint(4) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`def_scheme_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
