@@ -1262,7 +1262,7 @@ run_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 		return retval;
 	}
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
@@ -1557,7 +1557,7 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	query = sql_search[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
@@ -1604,7 +1604,7 @@ run_extended_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type)
 	query = sql_extended_search[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
@@ -1638,7 +1638,7 @@ run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	query = sql_insert[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
@@ -1676,7 +1676,7 @@ run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 	query = sql_update[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
@@ -1731,7 +1731,7 @@ run_delete_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 	query = sql_delete[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);

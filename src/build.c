@@ -192,7 +192,8 @@ print_build_config(cbc_t *details)
 		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
 	}
 	printf("Build details for server %s\n\n", details->server->name);
-	printf("Build domain:\t%s\n", details->bdom->domain);
+	if (details->bdom)
+		printf("Build domain:\t%s\n", details->bdom->domain);
 	if (details->btype)
 		printf("Build type:\t%s\n", details->btype->build_type);
 	else

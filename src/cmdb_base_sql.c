@@ -882,7 +882,7 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 		return retval;
 	}
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
@@ -945,7 +945,7 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	query = sql_search[type];
 
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
@@ -997,7 +997,7 @@ run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	query = sql_insert[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);

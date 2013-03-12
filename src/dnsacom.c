@@ -289,17 +289,12 @@ parse_dnsa_config_file(dnsa_config_t *dc, char *config)
 void
 parse_dnsa_config_error(int error)
 {
-	switch(error) {
-		case PORT_ERR:
-			fprintf(stderr, "Port higher than 65535!\n");
-			break;
-		case DIR_ERR:
-			fprintf(stderr, "Cannot add trailing / to DIR: > 79 characters\n");
-			break;
-		case BIND_ERR:
-			fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
-			break;
-		}
+	if (error == PORT_ERR)
+		fprintf(stderr, "Port higher than 65535!\n");
+	else if (error == DIR_ERR)
+		fprintf(stderr, "Cannot add trailing / to DIR: > 79 characters\n");
+	else if (BIND_ERR)
+		fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
 }
 
 int

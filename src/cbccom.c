@@ -136,7 +136,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 	
 	retval = NONE;
 
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::t::wdac")) != -1) {
+	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::a::wdc")) != -1) {
 		switch (opt) {
 			case 'n':
 				snprintf(cb->name, CONF_S, "%s", optarg);
@@ -180,7 +180,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				if (optarg)
 					cb->locale = strtoul(optarg, NULL, 10);
 				break;
-			case 't':
+			case 'a':
 				if (optarg)
 					snprintf(cb->arch, MAC_S, "%s", optarg);
 				break;
@@ -189,9 +189,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 				break;
 			case 'd':
 				cb->action = DISPLAY_CONFIG;
-				break;
-			case 'a':
-				cb->action = ADD_CONFIG;
 				break;
 			case 'c':
 				cb->action = CREATE_CONFIG;

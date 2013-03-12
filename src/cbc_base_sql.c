@@ -977,7 +977,7 @@ run_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
 		return retval;
 	}
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
@@ -1005,7 +1005,7 @@ run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type)
 	query = sql_insert[type];
 	file = config->file;
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(CANNOT_OPEN_FILE, file);
+		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);

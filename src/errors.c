@@ -37,201 +37,148 @@
 void
 report_error(int error, const char *errstr)
 {
-	switch (error){
-		case ARGC_INVAL:
-			fprintf(stderr, "Argc is invalid\n");
-			exit(ARGC_INVAL);
-			break;
-		case ARGV_INVAL:
-			fprintf(stderr, "Argv is invalid\n");
-			exit(ARGV_INVAL);
-			break;
-		case NO_DOMAIN:
-			fprintf(stderr, "No domain %s was found\n", errstr);
-			exit(NO_DOMAIN);
-			break;
-		case MULTI_DOMAIN:
-			fprintf(stderr, "Multiple records found for %s\n", errstr);
-			exit(MULTI_DOMAIN);
-			break;
-		case NO_DELIM:
-			fprintf(stderr, "No delimiter %s found in string\n", errstr);
-			exit(NO_DELIM);
-			break;
-		case NO_RECORDS:
-			fprintf(stderr, "No records found for the zone %s\n", errstr);
-			exit(NO_RECORDS);
-			break;
-		case NO_FORWARD_RECORDS:
-			fprintf(stderr, "No records found for forward zone %s\n", errstr);
-			exit(NO_FORWARD_RECORDS);
-			break;
-		case WRONG_ACTION:
-			fprintf(stderr, "Incorrect action specified\n");
-			exit(WRONG_ACTION);
-			break;
-		case WRONG_TYPE:
-			fprintf(stderr, "Incorrect domain type specified\n");
-			exit(WRONG_TYPE);
-			break;
-		case DOMAIN_LIST_FAIL:
-			fprintf(stderr, "No domains were found to list from the database\n");
-			exit(DOMAIN_LIST_FAIL);
-			break;
-		case MY_INIT_FAIL:
-			fprintf(stderr, "\
-Initialisation of MySQL connection failed with %s\n", errstr);
-			exit(MY_INIT_FAIL);
-			break;
-		case MY_CONN_FAIL:
-			fprintf(stderr, "Unable to connect to MySQL Database: %s\n", errstr);
-			exit(MY_CONN_FAIL);
-			break;
-		case MY_QUERY_FAIL:
-			fprintf(stderr, "Query to MySQL database failed with error %s\n", errstr);
-			exit(MY_QUERY_FAIL);
-			break;
-		case MY_STORE_FAIL:
-			fprintf(stderr, "Unable to store MySQL result set: %s\n", errstr);
-			exit(MY_STORE_FAIL);
-			break;
-		case MY_INSERT_FAIL:
-			fprintf(stderr, "Unable to insert into MySQL db:\n%s\n", errstr);
-			exit(MY_INSERT_FAIL);
-			break;
-		case MY_STATEMENT_FAIL:
-			fprintf(stderr, "DB statment failed with %s\n", errstr);
-			exit(MY_STATEMENT_FAIL);
-			break;
-		case MY_BIND_FAIL:
-			fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
-			exit (MY_BIND_FAIL);
-			break;
-		case FILE_O_FAIL:
-			fprintf(stderr, "Unable to open file %s\n", errstr);
-			exit(FILE_O_FAIL);
-			break;
-		case CHKZONE_FAIL:
-			fprintf(stderr, "Checking the zone %s failed\n", errstr);
-			exit(CHKZONE_FAIL);
-			break;
-		case NO_ZONE_CONFIGURATION:
-			fprintf(stderr, "There are no dnsa configuration values in the database\n");
-			exit(NO_ZONE_CONFIGURATION);
-			break;
-		case CANNOT_INSERT_ZONE:
-			fprintf(stderr, "Unable to add zone %s to database", errstr);
-			exit(CANNOT_INSERT_ZONE);
-			break;
-		case CANNOT_INSERT_RECORD:
-			fprintf(stderr, "Unable to add record %s to database", errstr);
-			exit(CANNOT_INSERT_RECORD);
-			break;
-		case MALLOC_FAIL:
-			fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
-			exit(MALLOC_FAIL);
-			break;
-		case SERVER_NOT_FOUND:
-			fprintf(stderr, "Server %s not found in database\n", errstr);
-			exit(SERVER_NOT_FOUND);
-			break;
-		case MULTIPLE_SERVERS:
-			fprintf(stderr, "Multiple servers with name %s found in database\n", errstr);
-			exit(MULTIPLE_SERVERS);
-			break;
-		case SERVER_ID_NOT_FOUND:
-			fprintf(stderr, "Server with id %s not found in database\n", errstr);
-			exit(SERVER_ID_NOT_FOUND);
-			break;
-		case MULTIPLE_SERVER_IDS:
-			fprintf(stderr, "Multiple servers with id %s in database\n\
-			THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
-			exit(MULTIPLE_SERVER_IDS);
-			break;
-		case SERVER_UUID_NOT_FOUND:
-			fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
-			exit(SERVER_UUID_NOT_FOUND);
-			break;
-		case MULTIPLE_SERVER_UUIDS:
-			fprintf(stderr, "Multiple servers with uuid %s in database\n\
-			THIS SHOULD NOT HAPPEN. Check your database!\n", errstr);
-			break;
-		case CUSTOMER_NOT_FOUND:
-			fprintf(stderr, "Customer %s not found\n", errstr);
-			exit(CUSTOMER_NOT_FOUND);
-			break;
-		case MULTIPLE_CUSTOMERS:
-			fprintf(stderr, "Multiple customers found for %s\n", errstr);
-			exit(MULTIPLE_CUSTOMERS);
-			break;
-		case SERVER_BUILD_NOT_FOUND:
-			fprintf(stderr, "Build for server id %s not found\n", errstr);
-			exit(SERVER_BUILD_NOT_FOUND);
-			break;
-		case MULTIPLE_SERVER_BUILDS:
-			fprintf(stderr, "Multiple builds found for server id %s\n", errstr);
-			exit(MULTIPLE_SERVER_BUILDS);
-			break;
-		case SERVER_PART_NOT_FOUND:
-			fprintf(stderr, "No partition information for server id %s\n", errstr);
-			exit(SERVER_PART_NOT_FOUND);
-			break;
-		case OS_NOT_FOUND:
-			fprintf(stderr, "No build Operating Systems were found\n");
-			exit(OS_NOT_FOUND);
-			break;
-		case NO_PARTITION_SCHEMES:
-			fprintf(stderr, "No partition schemes were found\n");
-			exit(NO_PARTITION_SCHEMES);
-			break;
-		case NO_VM_HOSTS:
-			fprintf(stderr, "No VM server hosts were found\n");
-			exit(NO_VM_HOSTS);
-			break;
-		case NO_CUSTOMERS:
-			fprintf(stderr, "No customers were found\n");
-			exit(NO_CUSTOMERS);
-			break;
-		case NO_HARDWARE_TYPES:
-			fprintf(stderr, "No Hardware types were found\n");
-			exit(NO_HARDWARE_TYPES);
-			break;
-		case BUILD_DOMAIN_NOT_FOUND:
-			fprintf(stderr, "No build domains found\n");
-			exit(BUILD_DOMAIN_NOT_FOUND);
-			break;
-		case CREATE_BUILD_FAILED:
-			fprintf(stderr, "Create build config failed with error: %s\n", errstr);
-			exit(CREATE_BUILD_FAILED);
-			break;
-		case ID_INVALID:
-			fprintf(stderr, "ID Invalid\n");
-			exit(ID_INVALID);
-			break;
-		case NAME_INVALID:
-			fprintf(stderr, "Name %s invalid\n", errstr);
-			exit(NAME_INVALID);
-			break;
-		case NO_LOCALE_FOR_OS:
-			fprintf(stderr, "No locale for OS %s\n", errstr);
-			exit(NO_LOCALE_FOR_OS);
-			break;
-		case VARIENT_NOT_FOUND:
-			fprintf(stderr, "No varient %s found\n", errstr);
-			exit(VARIENT_NOT_FOUND);
-			break;
-		case MULTIPLE_VARIENTS:
-			fprintf(stderr, "Multiple varients found for %s\n", errstr);
-			exit(MULTIPLE_VARIENTS);
-			break;
-		case CANNOT_OPEN_FILE:
-			fprintf(stderr, "Cannot open file %s\n", errstr);
-			exit(CANNOT_OPEN_FILE);
-			break;
-		default:
-			fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
-			exit(error);
-			break;
+	if (error == ARGC_INVAL) {
+		fprintf(stderr, "Argc is invalid\n");
+		exit(ARGC_INVAL);
+	} else if (error == ARGV_INVAL) {
+		fprintf(stderr, "Argv is invalid\n");
+		exit(ARGV_INVAL);
+	} else if (error == NO_DOMAIN) {
+		fprintf(stderr, "No domain %s was found\n", errstr);
+		exit(NO_DOMAIN);
+	} else if (error == MULTI_DOMAIN) {
+		fprintf(stderr, "Multiple records found for %s\n", errstr);
+		exit(MULTI_DOMAIN);
+	} else if (error == NO_DELIM) {
+		fprintf(stderr, "No delimiter %s found in string\n", errstr);
+		exit(NO_DELIM);
+	} else if (error == NO_RECORDS) {
+		fprintf(stderr, "No records found for the zone %s\n", errstr);
+		exit(NO_RECORDS);
+	} else if (error == NO_FORWARD_RECORDS) {
+		fprintf(stderr, "No records found for forward zone %s\n", errstr);
+		exit(NO_FORWARD_RECORDS);
+	} else if (error == WRONG_ACTION) {
+		fprintf(stderr, "Incorrect action specified\n");
+		exit(WRONG_ACTION);
+	} else if (error == WRONG_TYPE) {
+		fprintf(stderr, "Incorrect domain type specified\n");
+		exit(WRONG_TYPE);
+	} else if (error == DOMAIN_LIST_FAIL) {
+		fprintf(stderr, "No domains were found to list from the database\n");
+		exit(DOMAIN_LIST_FAIL);
+	} else if (error == MY_INIT_FAIL) {
+		fprintf(stderr, "DB initialisation failed with %s\n", errstr);
+		exit(MY_INIT_FAIL);
+	} else if (error == MY_CONN_FAIL) {
+		fprintf(stderr, "Unable to connect to database: %s\n", errstr);
+		exit(MY_CONN_FAIL);
+	} else if (error == MY_QUERY_FAIL) {
+		fprintf(stderr, "Query to database failed with error %s\n", errstr);
+		exit(MY_QUERY_FAIL);
+	} else if (error == MY_STORE_FAIL) {
+		fprintf(stderr, "Unable to store DB result set: %s\n", errstr);
+		exit(MY_STORE_FAIL);
+	} else if (error == MY_INSERT_FAIL) {
+		fprintf(stderr, "Unable to insert into DB:\n%s\n", errstr);
+		exit(MY_INSERT_FAIL);
+	} else if (error == MY_STATEMENT_FAIL) {
+		fprintf(stderr, "DB statment failed with %s\n", errstr);
+		exit(MY_STATEMENT_FAIL);
+	} else if (error == MY_BIND_FAIL) {
+		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
+		exit (MY_BIND_FAIL);
+	} else if (error == FILE_O_FAIL) {
+		fprintf(stderr, "Unable to open file %s\n", errstr);
+		exit(FILE_O_FAIL);
+	} else if (error == CHKZONE_FAIL) {
+		fprintf(stderr, "Checking the zone %s failed\n", errstr);
+		exit(CHKZONE_FAIL);
+	} else if (error == NO_ZONE_CONFIGURATION) {
+		fprintf(stderr, "There are no dnsa configuration values in the database\n");
+		exit(NO_ZONE_CONFIGURATION);
+	} else if (error == CANNOT_INSERT_ZONE) {
+		fprintf(stderr, "Unable to add zone %s to database", errstr);
+		exit(CANNOT_INSERT_ZONE);
+	} else if (error == CANNOT_INSERT_RECORD) {
+		fprintf(stderr, "Unable to add record %s to database", errstr);
+		exit(CANNOT_INSERT_RECORD);
+	} else if (error == MALLOC_FAIL) {
+		fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
+		exit(MALLOC_FAIL);
+	} else if (error == SERVER_NOT_FOUND) {
+		fprintf(stderr, "Server %s not found in database\n", errstr);
+		exit(SERVER_NOT_FOUND);
+	} else if (error == MULTIPLE_SERVERS) {
+		fprintf(stderr, "Multiple servers with name %s found in database\n", errstr);
+		exit(MULTIPLE_SERVERS);
+	} else if (error == SERVER_ID_NOT_FOUND) {
+		fprintf(stderr, "Server with id %s not found in database\n", errstr);
+		exit(SERVER_ID_NOT_FOUND);
+	} else if (error == MULTIPLE_SERVER_IDS) {
+		fprintf(stderr, "Multiple servers with id %s in database\n\
+		THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
+		exit(MULTIPLE_SERVER_IDS);
+	} else if (error == SERVER_UUID_NOT_FOUND) {
+		fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
+		exit(SERVER_UUID_NOT_FOUND);
+	} else if (error == MULTIPLE_SERVER_UUIDS) {
+		fprintf(stderr, "Multiple servers with uuid %s in database\n\
+		THIS SHOULD NOT HAPPEN. Check your database!\n", errstr);
+	} else if (error == CUSTOMER_NOT_FOUND) {
+		fprintf(stderr, "Customer %s not found\n", errstr);
+		exit(CUSTOMER_NOT_FOUND);
+	} else if (error == MULTIPLE_CUSTOMERS) {
+		fprintf(stderr, "Multiple customers found for %s\n", errstr);
+		exit(MULTIPLE_CUSTOMERS);
+	} else if (error == SERVER_BUILD_NOT_FOUND) {
+		fprintf(stderr, "Build for server id %s not found\n", errstr);
+		exit(SERVER_BUILD_NOT_FOUND);
+	} else if (error == MULTIPLE_SERVER_BUILDS) {
+		fprintf(stderr, "Multiple builds found for server id %s\n", errstr);
+		exit(MULTIPLE_SERVER_BUILDS);
+	} else if (error == SERVER_PART_NOT_FOUND) {
+		fprintf(stderr, "No partition information for server id %s\n", errstr);
+		exit(SERVER_PART_NOT_FOUND);
+	} else if (error == OS_NOT_FOUND) {
+		fprintf(stderr, "No build Operating Systems were found\n");
+		exit(OS_NOT_FOUND);
+	} else if (error == NO_PARTITION_SCHEMES) {
+		fprintf(stderr, "No partition schemes were found\n");
+		exit(NO_PARTITION_SCHEMES);
+	} else if (error == NO_VM_HOSTS) {
+		fprintf(stderr, "No VM server hosts were found\n");
+		exit(NO_VM_HOSTS);
+	} else if (error == NO_CUSTOMERS) {
+		fprintf(stderr, "No customers were found\n");
+		exit(NO_CUSTOMERS);
+	} else if (error == NO_HARDWARE_TYPES) {
+		fprintf(stderr, "No Hardware types were found\n");
+		exit(NO_HARDWARE_TYPES);
+	} else if (error == BUILD_DOMAIN_NOT_FOUND) {
+		fprintf(stderr, "No build domains found\n");
+		exit(BUILD_DOMAIN_NOT_FOUND);
+	} else if (error == CREATE_BUILD_FAILED) {
+		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
+		exit(CREATE_BUILD_FAILED);
+	} else if (error == ID_INVALID) {
+		fprintf(stderr, "ID Invalid\n");
+		exit(ID_INVALID);
+	} else if (error == NAME_INVALID) {
+		fprintf(stderr, "Name %s invalid\n", errstr);
+		exit(NAME_INVALID);
+	} else if (error == NO_LOCALE_FOR_OS) {
+		fprintf(stderr, "No locale for OS %s\n", errstr);
+		exit(NO_LOCALE_FOR_OS);
+	} else if (error == VARIENT_NOT_FOUND) {
+		fprintf(stderr, "No varient %s found\n", errstr);
+		exit(VARIENT_NOT_FOUND);
+	} else if (error == MULTIPLE_VARIENTS) {
+		fprintf(stderr, "Multiple varients found for %s\n", errstr);
+		exit(MULTIPLE_VARIENTS);
+	} else {
+		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
+		exit(error);
 	}
 }
 
@@ -242,92 +189,64 @@ display_cmdb_command_line_error(int retval, char *program)
 		program = strrchr(program, '/');
 		program++;
 	}
-	switch (retval){
-		case NO_NAME:
-			fprintf(stderr, "No name specified with -n\n");
-			break;
-		case NO_ID:
-			fprintf(stderr, "No ID specified with -i\n");
-			break;
-		case NO_TYPE:
-			fprintf(stderr, "No type specified on command line\n");
-			break;
-		case NO_ACTION:
-			fprintf(stderr, "No action specified on command line\n");
-			break;
-		case NO_NAME_OR_ID:
-			fprintf(stderr, "No name or ID specified on command line\n");
-			break;
-		case GENERIC_ERROR:
-			fprintf(stderr, "Unknown command line option\n");
-			break;
-		case NO_DOMAIN_NAME:
-			fprintf(stderr, "No domain specified on command line\n");
-			break;
-		case NO_IP_ADDRESS:
-			fprintf(stderr, "No IP address specified on command line\n");
-			break;
-		case NO_HOST_NAME:
-			fprintf(stderr, "No hostname specified on command line\n");
-			break;
-		case NO_RECORD_TYPE:
-			fprintf(stderr, "No record type specified on command line\n");
-			break;
-		case NO_UUID:
-			fprintf(stderr, "No UUID specified on command line\n");
-			break;
-		case NO_MAKE:
-			fprintf(stderr, "No make specified on command line\n");
-			break;
-		case NO_MODEL:
-			fprintf(stderr, "No model specified on command line\n");
-			break;
-		case NO_VENDOR:
-			fprintf(stderr, "No vendor specified on command line\n");
-			break;
-		case NO_ADDRESS:
-			fprintf(stderr, "No address specified on command line\n");
-			break;
-		case NO_CITY:
-			fprintf(stderr, "No city specified on command line\n");
-			break;
-		case NO_COUNTY:
-			fprintf(stderr, "No county specified on command line\n");
-			break;
-		case NO_POSTCODE:
-			fprintf(stderr, "No postcode specified on command line\n");
-			break;
-		case NO_COID:
-			fprintf(stderr, "No coid specified on command line\n");
-			break;
-		case NO_NAME_COID:
-			fprintf(stderr, "No server name or customer coid was specified\n");
-			break;
-		case NO_CONT_NAME:
-			fprintf(stderr, "No name specified with -N\n");
-			break;
-		case NO_PHONE:
-			fprintf(stderr, "No phone no. specified with -P\n");
-			break;
-		case NO_EMAIL:
-			fprintf(stderr, "No email address specified with -E\n");
-			break;
-		case DOMAIN_AND_IP_GIVEN:
-			fprintf(stderr, "Both domain name and IP given on command line\n");
-			break;
-		case DISPLAY_USAGE:
-			if ((strncmp(program, "cmdb", CONF_S) == 0))
-				display_cmdb_usage();
-			else if ((strncmp(program, "cbc", CONF_S) == 0))
-				display_cbc_usage();
-			else if ((strncmp(program, "dnsa", CONF_S) ==0))
-				display_dnsa_usage();
-			exit(retval);
-			break;
-		default:
-			fprintf(stderr, "Unknown error code %d!\n", retval);
-			break;
-	}
+	if (retval == NO_NAME)
+		fprintf(stderr, "No name specified with -n\n");
+	else if (retval == NO_ID)
+		fprintf(stderr, "No ID specified with -i\n");
+	else if (retval == NO_TYPE)
+		fprintf(stderr, "No type specified on command line\n");
+	else if (retval == NO_ACTION)
+		fprintf(stderr, "No action specified on command line\n");
+	else if (retval == NO_NAME_OR_ID)
+		fprintf(stderr, "No name or ID specified on command line\n");
+	else if (retval == GENERIC_ERROR)
+		fprintf(stderr, "Unknown command line option\n");
+	else if (retval == NO_DOMAIN_NAME)
+		fprintf(stderr, "No domain specified on command line\n");
+	else if (retval == NO_IP_ADDRESS)
+		fprintf(stderr, "No IP address specified on command line\n");
+	else if (retval == NO_HOST_NAME)
+		fprintf(stderr, "No hostname specified on command line\n");
+	else if (retval == NO_RECORD_TYPE) 
+		fprintf(stderr, "No record type specified on command line\n");
+	else if (retval == NO_UUID)
+		fprintf(stderr, "No UUID specified on command line\n");
+	else if (retval == NO_MAKE)
+		fprintf(stderr, "No make specified on command line\n");
+	else if (retval == NO_MODEL)
+		fprintf(stderr, "No model specified on command line\n");
+	else if (retval == NO_VENDOR)
+		fprintf(stderr, "No vendor specified on command line\n");
+	else if (retval == NO_ADDRESS)
+		fprintf(stderr, "No address specified on command line\n");
+	else if (retval == NO_CITY)
+		fprintf(stderr, "No city specified on command line\n");
+	else if (retval == NO_COUNTY)
+		fprintf(stderr, "No county specified on command line\n");
+	else if (retval == NO_POSTCODE)
+		fprintf(stderr, "No postcode specified on command line\n");
+	else if (retval == NO_COID)
+		fprintf(stderr, "No coid specified on command line\n");
+	else if (retval == NO_NAME_COID)
+		fprintf(stderr, "No server name or customer coid was specified\n");
+	else if (retval == NO_CONT_NAME)
+		fprintf(stderr, "No name specified with -N\n");
+	else if (retval == NO_PHONE)
+		fprintf(stderr, "No phone no. specified with -P\n");
+	else if (retval == NO_EMAIL)
+		fprintf(stderr, "No email address specified with -E\n");
+	else if (retval == DOMAIN_AND_IP_GIVEN)
+		fprintf(stderr, "Both domain name and IP given on command line\n");
+	else if (retval == DISPLAY_USAGE) {
+		if ((strncmp(program, "cmdb", CONF_S) == 0))
+			display_cmdb_usage();
+		else if ((strncmp(program, "cbc", CONF_S) == 0))
+			display_cbc_usage();
+		else if ((strncmp(program, "dnsa", CONF_S) ==0))
+			display_dnsa_usage();
+		exit(retval);
+	} else
+		fprintf(stderr, "Unknown error code %d!\n", retval);
 	if ((strncmp(program, "cmdb", CONF_S) == 0))
 		printf("Usage: run %s on its own or check man pages\n",
 	       program);
@@ -394,7 +313,7 @@ display_cbc_usage(void)
 	printf("Create and modify options:\n");
 	printf("Use the Display to get these names\n");
 	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
-	printf("<varient> -l<locale_id> -r<arch> [-n | -i | -u ] ");
+	printf("<varient> -l<locale_id> -a<arch> [-n | -i | -u ] ");
 	printf("<server_specifier>\n\n");
 }
 
@@ -429,45 +348,26 @@ display_dnsa_usage(void)
 void
 get_error_string(int error, char *errstr)
 {
-	switch (error) {
-		case SERVER_NOT_FOUND:
-			snprintf(errstr, MAC_S, "Server not found");
-			break;
-		case SERVER_UUID_NOT_FOUND:
-			snprintf(errstr, MAC_S, "Server not found");
-			break;
-		case SERVER_ID_NOT_FOUND:
-			snprintf(errstr, MAC_S, "Server not found");
-			break;
-		case NO_NAME_UUID_ID:
-			snprintf(errstr, MAC_S,
-			 "No server name / id / uuid specified");
-			break;
-		case BUILD_DOMAIN_NOT_FOUND:
-			snprintf(errstr, MAC_S,
-			 "Build domain not found");
-			break;
-		case NO_BUILD_IP:
-			snprintf(errstr, MAC_S,
-			 "No IP's left in build domain");
-			break;
-		case BUILD_IP_IN_USE:
-			snprintf(errstr, MAC_S,
-			 "Build IP already in use");
-			break;
-		case CANNOT_INSERT_IP:
-			snprintf(errstr, MAC_S,
-			 "Cannot insert build IP into DB");
-			break;
-		case SERVER_BUILD_NOT_FOUND:
-			snprintf(errstr, MAC_S,
-			 "No server build");
-			break;
-		default:
-			snprintf(errstr, MAC_S,
-			 "Unknown error %d", error);
-			break;
-	}
+	if (error == SERVER_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Server not found");
+	else if (error == SERVER_UUID_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Server not found");
+	else if (error ==SERVER_ID_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Server not found");
+	else if (error == NO_NAME_UUID_ID)
+		snprintf(errstr, MAC_S, "No server specifier");
+	else if (error == BUILD_DOMAIN_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Build domain not found");
+	else if (error == NO_BUILD_IP) 
+		snprintf(errstr, MAC_S, "No IP's left in build domain");
+	else if (error == BUILD_IP_IN_USE)
+		snprintf(errstr, MAC_S, "Build IP already in use");
+	else if (error == CANNOT_INSERT_IP)
+		snprintf(errstr, MAC_S, "Cannot insert build IP into DB");
+	else if (error == SERVER_BUILD_NOT_FOUND)
+		snprintf(errstr, MAC_S, "No server build");
+	else
+		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }
 
 void
@@ -482,22 +382,16 @@ chomp(char *input)
 void
 display_action_error(short int action)
 {
-	switch(action) {
-		case NONE:
-			fprintf(stderr, "No action specified\n");
-			break;
-		case DISPLAY:
-			fprintf(stderr, "Display failed\n");
-			break;
-		case LIST_OBJ:
-			fprintf(stderr, "Listing failed\n");
-			break;
-		case ADD_TO_DB:
-			fprintf(stderr, "Adding to DB failed\n");
-			break;
-		default:
-			fprintf(stderr, "Unknown error code %d failed\n", action);
-	}
+	if (action == NONE)
+		fprintf(stderr, "No action specified\n");
+	else if (action == DISPLAY)
+		fprintf(stderr, "Display failed\n");
+	else if (action == LIST_OBJ)
+		fprintf(stderr, "Listing failed\n");
+	else if (action == ADD_TO_DB)
+		fprintf(stderr, "Adding to DB failed\n");
+	else
+		fprintf(stderr, "Unknown error code %d failed\n", action);
 }
 
 void 
@@ -509,28 +403,22 @@ display_type_error(short int type)
 		report_error(MALLOC_FAIL, "message in display_type_error");
 	snprintf(message, HOST_S, "\
 Unable to perform requested action on ");
-	switch(type) {
-		case SERVER:
-			strncat(message, "server\n", MAC_S);
-			fprintf(stderr, "%s", message);
-			break;
-		case CUSTOMER:
-			strncat(message, "customer\n", MAC_S);
-			fprintf(stderr, "%s", message);
-			break;
-		case CONTACT:
-			strncat(message, "contact\n", MAC_S);
-			fprintf(stderr, "%s", message);
-			break;
-		case SERVICE:
-			strncat(message, "service\n", MAC_S);
-			fprintf(stderr, "%s", message);
-			break;
-		default:
-			strncat(message, "unknown type ", MAC_S);
-			fprintf(stderr, "%s", message);
-			fprintf(stderr, "%d\n", type);
-			break;
+	if (type == SERVER) {
+		strncat(message, "server\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == CUSTOMER) {
+		strncat(message, "customer\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == CONTACT) {
+		strncat(message, "contact\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == SERVICE) {
+		strncat(message, "service\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else {
+		strncat(message, "unknown type ", MAC_S);
+		fprintf(stderr, "%s", message);
+		fprintf(stderr, "%d\n", type);
 	}
 }
 
