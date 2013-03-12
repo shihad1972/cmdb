@@ -610,76 +610,70 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		report_error(MALLOC_FAIL, "classless in get_in_addr_string2");
 
 	snprintf(line, len, "%s", range);
-	switch (prefix) {
-		case 24:
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			while ((tmp = strrchr(line, c))) {
-				++tmp;
-				len = strlen(tmp);
-				strncat(in_addr, tmp, len);
-				strncat(in_addr, ".", 1);
-				--tmp;
-				*tmp = '\0';
-				i++;
-			}
-			break;
-		case 16:
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			while ((tmp = strrchr(line, c))) {
-				++tmp;
-				len = strlen(tmp);
-				strncat(in_addr, tmp, len);
-				strncat(in_addr, ".", 1);
-				--tmp;
-				*tmp = '\0';
-				i++;
-			}
-			break;
-		case 8:
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			tmp = strrchr(line, c);
-			*tmp = '\0';
-			while ((tmp = strrchr(line, c))) {
-				++tmp;
-				len = strlen(tmp);
-				strncat(in_addr, tmp, len);
-				strncat(in_addr, ".", 1);
-				--tmp;
-				*tmp = '\0';
-				i++;
-			}
-			break;
-		case 25: case 26: case 27: case 28: case 29: case 30:
-		case 31: case 32:
-			tmp = strrchr(line, c);
+	if (prefix == 24) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
 			++tmp;
 			len = strlen(tmp);
 			strncat(in_addr, tmp, len);
 			strncat(in_addr, ".", 1);
 			--tmp;
 			*tmp = '\0';
-			snprintf(classless, CONF_S, "/%lu.", prefix);
-			len = strlen(classless);
-			strncat(in_addr, classless, len);
-			while ((tmp = strrchr(line, c))) {
-				++tmp;
-				len = strlen(tmp);
-				strncat(in_addr, tmp, len);
-				strncat(in_addr, ".", 1);
-				--tmp;
-				*tmp = '\0';
-				i++;
-			}
-			break;
-		default:
-			break;
+			i++;
+		}
+	} else if (prefix == 16) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strncat(in_addr, ".", 1);
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if(prefix == 8) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strncat(in_addr, ".", 1);
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if (prefix == 25 || prefix == 26 || prefix == 27 || 
+		prefix == 28 || prefix == 29 || prefix == 30 ||
+		prefix == 31 || prefix == 32) {
+		tmp = strrchr(line, c);
+		++tmp;
+		len = strlen(tmp);
+		strncat(in_addr, tmp, len);
+		strncat(in_addr, ".", 1);
+		--tmp;
+		*tmp = '\0';
+		snprintf(classless, CONF_S, "/%lu.", prefix);
+		len = strlen(classless);
+		strncat(in_addr, classless, len);
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strncat(in_addr, ".", 1);
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
 	}
 	len = strlen(line);
 	strncat(in_addr, line, len);

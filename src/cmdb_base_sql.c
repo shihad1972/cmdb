@@ -220,85 +220,68 @@ get_query(int type, const char **query, unsigned int *fields)
 	int retval;
 	
 	retval = NONE;
-	switch(type) {
-		case SERVER:
-			*query = sql_select[SERVERS];
-			*fields = select_fields[SERVERS];
-			break;
-		case CUSTOMER:
-			*query = sql_select[CUSTOMERS];
-			*fields = select_fields[CUSTOMERS];
-			break;
-		case CONTACT:
-			*query = sql_select[CONTACTS];
-			*fields = select_fields[CONTACTS];
-			break;
-		case SERVICE:
-			*query = sql_select[SERVICES];
-			*fields = select_fields[SERVICES];
-			break;
-		case SERVICE_TYPE:
-			*query = sql_select[SERVICE_TYPES];
-			*fields = select_fields[SERVICE_TYPES];
-			break;
-		case HARDWARE:
-			*query = sql_select[HARDWARES];
-			*fields = select_fields[HARDWARES];
-			break;
-		case HARDWARE_TYPE:
-			*query = sql_select[HARDWARE_TYPES];
-			*fields = select_fields[HARDWARES];
-			break;
-		case VM_HOST:
-			*query = sql_select[VM_HOSTS];
-			*fields = select_fields[VM_HOSTS];
-			break;
-		default:
-			fprintf(stderr, "Unknown query type %d\n", type);
-			retval = 1;
-			break;
+	if (type == SERVER) {
+		*query = sql_select[SERVERS];
+		*fields = select_fields[SERVERS];
+	} else if (type == CUSTOMER) {
+		*query = sql_select[CUSTOMERS];
+		*fields = select_fields[CUSTOMERS];
+	} else if (type == CONTACT) {
+		*query = sql_select[CONTACTS];
+		*fields = select_fields[CONTACTS];
+	} else if (type == SERVICE) {
+		*query = sql_select[SERVICES];
+		*fields = select_fields[SERVICES];
+	} else if (type == SERVICE_TYPE) {
+		*query = sql_select[SERVICE_TYPES];
+		*fields = select_fields[SERVICE_TYPES];
+	} else if (type == HARDWARE) {
+		*query = sql_select[HARDWARES];
+		*fields = select_fields[HARDWARES];
+	} else if (type == HARDWARE_TYPE) {
+		*query = sql_select[HARDWARE_TYPES];
+		*fields = select_fields[HARDWARES];
+	} else if (type == VM_HOST) {
+		*query = sql_select[VM_HOSTS];
+		*fields = select_fields[VM_HOSTS];
+	} else {
+		fprintf(stderr, "Unknown query type %d\n", type);
+		retval = 1;
 	}
-	
 	return retval;
 }
 
 void
 get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_t *base)
 {
-	switch (type) {
-		case SERVER_ID_ON_NAME:
-			*input = &(base->server->name);
-			*output = &(base->server->server_id);
-			*fields = strlen(base->server->name);
-			*args = sizeof(base->server->server_id);
-			break;
-		case CUST_ID_ON_COID:
-			*input = &(base->customer->coid);
-			*output = &(base->customer->cust_id);
-			*fields = strlen(base->customer->coid);
-			*args = sizeof(base->customer->cust_id);
-			break;
-		case SERV_TYPE_ID_ON_SERVICE:
-			*input = &(base->servicetype->service);
-			*output = &(base->servicetype->service_id);
-			*fields = strlen(base->servicetype->service);
-			*args = sizeof(base->servicetype->service_id);
-			break;
-		case HARD_TYPE_ID_ON_HCLASS:
-			*input = &(base->hardtype->hclass);
-			*output = &(base->hardtype->ht_id);
-			*fields = strlen(base->hardtype->hclass);
-			*args = sizeof(base->hardtype->ht_id);
-			break;
-		case VM_ID_ON_NAME:
-			*input = &(base->vmhost->name);
-			*output = &(base->vmhost->id);
-			*fields = strlen(base->vmhost->name);
-			*args = sizeof(base->vmhost->id);
-			break;
-		default:
-			fprintf(stderr, "Unknown query %d\n", type);
-			exit (NO_QUERY);
+	if (type == SERVER_ID_ON_NAME) {
+		*input = &(base->server->name);
+		*output = &(base->server->server_id);
+		*fields = strlen(base->server->name);
+		*args = sizeof(base->server->server_id);
+	} else if (type == CUST_ID_ON_COID) {
+		*input = &(base->customer->coid);
+		*output = &(base->customer->cust_id);
+		*fields = strlen(base->customer->coid);
+		*args = sizeof(base->customer->cust_id);
+	} else if (type == SERV_TYPE_ID_ON_SERVICE) {
+		*input = &(base->servicetype->service);
+		*output = &(base->servicetype->service_id);
+		*fields = strlen(base->servicetype->service);
+		*args = sizeof(base->servicetype->service_id);
+	} else if (type == HARD_TYPE_ID_ON_HCLASS) {
+		*input = &(base->hardtype->hclass);
+		*output = &(base->hardtype->ht_id);
+		*fields = strlen(base->hardtype->hclass);
+		*args = sizeof(base->hardtype->ht_id);
+	} else if (type == VM_ID_ON_NAME) {
+		*input = &(base->vmhost->name);
+		*output = &(base->vmhost->id);
+		*fields = strlen(base->vmhost->name);
+		*args = sizeof(base->vmhost->id);
+	} else {
+		fprintf(stderr, "Unknown query %d\n", type);
+		exit (NO_QUERY);
 	}
 }
 
@@ -599,52 +582,50 @@ setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_t *base, unsigned int 
 void
 store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case SERVER:
-			if (fields != select_fields[SERVERS])
-				break;
-			store_server_mysql(row, base);
-			break;
-		case CUSTOMER:
-			if (fields != select_fields[CUSTOMERS])
-				break;
-			store_customer_mysql(row, base);
-			break;
-		case CONTACT:
-			if (fields != select_fields[CONTACTS])
-				break;
-			store_contact_mysql(row, base);
-			break;
-		case SERVICE:
-			if (fields != select_fields[SERVICES])
-				break;
-			store_service_mysql(row, base);
-			break;
-		case SERVICE_TYPE:
-			if (fields != select_fields[SERVICE_TYPES])
-				break;
-			store_service_type_mysql(row, base);
-			break;
-		case HARDWARE:
-			if (fields != select_fields[HARDWARES])
-				break;
-			store_hardware_mysql(row, base);
-			break;
-		case HARDWARE_TYPE:
-			if (fields != select_fields[HARDWARE_TYPES])
-				break;
-			store_hardware_type_mysql(row, base);
-			break;
-		case VM_HOST:
-			if (fields != select_fields[VM_HOSTS])
-				break;
-			store_vm_hosts_mysql(row, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == SERVER) {
+		required = select_fields[SERVERS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_server_mysql(row, base);
+	} else if (type == CUSTOMER) {
+		required = select_fields[CUSTOMERS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_customer_mysql(row, base);
+	} else if (type == CONTACT) {
+		required = select_fields[CONTACTS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_contact_mysql(row, base);
+	} else if (type == SERVICE) {
+		required = select_fields[SERVICES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_service_mysql(row, base);
+	} else if (type == SERVICE_TYPE) {
+		required = select_fields[SERVICE_TYPES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_service_type_mysql(row, base);
+	} else if (type == HARDWARE) {
+		required = select_fields[HARDWARES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_hardware_mysql(row, base);
+	} else if (type == HARDWARE_TYPE) {
+		required = select_fields[HARDWARE_TYPES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_hardware_type_mysql(row, base);
+	} else if (type == VM_HOST) {
+		required = select_fields[VM_HOSTS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_vm_hosts_mysql(row, base);
+	} else {
+		fprintf(stderr, "Unknown type %d\n",  type);
 	}
-			
 }
 
 void
@@ -963,23 +944,16 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		result = (unsigned long int)sqlite3_column_int(state, 0);
-		switch (type) {
-			case SERVER_ID_ON_NAME:
-				base->server->server_id = result;
-				break;
-			case CUST_ID_ON_COID:
-				base->customer->cust_id = result;
-				break;
-			case SERV_TYPE_ID_ON_SERVICE:
-				base->servicetype->service_id = result;
-				break;
-			case HARD_TYPE_ID_ON_HCLASS:
-				base->hardtype->ht_id = result;
-				break;
-			case VM_ID_ON_NAME:
-				base->vmhost->id = result;
-				break;
-		}
+		if (type == SERVER_ID_ON_NAME)
+			base->server->server_id = result;
+		else if (type == CUST_ID_ON_COID)
+			base->customer->cust_id = result;
+		else if (type == SERV_TYPE_ID_ON_SERVICE)
+			base->servicetype->service_id = result;
+		else if (type == HARD_TYPE_ID_ON_HCLASS)
+			base->hardtype->ht_id = result;
+		else if (type == VM_ID_ON_NAME)
+			base->vmhost->id = result;
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
@@ -1043,50 +1017,49 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 void
 store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case SERVER:
-			if (fields != select_fields[SERVERS])
-				break;
-			store_server_sqlite(state, base);
-			break;
-		case CUSTOMER:
-			if (fields != select_fields[CUSTOMERS])
-				break;
-			store_customer_sqlite(state, base);
-			break;
-		case CONTACT:
-			if(fields != select_fields[CONTACTS])
-				break;
-			store_contact_sqlite(state, base);
-			break;
-		case SERVICE:
-			if (fields != select_fields[SERVICES])
-				break;
-			store_service_sqlite(state, base);
-			break;
-		case SERVICE_TYPE:
-			if (fields != select_fields[SERVICE_TYPES])
-				break;
-			store_service_type_sqlite(state, base);
-			break;
-		case HARDWARE:
-			if (fields != select_fields[HARDWARES])
-				break;
-			store_hardware_sqlite(state, base);
-			break;
-		case HARDWARE_TYPE:
-			if (fields != select_fields[HARDWARE_TYPES])
-				break;
-			store_hardware_type_sqlite(state, base);
-			break;
-		case VM_HOST:
-			if (fields != select_fields[VM_HOSTS])
-				break;
-			store_vm_hosts_sqlite(state, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == SERVER) {
+		required = select_fields[SERVERS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_server_sqlite(state, base);
+	} else if (type == CUSTOMER) {
+		required = select_fields[CUSTOMERS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_customer_sqlite(state, base);
+	} else if (type == CONTACT) {
+		required = select_fields[CONTACTS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_contact_sqlite(state, base);
+	} else if (type == SERVICE) {
+		required = select_fields[SERVICES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_service_sqlite(state, base);
+	} else if (type == SERVICE_TYPE) {
+		required = select_fields[SERVICE_TYPES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_service_type_sqlite(state, base);
+	} else if (type == HARDWARE) {
+		required = select_fields[HARDWARES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_hardware_sqlite(state, base);
+	} else if (type == HARDWARE_TYPE) {
+		required = select_fields[HARDWARE_TYPES];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_hardware_type_sqlite(state, base);
+	} else if (type == VM_HOST) {
+		required = select_fields[VM_HOSTS];
+		if (fields != required)
+			cmdb_query_mismatch(fields, required, type);
+		store_vm_hosts_sqlite(state, base);
+	} else {
+		fprintf(stderr, "Unknown type %d\n",  type);
 	}
 }
 

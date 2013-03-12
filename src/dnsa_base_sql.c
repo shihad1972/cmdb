@@ -387,69 +387,55 @@ get_query(int type, const char **query, unsigned int *fields)
 	int retval;
 	
 	retval = NONE;
-	switch(type) {
-		case ZONE:
-			*query = sql_select[ZONES];
-			*fields = select_fields[ZONES];
-			break;
-		case REV_ZONE:
-			*query = sql_select[REV_ZONES];
-			*fields = select_fields[REV_ZONES];
-			break;
-		case RECORD:
-			*query = sql_select[RECORDS];
-			*fields = select_fields[RECORDS];
-			break;
-		case REV_RECORD:
-			*query = sql_select[REV_RECORDS];
-			*fields = select_fields[REV_RECORDS];
-			break;
-		case ALL_A_RECORD:
-			*query = sql_select[ALL_A_RECORDS];
-			*fields = select_fields[ALL_A_RECORDS];
-			break;
-		case DUPLICATE_A_RECORD:
-			*query = sql_select[DUPLICATE_A_RECORDS];
-			*fields = select_fields[DUPLICATE_A_RECORDS];
-			break;
-		case PREFERRED_A:
-			*query = sql_select[PREFERRED_AS];
-			*fields = select_fields[PREFERRED_AS];
-			break;
-		default:
-			fprintf(stderr, "Unknown query type %d\n", type);
-			retval = 1;
-			break;
+	if (type == ZONE) {
+		*query = sql_select[ZONES];
+		*fields = select_fields[ZONES];
+	} else if (type == REV_ZONE) {
+		*query = sql_select[REV_ZONES];
+		*fields = select_fields[REV_ZONES];
+	} else if (type == RECORD) {
+		*query = sql_select[RECORDS];
+		*fields = select_fields[RECORDS];
+	} else if (type == REV_RECORD) {
+		*query = sql_select[REV_RECORDS];
+		*fields = select_fields[REV_RECORDS];
+	} else if (type == ALL_A_RECORD) {
+		*query = sql_select[ALL_A_RECORDS];
+		*fields = select_fields[ALL_A_RECORDS];
+	} else if (type ==  DUPLICATE_A_RECORD) {
+		*query = sql_select[DUPLICATE_A_RECORDS];
+		*fields = select_fields[DUPLICATE_A_RECORDS];
+	} else if (type == PREFERRED_A) {
+		*query = sql_select[PREFERRED_AS];
+		*fields = select_fields[PREFERRED_AS];
+	} else {
+		fprintf(stderr, "Unknown query type %d\n", type);
+		retval = 1;
 	}
-	
 	return retval;
 }
 
 void
 get_search(int type, size_t *fields, size_t *args, void **input, void **output, dnsa_t *base)
 {
-	switch(type) {
-		case ZONE_ID_ON_NAME:
-			*input = &(base->zones->name);
-			*output = &(base->zones->id);
-			*fields = strlen(base->zones->name);
-			*args = sizeof(base->zones->id);
-			break;
-		case REV_ZONE_ID_ON_NET_RANGE:
-			*input = &(base->rev_zones->net_range);
-			*output = &(base->rev_zones->rev_zone_id);
-			*fields = strlen(base->rev_zones->net_range);
-			*args = sizeof(base->rev_zones->rev_zone_id);
-			break;
-		case REV_ZONE_PREFIX:
-			*input = &(base->rev_zones->net_range);
-			*output = &(base->rev_zones->prefix);
-			*fields = strlen(base->rev_zones->net_range);
-			*args = sizeof(base->rev_zones->prefix);
-			break;
-		default:
-			fprintf(stderr, "Unknown query %d\n", type);
-			exit (NO_QUERY);
+	if (type == ZONE_ID_ON_NAME) {
+		*input = &(base->zones->name);
+		*output = &(base->zones->id);
+		*fields = strlen(base->zones->name);
+		*args = sizeof(base->zones->id);
+	} else if (type == REV_ZONE_ID_ON_NET_RANGE) {
+		*input = &(base->rev_zones->net_range);
+		*output = &(base->rev_zones->rev_zone_id);
+		*fields = strlen(base->rev_zones->net_range);
+		*args = sizeof(base->rev_zones->rev_zone_id);
+	} else if (type == REV_ZONE_PREFIX) {
+		*input = &(base->rev_zones->net_range);
+		*output = &(base->rev_zones->prefix);
+		*fields = strlen(base->rev_zones->net_range);
+		*args = sizeof(base->rev_zones->prefix);
+	} else {
+		fprintf(stderr, "Unknown query %d\n", type);
+		exit (NO_QUERY);
 	}
 }
 
@@ -558,47 +544,45 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 void
 store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case ZONE:
-			if (fields != select_fields[ZONES])
-				break;
-			store_zone_mysql(row, base);
-			break;
-		case REV_ZONE:
-			if (fields != select_fields[REV_ZONES])
-				break;
-			store_rev_zone_mysql(row, base);
-			break;
-		case RECORD:
-			if (fields != select_fields[RECORDS])
-				break;
-			store_record_mysql(row, base);
-			break;
-		case REV_RECORD:
-			if (fields != select_fields[REV_RECORDS])
-				break;
-			store_rev_record_mysql(row, base);
-			break;
-		case ALL_A_RECORD:
-			if (fields != select_fields[ALL_A_RECORDS])
-				break;
-			store_all_a_records_mysql(row, base);
-			break;
-		case DUPLICATE_A_RECORD:
-			if (fields != select_fields[DUPLICATE_A_RECORDS])
-				break;
-			store_duplicate_a_record_mysql(row, base);
-			break;
-		case PREFERRED_A:
-			if (fields != select_fields[PREFERRED_AS])
-				break;
-			store_preferred_a_mysql(row, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type for storing %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == ZONE) {
+		required = select_fields[ZONES];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_zone_mysql(row, base);
+	} else if (type == REV_ZONE) {
+		required = select_fields[REV_ZONES];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_rev_zone_mysql(row, base);
+	} else if (type == RECORD) {
+		required = select_fields[RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_record_mysql(row, base);
+	} else if (type == REV_RECORD) {
+		required = select_fields[REV_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_rev_record_mysql(row, base);
+	} else if (type == ALL_A_RECORD) {
+		required = select_fields[ALL_A_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_all_a_records_mysql(row, base);
+	} else if (type == DUPLICATE_A_RECORD) {
+		required = select_fields[DUPLICATE_A_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_duplicate_a_record_mysql(row, base);
+	} else if (type == PREFERRED_A) {
+		required = select_fields[PREFERRED_AS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_preferred_a_mysql(row, base);
+	} else {
+		dnsa_query_mismatch(NONE, NONE, NONE);
 	}
-			
 }
 
 void
@@ -1311,47 +1295,45 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 void
 store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case ZONE:
-			if (fields != select_fields[ZONES])
-				break;
-			store_zone_sqlite(state, base);
-			break;
-		case REV_ZONE:
-			if (fields != select_fields[REV_ZONES])
-				break;
-			store_rev_zone_sqlite(state, base);
-			break;
-		case RECORD:
-			if (fields != select_fields[RECORDS])
-				break;
-			store_record_sqlite(state, base);
-			break;
-		case REV_RECORD:
-			if (fields != select_fields[REV_RECORDS])
-				break;
-			store_rev_record_sqlite(state, base);
-			break;
-		case ALL_A_RECORD:
-			if (fields != select_fields[ALL_A_RECORDS])
-				break;
-			store_all_a_records_sqlite(state, base);
-			break;
-		case DUPLICATE_A_RECORD:
-			if (fields != select_fields[DUPLICATE_A_RECORDS])
-				break;
-			store_duplicate_a_record_sqlite(state, base);
-			break;
-		case PREFERRED_A:
-			if (fields != select_fields[PREFERRED_AS])
-				break;
-			store_preferred_a_sqlite(state, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == ZONE) {
+		required = select_fields[ZONES];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_zone_sqlite(state, base);
+	} else if (type == REV_ZONE) {
+		required = select_fields[REV_ZONES];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_rev_zone_sqlite(state, base);
+	} else if (type == RECORD) {
+		required = select_fields[RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_record_sqlite(state, base);
+	} else if (type == REV_RECORD) {
+		required = select_fields[REV_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_rev_record_sqlite(state, base);
+	} else if (type == ALL_A_RECORD) {
+		required = select_fields[ALL_A_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_all_a_records_sqlite(state, base);
+	} else if (type == DUPLICATE_A_RECORD) {
+		required = select_fields[DUPLICATE_A_RECORDS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_duplicate_a_record_sqlite(state, base);
+	} else if (type == PREFERRED_A) {
+		required = select_fields[PREFERRED_AS];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		store_preferred_a_sqlite(state, base);
+	} else {
+		dnsa_query_mismatch(NONE, NONE, NONE);
 	}
-			
 }
 
 void
@@ -1575,16 +1557,12 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		result = (unsigned long int)sqlite3_column_int64(state, 0);
-		switch(type) {
-			case ZONE_ID_ON_NAME:
-				base->zones->id = result;
-				break;
-			case REV_ZONE_ID_ON_NET_RANGE:
-				base->rev_zones->rev_zone_id = result;
-				break;
-			case REV_ZONE_PREFIX:
-				base->rev_zones->prefix = result;
-		}
+		if (type == ZONE_ID_ON_NAME) 
+			base->zones->id = result;
+		else if (type == REV_ZONE_ID_ON_NET_RANGE)
+			base->rev_zones->rev_zone_id = result;
+		else if (type == REV_ZONE_PREFIX)
+			base->rev_zones->prefix = result;
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(dnsa);

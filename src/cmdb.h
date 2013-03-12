@@ -298,11 +298,11 @@ void
 display_dnsa_usage(void);
 /* Database fields query mismatch error functions */
 void
-cbc_query_mismatch(int fields, int required, int query);
+cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
-cmdb_query_mismatch(int fields, int required, int query);
+cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
-dnsa_query_mismatch(int fields, int required, int query);
+dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
 /* Miscellaneous  */
 void
 chomp(char *input);

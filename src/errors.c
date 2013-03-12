@@ -329,18 +329,129 @@ get_error_string(int error, char *errstr)
 }
 
 void
-cbc_query_mismatch(int fields, int required, int query)
+cbc_query_mismatch(unsigned int fields, unsigned int required, int query)
 {
+	char errstr[HOST_S];
+	char *err = errstr;
+	if (query == BOOT_LINE)
+		snprintf(err, HOST_S, "boot_line query: required %d, got %d\n",
+			required, fields);
+	else if (query == BUILD)
+		snprintf(err, HOST_S, "build query: required %d, got %d\n",
+			required, fields);
+	else if (query == BUILD_DOMAIN)
+		snprintf(err, HOST_S, "build domain query: required %d; got %d\n",
+			 required, fields);
+	else if (query == BUILD_IP)
+		snprintf(err, HOST_S, "build ip query: required %d; got %d\n",
+			 required, fields);
+	else if (query == BUILD_OS)
+		snprintf(err, HOST_S, "build os query: required %d, got %d\n",
+			 required, fields);
+	else if (query == BUILD_TYPE)
+		snprintf(err, HOST_S, "build type query: required %d, got %d\n",
+			 required, fields);
+	else if (query == DISK_DEV)
+		snprintf(err, HOST_S, "disk dev query: required %d, got %d\n",
+			 required, fields);
+	else if (query == LOCALE)
+		snprintf(err, HOST_S, "locale query: required %d, got %d\n",
+			 required, fields);
+	else if (query == BPACKAGE)
+		snprintf(err, HOST_S, "package query: required %d, got %d\n",
+			 required, fields);
+	else if (query == DPART)
+		snprintf(err, HOST_S, "\
+default partition query: required %d, got %d\n", required, fields);
+	else if (query == SPART)
+		snprintf(err, HOST_S, "\
+preseed partition query: required %d, got %d\n", required, fields);
+	else if (query == SSCHEME)
+		snprintf(err, HOST_S, "\
+preseed scheme partition query: required %d, got %d\n", required, fields);
+	else if (query == CSERVER)
+		snprintf(err, HOST_S, "server query: required %d, got %d\n",
+			 required, fields);
+	else if (query == VARIENT)
+		snprintf(err, HOST_S, "varient query: required %d, got %d\n",
+			 required, fields);
+	else if (query == VMHOST)
+		snprintf(err, HOST_S, "\
+virtual machine host query: required %d, got %d\n", required, fields);
+	else
+		snprintf(err, HOST_S, "\
+unknown query type %d: required %d, got %d\n", query, required, fields);
+	report_error(FIELDS_MISMATCH, errstr);
 }
 
 void
-cmdb_query_mismatch(int fields, int required, int query)
+cmdb_query_mismatch(unsigned int fields, unsigned int required, int query)
 {
+	char errstr[HOST_S];
+	char *err = errstr;
+	if (query == SERVER)
+		snprintf(err, HOST_S, "server query: required %d, got %d\n",
+			 required, fields);
+	else if (query == CUSTOMER)
+		snprintf(err, HOST_S, "customer query: required %d, got %d\n",
+			 required, fields);
+	else if (query == CONTACT)
+		snprintf(err, HOST_S, "contact query: required %d, got %d\n",
+			 required, fields);
+	else if (query == SERVICE)
+		snprintf(err, HOST_S, "service query: required %d, got %d\n",
+			 required, fields);
+	else if (query == SERVICE_TYPE)
+		snprintf(err, HOST_S, "\
+service type query: required %d, got %d\n", required, fields);
+	else if (query == HARDWARE)
+		snprintf(err, HOST_S, "hardware query: required %d, got %d\n",
+			 required, fields);
+	else if (query == HARDWARE_TYPE)
+		snprintf(err, HOST_S, "\
+hardware type query: required %d, got %d\n", required, fields);
+	else if (query == VM_HOST)
+		snprintf(err, HOST_S, "\
+virtual machine host query: required %d, got %d\n", required, fields);
+	else
+		snprintf(err, HOST_S, "\
+unknown query type %d: required %d, got %d\n", query, required, fields);
+	report_error(FIELDS_MISMATCH, errstr);
 }
 
 void
-dnsa_query_mismatch(int fields, int required, int query)
+dnsa_query_mismatch(unsigned int fields, unsigned int required, int query)
 {
+	char errstr[HOST_S];
+	char *err = errstr;
+	if (query == ZONE)
+		snprintf(err, HOST_S, "zone query: required %d, got %d\n",
+			 required, fields);
+	else if (query == REV_ZONE)
+		snprintf(err, HOST_S, "\
+reverse zone query: required %d, got %d\n", required, fields);
+	else if (query == RECORD)
+		snprintf(err, HOST_S, "record query: required %d, got %d\n",
+			 required, fields);
+	else if (query == REV_RECORD)
+		snprintf(err, HOST_S, "\
+reverse record query: required %d, got %d\n", required, fields);
+	else if (query == ALL_A_RECORD)
+		snprintf(err, HOST_S, "\
+all A records query: required %d, got %d\n", required, fields);
+	else if (query == DUPLICATE_A_RECORD)
+		snprintf(err, HOST_S, "\
+duplicate A records query: required %d, got %d\n", required, fields);
+	else if (query == PREFERRED_A)
+		snprintf(err, HOST_S, "\
+preferred A records query: required %d, got %d\n", required, fields);
+	else if (query == RECORDS_ON_CNAME_TYPE)
+		snprintf(err, HOST_S, "\
+CNAME records query: required %d, got %d\n", required, fields);
+	else
+		snprintf(err, HOST_S, "\
+unknown query type %d: required %d, got %d\n", query, required, fields);
+	report_error(FIELDS_MISMATCH, errstr);
 }
 
 void

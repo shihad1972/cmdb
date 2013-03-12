@@ -445,85 +445,84 @@ run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type)
 void
 store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case BOOT_LINE:
-			if (fields != select_fields[BOOT_LINES])
-				break;
-			store_boot_line_mysql(row, base);
-			break;
-		case BUILD:
-			if (fields != select_fields[BUILDS])
-				break;
-			store_build_mysql(row, base);
-			break;
-		case BUILD_DOMAIN:
-			if (fields != select_fields[BUILD_DOMAINS])
-				break;
-			store_build_domain_mysql(row, base);
-			break;
-		case BUILD_IP:
-			if (fields != select_fields[BUILD_IPS])
-				break;
-			store_build_ip_mysql(row, base);
-			break;
-		case BUILD_OS:
-			if (fields != select_fields[BUILD_OSS])
-				break;
-			store_build_os_mysql(row, base);
-			break;
-		case BUILD_TYPE:
-			if (fields != select_fields[BUILD_TYPES])
-				break;
-			store_build_type_mysql(row, base);
-			break;
-		case DISK_DEV:
-			if (fields != select_fields[DISK_DEVS])
-				break;
-			store_disk_dev_mysql(row, base);
-			break;
-		case LOCALE:
-			if (fields != select_fields[LOCALES])
-				break;
-			store_locale_mysql(row, base);
-			break;
-		case BPACKAGE:
-			if (fields != select_fields[BPACKAGES])
-				break;
-			store_package_mysql(row, base);
-			break;
-		case DPART:
-			if (fields != select_fields[DPARTS])
-				break;
-			store_dpart_mysql(row, base);
-			break;
-		case SPART:
-			if (fields != select_fields[SPARTS])
-				break;
-			store_spart_mysql(row, base);
-			break;
-		case SSCHEME:
-			if (fields != select_fields[SSCHEMES])
-				break;
-			store_seed_scheme_mysql(row, base);
-			break;
-		case CSERVER:
-			if (fields != select_fields[CSERVERS])
-				break;
-			store_server_mysql(row, base);
-			break;
-		case VARIENT:
-			if (fields != select_fields[VARIENTS])
-				break;
-			store_varient_mysql(row, base);
-			break;
-		case VMHOST:
-			if (fields != select_fields[VMHOSTS])
-				break;
-			store_vmhost_mysql(row, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type for storing %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == BOOT_LINE) {
+		required = select_fields[BOOT_LINES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_boot_line_mysql(row, base);
+	} else if (type == BUILD) {
+		required = select_fields[BUILDS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_mysql(row, base);
+	} else if (type == BUILD_DOMAIN) {
+		required = select_fields[BUILD_DOMAINS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_domain_mysql(row, base);
+	} else if (type == BUILD_IP) {
+		required = select_fields[BUILD_IPS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_ip_mysql(row, base);
+	} else if (type == BUILD_OS) {
+		required = select_fields[BUILD_OSS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_os_mysql(row, base);
+	} else if (type == BUILD_TYPE) {
+		required = select_fields[BUILD_TYPES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_type_mysql(row, base);
+	} else if (type == DISK_DEV) {
+		required = select_fields[DISK_DEVS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_disk_dev_mysql(row, base);
+	} else if (type == LOCALE) {
+		required = select_fields[LOCALES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_locale_mysql(row, base);
+	} else if (type == BPACKAGE) {
+		required = select_fields[BPACKAGES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_package_mysql(row, base);
+	} else if (type == DPART) {
+		required = select_fields[DPARTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_dpart_mysql(row, base);
+	} else if (type == SPART) {
+		required = select_fields[SPARTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_spart_mysql(row, base);
+	} else if (type == SSCHEME) {
+		required = select_fields[SSCHEMES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_seed_scheme_mysql(row, base);
+	} else if (type == CSERVER) {
+		required = select_fields[CSERVERS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_server_mysql(row, base);
+	} else if (type == VARIENT) {
+		required = select_fields[VARIENTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_varient_mysql(row, base);
+	} else if (type == VMHOST) {
+		required = select_fields[VMHOSTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_vmhost_mysql(row, base);
+	} else {
+		cbc_query_mismatch(NONE, NONE, NONE);
 	}
 }
 
@@ -1067,85 +1066,84 @@ run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
 void
 store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fields)
 {
-	switch(type) {
-		case BOOT_LINE:
-			if (fields != select_fields[BOOT_LINES])
-				break;
-			store_boot_line_sqlite(state, base);
-			break;
-		case BUILD:
-			if (fields != select_fields[BUILDS])
-				break;
-			store_build_sqlite(state, base);
-			break;
-		case BUILD_DOMAIN:
-			if (fields != select_fields[BUILD_DOMAINS])
-				break;
-			store_build_domain_sqlite(state, base);
-			break;
-		case BUILD_IP:
-			if (fields != select_fields[BUILD_IPS])
-				break;
-			store_build_ip_sqlite(state, base);
-			break;
-		case BUILD_OS:
-			if (fields != select_fields[BUILD_OSS])
-				break;
-			store_build_os_sqlite(state, base);
-			break;
-		case BUILD_TYPE:
-			if (fields != select_fields[BUILD_TYPES])
-				break;
-			store_build_type_sqlite(state, base);
-			break;
-		case DISK_DEV:
-			if (fields != select_fields[DISK_DEVS])
-				break;
-			store_disk_dev_sqlite(state, base);
-			break;
-		case LOCALE:
-			if (fields != select_fields[LOCALES])
-				break;
-			store_locale_sqlite(state, base);
-			break;
-		case BPACKAGE:
-			if (fields != select_fields[BPACKAGES])
-				break;
-			store_package_sqlite(state, base);
-			break;
-		case DPART:
-			if (fields != select_fields[DPARTS])
-				break;
-			store_dpart_sqlite(state, base);
-			break;
-		case SPART:
-			if (fields != select_fields[SPARTS])
-				break;
-			store_spart_sqlite(state, base);
-			break;
-		case SSCHEME:
-			if (fields != select_fields[SSCHEMES])
-				break;
-			store_seed_scheme_sqlite(state, base);
-			break;
-		case CSERVER:
-			if (fields != select_fields[CSERVERS])
-				break;
-			store_server_sqlite(state, base);
-			break;
-		case VARIENT:
-			if (fields != select_fields[VARIENTS])
-				break;
-			store_varient_sqlite(state, base);
-			break;
-		case VMHOST:
-			if (fields != select_fields[VMHOSTS])
-				break;
-			store_vmhost_sqlite(state, base);
-			break;
-		default:
-			fprintf(stderr, "Unknown type for storing %d\n",  type);
-			break;
+	unsigned int required;
+	if (type == BOOT_LINE) {
+		required = select_fields[BOOT_LINES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_boot_line_sqlite(state, base);
+	} else if (type == BUILD) {
+		required = select_fields[BUILDS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_sqlite(state, base);
+	} else if (type == BUILD_DOMAIN) {
+		required = select_fields[BUILD_DOMAINS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_domain_sqlite(state, base);
+	} else if (type == BUILD_IP) {
+		required = select_fields[BUILD_IPS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_ip_sqlite(state, base);
+	} else if (type == BUILD_OS) {
+		required = select_fields[BUILD_OSS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_os_sqlite(state, base);
+	} else if (type == BUILD_TYPE) {
+		required = select_fields[BUILD_TYPES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_build_type_sqlite(state, base);
+	} else if (type == DISK_DEV) {
+		required = select_fields[DISK_DEVS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_disk_dev_sqlite(state, base);
+	} else if (type == LOCALE) {
+		required = select_fields[LOCALES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_locale_sqlite(state, base);
+	} else if (type == BPACKAGE) {
+		required = select_fields[BPACKAGES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_package_sqlite(state, base);
+	} else if (type == DPART) {
+		required = select_fields[DPARTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_dpart_sqlite(state, base);
+	} else if (type == SPART) {
+		required = select_fields[SPARTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_spart_sqlite(state, base);
+	} else if (type == SSCHEME) {
+		required = select_fields[SSCHEMES];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_seed_scheme_sqlite(state, base);
+	} else if (type == CSERVER) {
+		required = select_fields[CSERVERS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_server_sqlite(state, base);
+	} else if (type == VARIENT) {
+		required = select_fields[VARIENTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_varient_sqlite(state, base);
+	} else if (type == VMHOST) {
+		required = select_fields[VMHOSTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		store_vmhost_sqlite(state, base);
+	} else {
+		cbc_query_mismatch(NONE, NONE, NONE);
 	}
 }
 

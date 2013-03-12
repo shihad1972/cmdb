@@ -70,153 +70,147 @@ int main(int argc, char *argv[])
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
-	switch (cm->type) {
-		case SERVER:
+	if (cm->type == SERVER) {
 #ifdef HAVE_LIBPCRE
-			if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
-				retval = validate_user_input(cm->id, UUID_REGEX);
-				if (retval < 0)
-					retval = validate_user_input(cm->id, NAME_REGEX);
-			} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
-				retval = validate_user_input(cm->name, NAME_REGEX);
-			} else {
-				printf("Both name and uuid set to NULL??\n");
-				exit (NO_NAME_UUID_ID);
-			}
-			if (retval < 0) {
-				printf("User input not valid\n");
-				exit (USER_INPUT_INVALID);
-			}
+		if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
+			retval = validate_user_input(cm->id, UUID_REGEX);
+			if (retval < 0)
+				retval = validate_user_input(cm->id, NAME_REGEX);
+		} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
+			retval = validate_user_input(cm->name, NAME_REGEX);
+		} else {
+			printf("Both name and uuid set to NULL??\n");
+			exit (NO_NAME_UUID_ID);
+		}
+		if (retval < 0) {
+			printf("User input not valid\n");
+			exit (USER_INPUT_INVALID);
+		}
 #endif /* HAVE_LIBPCRE */
-			if (cm->action == DISPLAY) {
-				display_server_info(cm->name, cm->id, cmc);
-			} else if (cm->action == LIST_OBJ) {
-				display_all_servers(cmc);
-			} else if (cm->action == ADD_TO_DB) {
-				retval = add_server_to_database(cmc, cm, base);
-				if (retval > 0) {
-					free(cmc);
-					free(cm);
-					free(cmdb_config);
-					cmdb_clean_list(base);
-					printf("Error adding server to database\n");
-					exit(DB_INSERT_FAILED);
-				} else {
-					printf("Added into database\n");
-				}
+		if (cm->action == DISPLAY) {
+			display_server_info(cm->name, cm->id, cmc);
+		} else if (cm->action == LIST_OBJ) {
+			display_all_servers(cmc);
+		} else if (cm->action == ADD_TO_DB) {
+			retval = add_server_to_database(cmc, cm, base);
+			if (retval > 0) {
+				free(cmc);
+				free(cm);
+				free(cmdb_config);
+				cmdb_clean_list(base);
+				printf("Error adding server to database\n");
+				exit(DB_INSERT_FAILED);
 			} else {
-				display_action_error(cm->action);
+				printf("Added into database\n");
 			}
-			break;
-		case CUSTOMER:
-			if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
-				retval = validate_user_input(cm->id, COID_REGEX);
-			} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
-				retval = validate_user_input(cm->name, CUSTOMER_REGEX);
+		} else {
+			display_action_error(cm->action);
+		}
+	} else if (cm->type == CUSTOMER) {
+#ifdef HAVE_LIBPCRE
+		if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
+			retval = validate_user_input(cm->id, COID_REGEX);
+		} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
+			retval = validate_user_input(cm->name, CUSTOMER_REGEX);
+		} else {
+			printf("Both name and coid set to NULL??\n");
+			exit(NO_NAME_UUID_ID);
+		}
+		if (retval < 0) {
+			printf("User input not valid\n");
+			exit(USER_INPUT_INVALID);
+		}
+#endif /* HAVE_LIBPCRE */
+		if (cm->action == DISPLAY) {
+			display_customer_info(cm->name, cm->id, cmc);
+		} else if (cm->action == LIST_OBJ) {
+			display_all_customers(cmc);
+		} else if (cm->action == ADD_TO_DB) {
+			retval = add_customer_to_database(cmc, base);
+			if (retval != 0) {
+				free(cmc);
+				free(cm);
+				free(cmdb_config);
+				cmdb_clean_list(base);
+				printf("Error %d adding customer to DB\n", retval);
+				exit(DB_INSERT_FAILED);
 			} else {
-				printf("Both name and coid set to NULL??\n");
-				exit(NO_NAME_UUID_ID);
+				printf("Added %s to database\n", base->customer->name);
+			}	
+		} else {
+			display_action_error(cm->action);
+		}
+	} else if (cm->type == CONTACT) {
+		if (cm->action == DISPLAY) {
+			if (strncmp(cm->id, "NULL", CONF_S) != 0) {
+				display_customer_contacts(cmc, cm->id);
 			}
-			if (retval < 0) {
-				printf("User input not valid\n");
-				exit(USER_INPUT_INVALID);
-			}
-			if (cm->action == DISPLAY) {
-				display_customer_info(cm->name, cm->id, cmc);
-			} else if (cm->action == LIST_OBJ) {
-				display_all_customers(cmc);
-			} else if (cm->action == ADD_TO_DB) {
-				retval = add_customer_to_database(cmc, base);
-				if (retval != 0) {
-					free(cmc);
-					free(cm);
-					free(cmdb_config);
-					cmdb_clean_list(base);
-					printf("Error %d adding customer to DB\n", retval);
-					exit(DB_INSERT_FAILED);
-				} else {
-					printf("Added %s to database\n", base->customer->name);
-				}	
+		} else if (cm->action == ADD_TO_DB) {
+			if ((retval = add_contact_to_database(cmc, base)) != 0) {
+				free(cmc);
+				free(cm);
+				free(cmdb_config);
+				printf("Error %d adding contact to DB\n", retval);
+				cmdb_clean_list(base);
+				exit(DB_INSERT_FAILED);
 			} else {
-				display_action_error(cm->action);
+				printf("Added %s to database\n", base->contact->name);
 			}
-			break;
-		case CONTACT:
-			if (cm->action == DISPLAY) {
-				if (strncmp(cm->id, "NULL", CONF_S) != 0) {
-					display_customer_contacts(cmc, cm->id);
-				}
-			} else if (cm->action == ADD_TO_DB) {
-				if ((retval = add_contact_to_database(cmc, base)) != 0) {
-					free(cmc);
-					free(cm);
-					free(cmdb_config);
-					printf("Error %d adding contact to DB\n", retval);
-					cmdb_clean_list(base);
-					exit(DB_INSERT_FAILED);
-				} else {
-					printf("Added %s to database\n", base->contact->name);
-				}
-			} else {
-				display_action_error(cm->action);
-			}
-			break;
-		case SERVICE:
-			if (cm->action == LIST_OBJ) {
-				display_service_types(cmc);
-			} else if (cm->action == DISPLAY) {
-				if ((strncmp(cm->name, "NULL", CONF_S) != 0))
-					display_server_services(cmc, cm->name);
-				else if ((strncmp(cm->id, "NULL", CONF_S) != 0))
-					display_customer_services(cmc, cm->id);
-			} else if (cm->action == ADD_TO_DB) {
-				if ((retval = add_service_to_database(cmc, base)) != 0) {
-					free(cmc);
-					free(cm);
-					free(cmdb_config);
-					printf("Error %d adding service %s to DB\n",
+		} else {
+			display_action_error(cm->action);
+		}
+	} else if (cm->type == SERVICE) {
+		if (cm->action == LIST_OBJ) {
+			display_service_types(cmc);
+		} else if (cm->action == DISPLAY) {
+			if ((strncmp(cm->name, "NULL", CONF_S) != 0))
+				display_server_services(cmc, cm->name);
+			else if ((strncmp(cm->id, "NULL", CONF_S) != 0))
+				display_customer_services(cmc, cm->id);
+		} else if (cm->action == ADD_TO_DB) {
+			if ((retval = add_service_to_database(cmc, base)) != 0) {
+				free(cmc);
+				free(cm);
+				free(cmdb_config);
+				printf("Error %d adding service %s to DB\n",
 					 retval, base->service->detail);
-					cmdb_clean_list(base);
-					exit(DB_INSERT_FAILED);
-				} else {
-					printf("Service %s added to database\n", base->service->detail);
-				}
+				cmdb_clean_list(base);
+				exit(DB_INSERT_FAILED);
 			} else {
-				display_action_error(cm->action);
+				printf("Service %s added to database\n", base->service->detail);
 			}
-			break;
-		case HARDWARE:
-			if (cm->action == LIST_OBJ) {
-				display_hardware_types(cmc);
-			} else if (cm->action == DISPLAY) {
-				display_server_hardware(cmc, cm->name);
-			} else if (cm->action == ADD_TO_DB) {
-				if ((retval = add_hardware_to_database(cmc, base)) != 0) {
-					free(cmc);
-					free(cm);
-					free(cmdb_config);
-					printf("Error %d adding hardware %s to DB\n",
+		} else {
+			display_action_error(cm->action);
+		}
+	} else if (cm->type == HARDWARE) {
+		if (cm->action == LIST_OBJ) {
+			display_hardware_types(cmc);
+		} else if (cm->action == DISPLAY) {
+			display_server_hardware(cmc, cm->name);
+		} else if (cm->action == ADD_TO_DB) {
+			if ((retval = add_hardware_to_database(cmc, base)) != 0) {
+				free(cmc);
+				free(cm);
+				free(cmdb_config);
+				printf("Error %d adding hardware %s to DB\n",
 					 retval, base->hardtype->hclass);
-					cmdb_clean_list(base);
-					exit(DB_INSERT_FAILED);
-				} else {
-					printf("\
+				cmdb_clean_list(base);
+				exit(DB_INSERT_FAILED);
+			} else {
+				printf("\
 Hardware for server %s added to database\n",base->server->name);
-				}
-			} else {
-				display_action_error(cm->action);
 			}
-			break;
-		case VM_HOST:
-			if (cm->action == LIST_OBJ) {
-				display_vm_hosts(cmc);
-			} else {
-				display_action_error(cm->action);
-			}
-			break;
-		default:
-			display_type_error(cm->type);
-			break;
+		} else {
+			display_action_error(cm->action);
+		}
+	} else if (cm->type == VM_HOST) {
+		if (cm->action == LIST_OBJ) {
+			display_vm_hosts(cmc);
+		} else {
+			display_action_error(cm->action);
+		}
+	} else {
+		display_type_error(cm->type);
 	}
 	cmdb_clean_list(base);
 	free(cmc);
