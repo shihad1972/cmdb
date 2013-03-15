@@ -66,6 +66,39 @@ display_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
 }
 
 int
+add_cbc_build_domain((cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+list_cbc_build_domain(cbc_config_t *cbc)
+{
+	int retval = NONE;
+	cbc_t *base;
+	cbc_build_domain_t *bdom;
+
+	if (!(base = malloc(sizeof(cbc_t))))
+		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
+	init_cbc_struct(base);
+	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
+		fprintf(stderr, "build query failed\n");
+		free(cbc);
+		return retval;
+	}
+	bdom = base->bdom;
+	printf("Build Domains\n\n");
+	while (bdom) {
+		printf("%s\n", bdom->domain);
+		bdom = bdom->next;
+	}
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
 get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base)
 {
 	int retval = NONE;

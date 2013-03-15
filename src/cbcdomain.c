@@ -64,6 +64,10 @@ main(int argc, char *argv[])
 	}
 	if (cdcl->action == DISPLAY_CONFIG)
 		retval = display_cbc_build_domain(cmc, cdcl);
+	else if (cdcl->action == LIST_CONFIG)
+		retval = list_cbc_build_domain(cmc);
+	else if (cdcl->action == ADD_CONFIG)
+		retval = add_cbc_build_domain(cmc, cdcl);
 	else
 		printf("Unknown Action type\n");
 
