@@ -463,9 +463,7 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base
 	retval = 0;
 	void *buffer;
 	bind->buffer_type = mysql_inserts[type][i];
-	if (bind->buffer_type == MYSQL_TYPE_STRING)
-		bind->is_unsigned = 0;
-	else if (bind->buffer_type == MYSQL_TYPE_LONG)
+	if (bind->buffer_type == MYSQL_TYPE_LONG)
 		bind->is_unsigned = 1;
 	else
 		bind->is_unsigned = 0;
@@ -975,7 +973,7 @@ run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "run_insert_sqlite");
 	}
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);

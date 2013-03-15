@@ -38,9 +38,12 @@ int
 list_cbc_build_domain(cbc_config_t *cbc);
 
 int
-add_cbc_build_domain((cbc_config_t *cbc, cbcdomain_comm_line_s *cdl);
+add_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl);
 
 int
 get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base);
+
+void
+copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_t *bdom);
 
 #endif /* __CBC_BUILD_DOMAIN_H__ */

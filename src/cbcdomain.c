@@ -85,10 +85,11 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 	snprintf(cdcl->ldapserver, COMM_S, "NULL");
 	snprintf(cdcl->logserver, COMM_S, "NULL");
 	snprintf(cdcl->nfsdomain, COMM_S, "NULL");
+	snprintf(cdcl->ntpserver, COMM_S, "NULL");
 	snprintf(cdcl->smtpserver, COMM_S, "NULL");
 	snprintf(cdcl->xymonserver, COMM_S, "NULL");
 	cdcl->action = cdcl->confldap = cdcl->ldapssl = cdcl->conflog = 0;
-	cdcl->confsmtp = cdcl->confxymon = 0;
+	cdcl->confsmtp = cdcl->confxymon = cdcl->confntp = cdcl->ldapssl = 0;
 	cdcl->start_ip = cdcl->end_ip = cdcl->netmask = cdcl->gateway = 0;
 	cdcl->ns = 0;
 }
@@ -106,7 +107,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:f:g:i:k:lmn:prs:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:f:g:i:k:lmn:prs:t:x:")) != -1) {
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'b') {
@@ -115,10 +116,12 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = DISPLAY_CONFIG;
 		} else if (opt == 'e') {
 			snprintf(cdl->smtpserver, HOST_S, "%s", optarg);
+			cdl->confsmtp = 1;
 		} else if (opt == 'f') {
 			snprintf(cdl->nfsdomain, CONF_S, "%s", optarg);
 		} else if (opt == 'g') {
 			snprintf(cdl->logserver, HOST_S, "%s", optarg);
+			cdl->conflog = 1;
 		} else if (opt == 'i') {
 			snprintf(cdl->binddn, NAME_S, "%s", optarg);
 		} else if (opt == 'k') {
@@ -135,8 +138,13 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = RM_CONFIG;
 		} else if (opt == 's') {
 			snprintf(cdl->ldapserver, HOST_S, "%s", optarg);
+			cdl->confldap = 1;
+		} else if (opt == 't') {
+			snprintf(cdl->ntpserver, HOST_S, "%s", optarg);
+			cdl->confntp = 1;
 		} else if (opt == 'x') {
 			snprintf(cdl->xymonserver, HOST_S, "%s", optarg);
+			cdl->confxymon = 1;
 		}
 	}
 	if (cdl->action == 0)

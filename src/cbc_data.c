@@ -205,11 +205,10 @@ clean_build_domain(cbc_build_domain_t *dom)
 }
 
 void
-display_build_domain(cbc_t *base)
+display_build_domain(cbc_build_domain_t *bdom)
 {
 	char *ip;
 	uint32_t ip_addr;
-	cbc_build_domain_t *bdom = base->bdom;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in display_build_domain");

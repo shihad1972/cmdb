@@ -60,16 +60,30 @@ display_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
 		free(cbc);
 		return retval;
 	}
-	display_build_domain(base);
+	display_build_domain(base->bdom);
 	clean_cbc_struct(base);
 	return retval;
 }
 
 int
-add_cbc_build_domain((cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
+add_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
 {
 	int retval = NONE;
+	cbc_t *base;
+	cbc_build_domain_t *bdom;
 
+	if (!(base = malloc(sizeof(cbc_t))))
+		report_error(MALLOC_FAIL, "base in add_cbc_build_domain");
+	if (!(bdom = malloc(sizeof(cbc_build_domain_t))))
+		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
+	init_cbc_struct(base);
+	init_build_domain(bdom);
+	base->bdom = bdom;
+	copy_build_domain_values(cdl, bdom);
+	display_build_domain(bdom);
+	retval = run_insert(cbc, base, BUILD_DOMAINS);
+
+	clean_cbc_struct(base);
 	return retval;
 }
 
@@ -123,4 +137,39 @@ get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base)
 	if (!base->bdom)
 		retval = BUILD_DOMAIN_NOT_FOUND;
 	return retval;
+}
+
+void
+copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_t *bdom)
+{
+	if (cdl->confntp > 0) {
+		bdom->config_ntp = 1;
+		snprintf(bdom->ntp_server, HOST_S, "%s", cdl->ntpserver);
+	}
+	if (cdl->conflog > 0) {
+		bdom->config_log = 1;
+		snprintf(bdom->log_server, CONF_S, "%s", cdl->logserver);
+	}
+	if (cdl->confsmtp > 0) {
+		bdom->config_email = 1;
+		snprintf(bdom->smtp_server, CONF_S, "%s", cdl->smtpserver);
+	}
+	if (cdl->confxymon > 0) {
+		bdom->config_xymon = 1;
+		snprintf(bdom->xymon_server, CONF_S, "%s", cdl->xymonserver);
+	}
+	if (cdl->confldap > 0) {
+		bdom->config_ldap = 1;
+		snprintf(bdom->ldap_server, URL_S, "%s", cdl->ldapserver);
+		snprintf(bdom->ldap_dn, URL_S, "%s", cdl->basedn);
+		snprintf(bdom->ldap_bind, URL_S, "%s", cdl->binddn);
+		bdom->ldap_ssl = cdl->ldapssl;
+	}
+	bdom->start_ip = cdl->start_ip;
+	bdom->end_ip = cdl->end_ip;
+	bdom->netmask = cdl->netmask;
+	bdom->gateway = cdl->gateway;
+	bdom->ns = cdl->ns;
+	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
+	snprintf(bdom->nfs_domain, CONF_S, "%s", cdl->nfsdomain);
 }

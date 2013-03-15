@@ -79,6 +79,9 @@ store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields);
 int
 setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base);
 
+int
+setup_insert_mysql_buffer(int type, void **buffer, cbc_t *base, unsigned int i);
+
 void
 store_boot_line_mysql(MYSQL_ROW row, cbc_t *base);
 
@@ -123,6 +126,9 @@ store_varient_mysql(MYSQL_ROW row, cbc_t *base);
 
 void
 store_vmhost_mysql(MYSQL_ROW row, cbc_t *base);
+
+void
+setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i);
 
 # endif /* HAVE_MYSQL */
 
@@ -188,6 +194,9 @@ store_varient_sqlite(sqlite3_stmt *state, cbc_t *base);
 
 void
 store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base);
+
+int
+setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_t *bdom);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

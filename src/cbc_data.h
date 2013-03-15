@@ -246,7 +246,7 @@ void
 clean_build_domain(cbc_build_domain_t *dom);
 
 void
-display_build_domain(cbc_t *base);
+display_build_domain(cbc_build_domain_t *dom);
 
 void
 init_build_ip(cbc_build_ip_t *ip);

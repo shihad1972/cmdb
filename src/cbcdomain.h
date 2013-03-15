@@ -37,6 +37,7 @@ typedef struct cbcdomain_comm_line_s {
 	char ldapserver[HOST_S];
 	char logserver[HOST_S];
 	char nfsdomain[CONF_S];
+	char ntpserver[HOST_S];
 	char smtpserver[HOST_S];
 	char xymonserver[HOST_S];
 	short int action;
@@ -45,6 +46,7 @@ typedef struct cbcdomain_comm_line_s {
 	short int conflog;
 	short int confsmtp;
 	short int confxymon;
+	short int confntp;
 	unsigned long int start_ip;
 	unsigned long int end_ip;
 	unsigned long int netmask;

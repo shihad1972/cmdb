@@ -86,10 +86,10 @@ INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, boot_id, ip_id, locale_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
- domain, country, language, keymap, ntp_server, config_ntp, ldap_server,\
- ldap_url, ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
+ domain, ntp_server, config_ntp, ldap_server,\
+ ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
  smtp_server, config_email, xymon_server, config_xymon, nfs_domain) VALUES (\
- ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id) VALUES (?, ?, ?,\
  ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, boot_id,\
@@ -125,12 +125,12 @@ const int mysql_inserts[][24] = {
   MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0},
 {MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING,
+  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
+  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
+  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING,
   MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
   MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  MYSQL_TYPE_STRING} ,
+  MYSQL_TYPE_STRING, 0, 0, 0, 0} ,
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
   MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
@@ -167,7 +167,7 @@ const int mysql_inserts[][24] = {
 
 const unsigned int select_fields[] = { 5, 9, 25, 5, 8, 6, 4, 8, 4, 8, 8, 3, 8,
   3, 4 };
-const unsigned int insert_fields[] = { 4, 8, 24, 4, 7, 5, 3, 7, 3, 7, 7, 2, 7,
+const unsigned int insert_fields[] = { 4, 8, 20, 4, 7, 5, 3, 7, 3, 7, 7, 2, 7,
   2, 3 };
 int
 run_query(cbc_config_t *config, cbc_t *base, int type)
@@ -384,7 +384,6 @@ run_insert_mysql(cbc_config_t *config, cbc_t *base, int type)
 
 	mysql_stmt_close(cbc_stmt);
 	cmdb_mysql_cleanup(&cbc);
-
 	return retval;
 }
 
@@ -528,7 +527,36 @@ store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
 int
 setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base)
 {
-	return NONE;
+	int retval = NONE;
+	void *buffer;
+
+	mybind->buffer_type = mysql_inserts[type][i];
+	if (mybind->buffer_type == MYSQL_TYPE_LONG)
+		mybind->is_unsigned = 1;
+	else
+		mybind->is_unsigned = 0;
+	mybind->is_null = 0;
+	mybind->length = 0;
+	if ((retval = setup_insert_mysql_buffer(type, &buffer, base, i)) != 0)
+		return retval;
+	mybind->buffer = buffer;
+	if (mybind->buffer_type == MYSQL_TYPE_LONG)
+		mybind->buffer_length = sizeof(unsigned long int);
+	else if (mybind->buffer_type == MYSQL_TYPE_STRING)
+		mybind->buffer_length = strlen(buffer);
+	return retval;
+}
+
+int
+setup_insert_mysql_buffer(int type, void **buffer, cbc_t *base, unsigned int i)
+{
+	int retval = NONE;
+
+	if (type == BUILD_DOMAINS)
+		setup_bind_mysql_build_domain(buffer, base, i);
+	else
+		retval = NO_TYPE;
+	return retval;
 }
 
 void
@@ -938,6 +966,51 @@ store_vmhost_mysql(MYSQL_ROW row, cbc_t *base)
 	}
 }
 
+void
+setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->bdom->start_ip);
+	else if (i == 1)
+		*buffer = &(base->bdom->end_ip);
+	else if (i == 2)
+		*buffer = &(base->bdom->netmask);
+	else if (i == 3)
+		*buffer = &(base->bdom->gateway);
+	else if (i == 4)
+		*buffer = &(base->bdom->ns);
+	else if (i == 5)
+		*buffer = &(base->bdom->domain);
+	else if (i == 6)
+		*buffer = &(base->bdom->ntp_server);
+	else if (i == 7)
+		*buffer = &(base->bdom->config_ntp);
+	else if (i == 8)
+		*buffer = &(base->bdom->ldap_server);
+	else if (i == 9)
+		*buffer = &(base->bdom->ldap_ssl);
+	else if (i == 10)
+		*buffer = &(base->bdom->ldap_dn);
+	else if (i == 11)
+		*buffer = &(base->bdom->ldap_bind);
+	else if (i == 12)
+		*buffer = &(base->bdom->config_ldap);
+	else if (i == 13)
+		*buffer = &(base->bdom->log_server);
+	else if (i == 14)
+		*buffer = &(base->bdom->config_log);
+	else if (i == 15)
+		*buffer = &(base->bdom->smtp_server);
+	else if (i == 16)
+		*buffer = &(base->bdom->config_email);
+	else if (i == 17)
+		*buffer = &(base->bdom->xymon_server);
+	else if (i == 18)
+		*buffer = &(base->bdom->config_xymon);
+	else if (i == 19)
+		*buffer = &(base->bdom->nfs_domain);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -990,7 +1063,7 @@ run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "run_insert_sqlite");
 	}
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
@@ -1149,7 +1222,13 @@ store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fie
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type)
 {
-	return NONE;
+	int retval = NONE;
+
+	if (type == BUILD_DOMAINS)
+		retval = setup_bind_sqlite_build_domain(state, base->bdom);
+	else
+		retval = NO_TYPE;
+	return retval;
 }
 
 void
@@ -1550,6 +1629,114 @@ store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base)
 	} else {
 		base->vmhost = vmhost;
 	}
+}
+
+int
+setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_t *bdom)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)bdom->start_ip)) > 0) {
+		fprintf(stderr, "Cannot bind start_ip\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)bdom->end_ip)) > 0) {
+		fprintf(stderr, "Cannot bind end_ip\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)bdom->netmask)) > 0) {
+		fprintf(stderr, "Cannot bind netmask\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)bdom->gateway)) > 0) {
+		fprintf(stderr, "Cannot bind gateway\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)bdom->ns)) > 0) {
+		fprintf(stderr, "Cannot bind ns\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 6, bdom->domain, (int)strlen(bdom->domain), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind domain %s\n", bdom->domain);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 7, bdom->ntp_server, (int)strlen(bdom->ntp_server), SQLITE_STATIC)) > 0){
+		fprintf(stderr,
+"Cannot bind ntp server %s\n", bdom->ntp_server);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 8, bdom->config_ntp)) > 0) {
+		fprintf(stderr, "Cannot bind config ntp");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 9, bdom->ldap_server, (int)strlen(bdom->ldap_server), SQLITE_STATIC)) > 0) {
+		fprintf(stderr,
+"Cannot bind ldap server %s\n", bdom->ldap_server);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 10, bdom->ldap_ssl)) > 0) {
+		fprintf(stderr, "Cannot bind ldap ssl");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 11, bdom->ldap_dn, (int)strlen(bdom->ldap_dn), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind ldap dn %s\n", bdom->ldap_dn);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 12, bdom->ldap_bind, (int)strlen(bdom->ldap_bind), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind ldap bind %s\n", bdom->ldap_bind);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 13, bdom->config_ldap)) > 0) {
+		fprintf(stderr, "Cannot bind config ldap");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 14, bdom->log_server, (int)strlen(bdom->log_server), SQLITE_STATIC)) > 0){
+		fprintf(stderr,
+"Cannot bind log server %s\n", bdom->log_server);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 15, bdom->config_log)) > 0) {
+		fprintf(stderr, "Cannot bind config log");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 16, bdom->smtp_server, (int)strlen(bdom->smtp_server), SQLITE_STATIC)) > 0){
+		fprintf(stderr,
+"Cannot bind smtp server %s\n", bdom->smtp_server);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 17, bdom->config_email)) > 0) {
+		fprintf(stderr, "Cannot bind config email");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 18, bdom->xymon_server, (int)strlen(bdom->xymon_server), SQLITE_STATIC)) > 0){
+		fprintf(stderr,
+"Cannot bind xymon server %s\n", bdom->xymon_server);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 19, bdom->config_xymon)) > 0) {
+		fprintf(stderr, "Cannot bind config xymon");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0){
+		fprintf(stderr,
+"Cannot bind nfs domain %s\n", bdom->nfs_domain);
+		return retval;
+	}
+	return retval;
 }
 
 #endif
