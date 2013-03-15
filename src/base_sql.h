@@ -145,4 +145,26 @@ enum {			/* Update indexes */
 	REV_ZONE_SERIAL
 };
 
+# ifdef HAVE_MYSQL
+#  include <mysql.h>
+
+void
+cmdb_mysql_query(MYSQL *cmdb_mysql, const char *query);
+
+int
+cmdb_mysql_query_with_checks(MYSQL *mycmdb, const char *query);
+
+void
+cmdb_mysql_clean(MYSQL *cmdb_mysql, char *query);
+
+void
+cmdb_mysql_clean_full(MYSQL_RES *cmdb_res, MYSQL *cmdb_mysql, char *query);
+
+void
+cmdb_mysql_cleanup(MYSQL *cmdb);
+
+void
+cmdb_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
+
+# endif /* HAVE_MYSQL */
 #endif /* __BASE_SQL_H */

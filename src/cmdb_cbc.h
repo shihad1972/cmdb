@@ -30,25 +30,6 @@
 #define __CMDB_CBC_H__
 
 
-typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
-	char config[CONF_S];
-	char name[CONF_S];
-	char uuid[CONF_S];
-	char partition[CONF_S];
-	char varient[CONF_S];
-	char os[CONF_S];
-	char os_version[MAC_S];
-	char build_domain[RBUFF_S];
-	char action_type[MAC_S];
-	char arch[MAC_S];
-	short int action;
-	short int server;
-	short int package;
-	unsigned long int server_id;
-	unsigned long int os_id;
-	unsigned long int locale;
-} cbc_comm_line_t;
-
 typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	char dbtype[RANGE_S];
 	char file[CONF_S];
@@ -137,16 +118,10 @@ typedef struct partition_schemes_t {
 } partition_schemes_t;
 */
 int
-parse_cbc_config_file(cbc_config_t *dc, char *config);
-
-void
-init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/);
+parse_cbc_config_file(cbc_config_t *dc, const char *config);
 
 void
 init_cbc_config_values(cbc_config_t *dc);
-
-void
-init_cbc_comm_values(cbc_comm_line_t *cbt);
 /*
 void
 init_cbc_build_values(cbc_build_t *build_config);
@@ -162,13 +137,7 @@ print_cbc_build_values(cbc_build_t *build_config);
 
 void
 print_cbc_build_ids(cbc_build_t *build_config);
-*/
-void
-print_cbc_command_line_values(cbc_comm_line_t *command_line);
 
-int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
-/*
 int
 get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
 

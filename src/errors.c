@@ -202,6 +202,8 @@ display_cmdb_command_line_error(int retval, char *program)
 			display_cbc_usage();
 		else if ((strncmp(program, "dnsa", CONF_S) ==0))
 			display_dnsa_usage();
+		else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
+			display_cbcdomain_usage();
 		exit(retval);
 	} else
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -249,9 +251,10 @@ display_cbc_usage(void)
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
 	printf("-w: write build files\n-d: display build details\n");
-	printf("-m: Modify build options\n-c: create build in database\n\n");
-	printf("Display and write ptions:\n");
-	printf("cbc [ -d | -w ] [ -n | -i |  -u ] <server specifier>\n\n");
+	printf("-m: modify build options\n-a: add build for server\n");
+	printf("-r: remove build for server\n-l: list servers with a build\n");
+	printf("Display, remove and write options:\n");
+	printf("cbc [ -d | -w | -r ] [ -n | -i |  -u ] <server specifier>\n\n");
 /*	printf("Add, display and create options:\n");
 	printf("-p: partition\n-o: OS\n-v: OS version\n-t: arch\n");
 	printf("-b: build domain\n-l: locale\n-x: varient\n-g: packages\n\n");
@@ -270,9 +273,15 @@ display_cbc_usage(void)
 	printf("[<server_specifier>]\n\n"); */
 	printf("Create and modify options:\n");
 	printf("Use the Display to get these names\n");
-	printf("cbc -c -p<scheme> -o<OS> -v<version> -b<domain> -x");
+	printf("cbc [ -a | -m ] -p<scheme> -o<OS> -v<version> -b<domain> -x");
 	printf("<varient> -l<locale_id> -a<arch> [-n | -i | -u ] ");
 	printf("<server_specifier>\n\n");
+}
+
+void
+display_cbcdomain_usage(void)
+{
+	printf("cbcdomain: Program to manipluate build domains\n");
 }
 
 void

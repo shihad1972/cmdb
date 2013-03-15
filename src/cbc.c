@@ -37,22 +37,21 @@
  End testing additions */
 #include "checks.h"
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	cbc_config_t *cmc;
 	cbc_comm_line_t *cml;
-	char *cbc_config, sretval[MAC_S];
+	char sretval[MAC_S];
+	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval;
 	
 	retval = 0;
-	if (!(cbc_config = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "cbc_config in cbc.c");
 	if (!(cmc = malloc(sizeof(cbc_config_t))))
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_t))))
 		report_error(MALLOC_FAIL, "cml in cbc.c");
 	
-	strncpy(cbc_config, "/etc/dnsa/dnsa.conf", CONF_S - 1);
 	
 	init_all_config(cmc, cml);
 	
@@ -60,12 +59,10 @@ int main(int argc, char *argv[])
 	if (retval < 0) {
 		free(cmc);
 		free(cml);
-		free(cbc_config);
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
-	retval = parse_cbc_config_file(cmc, cbc_config);
+	retval = parse_cbc_config_file(cmc, config);
 	
-	free(cbc_config);
 	if (retval > 1) {
 		parse_cbc_config_error(retval);
 		free(cml);

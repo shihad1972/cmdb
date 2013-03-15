@@ -37,7 +37,6 @@
 #endif /* HAVE_LIBPCRE */
 #ifdef HAVE_MYSQL
 # include <mysql.h>
-# include "mysqlfunc.h"
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>

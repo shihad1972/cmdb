@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include "cmdb.h"
 #include "cbc_data.h"
 
@@ -202,6 +203,61 @@ clean_build_domain(cbc_build_domain_t *dom)
 		else
 			next = '\0';
 	}
+}
+
+void
+display_build_domain(cbc_t *base)
+{
+	char *ip;
+	uint32_t ip_addr;
+	cbc_build_domain_t *bdom = base->bdom;
+
+	if (!(ip = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in display_build_domain");
+	printf("Details for build domain %s\n", bdom->domain);
+	ip_addr = htonl((uint32_t)bdom->start_ip);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	printf("Network configuration\n\tStart IP: %s\n", ip);
+	ip_addr = htonl((uint32_t)bdom->end_ip);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	printf("\tEnd IP: %s\n", ip);
+	ip_addr = htonl((uint32_t)bdom->netmask);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	printf("\tNetmask: %s\n", ip);
+	ip_addr = htonl((uint32_t)bdom->gateway);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	printf("\tGateway: %s\n", ip);
+	ip_addr = htonl((uint32_t)bdom->ns);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	printf("\tName server: %s\n", ip);
+	if (bdom->config_ntp > 0)
+		printf("NTP server: %s\n", bdom->ntp_server);
+	else
+		printf("No NTP configuration\n");
+	if (bdom->config_ldap > 0) {
+		printf("LDAP configuration:\n");
+		printf("\tLDAP Server: %s\n", bdom->ldap_server);
+		if (bdom->ldap_ssl > 0)
+			printf("\tLDAP URL: ldaps://%s\n", bdom->ldap_server);
+		else
+			printf("\tLDAP URL: ldap://%s\n", bdom->ldap_server);
+		printf("\tLDAP base DN: %s\n", bdom->ldap_dn);
+		printf("\tLDAP bind DN: %s\n", bdom->ldap_bind);
+	} else 
+		printf("No LDAP configuration\n");
+	if (bdom->config_log > 0)
+		printf("Logging server: %s\n", bdom->log_server);
+	else
+		printf("No logging server configuration\n");
+	if (bdom->config_email > 0)
+		printf("SMTP relay server: %s\n", bdom->smtp_server);
+	else
+		printf("No SMTP relay configuration\n");
+	if (bdom->config_xymon > 0)
+		printf("Xymon monitoring server: %s\n", bdom->xymon_server);
+	else
+		printf("No xymon monitoring configuration\n");
+	free(ip);
 }
 
 void

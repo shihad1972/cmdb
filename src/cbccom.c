@@ -40,7 +40,7 @@
 
 
 int
-parse_cbc_config_file(cbc_config_t *cbc, char *config)
+parse_cbc_config_file(cbc_config_t *cbc, const char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -129,83 +129,6 @@ parse_cbc_config_file(cbc_config_t *cbc, char *config)
 	return retval;
 }
 
-int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
-{
-	int retval, opt;
-	
-	retval = NONE;
-
-	while ((opt = getopt(argc, argv, "n:u:i:p::o::v::b::x::l::a::wdc")) != -1) {
-		if (opt == 'n') {
-			snprintf(cb->name, CONF_S, "%s", optarg);
-			cb->server = TRUE;
-		} else if (opt == 'u') {
-			snprintf(cb->uuid, CONF_S, "%s", optarg);
-			cb->server = TRUE;
-		} else if (opt == 'i') {
-			cb->server_id = strtoul(optarg, NULL, 10);
-			cb->server = TRUE;
-		} else if (opt == 'p') {
-			snprintf(cb->action_type, MAC_S, "partition");
-			if (optarg)
-				snprintf(cb->partition, CONF_S, "%s", optarg);
-		} else if (opt == 'o') {
-			snprintf(cb->action_type, MAC_S, "os");
-			if (optarg)
-				snprintf(cb->os, CONF_S, "%s", optarg);
-		} else if (opt == 'v') {
-			snprintf(cb->action_type, MAC_S, "os_version");
-			if (optarg)
-				snprintf(cb->os_version, MAC_S, "%s", optarg);
-		} else if (opt == 'b') {
-			snprintf(cb->action_type, MAC_S, "build_domain");
-			if (optarg)
-				snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
-		} else if (opt == 'x') {
-			snprintf(cb->action_type, MAC_S, "varient");
-			if (optarg)
-				snprintf(cb->varient, CONF_S, "%s", optarg);
-		} else if (opt == 'l') {
-			snprintf(cb->action_type, MAC_S, "locale");
-			if (optarg)
-				cb->locale = strtoul(optarg, NULL, 10);
-		} else if (opt == 'a') {
-			if (optarg)
-				snprintf(cb->arch, MAC_S, "%s", optarg);
-		} else if (opt == 'w') {
-			cb->action = WRITE_CONFIG;
-		} else if (opt == 'd') {
-			cb->action = DISPLAY_CONFIG;
-		} else if (opt == 'c') {
-			cb->action = CREATE_CONFIG;
-		} else {
-			printf("Unknown option: %c\n", opt);
-			retval = DISPLAY_USAGE;
-		}
-	}
-	if ((cb->action == NONE) && 
-	 (cb->server == NONE) &&
-	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
-		retval = DISPLAY_USAGE;
-	else if (cb->action == NONE)
-		retval = NO_ACTION;
-	else if ((cb->server == NONE) &&
-	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
-		retval = NO_NAME_OR_ID;
-	else if ((cb->action == ADD_CONFIG) &&
-	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
-	 (cb->server == NONE))
-		retval = NO_NAME_OR_ID;
-	else if ((cb->action == CREATE_CONFIG) &&
-	 (cb->server == NONE))
-		retval = NO_NAME_OR_ID;
-	if (cb->action == CREATE_CONFIG)
-		snprintf(cb->action_type, MAC_S, "create config");
-	return retval;
-	
-}
-
 void
 parse_cbc_config_error(int error)
 {
@@ -228,14 +151,6 @@ parse_cbc_config_error(int error)
 }
 
 void
-init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/)
-{
-	init_cbc_config_values(cct);
-	init_cbc_comm_values(cclt);
-/*	init_cbc_build_values(cbt); */
-}
-
-void
 init_cbc_config_values(cbc_config_t *cbc)
 {
 	sprintf(cbc->db, "cmdb");
@@ -252,27 +167,6 @@ init_cbc_config_values(cbc_config_t *cbc)
 	sprintf(cbc->kickstart, "kickstart");
 	cbc->port = 3306;
 	cbc->cliflag = 0;
-}
-
-void
-init_cbc_comm_values(cbc_comm_line_t *cbt)
-{
-	cbt->action = NONE;
-	cbt->server_id = NONE;
-	cbt->server = NONE;
-	cbt->locale = 0;
-	cbt->os_id = 0;
-	cbt->package = 0;
-	snprintf(cbt->name, CONF_S, "NULL");
-	snprintf(cbt->uuid, CONF_S, "NULL");
-	snprintf(cbt->action_type, MAC_S, "NULL");
-	snprintf(cbt->os, CONF_S, "NULL");
-	snprintf(cbt->os_version, MAC_S, "NULL");
-	snprintf(cbt->partition, CONF_S, "NULL");
-	snprintf(cbt->varient, CONF_S, "NULL");
-	snprintf(cbt->build_domain, RBUFF_S, "NULL");
-	snprintf(cbt->arch, MAC_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
 }
 /*
 void
@@ -370,36 +264,6 @@ print_cbc_build_values(cbc_build_t *build_config)
 	fprintf(stderr, "\n");
 }
 */
-void
-print_cbc_command_line_values(cbc_comm_line_t *cml)
-{
-	fprintf(stderr, "########\nCommand line Values\n");
-	if (cml->action == WRITE_CONFIG)
-		fprintf(stderr, "Action: Write configuration file\n");
-	else if (cml->action == DISPLAY_CONFIG)
-		fprintf(stderr, "Action: Display configuration\n");
-	else if (cml->action == ADD_CONFIG)
-		fprintf(stderr, "Action: Add configuration for build\n");
-	else if (cml->action == CREATE_CONFIG)
-		fprintf(stderr, "Action: Create build configuration\n");
-	else
-		fprintf(stderr, "Action: Unknown!!\n");
-	fprintf(stderr, "Config: %s\n", cml->config);
-	fprintf(stderr, "Name: %s\n", cml->name);
-	fprintf(stderr, "UUID: %s\n", cml->uuid);
-	fprintf(stderr, "Server ID: %ld\n", cml->server_id);
-	fprintf(stderr, "OS ID: %lu\n", cml->os_id);
-	fprintf(stderr, "OS: %s\n", cml->os);
-	fprintf(stderr, "OS Version: %s\n", cml->os_version);
-	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale ID: %lu\n", cml->locale);
-	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
-	fprintf(stderr, "Action Type: %s\n", cml->action_type);
-	fprintf(stderr, "Partition: %s\n", cml->partition);
-	fprintf(stderr, "Varient: %s\n", cml->varient);
-	
-	fprintf(stderr, "\n");
-}
 
 void
 print_cbc_config(cbc_config_t *cbc)

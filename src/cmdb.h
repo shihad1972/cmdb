@@ -234,7 +234,10 @@ enum {			/* cbc action codes */
 	WRITE_CONFIG = 11,
 	DISPLAY_CONFIG = 12,
 	ADD_CONFIG = 13,
-	CREATE_CONFIG = 14
+	CREATE_CONFIG = 14,
+	MOD_CONFIG = 15,
+	RM_CONFIG = 16,
+	LIST_CONFIG = 17
 };
 
 enum {			/* dnsa action codes */
@@ -296,6 +299,8 @@ void
 display_cbc_usage(void);
 void
 display_dnsa_usage(void);
+void
+display_cbcdomain_usage(void);
 /* Database fields query mismatch error functions */
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);

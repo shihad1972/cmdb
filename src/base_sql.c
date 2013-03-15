@@ -30,13 +30,13 @@
 #include <string.h>
 #ifdef HAVE_MYSQL
 # include <mysql.h>
-# include "mysqlfunc.h"
 #endif /*HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
 #endif /*HAVE_SQLITE3 */
 #include "cmdb.h"
 #include "cmdb_cbc.h"
+#include "base_sql.h"
 
 #ifdef HAVE_MYSQL
 
