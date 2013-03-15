@@ -36,6 +36,7 @@
 #include "cbc_data.h"
 #include "checks.h"
 #include "cbcdomain.h"
+#include "builddomain.h"
 
 int
 main(int argc, char *argv[])
