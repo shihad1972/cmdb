@@ -38,15 +38,15 @@
 
 
 void
-display_customer_info(char *name, char *coid, cmdb_config_t *config)
+display_customer_info(char *name, char *coid, cmdb_config_s *config)
 {
 	int retval, i;
-	cmdb_customer_t *list;
-	cmdb_t *cmdb;
+	cmdb_customer_s *list;
+	cmdb_s *cmdb;
 	retval = i = 0;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
+		report_error(MALLOC_FAIL, "cmdb_s in display_customer_info");
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
@@ -76,16 +76,16 @@ CUSTOMER | CONTACT | SERVICE)) != 0) {
 }
 
 void
-display_all_customers(cmdb_config_t *config)
+display_all_customers(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_customer_t *list;
-	cmdb_t *cmdb;
+	cmdb_customer_s *list;
+	cmdb_s *cmdb;
 	size_t len;
 	retval = 0;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_t in display_customer_info");
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
+		report_error(MALLOC_FAIL, "cmdb_s in display_customer_info");
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
@@ -106,11 +106,11 @@ display_all_customers(cmdb_config_t *config)
 }
 
 int
-add_customer_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
 	int retval;
-	cmdb_customer_t *cust;
+	cmdb_customer_s *cust;
 
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_customer_to_database");
@@ -137,11 +137,11 @@ add_customer_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 }
 
 int
-add_contact_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
 	int retval;
-	cmdb_contact_t *cont;
+	cmdb_contact_s *cont;
 
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_customer_to_database");
@@ -173,7 +173,7 @@ add_contact_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 }
 
 int
-add_service_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
 	int retval;
@@ -222,17 +222,17 @@ add_service_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 	return retval;
 }
 void
-display_service_types(cmdb_config_t *config)
+display_service_types(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_service_type_t *list;
+	cmdb_service_sype_t *list;
 	size_t len;
-	cmdb_t *cmdb;
+	cmdb_s *cmdb;
 
 	retval = 0;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
-		report_error(MALLOC_FAIL, "cmdb_t in display_service_types");
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
+		report_error(MALLOC_FAIL, "cmdb_s in display_service_types");
 	cmdb_init_struct(cmdb);
 
 	cmdb->servicetype = '\0';
@@ -256,14 +256,14 @@ display_service_types(cmdb_config_t *config)
 }
 
 void
-display_customer_services(cmdb_config_t *config, char *coid)
+display_customer_services(cmdb_config_s *config, char *coid)
 {
 	int retval;
-	cmdb_t *cmdb;
-	cmdb_customer_t *cust;
-	cmdb_service_t *service;
+	cmdb_s *cmdb;
+	cmdb_customer_s *cust;
+	cmdb_service_s *service;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb in display_customer_services");
 
 	cmdb_init_struct(cmdb);
@@ -289,14 +289,14 @@ display_customer_services(cmdb_config_t *config, char *coid)
 }
 
 void
-display_customer_contacts(cmdb_config_t *config, char *coid)
+display_customer_contacts(cmdb_config_s *config, char *coid)
 {
 	int retval, i;
-	cmdb_t *cmdb;
-	cmdb_customer_t *cust;
-	cmdb_contact_t *contact;
+	cmdb_s *cmdb;
+	cmdb_customer_s *cust;
+	cmdb_contact_s *contact;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb in display_customer_contacts");
 
 	i = 0;
@@ -326,7 +326,7 @@ display_customer_contacts(cmdb_config_t *config, char *coid)
 }
 
 void
-print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
+print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 {
 	printf("%s: Coid %s\n", cust->name, cust->coid);
 	printf("%s\n", cust->address);
@@ -336,10 +336,10 @@ print_customer_details(cmdb_customer_t *cust, cmdb_t *cmdb)
 }
 
 int
-print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
+print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id)
 {
 	int i = 0;
-	cmdb_contact_t *list;
+	cmdb_contact_s *list;
 	list = contacts;
 	while (list) {
 		if (list->cust_id == cust_id) {
@@ -354,10 +354,10 @@ print_customer_contacts(cmdb_contact_t *contacts, unsigned long int cust_id)
 }
 
 int
-get_customer(cmdb_config_t *config, cmdb_t *cmdb, char *coid)
+get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid)
 {
 	int retval;
-	cmdb_customer_t *cust, *next;
+	cmdb_customer_s *cust, *next;
 
 	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0)
 		return retval;

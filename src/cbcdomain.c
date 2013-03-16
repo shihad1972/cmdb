@@ -43,10 +43,10 @@ main(int argc, char *argv[])
 {
 	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval = NONE;
-	cbc_config_t *cmc;
+	cbc_config_s *cmc;
 	cbcdomain_comm_line_s *cdcl;
 
-	if (!(cmc = malloc(sizeof(cbc_config_t))))
+	if (!(cmc = malloc(sizeof(cbc_config_s))))
 		report_error(MALLOC_FAIL, "cmc in cbcdomain main");
 	if (!(cdcl = malloc(sizeof(cbcdomain_comm_line_s))))
 		report_error(MALLOC_FAIL, "cdcl in cbcdomain main");
@@ -95,7 +95,7 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 }
 
 void
-init_cbcdomain_config(cbc_config_t *cmc, cbcdomain_comm_line_s *cdcl)
+init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 {
 	init_cbc_config_values(cmc);
 	init_cbcdomain_comm_line(cdcl);

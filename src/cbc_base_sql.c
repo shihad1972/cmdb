@@ -45,13 +45,13 @@
 #endif /* HAVE_SQLITE3 */
 
 /**
- * These SQL searches require the cbc_t struct. Each search will fill one of
- * the structs pointed to within cbc_t.
- * The stucts within cbc_t will be malloc'ed by the database store function so
- * only cbc_t needs to be malloc'ed and initialised.
+ * These SQL searches require the cbc_s struct. Each search will fill one of
+ * the structs pointed to within cbc_s.
+ * The stucts within cbc_s will be malloc'ed by the database store function so
+ * only cbc_s needs to be malloc'ed and initialised.
  * These searches return multiple members.
  * Helper functions need to be created for each search to populate the member
- * of cbc_t used.
+ * of cbc_s used.
  */
 const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
@@ -171,7 +171,7 @@ const unsigned int cbc_insert_fields[] = { 4, 8, 20, 4, 7, 5, 3, 7, 3, 7, 7, 2, 
   2, 3 };
 
 int
-run_query(cbc_config_t *config, cbc_t *base, int type)
+run_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -196,7 +196,7 @@ run_query(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_multiple_query(cbc_config_t *config, cbc_t *base, int type)
+run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -222,7 +222,7 @@ run_multiple_query(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_insert(cbc_config_t *config, cbc_t *base, int type)
+run_insert(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -307,7 +307,7 @@ get_query(int type, const char **query, unsigned int *fields)
 #ifdef HAVE_MYSQL
 
 void
-cbc_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
+cbc_mysql_init(cbc_config_s *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
 
@@ -322,7 +322,7 @@ cbc_mysql_init(cbc_config_t *dc, MYSQL *cbc_mysql)
 }
 
 int
-run_query_mysql(cbc_config_t *config, cbc_t *base, int type)
+run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_RES *cbc_res;
@@ -358,7 +358,7 @@ run_query_mysql(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_insert_mysql(cbc_config_t *config, cbc_t *base, int type)
+run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_STMT *cbc_stmt;
@@ -389,7 +389,7 @@ run_insert_mysql(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type)
+run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -442,7 +442,7 @@ run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type)
 }
 
 void
-store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
+store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == BOOT_LINE) {
@@ -526,7 +526,7 @@ store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields)
 }
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base)
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base)
 {
 	int retval = NONE;
 	void *buffer;
@@ -549,7 +549,7 @@ setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *bas
 }
 
 int
-setup_insert_mysql_buffer(int type, void **buffer, cbc_t *base, unsigned int i)
+setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 {
 	int retval = NONE;
 
@@ -561,11 +561,11 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_t *base, unsigned int i)
 }
 
 void
-store_boot_line_mysql(MYSQL_ROW row, cbc_t *base)
+store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_boot_line_t *boot, *list;
+	cbc_boot_line_s *boot, *list;
 
-	if (!(boot = malloc(sizeof(cbc_boot_line_t))))
+	if (!(boot = malloc(sizeof(cbc_boot_line_s))))
 		report_error(MALLOC_FAIL, "boot in store_boot_line_mysql");
 	init_boot_line(boot);
 	boot->boot_id = strtoul(row[0], NULL, 10);
@@ -584,11 +584,11 @@ store_boot_line_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_build_mysql(MYSQL_ROW row, cbc_t *base)
+store_build_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_t *build, *list;
+	cbc_build_s *build, *list;
 
-	if (!(build = malloc(sizeof(cbc_build_t))))
+	if (!(build = malloc(sizeof(cbc_build_s))))
 		report_error(MALLOC_FAIL, "build in store_build_mysql");
 	init_build_struct(build);
 	build->build_id = strtoul(row[0], NULL, 10);
@@ -611,11 +611,11 @@ store_build_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_build_domain_mysql(MYSQL_ROW row, cbc_t *base)
+store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_domain_t *dom, *list;
+	cbc_build_domain_s *dom, *list;
 
-	if (!(dom = malloc(sizeof(cbc_build_domain_t))))
+	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "dom in store_build_domain_mysql");
 	init_build_domain(dom);
 	dom->bd_id = strtoul(row[0], NULL, 10);
@@ -677,11 +677,11 @@ store_build_domain_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_build_ip_mysql(MYSQL_ROW row, cbc_t *base)
+store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_ip_t *ip, *list;
+	cbc_build_ip_s *ip, *list;
 
-	if (!(ip = malloc(sizeof(cbc_build_ip_t))))
+	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in store_build_ip_mysql");
 	init_build_ip(ip);
 	ip->ip_id = strtoul(row[0], NULL, 10);
@@ -700,11 +700,11 @@ store_build_ip_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_build_os_mysql(MYSQL_ROW row, cbc_t *base)
+store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_os_t *os, *list;
+	cbc_build_os_s *os, *list;
 
-	if (!(os = malloc(sizeof(cbc_build_os_t))))
+	if (!(os = malloc(sizeof(cbc_build_os_s))))
 		report_error(MALLOC_FAIL, "os in store_build_os_mysql");
 	init_build_os(os);
 	os->os_id = strtoul(row[0], NULL, 10);
@@ -726,11 +726,11 @@ store_build_os_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_build_type_mysql(MYSQL_ROW row, cbc_t *base)
+store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_type_t *type, *list;
+	cbc_build_sype_t *type, *list;
 
-	if (!(type = malloc(sizeof(cbc_build_type_t))))
+	if (!(type = malloc(sizeof(cbc_build_sype_t))))
 		report_error(MALLOC_FAIL, "type in store_build_type_mysql");
 	init_build_type(type);
 	type->bt_id = strtoul(row[0], NULL, 10);
@@ -750,11 +750,11 @@ store_build_type_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base)
+store_disk_dev_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_disk_dev_t *disk, *list;
+	cbc_disk_dev_s *disk, *list;
 
-	if (!(disk = malloc(sizeof(cbc_disk_dev_t))))
+	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
 		report_error(MALLOC_FAIL, "disk in store_disk_dev_mysql");
 	init_disk_dev(disk);
 	disk->disk_id = strtoul(row[0], NULL, 10);
@@ -775,11 +775,11 @@ store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_locale_mysql(MYSQL_ROW row, cbc_t *base)
+store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_locale_t *loc, *list;
+	cbc_locale_s *loc, *list;
 
-	if (!(loc = malloc(sizeof(cbc_locale_t))))
+	if (!(loc = malloc(sizeof(cbc_locale_s))))
 		report_error(MALLOC_FAIL, "loc in store_locale_mysql");
 	init_locale(loc);
 	loc->locale_id = strtoul(row[0], NULL, 10);
@@ -801,11 +801,11 @@ store_locale_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_package_mysql(MYSQL_ROW row, cbc_t *base)
+store_package_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_package_t *pack, *list;
+	cbc_package_s *pack, *list;
 
-	if (!(pack = malloc(sizeof(cbc_package_t))))
+	if (!(pack = malloc(sizeof(cbc_package_s))))
 		report_error(MALLOC_FAIL, "pack in store_package_mysql");
 	init_package(pack);
 	pack->pack_id = strtoul(row[0], NULL, 10);
@@ -823,11 +823,11 @@ store_package_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_dpart_mysql(MYSQL_ROW row, cbc_t *base)
+store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_pre_part_t *part, *list;
+	cbc_pre_part_s *part, *list;
 
-	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
 	init_pre_part(part);
 	part->id.def_part_id = strtoul(row[0], NULL, 10);
@@ -849,11 +849,11 @@ store_dpart_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_spart_mysql(MYSQL_ROW row, cbc_t *base)
+store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_pre_part_t *part, *list;
+	cbc_pre_part_s *part, *list;
 
-	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
 	init_pre_part(part);
 	part->id.part_id = strtoul(row[0], NULL, 10);
@@ -875,11 +875,11 @@ store_spart_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_seed_scheme_mysql(MYSQL_ROW row, cbc_t *base)
+store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_seed_scheme_t *seed, *list;
+	cbc_seed_scheme_s *seed, *list;
 
-	if (!(seed = malloc(sizeof(cbc_seed_scheme_t))))
+	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "seed in store_seed_scheme_mysql");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = strtoul(row[0], NULL, 10);
@@ -899,11 +899,11 @@ store_seed_scheme_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_server_mysql(MYSQL_ROW row, cbc_t *base)
+store_server_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_server_t *server, *list;
+	cbc_server_s *server, *list;
 
-	if (!(server = malloc(sizeof(cbc_server_t))))
+	if (!(server = malloc(sizeof(cbc_server_s))))
 		report_error(MALLOC_FAIL, "server in store_server_mysql");
 	init_cbc_server(server);
 	server->server_id = strtoul(row[0], NULL, 10);
@@ -925,11 +925,11 @@ store_server_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_varient_mysql(MYSQL_ROW row, cbc_t *base)
+store_varient_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_varient_t *vari, *list;
+	cbc_varient_s *vari, *list;
 
-	if (!(vari = malloc(sizeof(cbc_varient_t))))
+	if (!(vari = malloc(sizeof(cbc_varient_s))))
 		report_error(MALLOC_FAIL, "vari in store_varient_mysql");
 	init_varient(vari);
 	vari->varient_id = strtoul(row[0], NULL, 10);
@@ -946,11 +946,11 @@ store_varient_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-store_vmhost_mysql(MYSQL_ROW row, cbc_t *base)
+store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_vm_server_hosts *vmhost, *list;
+	cbc_vm_server_hosts_s *vmhost, *list;
 
-	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts))))
+	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
 		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = strtoul(row[0], NULL, 10);
@@ -968,7 +968,7 @@ store_vmhost_mysql(MYSQL_ROW row, cbc_t *base)
 }
 
 void
-setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i)
+setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->bdom->start_ip);
@@ -1017,7 +1017,7 @@ setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
+run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1049,7 +1049,7 @@ run_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type)
+run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1084,7 +1084,7 @@ run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type)
 }
 
 int
-run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
+run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -1137,7 +1137,7 @@ run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type)
 }
 
 void
-store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fields)
+store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == BOOT_LINE) {
@@ -1221,7 +1221,7 @@ store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fie
 }
 
 int
-setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type)
+setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 {
 	int retval = NONE;
 
@@ -1233,11 +1233,11 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type)
 }
 
 void
-store_boot_line_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_boot_line_t *boot, *list;
+	cbc_boot_line_s *boot, *list;
 
-	if (!(boot = malloc(sizeof(cbc_boot_line_t))))
+	if (!(boot = malloc(sizeof(cbc_boot_line_s))))
 		report_error(MALLOC_FAIL, "boot in store_boot_line_sqlite");
 	init_boot_line(boot);
 	boot->boot_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1256,11 +1256,11 @@ store_boot_line_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_build_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_t *build, *list;
+	cbc_build_s *build, *list;
 
-	if (!(build = malloc(sizeof(cbc_build_t))))
+	if (!(build = malloc(sizeof(cbc_build_s))))
 		report_error(MALLOC_FAIL, "build in store_build_sqlite");
 	init_build_struct(build);
 	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1283,11 +1283,11 @@ store_build_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_build_domain_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_domain_t *dom, *list;
+	cbc_build_domain_s *dom, *list;
 
-	if (!(dom = malloc(sizeof(cbc_build_domain_t))))
+	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "dom in store_build_domain_sqlite");
 	init_build_domain(dom);
 	dom->bd_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1336,11 +1336,11 @@ store_build_domain_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_build_ip_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_ip_t *ip, *list;
+	cbc_build_ip_s *ip, *list;
 
-	if (!(ip = malloc(sizeof(cbc_build_ip_t))))
+	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in store_build_ip_sqlite");
 	init_build_ip(ip);
 	ip->ip_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1359,11 +1359,11 @@ store_build_ip_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_build_os_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_os_t *os, *list;
+	cbc_build_os_s *os, *list;
 
-	if (!(os = malloc(sizeof(cbc_build_os_t))))
+	if (!(os = malloc(sizeof(cbc_build_os_s))))
 		report_error(MALLOC_FAIL, "os in store_build_os_sqlite");
 	init_build_os(os);
 	os->os_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1385,11 +1385,11 @@ store_build_os_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_build_type_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_type_t *type, *list;
+	cbc_build_sype_t *type, *list;
 
-	if (!(type = malloc(sizeof(cbc_build_type_t))))
+	if (!(type = malloc(sizeof(cbc_build_sype_t))))
 		report_error(MALLOC_FAIL, "type in store_build_type_sqlite");
 	init_build_type(type);
 	type->bt_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1409,11 +1409,11 @@ store_build_type_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_disk_dev_t *disk, *list;
+	cbc_disk_dev_s *disk, *list;
 
-	if (!(disk = malloc(sizeof(cbc_disk_dev_t))))
+	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
 		report_error(MALLOC_FAIL, "disk in store_disk_dev_sqlite");
 	init_disk_dev(disk);
 	disk->disk_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1431,11 +1431,11 @@ store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_locale_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_locale_t *loc, *list;
+	cbc_locale_s *loc, *list;
 
-	if (!(loc = malloc(sizeof(cbc_locale_t))))
+	if (!(loc = malloc(sizeof(cbc_locale_s))))
 		report_error(MALLOC_FAIL, "loc in store_locale_sqlite");
 	init_locale(loc);
 	loc->locale_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1457,11 +1457,11 @@ store_locale_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_package_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_package_t *pack, *list;
+	cbc_package_s *pack, *list;
 
-	if (!(pack = malloc(sizeof(cbc_package_t))))
+	if (!(pack = malloc(sizeof(cbc_package_s))))
 		report_error(MALLOC_FAIL, "pack in store_package_sqlite");
 	init_package(pack);
 	pack->pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1479,11 +1479,11 @@ store_package_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_dpart_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_pre_part_t *part, *list;
+	cbc_pre_part_s *part, *list;
 
-	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.def_part_id = 
@@ -1510,11 +1510,11 @@ store_dpart_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_spart_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_pre_part_t *part, *list;
+	cbc_pre_part_s *part, *list;
 
-	if (!(part = malloc(sizeof(cbc_pre_part_t))))
+	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.part_id = 
@@ -1541,11 +1541,11 @@ store_spart_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_seed_scheme_t *seed, *list;
+	cbc_seed_scheme_s *seed, *list;
 
-	if (!(seed = malloc(sizeof(cbc_seed_scheme_t))))
+	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "seed in store_seed_scheme_sqlite");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = 
@@ -1564,11 +1564,11 @@ store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_server_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_server_t *server, *list;
+	cbc_server_s *server, *list;
 
-	if (!(server = malloc(sizeof(cbc_server_t))))
+	if (!(server = malloc(sizeof(cbc_server_s))))
 		report_error(MALLOC_FAIL, "server in store_server_sqlite");
 	init_cbc_server(server);
 	server->server_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1590,11 +1590,11 @@ store_server_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_varient_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_varient_t *vari, *list;
+	cbc_varient_s *vari, *list;
 
-	if (!(vari = malloc(sizeof(cbc_varient_t))))
+	if (!(vari = malloc(sizeof(cbc_varient_s))))
 		report_error(MALLOC_FAIL, "vari in store_varient_sqlite");
 	init_varient(vari);
 	vari->varient_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1611,11 +1611,11 @@ store_varient_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 void
-store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base)
+store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_vm_server_hosts *vmhost, *list;
+	cbc_vm_server_hosts_s *vmhost, *list;
 
-	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts))))
+	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
 		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1633,7 +1633,7 @@ store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base)
 }
 
 int
-setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_t *bdom)
+setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom)
 {
 	int retval;
 

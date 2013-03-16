@@ -42,12 +42,12 @@
 #include "builddomain.h"
 
 int
-display_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
+display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 {
 	int retval = NONE;
-	cbc_t *base;
+	cbc_s *base;
 
-	if (!(base = malloc(sizeof(cbc_t))))
+	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_cbc_build_domain");
 	init_cbc_struct(base);
 	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
@@ -66,15 +66,15 @@ display_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
 }
 
 int
-add_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
+add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 {
 	int retval = NONE;
-	cbc_t *base;
-	cbc_build_domain_t *bdom;
+	cbc_s *base;
+	cbc_build_domain_s *bdom;
 
-	if (!(base = malloc(sizeof(cbc_t))))
+	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_cbc_build_domain");
-	if (!(bdom = malloc(sizeof(cbc_build_domain_t))))
+	if (!(bdom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
 	init_cbc_struct(base);
 	init_build_domain(bdom);
@@ -88,13 +88,13 @@ add_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl)
 }
 
 int
-list_cbc_build_domain(cbc_config_t *cbc)
+list_cbc_build_domain(cbc_config_s *cbc)
 {
 	int retval = NONE;
-	cbc_t *base;
-	cbc_build_domain_t *bdom;
+	cbc_s *base;
+	cbc_build_domain_s *bdom;
 
-	if (!(base = malloc(sizeof(cbc_t))))
+	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
 	init_cbc_struct(base);
 	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
@@ -113,11 +113,11 @@ list_cbc_build_domain(cbc_config_t *cbc)
 }
 
 int
-get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base)
+get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base)
 {
 	int retval = NONE;
 	char *domain = cdl->domain;
-	cbc_build_domain_t *bdom = base->bdom, *next;
+	cbc_build_domain_s *bdom = base->bdom, *next;
 	base->bdom = '\0';
 
 	if (bdom)
@@ -140,7 +140,7 @@ get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base)
 }
 
 void
-copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_t *bdom)
+copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 {
 	if (cdl->confntp > 0) {
 		bdom->config_ntp = 1;

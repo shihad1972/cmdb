@@ -40,7 +40,7 @@
 
 
 int
-parse_cbc_config_file(cbc_config_t *cbc, const char *config)
+parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -151,7 +151,7 @@ parse_cbc_config_error(int error)
 }
 
 void
-init_cbc_config_values(cbc_config_t *cbc)
+init_cbc_config_values(cbc_config_s *cbc)
 {
 	sprintf(cbc->db, "cmdb");
 	sprintf(cbc->user, "root");
@@ -170,7 +170,7 @@ init_cbc_config_values(cbc_config_t *cbc)
 }
 /*
 void
-init_cbc_build_values(cbc_build_t *build_config)
+init_cbc_build_values(cbc_build_s *build_config)
 {
 	snprintf(build_config->ip_address, COMM_S, "NULL");
 	snprintf(build_config->mac_address, COMM_S, "NULL");
@@ -212,7 +212,7 @@ init_cbc_build_values(cbc_build_t *build_config)
 }
 
 void
-print_cbc_build_ids(cbc_build_t *build)
+print_cbc_build_ids(cbc_build_s *build)
 {
 	fprintf(stderr, "Server: %lu\n", build->server_id);
 	fprintf(stderr, "Build domain: %lu\n", build->bd_id);
@@ -224,7 +224,7 @@ print_cbc_build_ids(cbc_build_t *build)
 }
 
 void
-print_cbc_build_values(cbc_build_t *build_config)
+print_cbc_build_values(cbc_build_s *build_config)
 {
 	fprintf(stderr, "########\nBuild Values\n");
 	fprintf(stderr, "DISK DEVICE: %s\n", build_config->diskdev);
@@ -266,7 +266,7 @@ print_cbc_build_values(cbc_build_t *build_config)
 */
 
 void
-print_cbc_config(cbc_config_t *cbc)
+print_cbc_config(cbc_config_s *cbc)
 {
 	fprintf(stderr, "########\nConfig Values\n");
 	fprintf(stderr, "DB: %s\n", cbc->db);

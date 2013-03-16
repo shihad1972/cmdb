@@ -30,16 +30,16 @@
 # define __CBC_DATA_H__
 # include "cmdb.h"
 
-typedef struct cbc_boot_line_t {
+typedef struct cbc_boot_line_s {
 	char os[MAC_S];
 	char os_ver[MAC_S];
 	char boot_line[RBUFF_S];
 	unsigned long int boot_id;
 	unsigned long int bt_id;
-	struct cbc_boot_line_t *next;
-} cbc_boot_line_t;
+	struct cbc_boot_line_s *next;
+} cbc_boot_line_s;
 
-typedef struct cbc_build_t { 
+typedef struct cbc_build_s { 
 	char mac_addr[TYPE_S];
 	char net_int[RANGE_S];
 	unsigned long int build_id;
@@ -49,10 +49,10 @@ typedef struct cbc_build_t {
 	unsigned long int boot_id;
 	unsigned long int ip_id;
 	unsigned long int locale_id;
-	struct cbc_build_t *next;
-} cbc_build_t;
+	struct cbc_build_s *next;
+} cbc_build_s;
 
-typedef struct cbc_build_domain_t {
+typedef struct cbc_build_domain_s {
 	char domain[RBUFF_S];
 	char country[RANGE_S];
 	char language[RANGE_S];
@@ -79,19 +79,19 @@ typedef struct cbc_build_domain_t {
 	unsigned long int netmask;
 	unsigned long int gateway;
 	unsigned long int ns;
-	struct cbc_build_domain_t *next;
-} cbc_build_domain_t;
+	struct cbc_build_domain_s *next;
+} cbc_build_domain_s;
 
-typedef struct cbc_build_ip_t {
+typedef struct cbc_build_ip_s {
 	char host[MAC_S];
 	char domain[RBUFF_S];
 	unsigned long int ip;
 	unsigned long int ip_id;
 	unsigned long int bd_id;
-	struct cbc_build_ip_t *next;
-} cbc_build_ip_t;
+	struct cbc_build_ip_s *next;
+} cbc_build_ip_s;
 
-typedef struct cbc_build_os_t {
+typedef struct cbc_build_os_s {
 	char os[MAC_S];
 	char version[MAC_S];
 	char alias[MAC_S];
@@ -100,28 +100,28 @@ typedef struct cbc_build_os_t {
 	unsigned long int os_id;
 	unsigned long int boot_id;
 	unsigned long int bt_id;
-	struct cbc_build_os_t *next;
-} cbc_build_os_t;
+	struct cbc_build_os_s *next;
+} cbc_build_os_s;
 
-typedef struct cbc_build_type_t {
+typedef struct cbc_build_sype_t {
 	char alias[MAC_S];
 	char build_type[MAC_S];
 	char arg[RANGE_S];
 	char url[CONF_S];
 	char mirror[RBUFF_S];
 	unsigned long int bt_id;
-	struct cbc_build_type_t *next;
-} cbc_build_type_t;
+	struct cbc_build_sype_t *next;
+} cbc_build_sype_t;
 
-typedef struct cbc_disk_dev_t {
+typedef struct cbc_disk_dev_s {
 	char device[HOST_S];
 	short int lvm;
 	unsigned long int disk_id;
 	unsigned long int server_id;
-	struct cbc_disk_dev_t *next;
-} cbc_disk_dev_t;
+	struct cbc_disk_dev_s *next;
+} cbc_disk_dev_s;
 
-typedef struct cbc_locale_t {
+typedef struct cbc_locale_s {
 	char locale[MAC_S];
 	char country[RANGE_S];
 	char language[RANGE_S];
@@ -130,16 +130,16 @@ typedef struct cbc_locale_t {
 	unsigned long int locale_id;
 	unsigned long int os_id;
 	unsigned long int bt_id;
-	struct cbc_locale_t *next;
-} cbc_locale_t;
+	struct cbc_locale_s *next;
+} cbc_locale_s;
 
-typedef struct cbc_package_t {
+typedef struct cbc_package_s {
 	char package[HOST_S];
 	unsigned long int pack_id;
 	unsigned long int vari_id;
 	unsigned long int os_id;
-	struct cbc_package_t *next;
-} cbc_package_t;
+	struct cbc_package_s *next;
+} cbc_package_s;
 
 typedef union part_id_u {
 	unsigned long int def_part_id;
@@ -151,7 +151,7 @@ typedef union scheme_id_u {
 	unsigned long int server_id;
 } scheme_id_u;
 
-typedef struct cbc_pre_part_t {
+typedef struct cbc_pre_part_s {
 	char mount[HOST_S];
 	char fs[RANGE_S];
 	char log_vol[MAC_S];
@@ -160,17 +160,17 @@ typedef struct cbc_pre_part_t {
 	unsigned long int pri;
 	union part_id_u id;
 	union scheme_id_u link_id;
-	struct cbc_pre_part_t *next;
-} cbc_pre_part_t;
+	struct cbc_pre_part_s *next;
+} cbc_pre_part_s;
 
-typedef struct cbc_seed_scheme_t {
+typedef struct cbc_seed_scheme_s {
 	char name[CONF_S];
 	short int lvm;
 	unsigned long int def_scheme_id;
-	struct cbc_seed_scheme_t *next;
-} cbc_seed_scheme_t;
+	struct cbc_seed_scheme_s *next;
+} cbc_seed_scheme_s;
 
-typedef struct cbc_server_t {
+typedef struct cbc_server_s {
 	char vendor[CONF_S];
 	char make[CONF_S];
 	char model[CONF_S];
@@ -179,175 +179,175 @@ typedef struct cbc_server_t {
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
-	struct cbc_server_t *next;
-} cbc_server_t;
+	struct cbc_server_s *next;
+} cbc_server_s;
 
-typedef struct cbc_varient_t {
+typedef struct cbc_varient_s {
 	char varient[HOST_S];
 	char valias[MAC_S];
 	unsigned long int varient_id;
-	struct cbc_varient_t *next;
-} cbc_varient_t;
+	struct cbc_varient_s *next;
+} cbc_varient_s;
 
-typedef struct cbc_vm_server_hosts {
+typedef struct cbc_vm_server_hosts_s {
 	char vm_server[RBUFF_S];
 	char type[HOST_S];
 	unsigned long int vm_s_id;
 	unsigned long int server_id;
-	struct cbc_vm_server_hosts *next;
-} cbc_vm_server_hosts;
+	struct cbc_vm_server_hosts_s *next;
+} cbc_vm_server_hosts_s;
 
-typedef struct cbc_t {
-	struct cbc_boot_line_t *bootl;
-	struct cbc_build_t *build;
-	struct cbc_build_domain_t *bdom;
-	struct cbc_build_ip_t *bip;
-	struct cbc_build_os_t *bos;
-	struct cbc_build_type_t *btype;
-	struct cbc_disk_dev_t *diskd;
-	struct cbc_locale_t *locale;
-	struct cbc_package_t *package;
-	struct cbc_pre_part_t *dpart;
-	struct cbc_pre_part_t *spart;
-	struct cbc_seed_scheme_t *sscheme;
-	struct cbc_server_t *server;
-	struct cbc_varient_t *varient;
-	struct cbc_vm_server_hosts *vmhost;
-} cbc_t;
-
-void
-init_cbc_struct (cbc_t *cbc);
+typedef struct cbc_s {
+	struct cbc_boot_line_s *bootl;
+	struct cbc_build_s *build;
+	struct cbc_build_domain_s *bdom;
+	struct cbc_build_ip_s *bip;
+	struct cbc_build_os_s *bos;
+	struct cbc_build_sype_t *btype;
+	struct cbc_disk_dev_s *diskd;
+	struct cbc_locale_s *locale;
+	struct cbc_package_s *package;
+	struct cbc_pre_part_s *dpart;
+	struct cbc_pre_part_s *spart;
+	struct cbc_seed_scheme_s *sscheme;
+	struct cbc_server_s *server;
+	struct cbc_varient_s *varient;
+	struct cbc_vm_server_hosts_s *vmhost;
+} cbc_s;
 
 void
-clean_cbc_struct (cbc_t *cbc);
+init_cbc_struct (cbc_s *cbc);
 
 void
-init_boot_line(cbc_boot_line_t *boot);
+clean_cbc_struct (cbc_s *cbc);
 
 void
-clean_boot_line(cbc_boot_line_t *boot);
+init_boot_line(cbc_boot_line_s *boot);
 
 void
-display_boot_line(cbc_t *base);
+clean_boot_line(cbc_boot_line_s *boot);
 
 void
-init_build_struct(cbc_build_t *build);
+display_boot_line(cbc_s *base);
 
 void
-clean_build_struct(cbc_build_t *build);
+init_build_struct(cbc_build_s *build);
 
 void
-display_build_struct(cbc_t *base);
+clean_build_struct(cbc_build_s *build);
 
 void
-init_build_domain(cbc_build_domain_t *dom);
+display_build_struct(cbc_s *base);
 
 void
-clean_build_domain(cbc_build_domain_t *dom);
+init_build_domain(cbc_build_domain_s *dom);
 
 void
-display_build_domain(cbc_build_domain_t *dom);
+clean_build_domain(cbc_build_domain_s *dom);
 
 void
-init_build_ip(cbc_build_ip_t *ip);
+display_build_domain(cbc_build_domain_s *dom);
 
 void
-clean_build_ip(cbc_build_ip_t *ip);
+init_build_ip(cbc_build_ip_s *ip);
 
 void
-display_build_ip(cbc_t *base);
+clean_build_ip(cbc_build_ip_s *ip);
 
 void
-init_build_os(cbc_build_os_t *os);
+display_build_ip(cbc_s *base);
 
 void
-clean_build_os(cbc_build_os_t *os);
+init_build_os(cbc_build_os_s *os);
 
 void
-display_build_os(cbc_t *base);
+clean_build_os(cbc_build_os_s *os);
 
 void
-init_build_type(cbc_build_type_t *type);
+display_build_os(cbc_s *base);
 
 void
-clean_build_type(cbc_build_type_t *type);
+init_build_type(cbc_build_sype_t *type);
 
 void
-display_build_type(cbc_t *base);
+clean_build_type(cbc_build_sype_t *type);
 
 void
-init_pre_part(cbc_pre_part_t *prep);
+display_build_type(cbc_s *base);
 
 void
-clean_pre_part(cbc_pre_part_t *prep);
+init_pre_part(cbc_pre_part_s *prep);
 
 void
-display_def_part(cbc_t *base);
+clean_pre_part(cbc_pre_part_s *prep);
 
 void
-display_seed_part(cbc_t *base);
+display_def_part(cbc_s *base);
 
 void
-init_disk_dev(cbc_disk_dev_t *disk);
+display_seed_part(cbc_s *base);
 
 void
-clean_disk_dev(cbc_disk_dev_t *disk);
+init_disk_dev(cbc_disk_dev_s *disk);
 
 void
-display_disk_dev(cbc_t *base);
+clean_disk_dev(cbc_disk_dev_s *disk);
 
 void
-init_locale(cbc_locale_t *locale);
+display_disk_dev(cbc_s *base);
 
 void
-clean_locale(cbc_locale_t *locale);
+init_locale(cbc_locale_s *locale);
 
 void
-display_locale(cbc_t *base);
+clean_locale(cbc_locale_s *locale);
 
 void
-init_package(cbc_package_t *pack);
+display_locale(cbc_s *base);
 
 void
-clean_package(cbc_package_t *pack);
+init_package(cbc_package_s *pack);
 
 void
-display_package(cbc_t *base);
+clean_package(cbc_package_s *pack);
 
 void
-init_seed_scheme(cbc_seed_scheme_t *seed);
+display_package(cbc_s *base);
 
 void
-clean_seed_scheme(cbc_seed_scheme_t *seed);
+init_seed_scheme(cbc_seed_scheme_s *seed);
 
 void
-display_seed_scheme(cbc_t *base);
+clean_seed_scheme(cbc_seed_scheme_s *seed);
 
 void
-init_cbc_server(cbc_server_t *server);
+display_seed_scheme(cbc_s *base);
 
 void
-clean_cbc_server(cbc_server_t *server);
+init_cbc_server(cbc_server_s *server);
 
 void
-display_cbc_server(cbc_t *base);
+clean_cbc_server(cbc_server_s *server);
 
 void
-init_varient(cbc_varient_t *vari);
+display_cbc_server(cbc_s *base);
 
 void
-clean_varient(cbc_varient_t *vari);
+init_varient(cbc_varient_s *vari);
 
 void
-display_varient(cbc_t *base);
+clean_varient(cbc_varient_s *vari);
 
 void
-init_vm_hosts(cbc_vm_server_hosts *vm);
+display_varient(cbc_s *base);
 
 void
-clean_vm_hosts(cbc_vm_server_hosts *vm);
+init_vm_hosts(cbc_vm_server_hosts_s *vm);
 
 void
-display_vm_hosts(cbc_t *base);
+clean_vm_hosts(cbc_vm_server_hosts_s *vm);
+
+void
+display_vm_hosts(cbc_s *base);
 
 #endif /* __CBC_DATA_H__ */

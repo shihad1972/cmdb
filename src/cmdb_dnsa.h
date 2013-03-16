@@ -8,7 +8,7 @@ enum {			/* zone types; use NONE from action codes */
 	REVERSE_ZONE = 2
 };
 
-typedef struct comm_line_t { /* Hold parsed command line args */
+typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	short int action;
 	short int type;
 	unsigned long int prefix;
@@ -17,9 +17,9 @@ typedef struct comm_line_t { /* Hold parsed command line args */
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
 	char rtype[RANGE_S];
-} comm_line_t;
+} dnsa_comm_line_s;
 
-typedef struct dnsa_config_t { /* Hold DNSA configuration values */
+typedef struct dnsa_config_s { /* Hold DNSA configuration values */
 	char dbtype[RANGE_S];
 	char db[CONF_S];
 	char file[CONF_S];
@@ -45,9 +45,9 @@ typedef struct dnsa_config_t { /* Hold DNSA configuration values */
 	unsigned long int ttl;
 	unsigned int port;
 	unsigned long int cliflag;
-} dnsa_config_t;
+} dnsa_config_s;
 
-typedef struct record_row_t { /* Hold dns record */
+typedef struct record_row_s { /* Hold dns record */
 	char dest[RBUFF_S];
 	char host[RBUFF_S];
 	char type[RANGE_S];
@@ -56,20 +56,20 @@ typedef struct record_row_t { /* Hold dns record */
 	unsigned long int pri;
 	unsigned long int zone;
 	unsigned long int ip_addr;
-	struct record_row_t *next;
-} record_row_t;
+	struct record_row_s *next;
+} record_row_s;
 
-typedef struct rev_record_row_t { /* Hold dns record */
+typedef struct rev_record_row_s { /* Hold dns record */
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
 	char valid[RANGE_S];
 	unsigned long int record_id;
 	unsigned long int rev_zone;
 	unsigned long int ip_addr;
-	struct rev_record_row_t *next;
-} rev_record_row_t;
+	struct rev_record_row_s *next;
+} rev_record_row_s;
 
-typedef struct zone_info_t { /* Hold DNS zone */
+typedef struct zone_info_s { /* Hold DNS zone */
 	char name[RBUFF_S];
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
@@ -85,10 +85,10 @@ typedef struct zone_info_t { /* Hold DNS zone */
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
-	struct zone_info_t *next;
-} zone_info_t;
+	struct zone_info_s *next;
+} zone_info_s;
 
-typedef struct rev_zone_info_t { /* Hold DNS zone */
+typedef struct rev_zone_info_s { /* Hold DNS zone */
 	char net_range[RANGE_S];
 	char net_start[RANGE_S];
 	char net_finish[RANGE_S];
@@ -107,244 +107,244 @@ typedef struct rev_zone_info_t { /* Hold DNS zone */
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
-	struct rev_zone_info_t *next;
-} rev_zone_info_t;
+	struct rev_zone_info_s *next;
+} rev_zone_info_s;
 
-typedef struct preferred_a_t { /* Hold the preferred A records for reverse */
+typedef struct preferred_a_s { /* Hold the preferred A records for reverse */
 	unsigned long int prefa_id;
 	unsigned long int ip_addr;
 	unsigned long int record_id;
 	char ip[RANGE_S];
 	char fqdn[RBUFF_S];
-	struct preferred_a_t *next;
-} preferred_a_t;
+	struct preferred_a_s *next;
+} preferred_a_s;
 
-typedef struct zone_file_t {
+typedef struct zone_file_s {
 	char out[RBUFF_S];
-	struct zone_file_t *next;
-} zone_file_t;
+	struct zone_file_s *next;
+} zone_file_s;
 
-typedef struct dnsa_config_and_reverse {
-	dnsa_config_t *dc;
-	rev_record_row_t *record;
-	rev_zone_info_t *zone;
-} dnsa_config_and_reverse;
+typedef struct dnsa_config_and_reverse_s {
+	dnsa_config_s *dc;
+	rev_record_row_s *record;
+	rev_zone_info_s *zone;
+} dnsa_config_and_reverse_s;
 
-typedef struct dnsa_t {
-	struct zone_info_t *zones;
-	struct rev_zone_info_t *rev_zones;
-	struct record_row_t *records;
-	struct rev_record_row_t *rev_records;
-	struct preferred_a_t *prefer;
-	struct zone_file_t *file;
-} dnsa_t;
+typedef struct dnsa_s {
+	struct zone_info_s *zones;
+	struct rev_zone_info_s *rev_zones;
+	struct record_row_s *records;
+	struct rev_record_row_s *rev_records;
+	struct preferred_a_s *prefer;
+	struct zone_file_s *file;
+} dnsa_s;
 
 typedef union dbdata_u {
 	char text[256];
 	unsigned long int number;
 } dbdata_u;
 
-typedef struct dbdata_t {
+typedef struct dbdata_s {
 	union dbdata_u fields;
 	union dbdata_u args;
-	struct dbdata_t *next;
-} dbdata_t;
+	struct dbdata_s *next;
+} dbdata_s;
 
 /* Get command line args and pass them. Put actions into the struct */
 int
-parse_dnsa_command_line(int argc, char **argv, comm_line_t *comm);
+parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
 /* Grab config values from file */
 int
-parse_dnsa_config_file(dnsa_config_t *dc, char *config);
+parse_dnsa_config_file(dnsa_config_s *dc, char *config);
 /*initialise configuration struct */
 void
-init_config_values(dnsa_config_t *dc);
+init_config_values(dnsa_config_s *dc);
 void
 parse_dnsa_config_error(int error);
 /* Validate command line input */
 int
-validate_comm_line(comm_line_t *comm);
+validate_comm_line(dnsa_comm_line_s *comm);
 /* Struct initialisation and clean functions */
 void
-init_dnsa_struct(dnsa_t *dnsa);
+init_dnsa_struct(dnsa_s *dnsa);
 void
-init_zone_struct(zone_info_t *zone);
+init_zone_struct(zone_info_s *zone);
 void
-init_rev_zone_struct(rev_zone_info_t *revzone);
+init_rev_zone_struct(rev_zone_info_s *revzone);
 void
-init_record_struct(record_row_t *record);
+init_record_struct(record_row_s *record);
 void
-init_rev_record_struct(rev_record_row_t *revrecord);
+init_rev_record_struct(rev_record_row_s *revrecord);
 void
-init_preferred_a_struct(preferred_a_t *prefer);
+init_preferred_a_struct(preferred_a_s *prefer);
 void
-init_dbdata_struct(dbdata_t *data);
+init_dbdata_struct(dbdata_s *data);
 void
-init_initial_dbdata(dbdata_t **list, int type);
+init_initial_dbdata(dbdata_s **list, int type);
 void
-dnsa_clean_list(dnsa_t *dnsa);
+dnsa_clean_list(dnsa_s *dnsa);
 void
-dnsa_clean_zones(zone_info_t *zone);
+dnsa_clean_zones(zone_info_s *zone);
 void
-dnsa_clean_rev_zones(rev_zone_info_t *rev);
+dnsa_clean_rev_zones(rev_zone_info_s *rev);
 void
-dnsa_clean_records(record_row_t *rec);
+dnsa_clean_records(record_row_s *rec);
 void
-dnsa_clean_rev_records(rev_record_row_t *rev);
+dnsa_clean_rev_records(rev_record_row_s *rev);
 void
-dnsa_clean_prefer(preferred_a_t *list);
+dnsa_clean_prefer(preferred_a_s *list);
 void
-dnsa_clean_dbdata_list(dbdata_t *data);
+dnsa_clean_dbdata_list(dbdata_s *data);
 /* Zone action Functions */
 int
-add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
+add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-add_rev_zone(dnsa_config_t *dc, comm_line_t *cm);
+add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-commit_fwd_zones(dnsa_config_t *dc);
+commit_fwd_zones(dnsa_config_s *dc);
 int
-commit_rev_zones(dnsa_config_t *dc);
+commit_rev_zones(dnsa_config_s *dc);
 int
-add_host(dnsa_config_t *dc, comm_line_t *cm);
+add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm);
+display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm);
+mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm);
+build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-get_correct_rev_zone_and_preferred_records(dnsa_t *dnsa, comm_line_t *cm);
+get_correct_rev_zone_and_preferred_records(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 /* Added 06/03/2013 */
 int
-compare_fwd_ns_records_with_host(dnsa_t *dnsa, char *name);
+compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name);
 int
-compare_host_with_record_destination(dnsa_t *dnsa, char *name);
+compare_host_with_record_destination(dnsa_s *dnsa, char *name);
 int
-compare_host_with_fqdn_cname(dnsa_t *dnsa, char *name);
+compare_host_with_fqdn_cname(dnsa_s *dnsa, char *name);
 void
-get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn);
+get_fqdn_for_record_host(dnsa_s *dnsa, record_row_s *fwd, char *fqdn);
 void
-get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn);
+get_fqdn_for_record_dest(dnsa_s *dnsa, record_row_s *fwd, char *fqdn);
 int
-get_fwd_zone(dnsa_t *dnsa, comm_line_t *cm);
+get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
-get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm);
+get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
-delete_reverse_zone(dnsa_config_t *dc, comm_line_t *cm);
+delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* End addition 06/03/2013 */
 /* Added 07/03/2013 */
 int
-check_for_fwd_record_use(dnsa_t *dnsa, char *name);
+check_for_fwd_record_use(dnsa_s *dnsa, char *name);
 int
-delete_fwd_zone(dnsa_config_t *dc, comm_line_t *cm);
+delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 void
-split_fwd_record_list(zone_info_t *zone, record_row_t *list, record_row_t **fwd, record_row_t **other);
+split_fwd_record_list(zone_info_s *zone, record_row_s *list, record_row_s **fwd, record_row_s **other);
 /* End addition 07/03/2013 */
 int
-get_rev_zone(dnsa_t *dnsa, comm_line_t *cm);
+get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 void
-get_duplicate_a_records(comm_line_t *cm, dnsa_t *dnsa);
+get_duplicate_a_records(dnsa_comm_line_s *cm, dnsa_s *dnsa);
 int
-get_rev_records_for_range(rev_record_row_t **rev, rev_zone_info_t *zone);
+get_rev_records_for_range(rev_record_row_s **rev, rev_zone_info_s *zone);
 /* Zone display functions */
 void
-list_zones(dnsa_config_t *dc);
+list_zones(dnsa_config_s *dc);
 void
-list_rev_zones(dnsa_config_t *dc);
+list_rev_zones(dnsa_config_s *dc);
 void
-display_zone(char *domain, dnsa_config_t *dc);
+display_zone(char *domain, dnsa_config_s *dc);
 void
-print_zone(dnsa_t *dnsa, char *domain);
+print_zone(dnsa_s *dnsa, char *domain);
 void
-display_rev_zone(char *domain, dnsa_config_t *dc);
+display_rev_zone(char *domain, dnsa_config_s *dc);
 void
-print_rev_zone(dnsa_t *dnsa, char *domain);
+print_rev_zone(dnsa_s *dnsa, char *domain);
 void
-print_multiple_a_records(dnsa_config_t *dc, dbdata_t *data, dnsa_t *dnsa);
+print_multiple_a_records(dnsa_config_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int
-get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa);
+get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 /* Various zone functions */
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 unsigned long int
 get_zone_serial(void);
 int
-check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type);
+check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type);
 void
-select_specific_ip(dnsa_t *dnsa, comm_line_t *cm);
+select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
-get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone);
+get_a_records_for_range(record_row_s **records, rev_zone_info_s *zone);
 int
-get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev);
+get_pref_a_for_range(preferred_a_s **prefer, rev_zone_info_s *rev);
 void
-add_int_ip_to_records(dnsa_t *dnsa);
+add_int_ip_to_records(dnsa_s *dnsa);
 void
-add_int_ip_to_fwd_records(record_row_t *records);
+add_int_ip_to_fwd_records(record_row_s *records);
 int
-add_int_ip_to_rev_records(dnsa_t *dnsa);
+add_int_ip_to_rev_records(dnsa_s *dnsa);
 /* Added 05/03/2013 */
 int
-delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm);
+delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-delete_record(dnsa_config_t *dc, comm_line_t *cm);
+delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* End add 05/03/2013 */
 /* Forward zone functions */
 int
-check_fwd_zone(char *domain, dnsa_config_t *dc);
+check_fwd_zone(char *domain, dnsa_config_s *dc);
 int
-create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone);
+create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone);
 int
-create_fwd_config(dnsa_config_t *dc, zone_info_t *zone, char *config);
+create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *config);
 void
-create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonfile);
+create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonfile);
 void
-add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile);
 int
-create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa);
+create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa);
 void
-check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone);
+check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone);
 int
-validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa);
+validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa);
 void
-fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
+fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc);
 /* Reverse zone functions */
 void 
-print_rev_zone_info(rev_zone_info_t *zone);
+print_rev_zone_info(rev_zone_info_s *zone);
 int
-create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone);
+create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone);
 void
-create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile);
+create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonefile);
 void
-add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile);
+add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile);
 int
-check_rev_zone(char *domain, dnsa_config_t *dc);
+check_rev_zone(char *domain, dnsa_config_s *dc);
 int
-create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile);
+create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, char *configfile);
 void
-fill_rev_zone_info(rev_zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc);
+fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc);
 unsigned long int
 get_net_range(unsigned long int prefix);
 int
-validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa);
+validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
 int
-create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa);
+create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa);
 /* 04/03/2013 functions add */
 void
-trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec);
+trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);
 int
-check_dup_and_pref_list(record_row_t *list, record_row_t *fwd, dnsa_t *dnsa);
+check_dup_and_pref_list(record_row_s *list, record_row_s *fwd, dnsa_s *dnsa);
 int
-rev_records_to_delete(dnsa_t *dnsa, rev_record_row_t **rev);
+rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev);
 void
-insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev);
+insert_into_rev_del_list(rev_record_row_s *record, rev_record_row_s **rev);
 /* Updated / modified functions */
 int
-rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev);
+rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev);
 /* End 04/03/2013 */
 int
-insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev);
+insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev);
 void
-add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd);
+add_dup_to_prefer_list(dnsa_s *dnsa, record_row_s *fwd);
 int
 get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
 #endif /* __CMDB_DNSA_H__ */

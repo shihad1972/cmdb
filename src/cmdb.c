@@ -45,17 +45,17 @@
 
 int main(int argc, char *argv[])
 {
-	cmdb_comm_line_t *cm;
-	cmdb_config_t *cmc;
-	cmdb_t *base;
+	cmdb_comm_line_s *cm;
+	cmdb_config_s *cmc;
+	cmdb_s *base;
 	char *cmdb_config;
 	int retval;
 
-	if (!(cmc = malloc(sizeof(cmdb_config_t))))
+	if (!(cmc = malloc(sizeof(cmdb_config_s))))
 		report_error(MALLOC_FAIL, "cmc in cmdb.c");
-	if (!(cm = malloc(sizeof(cmdb_comm_line_t))))
+	if (!(cm = malloc(sizeof(cmdb_comm_line_s))))
 		report_error(MALLOC_FAIL, "cm in cmdb.c");
-	if (!(base = malloc(sizeof(cmdb_t))))
+	if (!(base = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "base in cmdb.c");
 	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");

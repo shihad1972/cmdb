@@ -32,18 +32,18 @@
 # define __CBC_BUILD_DOMAIN_H__
 
 int
-display_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl);
+display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
 
 int
-list_cbc_build_domain(cbc_config_t *cbc);
+list_cbc_build_domain(cbc_config_s *cbc);
 
 int
-add_cbc_build_domain(cbc_config_t *cbc, cbcdomain_comm_line_s *cdl);
+add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
 
 int
-get_build_domain(cbcdomain_comm_line_s *cdl, cbc_t *base);
+get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base);
 
 void
-copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_t *bdom);
+copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 
 #endif /* __CBC_BUILD_DOMAIN_H__ */

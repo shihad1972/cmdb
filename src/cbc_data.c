@@ -31,7 +31,7 @@
 #include "cbc_data.h"
 
 void
-init_cbc_struct (cbc_t *cbc)
+init_cbc_struct (cbc_s *cbc)
 {
 	cbc->bootl = '\0';
 	cbc->build = '\0';
@@ -51,7 +51,7 @@ init_cbc_struct (cbc_t *cbc)
 }
 
 void
-clean_cbc_struct (cbc_t *cbc)
+clean_cbc_struct (cbc_s *cbc)
 {
 	if (cbc->bootl)
 		clean_boot_line(cbc->bootl);
@@ -87,7 +87,7 @@ clean_cbc_struct (cbc_t *cbc)
 }
 
 void
-init_boot_line(cbc_boot_line_t *boot)
+init_boot_line(cbc_boot_line_s *boot)
 {
 	boot->boot_id = NONE;
 	boot->bt_id = NONE;
@@ -98,9 +98,9 @@ init_boot_line(cbc_boot_line_t *boot)
 }
 
 void
-clean_boot_line(cbc_boot_line_t *boot)
+clean_boot_line(cbc_boot_line_s *boot)
 {
-	cbc_boot_line_t *list, *next;
+	cbc_boot_line_s *list, *next;
 
 	if (boot)
 		list = boot;
@@ -118,7 +118,7 @@ clean_boot_line(cbc_boot_line_t *boot)
 }
 
 void
-init_build_struct(cbc_build_t *build)
+init_build_struct(cbc_build_s *build)
 {
 	snprintf(build->mac_addr, COMM_S, "NULL");
 	snprintf(build->net_int, COMM_S, "NULL");
@@ -133,9 +133,9 @@ init_build_struct(cbc_build_t *build)
 }
 
 void
-clean_build_struct(cbc_build_t *build)
+clean_build_struct(cbc_build_s *build)
 {
-	cbc_build_t *list, *next;
+	cbc_build_s *list, *next;
 
 	if (build)
 		list = build;
@@ -153,7 +153,7 @@ clean_build_struct(cbc_build_t *build)
 }
 
 void
-init_build_domain(cbc_build_domain_t *dom)
+init_build_domain(cbc_build_domain_s *dom)
 {
 	snprintf(dom->domain, COMM_S, "NULL");
 	snprintf(dom->country, COMM_S, "NULL");
@@ -185,9 +185,9 @@ init_build_domain(cbc_build_domain_t *dom)
 }
 
 void
-clean_build_domain(cbc_build_domain_t *dom)
+clean_build_domain(cbc_build_domain_s *dom)
 {
-	cbc_build_domain_t *list, *next;
+	cbc_build_domain_s *list, *next;
 
 	if (dom)
 		list = dom;
@@ -205,7 +205,7 @@ clean_build_domain(cbc_build_domain_t *dom)
 }
 
 void
-display_build_domain(cbc_build_domain_t *bdom)
+display_build_domain(cbc_build_domain_s *bdom)
 {
 	char *ip;
 	uint32_t ip_addr;
@@ -259,7 +259,7 @@ display_build_domain(cbc_build_domain_t *bdom)
 }
 
 void
-init_build_ip(cbc_build_ip_t *ip)
+init_build_ip(cbc_build_ip_s *ip)
 {
 	snprintf(ip->host, COMM_S, "NULL");
 	snprintf(ip->domain, COMM_S, "NULL");
@@ -270,9 +270,9 @@ init_build_ip(cbc_build_ip_t *ip)
 }
 
 void
-clean_build_ip(cbc_build_ip_t *ip)
+clean_build_ip(cbc_build_ip_s *ip)
 {
-	cbc_build_ip_t *list, *next;
+	cbc_build_ip_s *list, *next;
 
 	if (ip)
 		list = ip;
@@ -290,7 +290,7 @@ clean_build_ip(cbc_build_ip_t *ip)
 }
 
 void
-init_build_os(cbc_build_os_t *os)
+init_build_os(cbc_build_os_s *os)
 {
 	snprintf(os->os, COMM_S, "NULL");
 	snprintf(os->version, COMM_S, "NULL");
@@ -304,9 +304,9 @@ init_build_os(cbc_build_os_t *os)
 }
 
 void
-clean_build_os(cbc_build_os_t *os)
+clean_build_os(cbc_build_os_s *os)
 {
-	cbc_build_os_t *list, *next;
+	cbc_build_os_s *list, *next;
 
 	if (os)
 		list = os;
@@ -324,7 +324,7 @@ clean_build_os(cbc_build_os_t *os)
 }
 
 void
-init_build_type(cbc_build_type_t *type)
+init_build_type(cbc_build_sype_t *type)
 {
 	snprintf(type->alias, COMM_S, "NULL");
 	snprintf(type->build_type, COMM_S, "NULL");
@@ -336,9 +336,9 @@ init_build_type(cbc_build_type_t *type)
 }
 
 void
-clean_build_type(cbc_build_type_t *type)
+clean_build_type(cbc_build_sype_t *type)
 {
-	cbc_build_type_t *list, *next;
+	cbc_build_sype_t *list, *next;
 
 	if (type)
 		list = type;
@@ -356,7 +356,7 @@ clean_build_type(cbc_build_type_t *type)
 }
 
 void
-init_disk_dev(cbc_disk_dev_t *disk)
+init_disk_dev(cbc_disk_dev_s *disk)
 {
 	snprintf(disk->device, COMM_S, "NULL");
 	disk->lvm = NONE;
@@ -366,9 +366,9 @@ init_disk_dev(cbc_disk_dev_t *disk)
 }
 
 void
-clean_disk_dev(cbc_disk_dev_t *disk)
+clean_disk_dev(cbc_disk_dev_s *disk)
 {
-	cbc_disk_dev_t *list, *next;
+	cbc_disk_dev_s *list, *next;
 
 	if (disk)
 		list = disk;
@@ -386,7 +386,7 @@ clean_disk_dev(cbc_disk_dev_t *disk)
 }
 
 void
-init_locale(cbc_locale_t *locale)
+init_locale(cbc_locale_s *locale)
 {
 	snprintf(locale->locale, COMM_S, "NULL");
 	snprintf(locale->country, COMM_S, "NULL");
@@ -400,9 +400,9 @@ init_locale(cbc_locale_t *locale)
 }
 
 void
-clean_locale(cbc_locale_t *locale)
+clean_locale(cbc_locale_s *locale)
 {
-	cbc_locale_t *list, *next;
+	cbc_locale_s *list, *next;
 
 	if (locale)
 		list = locale;
@@ -420,7 +420,7 @@ clean_locale(cbc_locale_t *locale)
 }
 
 void
-init_package(cbc_package_t *pack)
+init_package(cbc_package_s *pack)
 {
 	snprintf(pack->package, COMM_S, "NULL");
 	pack->pack_id = NONE;
@@ -430,9 +430,9 @@ init_package(cbc_package_t *pack)
 }
 
 void
-clean_package(cbc_package_t *pack)
+clean_package(cbc_package_s *pack)
 {
-	cbc_package_t *list, *next;
+	cbc_package_s *list, *next;
 
 	if (pack)
 		list = pack;
@@ -450,7 +450,7 @@ clean_package(cbc_package_t *pack)
 }
 
 void
-init_pre_part(cbc_pre_part_t *prep)
+init_pre_part(cbc_pre_part_s *prep)
 {
 	snprintf(prep->mount, COMM_S, "NULL");
 	snprintf(prep->fs, COMM_S, "NULL");
@@ -464,9 +464,9 @@ init_pre_part(cbc_pre_part_t *prep)
 }
 
 void
-clean_pre_part(cbc_pre_part_t *prep)
+clean_pre_part(cbc_pre_part_s *prep)
 {
-	cbc_pre_part_t *list, *next;
+	cbc_pre_part_s *list, *next;
 
 	if (prep)
 		list = prep;
@@ -484,7 +484,7 @@ clean_pre_part(cbc_pre_part_t *prep)
 }
 
 void
-init_seed_scheme(cbc_seed_scheme_t *seed)
+init_seed_scheme(cbc_seed_scheme_s *seed)
 {
 	snprintf(seed->name, COMM_S, "NULL");
 	seed->lvm = NONE;
@@ -493,9 +493,9 @@ init_seed_scheme(cbc_seed_scheme_t *seed)
 }
 
 void
-clean_seed_scheme(cbc_seed_scheme_t *seed)
+clean_seed_scheme(cbc_seed_scheme_s *seed)
 {
-	cbc_seed_scheme_t *list, *next;
+	cbc_seed_scheme_s *list, *next;
 
 	if (seed)
 		list = seed;
@@ -513,7 +513,7 @@ clean_seed_scheme(cbc_seed_scheme_t *seed)
 }
 
 void
-init_cbc_server(cbc_server_t *server)
+init_cbc_server(cbc_server_s *server)
 {
 	snprintf(server->vendor, COMM_S, "NULL");
 	snprintf(server->make, COMM_S, "NULL");
@@ -527,9 +527,9 @@ init_cbc_server(cbc_server_t *server)
 }
 
 void
-clean_cbc_server(cbc_server_t *server)
+clean_cbc_server(cbc_server_s *server)
 {
-	cbc_server_t *list, *next;
+	cbc_server_s *list, *next;
 
 	if (server)
 		list = server;
@@ -547,7 +547,7 @@ clean_cbc_server(cbc_server_t *server)
 }
 
 void
-init_varient(cbc_varient_t *vari)
+init_varient(cbc_varient_s *vari)
 {
 	snprintf(vari->varient, COMM_S, "NULL");
 	snprintf(vari->valias, COMM_S, "NULL");
@@ -556,9 +556,9 @@ init_varient(cbc_varient_t *vari)
 }
 
 void
-clean_varient(cbc_varient_t *vari)
+clean_varient(cbc_varient_s *vari)
 {
-	cbc_varient_t *list, *next;
+	cbc_varient_s *list, *next;
 
 	if (vari)
 		list = vari;
@@ -576,7 +576,7 @@ clean_varient(cbc_varient_t *vari)
 }
 
 void
-init_vm_hosts(cbc_vm_server_hosts *vm)
+init_vm_hosts(cbc_vm_server_hosts_s *vm)
 {
 	snprintf(vm->vm_server, COMM_S, "NULL");
 	snprintf(vm->type, COMM_S, "NULL");
@@ -586,9 +586,9 @@ init_vm_hosts(cbc_vm_server_hosts *vm)
 }
 
 void
-clean_vm_hosts(cbc_vm_server_hosts *vm)
+clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 {
-	cbc_vm_server_hosts *list, *next;
+	cbc_vm_server_hosts_s *list, *next;
 
 	if (vm)
 		list = vm;

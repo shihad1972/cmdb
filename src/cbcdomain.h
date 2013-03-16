@@ -61,7 +61,7 @@ void
 print_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
 
 void
-init_cbcdomain_config(cbc_config_t *cmc, cbcdomain_comm_line_s *cdcl);
+init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl);
 
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);

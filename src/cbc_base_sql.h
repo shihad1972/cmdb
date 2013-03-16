@@ -45,90 +45,90 @@ extern const int mycbc_sql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
 int
-run_query(cbc_config_t *config, cbc_t *base, int type);
+run_query(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_multiple_query(cbc_config_t *config, cbc_t *base, int type);
+run_multiple_query(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_insert(cbc_config_t *config, cbc_t *base, int type);
+run_insert(cbc_config_s *config, cbc_s *base, int type);
 
 int
 get_query(int type, const char **query, unsigned int *fields);
 
 int
-run_multiple_query(cbc_config_t *config, cbc_t *base, int type);
+run_multiple_query(cbc_config_s *config, cbc_s *base, int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
-cbc_mysql_init(cbc_config_t *dc, MYSQL *cmdb_mysql);
+cbc_mysql_init(cbc_config_s *dc, MYSQL *cmdb_mysql);
 
 int
-run_query_mysql(cbc_config_t *config, cbc_t *base, int type);
+run_query_mysql(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_insert_mysql(cbc_config_t *config, cbc_t *base, int type);
+run_insert_mysql(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_multiple_query_mysql(cbc_config_t *config, cbc_t *base, int type);
+run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type);
 
 void
-store_result_mysql(MYSQL_ROW row, cbc_t *base, int type, unsigned int fields);
+store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_t *base);
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base);
 
 int
-setup_insert_mysql_buffer(int type, void **buffer, cbc_t *base, unsigned int i);
+setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i);
 
 void
-store_boot_line_mysql(MYSQL_ROW row, cbc_t *base);
+store_boot_line_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_build_mysql(MYSQL_ROW row, cbc_t *base);
+store_build_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_build_domain_mysql(MYSQL_ROW row, cbc_t *base);
+store_build_domain_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_build_ip_mysql(MYSQL_ROW row, cbc_t *base);
+store_build_ip_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_build_os_mysql(MYSQL_ROW row, cbc_t *base);
+store_build_os_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_build_type_mysql(MYSQL_ROW row, cbc_t *base);
+store_build_type_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_disk_dev_mysql(MYSQL_ROW row, cbc_t *base);
+store_disk_dev_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_locale_mysql(MYSQL_ROW row, cbc_t *base);
+store_locale_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_package_mysql(MYSQL_ROW row, cbc_t *base);
+store_package_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_dpart_mysql(MYSQL_ROW row, cbc_t *base);
+store_dpart_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_spart_mysql(MYSQL_ROW row, cbc_t *base);
+store_spart_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_seed_scheme_mysql(MYSQL_ROW row, cbc_t *base);
+store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_server_mysql(MYSQL_ROW row, cbc_t *base);
+store_server_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_varient_mysql(MYSQL_ROW row, cbc_t *base);
+store_varient_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-store_vmhost_mysql(MYSQL_ROW row, cbc_t *base);
+store_vmhost_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
-setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i);
+setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
 # endif /* HAVE_MYSQL */
 
@@ -136,67 +136,67 @@ setup_bind_mysql_build_domain(void **buffer, cbc_t *base, unsigned int i);
 #  include <sqlite3.h>
 
 int
-run_query_sqlite(cbc_config_t *config, cbc_t *base, int type);
+run_query_sqlite(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_insert_sqlite(cbc_config_t *config, cbc_t *base, int type);
+run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type);
 
 int
-run_multiple_query_sqlite(cbc_config_t *config, cbc_t *base, int type);
+run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type);
 
 void
-store_result_sqlite(sqlite3_stmt *state, cbc_t *base, int type, unsigned int fields);
+store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields);
 
 int
-setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_t *base, int type);
+setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type);
 
 void
-store_boot_line_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_build_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_build_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_build_domain_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_build_ip_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_build_os_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_build_type_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_disk_dev_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_locale_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_locale_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_package_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_package_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_dpart_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_spart_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_spart_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_server_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_server_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_varient_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_varient_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 void
-store_vmhost_sqlite(sqlite3_stmt *state, cbc_t *base);
+store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 int
-setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_t *bdom);
+setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

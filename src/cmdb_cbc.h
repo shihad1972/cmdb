@@ -30,7 +30,7 @@
 #define __CMDB_CBC_H__
 
 
-typedef struct cbc_config_t {		/* Hold CMDB configuration values */
+typedef struct cbc_config_s {		/* Hold CMDB configuration values */
 	char dbtype[RANGE_S];
 	char file[CONF_S];
 	char db[CONF_S];
@@ -47,18 +47,18 @@ typedef struct cbc_config_t {		/* Hold CMDB configuration values */
 	char preseed[CONF_S];
 	unsigned int port;
 	unsigned long int cliflag;
-} cbc_config_t;
+} cbc_config_s;
 /*
-typedef struct cbc_build_dom_t {
+typedef struct cbc_build_dom_s {
 	unsigned long int start_ip;
 	unsigned long int end_ip;
 	unsigned long int netmask;
 	unsigned long int gateway;
 	unsigned long int ns;
 	struct cbc_domain_ip_t *iplist;
-} cbc_build_dom_t;
+} cbc_build_dom_s;
 
-typedef struct cbc_build_t {
+typedef struct cbc_build_s {
 	char ip_address[RANGE_S];
 	char gateway[RANGE_S];
 	char nameserver[RANGE_S];
@@ -96,10 +96,10 @@ typedef struct cbc_build_t {
 	unsigned long int boot_id;
 	unsigned long int locale_id;
 	unsigned long int ip_id;
-	struct cbc_build_dom_t *build_dom;
-} cbc_build_t;
+	struct cbc_build_dom_s *build_dom;
+} cbc_build_s;
 
-typedef struct pre_disk_part_t {
+typedef struct pre_disk_part_s {
 	char mount_point[HOST_S + 1];
 	char filesystem[RANGE_S + 1];
 	char log_vol[RANGE_S + 1];
@@ -107,155 +107,155 @@ typedef struct pre_disk_part_t {
 	unsigned long int pri;
 	unsigned long int max;
 	unsigned long int part_id;
-	struct pre_disk_part_t *nextpart;
-} pre_disk_part_t;
+	struct pre_disk_part_s *nextpart;
+} pre_disk_part_s;
 
-typedef struct partition_schemes_t {
+typedef struct partition_schemes_s {
 	unsigned long int id;
 	char name[CONF_S];
 	unsigned long int lvm;
-	struct partition_schemes_t *next;
-} partition_schemes_t;
+	struct partition_schemes_s *next;
+} partition_schemes_s;
 */
 int
-parse_cbc_config_file(cbc_config_t *dc, const char *config);
+parse_cbc_config_file(cbc_config_s *dc, const char *config);
 
 void
-init_cbc_config_values(cbc_config_t *dc);
+init_cbc_config_values(cbc_config_s *dc);
 /*
 void
-init_cbc_build_values(cbc_build_t *build_config);
+init_cbc_build_values(cbc_build_s *build_config);
 */
 void
 parse_cbc_config_error(int error);
 
 void
-print_cbc_config(cbc_config_t *cbc);
+print_cbc_config(cbc_config_s *cbc);
 /*
 void
-print_cbc_build_values(cbc_build_t *build_config);
+print_cbc_build_values(cbc_build_s *build_config);
 
 void
-print_cbc_build_ids(cbc_build_t *build_config);
+print_cbc_build_ids(cbc_build_s *build_config);
 
 int
-get_server_name(cbc_comm_line_t *info, cbc_config_t *config);
+get_server_name(cbc_comm_line_s *info, cbc_config_s *config);
 
 int
-get_build_info(cbc_config_t *config, cbc_build_t *build_info, unsigned long int server_id);
+get_build_info(cbc_config_s *config, cbc_build_s *build_info, unsigned long int server_id);
 
 void
-write_tftp_config(cbc_config_t *cct, cbc_build_t *cbt);
+write_tftp_config(cbc_config_s *cct, cbc_build_s *cbt);
 
 void
-write_dhcp_config(cbc_config_t *cct, cbc_build_t *cbt);
+write_dhcp_config(cbc_config_s *cct, cbc_build_s *cbt);
 
 int
-write_build_config(cbc_config_t *cmc, cbc_build_t *cbt);
+write_build_config(cbc_config_s *cmc, cbc_build_s *cbt);
 
 int
-delete_build_if_exists(cbc_config_t *cmc, cbc_build_t *cbt);
+delete_build_if_exists(cbc_config_s *cmc, cbc_build_s *cbt);
 
 int
-add_partition_scheme(cbc_config_t *config);
+add_partition_scheme(cbc_config_s *config);
 
 void
-display_partition_schemes(cbc_config_t *config);
+display_partition_schemes(cbc_config_s *config);
 
 void
-display_build_operating_systems(cbc_config_t *config);
+display_build_operating_systems(cbc_config_s *config);
 
 void
-display_build_os_versions(cbc_config_t *config);
+display_build_os_versions(cbc_config_s *config);
 
 void
-display_build_domains(cbc_config_t *config);
+display_build_domains(cbc_config_s *config);
 
 void
-display_build_varients(cbc_config_t *config);
+display_build_varients(cbc_config_s *config);
 
 void
-display_build_locales(cbc_config_t *config);
+display_build_locales(cbc_config_s *config);
 
 int
-create_build_config(cbc_config_t *cbc, cbc_comm_line_t *cml, cbc_build_t *cbt);
+create_build_config(cbc_config_s *cbc, cbc_comm_line_s *cml, cbc_build_s *cbt);
 
 int
-get_os_from_user(cbc_config_t *cbc, cbc_comm_line_t *cml);
+get_os_from_user(cbc_config_s *cbc, cbc_comm_line_s *cml);
 
 int
-get_os_version_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_os_version_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_os_arch_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_os_arch_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_build_os_id(cbc_config_t *config, cbc_comm_line_t *cml);
+get_build_os_id(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_build_domain_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_build_domain_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_build_varient_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_build_varient_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_locale_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_locale_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-get_disk_scheme_from_user(cbc_config_t *config, cbc_comm_line_t *cml);
+get_disk_scheme_from_user(cbc_config_s *config, cbc_comm_line_s *cml);
 
 int
-copy_build_values(cbc_comm_line_t *cml, cbc_build_t *cbt);
+copy_build_values(cbc_comm_line_s *cml, cbc_build_s *cbt);
 
 void
-copy_initial_build_values(cbc_comm_line_t *cml, cbc_build_t *cbt);
+copy_initial_build_values(cbc_comm_line_s *cml, cbc_build_s *cbt);
 
 int
-get_build_hardware(cbc_config_t *config, cbc_build_t *cbt);
+get_build_hardware(cbc_config_s *config, cbc_build_s *cbt);
 
 unsigned long int
-get_hard_type_id(cbc_config_t *config, char *htype, char *hclass);
+get_hard_type_id(cbc_config_s *config, char *htype, char *hclass);
 
 int
-get_build_hardware_device(cbc_config_t *config, unsigned long int id, unsigned long int sid, char *device, char *detail);
+get_build_hardware_device(cbc_config_s *config, unsigned long int id, unsigned long int sid, char *device, char *detail);
 
 int
-get_build_varient_id(cbc_config_t *config, cbc_build_t *cbt);
+get_build_varient_id(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-get_build_partition_id(cbc_config_t *config, cbc_build_t *cbt);
+get_build_partition_id(cbc_config_s *config, cbc_build_s *cbt);
 
 void
-get_base_os_version(cbc_build_t *cbt);
+get_base_os_version(cbc_build_s *cbt);
 
 int
-get_build_boot_line_id(cbc_config_t *config, cbc_build_t *cbt);
+get_build_boot_line_id(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-get_build_domain_id(cbc_config_t *config, cbc_build_t *cbt);
+get_build_domain_id(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-insert_build_into_database(cbc_config_t *config, cbc_build_t *cbt);
+insert_build_into_database(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-get_build_domain_info_on_id(cbc_config_t *config, cbc_build_dom_t *cbt, unsigned long int id);
+get_build_domain_info_on_id(cbc_config_s *config, cbc_build_dom_s *cbt, unsigned long int id);
 
 int
-get_build_ip(cbc_config_t *config, cbc_build_dom_t *bd);
+get_build_ip(cbc_config_s *config, cbc_build_dom_s *bd);
 
 void
-convert_build_ip_address(cbc_build_t *cbt);
+convert_build_ip_address(cbc_build_s *cbt);
 
 int
-insert_ip_into_db(cbc_config_t *config, cbc_build_t *cbt);
+insert_ip_into_db(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-insert_into_build_table(cbc_config_t *config, cbc_build_t *cbt);
+insert_into_build_table(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-insert_build_partitions(cbc_config_t *config, cbc_build_t *cbt);
+insert_build_partitions(cbc_config_s *config, cbc_build_s *cbt);
 
 int
-insert_disk_device(cbc_config_t *config, cbc_build_t *cbt);
+insert_disk_device(cbc_config_s *config, cbc_build_s *cbt);
 */
 #endif

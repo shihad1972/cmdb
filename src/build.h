@@ -28,7 +28,7 @@
 #ifndef __CBC_BUILD_H__
 # define __CBC_BUILD_H__
 
-typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
+typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char config[CONF_S];
 	char name[CONF_S];
 	char uuid[CONF_S];
@@ -45,30 +45,30 @@ typedef struct cbc_comm_line_t {	/* Hold parsed command line args */
 	unsigned long int server_id;
 	unsigned long int os_id;
 	unsigned long int locale;
-} cbc_comm_line_t;
+} cbc_comm_line_s;
 
 int
-display_build_config(cbc_config_t *cbt, cbc_comm_line_t *cml);
+display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
 int
-cbc_get_server(cbc_comm_line_t *cml, cbc_t *cbc, cbc_t *details);
+cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
-cbc_get_build_details(cbc_t *cbc, cbc_t *details);
+cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 
 void
-print_build_config(cbc_t *details);
+print_build_config(cbc_s *details);
 
 void
-init_cbc_comm_values(cbc_comm_line_t *cbt);
+init_cbc_comm_values(cbc_comm_line_s *cbt);
 
 void
-init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/);
+init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt/*, cbc_build_s *cbt*/);
 
 void
-print_cbc_command_line_values(cbc_comm_line_t *command_line);
+print_cbc_command_line_values(cbc_comm_line_s *command_line);
 
 int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb);
+parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
 
 #endif /* __CBC_BUILD_H__ */

@@ -37,16 +37,16 @@
 
 int main(int argc, char *argv[])
 {
-	comm_line_t *cm;
-	dnsa_config_t *dc;
+	dnsa_comm_line_s *cm;
+	dnsa_config_s *dc;
 	char *domain;
 	int retval, id;
 
 	if (!(domain = malloc(CONF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "domain in dnsa.c");
-	if (!(dc = malloc(sizeof(dnsa_config_t))))
+	if (!(dc = malloc(sizeof(dnsa_config_s))))
 		report_error(MALLOC_FAIL, "dc in dnsa.c");
-	if (!(cm = malloc(sizeof(comm_line_t))))
+	if (!(cm = malloc(sizeof(dnsa_comm_line_s))))
 		report_error(MALLOC_FAIL, "cm in dnsa.c");
 	
 	/* Get command line args. See above */

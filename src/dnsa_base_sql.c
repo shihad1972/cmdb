@@ -43,13 +43,13 @@
 #endif /* HAVE_SQLITE3 */
 
 /**
- * These SQL searches require the dnsa_t struct. Each search will fill one of
- * the structs pointed to within dnsa_t.
+ * These SQL searches require the dnsa_s struct. Each search will fill one of
+ * the structs pointed to within dnsa_s.
  * The stucts within dnsa will be malloc'ed by the database store function so
- * only dnsa_t needs to be malloc'ed and initialised.
+ * only dnsa_s needs to be malloc'ed and initialised.
  * These searches return multiple members.
  * Helper functions need to be created for earch search to populate the member
- * of dnsa_t used.
+ * of dnsa_s used.
  */
 const char *sql_select[] = { "\
 SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, \
@@ -66,7 +66,7 @@ SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
 };
 /**
- * These SQL searches require the struct within dnsa_t to be initialised, as
+ * These SQL searches require the struct within dnsa_s to be initialised, as
  * the arguments for the query are contained within them. 
  * These searches will only return 1 member, regardless of the number of
  * search results. This can lead to bugs if the database is not in order e.g.
@@ -80,7 +80,7 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
 /**
  * These SQL searches return an unknown number of members, with a variable
  * number and type of fields and arguments in the query. The data is sent
- * and returned in a list of dbdata_t structs. The inital list must be created
+ * and returned in a list of dbdata_s structs. The inital list must be created
  * to hold at least the greater of extended_search_fields OR 
  * extended_search_args. The helper function init_initial_dbdata will do this.
  * To ascertain the argument, fields and types thereof, we use the following 
@@ -203,7 +203,7 @@ const unsigned int delete_arg_type[][1] = {
 };
 
 int
-run_query(dnsa_config_t *config, dnsa_t *base, int type)
+run_query(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -228,7 +228,7 @@ run_query(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_multiple_query(dnsa_config_t *config, dnsa_t *base, int type)
+run_multiple_query(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -254,7 +254,7 @@ run_multiple_query(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_search(dnsa_config_t *config, dnsa_t *base, int type)
+run_search(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 
@@ -280,7 +280,7 @@ run_search(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_extended_search(dnsa_config_t *config, dbdata_t *base, int type)
+run_extended_search(dnsa_config_s *config, dbdata_s *base, int type)
 {
 	int retval;
 
@@ -306,7 +306,7 @@ run_extended_search(dnsa_config_t *config, dbdata_t *base, int type)
 }
 
 int
-run_insert(dnsa_config_t *config, dnsa_t *base, int type)
+run_insert(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -331,7 +331,7 @@ run_insert(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_update(dnsa_config_t *config, dbdata_t *data, int type)
+run_update(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -356,7 +356,7 @@ run_update(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-run_delete(dnsa_config_t *config, dbdata_t *data, int type)
+run_delete(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -415,7 +415,7 @@ get_query(int type, const char **query, unsigned int *fields)
 }
 
 void
-get_search(int type, size_t *fields, size_t *args, void **input, void **output, dnsa_t *base)
+get_search(int type, size_t *fields, size_t *args, void **input, void **output, dnsa_s *base)
 {
 	if (type == ZONE_ID_ON_NAME) {
 		*input = &(base->zones->name);
@@ -439,13 +439,13 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 }
 
 void
-init_initial_dbdata(dbdata_t **list, int type)
+init_initial_dbdata(dbdata_s **list, int type)
 {
 	unsigned int i = 0;
-	dbdata_t *data, *dlist;
+	dbdata_s *data, *dlist;
 	dlist = *list = '\0';
 	for (i = 0; i < extended_search_fields[type]; i++) {
-		if (!(data = malloc(sizeof(dbdata_t))))
+		if (!(data = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
 		init_dbdata_struct(data);
 		if (!(*list)) {
@@ -460,7 +460,7 @@ init_initial_dbdata(dbdata_t **list, int type)
 
 #ifdef HAVE_MYSQL
 void
-cmdb_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
+cmdb_mysql_init(dnsa_config_s *dc, MYSQL *dnsa_mysql)
 {
 	const char *unix_socket;
 
@@ -476,7 +476,7 @@ cmdb_mysql_init(dnsa_config_t *dc, MYSQL *dnsa_mysql)
 }
 
 int
-run_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
@@ -512,7 +512,7 @@ run_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -541,7 +541,7 @@ run_multiple_query_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 void
-store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
+store_result_mysql(MYSQL_ROW row, dnsa_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == ZONE) {
@@ -585,12 +585,12 @@ store_result_mysql(MYSQL_ROW row, dnsa_t *base, int type, unsigned int fields)
 }
 
 void
-store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
+store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 {
 	int retval;
-	zone_info_t *zone, *list;
+	zone_info_s *zone, *list;
 
-	if (!(zone = malloc(sizeof(zone_info_t))))
+	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in store_zone_mysql");
 	init_zone_struct(zone);
 	zone->id = strtoul(row[0], NULL, 10);
@@ -621,11 +621,11 @@ store_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_record_mysql(MYSQL_ROW row, dnsa_t *base)
+store_record_mysql(MYSQL_ROW row, dnsa_s *base)
 {
-	record_row_t *rec, *list;
+	record_row_s *rec, *list;
 
-	if (!(rec = malloc(sizeof(record_row_t))))
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in store_record_mysql");
 	init_record_struct(rec);
 	rec->id = strtoul(row[0], NULL, 10);
@@ -646,12 +646,12 @@ store_record_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
+store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 {
 	int retval;
-	rev_zone_info_t *rev, *list;
+	rev_zone_info_s *rev, *list;
 
-	if (!(rev = malloc(sizeof(rev_zone_info_t))))
+	if (!(rev = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "rev in store_rev_zone_mysql");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = strtoul(row[0], NULL, 10);
@@ -687,11 +687,11 @@ store_rev_zone_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
+store_rev_record_mysql(MYSQL_ROW row, dnsa_s *base)
 {
-	rev_record_row_t *rev, *list;
+	rev_record_row_s *rev, *list;
 
-	if (!(rev = malloc(sizeof(rev_record_row_t))))
+	if (!(rev = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "rev in store_rev_record_mysql");
 	init_rev_record_struct(rev);
 	rev->record_id = strtoul(row[0], NULL, 10);
@@ -710,11 +710,11 @@ store_rev_record_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_all_a_records_mysql(MYSQL_ROW row, dnsa_t *base)
+store_all_a_records_mysql(MYSQL_ROW row, dnsa_s *base)
 {
-	record_row_t *rec, *list;
+	record_row_s *rec, *list;
 
-	if (!(rec = malloc(sizeof(record_row_t))))
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in store_all_a_records_mysql");
 	init_record_struct(rec);
 	snprintf(rec->host, RBUFF_S, "%s.%s", row[1], row[0]);
@@ -732,11 +732,11 @@ store_all_a_records_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *base)
+store_preferred_a_mysql(MYSQL_ROW row, dnsa_s *base)
 {
-	preferred_a_t *prefer, *list;
+	preferred_a_s *prefer, *list;
 
-	if (!(prefer = malloc(sizeof(preferred_a_t))))
+	if (!(prefer = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "prefer in store_preferred_a_sqlite");
 	init_preferred_a_struct(prefer);
 	prefer->prefa_id = strtoul(row[0], NULL, 10);
@@ -755,11 +755,11 @@ store_preferred_a_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 void
-store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *base)
+store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_s *base)
 {
-	record_row_t *rec, *list;
+	record_row_s *rec, *list;
 
-	if (!(rec = malloc(sizeof(record_row_t))))
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "store_duplicate_a_record_mysql");
 	init_record_struct(rec);
 	snprintf(rec->dest, RANGE_S, "%s", row[0]);
@@ -775,7 +775,7 @@ store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_t *base)
 }
 
 int
-run_search_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+run_search_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -833,7 +833,7 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
-run_extended_search_mysql(dnsa_config_t *config, dbdata_t *base, int type)
+run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -886,7 +886,7 @@ run_extended_search_mysql(dnsa_config_t *config, dbdata_t *base, int type)
 }
 
 int
-run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type)
+run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -918,7 +918,7 @@ run_insert_mysql(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type)
+run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -926,7 +926,7 @@ run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type)
 	const char *query;
 	int retval;
 	unsigned int i;
-	dbdata_t *list;
+	dbdata_s *list;
 
 	list = data;
 	retval = 0;
@@ -967,7 +967,7 @@ run_update_mysql(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-run_delete_mysql(dnsa_config_t *config, dbdata_t *data, int type)
+run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -975,7 +975,7 @@ run_delete_mysql(dnsa_config_t *config, dbdata_t *data, int type)
 	const char *query;
 	int retval;
 	unsigned int i;
-	dbdata_t *list;
+	dbdata_s *list;
 
 	list = data;
 	retval = 0;
@@ -1017,7 +1017,7 @@ run_delete_mysql(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_t *base)
+setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_s *base)
 {
 	int retval;
 
@@ -1042,12 +1042,12 @@ setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_t *ba
 }
 
 int
-setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_t *base)
+setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
 	int retval;
 	unsigned int j;
 	void *buffer;
-	dbdata_t *list = base;
+	dbdata_s *list = base;
 	
 	retval = 0;
 	mybind->is_null = 0;
@@ -1072,19 +1072,19 @@ setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_t
 }
 
 int
-setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_t *base)
+setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
 	int retval, j;
 	static int m = 0;
 	void *buffer;
-	dbdata_t *list, *new;
+	dbdata_s *list, *new;
 	list = base;
 	
 	retval = 0;
 	mybind->is_null = 0;
 	mybind->length = 0;
 	if (k > 0) {
-		if (!(new = malloc(sizeof(dbdata_t))))
+		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in setup_bind_ext_mysql_fields");
 		init_dbdata_struct(new);
 		while (list->next) {
@@ -1115,7 +1115,7 @@ setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 }
 
 int
-setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsigned int i)
 {
 	int retval = 0;
 	
@@ -1136,7 +1136,7 @@ setup_insert_mysql_bind_buffer(int type, void **input, dnsa_t *base, unsigned in
 }
 
 void
-setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_record(void **input, dnsa_s *base, unsigned int i)
 {
 	if (i == 0)
 		*input = &(base->records->zone);
@@ -1151,7 +1151,7 @@ setup_insert_mysql_bind_buff_record(void **input, dnsa_t *base, unsigned int i)
 }
 
 void
-setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_zone(void **input, dnsa_s *base, unsigned int i)
 {
 	if (i == 0)
 		*input = &(base->zones->name);
@@ -1172,7 +1172,7 @@ setup_insert_mysql_bind_buff_zone(void **input, dnsa_t *base, unsigned int i)
 }
 
 void
-setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_s *base, unsigned int i)
 {
 	if (i == 0)
 		*input = &(base->rev_zones->net_range);
@@ -1203,7 +1203,7 @@ setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_t *base, unsigned int i
 }
 
 void
-setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_s *base, unsigned int i)
 {
 	if (i == 0)
 		*input = &(base->rev_records->rev_zone);
@@ -1214,7 +1214,7 @@ setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_t *base, unsigned in
 }
 
 void
-setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned int i)
 {
 	if (i == 0)
 		*input = &(base->prefer->ip);
@@ -1231,7 +1231,7 @@ setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_t *base, unsigned int i)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1263,7 +1263,7 @@ run_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+run_multiple_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -1292,7 +1292,7 @@ run_multiple_query_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 void
-store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fields)
+store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == ZONE) {
@@ -1336,12 +1336,12 @@ store_result_sqlite(sqlite3_stmt *state, dnsa_t *base, int type, unsigned int fi
 }
 
 void
-store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
 	int retval;
-	zone_info_t *zone, *list;
+	zone_info_s *zone, *list;
 	
-	if (!(zone = malloc(sizeof(zone_info_t))))
+	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in store_zone_sqlite");
 	init_zone_struct(zone);
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1372,12 +1372,12 @@ store_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 void
-store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
 	int retval;
-	rev_zone_info_t *rev, *list;
+	rev_zone_info_s *rev, *list;
 	
-	if (!(rev = malloc(sizeof(rev_zone_info_t))))
+	if (!(rev = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "rev in store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1413,10 +1413,10 @@ store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 void
-store_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
-	record_row_t *rec, *list;
-	if (!(rec = malloc(sizeof(record_row_t))))
+	record_row_s *rec, *list;
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in store_record_sqlite");
 	init_record_struct(rec);
 	rec->id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1437,11 +1437,11 @@ store_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 void
-store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
-	rev_record_row_t *rev, *list;
+	rev_record_row_s *rev, *list;
 
-	if (!(rev = malloc(sizeof(rev_record_row_t))))
+	if (!(rev = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "rev in store_rev_record_sqlite");
 	init_rev_record_struct(rev);
 	rev->record_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1460,11 +1460,11 @@ store_rev_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 void
-store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
-	record_row_t *rec, *list;
+	record_row_s *rec, *list;
 
-	if (!(rec = malloc(sizeof(record_row_t))))
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in store_all_a_records");
 	init_record_struct(rec);
 	snprintf(rec->host, RBUFF_S, "%s.%s",
@@ -1482,11 +1482,11 @@ store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_t *base)
 	}
 }
 void
-store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
-	preferred_a_t *prefer, *list;
+	preferred_a_s *prefer, *list;
 	
-	if (!(prefer = malloc(sizeof(preferred_a_t))))
+	if (!(prefer = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "prefer in store_preferred_a_sqlite");
 	init_preferred_a_struct(prefer);
 	prefer->prefa_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1505,11 +1505,11 @@ store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 void
-store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
+store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
-	record_row_t *rec, *list;
+	record_row_s *rec, *list;
 
-	if (!(rec = malloc(sizeof(record_row_t))))
+	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "store_duplicate_a_record_mysql");
 	init_record_struct(rec);
 	snprintf(rec->dest, RANGE_S, "%s", sqlite3_column_text(state, 0));
@@ -1525,7 +1525,7 @@ store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_t *base)
 }
 
 int
-run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1569,11 +1569,11 @@ run_search_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_extended_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type)
+run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 {
 	const char *query, *file;
 	int retval, i;
-	dbdata_t *list;
+	dbdata_s *list;
 	sqlite3 *dnsa;
 	sqlite3_stmt *state;
 
@@ -1605,7 +1605,7 @@ run_extended_search_sqlite(dnsa_config_t *config, dbdata_t *base, int type)
 }
 
 int
-run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
+run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1640,12 +1640,12 @@ run_insert_sqlite(dnsa_config_t *config, dnsa_t *base, int type)
 }
 
 int
-run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
+run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	const char *query, *file;
 	int retval;
 	unsigned int i;
-	dbdata_t *list;
+	dbdata_s *list;
 	sqlite3 *dnsa;
 	sqlite3_stmt *state;
 
@@ -1695,12 +1695,12 @@ run_update_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-run_delete_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
+run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	const char *query, *file;
 	int retval;
 	unsigned int i;
-	dbdata_t *list;
+	dbdata_s *list;
 	sqlite3 *dnsa;
 	sqlite3_stmt *state;
 
@@ -1744,7 +1744,7 @@ run_delete_sqlite(dnsa_config_t *config, dbdata_t *data, int type)
 }
 
 int
-setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
+setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 {
 	int retval;
 	if (type == RECORDS)
@@ -1763,7 +1763,7 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_t *base, int type)
 }
 
 int
-setup_bind_extended_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i)
+setup_bind_extended_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 {
 	int retval;
 
@@ -1787,11 +1787,11 @@ state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
 }
 
 int
-get_extended_results_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i)
+get_extended_results_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 {
 	int retval, j, k;
 	unsigned int u;
-	dbdata_t *data;
+	dbdata_s *data;
 
 	data = list;
 	retval = 0;
@@ -1802,7 +1802,7 @@ get_extended_results_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i
 					list = list->next;
 		}
 		for (j = 0; (unsigned)j < extended_search_fields[type]; j++) {
-			if (!(data = malloc(sizeof(dbdata_t))))
+			if (!(data = malloc(sizeof(dbdata_s))))
 				report_error(MALLOC_FAIL, "data in get_ext_results_sqlite");
 			init_dbdata_struct(data);
 			if (ext_search_field_type[type][j] == DBTEXT) {
@@ -1828,7 +1828,7 @@ get_extended_results_sqlite(sqlite3_stmt *state, dbdata_t *list, int type, int i
 }
 
 int
-setup_bind_sqlite_records(sqlite3_stmt *state, record_row_t *record)
+setup_bind_sqlite_records(sqlite3_stmt *state, record_row_s *record)
 {
 	int retval;
 
@@ -1860,7 +1860,7 @@ state, 5, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_t *zone)
+setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_s *zone)
 {
 	int retval;
 
@@ -1904,7 +1904,7 @@ state, 3, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_t *zone)
+setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_s *zone)
 {
 	int retval;
 
@@ -1970,7 +1970,7 @@ state, 8, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_rev_records(sqlite3_stmt *state, rev_record_row_t *rev)
+setup_bind_sqlite_rev_records(sqlite3_stmt *state, rev_record_row_s *rev)
 {
 	int retval;
 
@@ -1992,7 +1992,7 @@ state, 3, rev->dest, (int)strlen(rev->dest), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_t *prefer)
+setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_s *prefer)
 {
 	int retval;
 

@@ -36,15 +36,15 @@
 #endif /* HAVE_LIBPCRE */
 
 int
-add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb)
+add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
 	char *input;
 	int retval;
-	cmdb_vm_host_t *vmhost;
+	cmdb_vm_host_s *vmhost;
 	
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
-	if (!(vmhost = malloc(sizeof(cmdb_vm_host_t))))
+	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
 
 	cmdb_init_vmhost_t(vmhost);
@@ -90,7 +90,7 @@ add_server_to_database(cmdb_config_t *config, cmdb_comm_line_t *cm, cmdb_t *cmdb
 }
 
 int
-add_hardware_to_database(cmdb_config_t *config, cmdb_t *cmdb)
+add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
 	int retval;
@@ -137,13 +137,13 @@ add_hardware_to_database(cmdb_config_t *config, cmdb_t *cmdb)
 }
 
 void
-display_server_info(char *name, char *uuid, cmdb_config_t *config)
+display_server_info(char *name, char *uuid, cmdb_config_s *config)
 {
 	int retval, i;
-	cmdb_server_t *server;
-	cmdb_t *cmdb;
+	cmdb_server_s *server;
+	cmdb_s *cmdb;
 	
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
@@ -174,12 +174,12 @@ cmdb, SERVER | CUSTOMER | HARDWARE |  SERVICE | VM_HOST)) != 0) {
 }
 
 void
-display_all_servers(cmdb_config_t *config)
+display_all_servers(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_t *cmdb;
+	cmdb_s *cmdb;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
@@ -194,15 +194,15 @@ display_all_servers(cmdb_config_t *config)
 }
 
 void
-display_hardware_types(cmdb_config_t *config)
+display_hardware_types(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_t *cmdb;
-	cmdb_hard_type_t *list;
+	cmdb_s *cmdb;
+	cmdb_hard_type_s *list;
 	size_t len;
 
 	retval = 0;
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb in display_server_info");
 
 	cmdb_init_struct(cmdb);
@@ -232,14 +232,14 @@ display_hardware_types(cmdb_config_t *config)
 }
 
 void
-display_server_hardware(cmdb_config_t *config, char *name)
+display_server_hardware(cmdb_config_s *config, char *name)
 {
 	int retval;
-	cmdb_t *cmdb;
-	cmdb_server_t *server;
-	cmdb_hardware_t *hardware;
+	cmdb_s *cmdb;
+	cmdb_server_s *server;
+	cmdb_hardware_s *hardware;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb in display server hardware");
 
 	cmdb_init_struct(cmdb);
@@ -265,14 +265,14 @@ display_server_hardware(cmdb_config_t *config, char *name)
 }
 
 void
-display_server_services(cmdb_config_t *config, char *name)
+display_server_services(cmdb_config_s *config, char *name)
 {
 	int retval;
-	cmdb_t *cmdb;
-	cmdb_server_t *server;
-	cmdb_service_t *service;
+	cmdb_s *cmdb;
+	cmdb_server_s *server;
+	cmdb_service_s *service;
 
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb in display server services");
 
 	cmdb_init_struct(cmdb);
@@ -298,12 +298,12 @@ display_server_services(cmdb_config_t *config, char *name)
 }
 
 void 
-print_server_details(cmdb_server_t *server, cmdb_t *base)
+print_server_details(cmdb_server_s *server, cmdb_s *base)
 {
-	cmdb_customer_t *customer = base->customer;
-	cmdb_vm_host_t *vmhost = base->vmhost;
-	cmdb_hardware_t *hard = base->hardware;
-	cmdb_service_t *service = base->service;
+	cmdb_customer_s *customer = base->customer;
+	cmdb_vm_host_s *vmhost = base->vmhost;
+	cmdb_hardware_s *hard = base->hardware;
+	cmdb_service_s *service = base->service;
 
 	printf("Server Details:\n");
 	printf("Name:\t\t%s\n", server->name);
@@ -333,11 +333,11 @@ print_server_details(cmdb_server_t *server, cmdb_t *base)
 }
 
 void
-print_all_servers(cmdb_t *cmdb)
+print_all_servers(cmdb_s *cmdb)
 {
 	unsigned long int id;
-	cmdb_server_t *server = cmdb->server;
-	cmdb_customer_t *cust = cmdb->customer;
+	cmdb_server_s *server = cmdb->server;
+	cmdb_customer_s *cust = cmdb->customer;
 	size_t len;
 
 	printf("Server\t\t\t\tCustomer\n");
@@ -362,14 +362,14 @@ print_all_servers(cmdb_t *cmdb)
 }
 
 void
-display_vm_hosts(cmdb_config_t *config)
+display_vm_hosts(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_t *cmdb;
-	cmdb_vm_host_t *list;
+	cmdb_s *cmdb;
+	cmdb_vm_host_s *list;
 
 	retval = 0;
-	if (!(cmdb = malloc(sizeof(cmdb_t))))
+	if (!(cmdb = malloc(sizeof(cmdb_s))))
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
@@ -384,7 +384,7 @@ display_vm_hosts(cmdb_config_t *config)
 }
 
 void
-print_vm_hosts(cmdb_vm_host_t *vmhost)
+print_vm_hosts(cmdb_vm_host_s *vmhost)
 {
 	if (vmhost) {
 		printf("Virtual Machine Hosts\n");
@@ -400,7 +400,7 @@ print_vm_hosts(cmdb_vm_host_t *vmhost)
 }
 
 int
-print_hardware(cmdb_hardware_t *hard, unsigned long int id)
+print_hardware(cmdb_hardware_s *hard, unsigned long int id)
 {
 	int i = 0;
 
@@ -422,7 +422,7 @@ hard->hardtype->hclass, hard->device, hard->detail);
 }
 
 int
-print_services(cmdb_service_t *service, unsigned long int id, int type)
+print_services(cmdb_service_s *service, unsigned long int id, int type)
 {
 	int i = 0;
 

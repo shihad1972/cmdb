@@ -37,7 +37,7 @@
 #endif /* HAVE_LIBPCRE */
 
 int
-parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
+parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int i, retval;
 	
@@ -156,7 +156,7 @@ parse_dnsa_command_line(int argc, char **argv, comm_line_t *comp)
 }
 
 int
-parse_dnsa_config_file(dnsa_config_t *dc, char *config)
+parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 {
 	char buff[RBUFF_S] = "";
 	char port[RANGE_S] = "";
@@ -298,7 +298,7 @@ parse_dnsa_config_error(int error)
 }
 
 int
-validate_comm_line(comm_line_t *comm)
+validate_comm_line(dnsa_comm_line_s *comm)
 {
 	int retval;
 	
@@ -314,7 +314,7 @@ validate_comm_line(comm_line_t *comm)
 }
 
 void
-init_config_values(dnsa_config_t *dc)
+init_config_values(dnsa_config_s *dc)
 {
 	char *buff;
 	buff = dc->socket;
@@ -335,7 +335,7 @@ init_config_values(dnsa_config_t *dc)
 }
 
 void
-init_dnsa_struct(dnsa_t *dnsa)
+init_dnsa_struct(dnsa_s *dnsa)
 {
 	dnsa->zones = '\0';
 	dnsa->rev_zones = '\0';
@@ -346,7 +346,7 @@ init_dnsa_struct(dnsa_t *dnsa)
 }
 
 void
-init_zone_struct(zone_info_t *zone)
+init_zone_struct(zone_info_s *zone)
 {
 	zone->id = zone->owner = 0;
 	zone->serial = zone->expire = zone->retry = 0;
@@ -363,7 +363,7 @@ init_zone_struct(zone_info_t *zone)
 }
 
 void
-init_rev_zone_struct(rev_zone_info_t *rev)
+init_rev_zone_struct(rev_zone_info_s *rev)
 {
 	rev->rev_zone_id = rev->owner = 0;
 	rev->prefix = rev->serial = rev->refresh = rev->retry = rev->ttl = 0;
@@ -380,7 +380,7 @@ init_rev_zone_struct(rev_zone_info_t *rev)
 }
 
 void
-init_record_struct(record_row_t *record)
+init_record_struct(record_row_s *record)
 {
 	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
@@ -391,7 +391,7 @@ init_record_struct(record_row_t *record)
 }
 
 void
-init_rev_record_struct(rev_record_row_t *rev)
+init_rev_record_struct(rev_record_row_s *rev)
 {
 	rev->record_id = rev->rev_zone = rev->ip_addr = 0;
 	snprintf(rev->host, COMM_S, "NULL");
@@ -401,7 +401,7 @@ init_rev_record_struct(rev_record_row_t *rev)
 }
 
 void
-init_preferred_a_struct(preferred_a_t *prefer)
+init_preferred_a_struct(preferred_a_s *prefer)
 {
 	prefer->prefa_id = 0;
 	prefer->ip_addr = 0;
@@ -412,7 +412,7 @@ init_preferred_a_struct(preferred_a_t *prefer)
 }
 
 void
-init_dbdata_struct(dbdata_t *data)
+init_dbdata_struct(dbdata_s *data)
 {
 	data->fields.number = 0;
 	data->args.number = 0;
@@ -420,7 +420,7 @@ init_dbdata_struct(dbdata_t *data)
 }
 
 void
-dnsa_clean_list(dnsa_t *dnsa)
+dnsa_clean_list(dnsa_s *dnsa)
 {
 	if (dnsa->zones)
 		dnsa_clean_zones(dnsa->zones);
@@ -436,9 +436,9 @@ dnsa_clean_list(dnsa_t *dnsa)
 }
 
 void
-dnsa_clean_zones(zone_info_t *list)
+dnsa_clean_zones(zone_info_s *list)
 {
-	zone_info_t *zone, *next;
+	zone_info_s *zone, *next;
 
 	if (list)
 		zone = list;
@@ -462,9 +462,9 @@ dnsa_clean_zones(zone_info_t *list)
 }
 
 void
-dnsa_clean_rev_zones(rev_zone_info_t *list)
+dnsa_clean_rev_zones(rev_zone_info_s *list)
 {
-	rev_zone_info_t *zone, *next;
+	rev_zone_info_s *zone, *next;
 
 	if (list)
 		zone = list;
@@ -488,9 +488,9 @@ dnsa_clean_rev_zones(rev_zone_info_t *list)
 }
 
 void
-dnsa_clean_records(record_row_t *list)
+dnsa_clean_records(record_row_s *list)
 {
-	record_row_t *rec, *next;
+	record_row_s *rec, *next;
 
 	if (list)
 		rec = list;
@@ -514,9 +514,9 @@ dnsa_clean_records(record_row_t *list)
 }
 
 void
-dnsa_clean_rev_records(rev_record_row_t *list)
+dnsa_clean_rev_records(rev_record_row_s *list)
 {
-	rev_record_row_t *rec, *next;
+	rev_record_row_s *rec, *next;
 
 	if (list)
 		rec = list;
@@ -540,9 +540,9 @@ dnsa_clean_rev_records(rev_record_row_t *list)
 }
 
 void
-dnsa_clean_prefer(preferred_a_t *list)
+dnsa_clean_prefer(preferred_a_s *list)
 {
-	preferred_a_t *prefer, *next;
+	preferred_a_s *prefer, *next;
 
 	if (list)
 		prefer = list;
@@ -566,9 +566,9 @@ dnsa_clean_prefer(preferred_a_t *list)
 }
 
 void
-dnsa_clean_dbdata_list(dbdata_t *list)
+dnsa_clean_dbdata_list(dbdata_s *list)
 {
-	dbdata_t *data, *next;
+	dbdata_s *data, *next;
 	
 	if (list)
 		data = list;
@@ -684,7 +684,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 }
 
 void 
-print_rev_zone_info(rev_zone_info_t *rzi)
+print_rev_zone_info(rev_zone_info_s *rzi)
 {
 	printf("rev_zone-id: %lu\n", rzi->rev_zone_id);
 	printf("prefix: %lu\n", rzi->prefix);

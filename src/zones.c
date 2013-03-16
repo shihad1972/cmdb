@@ -38,14 +38,14 @@
 #endif /* HAVE_LIBPCRE */
 
 void
-list_zones (dnsa_config_t *dc)
+list_zones (dnsa_config_s *dc)
 {
 	int retval;
-	dnsa_t *dnsa;
-	zone_info_t *zone;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
 	size_t len;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
 	
 	retval = 0;
@@ -83,13 +83,13 @@ list_zones (dnsa_config_t *dc)
 }
 
 void
-list_rev_zones(dnsa_config_t *dc)
+list_rev_zones(dnsa_config_s *dc)
 {
 	int retval;
-	dnsa_t *dnsa;
-	rev_zone_info_t *rev;
+	dnsa_s *dnsa;
+	rev_zone_info_s *rev;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
 
 	retval = 0;
@@ -112,12 +112,12 @@ list_rev_zones(dnsa_config_t *dc)
 }
 
 void
-display_zone(char *domain, dnsa_config_t *dc)
+display_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
-	dnsa_t *dnsa;
+	dnsa_s *dnsa;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in display_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
@@ -130,11 +130,11 @@ display_zone(char *domain, dnsa_config_t *dc)
 }
 
 void
-print_zone(dnsa_t *dnsa, char *domain)
+print_zone(dnsa_s *dnsa, char *domain)
 {
 	unsigned int i, j;
-	record_row_t *records = dnsa->records;
-	zone_info_t *zone = dnsa->zones;
+	record_row_s *records = dnsa->records;
+	zone_info_s *zone = dnsa->zones;
 	i = j = 0;
 	while (zone) {
 		if (strncmp(zone->name, domain, RBUFF_S) == 0) {
@@ -177,12 +177,12 @@ records->host, records->type, records->dest);
 }
 
 void
-display_rev_zone(char *domain, dnsa_config_t *dc)
+display_rev_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
-	dnsa_t *dnsa;
+	dnsa_s *dnsa;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
@@ -195,12 +195,12 @@ display_rev_zone(char *domain, dnsa_config_t *dc)
 }
 
 void
-print_rev_zone(dnsa_t *dnsa, char *domain)
+print_rev_zone(dnsa_s *dnsa, char *domain)
 {
 	char *in_addr;
 	unsigned int i, j;
-	rev_record_row_t *records = dnsa->rev_records;
-	rev_zone_info_t *zone = dnsa->rev_zones;
+	rev_record_row_s *records = dnsa->rev_records;
+	rev_zone_info_s *zone = dnsa->rev_zones;
 	if (!(in_addr = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "in_addr in print rev zone");
 	i = j = 0;
@@ -233,7 +233,7 @@ zone->net_range, zone->pri_dns, zone->serial);
 }
 
 int
-check_fwd_zone(char *domain, dnsa_config_t *dc)
+check_fwd_zone(char *domain, dnsa_config_s *dc)
 {
 	char *command, syscom[RBUFF_S];
 	int error, retval;
@@ -250,7 +250,7 @@ check_fwd_zone(char *domain, dnsa_config_t *dc)
 }
 
 int
-check_rev_zone(char *domain, dnsa_config_t *dc)
+check_rev_zone(char *domain, dnsa_config_s *dc)
 {
 	char *command, syscom[RBUFF_S];
 	int error, retval;
@@ -266,14 +266,14 @@ check_rev_zone(char *domain, dnsa_config_t *dc)
 }
 
 int
-commit_fwd_zones(dnsa_config_t *dc)
+commit_fwd_zones(dnsa_config_s *dc)
 {
 	char *configfile, *buffer, *filename;
 	int retval;
-	dnsa_t *dnsa;
-	zone_info_t *zone;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
 	if (!(configfile = calloc(BUILD_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefile in commit_fwd_zones");
@@ -309,14 +309,14 @@ commit_fwd_zones(dnsa_config_t *dc)
 }
 
 void
-create_fwd_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile)
+create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonefile)
 {
 	char *buffer;
 	
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
-	zone_info_t *zone = dnsa->zones;
-	record_row_t *record = dnsa->records;
+	zone_info_s *zone = dnsa->zones;
+	record_row_s *record = dnsa->records;
 	while (zone->id != id)
 		zone = zone->next;
 	snprintf(zonefile, BUILD_S, "\
@@ -351,11 +351,11 @@ $TTL %lu\n\
 }
 
 void
-add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
+add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
 {
 	char *buffer;
 	size_t len, size;
-	record_row_t *record = dnsa->records;
+	record_row_s *record = dnsa->records;
 	len = BUILD_S;
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
@@ -385,7 +385,7 @@ add_records_to_fwd_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 }
 
 int
-create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone)
+create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 {
 	int retval;
 	char *zonefile, *buffer, *filename;
@@ -414,7 +414,7 @@ create_and_write_fwd_zone(dnsa_t *dnsa, dnsa_config_t *dc, zone_info_t *zone)
 }
 
 int
-create_fwd_config(dnsa_config_t *dc, zone_info_t *zone, char *configfile)
+create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *configfile)
 {
 	int retval;
 	char *buffer;
@@ -440,11 +440,11 @@ zone \"%s\" {\n\
 }
 
 void
-check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone)
+check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 {
 	int retval;
 	unsigned long int serial;
-	dbdata_t serial_data, id_data;
+	dbdata_s serial_data, id_data;
 
 	retval = 0;
 	if (strncmp("yes", zone->updated, COMM_S) == 0) {
@@ -467,14 +467,14 @@ check_for_updated_fwd_zone(dnsa_config_t *dc, zone_info_t *zone)
 }
 
 int
-commit_rev_zones(dnsa_config_t *dc)
+commit_rev_zones(dnsa_config_s *dc)
 {
 	char *configfile, *buffer, *filename;
 	int retval;
-	dnsa_t *dnsa;
-	rev_zone_info_t *zone;
+	dnsa_s *dnsa;
+	rev_zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in commit_rev_zones");
 	if (!(configfile = calloc(BUILD_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "zonefile in commit_rev_zones");
@@ -509,7 +509,7 @@ commit_rev_zones(dnsa_config_t *dc)
 }
 
 int
-create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone)
+create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone)
 {
 	int retval;
 	char *zonefile, *buffer, *filename;
@@ -540,13 +540,13 @@ create_and_write_rev_zone(dnsa_t *dnsa, dnsa_config_t *dc, rev_zone_info_t *zone
 }
 
 void
-create_rev_zone_header(dnsa_t *dnsa, char *hostm, unsigned long int id, char *zonefile)
+create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonefile)
 {
 	char *buffer;
 	
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer ins create_rev_zone_header");
-	rev_zone_info_t *zone = dnsa->rev_zones;
+	rev_zone_info_s *zone = dnsa->rev_zones;
 	while (zone->rev_zone_id != id)
 		zone = zone->next;
 	snprintf(zonefile, BUILD_S, "\
@@ -569,11 +569,11 @@ $TTL %lu\n\
 }
 
 void
-add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
+add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
 {
 	char *buffer;
 	size_t len, size;
-	rev_record_row_t *record = dnsa->rev_records;
+	rev_record_row_s *record = dnsa->rev_records;
 	len = BUILD_S;
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
@@ -599,7 +599,7 @@ add_records_to_rev_zonefile(dnsa_t *dnsa, unsigned long int id, char **zonefile)
 }
 
 int
-create_rev_config(dnsa_config_t *dc, rev_zone_info_t *zone, char *configfile)
+create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, char *configfile)
 {
 	int retval;
 	char *buffer, *in_addr;
@@ -628,19 +628,19 @@ zone \"%s\" {\n\
 }
 
 int
-display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
+display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
-	dnsa_t *dnsa;
-	dbdata_t *start;
-	rev_zone_info_t *rzone;
-	record_row_t *records;
-	preferred_a_t *prefer;
+	dnsa_s *dnsa;
+	dbdata_s *start;
+	rev_zone_info_s *rzone;
+	record_row_s *records;
+	preferred_a_s *prefer;
 
 	retval = 0;
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in disp_multi_a");
-	if (!(rzone = malloc(sizeof(rev_zone_info_t))))
+	if (!(rzone = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "rzone in disp_multi_a");
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
@@ -702,13 +702,13 @@ display_multi_a_records(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 void
-print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, dnsa_t *dnsa)
+print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 {
 	int i, j, k;
 	char name[RBUFF_S], *fqdn;
-	dbdata_t *dlist;
-	record_row_t *records = dnsa->records;
-	preferred_a_t *prefer = dnsa->prefer;
+	dbdata_s *dlist;
+	record_row_s *records = dnsa->records;
+	preferred_a_s *prefer = dnsa->prefer;
 	fqdn = &name[0];
 	while (records) {
 		dlist = start;
@@ -742,19 +742,19 @@ print_multiple_a_records(dnsa_config_t *dc, dbdata_t *start, dnsa_t *dnsa)
 }
 
 int
-mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
+mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
 	uint32_t ip_addr;
 	unsigned long int ip;
-	dnsa_t *dnsa;
-	zone_info_t *zone;
-	preferred_a_t *prefer;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+	preferred_a_s *prefer;
 
 	retval = 0;
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in mark_preferred_a_record");
-	if (!(zone = malloc(sizeof(zone_info_t))))
+	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in mark_preferred_a_record");
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
@@ -800,17 +800,17 @@ mark_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-get_preferred_a_record(dnsa_config_t *dc, comm_line_t *cm, dnsa_t *dnsa)
+get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 {
 	char *name = cm->dest;
 	char fqdn[RBUFF_S], cl_fqdn[RBUFF_S], *cl_name;
 	int i = 0;
 	uint32_t ip_addr;
-	dbdata_t *start, *list;
-	preferred_a_t *prefer;
-	record_row_t *rec = dnsa->records;
+	dbdata_s *start, *list;
+	preferred_a_s *prefer;
+	record_row_s *rec = dnsa->records;
 
-	if (!(prefer = malloc(sizeof(preferred_a_t))))
+	if (!(prefer = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
 	init_preferred_a_struct(prefer);
 	dnsa->prefer = prefer;
@@ -856,16 +856,16 @@ Curently you cannot add FQDN's not authoritative on this DNS server\n");
 }
 
 int
-delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm)
+delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	char *ip_addr = cm->dest;
 	int retval = 0;
 	int i = 0;
-	dnsa_t *dnsa;
-	dbdata_t data;
-	preferred_a_t *prefer;
+	dnsa_s *dnsa;
+	dbdata_s data;
+	preferred_a_s *prefer;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_preferred_a");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(&data);
@@ -899,19 +899,19 @@ delete_preferred_a(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-add_host(dnsa_config_t *dc, comm_line_t *cm)
+add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
-	dnsa_t *dnsa;
-	zone_info_t *zone;
-	record_row_t *record;
-	dbdata_t data;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+	record_row_s *record;
+	dbdata_s data;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_host");
-	if (!(zone = malloc(sizeof(zone_info_t))))
+	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in add_host");
-	if (!(record = malloc(sizeof(record_row_t))))
+	if (!(record = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "record in add_host");
 
 	init_dnsa_struct(dnsa);
@@ -935,13 +935,13 @@ add_host(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-delete_record(dnsa_config_t *dc, comm_line_t *cm)
+delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	char fqdn[RBUFF_S], *name;
 	int retval = 0;
-	dnsa_t *dnsa;
+	dnsa_s *dnsa;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_record");
 	init_dnsa_struct(dnsa);
 	if ((retval = run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
@@ -967,16 +967,16 @@ delete_record(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
+add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
-	dnsa_t *dnsa;
-	zone_info_t *zone;
-	dbdata_t data;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+	dbdata_s data;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
-	if (!(zone = malloc(sizeof(zone_info_t))))
+	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
@@ -1013,18 +1013,18 @@ add_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-delete_fwd_zone(dnsa_config_t *dc, comm_line_t *cm)
+delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	char fqdn[RBUFF_S], *name;
 	int retval, i = 0;
-	dnsa_t *dnsa;
-	dbdata_t *data;
-	record_row_t *fwd, *other, *list;
-	zone_info_t *zone;
+	dnsa_s *dnsa;
+	dbdata_s *data;
+	record_row_s *fwd, *other, *list;
+	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_fwd_zone");
-	if (!(data = malloc(sizeof(dbdata_t))))
+	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in delete_fwd_zone");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
@@ -1091,16 +1091,16 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 }
 
 int
-add_rev_zone(dnsa_config_t *dc, comm_line_t *cm)
+add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
-	dnsa_t *dnsa;
-	rev_zone_info_t *zone;
-	dbdata_t data;
+	dnsa_s *dnsa;
+	rev_zone_info_s *zone;
+	dbdata_s data;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
-	if (!(zone = malloc(sizeof(rev_zone_info_t))))
+	if (!(zone = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
@@ -1138,16 +1138,16 @@ add_rev_zone(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-delete_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
+delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval;
-	dnsa_t *dnsa;
-	dbdata_t *data;
-	rev_zone_info_t *rev;
+	dnsa_s *dnsa;
+	dbdata_s *data;
+	rev_zone_info_s *rev;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_reverse_zone");
-	if (!(data = malloc(sizeof(dbdata_t))))
+	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in delete_reverse_zone");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
@@ -1174,11 +1174,11 @@ delete_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa)
+create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	char *configfile, *buffer, filename[NAME_S];
 	int retval;
-	zone_info_t *zone;
+	zone_info_s *zone;
 
 	buffer = &filename[0];
 	retval = 0;
@@ -1204,11 +1204,11 @@ create_and_write_fwd_config(dnsa_config_t *dc, dnsa_t *dnsa)
 }
 
 int
-create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa)
+create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	char *configfile, *buffer, filename[NAME_S];
 	int retval;
-	rev_zone_info_t *zone;
+	rev_zone_info_s *zone;
 	
 	buffer = &filename[0];
 	retval = 0;
@@ -1234,7 +1234,7 @@ create_and_write_rev_config(dnsa_config_t *dc, dnsa_t *dnsa)
 }
 
 int
-validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa)
+validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 {
 	char command[NAME_S], *buffer;
 	int retval;
@@ -1266,7 +1266,7 @@ validate_fwd_zone(dnsa_config_t *dc, zone_info_t *zone, dnsa_t *dnsa)
 }
 
 int
-validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
+validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 {
 	char command[NAME_S], *buffer;
 	int retval;
@@ -1298,7 +1298,7 @@ validate_rev_zone(dnsa_config_t *dc, rev_zone_info_t *zone, dnsa_t *dnsa)
 }
 
 int
-check_for_fwd_record_use(dnsa_t *dnsa, char *name)
+check_for_fwd_record_use(dnsa_s *dnsa, char *name)
 {
 	int retval;
 /**
@@ -1326,18 +1326,18 @@ check_for_fwd_record_use(dnsa_t *dnsa, char *name)
 }
 
 int
-build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
+build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval, a_rec;
 	unsigned long int serial;
-	dnsa_t *dnsa;
-	dbdata_t serial_d, zone_info_d, *data;
-	record_row_t *rec;
-	rev_record_row_t *add, *delete, *list;
+	dnsa_s *dnsa;
+	dbdata_s serial_d, zone_info_d, *data;
+	record_row_s *rec;
+	rev_record_row_s *add, *delete, *list;
 
-	if (!(dnsa = malloc(sizeof(dnsa_t))))
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
-	if (!(data = malloc(sizeof(dbdata_t))))
+	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in build_reverse_zone");
 	retval = 0;
 /* Set to NULL so we can check if there are no records to add / delete */
@@ -1420,7 +1420,7 @@ build_reverse_zone(dnsa_config_t *dc, comm_line_t *cm)
 }
 
 int
-get_correct_rev_zone_and_preferred_records(dnsa_t *dnsa, comm_line_t *cm)
+get_correct_rev_zone_and_preferred_records(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	int retval = 0;
 	if ((retval = get_rev_zone(dnsa, cm)) != 0) {
@@ -1440,9 +1440,9 @@ get_correct_rev_zone_and_preferred_records(dnsa_t *dnsa, comm_line_t *cm)
 }
 
 int
-get_fwd_zone(dnsa_t *dnsa, comm_line_t *cm)
+get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
-	zone_info_t *fwd, *list, *next;
+	zone_info_s *fwd, *list, *next;
 	fwd = dnsa->zones;
 	list = '\0';
 	if (fwd->next)
@@ -1470,9 +1470,9 @@ get_fwd_zone(dnsa_t *dnsa, comm_line_t *cm)
 }
 
 int
-get_rev_zone(dnsa_t *dnsa, comm_line_t *cm)
+get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
-	rev_zone_info_t *rev, *list, *next;
+	rev_zone_info_s *rev, *list, *next;
 	rev = dnsa->rev_zones;
 	list = '\0';
 	if (rev->next)
@@ -1500,10 +1500,10 @@ get_rev_zone(dnsa_t *dnsa, comm_line_t *cm)
 }
 
 int
-get_rev_records_for_range(rev_record_row_t **records, rev_zone_info_t *zone)
+get_rev_records_for_range(rev_record_row_s **records, rev_zone_info_s *zone)
 {
 	int i = 0;
-	rev_record_row_t *list, *prev, *next, *tmp, *rec;
+	rev_record_row_s *list, *prev, *next, *tmp, *rec;
 	list = *records;
 	rec = prev = list;
 	if (rec)
@@ -1536,12 +1536,12 @@ get_rev_records_for_range(rev_record_row_t **records, rev_zone_info_t *zone)
 }
 
 void
-trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec)
+trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec)
 {
 	char host[RBUFF_S], *newhost;
 	int retval;
-	record_row_t *fwd = dnsa->records; /* List of A records */
-	record_row_t *list, *tmp, *fwd_list, *prev;
+	record_row_s *fwd = dnsa->records; /* List of A records */
+	record_row_s *list, *tmp, *fwd_list, *prev;
 	fwd_list = prev = fwd;
 	while (fwd) {
 /* Get rid of @. in the start of these types of A records */
@@ -1580,12 +1580,12 @@ trim_forward_record_list(dnsa_t *dnsa, record_row_t *rec)
 
 /* Build a list of the reverse records we need to add to the database. */
 int
-rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev)
+rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev)
 {
 	int i;
 	size_t len;
-	record_row_t *fwd = dnsa->records; /* List of A records */
-	rev_record_row_t *rev_list;
+	record_row_s *fwd = dnsa->records; /* List of A records */
+	rev_record_row_s *rev_list;
 
 	while (fwd) {
 /* Now check if the forward record is in the reverse list */
@@ -1610,9 +1610,9 @@ rev_records_to_add(dnsa_t *dnsa, rev_record_row_t **rev)
 }
 
 int
-check_dup_and_pref_list(record_row_t *list, record_row_t *fwd, dnsa_t *dnsa)
+check_dup_and_pref_list(record_row_s *list, record_row_s *fwd, dnsa_s *dnsa)
 {
-	preferred_a_t *prefer;
+	preferred_a_s *prefer;
 	while (list) {
 		prefer = dnsa->prefer;
 /* Check if this is IP is in the duplicate list */
@@ -1646,13 +1646,13 @@ check_dup_and_pref_list(record_row_t *list, record_row_t *fwd, dnsa_t *dnsa)
 }
 
 int
-insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev)
+insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev)
 {
 	char rev_host[RANGE_S];
-	rev_record_row_t *new, *list;
-	zone_info_t *zones = dnsa->zones;
+	rev_record_row_s *new, *list;
+	zone_info_s *zones = dnsa->zones;
 
-	if (!(new = malloc(sizeof(rev_record_row_t))))
+	if (!(new = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "new in insert_into_rev_add_list");
 	list = *rev;
 	init_rev_record_struct(new);
@@ -1684,11 +1684,11 @@ insert_into_rev_add_list(dnsa_t *dnsa, record_row_t *fwd, rev_record_row_t **rev
 }
 
 void
-add_dup_to_prefer_list(dnsa_t *dnsa, record_row_t *fwd)
+add_dup_to_prefer_list(dnsa_s *dnsa, record_row_s *fwd)
 {
-	preferred_a_t *new, *list;
+	preferred_a_s *new, *list;
 
-	if (!(new = malloc(sizeof(preferred_a_t))))
+	if (!(new = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "new in add_dup_to_prefer_list");
 	init_preferred_a_struct(new);
 	list = dnsa->prefer;
@@ -1714,12 +1714,12 @@ If this is not what you want, please set up a preferred record for this PTR\n",
 
 /* Build list of the reverse records we need to delete from the database */
 int
-rev_records_to_delete(dnsa_t *dnsa, rev_record_row_t **rev)
+rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 {
 	int i = 0;
 	size_t len;
-	rev_record_row_t *list = dnsa->rev_records;
-	record_row_t *fwd;
+	rev_record_row_s *list = dnsa->rev_records;
+	record_row_s *fwd;
 
 	while (list) {
 		fwd = dnsa->records;
@@ -1739,11 +1739,11 @@ rev_records_to_delete(dnsa_t *dnsa, rev_record_row_t **rev)
 }
 
 void
-insert_into_rev_del_list(rev_record_row_t *record, rev_record_row_t **rev)
+insert_into_rev_del_list(rev_record_row_s *record, rev_record_row_s **rev)
 {
-	rev_record_row_t *new, *list;
+	rev_record_row_s *new, *list;
 
-	if (!(new = malloc(sizeof(rev_record_row_t))))
+	if (!(new = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "new in insert_into_rev_add_list");
 	list = *rev;
 	init_rev_record_struct(new);
@@ -1800,7 +1800,7 @@ get_rev_host(unsigned long int prefix, char *rev_host, char *host)
 }
 
 void
-add_int_ip_to_records(dnsa_t *dnsa)
+add_int_ip_to_records(dnsa_s *dnsa)
 {
 	if (dnsa->records)
 		add_int_ip_to_fwd_records(dnsa->records);
@@ -1809,7 +1809,7 @@ add_int_ip_to_records(dnsa_t *dnsa)
 }
 
 void
-add_int_ip_to_fwd_records(record_row_t *records)
+add_int_ip_to_fwd_records(record_row_s *records)
 {
 	uint32_t ip;
 	while (records) {
@@ -1822,13 +1822,13 @@ add_int_ip_to_fwd_records(record_row_t *records)
 }
 
 int
-add_int_ip_to_rev_records(dnsa_t *dnsa)
+add_int_ip_to_rev_records(dnsa_s *dnsa)
 {
 	char address[RANGE_S], host[RANGE_S], *ip_addr, *tmp;
 	int i;
 	uint32_t ip;
 	unsigned long int prefix = dnsa->rev_zones->prefix;
-	rev_record_row_t *rev = dnsa->rev_records;
+	rev_record_row_s *rev = dnsa->rev_records;
 	ip_addr = address;
 	while (rev) {
 		strncpy(ip_addr, dnsa->rev_zones->net_range, RANGE_S);
@@ -1875,10 +1875,10 @@ add_int_ip_to_rev_records(dnsa_t *dnsa)
 }
 
 int
-compare_fwd_ns_records_with_host(dnsa_t *dnsa, char *name)
+compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name)
 {
 	int retval = NONE;
-	zone_info_t *list;
+	zone_info_s *list;
 
 	if (dnsa->zones)
 		list = dnsa->zones;
@@ -1903,9 +1903,9 @@ Zone %s has secondary NS server of %s You want to delete %s\n",
 }
 
 int
-compare_host_with_record_destination(dnsa_t *dnsa, char *name)
+compare_host_with_record_destination(dnsa_s *dnsa, char *name)
 {
-	record_row_t *list;
+	record_row_s *list;
 
 	if (dnsa->records)
 		list = dnsa->records;
@@ -1924,10 +1924,10 @@ We have a record type %s in zone ID %lu with destination %s\n",
 }
 
 int
-compare_host_with_fqdn_cname(dnsa_t *dnsa, char *hname)
+compare_host_with_fqdn_cname(dnsa_s *dnsa, char *hname)
 {
 	char rfqdn[RBUFF_S], *rname;
-	record_row_t *list;
+	record_row_s *list;
 
 	rname = rfqdn;
 	if (dnsa->records)
@@ -1947,11 +1947,11 @@ We have a record in zone id %lu whose destination FQDN is %s\n", list->zone, rna
 }
 
 void
-get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
+get_fqdn_for_record_dest(dnsa_s *dnsa, record_row_s *fwd, char *fqdn)
 {
 	char *tmp;
 	int i;
-	zone_info_t *zone;
+	zone_info_s *zone;
 
 	tmp = fqdn;
 	for (i = 0; i < RBUFF_S; i++) {
@@ -1972,11 +1972,11 @@ get_fqdn_for_record_dest(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 }
 
 void
-get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
+get_fqdn_for_record_host(dnsa_s *dnsa, record_row_s *fwd, char *fqdn)
 {
 	char *tmp;
 	int i;
-	zone_info_t *zone;
+	zone_info_s *zone;
 
 	tmp = fqdn;
 	for (i = 0; i < RBUFF_S; i++) {
@@ -1997,9 +1997,9 @@ get_fqdn_for_record_host(dnsa_t *dnsa, record_row_t *fwd, char *fqdn)
 }
 
 void
-split_fwd_record_list(zone_info_t *zone, record_row_t *rec, record_row_t **fwd, record_row_t **other)
+split_fwd_record_list(zone_info_s *zone, record_row_s *rec, record_row_s **fwd, record_row_s **other)
 {
-	record_row_t *list, *next;
+	record_row_s *list, *next;
 
 	while (rec) {
 		next = rec->next;
@@ -2058,7 +2058,7 @@ get_zone_serial(void)
 }
 
 int
-check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type)
+check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 {
 	int retval;
 
@@ -2077,7 +2077,7 @@ check_for_zone_in_db(dnsa_config_t *dc, dnsa_t *dnsa, short int type)
 	return retval;
 }
 void
-fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
+fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
@@ -2090,7 +2090,7 @@ fill_fwd_zone_info(zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
 }
 
 void
-fill_rev_zone_info(rev_zone_info_t *zone, comm_line_t *cm, dnsa_config_t *dc)
+fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
 	char address[RANGE_S], *addr;
 	uint32_t ip_addr;
@@ -2128,14 +2128,14 @@ get_net_range(unsigned long int prefix)
 }
 
 int
-get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm)
+get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	char hfqdn[RBUFF_S], rfqdn[RBUFF_S], *hname, *rname;
 	int retval = 0;
-	dbdata_t *data;
-	record_row_t *list;
+	dbdata_s *data;
+	record_row_s *list;
 
-	if (!(data = malloc(sizeof(dbdata_t))))
+	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in get_record_id_and_delete");
 	init_dbdata_struct(data);
 	hname = hfqdn;
@@ -2159,9 +2159,9 @@ get_record_id_and_delete(dnsa_config_t *dc, dnsa_t *dnsa, comm_line_t *cm)
 }
 
 void
-select_specific_ip(dnsa_t *dnsa, comm_line_t *cm)
+select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
-	record_row_t *records, *next, *ip;
+	record_row_s *records, *next, *ip;
 
 	ip = '\0';
 	records = dnsa->records;
@@ -2195,9 +2195,9 @@ select_specific_ip(dnsa_t *dnsa, comm_line_t *cm)
  * node is changed we set *records to list, the new head memeber
  */
 int
-get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
+get_a_records_for_range(record_row_s **records, rev_zone_info_s *zone)
 {
-	record_row_t *rec, *list, *tmp, *prev, *next;
+	record_row_s *rec, *list, *tmp, *prev, *next;
 	int i = 0;
 	uint32_t ip_addr;
 	unsigned long int ip;
@@ -2235,9 +2235,9 @@ get_a_records_for_range(record_row_t **records, rev_zone_info_t *zone)
 }
 
 int
-get_pref_a_for_range(preferred_a_t **prefer, rev_zone_info_t *rev)
+get_pref_a_for_range(preferred_a_s **prefer, rev_zone_info_s *rev)
 {
-	preferred_a_t *pref, *list, *tmp, *prev, *next;
+	preferred_a_s *pref, *list, *tmp, *prev, *next;
 	int i = 0;
 	list = *prefer;
 	pref = prev = list;

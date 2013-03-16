@@ -39,7 +39,7 @@
 #include "cmdb_base_sql.h"
 
 int
-parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *base)
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
 {
 	int opt, retval;
 	
@@ -51,19 +51,19 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 	strncpy(comp->name, "NULL", CONF_S);
 	strncpy(comp->id, "NULL", RANGE_S);
 	strncpy(comp->vmhost, "NULL", COMM_S);
-	if (!(base->server = malloc(sizeof(cmdb_server_t))))
+	if (!(base->server = malloc(sizeof(cmdb_server_s))))
 		report_error(MALLOC_FAIL, "base->server in parse_cmdb_comm_line");
-	if (!(base->customer = malloc(sizeof(cmdb_customer_t))))
+	if (!(base->customer = malloc(sizeof(cmdb_customer_s))))
 		report_error(MALLOC_FAIL, "base->customer in parse_cmdb_comm_line");
-	if (!(base->contact = malloc(sizeof(cmdb_contact_t))))
+	if (!(base->contact = malloc(sizeof(cmdb_contact_s))))
 		report_error(MALLOC_FAIL, "base->contact in parse_cmdb_comm_line");
-	if (!(base->service = malloc(sizeof(cmdb_service_t))))
+	if (!(base->service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "base->service in parse_cmdb_comm_line");
-	if (!(base->servicetype = malloc(sizeof(cmdb_service_type_t))))
+	if (!(base->servicetype = malloc(sizeof(cmdb_service_sype_t))))
 		report_error(MALLOC_FAIL, "base->servicetype in parse_cmdb_comm_line");
-	if (!(base->hardware = malloc(sizeof(cmdb_hardware_t))))
+	if (!(base->hardware = malloc(sizeof(cmdb_hardware_s))))
 		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
-	if (!(base->hardtype = malloc(sizeof(cmdb_hard_type_t))))
+	if (!(base->hardtype = malloc(sizeof(cmdb_hard_type_s))))
 		report_error(MALLOC_FAIL, "base->hardtype in parse_cmdb_comm_line");
 	cmdb_init_server_t(base->server);
 	cmdb_init_customer_t(base->customer);
@@ -168,7 +168,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_t *comp, cmdb_t *b
 }
 
 int
-check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
+check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 {
 	int retval;
 
@@ -263,7 +263,7 @@ check_cmdb_comm_options(cmdb_comm_line_t *comp, cmdb_t *base)
 }
 
 int
-parse_cmdb_config_file(cmdb_config_t *dc, char *config)
+parse_cmdb_config_file(cmdb_config_s *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
@@ -326,7 +326,7 @@ parse_cmdb_config_file(cmdb_config_t *dc, char *config)
 }
 
 void
-init_cmdb_comm_line_values(cmdb_comm_line_t *cm)
+init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
 	cm->action = 0;
 	cm->type = 0;
@@ -337,7 +337,7 @@ init_cmdb_comm_line_values(cmdb_comm_line_t *cm)
 }
 
 void
-init_cmdb_config_values(cmdb_config_t *dc)
+init_cmdb_config_values(cmdb_config_s *dc)
 {
 	snprintf(dc->dbtype, RANGE_S, "none");
 	snprintf(dc->file, CONF_S, "none");
@@ -351,7 +351,7 @@ init_cmdb_config_values(cmdb_config_t *dc)
 }
 
 void
-cmdb_init_struct(cmdb_t *cmdb)
+cmdb_init_struct(cmdb_s *cmdb)
 {
 	cmdb->server = '\0';
 	cmdb->customer = '\0';
@@ -364,7 +364,7 @@ cmdb_init_struct(cmdb_t *cmdb)
 }
 
 void
-cmdb_init_server_t(cmdb_server_t *server)
+cmdb_init_server_t(cmdb_server_s *server)
 {
 	snprintf(server->vendor, COMM_S, "NULL");
 	snprintf(server->make, COMM_S, "NULL");
@@ -376,7 +376,7 @@ cmdb_init_server_t(cmdb_server_t *server)
 }
 
 void
-cmdb_init_customer_t(cmdb_customer_t *cust)
+cmdb_init_customer_t(cmdb_customer_s *cust)
 {
 	snprintf(cust->address, COMM_S, "NULL");
 	snprintf(cust->city, COMM_S, "NULL");
@@ -388,7 +388,7 @@ cmdb_init_customer_t(cmdb_customer_t *cust)
 }
 
 void
-cmdb_init_service_t(cmdb_service_t *service)
+cmdb_init_service_t(cmdb_service_s *service)
 {
 	snprintf(service->detail, COMM_S, "NULL");
 	snprintf(service->url, COMM_S, "NULL");
@@ -400,7 +400,7 @@ cmdb_init_service_t(cmdb_service_t *service)
 }
 
 void
-cmdb_init_hardware_t(cmdb_hardware_t *hard)
+cmdb_init_hardware_t(cmdb_hardware_s *hard)
 {
 	snprintf(hard->detail, COMM_S, "NULL");
 	snprintf(hard->device, COMM_S, "NULL");
@@ -411,7 +411,7 @@ cmdb_init_hardware_t(cmdb_hardware_t *hard)
 }
 
 void
-cmdb_init_contact_t(cmdb_contact_t *cont)
+cmdb_init_contact_t(cmdb_contact_s *cont)
 {
 	snprintf(cont->name, COMM_S, "NULL");
 	snprintf(cont->phone, COMM_S, "NULL");
@@ -420,7 +420,7 @@ cmdb_init_contact_t(cmdb_contact_t *cont)
 }
 
 void
-cmdb_init_hardtype_t(cmdb_hard_type_t *type)
+cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 {
 	snprintf(type->type, COMM_S, "NULL");
 	snprintf(type->hclass, COMM_S, "NULL");
@@ -429,7 +429,7 @@ cmdb_init_hardtype_t(cmdb_hard_type_t *type)
 }
 
 void
-cmdb_init_servicetype_t(cmdb_service_type_t *type)
+cmdb_init_servicetype_t(cmdb_service_sype_t *type)
 {
 	snprintf(type->service, COMM_S, "NULL");
 	snprintf(type->detail, COMM_S, "NULL");
@@ -437,7 +437,7 @@ cmdb_init_servicetype_t(cmdb_service_type_t *type)
 }
 
 void
-cmdb_init_vmhost_t(cmdb_vm_host_t *type)
+cmdb_init_vmhost_t(cmdb_vm_host_s *type)
 {
 	snprintf(type->name, COMM_S, "NULL");
 	snprintf(type->type, COMM_S, "NULL");
@@ -447,7 +447,7 @@ cmdb_init_vmhost_t(cmdb_vm_host_t *type)
 }
 
 void
-cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
+cmdb_main_free(cmdb_comm_line_s *cm, cmdb_config_s *cmc, char *cmdb_config)
 {
 	free(cm);
 	free(cmc);
@@ -455,7 +455,7 @@ cmdb_main_free(cmdb_comm_line_t *cm, cmdb_config_t *cmc, char *cmdb_config)
 }
 
 void
-cmdb_clean_list(cmdb_t *cmdb)
+cmdb_clean_list(cmdb_s *cmdb)
 {
 	if (cmdb->server)
 		clean_server_list(cmdb->server);
@@ -477,9 +477,9 @@ cmdb_clean_list(cmdb_t *cmdb)
 }
 
 void
-clean_server_list(cmdb_server_t *list)
+clean_server_list(cmdb_server_s *list)
 {
-	cmdb_server_t *server, *next;
+	cmdb_server_s *server, *next;
 
 	server = list;
 	next = server->next;
@@ -495,9 +495,9 @@ clean_server_list(cmdb_server_t *list)
 }
 
 void
-clean_customer_list(cmdb_customer_t *list)
+clean_customer_list(cmdb_customer_s *list)
 {
-	cmdb_customer_t *customer, *next;
+	cmdb_customer_s *customer, *next;
 
 	customer = list;
 	next = customer->next;
@@ -513,9 +513,9 @@ clean_customer_list(cmdb_customer_t *list)
 }
 
 void
-clean_contact_list(cmdb_contact_t *list)
+clean_contact_list(cmdb_contact_s *list)
 {
-	cmdb_contact_t *contact, *next;
+	cmdb_contact_s *contact, *next;
 
 	contact = list;
 	next = contact->next;
@@ -531,9 +531,9 @@ clean_contact_list(cmdb_contact_t *list)
 }
 
 void
-clean_service_list(cmdb_service_t *list)
+clean_service_list(cmdb_service_s *list)
 {
-	cmdb_service_t *service, *next;
+	cmdb_service_s *service, *next;
 
 	service = list;
 	next = service->next;
@@ -549,9 +549,9 @@ clean_service_list(cmdb_service_t *list)
 }
 
 void
-clean_service_type_list(cmdb_service_type_t *list)
+clean_service_type_list(cmdb_service_sype_t *list)
 {
-	cmdb_service_type_t *service, *next;
+	cmdb_service_sype_t *service, *next;
 
 	service = list;
 	next = service->next;
@@ -567,9 +567,9 @@ clean_service_type_list(cmdb_service_type_t *list)
 }
 
 void
-clean_hardware_list(cmdb_hardware_t *list)
+clean_hardware_list(cmdb_hardware_s *list)
 {
-	cmdb_hardware_t *hardware, *next;
+	cmdb_hardware_s *hardware, *next;
 
 	hardware = list;
 	next = hardware->next;
@@ -585,9 +585,9 @@ clean_hardware_list(cmdb_hardware_t *list)
 }
 
 void
-clean_hardware_type_list(cmdb_hard_type_t *list)
+clean_hardware_type_list(cmdb_hard_type_s *list)
 {
-	cmdb_hard_type_t *hardware, *next;
+	cmdb_hard_type_s *hardware, *next;
 
 	hardware = list;
 	next = hardware->next;
@@ -603,9 +603,9 @@ clean_hardware_type_list(cmdb_hard_type_t *list)
 }
 
 void
-clean_vmhost_list(cmdb_vm_host_t *list)
+clean_vmhost_list(cmdb_vm_host_s *list)
 {
-	cmdb_vm_host_t *vmhost, *next;
+	cmdb_vm_host_s *vmhost, *next;
 
 	vmhost = list;
 	next = vmhost->next;

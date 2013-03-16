@@ -40,14 +40,14 @@
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
 #endif /* HAVE_SQLITE3 */
-const struct cmdb_server_t servers;
-const struct cmdb_customer_t customers;
-const struct cmdb_contact_t contacts;
-const struct cmdb_service_t services;
-const struct cmdb_service_type_t servtypes;
-const struct cmdb_hardware_t hardwares;
-const struct cmdb_hard_type_t hardtypes;
-const struct cmdb_vm_host_t vmhosts;
+const struct cmdb_server_s servers;
+const struct cmdb_customer_s customers;
+const struct cmdb_contact_s contacts;
+const struct cmdb_service_s services;
+const struct cmdb_service_sype_t servtypes;
+const struct cmdb_hardware_s hardwares;
+const struct cmdb_hard_type_s hardtypes;
+const struct cmdb_vm_host_s vmhosts;
 
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
@@ -113,7 +113,7 @@ const unsigned int search_args[] = { 1,1,1,1,1 };
 
 
 int
-run_query(cmdb_config_t *config, cmdb_t *base, int type)
+run_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -138,7 +138,7 @@ run_query(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type)
+run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -163,7 +163,7 @@ run_multiple_query(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_search(cmdb_config_t *config, cmdb_t *base, int type)
+run_search(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 
@@ -189,7 +189,7 @@ run_search(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_insert(cmdb_config_t *config, cmdb_t *base, int type)
+run_insert(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -251,7 +251,7 @@ get_query(int type, const char **query, unsigned int *fields)
 }
 
 void
-get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_t *base)
+get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
 {
 	if (type == SERVER_ID_ON_NAME) {
 		*input = &(base->server->name);
@@ -289,7 +289,7 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 
 
 void
-cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql)
+cmdb_mysql_init(cmdb_config_s *dc, MYSQL *cmdb_mysql)
 {
 	const char *unix_socket;
 	
@@ -305,7 +305,7 @@ cmdb_mysql_init(cmdb_config_t *dc, MYSQL *cmdb_mysql)
 }
 
 int
-run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
@@ -341,7 +341,7 @@ run_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
@@ -372,7 +372,7 @@ run_multiple_query_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_search_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_STMT *cmdb_stmt;
@@ -426,7 +426,7 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
-run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
+run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_STMT *cmdb_stmt;
@@ -456,7 +456,7 @@ run_insert_mysql(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base)
+setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base)
 {
 	int retval;
 
@@ -480,7 +480,7 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_t *base
 }
 
 int
-setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_s *base, unsigned int i)
 {
 	int retval;
 
@@ -501,7 +501,7 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_t *base, unsigned i
 }
 
 void
-setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_server(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->server->name);
@@ -520,7 +520,7 @@ setup_insert_mysql_bind_buff_server(void **buffer, cmdb_t *base, unsigned int i)
 }
 
 void
-setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->customer->name);
@@ -537,7 +537,7 @@ setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_t *base, unsigned int 
 }
 
 void
-setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->contact->name);
@@ -550,7 +550,7 @@ setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_t *base, unsigned int i
 }
 
 void
-setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_service(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->service->server_id);
@@ -565,7 +565,7 @@ setup_insert_mysql_bind_buff_service(void **buffer, cmdb_t *base, unsigned int i
 }
 
 void
-setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_t *base, unsigned int i)
+setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->hardware->detail);
@@ -577,7 +577,7 @@ setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_t *base, unsigned int 
 		*buffer = &(base->hardware->ht_id);
 }
 void
-store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
+store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == SERVER) {
@@ -626,11 +626,11 @@ store_result_mysql(MYSQL_ROW row, cmdb_t *base, int type, unsigned int fields)
 }
 
 void
-store_server_mysql(MYSQL_ROW row, cmdb_t *base)
+store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_server_t *server, *list;
+	cmdb_server_s *server, *list;
 
-	if (!(server = malloc(sizeof(cmdb_server_t))))
+	if (!(server = malloc(sizeof(cmdb_server_s))))
 		report_error(MALLOC_FAIL, "server in store_server_mysql");
 	server->server_id = strtoul(row[0], NULL, 10);
 	snprintf(server->vendor, CONF_S, "%s", row[1]);
@@ -653,11 +653,11 @@ store_server_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_customer_mysql(MYSQL_ROW row, cmdb_t *base)
+store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_customer_t *customer, *list;
+	cmdb_customer_s *customer, *list;
 
-	if (!(customer = malloc(sizeof(cmdb_customer_t))))
+	if (!(customer = malloc(sizeof(cmdb_customer_s))))
 		report_error(MALLOC_FAIL, "customer in store_customer_mysql");
 	customer->cust_id = strtoul(row[0], NULL, 10);
 	snprintf(customer->name, HOST_S, "%s", row[1]);
@@ -679,11 +679,11 @@ store_customer_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_contact_mysql(MYSQL_ROW row, cmdb_t *base)
+store_contact_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_contact_t *contact, *list;
+	cmdb_contact_s *contact, *list;
 
-	if (!(contact = malloc(sizeof(cmdb_contact_t))))
+	if (!(contact = malloc(sizeof(cmdb_contact_s))))
 		report_error(MALLOC_FAIL, "contact in store_contact_mysql");
 	contact->cont_id = strtoul(row[0], NULL, 10);
 	snprintf(contact->name, HOST_S, "%s", row[1]);
@@ -703,12 +703,12 @@ store_contact_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_service_mysql(MYSQL_ROW row, cmdb_t *base)
+store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_service_t *service, *list;
-	cmdb_service_type_t *type;
+	cmdb_service_s *service, *list;
+	cmdb_service_sype_t *type;
 
-	if (!(service = malloc(sizeof(cmdb_service_t))))
+	if (!(service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
 	service->service_id = strtoul(row[0], NULL, 10);
 	service->server_id = strtoul(row[1], NULL, 10);
@@ -737,11 +737,11 @@ store_service_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_service_type_mysql(MYSQL_ROW row, cmdb_t *base)
+store_service_type_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_service_type_t *service, *list;
+	cmdb_service_sype_t *service, *list;
 
-	if (!(service = malloc(sizeof(cmdb_service_type_t))))
+	if (!(service = malloc(sizeof(cmdb_service_sype_t))))
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = strtoul(row[0], NULL, 10);
@@ -760,12 +760,12 @@ store_service_type_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_hardware_mysql(MYSQL_ROW row, cmdb_t *base)
+store_hardware_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_hardware_t *hard, *list;
-	cmdb_hard_type_t *type;
+	cmdb_hardware_s *hard, *list;
+	cmdb_hard_type_s *type;
 
-	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
+	if (!(hard = malloc(sizeof(cmdb_hardware_s))))
 		report_error(MALLOC_FAIL, "hardware in store_hardware_mysql");
 
 	hard->hard_id = strtoul(row[0], NULL, 10);
@@ -794,11 +794,11 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_hardware_type_mysql(MYSQL_ROW row, cmdb_t *base)
+store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_hard_type_t *hard, *list;
+	cmdb_hard_type_s *hard, *list;
 
-	if (!(hard = malloc(sizeof(cmdb_hard_type_t))))
+	if (!(hard = malloc(sizeof(cmdb_hard_type_s))))
 		report_error(MALLOC_FAIL, "hardware in store_hardware_type_mysql");
 
 	hard->ht_id = strtoul(row[0], NULL, 10);
@@ -817,11 +817,11 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_t *base)
 }
 
 void
-store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base)
+store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_vm_host_t *vmhost, *list;
+	cmdb_vm_host_s *vmhost, *list;
 
-	if (!(vmhost = malloc(sizeof(cmdb_vm_host_t))))
+	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_mysql");
 	vmhost->id = strtoul(row[0], NULL, 10);
 	snprintf(vmhost->name, RBUFF_S, "%s", row[1]);
@@ -846,7 +846,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_t *base)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -878,7 +878,7 @@ run_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
@@ -909,7 +909,7 @@ run_multiple_query_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -958,7 +958,7 @@ run_search_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
+run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -992,7 +992,7 @@ run_insert_sqlite(cmdb_config_t *config, cmdb_t *base, int type)
 }
 
 int
-setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
+setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 {
 	int retval;
 	if (type == SERVERS) {
@@ -1012,7 +1012,7 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_t *cmdb, int type)
 }
 
 void
-store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fields)
+store_result_sqlite(sqlite3_stmt *state, cmdb_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == SERVER) {
@@ -1061,11 +1061,11 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_t *base, int type, unsigned int fi
 }
 
 void
-store_server_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_server_t *server, *list;
+	cmdb_server_s *server, *list;
 
-	if (!(server = malloc(sizeof(cmdb_server_t))))
+	if (!(server = malloc(sizeof(cmdb_server_s))))
 		report_error(MALLOC_FAIL, "server in store_server_sqlite");
 	server->server_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
@@ -1088,11 +1088,11 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_customer_t *cust, *list;
+	cmdb_customer_s *cust, *list;
 
-	if (!(cust = malloc(sizeof(cmdb_customer_t))))
+	if (!(cust = malloc(sizeof(cmdb_customer_s))))
 		report_error(MALLOC_FAIL, "cust in store_customer_sqlite");
 	cust->cust_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(cust->name, HOST_S, "%s", sqlite3_column_text(state, 1));
@@ -1114,11 +1114,11 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_contact_t *contact, *list;
+	cmdb_contact_s *contact, *list;
 
-	if (!(contact = malloc(sizeof(cmdb_contact_t))))
+	if (!(contact = malloc(sizeof(cmdb_contact_s))))
 		report_error(MALLOC_FAIL, "contact in store_contact_sqlite");
 
 	contact->cont_id = (unsigned long int) sqlite3_column_int(state, 0);
@@ -1139,12 +1139,12 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_service_t *service, *list;
-	cmdb_service_type_t *type;
+	cmdb_service_s *service, *list;
+	cmdb_service_sype_t *type;
 
-	if (!(service = malloc(sizeof(cmdb_service_t))))
+	if (!(service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
 
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
@@ -1174,11 +1174,11 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_service_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_service_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_service_type_t *service, *list;
+	cmdb_service_sype_t *service, *list;
 
-	if (!(service = malloc(sizeof(cmdb_service_type_t))))
+	if (!(service = malloc(sizeof(cmdb_service_sype_t))))
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
@@ -1197,12 +1197,12 @@ store_service_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_hardware_t *hard, *list;
-	cmdb_hard_type_t *type;
+	cmdb_hardware_s *hard, *list;
+	cmdb_hard_type_s *type;
 
-	if (!(hard = malloc(sizeof(cmdb_hardware_t))))
+	if (!(hard = malloc(sizeof(cmdb_hardware_s))))
 		report_error(MALLOC_FAIL, "hard in store_hardware_sqlite");
 
 	hard->hard_id = (unsigned long int) sqlite3_column_int(state, 0);
@@ -1231,11 +1231,11 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_hard_type_t *hard, *list;
+	cmdb_hard_type_s *hard, *list;
 
-	if (!(hard = malloc(sizeof(cmdb_hard_type_t))))
+	if (!(hard = malloc(sizeof(cmdb_hard_type_s))))
 		report_error(MALLOC_FAIL, "hard in store_hardware_types_sqlite");
 
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 0);
@@ -1254,11 +1254,11 @@ store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 void
-store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base)
+store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_vm_host_t *vmhost, *list;
+	cmdb_vm_host_s *vmhost, *list;
 
-	if (!(vmhost = malloc(sizeof(cmdb_vm_host_t))))
+	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_sqlite");
 	vmhost->id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(vmhost->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -1277,7 +1277,7 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_t *base)
 }
 
 int
-setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_t *server)
+setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_s *server)
 {
 	int retval;
 
@@ -1322,7 +1322,7 @@ state, 7, (int)server->vm_server_id)) > 0) {
 }
 
 int
-setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_t *cust)
+setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_s *cust)
 {
 	int retval;
 
@@ -1361,7 +1361,7 @@ state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_t *cont)
+setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_s *cont)
 {
 	int retval;
 
@@ -1390,7 +1390,7 @@ state, 4, (int)cont->cust_id)) > 0) {
 }
 
 int
-setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_t *service)
+setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_s *service)
 {
 	int retval;
 
@@ -1424,7 +1424,7 @@ state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_t *hard)
+setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_s *hard)
 {
 	int retval;
 

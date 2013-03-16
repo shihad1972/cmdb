@@ -39,7 +39,7 @@
 
 
 int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
+parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
 	int retval, opt;
 
@@ -95,7 +95,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_t *cb)
 }
 
 void
-print_cbc_command_line_values(cbc_comm_line_t *cml)
+print_cbc_command_line_values(cbc_comm_line_s *cml)
 {
 	fprintf(stderr, "########\nCommand line Values\n");
 	if (cml->action == WRITE_CONFIG)
@@ -126,7 +126,7 @@ print_cbc_command_line_values(cbc_comm_line_t *cml)
 }
 
 void
-init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/)
+init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt/*, cbc_build_s *cbt*/)
 {
 	init_cbc_config_values(cct);
 	init_cbc_comm_values(cclt);
@@ -134,7 +134,7 @@ init_all_config(cbc_config_t *cct, cbc_comm_line_t *cclt/*, cbc_build_t *cbt*/)
 }
 
 void
-init_cbc_comm_values(cbc_comm_line_t *cbt)
+init_cbc_comm_values(cbc_comm_line_s *cbt)
 {
 	cbt->action = NONE;
 	cbt->server_id = NONE;
@@ -155,14 +155,14 @@ init_cbc_comm_values(cbc_comm_line_t *cbt)
 }
 
 int
-display_build_config(cbc_config_t *cbt, cbc_comm_line_t *cml)
+display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
 	int retval, query;
-	cbc_t *cbc, *details;
+	cbc_s *cbc, *details;
 	
-	if (!(cbc = malloc(sizeof(cbc_t))))
+	if (!(cbc = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "cbc in display_build_config");
-	if (!(details = malloc(sizeof(cbc_t))))
+	if (!(details = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "details in display_build_config");
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
@@ -190,9 +190,9 @@ display_build_config(cbc_config_t *cbt, cbc_comm_line_t *cml)
 }
 
 int
-cbc_get_server(cbc_comm_line_t *cml, cbc_t *cbc, cbc_t *details)
+cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 {
-	cbc_server_t *server = cbc->server;
+	cbc_server_s *server = cbc->server;
 	if (strncmp(cml->name, "NULL", COMM_S) != 0) {
 		while (server) {
 			if (strncmp(server->name, cml->name, MAC_S) == 0) {
@@ -230,18 +230,18 @@ cbc_get_server(cbc_comm_line_t *cml, cbc_t *cbc, cbc_t *details)
 }
 
 int
-cbc_get_build_details(cbc_t *cbc, cbc_t *details)
+cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 {
 	unsigned long int sid = details->server->server_id;
 	unsigned long int osid, bid, ipid, lid, vid, bdid, btid;
-	cbc_build_t *build = cbc->build;
-	cbc_build_domain_t *dom = cbc->bdom;
-	cbc_build_ip_t *bip = cbc->bip;
-	cbc_build_os_t *bos = cbc->bos;
-	cbc_build_type_t *type = cbc->btype;
+	cbc_build_s *build = cbc->build;
+	cbc_build_domain_s *dom = cbc->bdom;
+	cbc_build_ip_s *bip = cbc->bip;
+	cbc_build_os_s *bos = cbc->bos;
+	cbc_build_sype_t *type = cbc->btype;
 	details->spart = cbc->spart;
-	cbc_locale_t *loc = cbc->locale;
-	cbc_varient_t *vari = cbc->varient;
+	cbc_locale_s *loc = cbc->locale;
+	cbc_varient_s *vari = cbc->varient;
 	osid = bid = ipid = lid = vid = bdid = btid = 0;
 
 	while (build) {
@@ -295,13 +295,13 @@ cbc_get_build_details(cbc_t *cbc, cbc_t *details)
 }
 
 void
-print_build_config(cbc_t *details)
+print_build_config(cbc_s *details)
 {
 	char *name = details->server->name;
 	unsigned long int sid = details->server->server_id;
 	char ip[RANGE_S], *addr;
 	uint32_t ip_addr;
-	cbc_pre_part_t *part = details->spart;
+	cbc_pre_part_s *part = details->spart;
 
 	addr = ip;
 	if (details->bip) {
