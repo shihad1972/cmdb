@@ -732,7 +732,7 @@ store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(os->version, MAC_S, "%s", row[2]);
 	snprintf(os->alias, MAC_S, "%s", row[3]);
 	snprintf(os->ver_alias, MAC_S, "%s", row[4]);
-	snprintf(os->arch, MAC_S, "%s", row[5]);
+	snprintf(os->arch, RANGE_S, "%s", row[5]);
 	os->boot_id = strtoul(row[6], NULL, 10);
 	os->bt_id = strtoul(row[7], NULL, 10);
 	list = base->bos;
@@ -1317,11 +1317,11 @@ store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	dom->gateway = (unsigned long int) sqlite3_column_int64(state, 4);
 	dom->ns = (unsigned long int) sqlite3_column_int64(state, 5);
 	snprintf(dom->domain, RBUFF_S, "%s", sqlite3_column_text(state, 6));
-	snprintf(dom->country, RBUFF_S, "%s", sqlite3_column_text(state, 7));
-	snprintf(dom->language, RBUFF_S, "%s", sqlite3_column_text(state, 8));
-	snprintf(dom->keymap, RBUFF_S, "%s", sqlite3_column_text(state, 9));
+	snprintf(dom->country, RANGE_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(dom->language, RANGE_S, "%s", sqlite3_column_text(state, 8));
+	snprintf(dom->keymap, RANGE_S, "%s", sqlite3_column_text(state, 9));
 	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 11)) != 0)
-		snprintf(dom->ntp_server, RBUFF_S, "%s",
+		snprintf(dom->ntp_server, HOST_S, "%s",
 		 sqlite3_column_text(state, 10));
 	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 17)) != 0) {
 		snprintf(dom->ldap_server, URL_S, "%s", 
@@ -1391,7 +1391,7 @@ store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(os->version, MAC_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(os->alias, MAC_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(os->ver_alias, MAC_S, "%s", sqlite3_column_text(state, 4));
-	snprintf(os->arch, MAC_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(os->arch, RANGE_S, "%s", sqlite3_column_text(state, 5));
 	os->boot_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 7);
 	list = base->bos;

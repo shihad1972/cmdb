@@ -16,7 +16,7 @@ cbcdomain_SOURCES = \
 		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
 		cbc_base_sql.c builddomain.c cbccom.c cbc_bdom_sql.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
-		base_sql.h cbc_bdom_sql.h
+		base_sql.h cbc_bdom_sql.h cbcdomain.h
 
 AM_CFLAGS = -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 AM_LDFLAGS =
