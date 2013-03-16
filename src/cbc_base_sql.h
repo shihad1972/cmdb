@@ -26,22 +26,22 @@
 # define __CBC_BASE_SQL_H
 # include "../config.h"
 
-extern const char *sql_select[];
-extern const char *sql_insert[];
-extern const char *sql_search[];
-extern const char *sql_update[];
-extern const char *sql_delete[];
-extern const unsigned int select_fields[];
-extern const unsigned int insert_fields[];
-extern const unsigned int search_args[];
-extern const unsigned int search_fields[];
-extern const unsigned int update_args[];
-extern const unsigned int update_fields[];
-extern const unsigned int delete_args[];
-extern const unsigned int delete_fields[];
+extern const char *cbc_sql_select[];
+extern const char *cbc_sql_insert[];
+extern const char *cbc_sql_search[];
+extern const char *cbc_sql_update[];
+extern const char *cbc_sql_delete[];
+extern const unsigned int cbc_select_fields[];
+extern const unsigned int cbc_insert_fields[];
+extern const unsigned int cbc_search_args[];
+extern const unsigned int cbc_search_fields[];
+extern const unsigned int cbc_update_args[];
+extern const unsigned int cbc_update_fields[];
+extern const unsigned int cbc_delete_args[];
+extern const unsigned int cbc_delete_fields[];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][24];
+extern const int mycbc_sql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
 int
