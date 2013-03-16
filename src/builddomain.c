@@ -72,17 +72,34 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	int retval = NONE;
 	cbc_s *base;
 	cbc_build_domain_s *bdom;
+	dbdata_s *data;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_cbc_build_domain");
 	if (!(bdom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
 	init_cbc_struct(base);
 	init_build_domain(bdom);
 	base->bdom = bdom;
 	copy_build_domain_values(cdl, bdom);
+	snprintf(data->args.text, RBUFF_S, "%s", bdom->domain);
+	retval = cbcdom_run_search(cbc, data, BUILD_DOMAIN_COUNT);
+	if (data->fields.number > 0) {
+		printf("Domain %s already in database\n", bdom->domain);
+		free(data);
+		clean_cbc_struct(base);
+		return BUILD_DOMAIN_EXISTS;
+	}
 	display_build_domain(bdom);
-	retval = run_insert(cbc, base, BUILD_DOMAINS);
+	
+	if ((retval = run_insert(cbc, base, BUILD_DOMAINS)) != 0)
+		printf("\
+\nUnable to add build domain %s to database\n", bdom->domain);
+	else
+		printf("\
+\nAdded build domain %s to database\n", bdom->domain);
 
 	clean_cbc_struct(base);
 	return retval;

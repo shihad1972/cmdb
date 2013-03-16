@@ -168,10 +168,6 @@ init_rev_record_struct(rev_record_row_s *revrecord);
 void
 init_preferred_a_struct(preferred_a_s *prefer);
 void
-init_dbdata_struct(dbdata_s *data);
-void
-init_initial_dbdata(dbdata_s **list, int type);
-void
 dnsa_clean_list(dnsa_s *dnsa);
 void
 dnsa_clean_zones(zone_info_s *zone);
@@ -183,8 +179,6 @@ void
 dnsa_clean_rev_records(rev_record_row_s *rev);
 void
 dnsa_clean_prefer(preferred_a_s *list);
-void
-dnsa_clean_dbdata_list(dbdata_s *data);
 /* Zone action Functions */
 int
 add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);

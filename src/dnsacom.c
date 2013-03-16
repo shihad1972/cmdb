@@ -314,6 +314,17 @@ validate_comm_line(dnsa_comm_line_s *comm)
 }
 
 void
+init_dnsa_struct(dnsa_s *dnsa)
+{
+	dnsa->zones = '\0';
+	dnsa->rev_zones = '\0';
+	dnsa->records = '\0';
+	dnsa->rev_records = '\0';
+	dnsa->prefer = '\0';
+	dnsa->file = '\0';
+}
+
+void
 init_config_values(dnsa_config_s *dc)
 {
 	char *buff;
@@ -332,17 +343,6 @@ init_config_values(dnsa_config_s *dc)
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
 	sprintf(buff, "%s", "");
-}
-
-void
-init_dnsa_struct(dnsa_s *dnsa)
-{
-	dnsa->zones = '\0';
-	dnsa->rev_zones = '\0';
-	dnsa->records = '\0';
-	dnsa->rev_records = '\0';
-	dnsa->prefer = '\0';
-	dnsa->file = '\0';
 }
 
 void
@@ -409,14 +409,6 @@ init_preferred_a_struct(preferred_a_s *prefer)
 	snprintf(prefer->ip, COMM_S, "NULL");
 	snprintf(prefer->fqdn, COMM_S, "NULL");
 	prefer->next = '\0';
-}
-
-void
-init_dbdata_struct(dbdata_s *data)
-{
-	data->fields.number = 0;
-	data->args.number = 0;
-	data->next = '\0';
 }
 
 void
@@ -560,32 +552,6 @@ dnsa_clean_prefer(preferred_a_s *list)
 			return;
 		if (prefer->next)
 			next = prefer->next;
-		else
-			next = '\0';
-	}
-}
-
-void
-dnsa_clean_dbdata_list(dbdata_s *list)
-{
-	dbdata_s *data, *next;
-	
-	if (list)
-		data = list;
-	else
-		return;
-	if (data->next)
-		next = data->next;
-	else
-		next = '\0';
-	while (data) {
-		free(data);
-		if (next)
-			data = next;
-		else
-			return;
-		if (data->next)
-			next = data->next;
 		else
 			next = '\0';
 	}

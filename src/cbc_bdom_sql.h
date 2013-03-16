@@ -43,10 +43,19 @@ extern const unsigned int cbcdom_delete_types[][2];
 extern const unsigned int cbcdom_search_arg_types[][2];
 extern const unsigned int cbcdom_search_field_types[][5];
 
-enum {			/* Build Domain Delete SQL Statements */
+enum {			/* Build domain delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
 	BDOM_DEL_DOM_IS = 1
 };
+
+enum {			/* Build domain search SQL statements */
+	LDAP_CONFIG_ON_DOM = 0,
+	LDAP_CONFIG_ON_ID = 1,
+	BUILD_DOMAIN_COUNT = 2
+};
+
+int
+cbcdom_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
 cbcdom_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
@@ -58,6 +67,15 @@ cbcdom_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbcdom_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
+int
+cbcdom_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+set_dom_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
+
+int
+set_dom_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -65,6 +83,15 @@ cbcdom_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
 cbcdom_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbcdom_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+set_cbcdom_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+
+int
+get_cbcdom_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 
 # endif /* HAVE_SQLITE3 */
 

@@ -650,7 +650,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
 		select_specific_ip(dnsa, cm);
 		if (!(dnsa->records))
@@ -658,7 +658,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 				cm->dest);
 		else
 			print_multiple_a_records(dc, start, dnsa);
-		dnsa_clean_dbdata_list(start);
+		clean_dbdata_struct(start);
 		dnsa_clean_list(dnsa);
 		return NONE;
 	}
@@ -672,7 +672,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	if (rzone->prefix == NONE) {
 		printf("Net range %s does not exist in database\n", cm->domain);
 		dnsa_clean_list(dnsa);
-		dnsa_clean_dbdata_list(start);
+		clean_dbdata_struct(start);
 		return NO_DOMAIN;
 	}
 	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
@@ -696,7 +696,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		printf("If you want to see the A records for a specific IP use the ");
 		printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
 	}
-	dnsa_clean_dbdata_list(start);
+	clean_dbdata_struct(start);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -735,7 +735,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 		printf("\n");
 		records = records->next;
 		dlist = start->next->next->next;
-		dnsa_clean_dbdata_list(dlist);
+		clean_dbdata_struct(dlist);
 		dlist = start->next->next;
 		dlist->next = '\0';
 	}
@@ -814,7 +814,7 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
 	init_preferred_a_struct(prefer);
 	dnsa->prefer = prefer;
-	init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	while (rec) {
 		if (strncmp(name, rec->dest, RBUFF_S) == 0) {
 			snprintf(prefer->ip, RANGE_S, "%s", cm->dest);
@@ -1069,7 +1069,7 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 	data->args.number = zone->id;
 	if ((retval = run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
 		printf("Unable to delete records in forward zone %s\n", cm->domain);
-		dnsa_clean_dbdata_list(data);
+		clean_dbdata_struct(data);
 		dnsa_clean_list(dnsa);
 		return CANNOT_DELETE_RECORD;
 	} else {
@@ -1086,7 +1086,7 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 		retval = MULTIPLE_ZONE_DELETED;
 	}
 	dnsa_clean_list(dnsa);
-	dnsa_clean_dbdata_list(data);
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -1412,7 +1412,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		       dnsa->rev_zones->net_range);
 	}
 	dnsa->rev_records = add;
-	dnsa_clean_dbdata_list(data);
+	clean_dbdata_struct(data);
 	dnsa_clean_rev_records(delete);
 	dnsa_clean_records(rec);
 	dnsa_clean_list(dnsa);

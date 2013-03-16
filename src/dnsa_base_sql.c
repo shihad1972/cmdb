@@ -439,7 +439,7 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 }
 
 void
-init_initial_dbdata(dbdata_s **list, int type)
+dnsa_init_initial_dbdata(dbdata_s **list, int type)
 {
 	unsigned int i = 0;
 	dbdata_s *data, *dlist;

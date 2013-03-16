@@ -157,6 +157,11 @@ typedef struct dbdata_s {
 	struct dbdata_s *next;
 } dbdata_s;
 
+void
+init_dbdata_struct(dbdata_s *data);
+void
+clean_dbdata_struct(dbdata_s *data);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 

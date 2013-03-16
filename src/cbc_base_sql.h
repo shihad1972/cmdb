@@ -59,6 +59,9 @@ get_query(int type, const char **query, unsigned int *fields);
 int
 run_multiple_query(cbc_config_s *config, cbc_s *base, int type);
 
+void
+cbc_init_initial_dbdata(dbdata_s **list, unsigned int type);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void

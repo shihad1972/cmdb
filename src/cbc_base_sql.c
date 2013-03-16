@@ -304,6 +304,26 @@ get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
+void
+cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
+{
+	unsigned int i = 0;
+	dbdata_s *data, *dlist;
+	dlist = *list = '\0';
+	for (i = 0; i < type; i++) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
+}
+
 #ifdef HAVE_MYSQL
 
 void
