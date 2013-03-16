@@ -68,6 +68,8 @@ main(int argc, char *argv[])
 		retval = list_cbc_build_domain(cmc);
 	else if (cdcl->action == ADD_CONFIG)
 		retval = add_cbc_build_domain(cmc, cdcl);
+	else if (cdcl->action == RM_CONFIG)
+		retval = remove_cbc_build_domain(cmc, cdcl);
 	else
 		printf("Unknown Action type\n");
 
@@ -147,8 +149,12 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->confxymon = 1;
 		}
 	}
+	if (argc == 1)
+		return DISPLAY_USAGE;
 	if (cdl->action == 0)
 		return NO_ACTION;
+	if (cdl->action != LIST_CONFIG && strncmp(cdl->domain, "NULL", COMM_S) == 0)
+		return NO_DOMAIN_NAME;
 	return retval;
 }
 

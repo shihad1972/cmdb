@@ -37,6 +37,7 @@
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
+#include "cbc_bdom_sql.h"
 #include "checks.h"
 #include "cbcdomain.h"
 #include "builddomain.h"
@@ -84,6 +85,33 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	retval = run_insert(cbc, base, BUILD_DOMAINS);
 
 	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in remove_cbc_build_domain");
+	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
+		snprintf(data->args.text, RBUFF_S, "%s", cdl->domain);
+	else {
+		free(data);
+		return NO_DOMAIN_NAME;
+	}
+	if ((retval = cbcdom_run_delete(cbc, data, BDOM_DEL_DOMAIN)) != 1) {
+		printf("%d domain(s) deleted\n", retval);
+		free(data);
+		return retval;
+	} else {
+		printf("Build domain %s deleted\n", data->args.text);
+		retval = NONE;
+	}
+
+	free(data);
 	return retval;
 }
 

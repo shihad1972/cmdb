@@ -1,7 +1,8 @@
 /* cmdb_dnsa.h: DNSA header file */
 
 #ifndef __CMDB_DNSA_H__
-#define __CMDB_DNSA_H__
+# define __CMDB_DNSA_H__
+# include "base_sql.h"
 
 enum {			/* zone types; use NONE from action codes */
 	FORWARD_ZONE = 1,
@@ -138,17 +139,6 @@ typedef struct dnsa_s {
 	struct preferred_a_s *prefer;
 	struct zone_file_s *file;
 } dnsa_s;
-
-typedef union dbdata_u {
-	char text[256];
-	unsigned long int number;
-} dbdata_u;
-
-typedef struct dbdata_s {
-	union dbdata_u fields;
-	union dbdata_u args;
-	struct dbdata_s *next;
-} dbdata_s;
 
 /* Get command line args and pass them. Put actions into the struct */
 int

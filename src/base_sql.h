@@ -145,6 +145,18 @@ enum {			/* Update indexes */
 	REV_ZONE_SERIAL
 };
 
+typedef union dbdata_u {
+	char text[256];
+	unsigned long int number;
+	short int small;
+} dbdata_u;
+
+typedef struct dbdata_s {
+	union dbdata_u fields;
+	union dbdata_u args;
+	struct dbdata_s *next;
+} dbdata_s;
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 

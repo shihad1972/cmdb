@@ -217,6 +217,9 @@ display_cmdb_command_line_error(int retval, char *program)
 		printf("Usage: %s [-d | -w | -c | -l | -z | -a] [-f | -r] -n \
 <domain/netrange> -i <IP address> -h <hostname> -t <record type>\n",
 	       program);
+	else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
+		printf("Usage: %s [-a | -d | -l | -m | -r ] -n <domain name> \
+[ OPTIONS ]\n", program);
 	exit (retval);
 }
 
@@ -281,7 +284,20 @@ display_cbc_usage(void)
 void
 display_cbcdomain_usage(void)
 {
-	printf("cbcdomain: Program to manipluate build domains\n");
+	printf("\ncbcdomain: Program to manipluate build domains\n");
+	printf("Action Options:\n");
+	printf("-a: add build domain\n-d: display build domain details\n");
+	printf("-l: list build domain names\n-m: modify build domain\n");
+	printf("-r: remove build domain\n");
+	printf("All actions apart from -l need -n <domain name>\n");
+	printf("Detail Options:\n");
+	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
+	printf("\n\t-p use ssl for ldap connection \n");
+	printf("Network Details:\n");
+	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n");
+	printf("Application server configurations\n");
+	printf("-e smtp_server\n-f nfs_domain\n-t ntp_server\n-x xymon_server\n\n");
+	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n domain [ app options ]\n\n");
 }
 
 void

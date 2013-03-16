@@ -48,7 +48,8 @@ enum {			/* Database Type errors */
 
 enum {			/* Database colum types */
 	DBTEXT = 1,
-	DBINT = 2
+	DBINT = 2,
+	DBSHORT = 3
 };
 
 enum {			/* dnsa error codes */
