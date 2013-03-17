@@ -45,7 +45,7 @@ extern const unsigned int cbcdom_search_field_types[][5];
 
 enum {			/* Build domain delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
-	BDOM_DEL_DOM_IS = 1
+	BDOM_DEL_DOM_ID = 1
 };
 
 enum {			/* Build domain search SQL statements */

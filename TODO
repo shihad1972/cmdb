@@ -1,3 +1,10 @@
+16/03/2013
+Need to removed the country, keymap and language from build domain for cbc. This will
+include remove the colums from the database and also all the database calls in cbc and
+cbcdomain. I think I should move this into the build table, so it is linked to the
+build and not the build domain
+
+
 *** CMDB ***
 We can add, delete, list and display servers, customers, services. We can also
 do this for contacts for customers and also vm_host_servers. 

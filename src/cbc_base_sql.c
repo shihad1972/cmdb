@@ -63,8 +63,9 @@ SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain, country,\
  config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, boot_id, bt_id FROM\
- build_os","\
-SELECT bt_id, alias, build_type, arg, url, mirror FROM build_type","\
+ build_os ORDER BY alias, version","\
+SELECT bt_id, alias, build_type, arg, url, mirror FROM build_type ORDER BY\
+ alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
 SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
  FROM locale","\

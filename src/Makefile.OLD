@@ -17,13 +17,15 @@ DOBJECTS = dnsa.o dnsacom.o errors.o checks.o base_sql.o dnsa_base_sql.o zones.o
 COBJECTS = cmdb.o cmdbcom.o errors.o checks.o servers.o customers.o cmdb_base_sql.o base_sql.o
 BOBJECTS = cbc.o cbccom.o errors.o checks.o base_sql.o cbc_base_sql.o cbc_data.o build.o
 CDOBJECTS = cbcdomain.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o builddomain.o cbccom.o cbc_bdom_sql.o
+COOBJECTS = cbcos.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 
 DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
 CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h
 BHEADERS = cmdb_cbc.h cbc_base_sql.h base_sql.h cmdb.h checks.h build.h
-CDHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h base_sql.h cbc_bdom_sql.h
+CDHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h builddomain.h cbc_bdom_sql.h
+COHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcos.h
 
-all:	dnsa cmdb cbc cbcdomain
+all:	dnsa cmdb cbc cbcdomain cbcos
 
 dnsa:	$(DOBJECTS) $(DHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
@@ -36,6 +38,9 @@ cbc:	$(BOBJECTS) $(BHEADERS)
 
 cbcdomain:	$(CDOBJECTS) $(CDHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CDOBJECTS) $(LDFLAGS) $(LIBS)
+
+cbcos:	$(COOBJECTS) $(COHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(COOBJECTS) $(LDFLAGS) $(LIBS)
 
 .PHONY :	clean
 clean :

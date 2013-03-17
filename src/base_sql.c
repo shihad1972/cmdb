@@ -35,7 +35,6 @@
 # include <sqlite3.h>
 #endif /*HAVE_SQLITE3 */
 #include "cmdb.h"
-#include "cmdb_cbc.h"
 #include "base_sql.h"
 
 
