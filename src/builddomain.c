@@ -37,7 +37,6 @@
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "cbc_bdom_sql.h"
 #include "checks.h"
 #include "cbcdomain.h"
 #include "builddomain.h"
@@ -85,7 +84,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	base->bdom = bdom;
 	copy_build_domain_values(cdl, bdom);
 	snprintf(data->args.text, RBUFF_S, "%s", bdom->domain);
-	retval = cbcdom_run_search(cbc, data, BUILD_DOMAIN_COUNT);
+	retval = cbc_run_search(cbc, data, BUILD_DOMAIN_COUNT);
 	if (data->fields.number > 0) {
 		printf("Domain %s already in database\n", bdom->domain);
 		free(data);
@@ -119,7 +118,7 @@ remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		free(data);
 		return NO_DOMAIN_NAME;
 	}
-	if ((retval = cbcdom_run_delete(cbc, data, BDOM_DEL_DOMAIN)) != 1) {
+	if ((retval = cbc_run_delete(cbc, data, BDOM_DEL_DOMAIN)) != 1) {
 		printf("%d domain(s) deleted\n", retval);
 		free(data);
 		return retval;

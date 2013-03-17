@@ -29,19 +29,19 @@
 # include "cmdb_cbc.h"
 # include "base_sql.h"
 
-extern const char *cbcdom_sql_update[];
-extern const char *cbcdom_sql_delete[];
-extern const char *cbcdom_sql_search[];
+extern const char *cbc_sql_update[];
+extern const char *cbc_sql_delete[];
+extern const char *cbc_sql_search[];
 
-extern const unsigned int cbcdom_update_args[];
-extern const unsigned int cbcdom_delete_args[];
-extern const unsigned int cbcdom_search_args[];
-extern const unsigned int cbcdom_search_fields[];
+extern const unsigned int cbc_update_args[];
+extern const unsigned int cbc_delete_args[];
+extern const unsigned int cbc_search_args[];
+extern const unsigned int cbc_search_fields[];
 
-extern const unsigned int cbcdom_update_types[][2];
-extern const unsigned int cbcdom_delete_types[][2];
-extern const unsigned int cbcdom_search_arg_types[][2];
-extern const unsigned int cbcdom_search_field_types[][5];
+extern const unsigned int cbc_update_types[][2];
+extern const unsigned int cbc_delete_types[][2];
+extern const unsigned int cbc_search_arg_types[][2];
+extern const unsigned int cbc_search_field_types[][5];
 
 enum {			/* Build domain delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
@@ -55,20 +55,20 @@ enum {			/* Build domain search SQL statements */
 };
 
 int
-cbcdom_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
-cbcdom_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
 
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 
 int
-cbcdom_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
-cbcdom_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
 set_dom_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
@@ -82,16 +82,16 @@ set_dom_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 #  include <sqlite3.h>
 
 int
-cbcdom_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
-cbcdom_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
-set_cbcdom_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+set_cbc_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 
 int
-get_cbcdom_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 
 # endif /* HAVE_SQLITE3 */
 

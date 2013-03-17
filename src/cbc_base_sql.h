@@ -25,12 +25,17 @@
 #ifndef __CBC_BASE_SQL_H
 # define __CBC_BASE_SQL_H
 # include "../config.h"
+# include "base_sql.h"
 
 extern const char *cbc_sql_select[];
 extern const char *cbc_sql_insert[];
 extern const char *cbc_sql_search[];
 extern const char *cbc_sql_update[];
 extern const char *cbc_sql_delete[];
+extern const char *cbc_sql_update[];
+extern const char *cbc_sql_delete[];
+extern const char *cbc_sql_search[];
+
 extern const unsigned int cbc_select_fields[];
 extern const unsigned int cbc_insert_fields[];
 extern const unsigned int cbc_search_args[];
@@ -39,6 +44,27 @@ extern const unsigned int cbc_update_args[];
 extern const unsigned int cbc_update_fields[];
 extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_delete_fields[];
+extern const unsigned int cbc_update_args[];
+extern const unsigned int cbc_delete_args[];
+extern const unsigned int cbc_search_args[];
+extern const unsigned int cbc_search_fields[];
+
+extern const unsigned int cbc_update_types[][2];
+extern const unsigned int cbc_delete_types[][2];
+extern const unsigned int cbc_search_arg_types[][2];
+extern const unsigned int cbc_search_field_types[][5];
+
+
+enum {			/* Build domain delete SQL statements */
+	BDOM_DEL_DOMAIN = 0,
+	BDOM_DEL_DOM_ID = 1
+};
+
+enum {			/* Build domain search SQL statements */
+	LDAP_CONFIG_ON_DOM = 0,
+	LDAP_CONFIG_ON_ID = 1,
+	BUILD_DOMAIN_COUNT = 2
+};
 
 # ifdef HAVE_MYSQL
 extern const int mycbc_sql_inserts[][24];
@@ -61,6 +87,24 @@ run_multiple_query(cbc_config_s *config, cbc_s *base, int type);
 
 void
 cbc_init_initial_dbdata(dbdata_s **list, unsigned int type);
+
+int
+cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
+
+int
+set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
@@ -146,6 +190,18 @@ run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type);
 
 int
 run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type);
+
+int
+cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+set_cbc_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+
+int
+get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 
 void
 store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields);
