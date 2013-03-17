@@ -280,6 +280,18 @@ enum {
 	TRUE = 1
 };
 
+typedef union dbdata_u {
+	char text[256];
+	unsigned long int number;
+	short int small;
+} dbdata_u;
+
+typedef struct dbdata_s {
+	union dbdata_u fields;
+	union dbdata_u args;
+	struct dbdata_s *next;
+} dbdata_s;
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 
@@ -319,4 +331,8 @@ int
 add_trailing_dot(char *member);
 int
 write_file(char *filename, char *output);
+void
+init_dbdata_struct(dbdata_s *data);
+void
+clean_dbdata_struct(dbdata_s *data);
 #endif

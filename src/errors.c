@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
-#include "cmdb_dnsa.h"
 #include "base_sql.h"
 
 void
@@ -583,4 +582,38 @@ write_file(char *filename, char *output)
 		retval = NONE;
 	}
 	return retval;
+}
+
+void
+init_dbdata_struct(dbdata_s *data)
+{
+	data->fields.number = 0;
+	data->args.number = 0;
+	data->next = '\0';
+}
+
+void
+clean_dbdata_struct(dbdata_s *list)
+{
+	dbdata_s *data, *next;
+	
+	if (list)
+		data = list;
+	else
+		return;
+	if (data->next)
+		next = data->next;
+	else
+		next = '\0';
+	while (data) {
+		free(data);
+		if (next)
+			data = next;
+		else
+			return;
+		if (data->next)
+			next = data->next;
+		else
+			next = '\0';
+	}
 }
