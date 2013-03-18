@@ -108,7 +108,7 @@ report_error(int error, const char *errstr)
 	} else if (error == SERVER_PART_NOT_FOUND) {
 		fprintf(stderr, "No partition information for server id %s\n", errstr);
 	} else if (error == OS_NOT_FOUND) {
-		fprintf(stderr, "No build Operating Systems were found\n");
+		fprintf(stderr, "Build Operating System %s was not found\n", errstr);
 	} else if (error == NO_PARTITION_SCHEMES) {
 		fprintf(stderr, "No partition schemes were found\n");
 	} else if (error == NO_VM_HOSTS) {
@@ -203,6 +203,8 @@ display_cmdb_command_line_error(int retval, char *program)
 			display_dnsa_usage();
 		else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
 			display_cbcdomain_usage();
+		else if ((strncmp(program, "cbcos", CONF_S) == 0))
+			display_cbcos_usage();
 		exit(retval);
 	} else
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -218,6 +220,9 @@ display_cmdb_command_line_error(int retval, char *program)
 	       program);
 	else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
 		printf("Usage: %s [-a | -d | -l | -m | -r ] -n <domain name> \
+[ OPTIONS ]\n", program);
+	else if ((strncmp(program, "cbcos", CONF_S) == 0))
+		printf("Usage: %s [-a | -d | -l | -r ] -n <os name> \
 [ OPTIONS ]\n", program);
 	exit (retval);
 }
@@ -283,7 +288,7 @@ display_cbc_usage(void)
 void
 display_cbcdomain_usage(void)
 {
-	printf("\ncbcdomain: Program to manipluate build domains\n");
+	printf("cbcdomain: Program to manipulate build domains\n");
 	printf("Action Options:\n");
 	printf("-a: add build domain\n-d: display build domain details\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
@@ -297,6 +302,19 @@ display_cbcdomain_usage(void)
 	printf("Application server configurations\n");
 	printf("-e smtp_server\n-f nfs_domain\n-t ntp_server\n-x xymon_server\n\n");
 	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n domain [ app options ]\n\n");
+}
+
+void
+display_cbcos_usage(void)
+{
+	printf("cbcos: Program to manipulate build operating systems\n");
+	printf("Action Options:\n");
+	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
+	printf("All actions apart from -l need -n <OS name>\n");
+	printf("Detail Options:\n");
+	printf("-e: <version alias>\n-i: <os id>\n-o: <os version>\n");
+	printf("-s: alias\n-t: <os architecture\n");
+	printf("cbcos [ -a | -d | -l | -r ] -n os-name [ detail options ]\n\n");
 }
 
 void

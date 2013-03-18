@@ -52,4 +52,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col);
 int
 list_cbc_build_os(cbc_config_s *cmc);
 
+int
+display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
 #endif /* __CBCOS_H__ */

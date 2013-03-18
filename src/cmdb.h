@@ -312,9 +312,11 @@ display_cmdb_usage(void);
 void
 display_cbc_usage(void);
 void
-display_dnsa_usage(void);
-void
 display_cbcdomain_usage(void);
+void
+display_cbcos_usage(void);
+void
+display_dnsa_usage(void);
 /* Database fields query mismatch error functions */
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);

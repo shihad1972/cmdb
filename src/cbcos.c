@@ -64,10 +64,14 @@ main (int argc, char *argv[])
 	}
 	if (cocl->action == LIST_CONFIG)
 		retval = list_cbc_build_os(cmc);
+	else if (cocl->action == DISPLAY_CONFIG)
+		retval = display_cbc_build_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
-	free(cocl);
 	free(cmc);
+	if (retval != 0)
+		report_error(retval, cocl->os);
+	free(cocl);
 	exit(retval);
 }
 
@@ -163,5 +167,46 @@ list_cbc_build_os(cbc_config_s *cmc)
 		}	
 		type = type->next;
 	}
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+{
+	char *name = col->os;
+	int retval = 0, i = 0;
+	cbc_s *base;
+	cbc_build_os_s *os;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
+	init_cbc_struct(base);
+	if ((retval = run_query(cmc, base, BUILD_OS)) != 0) {
+		clean_cbc_struct(base);
+		return MY_QUERY_FAIL;
+	}
+	os = base->bos;
+	printf("Operating System %s\n", name);
+	printf("Version\tVersion alias\tArchitecture\n");
+	while (os) {
+		if (strncmp(os->os, name, MAC_S) == 0) {
+			i++;
+			if (strncmp(os->ver_alias, "none", COMM_S) == 0)
+				printf("%s\tnone\t\t%s\n",
+				     os->version, os->arch);
+			else
+				if (strlen(os->ver_alias) < 8)
+					printf("%s\t%s\t\t%s\n",
+					     os->version, os->ver_alias, os->arch);
+				else
+					printf("%s\t%s\t%s\n",
+					     os->version, os->ver_alias, os->arch);
+		}
+		os = os->next;
+	}
+	if (i == 0)
+		retval =  OS_NOT_FOUND;
+	clean_cbc_struct(base);
 	return retval;
 }
