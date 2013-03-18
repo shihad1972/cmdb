@@ -63,7 +63,7 @@ main (int argc, char *argv[])
 		exit(retval);
 	}
 	if (cocl->action == LIST_CONFIG)
-		retval = list_cbc_build_os(cmc, cocl);
+		retval = list_cbc_build_os(cmc);
 	else
 		printf("Unknown action type\n");
 	free(cocl);
@@ -95,9 +95,11 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ae:i:ln:o:rs:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:i:ln:o:rs:t:")) != -1) {
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
+		else if (opt == 'd')
+			col->action = DISPLAY_CONFIG;
 		else if (opt == 'l')
 			col->action = LIST_CONFIG;
 		else if (opt == 'r')
@@ -128,6 +130,38 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 }
 
 int
-list_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+list_cbc_build_os(cbc_config_s *cmc)
 {
+	char *oalias, *talias;
+	int retval = 0;
+	cbc_s *base;
+	cbc_build_os_s *os;
+	cbc_build_sype_t *type;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
+	init_cbc_struct(base);
+	if ((retval = run_multiple_query(cmc, base, BUILD_OS | BUILD_TYPE)) != 0) {
+		clean_cbc_struct(base);
+		return MY_QUERY_FAIL;
+	}
+	type = base->btype;
+	printf("Operating Systems\n");
+	while (type) {
+		os = base->bos;
+		talias = type->alias;
+		oalias = os->alias;
+		while (os) {
+			if (strncmp(talias, oalias, MAC_S) != 0) {
+				os = os->next;
+				oalias = os->alias;
+			} else {
+				printf("%s\n", os->os);
+				os = os->next;
+				break;
+			}
+		}	
+		type = type->next;
+	}
+	return retval;
 }

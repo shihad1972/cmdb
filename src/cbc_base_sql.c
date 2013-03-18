@@ -63,7 +63,7 @@ SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain, country,\
  config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, boot_id, bt_id FROM\
- build_os ORDER BY alias, version","\
+ build_os ORDER BY alias, os_version","\
 SELECT bt_id, alias, build_type, arg, url, mirror FROM build_type ORDER BY\
  alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
@@ -1465,7 +1465,7 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		if (!list)
 			break;
 		if (cbc_delete_types[type][i - 1] == DBINT) {
-			if ((sqlite3_bind_int64(state, (int)i, list->args.number)) > 0) {
+			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
 				fprintf(stderr, "Cannot bind arg %ud\n", i);
 				return retval;
 			}
