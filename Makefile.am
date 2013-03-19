@@ -27,8 +27,8 @@ cbcdomain_SOURCES = \
 		src/cbc_base_sql.h src/builddomain.h src/cbcdomain.h
 
 cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\
-		src/cbc_data.c src/cbc_base_sql.c cbccom.c\
-		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_bdom_sql.h\
+		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcos.h
 		
 cmdb_SOURCES =	src/cmdb.c src/cmdbcom.c src/errors.c src/servers.c\
@@ -55,5 +55,6 @@ cbcdomain:
 	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcdomain
 
-cbcos:	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
+cbcos:	
+	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcos
