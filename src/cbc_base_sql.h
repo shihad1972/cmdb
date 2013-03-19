@@ -103,12 +103,6 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
-int
-set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
-
-int
-set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
-
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
@@ -125,6 +119,12 @@ run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type);
 
 void
 store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);
+
+int
+set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
+
+int
+set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
 
 int
 setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base);
