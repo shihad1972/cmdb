@@ -121,15 +121,21 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 't')
 			snprintf(col->arch, RANGE_S, "%s", optarg);
 	}
-	if (col->action == 0 && argc != 1)
+	if (col->action == 0 && argc != 1) {
+		printf("No action provided\n");
 		return NO_ACTION;
+	}
 	if (col->action == ADD_CONFIG && (
 		strncmp(col->version, "NULL", COMM_S) == 0 ||
 		strncmp(col->os, "NULL", COMM_S) == 0 ||
-		strncmp(col->arch, "NULL", COMM_S) == 0))
+		strncmp(col->arch, "NULL", COMM_S) == 0)) {
+			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
-	if (col->action != LIST_CONFIG && (strncmp(col->os, "NULL", COMM_S) == 0))
+	}
+	if (col->action != LIST_CONFIG && (strncmp(col->os, "NULL", COMM_S) == 0)) {
+		printf("No OS name was provided\n");
 		return DISPLAY_USAGE;
+	}
 	return NONE;
 }
 
@@ -192,16 +198,17 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	while (os) {
 		if (strncmp(os->os, name, MAC_S) == 0) {
 			i++;
-			if (strncmp(os->ver_alias, "none", COMM_S) == 0)
+			if (strncmp(os->ver_alias, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\n",
 				     os->version, os->arch);
-			else
+			} else {
 				if (strlen(os->ver_alias) < 8)
 					printf("%s\t%s\t\t%s\n",
 					     os->version, os->ver_alias, os->arch);
 				else
 					printf("%s\t%s\t%s\n",
 					     os->version, os->ver_alias, os->arch);
+			}
 		}
 		os = os->next;
 	}
