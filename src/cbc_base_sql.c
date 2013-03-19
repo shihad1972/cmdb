@@ -56,16 +56,16 @@
 const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
- boot_id, ip_id, locale_id FROM build","\
+ ip_id, locale_id FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain, country,\
  language, keymap, ntp_server, config_ntp, ldap_server, ldap_url, ldap_ssl,\
  ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
  config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id FROM build_ip","\
-SELECT os_id, os, os_version, alias, ver_alias, arch, boot_id, bt_id FROM\
+SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id FROM\
  build_os ORDER BY alias, os_version","\
-SELECT bt_id, alias, build_type, arg, url, mirror FROM build_type ORDER BY\
- alias","\
+SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
+ ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
 SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
  FROM locale","\
@@ -85,7 +85,7 @@ const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
  ?, ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
- os_id, boot_id, ip_id, locale_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ os_id, ip_id, locale_id) VALUES (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  domain, ntp_server, config_ntp, ldap_server,\
  ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
@@ -93,10 +93,10 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id) VALUES (?, ?, ?,\
  ?, ?)","\
-INSERT INTO build_os (os, os_version, alias, ver_alias, arch, boot_id,\
- bt_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO build_type (alias, build_type, arg, url, mirror) VALUES (\
- ?, ?, ?, ?, ?, ?)","\
+INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
+ bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
+(?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
  bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -130,7 +130,10 @@ SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
 build_domain WHERE domain = ?","\
 SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
 build_domain WHERE bd_id = ?","\
-SELECT COUNT(*) c FROM build_domain WHERE domain = ?"
+SELECT COUNT(*) c FROM build_domain WHERE domain = ?","\
+SELECT alias, ver_alias, os_version, arch FROM build_os WHERE os = ?","\
+SELECT DISTINCT alias FROM build_os WHERE os = ?","\
+SELECT bt_id FROM build_type WHERE alias = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -141,8 +144,7 @@ const int mycbc_sql_inserts[][24] = {
   0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
   MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0},
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
   MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
   MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
@@ -156,8 +158,8 @@ const int mycbc_sql_inserts[][24] = {
   MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0},
+  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
@@ -185,11 +187,11 @@ const int mycbc_sql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 25, 5, 8, 6, 4, 8, 4, 8, 8, 3, 8, 3, 4
+	5, 8, 25, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 8, 20, 4, 7, 5, 3, 7, 3, 7, 7, 2, 7, 2, 3
+	4, 7, 20, 4, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -199,10 +201,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1
+	1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1
+	5, 5, 1, 4, 1, 1
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -216,11 +218,17 @@ const unsigned int cbc_delete_types[][2] = {
 const unsigned int cbc_search_arg_types[][2] = {
 	{ DBTEXT, NONE } ,
 	{ DBINT, NONE } ,
+	{ DBTEXT, NONE } ,
+	{ DBTEXT, NONE } ,
+	{ DBTEXT, NONE } ,
 	{ DBTEXT, NONE }
 };
 const unsigned int cbc_search_field_types[][5] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE }
 };
 
@@ -353,7 +361,7 @@ get_query(int type, const char **query, unsigned int *fields)
 		*fields = cbc_select_fields[VMHOSTS];
 	} else {
 		fprintf(stderr, "Unknown query type %d\n", type);
-		retval = 1;
+		retval = UNKNOWN_QUERY;
 	}
 	return retval;
 }
@@ -361,10 +369,13 @@ get_query(int type, const char **query, unsigned int *fields)
 void
 cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
 {
-	unsigned int i = 0;
+	unsigned int i = 0, max = 0;
 	dbdata_s *data, *dlist;
 	dlist = *list = '\0';
-	for (i = 0; i < type; i++) {
+	max = (cbc_search_fields[type] >= cbc_search_args[type]) ?
+		cbc_search_fields[type] :
+		cbc_search_args[type];
+	for (i = 0; i < max; i++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
 		init_dbdata_struct(data);
@@ -707,11 +718,17 @@ int
 set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
 	int retval = 0, j;
-	static int m = 0;
+	static int m = 0, stype = 0;
 	void *buffer;
 	dbdata_s *list, *new;
 	list = base;
 
+	if (stype == 0)
+		stype = type;
+	else if (stype != type) {
+		stype = type;
+		m = 0;
+	}
 	mybind->is_null = 0;
 	mybind->length = 0;
 	if (k > 0) {
@@ -864,6 +881,8 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 
 	if (type == BUILD_DOMAINS)
 		setup_bind_mysql_build_domain(buffer, base, i);
+	else if (type == BUILD_OSS)
+		setup_bind_mysql_build_os(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -906,9 +925,8 @@ store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(build->net_int, RANGE_S, "%s", row[3]);
 	build->server_id = strtoul(row[4], NULL, 10);
 	build->os_id = strtoul(row[5], NULL, 10);
-	build->boot_id = strtoul(row[6], NULL, 10);
-	build->ip_id = strtoul(row[7], NULL, 10);
-	build->locale_id = strtoul(row[8], NULL, 10);
+	build->ip_id = strtoul(row[6], NULL, 10);
+	build->locale_id = strtoul(row[7], NULL, 10);
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1022,8 +1040,7 @@ store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(os->alias, MAC_S, "%s", row[3]);
 	snprintf(os->ver_alias, MAC_S, "%s", row[4]);
 	snprintf(os->arch, RANGE_S, "%s", row[5]);
-	os->boot_id = strtoul(row[6], NULL, 10);
-	os->bt_id = strtoul(row[7], NULL, 10);
+	os->bt_id = strtoul(row[6], NULL, 10);
 	list = base->bos;
 	if (list) {
 		while (list->next)
@@ -1037,9 +1054,9 @@ store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 void
 store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_build_sype_t *type, *list;
+	cbc_build_type_s *type, *list;
 
-	if (!(type = malloc(sizeof(cbc_build_sype_t))))
+	if (!(type = malloc(sizeof(cbc_build_type_s))))
 		report_error(MALLOC_FAIL, "type in store_build_type_mysql");
 	init_build_type(type);
 	type->bt_id = strtoul(row[0], NULL, 10);
@@ -1048,6 +1065,7 @@ store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(type->arg, RANGE_S, "%s", row[3]);
 	snprintf(type->url, CONF_S, "%s", row[4]);
 	snprintf(type->mirror, CONF_S, "%s", row[5]);
+	snprintf(type->boot_line, URL_S, "%s", row[6]);
 	list = base->btype;
 	if (list) {
 		while (list->next)
@@ -1319,6 +1337,23 @@ setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bdom->config_xymon);
 	else if (i == 19)
 		*buffer = &(base->bdom->nfs_domain);
+}
+
+void
+setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->bos->os);
+	else if (i == 1)
+		*buffer = &(base->bos->version);
+	else if (i == 2)
+		*buffer = &(base->bos->alias);
+	else if (i == 3)
+		*buffer = &(base->bos->ver_alias);
+	else if (i == 4)
+		*buffer = &(base->bos->arch);
+	else if (i == 5)
+		*buffer = &(base->bos->bt_id);
 }
 
 #endif /* HAVE_MYSQL */
@@ -1685,6 +1720,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 
 	if (type == BUILD_DOMAINS)
 		retval = setup_bind_sqlite_build_domain(state, base->bdom);
+	else if (type == BUILD_OSS)
+		retval = setup_bind_sqlite_build_os(state, base->bos);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1727,9 +1764,8 @@ store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(build->net_int, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	build->server_id = (unsigned long int) sqlite3_column_int64(state, 4);
 	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
-	build->boot_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 7);
-	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 8);
+	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1830,8 +1866,7 @@ store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(os->alias, MAC_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(os->ver_alias, MAC_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(os->arch, RANGE_S, "%s", sqlite3_column_text(state, 5));
-	os->boot_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	list = base->bos;
 	if (list) {
 		while (list->next)
@@ -1845,9 +1880,9 @@ store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
-	cbc_build_sype_t *type, *list;
+	cbc_build_type_s *type, *list;
 
-	if (!(type = malloc(sizeof(cbc_build_sype_t))))
+	if (!(type = malloc(sizeof(cbc_build_type_s))))
 		report_error(MALLOC_FAIL, "type in store_build_type_sqlite");
 	init_build_type(type);
 	type->bt_id = (unsigned long int) sqlite3_column_int64(state, 0);
@@ -1856,6 +1891,7 @@ store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(type->arg, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(type->url, CONF_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(type->mirror, RBUFF_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(type->boot_line, URL_S, "%s", sqlite3_column_text(state, 6));
 	list = base->btype;
 	if (list) {
 		while (list->next)
@@ -2193,6 +2229,43 @@ state, 18, bdom->xymon_server, (int)strlen(bdom->xymon_server), SQLITE_STATIC)) 
 state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0){
 		fprintf(stderr,
 "Cannot bind nfs domain %s\n", bdom->nfs_domain);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_build_os(sqlite3_stmt *state, cbc_build_os_s *bos)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, bos->os, (int)strlen(bos->os), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind OS %s\n", bos->os);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, bos->version, (int)strlen(bos->version), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind OS version %s\n", bos->version);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, bos->alias, (int)strlen(bos->alias), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind alias %s\n", bos->alias);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, bos->ver_alias, (int)strlen(bos->ver_alias), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind OS ver alias%s\n", bos->ver_alias);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, bos->arch, (int)strlen(bos->arch), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind arch %s\n", bos->arch);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)bos->bt_id)) > 0) {
+		fprintf(stderr, "Cannot bind build type id %lu\n", bos->bt_id);
 		return retval;
 	}
 	return retval;

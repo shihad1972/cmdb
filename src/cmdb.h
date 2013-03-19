@@ -71,6 +71,7 @@ enum {			/* dnsa error codes */
 	MY_STATEMENT_FAIL = 15,
 	NO_QUERY = 16,
 	MY_BIND_FAIL = 17,
+	UNKNOWN_QUERY = 18,
 	FILE_O_FAIL = 20,
 	DIR_C_FAIL = 21,
 	CHKZONE_FAIL = 22,
@@ -150,7 +151,9 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	SQLITE_INSERT_FAILED = 153,
 	DB_INSERT_FAILED = 154,
 	DB_UPDATE_FAILED = 155,
-	BUILD_DOMAIN_EXISTS = 160
+	BUILD_DOMAIN_EXISTS = 160,
+	BUILD_OS_EXISTS = 161,
+	OS_ALIAS_NEEDED = 162
 	
 };
 

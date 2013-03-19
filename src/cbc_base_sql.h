@@ -63,7 +63,10 @@ enum {			/* Build domain delete SQL statements */
 enum {			/* Build domain search SQL statements */
 	LDAP_CONFIG_ON_DOM = 0,
 	LDAP_CONFIG_ON_ID = 1,
-	BUILD_DOMAIN_COUNT = 2
+	BUILD_DOMAIN_COUNT = 2,
+	BUILD_OS_ON_NAME = 3,
+	OS_ALIAS_ON_OS = 4,
+	BUILD_TYPE_ID_ON_ALIAS = 5
 };
 
 # ifdef HAVE_MYSQL
@@ -177,6 +180,9 @@ store_vmhost_mysql(MYSQL_ROW row, cbc_s *base);
 void
 setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
+void
+setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -256,6 +262,9 @@ store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base);
 
 int
 setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom);
+
+int
+setup_bind_sqlite_build_os(sqlite3_stmt *state, cbc_build_os_s *bos);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -42,6 +43,7 @@ int
 main (int argc, char *argv[])
 {
 	const char *config = "/etc/dnsa/dnsa.conf";
+	char error[URL_S];
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcos_comm_line_s *cocl;
@@ -66,11 +68,17 @@ main (int argc, char *argv[])
 		retval = list_cbc_build_os(cmc);
 	else if (cocl->action == DISPLAY_CONFIG)
 		retval = display_cbc_build_os(cmc, cocl);
+	else if (cocl->action == ADD_CONFIG)
+		retval = add_cbc_build_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
 	free(cmc);
-	if (retval != 0)
-		report_error(retval, cocl->os);
+	if (retval != 0) {
+		snprintf(error, URL_S, "%s %s %s",
+			 cocl->os, cocl->version, cocl->arch);
+		free(cocl);
+		report_error(retval, error);
+	}
 	free(cocl);
 	exit(retval);
 }
@@ -146,14 +154,14 @@ list_cbc_build_os(cbc_config_s *cmc)
 	int retval = 0;
 	cbc_s *base;
 	cbc_build_os_s *os;
-	cbc_build_sype_t *type;
+	cbc_build_type_s *type;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
 	init_cbc_struct(base);
 	if ((retval = run_multiple_query(cmc, base, BUILD_OS | BUILD_TYPE)) != 0) {
 		clean_cbc_struct(base);
-		return MY_QUERY_FAIL;
+		return retval;
 	}
 	type = base->btype;
 	printf("Operating Systems\n");
@@ -216,4 +224,96 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		retval =  OS_NOT_FOUND;
 	clean_cbc_struct(base);
 	return retval;
+}
+
+int
+add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+{
+	char *name = col->os;
+	int retval = NONE;
+	cbc_s *cbc;
+	cbc_build_os_s *os;
+	dbdata_s *data = '\0';
+
+	if (!(os = malloc(sizeof(cbc_build_os_s))))
+		report_error(MALLOC_FAIL, "os in add_cbc_build_os");
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in add_cbc_build_os");
+	cbc_init_initial_dbdata(&data, BUILD_OS_ON_NAME);
+	init_cbc_struct(cbc);
+	init_build_os(os);
+	cbc->bos = os;
+	if (*name >= 'a' && *name <= 'z') {
+		retval = toupper(*name);
+		*name = (char)retval;
+		retval = NONE;
+	}
+	snprintf(data->args.text, MAC_S, "%s", name);
+	if ((retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME)) == 0) {
+		clean_dbdata_struct(data);
+		free(cmc);
+		free(col);
+		return OS_NOT_FOUND;
+	}
+	retval = NONE;
+	if (check_for_build_os(col, data) != 0) {
+		clean_dbdata_struct(data);
+		return BUILD_OS_EXISTS;
+	}
+	if ((strncmp(data->next->fields.text, "none", COMM_S) != 0) &&
+	    (strncmp(col->ver_alias, "NULL", COMM_S) == 0)) {
+		clean_dbdata_struct(data);
+		return OS_ALIAS_NEEDED;
+	}
+	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
+		snprintf(col->ver_alias, COMM_S, "none");
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, OS_ALIAS_ON_OS);
+	snprintf(data->args.text, MAC_S, "%s", name);
+	if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
+		clean_dbdata_struct(data);
+		free(cmc);
+		free(col);
+		return OS_NOT_FOUND;
+	}
+	snprintf(data->args.text, MAC_S, "%s", data->fields.text);
+	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
+		clean_dbdata_struct(data);
+		free(cmc);
+		free(col);
+		return OS_NOT_FOUND;
+	}
+	retval = NONE;
+	os->bt_id = data->fields.number;
+	snprintf(os->alias, MAC_S, "%s", data->args.text);
+	snprintf(os->os, MAC_S, "%s", col->os);
+	snprintf(os->version, MAC_S, "%s", col->version);
+	snprintf(os->ver_alias, MAC_S, "%s", col->ver_alias);
+	snprintf(os->arch, RANGE_S, "%s", col->arch);
+	if ((retval = run_insert(cmc, cbc, BUILD_OSS)) != 0)
+		printf("Unable to add build os to database\n");
+	else
+		printf("Build os added to database\n");
+	return retval;
+}
+
+int
+check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
+{
+	char *version = col->version, *arch = col->arch;
+	unsigned int i, type = BUILD_OS_ON_NAME,
+		max = (cbc_search_fields[type] >= cbc_search_args[type]) ?
+		cbc_search_fields[type] :
+		cbc_search_args[type];
+	dbdata_s *list = data->next->next;
+	while (list) {
+		if ((strncmp(version, list->fields.text, MAC_S) == 0) &&
+			(strncmp(arch, list->next->fields.text, RANGE_S) == 0)) {
+			return 1;
+		} else {
+			for (i = 0; ((i < max) && (list)); i++)
+				list = list->next;
+		}
+	}
+	return NONE;
 }

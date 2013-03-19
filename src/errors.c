@@ -133,6 +133,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Multiple varients found for %s\n", errstr);
 	} else if (error == FIELDS_MISMATCH) {
 		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
+	} else if (error == BUILD_OS_EXISTS) {
+		fprintf(stderr, "Build OS %s already exists\n", errstr);
+	} else if (error == OS_ALIAS_NEEDED) {
+		fprintf(stderr, "Build os %s needs a version alias\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
 	}
@@ -352,7 +356,7 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Server not found");
 	else if (error == SERVER_UUID_NOT_FOUND)
 		snprintf(errstr, MAC_S, "Server not found");
-	else if (error ==SERVER_ID_NOT_FOUND)
+	else if (error == SERVER_ID_NOT_FOUND)
 		snprintf(errstr, MAC_S, "Server not found");
 	else if (error == NO_NAME_UUID_ID)
 		snprintf(errstr, MAC_S, "No server specifier");

@@ -46,7 +46,6 @@ typedef struct cbc_build_s {
 	unsigned long int varient_id;
 	unsigned long int server_id;
 	unsigned long int os_id;
-	unsigned long int boot_id;
 	unsigned long int ip_id;
 	unsigned long int locale_id;
 	struct cbc_build_s *next;
@@ -98,20 +97,20 @@ typedef struct cbc_build_os_s {
 	char ver_alias[MAC_S];
 	char arch[RANGE_S];
 	unsigned long int os_id;
-	unsigned long int boot_id;
 	unsigned long int bt_id;
 	struct cbc_build_os_s *next;
 } cbc_build_os_s;
 
-typedef struct cbc_build_sype_t {
+typedef struct cbc_build_type_s {
 	char alias[MAC_S];
 	char build_type[MAC_S];
 	char arg[RANGE_S];
 	char url[CONF_S];
 	char mirror[RBUFF_S];
+	char boot_line[URL_S];
 	unsigned long int bt_id;
-	struct cbc_build_sype_t *next;
-} cbc_build_sype_t;
+	struct cbc_build_type_s *next;
+} cbc_build_type_s;
 
 typedef struct cbc_disk_dev_s {
 	char device[HOST_S];
@@ -203,7 +202,7 @@ typedef struct cbc_s {
 	struct cbc_build_domain_s *bdom;
 	struct cbc_build_ip_s *bip;
 	struct cbc_build_os_s *bos;
-	struct cbc_build_sype_t *btype;
+	struct cbc_build_type_s *btype;
 	struct cbc_disk_dev_s *diskd;
 	struct cbc_locale_s *locale;
 	struct cbc_package_s *package;
@@ -267,10 +266,10 @@ void
 display_build_os(cbc_s *base);
 
 void
-init_build_type(cbc_build_sype_t *type);
+init_build_type(cbc_build_type_s *type);
 
 void
-clean_build_type(cbc_build_sype_t *type);
+clean_build_type(cbc_build_type_s *type);
 
 void
 display_build_type(cbc_s *base);

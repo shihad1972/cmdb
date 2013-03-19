@@ -55,4 +55,10 @@ list_cbc_build_os(cbc_config_s *cmc);
 int
 display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
 
+int
+add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+int
+check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data);
+
 #endif /* __CBCOS_H__ */

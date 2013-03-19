@@ -238,7 +238,7 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 	cbc_build_domain_s *dom = cbc->bdom;
 	cbc_build_ip_s *bip = cbc->bip;
 	cbc_build_os_s *bos = cbc->bos;
-	cbc_build_sype_t *type = cbc->btype;
+	cbc_build_type_s *type = cbc->btype;
 	details->spart = cbc->spart;
 	cbc_locale_s *loc = cbc->locale;
 	cbc_varient_s *vari = cbc->varient;

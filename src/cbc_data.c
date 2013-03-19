@@ -126,7 +126,6 @@ init_build_struct(cbc_build_s *build)
 	build->varient_id = NONE;
 	build->server_id = NONE;
 	build->os_id = NONE;
-	build->boot_id = NONE;
 	build->ip_id = NONE;
 	build->locale_id = NONE;
 	build->next = '\0';
@@ -298,7 +297,6 @@ init_build_os(cbc_build_os_s *os)
 	snprintf(os->ver_alias, COMM_S, "NULL");
 	snprintf(os->arch, COMM_S, "NULL");
 	os->os_id = NONE;
-	os->boot_id = NONE;
 	os->bt_id = NONE;
 	os->next = '\0';
 }
@@ -324,7 +322,7 @@ clean_build_os(cbc_build_os_s *os)
 }
 
 void
-init_build_type(cbc_build_sype_t *type)
+init_build_type(cbc_build_type_s *type)
 {
 	snprintf(type->alias, COMM_S, "NULL");
 	snprintf(type->build_type, COMM_S, "NULL");
@@ -336,9 +334,9 @@ init_build_type(cbc_build_sype_t *type)
 }
 
 void
-clean_build_type(cbc_build_sype_t *type)
+clean_build_type(cbc_build_type_s *type)
 {
-	cbc_build_sype_t *list, *next;
+	cbc_build_type_s *list, *next;
 
 	if (type)
 		list = type;
