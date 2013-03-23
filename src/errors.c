@@ -37,6 +37,7 @@
 void
 report_error(int error, const char *errstr)
 {
+
 	if (error == ARGC_INVAL) {
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
@@ -137,6 +138,9 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Build OS %s already exists\n", errstr);
 	} else if (error == OS_ALIAS_NEEDED) {
 		fprintf(stderr, "Build os %s needs a version alias\n", errstr);
+	} else if (error == BUILD_OS_IN_USE) {
+		fprintf(stderr,
+"Cowardly refusal to delete build os %s\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
 	}

@@ -51,13 +51,14 @@ extern const unsigned int cbc_search_fields[];
 
 extern const unsigned int cbc_update_types[][2];
 extern const unsigned int cbc_delete_types[][2];
-extern const unsigned int cbc_search_arg_types[][2];
+extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][5];
 
 
 enum {			/* Build domain delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
-	BDOM_DEL_DOM_ID = 1
+	BDOM_DEL_DOM_ID = 1,
+	BOS_DEL_BOS_ID = 2
 };
 
 enum {			/* Build domain search SQL statements */
@@ -66,7 +67,11 @@ enum {			/* Build domain search SQL statements */
 	BUILD_DOMAIN_COUNT = 2,
 	BUILD_OS_ON_NAME = 3,
 	OS_ALIAS_ON_OS = 4,
-	BUILD_TYPE_ID_ON_ALIAS = 5
+	BUILD_TYPE_ID_ON_ALIAS = 5,
+	OS_ID_ON_NAME = 6,
+	OS_ID_ON_ALIAS = 7,
+	BUILD_ID_ON_OS_ID = 8,
+	SERVERS_USING_BUILD_OS = 9
 };
 
 # ifdef HAVE_MYSQL

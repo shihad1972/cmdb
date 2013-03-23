@@ -153,7 +153,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	DB_UPDATE_FAILED = 155,
 	BUILD_DOMAIN_EXISTS = 160,
 	BUILD_OS_EXISTS = 161,
-	OS_ALIAS_NEEDED = 162
+	OS_ALIAS_NEEDED = 162,
+	BUILD_OS_IN_USE = 163
 	
 };
 

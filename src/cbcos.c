@@ -70,6 +70,8 @@ main (int argc, char *argv[])
 		retval = display_cbc_build_os(cmc, cocl);
 	else if (cocl->action == ADD_CONFIG)
 		retval = add_cbc_build_os(cmc, cocl);
+	else if (cocl->action == RM_CONFIG)
+		retval = remove_cbc_build_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
 	free(cmc);
@@ -294,6 +296,78 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Unable to add build os to database\n");
 	else
 		printf("Build os added to database\n");
+	return retval;
+}
+
+int
+remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+{
+	char *name = col->os, *alias = col->alias;
+	char *version = col->version, *arch = col->arch;
+	int retval = NONE, i;
+	unsigned long int id;
+
+	dbdata_s *data = '\0', *list;
+	cbc_init_initial_dbdata(&data, OS_ID_ON_NAME);
+	if (strncmp(name, "NULL", MAC_S) != 0) {
+		snprintf(data->args.text, MAC_S, "%s", name);
+		snprintf(data->next->args.text, MAC_S, "%s", version);
+		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
+		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 0) {
+			clean_dbdata_struct(data);
+			return OS_NOT_FOUND;
+		}
+	} else if (strncmp(alias, "NULL", MAC_S) != 0) {
+		snprintf(data->args.text, MAC_S, "%s", alias);
+		snprintf(data->next->args.text, MAC_S, "%s", version);
+		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
+		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 0) {
+			clean_dbdata_struct(data);
+			return OS_NOT_FOUND;
+		}
+	} else {
+		clean_dbdata_struct(data);
+		return NO_OS;
+	}
+	id = data->fields.number;
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, BUILD_ID_ON_OS_ID);
+	data->args.number = id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_OS_ID)) != 0) {
+		clean_dbdata_struct(data);
+		cbc_init_initial_dbdata(&data, SERVERS_USING_BUILD_OS);
+		data->args.number = id;
+		retval = cbc_run_search(cmc, data, SERVERS_USING_BUILD_OS);
+		printf("Server(s) ");
+		list = data;
+		for (i = 0; i < retval; i++) {
+			if (i + 1 == retval)
+				printf("%s ", list->fields.text);
+			else
+				printf("%s, ", list->fields.text);
+			if (list->next)
+				list = list->next;
+			else
+				break;
+		}
+		printf("are using build os.\n");
+		clean_dbdata_struct(data);
+		return BUILD_OS_IN_USE;
+	}
+	clean_dbdata_struct(data);
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in remove_cbc_build_os");
+	data->next = '\0';
+	data->args.number = id;
+	if ((retval = cbc_run_delete(cmc, data, BOS_DEL_BOS_ID)) != 1) {
+		fprintf(stderr, "%d oses deleted for %s %s %s\n",
+			retval, name, version, arch);
+		retval = MULTIPLE_OS;
+	} else {
+		printf("OS %s %s %s deleted from db\n", name, version, arch);
+		retval = NONE;
+	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 
