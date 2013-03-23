@@ -58,7 +58,8 @@ extern const unsigned int cbc_search_field_types[][5];
 enum {			/* cbc delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
 	BDOM_DEL_DOM_ID = 1,
-	BOS_DEL_BOS_ID = 2
+	BOS_DEL_BOS_ID = 2,
+	VARI_DEL_VARI_ID = 3
 };
 
 enum {			/* cbc search SQL statements */
@@ -71,7 +72,9 @@ enum {			/* cbc search SQL statements */
 	OS_ID_ON_NAME = 6,
 	OS_ID_ON_ALIAS = 7,
 	BUILD_ID_ON_OS_ID = 8,
-	SERVERS_USING_BUILD_OS = 9
+	SERVERS_USING_BUILD_OS = 9,
+	VARIENT_ID_ON_VARIENT = 10,
+	VARIENT_ID_ON_VALIAS = 11
 };
 
 # ifdef HAVE_MYSQL

@@ -58,4 +58,7 @@ list_cbc_build_varient(cbc_config_s *cmc);
 int
 add_cbc_build_varient(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
 
+int
+remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+
 #endif /* __CBCVARI_H__ */

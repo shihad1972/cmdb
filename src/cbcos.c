@@ -308,8 +308,8 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	char *version = col->version, *arch = col->arch;
 	int retval = NONE, i;
 	unsigned long int id;
-
 	dbdata_s *data = '\0', *list;
+
 	cbc_init_initial_dbdata(&data, OS_ID_ON_NAME);
 	if (strncmp(name, "NULL", MAC_S) != 0) {
 		snprintf(data->args.text, MAC_S, "%s", name);

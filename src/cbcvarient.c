@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 	else if (cvcl->action == ADD_CONFIG)
 		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG)
-		printf("Remove varient\n");
+		retval = remove_cbc_build_varient(cmc, cvcl);
 	else
 		printf("Unknown action type\n");
 	if (retval != 0) {
@@ -224,5 +224,41 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		printf(" for this build varient\n");
 	}
 	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	int retval = NONE;
+	char varient[HOST_S];
+	dbdata_s *data = '\0';
+
+	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VALIAS);
+	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
+		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
+		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);
+		if (retval != 1) {
+			clean_dbdata_struct(data);
+			return VARIENT_NOT_FOUND;
+		}
+	} else if (strncmp(cvl->valias, "NULL", COMM_S) != 0) {
+		snprintf(data->args.text, HOST_S, "%s", cvl->valias);
+		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS);
+		if (retval != 1) {
+			clean_dbdata_struct(data);
+			return VARIENT_NOT_FOUND;
+		}
+	}
+	snprintf(varient, HOST_S, "%s", data->args.text);
+	data->args.number = data->fields.number;
+	if ((retval = cbc_run_delete(cmc, data, VARI_DEL_VARI_ID)) != 1) {
+		fprintf(stderr, "%d varients deleted for %s\n",
+			retval, varient);
+		retval = MULTIPLE_VARIENTS;
+	} else {
+		printf("Varient %s deleted\n", varient);
+		retval = NONE;
+	}
 	return retval;
 }
