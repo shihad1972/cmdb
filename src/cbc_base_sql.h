@@ -188,6 +188,9 @@ setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 void
 setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i);
 
+void
+setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -270,6 +273,9 @@ setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom);
 
 int
 setup_bind_sqlite_build_os(sqlite3_stmt *state, cbc_build_os_s *bos);
+
+int
+setup_bind_sqlite_build_varient(sqlite3_stmt *state, cbc_varient_s *vari);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

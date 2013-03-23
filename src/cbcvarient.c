@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 	else if (cvcl->action == DISPLAY_CONFIG)
 		printf("Display varient\n");
 	else if (cvcl->action == ADD_CONFIG)
-		printf("Add varient\n");
+		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG)
 		printf("Remove varient\n");
 	else
@@ -149,9 +149,16 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return NO_ACTION;
 	}
 	if (cvl->action != LIST_CONFIG &&
-		((strncmp(cvl->varient, "NULL", COMM_S) == 0) ||
-		(strncmp(cvl->valias, "NULL", COMM_S) == 0))) {
+		(strncmp(cvl->varient, "NULL", COMM_S) == 0) &&
+		(strncmp(cvl->valias, "NULL", COMM_S) == 0)) {
 		fprintf(stderr, "No varient name or alias was provided\n");
+		return DISPLAY_USAGE;
+	}
+	if (cvl->action == ADD_CONFIG &&
+		((strncmp(cvl->varient, "NULL", COMM_S) == 0) ||
+		 (strncmp(cvl->valias, "NULL", COMM_S) == 0))) {
+		fprintf(stderr, "\
+You need to supply both a varient name and valias\n");
 		return DISPLAY_USAGE;
 	}
 	return NONE;
@@ -188,6 +195,33 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		else
 			printf("%s\t%s\n", list->valias, list->varient);
 		list = list->next;
+	}
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	int retval = NONE;
+	cbc_s *base;
+	cbc_varient_s *vari;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add_cbc_build_varient");
+	if (!(vari = malloc(sizeof(cbc_varient_s))))
+		report_error(MALLOC_FAIL, "vari in add_cbc_build_varient");
+	init_cbc_struct(base);
+	init_varient(vari);
+	base->varient = vari;
+	snprintf(vari->varient, HOST_S, "%s", cvl->varient);
+	snprintf(vari->valias, MAC_S, "%s", cvl->valias);
+	if ((retval = run_insert(cmc, base, VARIENTS)) != 0) {
+		printf("Unable to add varient %s to database\n", cvl->varient);
+	} else {
+		printf("Varient %s added to database\n", cvl->varient);
+		printf("You can now use cbcpackage to define the packages");
+		printf(" for this build varient\n");
 	}
 	clean_cbc_struct(base);
 	return retval;

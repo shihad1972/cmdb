@@ -110,7 +110,7 @@ INSERT INTO seed_part (minimum, maximum, priority, mount_point,\
 INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id,\
  vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO varient (varient, valias) VALUES (?, ?, ?)","\
+INSERT INTO varient (varient, valias) VALUES (?, ?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES\
  (?, ?, ?, ?)"
 };
@@ -897,6 +897,8 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 		setup_bind_mysql_build_domain(buffer, base, i);
 	else if (type == BUILD_OSS)
 		setup_bind_mysql_build_os(buffer, base, i);
+	else if (type == VARIENTS)
+		setup_bind_mysql_build_varient(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1370,6 +1372,15 @@ setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bos->bt_id);
 }
 
+void
+setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->varient->varient);
+	else if (i == 1)
+		*buffer = &(base->varient->valias);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1736,6 +1747,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = setup_bind_sqlite_build_domain(state, base->bdom);
 	else if (type == BUILD_OSS)
 		retval = setup_bind_sqlite_build_os(state, base->bos);
+	else if (type == VARIENTS)
+		retval = setup_bind_sqlite_build_varient(state, base->varient);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -2280,6 +2293,24 @@ state, 5, bos->arch, (int)strlen(bos->arch), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)bos->bt_id)) > 0) {
 		fprintf(stderr, "Cannot bind build type id %lu\n", bos->bt_id);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_build_varient(sqlite3_stmt *state, cbc_varient_s *vari)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, vari->varient, (int)strlen(vari->varient), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind varient %s\n", vari->varient);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, vari->valias, (int)strlen(vari->valias), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind valias %s\n", vari->valias);
 		return retval;
 	}
 	return retval;
