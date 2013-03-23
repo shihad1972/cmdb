@@ -1,4 +1,4 @@
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient
 
 dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c\
 		zones.c\
@@ -21,6 +21,11 @@ cbcos_SOURCES = \
 		cbcos.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcos.h
+cbcvarient_SOURCES = \
+		cbcvarient.c errors.c checks.c base_sql.c cbc_data.c\
+		cbc_base_sql.c cbccom.c\
+		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h\
+		cbcvarient.h
 
 AM_CFLAGS = -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 AM_LDFLAGS =

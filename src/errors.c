@@ -213,6 +213,8 @@ display_cmdb_command_line_error(int retval, char *program)
 			display_cbcdomain_usage();
 		else if ((strncmp(program, "cbcos", CONF_S) == 0))
 			display_cbcos_usage();
+		else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
+			display_cbcvarient_usage();
 		exit(retval);
 	} else
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -232,6 +234,9 @@ display_cmdb_command_line_error(int retval, char *program)
 	else if ((strncmp(program, "cbcos", CONF_S) == 0))
 		printf("Usage: %s [-a | -d | -l | -r ] -n <os name> \
 [ OPTIONS ]\n", program);
+	else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
+		printf("Usage: %s [-a | -d | -l | -r ] [-x <varient> \
+-k valias] [ OPTIONS ]\n", program);
 	exit (retval);
 }
 
@@ -296,17 +301,17 @@ display_cbc_usage(void)
 void
 display_cbcdomain_usage(void)
 {
-	printf("cbcdomain: Program to manipulate build domains\n");
+	printf("cbcdomain: Program to manipulate build domains\n\n");
 	printf("Action Options:\n");
 	printf("-a: add build domain\n-d: display build domain details\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n");
-	printf("All actions apart from -l need -n <domain name>\n");
+	printf("All actions apart from -l need -n <domain name>\n\n");
 	printf("Detail Options:\n");
 	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
-	printf("\n\t-p use ssl for ldap connection \n");
+	printf("\n\t-p use ssl for ldap connection\n\n");
 	printf("Network Details:\n");
-	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n");
+	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("Application server configurations\n");
 	printf("-e smtp_server\n-f nfs_domain\n-t ntp_server\n-x xymon_server\n\n");
 	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n domain [ app options ]\n\n");
@@ -315,14 +320,31 @@ display_cbcdomain_usage(void)
 void
 display_cbcos_usage(void)
 {
-	printf("cbcos: Program to manipulate build operating systems\n");
+	printf("cbcos: Program to manipulate build operating systems\n\n");
 	printf("Action Options:\n");
 	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
-	printf("All actions apart from -l need -n <OS name>\n");
+	printf("All actions apart from -l need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-i: <os id>\n-o: <os version>\n");
-	printf("-s: alias\n-t: <os architecture\n");
+	printf("-s: alias\n-t: <os architecture\n\n");
 	printf("cbcos [ -a | -d | -l | -r ] -n os-name [ detail options ]\n\n");
+}
+
+void
+display_cbcvarient_usage(void)
+{
+	printf("cbcvarient: Program to manipulate build varients\n\n");
+	printf("Action Options:\n");
+	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
+	printf("-d and -r actions need -x <varient name> or -k <valias>\n");
+	printf("-a will need both -x <varient name> and -k <valias>\n\n");
+	printf("Name Options:\n");
+	printf("-x: <varient>\n-k: <valias>\n\n");
+	printf("Detail Options:\n");
+	printf("-e: <version alias>\n-i: <os id>\n-o: <os version>\n");
+	printf("-s: <os alias>\n-t: <os architecture\n\n");
+	printf("cbcvarient [ -a | -d | -l | -r ] \
+[ -x varient | -k valias ] [ detail options ]\n\n");
 }
 
 void

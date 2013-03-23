@@ -320,6 +320,8 @@ display_cbcdomain_usage(void);
 void
 display_cbcos_usage(void);
 void
+display_cbcvarient_usage(void);
+void
 display_dnsa_usage(void);
 /* Database fields query mismatch error functions */
 void

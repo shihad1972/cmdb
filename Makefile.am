@@ -7,7 +7,7 @@ RM = rm -f
 ECHO = echo
 DIR = src
 SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient
 
 dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 		src/dnsa_base_sql.c src/base_sql.c\
@@ -30,7 +30,13 @@ cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcos.h
-		
+
+cbcvarinet_SOURCES = \
+		src/cbcvarient.c src/errors.c src/checks.c src/base_sql.c\
+		src/cbc_data.c src/cbc_base_sql.c cbccom.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
+		src/cbc_base_sql.h src/cbcvarient.h
+
 cmdb_SOURCES =	src/cmdb.c src/cmdbcom.c src/errors.c src/servers.c\
 		src/customers.c src/checks.c src/base_sql.c\
 		src/cmdb_base_sql.c\
@@ -55,6 +61,10 @@ cbcdomain:
 	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcdomain
 
-cbcos:	
-	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
+cbcos:
+	$(ECHO) Building cbcos: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcos
+
+cbcvarient:
+	$(ECHO) Building cbcvarient: $(MAKE) $(FLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cbcvarient

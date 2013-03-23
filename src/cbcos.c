@@ -131,6 +131,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 't')
 			snprintf(col->arch, RANGE_S, "%s", optarg);
 	}
+	if (argc == 1)
+		return DISPLAY_USAGE;
 	if (col->action == 0 && argc != 1) {
 		printf("No action provided\n");
 		return NO_ACTION;

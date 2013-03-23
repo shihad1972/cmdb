@@ -55,13 +55,13 @@ extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][5];
 
 
-enum {			/* Build domain delete SQL statements */
+enum {			/* cbc delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
 	BDOM_DEL_DOM_ID = 1,
 	BOS_DEL_BOS_ID = 2
 };
 
-enum {			/* Build domain search SQL statements */
+enum {			/* cbc search SQL statements */
 	LDAP_CONFIG_ON_DOM = 0,
 	LDAP_CONFIG_ON_ID = 1,
 	BUILD_DOMAIN_COUNT = 2,
