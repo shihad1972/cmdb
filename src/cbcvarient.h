@@ -39,8 +39,6 @@ typedef struct cbcvari_comm_line_s {
 	char varient[HOST_S];
 	char valias[MAC_S];
 	short int action;
-	unsigned long int id;
-	unsigned long int os_id;
 } cbcvari_comm_line_s;
 
 void
@@ -54,6 +52,9 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl);
 
 int
 list_cbc_build_varient(cbc_config_s *cmc);
+
+int
+display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
 
 int
 add_cbc_build_varient(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);

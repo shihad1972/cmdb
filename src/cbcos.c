@@ -96,7 +96,6 @@ void
 init_cbcos_comm_line(cbcos_comm_line_s *col)
 {
 	col->action = 0;
-	col->id = 0;
 	snprintf(col->alias, MAC_S, "NULL");
 	snprintf(col->arch, RANGE_S, "NULL");
 	snprintf(col->os, MAC_S, "NULL");
@@ -109,7 +108,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:i:ln:o:rs:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:ln:o:rs:t:")) != -1) {
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -120,8 +119,6 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = RM_CONFIG;
 		else if (opt == 'e')
 			snprintf(col->ver_alias, MAC_S, "%s", optarg);
-		else if (opt == 'i')
-			col->id = strtoul(optarg, NULL, 10);
 		else if (opt == 'n')
 			snprintf(col->os, MAC_S, "%s", optarg);
 		else if (opt == 'o')

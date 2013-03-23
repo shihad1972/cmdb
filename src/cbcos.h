@@ -37,7 +37,6 @@ typedef struct cbcos_comm_line_s {
 	char ver_alias[MAC_S];
 	char version[MAC_S];
 	short int action;
-	unsigned long int id;
 } cbcos_comm_line_s;
 
 void

@@ -325,7 +325,7 @@ display_cbcos_usage(void)
 	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
 	printf("All actions apart from -l need -n <OS name>\n\n");
 	printf("Detail Options:\n");
-	printf("-e: <version alias>\n-i: <os id>\n-o: <os version>\n");
+	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: alias\n-t: <os architecture\n\n");
 	printf("cbcos [ -a | -d | -l | -r ] -n os-name [ detail options ]\n\n");
 }
@@ -341,7 +341,7 @@ display_cbcvarient_usage(void)
 	printf("Name Options:\n");
 	printf("-x: <varient>\n-k: <valias>\n\n");
 	printf("Detail Options:\n");
-	printf("-e: <version alias>\n-i: <os id>\n-o: <os version>\n");
+	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
 	printf("cbcvarient [ -a | -d | -l | -r ] \
 [ -x varient | -k valias ] [ detail options ]\n\n");

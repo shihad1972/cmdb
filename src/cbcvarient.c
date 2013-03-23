@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 	if (cvcl->action == LIST_CONFIG)
 		retval = list_cbc_build_varient(cmc);
 	else if (cvcl->action == DISPLAY_CONFIG)
-		printf("Display varient\n");
+		retval = display_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == ADD_CONFIG)
 		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG)
@@ -100,8 +100,6 @@ void
 init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 {
 	cvl->action = 0;
-	cvl->id = 0;
-	cvl->os_id = 0;
 	snprintf(cvl->alias, MAC_S, "NULL");
 	snprintf(cvl->arch, RANGE_S, "NULL");
 	snprintf(cvl->os, MAC_S, "NULL");
@@ -116,7 +114,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:i:k:ln:o:rs:t:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:k:ln:o:rs:t:x:")) != -1) {
 		if (opt == 'a')
 			cvl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -127,8 +125,6 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->action = RM_CONFIG;
 		else if (opt == 'e')
 			snprintf(cvl->ver_alias, MAC_S, "%s", optarg);
-		else if (opt == 'i')
-			cvl->id = strtoul(optarg, NULL, 10);
 		else if (opt == 'k')
 			snprintf(cvl->valias, MAC_S, "%s", optarg);
 		else if (opt == 'n')
@@ -201,6 +197,47 @@ list_cbc_build_varient(cbc_config_s *cmc)
 }
 
 int
+display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	int retval = NONE;
+	char varient[HOST_S];
+	unsigned long int id;
+	cbc_s *base;
+	dbdata_s *data = '\0';
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in display_cbc_build_varient");
+	init_cbc_struct(base);
+	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VALIAS);
+	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
+		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
+		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);
+		if (retval != 1) {
+			clean_dbdata_struct(data);
+			return VARIENT_NOT_FOUND;
+		}
+	} else if (strncmp(cvl->valias, "NULL", COMM_S) != 0) {
+		snprintf(data->args.text, HOST_S, "%s", cvl->valias);
+		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS);
+		if (retval != 1) {
+			clean_dbdata_struct(data);
+			return VARIENT_NOT_FOUND;
+		}
+	}
+	snprintf(varient, HOST_S, "%s", data->args.text);
+	id = data->fields.number;
+	if ((retval = run_multiple_query(cmc, base, BUILD_OS | BPACKAGE)) != 0) {
+		clean_dbdata_struct(data);
+		clean_cbc_struct(base);
+		return MY_QUERY_FAIL;
+	}
+
+	clean_cbc_struct(base);
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
 add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
@@ -260,5 +297,6 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		printf("Varient %s deleted\n", varient);
 		retval = NONE;
 	}
+	free(data);
 	return retval;
 }
