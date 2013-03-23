@@ -31,9 +31,9 @@ cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcos.h
 
-cbcvarinet_SOURCES = \
+cbcvarient_SOURCES = \
 		src/cbcvarient.c src/errors.c src/checks.c src/base_sql.c\
-		src/cbc_data.c src/cbc_base_sql.c cbccom.c\
+		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcvarient.h
 
