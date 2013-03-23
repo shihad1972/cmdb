@@ -69,7 +69,7 @@ main(int argc, char *argv[])
 		exit(retval);
 	}
 	if (cvcl->action == LIST_CONFIG)
-		printf("List varient\n");
+		retval = list_cbc_build_varient(cmc);
 	else if (cvcl->action == DISPLAY_CONFIG)
 		printf("Display varient\n");
 	else if (cvcl->action == ADD_CONFIG)
@@ -78,6 +78,11 @@ main(int argc, char *argv[])
 		printf("Remove varient\n");
 	else
 		printf("Unknown action type\n");
+	if (retval != 0) {
+		free(cmc);
+		free(cvcl);
+		report_error(retval, error);
+	}
 
 	free(cmc);
 	free(cvcl);
@@ -150,4 +155,40 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return DISPLAY_USAGE;
 	}
 	return NONE;
+}
+
+int
+list_cbc_build_varient(cbc_config_s *cmc)
+{
+	int retval = NONE;
+	cbc_s *base = '\0';
+	cbc_varient_s *list = '\0';
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in list_cbc_build_varient");
+	init_cbc_struct(base);
+	if ((retval = run_query(cmc, base, VARIENT)) != 0) {
+		clean_cbc_struct(base);
+		return retval;
+	}
+	if (base->varient) {
+		list = base->varient;
+	} else {
+		printf("No build varients??\n");
+		clean_cbc_struct(base);
+		return VARIENT_NOT_FOUND;
+	}
+	printf("Build Varients\n");
+	printf("Alias\t\t\tName\n");
+	while (list) {
+		if (strlen(list->valias) < 8)
+			printf("%s\t\t\t%s\n", list->valias, list->varient);
+		else if (strlen(list->valias) < 16)
+			printf("%s\t\t%s\n", list->valias, list->varient);
+		else
+			printf("%s\t%s\n", list->valias, list->varient);
+		list = list->next;
+	}
+	clean_cbc_struct(base);
+	return retval;
 }

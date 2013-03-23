@@ -52,4 +52,7 @@ init_cbcvari_comm_line(cbcvari_comm_line_s *cvl);
 int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl);
 
+int
+list_cbc_build_varient(cbc_config_s *cmc);
+
 #endif /* __CBCVARI_H__ */
