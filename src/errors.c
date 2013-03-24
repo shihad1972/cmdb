@@ -136,6 +136,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
 	} else if (error == BUILD_OS_EXISTS) {
 		fprintf(stderr, "Build OS %s already exists\n", errstr);
+	} else if (error == NO_BUILD_PACKAGES) {
+		fprintf(stderr, "No build packages in database\n");
 	} else if (error == OS_ALIAS_NEEDED) {
 		fprintf(stderr, "Build os %s needs a version alias\n", errstr);
 	} else if (error == BUILD_OS_IN_USE) {

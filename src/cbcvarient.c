@@ -231,6 +231,16 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		clean_cbc_struct(base);
 		return MY_QUERY_FAIL;
 	}
+	if (!(base->package)) {
+		clean_cbc_struct(base);
+		clean_dbdata_struct(data);
+		return NO_BUILD_PACKAGES;
+	}
+	if ((strncmp(cvl->os, "NULL", COMM_S) == 0) &&
+	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
+		retval = display_all_os_packages(base, id, cvl);
+	else
+		retval = display_one_os_packages(base, id, cvl);
 
 	clean_cbc_struct(base);
 	clean_dbdata_struct(data);
@@ -299,4 +309,123 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	free(data);
 	return retval;
+}
+
+int
+display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
+{
+	cbc_build_os_s *bos = base->bos;
+	if (!(bos))
+		return NO_OS;
+	printf("Displaying all OS build packages\n");
+	while (bos) {
+		snprintf(cvl->alias, MAC_S, "%s", bos->alias);
+		display_one_os_packages(base, id, cvl);
+		while ((bos) && strncmp(cvl->alias, bos->alias, MAC_S) == 0)
+			bos = bos->next;
+		snprintf(cvl->version, MAC_S, "NULL");
+		snprintf(cvl->arch, RANGE_S, "NULL");
+	}
+	return NONE;
+}
+
+int
+display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
+{
+	int retval = NONE;
+	unsigned long int osid;
+	cbc_build_os_s *bos = base->bos;
+
+	if (!(bos))
+		return NO_OS;
+	if ((strncmp(cvl->os, "NULL", COMM_S) != 0) &&
+	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
+		if ((retval = get_os_alias(base, cvl)) != 0)
+			return retval;
+	printf("\nDisplaying build packages for os %s\n", cvl->alias);
+	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) &&
+	    (strncmp(cvl->arch, "NULL", COMM_S) != 0)) {
+		printf("Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
+		if ((osid = get_single_os_id(base, cvl)) == 0) {
+			return NO_OS;
+		}
+		display_specific_os_packages(base, id, osid);
+	} else if (strncmp(cvl->version, "NULL", COMM_S) != 0) {
+		while (bos) {
+			if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
+			    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
+				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
+				printf("\
+Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
+				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, osid);
+			}
+			bos = bos->next;
+		}
+	} else {
+		while (bos) {
+			if (strncmp(cvl->alias, bos->alias, MAC_S) == 0) {
+				snprintf(cvl->version, MAC_S, "%s", bos->version);
+				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
+				printf("\
+Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
+				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, osid);
+			}
+			bos = bos->next;
+		}
+	}
+	return retval;
+}
+
+int
+display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid)
+{
+	int i = 0;
+	cbc_package_s *pack = base->package;
+
+	while (pack) {
+		if (id == pack->vari_id && osid == pack->os_id) {
+			i++;
+			printf("%s ", pack->package);
+		}
+		pack = pack->next;
+	}
+	printf("\n");
+	if (i == 0)
+		return SERVER_PACKAGES_NOT_FOUND;
+	return NONE;
+}
+
+int
+get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl)
+{
+	char *os = cvl->os;
+	cbc_build_os_s *bos = base->bos;
+	if (!(bos))
+		return NO_OS;
+	while (bos) {
+		if (strncmp(os, bos->os, MAC_S) == 0) {
+			snprintf(cvl->alias, MAC_S, "%s", bos->alias);
+			return NONE;
+		}
+		bos = bos->next;
+	}
+	return NO_OS;
+}
+
+unsigned long int
+get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
+{
+	cbc_build_os_s *bos = base->bos;
+	if (!(bos))
+		return NONE;
+	while (bos) {
+		if ((strncmp(bos->alias, cvl->alias, MAC_S) == 0) &&
+		    (strncmp(bos->version, cvl->version, MAC_S) == 0) &&
+		    (strncmp(bos->arch, cvl->arch, RANGE_S) == 0))
+			return bos->os_id;
+		bos = bos->next;
+	}
+	return NONE;
 }
