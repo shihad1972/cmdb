@@ -49,5 +49,5 @@ cbcvarient:	$(CVOBJECTS) $(CVHEADERS)
 
 .PHONY :	clean
 clean :
-	$(RM) *.o dnsa cmdb cbc cbcdomain cbcos
+	$(RM) *.o dnsa cmdb cbc cbcdomain cbcos cbcvarient
 
