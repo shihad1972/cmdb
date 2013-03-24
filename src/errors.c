@@ -200,6 +200,12 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "No name specified with -N\n");
 	else if (retval == NO_PHONE)
 		fprintf(stderr, "No phone no. specified with -P\n");
+	else if (retval == NO_PACKAGE)
+		fprintf(stderr, "No package supplied\n");
+	else if (retval == NO_OS_COMM)
+		fprintf(stderr, "No os or alias supplied\n");
+	else if (retval == NO_VARIENT)
+		fprintf(stderr, "No varient or valias supplied\n");
 	else if (retval == NO_EMAIL)
 		fprintf(stderr, "No email address specified with -E\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
@@ -217,6 +223,8 @@ display_cmdb_command_line_error(int retval, char *program)
 			display_cbcos_usage();
 		else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
 			display_cbcvarient_usage();
+		else if ((strncmp(program, "cbcpack", CONF_S) == 0))
+			display_cbcpack_usage();
 		exit(retval);
 	} else
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -316,7 +324,7 @@ display_cbcdomain_usage(void)
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("Application server configurations\n");
 	printf("-e smtp_server\n-f nfs_domain\n-t ntp_server\n-x xymon_server\n\n");
-	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n domain [ app options ]\n\n");
+	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n [ app options ]\n\n");
 }
 
 void
@@ -329,7 +337,7 @@ display_cbcos_usage(void)
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: alias\n-t: <os architecture\n\n");
-	printf("cbcos [ -a | -d | -l | -r ] -n os-name [ detail options ]\n\n");
+	printf("cbcos [ -a | -d | -l | -r ] -n [ detail options ]\n\n");
 }
 
 void
@@ -337,16 +345,32 @@ display_cbcvarient_usage(void)
 {
 	printf("cbcvarient: Program to manipulate build varients\n\n");
 	printf("Action Options:\n");
-	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
+	printf("-a: add varient\n-d: display varient\n-l: list varients\n");
+	printf("-r: remove varient\n");
 	printf("-d and -r actions need -x <varient name> or -k <valias>\n");
 	printf("-a will need both -x <varient name> and -k <valias>\n\n");
 	printf("Name Options:\n");
 	printf("-x: <varient>\n-k: <valias>\n\n");
 	printf("Detail Options:\n");
-	printf("-e: <version alias>\n-o: <os version>\n");
+	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("cbcvarient [ -a | -d | -l | -r ] \
-[ -x varient | -k valias ] [ detail options ]\n\n");
+	printf("cbcvarient [ -a | -d | -l | -r ]  [ -x | -k ] [ detail options ]\n\n");
+}
+
+void
+display_cbcpack_usage(void)
+{
+	printf("cbcpack: Program to manipulate build packages\n\n");
+	printf("Action Options:\n");
+	printf("-s: add package\n-r: remove package\n\n");
+	printf("Varient Options:\n");
+	printf("-x: <varient>\n-k: <valias>\n\n");
+	printf("OS options:\n");;
+	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
+	printf("-s: <os alias>\n-t: <os architecture\n\n");
+	printf("Need one varient option and one OS name or alias option\n");
+	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ] -o -t (-e)\n");
+	
 }
 
 void

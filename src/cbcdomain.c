@@ -149,6 +149,9 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'x') {
 			snprintf(cdl->xymonserver, HOST_S, "%s", optarg);
 			cdl->confxymon = 1;
+		} else {
+			printf("Unknown option: %c\n", opt);
+			return DISPLAY_USAGE;
 		}
 	}
 	if (argc == 1)

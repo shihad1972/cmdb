@@ -72,6 +72,8 @@ main (int argc, char *argv[])
 		retval = add_cbc_build_os(cmc, cocl);
 	else if (cocl->action == RM_CONFIG)
 		retval = remove_cbc_build_os(cmc, cocl);
+	else if (cocl->action == MOD_CONFIG)
+		printf("Cowardly refusal to modify Operating Systems\n");
 	else
 		printf("Unknown action type\n");
 	free(cmc);
@@ -108,7 +110,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:ln:o:rs:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:lmn:o:rs:t:")) != -1) {
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -117,6 +119,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = LIST_CONFIG;
 		else if (opt == 'r')
 			col->action = RM_CONFIG;
+		else if (opt == 'm')
+			col->action = MOD_CONFIG;
 		else if (opt == 'e')
 			snprintf(col->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'n')
@@ -127,6 +131,10 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			snprintf(col->alias, MAC_S, "%s", optarg);
 		else if (opt == 't')
 			snprintf(col->arch, RANGE_S, "%s", optarg);
+		else {
+			printf("Unknown option: %c\n", opt);
+			return DISPLAY_USAGE;
+		}
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
@@ -326,7 +334,7 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		}
 	} else {
 		clean_dbdata_struct(data);
-		return NO_OS;
+		return OS_NOT_FOUND;
 	}
 	id = data->fields.number;
 	clean_dbdata_struct(data);

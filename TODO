@@ -1,6 +1,6 @@
 16/03/2013
 Need to removed the country, keymap and language from build domain for cbc. This will
-include remove the colums from the database and also all the database calls in cbc and
+include remove the columns from the database and also all the database calls in cbc and
 cbcdomain. I think I should move this into the build table, so it is linked to the
 build and not the build domain
 
@@ -20,19 +20,19 @@ checking of the zonefiles and config files.
 
 Need to check the pcre checks. Still we are missing some ifdef libpcre statements
 
-**** Features *****
-** Add records to the database - use ncurses? Done - commit 7622adc
-** Automatically create reverse zone(s) in the database (via cron??) Done - commit 0df2265
-** Specify different config file on command line
-** Add install script (/usr/local most likely) Done - using autotools
-
-**** Coding *****
-** Farm out config file reading to a separate function in a lib.
-
 *** CBC ***
 I want to split out the various parts of the build configuration into separate
 commands, so for example to add / delete / display build domains use
 cbcbuilddomain, or perhaps cbcbuildd or cbcbdom, cbcos for OS's etc
+*** Partially done: we have
+cbcdomain
+cbcos
+cbcvarient
+
+still need:
+cbcpackage
+cbcpartition
+cbclocale
 
 *** ALL ***
 Need to sort out and install script for the database and decide what tables

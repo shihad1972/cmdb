@@ -76,6 +76,8 @@ main(int argc, char *argv[])
 		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG)
 		retval = remove_cbc_build_varient(cmc, cvcl);
+	else if (cvcl->action == MOD_CONFIG)
+		printf("Cowardly refusal to modify varients\n");
 	else
 		printf("Unknown action type\n");
 	if (retval != 0) {
@@ -114,7 +116,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:k:ln:o:rs:t:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:k:lmn:o:rs:t:x:")) != -1) {
 		if (opt == 'a')
 			cvl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -123,6 +125,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->action = LIST_CONFIG;
 		else if (opt == 'r')
 			cvl->action = RM_CONFIG;
+		else if (opt == 'm')
+			cvl->action = MOD_CONFIG;
 		else if (opt == 'e')
 			snprintf(cvl->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'k')
@@ -137,24 +141,24 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			snprintf(cvl->arch, RANGE_S, "%s", optarg);
 		else if (opt == 'x')
 			snprintf(cvl->varient, HOST_S, "%s", optarg);
+		else {
+			printf("Unknown option: %c\n", opt);
+			return DISPLAY_USAGE;
+		}
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cvl->action == 0 && argc != 1) {
-		printf("No action provided\n");
+	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
-	}
 	if (cvl->action != LIST_CONFIG &&
 		(strncmp(cvl->varient, "NULL", COMM_S) == 0) &&
-		(strncmp(cvl->valias, "NULL", COMM_S) == 0)) {
-		fprintf(stderr, "No varient name or alias was provided\n");
-		return DISPLAY_USAGE;
-	}
+		(strncmp(cvl->valias, "NULL", COMM_S) == 0))
+		return NO_VARIENT;
 	if (cvl->action == ADD_CONFIG &&
 		((strncmp(cvl->varient, "NULL", COMM_S) == 0) ||
 		 (strncmp(cvl->valias, "NULL", COMM_S) == 0))) {
 		fprintf(stderr, "\
-You need to supply both a varient name and valias\n");
+You need to supply both a varient name and valias when adding\n");
 		return DISPLAY_USAGE;
 	}
 	return NONE;
@@ -316,7 +320,7 @@ display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 {
 	cbc_build_os_s *bos = base->bos;
 	if (!(bos))
-		return NO_OS;
+		return OS_NOT_FOUND;
 	printf("Displaying all OS build packages\n");
 	while (bos) {
 		snprintf(cvl->alias, MAC_S, "%s", bos->alias);
@@ -337,7 +341,7 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 	cbc_build_os_s *bos = base->bos;
 
 	if (!(bos))
-		return NO_OS;
+		return OS_NOT_FOUND;
 	if ((strncmp(cvl->os, "NULL", COMM_S) != 0) &&
 	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
 		if ((retval = get_os_alias(base, cvl)) != 0)
@@ -347,7 +351,7 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 	    (strncmp(cvl->arch, "NULL", COMM_S) != 0)) {
 		printf("Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
 		if ((osid = get_single_os_id(base, cvl)) == 0) {
-			return NO_OS;
+			return OS_NOT_FOUND;
 		}
 		display_specific_os_packages(base, id, osid);
 	} else if (strncmp(cvl->version, "NULL", COMM_S) != 0) {
@@ -403,7 +407,7 @@ get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl)
 	char *os = cvl->os;
 	cbc_build_os_s *bos = base->bos;
 	if (!(bos))
-		return NO_OS;
+		return OS_NOT_FOUND;
 	while (bos) {
 		if (strncmp(os, bos->os, MAC_S) == 0) {
 			snprintf(cvl->alias, MAC_S, "%s", bos->alias);
@@ -411,7 +415,7 @@ get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl)
 		}
 		bos = bos->next;
 	}
-	return NO_OS;
+	return OS_NOT_FOUND;
 }
 
 unsigned long int

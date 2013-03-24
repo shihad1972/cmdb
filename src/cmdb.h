@@ -155,7 +155,10 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	BUILD_OS_EXISTS = 161,
 	OS_ALIAS_NEEDED = 162,
 	BUILD_OS_IN_USE = 163,
-	NO_BUILD_PACKAGES = 164
+	NO_BUILD_PACKAGES = 164,
+	NO_PACKAGE = 165,
+	NO_VARIENT = 166,
+	NO_OS_COMM = 167
 	
 };
 
@@ -322,6 +325,8 @@ void
 display_cbcos_usage(void);
 void
 display_cbcvarient_usage(void);
+void
+display_cbcpack_usage(void);
 void
 display_dnsa_usage(void);
 /* Database fields query mismatch error functions */
