@@ -158,7 +158,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_BUILD_PACKAGES = 164,
 	NO_PACKAGE = 165,
 	NO_VARIENT = 166,
-	NO_OS_COMM = 167
+	NO_OS_COMM = 167,
+	VARIENT_EXISTS = 168
 	
 };
 
