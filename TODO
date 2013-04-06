@@ -1,3 +1,8 @@
+06/04/2013
+Allow packages to be grouped, so e.g. PHP can contain all php modules
+
+Should probably add racks / power points / switch points into cmdb.
+
 16/03/2013
 Need to removed the country, keymap and language from build domain for cbc. This will
 include remove the columns from the database and also all the database calls in cbc and
@@ -28,10 +33,10 @@ cbcbuilddomain, or perhaps cbcbuildd or cbcbdom, cbcos for OS's etc
 cbcdomain
 cbcos
 cbcvarient
+cbcpack
 
 still need:
-cbcpackage
-cbcpartition
+cbcpart
 cbclocale
 
 *** ALL ***

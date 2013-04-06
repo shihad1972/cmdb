@@ -1,0 +1,59 @@
+CBC: Create Build Config
+
+cbc is software to create a build config for either the kickstart or preseed
+build system. It will also create a DHCP entry and PXE boot file so the host
+can boot from the network. With the addition of the DNSA module it will also
+create an A record for the host.
+
+Currently you have to manually restart the DHCPD service, as well as the DNS
+service. The DNS zonefile will have to be written out before the bind server
+is restarted, and you probably want to build the reverse zone in the database
+as well. 
+
+Given all the variables in building a system, cbc uses some base concepts:
+
+***
+Varient: This is the kind of server you want built, e.g. a web server, email
+	server etc.
+
+***
+Build Type: This is (currently) kickstart, preseed or none. This is based on
+	the operating system specific build type.
+
+***
+Build Domain: This is to get an IP address for server. You define a build
+	domain to tie in with a DNS domain, so that you have an ip range for
+	the servers and a DNS domain that they are part of. This also
+	has various configuration options associated with it, which will be
+	detailed below.
+
+****
+As well as network information (IP, DNS, etc) you can also add application
+	configuration to a build domain. These are services for the servers
+	being built. These are:
+
+	LDAP details for authentication
+	Log server to send syslog output
+	SMTP server for email relay
+	XYMON monitoring server
+	NTP server
+	NFS domain if you are using NFS V4, for example, for home directories.
+
+These are contained in a build domain as these are network services. So, for
+example, each project or group of servers may have their own definition for
+these services. So this is where this information is stored.
+
+***
+Package: These are the packages that will be installed for a specific varient.
+	The package names are taken from the operating systems' definition
+	so that they can be added to the preseed or kickstart file.
+
+***
+Partition: When a server is built, you may want to have some different
+	partition schemes for various servers. This is where they are defined.
+
+Locale: As not every one is in the UK :-) then this is where you can specify
+	your keyboard mapping, country location and language. This is also
+	needed for Ubuntu and Debian in their network boot lines.
+
+
