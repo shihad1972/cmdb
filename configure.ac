@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([cmdb], [0.2.8.1], [iain-at-thargoid-dot-co-dot-uk])
+AC_INIT([cmdb], [0.2.8.2], [iain-at-thargoid-dot-co-dot-uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -301,5 +301,5 @@ AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-AC_CONFIG_SUBDIRS([cmdb-0.2.8.1])
+AC_CONFIG_SUBDIRS([cmdb-0.2.8.2])
 AC_OUTPUT
