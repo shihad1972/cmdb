@@ -16,6 +16,70 @@ AC_PROG_MKDIR_P
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h stdlib.h string.h unistd.h])
+# ===========================================================================
+#      http://www.gnu.org/software/autoconf-archive/ax_check_mysql.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_CHECK_MYSQL([MYSQL-PLUGIN-NEEDED],[MYSQL-REQUIRED],[MINIMUM-VERSION],[INCLUDES-REQUIRED])
+#   AX_SOURCE_MYSQL()
+#   AX_CHECK_MYSQL_INSTALL([ROOT-DIR],[IF-FOUND],[IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Looks for a MySQL installation in typical locations, or can take in a
+#   flag designating where a MySQL installation is found. Sets the variables
+#   stated to various attributes of the desired MySQL installation.
+#
+#   In detail, AX_CHECK_MYSQL will automatically look for a MySQL
+#   installation in the directories that a mysql source or binary install
+#   typically install to. AX_CHECK_MYSQL will throw an error if it cannot
+#   find one, and it is required.
+#
+#   AX_CHECK_MYSQL can also check for specific variables passed regarding a
+#   location of a MySQL installation.
+#
+#   If a MySQL installation is found, AX_CHECK_MYSQL sets variables
+#   regarding the version of MySQL, its architecture (32 or 64 bit), and
+#   wether the version supports Plugins.
+#
+#   AX_CHECK_MYSQL_INSTALL will check a designated root directory for a
+#   command, plugin, and include directory. If a mysql binary is not found
+#   or not found, the IF-FOUND and IF-NOT-FOUND directive will be executed,
+#   respectively.
+#
+#   AX_CHECK_MYSQL adds the following flags:
+#
+#     --with-mysql, for the root of a desired MySQL installation
+#     --with-mysql-plugin, for the path to the plugin directory of the MySQL installation
+#     --with-mysql-include, for the path to the include directory of the MySQL installation
+#     --with-mysql-command, for the path to the binary directory of the MySQL installation
+#     --with-mysql-source, for the path to a directory containing the source of the MySQL installation
+#
+#   AX_CHECK_MYSQL sets:
+#
+#     MYSQL to indicate whether MySQL was found or not
+#     MYSQL_INCLUDES to the include directory (if one exists)
+#     MYSQL_PLUGINS  to the plugin directory
+#     MYSQL_COMMANDS  to the mysql executable directory
+#     MYSQL_ARCHITECTURE to whether MySQL is 32 or 64 bit (32 if 32, 64 if 64)
+#     MYSQL_VERSION to what the MySQL version is (5.1,5.5, etc)
+#     MYSQL_PLUGIN_OK to whether MySQL version supports plugins (5.1 or greater)
+#     MYSQL_55 to whether the version of MySQL is 5.5 or greater
+#     MYSQL_SOURCE  to the source directory passed by --with-mysql-source
+#
+# LICENSE
+#
+#   Copyright (c) 2011 University of Washington
+#   Copyright (c) 2011 Yusuke Tsutsumi <tsutsumi.yusuke@gmail.com>
+#   Copyright (c) 2011 Craig Stimmel <cstimmel@uw.edu>
+#   Copyright (c) 2011 Eric Wu
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved. This file is offered as-is, without any
+#   warranty.
 
 AC_DEFUN([AX_LIB_MYSQL],
 [
@@ -121,6 +185,59 @@ AC_DEFUN([AX_LIB_MYSQL],
     AC_SUBST([MYSQL_LDFLAGS])
 ])
 
+#==============================================================================
+#     END OF AC_CHECK_MYSQL
+#==============================================================================
+
+# ===========================================================================
+#     http://www.gnu.org/software/autoconf-archive/ax_path_lib_pcre.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_PATH_LIB_PCRE [(A/NA)]
+#
+# DESCRIPTION
+#
+#   check for pcre lib and set PCRE_LIBS and PCRE_CFLAGS accordingly.
+#
+#   also provide --with-pcre option that may point to the $prefix of the
+#   pcre installation - the macro will check $pcre/include and $pcre/lib to
+#   contain the necessary files.
+#
+#   the usual two ACTION-IF-FOUND / ACTION-IF-NOT-FOUND are supported and
+#   they can take advantage of the LIBS/CFLAGS additions.
+#
+# LICENSE
+#
+#   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
+#
+#   This program is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation; either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+#
+#   This special exception to the GPL applies to versions of the Autoconf
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
+
 AC_DEFUN([AX_PATH_LIB_PCRE],[dnl
 AC_MSG_CHECKING([lib pcre])
 AC_ARG_WITH(pcre,
@@ -163,6 +280,47 @@ fi
 AC_SUBST([PCRE_LIBS])
 AC_SUBST([PCRE_CFLAGS])
 ])
+# ===========================================================================
+#      End of AX_PATH_LIB_PCRE
+# ===========================================================================
+# ===========================================================================
+#      http://www.gnu.org/software/autoconf-archive/ax_lib_sqlite3.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_LIB_SQLITE3([MINIMUM-VERSION])
+#
+# DESCRIPTION
+#
+#   Test for the SQLite 3 library of a particular version (or newer)
+#
+#   This macro takes only one optional argument, required version of SQLite
+#   3 library. If required version is not passed, 3.0.0 is used in the test
+#   of existance of SQLite 3.
+#
+#   If no intallation prefix to the installed SQLite library is given the
+#   macro searches under /usr, /usr/local, and /opt.
+#
+#   This macro calls:
+#
+#     AC_SUBST(SQLITE3_CFLAGS)
+#     AC_SUBST(SQLITE3_LDFLAGS)
+#     AC_SUBST(SQLITE3_VERSION)
+#
+#   And sets:
+#
+#     HAVE_SQLITE3
+#
+# LICENSE
+#
+#   Copyright (c) 2008 Mateusz Loskot <mateusz@loskot.net>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved. This file is offered as-is, without any
+#   warranty.
+
 AC_DEFUN([AX_LIB_SQLITE3],
 [
     AC_ARG_WITH([sqlite3],
@@ -281,6 +439,9 @@ AC_DEFUN([AX_LIB_SQLITE3],
         fi
     fi
 ])
+# =============================================================================
+#     End AX_LIB_SQLITE3
+#==============================================================================
 
 AX_LIB_MYSQL
 AX_PATH_LIB_PCRE
