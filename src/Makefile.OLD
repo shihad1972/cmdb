@@ -20,6 +20,7 @@ CDOBJECTS = cbcdomain.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o b
 COOBJECTS = cbcos.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CVOBJECTS = cbcvarient.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CPOBJECTS = cbcpack.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
+CKOBJECTS = cbcpart.o errors.o checks.o base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 
 DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
 CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h
@@ -28,8 +29,9 @@ CDHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h builddomain.h
 COHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcos.h
 CVHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcvarient.h
 CPHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpack.h
+CKHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
 
-all:	dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack
+all:	dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
 dnsa:	$(DOBJECTS) $(DHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
@@ -52,7 +54,10 @@ cbcvarient:	$(CVOBJECTS) $(CVHEADERS)
 cbcpack:	$(CPOBJECTS) $(CPHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CPOBJECTS) $(LDFLAGS) $(LIBS)
 
+cbcpart:	$(CKOBJECTS) $(CKHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LIBS)
+
 .PHONY :	clean
 clean :
-	$(RM) *.o dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack
+	$(RM) *.o dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 

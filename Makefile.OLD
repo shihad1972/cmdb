@@ -49,6 +49,12 @@ cbcpack_SOURCES = \
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcpack.h
 
+cbcpart_SOURCES = \
+		src/cbcpart.c src/errors.c src/checks.c src/base_sql.c\
+		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
+		src/cbc_base_sql.h src/cbcpart.h
+
 all:	$(bin_PROGRAMS)
 
 dnsa:
@@ -78,6 +84,10 @@ cbcvarient:
 cbcpack:
 	$(ECHO) Building cbcpack: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcpack
+
+cbcpart:
+	$(ECHO) Building cbcpart: $(MAKE) $(MFLAGS)
+	cd $(DIR); $(MAKE) $(MFLAGS) cbcpart
 
 clean :
 	$(ECHO) Making Clean
