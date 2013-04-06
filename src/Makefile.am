@@ -35,7 +35,7 @@ cbcpart_SOURCES = \
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
 
-AM_CFLAGS = -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
+AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings
 AM_LDFLAGS =
 
 if HAVE_MYSQL
@@ -50,5 +50,6 @@ endif
 
 if HAVE_SQLITE3
 AM_CFLAGS += $(SQLITE3_CFLAGS)
+AM_LDFLAGS += $(SQLITE3_LDFLAGS)
 LIBS += -lsqlite3
 endif
