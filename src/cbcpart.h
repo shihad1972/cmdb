@@ -26,3 +26,18 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
+
+#ifndef __CBCPART_H__
+# define __CBCPART_H__
+# include "cmdb.h"
+# include "cbc_data.h"
+
+typedef struct cbcpart_comm_line_s {
+	char scheme[CONF_S];
+	short int action;
+	short int lvm;
+} cbcpart_comm_line_s;
+
+
+#endif /* __CBCPART_H__ */
+
