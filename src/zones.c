@@ -28,6 +28,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+/* For freeBSD ?? */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+/* End freeBSD */
 #include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
