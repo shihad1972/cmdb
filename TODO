@@ -1,3 +1,10 @@
+28/04/2013
+The varients perhaps should be able to be added together, so for example you
+can create a cluster varient that will install all the packages necessary
+for a cluster as well as , e.g., LAMP or SQL Database.
+
+This functionality could be added with "add on" packages
+
 20/04/2013
 Add timestamps and uids to database. One for creation, one for
 modification
