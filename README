@@ -1,7 +1,75 @@
- The configure script will build the 3 programs (cbc, dnsa and cmdb)
-in the src/ directory and make install will install them into /usr/local
-(unless you specify a differnt location using the --prefix options
-to './configure'. 
+For full installation instructions see the INSTALL FILE.
+
+ The configure script will build the 3 suites of programs in the src/ 
+directory and make install will install them into /usr/local (unless you 
+specify a differnt location using the --prefix options to './configure'. 
 
  Currently you need to configure the database manually. Check out the sql
 directory for for the table definitions.
+
+###############################################################################
+#
+#
+# Welcome to the cmdb suite of programs
+#
+# cmdb: Configuration Management Database
+#
+# dnsa: Domain Name System Administration
+#
+# cbc: Create build configuration
+#
+#       The cbc suite contains:
+#
+#       cbcvarient -> Manipulate Build Varients
+#       cbcos      -> Manipulate Build Operating Ssystems
+#       cbcdomain  -> Manipulate Build Domains
+#       cbcpack    -> Manipulate Build Package Lists
+#       cbcpart    -> Manipulate Build Partition Schemes
+#       cbc        -> Create Build Configuration
+#
+#
+###############################################################################
+
+ This 3 suites of programs will allow you to keep track of servers in your
+estate and create individual build files for the servers, whilst being able to
+maintain DNS records for the servers. Let's describe the 3 suites now
+
+#####
+#
+# cmdb
+#
+#####
+
+ cmdb will store configuration details about your servers, and these details
+will be used to create automatic build files for your servers. Details stored
+include hardware details (include the MAC address of the network card; useful
+for network booting!) and switch / power ports and rack locations. You can
+group servers by customer, which can be an external customer or an internal
+customer, for example a specific project. You can also store the serial numbers
+and hardware types.
+
+#####
+#
+# dnsa
+#
+#####
+
+ dnsa allows you manipulate DNS records for your servers and the services that
+run on them. It will also automatically build the reverse DNS zones, based on
+the forward names in DNS. For IP addresses that have multiple forward records
+you can choose a preferrred A record. 
+
+#####
+#
+# cbc
+#
+####
+
+ The cbc suite allows you to create multiple configurations for server builds.
+There is multiple OS support, you can create partition schemes, build varients
+that can be used to install different server types, e.g. web, database, mail.
+You can also configure base OS services, such as logging, authentication types,
+NTP, monitoring services, smtp relay, and locales and languages. The cbc
+program will create the DHCP and TFTP configuration to allow network booting of
+your servers, as well as the build configuration file for either preseed or
+kickstart build types. 

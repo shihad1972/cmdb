@@ -249,6 +249,9 @@ display_cmdb_command_line_error(int retval, char *program)
 	else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
 		printf("Usage: %s [-a | -d | -l | -r ] [-x <varient> \
 -k valias] [ OPTIONS ]\n", program);
+	else if ((strncmp(program, "cbcpack", CONF_S) == 0))
+		printf("Usage: %s [-a | -r ] [ -x | -k ] [ -n | -s ] \
+-o -t [ -e ]\n", program);
 	exit (retval);
 }
 
@@ -364,14 +367,14 @@ display_cbcpack_usage(void)
 {
 	printf("cbcpack: Program to manipulate build packages\n\n");
 	printf("Action Options:\n");
-	printf("-s: add package\n-r: remove package\n\n");
+	printf("-a: add package\n-r: remove package\n\n");
 	printf("Varient Options:\n");
 	printf("-x: <varient>\n-k: <valias>\n\n");
 	printf("OS options:\n");;
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
 	printf("Need one varient option and one OS name or alias option\n");
-	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ] -o -t (-e)\n");
+	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ] -o -t [ -e ]\n");
 	
 }
 
