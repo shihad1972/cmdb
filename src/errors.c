@@ -227,6 +227,8 @@ display_cmdb_command_line_error(int retval, char *program)
 			display_cbcvarient_usage();
 		else if ((strncmp(program, "cbcpack", CONF_S) == 0))
 			display_cbcpack_usage();
+		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
+			display_cbcpart_usage();
 		exit(retval);
 	} else
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -234,24 +236,27 @@ display_cmdb_command_line_error(int retval, char *program)
 		printf("Usage: run %s on its own or check man pages\n",
 	       program);
 	else if ((strncmp(program, "cbc", CONF_S) == 0))
-		printf("Usage: %s [-w | -d ] [-p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
+		printf("Usage: %s [ -w | -d ] [ -p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
 	       program);
 	else if ((strncmp(program, "dnsa", CONF_S) ==0))
-		printf("Usage: %s [-d | -w | -c | -l | -z | -a] [-f | -r] -n \
+		printf("Usage: %s [ -d | -w | -c | -l | -z | -a ] [ -f | -r ] -n \
 <domain/netrange> -i <IP address> -h <hostname> -t <record type>\n",
 	       program);
 	else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
-		printf("Usage: %s [-a | -d | -l | -m | -r ] -n <domain name> \
+		printf("Usage: %s [ -a | -d | -l | -m | -r ] -n <domain name> \
 [ OPTIONS ]\n", program);
 	else if ((strncmp(program, "cbcos", CONF_S) == 0))
-		printf("Usage: %s [-a | -d | -l | -r ] -n <os name> \
+		printf("Usage: %s [ -a | -d | -l | -r ] -n <os name> \
 [ OPTIONS ]\n", program);
 	else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
-		printf("Usage: %s [-a | -d | -l | -r ] [-x <varient> \
+		printf("Usage: %s [ -a | -d | -l | -r ] [ -x <varient> \
 -k valias] [ OPTIONS ]\n", program);
 	else if ((strncmp(program, "cbcpack", CONF_S) == 0))
-		printf("Usage: %s [-a | -r ] [ -x | -k ] [ -n | -s ] \
+		printf("Usage: %s [ -a | -r ] [ -x | -k ] [ -n | -s ] \
 -o -t [ -e ]\n", program);
+	else if ((strncmp(program, "cbcpart", CONF_S) == 0))
+		printf("Usage: %s [ -a | -d | -l | -r ] [ -p | -s ] [ -l ] \
+[ -t partition-info ]\n", program);
 	exit (retval);
 }
 
@@ -360,6 +365,24 @@ display_cbcvarient_usage(void)
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
 	printf("cbcvarient [ -a | -d | -l | -r ]  [ -x | -k ] [ detail options ]\n\n");
+}
+
+void
+display_cbcpart_usage(void)
+{
+	printf("cbcpart: Program to manipulate build partitions & schemes\n\n");
+	printf("Action Options:\n");
+	printf("-a: add scheme / partition\n-d: display scheme\n");
+	printf("-l: list schemes\n-r: remove scheme / partition\n\n");
+	printf("Definition Options:\n");
+	printf("-p: partition\n-s: scheme\n\n");
+	printf("Detail Options\n");
+	printf("-l: Use lvm (when adding a partition)\n");
+	printf("-n: <scheme name>\n\n");
+	printf("Partition Details:\n");
+	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
+	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -l ] [ -t \
+<partition definition>]\n");
 }
 
 void

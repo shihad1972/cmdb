@@ -159,7 +159,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_PACKAGE = 165,
 	NO_VARIENT = 166,
 	NO_OS_COMM = 167,
-	VARIENT_EXISTS = 168
+	VARIENT_EXISTS = 168,
+	NO_PARTITION_INFO = 169
 	
 };
 
@@ -328,6 +329,8 @@ void
 display_cbcvarient_usage(void);
 void
 display_cbcpack_usage(void);
+void
+display_cbcpart_usage(void);
 void
 display_dnsa_usage(void);
 /* Database fields query mismatch error functions */

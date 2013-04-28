@@ -32,12 +32,27 @@
 # include "cmdb.h"
 # include "cbc_data.h"
 
+enum {
+	PARTITION = 1,
+	SCHEME = 2,
+};
+
 typedef struct cbcpart_comm_line_s {
 	char scheme[CONF_S];
+	char partition[RBUFF_S];
 	short int action;
 	short int lvm;
+	short int type;
 } cbcpart_comm_line_s;
 
+void
+init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+void
+init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+
+int
+parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl);
 
 #endif /* __CBCPART_H__ */
 
