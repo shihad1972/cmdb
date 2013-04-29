@@ -43,7 +43,6 @@ int
 main (int argc, char *argv[])
 {
 	const char *config = "/etc/dnsa/dnsa.conf";
-	char error[URL_S];
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcpart_comm_line_s *cpcl;
@@ -68,7 +67,7 @@ main (int argc, char *argv[])
 	if (cpcl->action == ADD_CONFIG)
 		printf("Adding Config\n");
 	else if (cpcl->action == DISPLAY_CONFIG)
-		printf("Displaying Config\n");
+		retval = display_full_seed_scheme(cmc, cpcl);
 	else if (cpcl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpcl->action == RM_CONFIG)
@@ -158,8 +157,56 @@ list_seed_schemes(cbc_config_s *cbc)
 	seeds = base->sscheme;
 	printf("Partition Schemes\n");
 	while (seeds) {
-		printf("%s\n", seeds->name);
+		printf("\t%s\n", seeds->name);
 		seeds = seeds->next;
+	}
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+	unsigned long int def_id = 0;
+	cbc_s *base;
+	cbc_seed_scheme_s *seed;
+	cbc_pre_part_s *part;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in display_full_seed_scheme\n");
+	init_cbc_struct(base);
+	if ((retval = run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
+		fprintf(stderr, "Seed scheme and default part query failed\n");
+		free(base);
+		return retval;
+	}
+	seed = base->sscheme;
+	while (seed) {
+		part = base->dpart;
+		if (strncmp(seed->name, cpl->scheme, CONF_S) == 0) {
+			def_id = seed->def_scheme_id;
+			printf("%s partitions ", cpl->scheme);
+			if (seed->lvm > 0)
+				printf("with LVM\n\tMount\tFS\tMin\tMax\tLogvol\n");
+			else
+				printf("No LVM\n\tMount\tFS\tMin\tMax\n");
+		} else {
+			seed = seed->next;
+			continue;
+		}
+		while (part) {
+			if (def_id == part->link_id.def_scheme_id) {
+				if (seed->lvm > 0)
+					printf("\t%s\t%s\t%lu\t%lu\t%s\n", part->mount, part->fs,
+					part->min, part->max, part->log_vol);
+				else
+					printf("\t%s\t%s\t%lu\t%lu\n", part->mount, part->fs,
+					part->min, part->max);
+			}
+			part = part->next;
+		}
+		seed = seed->next;
 	}
 	clean_cbc_struct(base);
 	return retval;
