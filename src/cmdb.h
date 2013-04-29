@@ -160,7 +160,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_VARIENT = 166,
 	NO_OS_COMM = 167,
 	VARIENT_EXISTS = 168,
-	NO_PARTITION_INFO = 169
+	NO_PARTITION_INFO = 169,
+	NO_SCHEME_INFO = 170
 	
 };
 

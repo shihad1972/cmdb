@@ -54,5 +54,8 @@ init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
 int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl);
 
+int
+list_seed_schemes(cbc_config_s *cbc);
+
 #endif /* __CBCPART_H__ */
 

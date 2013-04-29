@@ -59,6 +59,23 @@ main (int argc, char *argv[])
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
 
+	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
+		free (cpcl);
+		free (cmc);
+		parse_cbc_config_error(retval);
+		exit(retval);
+	}
+	if (cpcl->action == ADD_CONFIG)
+		printf("Adding Config\n");
+	else if (cpcl->action == DISPLAY_CONFIG)
+		printf("Displaying Config\n");
+	else if (cpcl->action == LIST_CONFIG)
+		retval = list_seed_schemes(cmc);
+	else if (cpcl->action == RM_CONFIG)
+		printf("Removing Config\n");
+
+	free(cmc);
+	free(cpcl);
 	exit (retval);
 }
 
@@ -84,7 +101,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "adln:prst:")) != -1) {
+	while ((opt = getopt(argc, argv, "adln:prst:v")) != -1) {
 		if (opt == 'a')
 			cpl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -93,7 +110,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = LIST_CONFIG;
 		else if (opt == 'r')
 			cpl->action = RM_CONFIG;
-		else if (opt == 'l')
+		else if (opt == 'v')
 			cpl->lvm = TRUE;
 		else if (opt == 'n')
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
@@ -116,7 +133,35 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	     cpl->type == 0)
 		return NO_TYPE;
 	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) &&
-	    cpl->type == 0)
+	    (strncmp(cpl->partition, "NULL", COMM_S) == 0) && (cpl->type == PARTITION))
 		return NO_PARTITION_INFO;
+	if ((cpl->action != LIST_CONFIG) && (strncmp(cpl->scheme, "NULL", COMM_S) == 0))
+		return NO_SCHEME_INFO;
 	return NONE;
 }
+
+int
+list_seed_schemes(cbc_config_s *cbc)
+{
+	int retval = NONE;
+	cbc_s *base;
+	cbc_seed_scheme_s *seeds;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in list_seed_schemes");
+	init_cbc_struct(base);
+	if ((retval = run_query(cbc, base, SSCHEME)) != 0) {
+		fprintf(stderr, "Seed scheme query failed\n");
+		free(base);
+		return retval;
+	}
+	seeds = base->sscheme;
+	printf("Partition Schemes\n");
+	while (seeds) {
+		printf("%s\n", seeds->name);
+		seeds = seeds->next;
+	}
+	clean_cbc_struct(base);
+	return retval;
+}
+

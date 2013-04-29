@@ -212,6 +212,10 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "No email address specified with -E\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
 		fprintf(stderr, "Both domain name and IP given on command line\n");
+	else if (retval == NO_PARTITION_INFO)
+		fprintf(stderr, "No partition information on command line\n");
+	else if (retval == NO_SCHEME_INFO)
+		fprintf(stderr, "No scheme name was supplied on the command line\n");
 	else if (retval == DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONF_S) == 0))
 			display_cmdb_usage();
@@ -255,7 +259,7 @@ display_cmdb_command_line_error(int retval, char *program)
 		printf("Usage: %s [ -a | -r ] [ -x | -k ] [ -n | -s ] \
 -o -t [ -e ]\n", program);
 	else if ((strncmp(program, "cbcpart", CONF_S) == 0))
-		printf("Usage: %s [ -a | -d | -l | -r ] [ -p | -s ] [ -l ] \
+		printf("Usage: %s [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] \
 [ -t partition-info ]\n", program);
 	exit (retval);
 }
@@ -377,11 +381,11 @@ display_cbcpart_usage(void)
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
-	printf("-l: Use lvm (when adding a partition)\n");
+	printf("-v: Use lvm (when adding a partition)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
 	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
-	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -l ] [ -t \
+	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] [ -t \
 <partition definition>]\n");
 }
 
