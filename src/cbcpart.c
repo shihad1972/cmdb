@@ -134,9 +134,11 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	     cpl->type == 0)
 		return NO_TYPE;
 	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) &&
-	    (strncmp(cpl->partition, "NULL", COMM_S) == 0) && (cpl->type == PARTITION))
+	    (strncmp(cpl->partition, "NULL", COMM_S) == 0) &&
+	    (cpl->type == PARTITION))
 		return NO_PARTITION_INFO;
-	if ((cpl->action != LIST_CONFIG) && (strncmp(cpl->scheme, "NULL", COMM_S) == 0))
+	if ((cpl->action != LIST_CONFIG) && 
+	    (strncmp(cpl->scheme, "NULL", COMM_S) == 0))
 		return NO_SCHEME_INFO;
 	return NONE;
 }
@@ -200,11 +202,11 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		while (part) {
 			if (def_id == part->link_id.def_scheme_id) {
 				if (seed->lvm > 0)
-					printf("\t%s\t%s\t%lu\t%lu\t%s\n", part->mount, part->fs,
-					part->min, part->max, part->log_vol);
+					printf("\t%s\t%s\t%lu\t%lu\t%s\n",
+part->mount, part->fs, part->min, part->max, part->log_vol);
 				else
-					printf("\t%s\t%s\t%lu\t%lu\n", part->mount, part->fs,
-					part->min, part->max);
+					printf("\t%s\t%s\t%lu\t%lu\n",
+part->mount, part->fs, part->min, part->max);
 			}
 			part = part->next;
 		}
