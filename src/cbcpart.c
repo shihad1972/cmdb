@@ -65,7 +65,7 @@ main (int argc, char *argv[])
 		exit(retval);
 	}
 	if (cpcl->action == ADD_CONFIG)
-		printf("Adding Config\n");
+		retval = add_scheme_part(cmc, cpcl);
 	else if (cpcl->action == DISPLAY_CONFIG)
 		retval = display_full_seed_scheme(cmc, cpcl);
 	else if (cpcl->action == LIST_CONFIG)
@@ -73,6 +73,8 @@ main (int argc, char *argv[])
 	else if (cpcl->action == RM_CONFIG)
 		printf("Removing Config\n");
 
+	if (retval == WRONG_TYPE)
+		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
 	free(cpcl);
 	exit (retval);
@@ -209,6 +211,48 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		seed = seed->next;
 	}
 	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	if (cpl->type == PARTITION)
+		retval = add_partition_to_scheme(cbc, cpl);
+	else if (cpl->type == SCHEME)
+		retval = add_new_scheme(cbc, cpl);
+	else
+		retval = WRONG_TYPE;
+
+	return retval;
+}
+
+int
+add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+	cbc_seed_scheme_s *scheme;
+	cbc_s *base;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add_new_scheme");
+	if (!(scheme = malloc(sizeof(cbc_seed_scheme_s))))
+		report_error(MALLOC_FAIL, "scheme in add_new_scheme");
+
+	base->sscheme = scheme;
+	scheme->lvm = cpl->lvm;
+	strncpy(scheme->name, cpl->scheme, CONF_S);
+
 	return retval;
 }
 

@@ -60,5 +60,14 @@ list_seed_schemes(cbc_config_s *cbc);
 int
 display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
+int
+add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
 #endif /* __CBCPART_H__ */
 
