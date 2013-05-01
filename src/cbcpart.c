@@ -244,7 +244,7 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	int retval = NONE;
 	short int lvm;
 	unsigned long int scheme_id = 0;
-	cbc_pre_part_s *part;
+	cbc_pre_part_s *part, *dpart;
 	cbc_seed_scheme_s *seed;
 	cbc_s *base;
 
@@ -253,9 +253,9 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
 	init_cbc_struct(base);
-	base->dpart = part;
 	if ((retval = run_query(cbc, base, SSCHEME)) != 0) {
-		free(base);
+		clean_cbc_struct(base);
+		free(part);
 		fprintf(stderr, "Unable to get schemes from DB\n");
 		return retval;
 	}
@@ -274,24 +274,57 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if ((lvm > 0) && (cpl->lvm < 1)) {
 		printf("Logical volume defined for scheme %s\n", cpl->scheme);
 		printf("Please supply logical volume details\n");
+		free(part);
+		clean_cbc_struct(base);
 		return NO_LOG_VOL;
 	}
 	if ((lvm < 1) && (cpl->lvm > 0)) {
 		printf("You have defined a logical volume, but this ");
 		printf("scheme %s does not use it\n", cpl->scheme);
+		free(part);
+		clean_cbc_struct(base);
 		return EXTRA_LOG_VOL;
 	}
-	printf("We got %lu for scheme id for %s\n", scheme_id, cpl->scheme);
+	if ((retval = run_query(cbc, base, DPART)) != 0) {
+		clean_cbc_struct(base);
+		free(part);
+		fprintf(stderr, "Unable to get partitions from DB\n");
+		return retval;
+	}
+	dpart = base->dpart;
 	part->link_id.def_scheme_id = scheme_id;
 	snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
 	if ((retval = add_part_info(cpl, part)) != 0) {
 		fprintf(stderr, "Unable to add part info for DB insert\n");
 		return retval;
 	}
+	while (dpart) {
+		if (scheme_id == dpart->link_id.def_scheme_id) {
+			if (strncmp(part->mount, dpart->mount, RANGE_S) == 0) {
+				fprintf(stderr, "Partition %s already defined in %s\n",
+part->mount, cpl->scheme);
+				clean_cbc_struct(base);
+				free(part);
+				return PARTITION_EXISTS;
+			}
+			if ((strncmp(part->log_vol, dpart->log_vol, MAC_S) == 0) &&
+				lvm > 0) {
+				fprintf(stderr, "Logical volume %s already used in %s\n",
+part->log_vol, cpl->scheme);
+				clean_cbc_struct(base);
+				free(part);
+				return LOG_VOL_EXISTS;
+			}
+		}
+		dpart = dpart->next;
+	}
+	clean_pre_part(base->dpart);
+	base->dpart = part;
 	if ((retval = run_insert(cbc, base, DPARTS)) != 0)
 		printf("Unable to add partition to DB\n");
 	else
 		printf("Partition added to DB\n");
+	part->next = '\0';
 	clean_cbc_struct(base);
 
 	return retval;

@@ -163,7 +163,9 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_PARTITION_INFO = 169,
 	NO_SCHEME_INFO = 170,
 	NO_LOG_VOL = 171,
-	EXTRA_LOG_VOL = 172
+	EXTRA_LOG_VOL = 172,
+	LOG_VOL_EXISTS = 173,
+	PARTITION_EXISTS = 174
 	
 };
 
