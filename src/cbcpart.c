@@ -235,6 +235,31 @@ int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
+	unsigned long int scheme_id = 0;
+	cbc_pre_part_s *part;
+	cbc_seed_scheme_s *seed;
+	cbc_s *base;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add_part_to_scheme");
+	if (!(part = malloc(sizeof(cbc_pre_part_s))))
+		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
+	init_cbc_struct(base);
+	base->dpart = part;
+	if ((retval = run_query(cbc, base, SSCHEME)) != 0) {
+		free(base);
+		fprintf(stderr, "Unable to get schemes from DB\n");
+		return retval;
+	}
+	seed = base->sscheme;
+	while (seed) {
+		if (strncmp(cpl->scheme, seed->name, CONF_S) == 0)
+			scheme_id = seed->def_scheme_id;
+		seed = seed->next;
+	}
+	printf("We got %lu for scheme id for %s\n", scheme_id, cpl->scheme);
+	part->scheme_id_u.def_scheme_id = scheme_id;
+	clean_cbc_struct(base);
 
 	return retval;
 }
@@ -259,6 +284,7 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		printf("Unable to add seed scheme to the database\n");
 	else
 		printf("Added seed scheme %s to database\n", scheme->name);
+	clean_cbc_struct(base);
 	return retval;
 }
 
