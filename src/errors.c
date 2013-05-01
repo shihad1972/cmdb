@@ -382,11 +382,12 @@ display_cbcpart_usage(void)
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
 	printf("-v: Use lvm (when adding a partition)\n");
+	printf("-g: logical volume (if using lvm)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
 	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
-	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] [ -t \
-<partition definition>]\n");
+	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] [ -g \
+log vol ] [ -t <part def>]\n");
 }
 
 void

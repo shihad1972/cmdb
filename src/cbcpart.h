@@ -40,6 +40,7 @@ enum {
 typedef struct cbcpart_comm_line_s {
 	char scheme[CONF_S];
 	char partition[RBUFF_S];
+	char log_vol[MAC_S];
 	short int action;
 	short int lvm;
 	short int type;
@@ -68,6 +69,9 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
 add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
 
 #endif /* __CBCPART_H__ */
 

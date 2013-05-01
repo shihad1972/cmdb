@@ -197,6 +197,9 @@ setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i);
 void
 setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i);
 
+void
+setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -285,6 +288,9 @@ setup_bind_sqlite_build_varient(sqlite3_stmt *state, cbc_varient_s *vari);
 
 int
 setup_bind_sqlite_build_part_scheme(sqlite3_stmt *state, cbc_seed_scheme_s *seed);
+
+int
+setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

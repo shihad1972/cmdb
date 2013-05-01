@@ -108,10 +108,10 @@ INSERT INTO locale (locale, country, language, keymap, os_id,\
 INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?, ?)\
 ","\
 INSERT INTO default_part (minimum, maximum, priority,\
-mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?\
- ?, ?, ?)","\
+mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?,\
+ ?, ?)","\
 INSERT INTO seed_part (minimum, maximum, priority, mount_point,\
- filesystem, server_id, logical_volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+ filesystem, server_id, logical_volume) VALUES (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id,\
  vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -915,6 +915,8 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 		setup_bind_mysql_build_varient(buffer, base, i);
 	else if (type == SSCHEMES)
 		setup_bind_mysql_build_part_scheme(buffer, base, i);
+	else if (type == DPARTS)
+		setup_bind_mysql_build_def_part(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1406,6 +1408,25 @@ setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->sscheme->lvm);
 }
 
+void
+setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->dpart->min);
+	else if (i == 1)
+		*buffer = &(base->dpart->max);
+	else if (i == 2)
+		*buffer = &(base->dpart->pri);
+	else if (i == 3)
+		*buffer = &(base->dpart->mount);
+	else if (i == 4)
+		*buffer = &(base->dpart->fs);
+	else if (i == 5)
+		*buffer = &(base->dpart->link_id.def_scheme_id);
+	else if (i == 6)
+		*buffer = &(base->dpart->log_vol);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1776,6 +1797,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = setup_bind_sqlite_build_varient(state, base->varient);
 	else if (type == SSCHEMES)
 		retval = setup_bind_sqlite_build_part_scheme(state, base->sscheme);
+	else if (type == DPARTS)
+		retval = setup_bind_sqlite_build_part(state, base->dpart);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -2355,6 +2378,49 @@ state, 1, seed->name, (int)strlen(seed->name), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int(state, 2, seed->lvm)) > 0) {
 		fprintf(stderr, "Cannot bind LVM value %d\n", seed->lvm);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)part->min)) > 0) {
+		fprintf(stderr, "Cannot bind min size %lu\n", part->min);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)part->max)) > 0) {
+		fprintf(stderr, "Cannot bind max size %lu\n", part->max);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)part->pri)) > 0) {
+		fprintf(stderr, "Cannot bind priority %lu\n", part->pri);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, part->mount, (int)strlen(part->mount), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind mount point %s\n", part->mount);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, part->fs, (int)strlen(part->fs), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind file system %s\n", part->fs);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)part->link_id.def_scheme_id)) > 0) {
+		fprintf(stderr, "Cannot bind scheme id %lu\n", part->link_id.def_scheme_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 7, part->log_vol, (int)strlen(part->log_vol), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind logical volume %s\n", part->log_vol);
 		return retval;
 	}
 	return retval;

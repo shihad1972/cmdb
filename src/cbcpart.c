@@ -95,6 +95,7 @@ init_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 	cpl->type = 0;
 	snprintf(cpl->partition, COMM_S, "NULL");
 	snprintf(cpl->scheme, COMM_S, "NULL");
+	snprintf(cpl->log_vol, COMM_S, "none");
 }
 
 int
@@ -102,7 +103,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "adln:prst:v")) != -1) {
+	while ((opt = getopt(argc, argv, "adg:ln:prst:v")) != -1) {
 		if (opt == 'a')
 			cpl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -113,7 +114,13 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = RM_CONFIG;
 		else if (opt == 'v')
 			cpl->lvm = TRUE;
-		else if (opt == 'n')
+		else if (opt == 'g') {
+			if (cpl->lvm < 1) {
+				fprintf(stderr, "LVM not set before logvol\n");
+				return DISPLAY_USAGE;
+			}
+			snprintf(cpl->log_vol, MAC_S, "%s", optarg);
+		} else if (opt == 'n')
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
 		else if (opt == 'p')
 			cpl->type = PARTITION;
@@ -235,6 +242,7 @@ int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
+	short int lvm;
 	unsigned long int scheme_id = 0;
 	cbc_pre_part_s *part;
 	cbc_seed_scheme_s *seed;
@@ -253,12 +261,37 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	}
 	seed = base->sscheme;
 	while (seed) {
-		if (strncmp(cpl->scheme, seed->name, CONF_S) == 0)
+		if (strncmp(cpl->scheme, seed->name, CONF_S) == 0) {
 			scheme_id = seed->def_scheme_id;
+			lvm = seed->lvm;
+		}
 		seed = seed->next;
 	}
+	if (scheme_id == 0) {
+		printf("No scheme named %s\n", cpl->scheme);
+		return SCHEME_NOT_FOUND;
+	}
+	if ((lvm > 0) && (cpl->lvm < 1)) {
+		printf("Logical volume defined for scheme %s\n", cpl->scheme);
+		printf("Please supply logical volume details\n");
+		return NO_LOG_VOL;
+	}
+	if ((lvm < 1) && (cpl->lvm > 0)) {
+		printf("You have defined a logical volume, but this ");
+		printf("scheme %s does not use it\n", cpl->scheme);
+		return EXTRA_LOG_VOL;
+	}
 	printf("We got %lu for scheme id for %s\n", scheme_id, cpl->scheme);
-	part->scheme_id_u.def_scheme_id = scheme_id;
+	part->link_id.def_scheme_id = scheme_id;
+	snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
+	if ((retval = add_part_info(cpl, part)) != 0) {
+		fprintf(stderr, "Unable to add part info for DB insert\n");
+		return retval;
+	}
+	if ((retval = run_insert(cbc, base, DPARTS)) != 0)
+		printf("Unable to add partition to DB\n");
+	else
+		printf("Partition added to DB\n");
 	clean_cbc_struct(base);
 
 	return retval;
@@ -288,3 +321,60 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
+int
+add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
+{
+	int retval = NONE, i = NONE;
+	char *sbuck, *pbuck;
+	sbuck = cpl->partition;
+	if (!(pbuck = strchr(cpl->partition, ','))) {
+		printf("Invalid input for partition\n");
+		printf("You need 5 strings separated by 4 commas\n");
+		printf("You have %d commas\n", i);
+		return USER_INPUT_INVALID;
+	} else {
+		i++;
+	}
+	*pbuck = '\0';
+	pbuck++;
+	part->min = strtoul(sbuck, NULL, 10);
+	sbuck = pbuck;
+	if (!(pbuck = strchr(sbuck, ','))) {
+		printf("Invalid input for partition\n");
+		printf("You need 5 strings separated by 4 commas\n");
+		printf("You have %d commas\n", i);
+		return USER_INPUT_INVALID;
+	} else {
+		i++;
+	}
+	*pbuck = '\0';
+	pbuck++;
+	part->max = strtoul(sbuck, NULL, 10);
+	sbuck = pbuck;
+	if (!(pbuck = strchr(sbuck, ','))) {
+		printf("Invalid input for partition\n");
+		printf("You need 5 strings separated by 4 commas\n");
+		printf("You have %d commas\n", i);
+		return USER_INPUT_INVALID;
+	} else {
+		i++;
+	}
+	*pbuck = '\0';
+	pbuck++;
+	part->pri = strtoul(sbuck, NULL, 10);
+	sbuck = pbuck;
+	if (!(pbuck = strchr(sbuck, ','))) {
+		printf("Invalid input for partition\n");
+		printf("You need 5 strings separated by 4 commas\n");
+		printf("You have %d commas\n", i);
+		return USER_INPUT_INVALID;
+	} else {
+		i++;
+	}
+	*pbuck = '\0';
+	pbuck++;
+	snprintf(part->mount, HOST_S, "%s", sbuck);
+	sbuck = pbuck;
+	snprintf(part->fs, RANGE_S, "%s", sbuck);
+	return retval;
+}
