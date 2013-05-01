@@ -251,10 +251,14 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(scheme = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "scheme in add_new_scheme");
 
+	init_cbc_struct(base);
 	base->sscheme = scheme;
 	scheme->lvm = cpl->lvm;
 	strncpy(scheme->name, cpl->scheme, CONF_S);
-
+	if ((retval = run_insert(cbc, base, SSCHEMES)) != 0) 
+		printf("Unable to add seed scheme to the database\n");
+	else
+		printf("Added seed scheme %s to database\n", scheme->name);
 	return retval;
 }
 

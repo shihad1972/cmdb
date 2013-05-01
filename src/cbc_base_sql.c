@@ -112,7 +112,7 @@ mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?\
  ?, ?, ?)","\
 INSERT INTO seed_part (minimum, maximum, priority, mount_point,\
  filesystem, server_id, logical_volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?, ?)","\
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id,\
  vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO varient (varient, valias) VALUES (?, ?)","\
@@ -913,6 +913,8 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 		setup_bind_mysql_build_os(buffer, base, i);
 	else if (type == VARIENTS)
 		setup_bind_mysql_build_varient(buffer, base, i);
+	else if (type == SSCHEMES)
+		setup_bind_mysql_build_part_scheme(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1395,6 +1397,15 @@ setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->varient->valias);
 }
 
+void
+setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->sscheme->name);
+	else if (i == 1)
+		*buffer = &(base->sscheme->lvm);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1763,6 +1774,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = setup_bind_sqlite_build_os(state, base->bos);
 	else if (type == VARIENTS)
 		retval = setup_bind_sqlite_build_varient(state, base->varient);
+	else if (type == SSCHEMES)
+		retval = setup_bind_sqlite_build_part_scheme(state, base->sscheme);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -2325,6 +2338,23 @@ state, 1, vari->varient, (int)strlen(vari->varient), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 2, vari->valias, (int)strlen(vari->valias), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind valias %s\n", vari->valias);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_build_part_scheme(sqlite3_stmt *state, cbc_seed_scheme_s *seed)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, seed->name, (int)strlen(seed->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind seed name %s\n", seed->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 2, seed->lvm)) > 0) {
+		fprintf(stderr, "Cannot bind LVM value %d\n", seed->lvm);
 		return retval;
 	}
 	return retval;
