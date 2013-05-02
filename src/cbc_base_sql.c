@@ -147,7 +147,10 @@ SELECT build_id FROM build WHERE os_id = ?","\
 SELECT name FROM server s, build b WHERE b.os_id = ?\
  AND b.server_id = s.server_id","\
 SELECT varient_id FROM varient WHERE varient = ?","\
-SELECT varient_id FROM varient WHERE valias = ?"
+SELECT varient_id FROM varient WHERE valias = ?","\
+SELECT os_id FROM build_os WHERE os = ?","\
+SELECT os_id FROM build_os WHERE alias = ?","\
+SELECT os_id FROM build_os WHERE os = ? AND version = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -215,10 +218,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -243,7 +246,10 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE }
+	{ DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE }
 };
 const unsigned int cbc_search_field_types[][5] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT } ,
@@ -256,6 +262,9 @@ const unsigned int cbc_search_field_types[][5] = {
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE }
 };

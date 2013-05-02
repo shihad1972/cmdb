@@ -74,9 +74,9 @@ main(int argc, char *argv[])
 	else if (cpcl->action == MOD_CONFIG)
 		printf("Cowardly refusal to modify packages\n");
 	else if (cpcl->action == ADD_CONFIG)
-		printf("Adding package %s\n", cpcl->package);
+		add_package(cmc, cpcl);
 	else if (cpcl->action == RM_CONFIG)
-		printf("Removing package %s\n", cpcl->package);
+		remove_package(cmc, cpcl);
 	else
 		printf("Unknown action type\n");
 	if (retval != NONE) {
@@ -154,11 +154,26 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 		return NO_ACTION;
 	if (strncmp(cpl->package, "NULL", COMM_S) == 0)
 		return NO_PACKAGE;
-	if ((strncmp(cpl->valias, "NULL", COMM_S) == 0) &&
-	    (strncmp(cpl->varient, "NULL", COMM_S) == 0))
-		return NO_VARIENT;
 	if ((strncmp(cpl->os, "NULL", COMM_S) == 0) &&
 	    (strncmp(cpl->alias, "NULL", COMM_S) == 0))
 		return NO_OS_COMM;
 	return NONE;
+}
+
+int
+add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	printf("Adding package %s\n", cpl->package);
+	return retval;
+}
+
+int
+remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	printf("Removing package %s\n", cpl->package);
+	return retval;
 }

@@ -257,7 +257,7 @@ display_cmdb_command_line_error(int retval, char *program)
 -k valias] [ OPTIONS ]\n", program);
 	else if ((strncmp(program, "cbcpack", CONF_S) == 0))
 		printf("Usage: %s [ -a | -r ] [ -x | -k ] [ -n | -s ] \
--o -t [ -e ]\n", program);
+[ -o | -e ] [ -t ] -p <package name>\n", program);
 	else if ((strncmp(program, "cbcpart", CONF_S) == 0))
 		printf("Usage: %s [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] \
 [ -t partition-info ]\n", program);
@@ -401,8 +401,11 @@ display_cbcpack_usage(void)
 	printf("OS options:\n");;
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("Need one varient option and one OS name or alias option\n");
-	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ] -o -t [ -e ]\n");
+	printf("Need at least one OS name or alias option and package name\n");
+	printf("OS version / version alias, architecture and varient are optional\n");
+	printf("Not including these will add the package to all of them\n");
+	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ]  [ -o | -e ]  \
+[ -t ] -p <package name>\n");
 	
 }
 

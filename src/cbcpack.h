@@ -51,4 +51,10 @@ init_cbcpack_comm_line(cbcpack_comm_line_s *cpl);
 int
 parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl);
 
+int
+add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
+
+int
+remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
+
 #endif /* __CBCPACK_H__ */
