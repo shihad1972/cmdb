@@ -163,8 +163,8 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE, osnum = NONE, varinum = NONE, i;
-	unsigned long int *osid, *variid, *temp;
+	int retval = NONE, osnum = NONE, varinum = NONE;
+	unsigned long int *osid, *variid;
 	size_t len;
 	cbc_s *base;
 
@@ -176,16 +176,11 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		free(base);
 		return retval;
 	}
-	if ((osnum = get_os_list_count(cpl, base)) != 0)
-		printf("We have %d os\n", osnum);
-	else
+	if ((osnum = get_os_list_count(cpl, base)) == 0)
 		return OS_NOT_FOUND;
-	if ((varinum = get_vari_list_count(cpl, base)) != 0)
-		printf("We have %d varients\n", varinum);
-	else
+	if ((varinum = get_vari_list_count(cpl, base)) == 0)
 		return NO_VARIENT;
 	
-	printf("Adding package %s\n", cpl->package);
 	len = (size_t)osnum;
 	if (!(osid = malloc(len * sizeof(unsigned long int))))
 		report_error(MALLOC_FAIL, "osid in add_package");
@@ -199,13 +194,6 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		free(variid);
 		return retval;
 	}
-	printf("OS id's\n");
-	temp = osid;
-	for (i = 0; i < osnum; i++) {
-		printf("%lu ", *temp);
-		temp++;
-	}
-	printf("\n");
 	if ((retval = get_vari_list(cpl, base, variid, varinum)) != 0) {
 		fprintf(stderr, "Unable to get varient list!\n");
 		clean_cbc_struct(base);
@@ -213,13 +201,6 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		free(variid);
 		return retval;
 	}
-	printf("Varient ID's\n");
-	temp = variid;
-	for (i = 0; i < varinum; i++) {
-		printf("%lu ", *temp);
-		temp++;
-	}
-	printf("\n");
 
 	free(osid);
 	free(variid);
