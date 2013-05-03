@@ -64,6 +64,9 @@ int
 get_os_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
 
 int
+get_vari_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
+
+int
 remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
 
 #endif /* __CBCPACK_H__ */

@@ -167,7 +167,6 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	unsigned long int *osid, *variid, *temp;
 	size_t len;
 	cbc_s *base;
-	cbc_varient_s *vari;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add package");
@@ -177,50 +176,15 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		free(base);
 		return retval;
 	}
-	if ((osnum = get_os_list_count(cpl, base)) != 0) {
+	if ((osnum = get_os_list_count(cpl, base)) != 0)
 		printf("We have %d os\n", osnum);
-	} else {
-		printf("Unknown OS: ");
-		if (strncmp(cpl->os, "NULL", COMM_S) != 0)
-			printf("%s ", cpl->os);
-		if (strncmp(cpl->alias, "NULL", COMM_S) != 0)
-			printf("%s ", cpl->alias);
-		if (strncmp(cpl->version, "NULL", COMM_S) != 0) 
-			printf("%s ", cpl->version);
-		if (strncmp(cpl->ver_alias, "NULL", COMM_S) != 0)
-			printf("%s ", cpl->ver_alias);
-		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
-			printf("%s ", cpl->arch);
-		printf("\n");
+	else
 		return OS_NOT_FOUND;
-	}
-	vari = base->varient;
-	if ((strncmp(cpl->varient, "NULL", COMM_S) != 0) ||
-	    (strncmp(cpl->valias, "NULL", COMM_S) != 0)) {
-		while (vari) {
-			if ((strncmp(vari->varient, cpl->varient, HOST_S) == 0) ||
-			    (strncmp(vari->valias, cpl->valias, MAC_S) == 0))
-				varinum++;
-			vari = vari->next;
-		}
-	} else {
-		while (vari) {
-			varinum++;
-			vari = vari->next;
-		}
-	}
-	if (varinum > 0) {
+	if ((varinum = get_vari_list_count(cpl, base)) != 0)
 		printf("We have %d varients\n", varinum);
-	} else {
-		printf("No varients found ");
-		if (strncmp(cpl->varient, "NULL", COMM_S) != 0)
-			printf("for varient %s\n", cpl->varient);
-		else if (strncmp(cpl->valias, "NULL", COMM_S) != 0)
-			printf("for valias %s\n", cpl->valias);
-		else
-			printf("in DB. Please check with cbcvarient -l\n");
+	else
 		return NO_VARIENT;
-	}
+	
 	printf("Adding package %s\n", cpl->package);
 	len = (size_t)osnum;
 	if (!(osid = malloc(len * sizeof(unsigned long int))))
@@ -292,6 +256,52 @@ get_os_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc)
 				retval++;
 			bos = bos->next;
 		}
+	}
+	if (retval == 0) {
+		printf("Unknown OS: ");
+		if (strncmp(cpl->os, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->os);
+		if (strncmp(cpl->alias, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->alias);
+		if (strncmp(cpl->version, "NULL", COMM_S) != 0) 
+			printf("%s ", cpl->version);
+		if (strncmp(cpl->ver_alias, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->ver_alias);
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->arch);
+		printf("\n");
+	}
+	return retval;
+}
+
+int
+get_vari_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc)
+{
+	int retval = NONE;
+	cbc_varient_s *vari = cbc->varient;
+
+	if ((strncmp(cpl->varient, "NULL", COMM_S) != 0) ||
+	    (strncmp(cpl->valias, "NULL", COMM_S) != 0)) {
+		while (vari) {
+			if ((strncmp(vari->varient, cpl->varient, HOST_S) == 0) ||
+			    (strncmp(vari->valias, cpl->valias, MAC_S) == 0))
+				retval++;
+			vari = vari->next;
+		}
+	} else {
+		while (vari) {
+			retval++;
+			vari = vari->next;
+		}
+	}
+	if (retval == 0) {
+		printf("No varients found ");
+		if (strncmp(cpl->varient, "NULL", COMM_S) != 0)
+			printf("for varient %s\n", cpl->varient);
+		else if (strncmp(cpl->valias, "NULL", COMM_S) != 0)
+			printf("for valias %s\n", cpl->valias);
+		else
+			printf("in DB. Please check with cbcvarient -l\n");
 	}
 	return retval;
 }
