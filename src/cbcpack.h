@@ -30,6 +30,12 @@
 #ifndef __CBCPACK_H__
 # define __CBCPACK_H__
 
+enum {
+	ARCH = 1,
+	VER = 2,
+	BOTH = 3
+};
+
 typedef struct cbcpack_comm_line_s {
 	char alias[MAC_S];
 	char arch[RANGE_S];
@@ -53,6 +59,9 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl);
 
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
+
+int
+get_os_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
 
 int
 remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);

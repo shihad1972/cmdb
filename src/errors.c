@@ -399,11 +399,13 @@ display_cbcpack_usage(void)
 	printf("Varient Options:\n");
 	printf("-x: <varient>\n-k: <valias>\n\n");
 	printf("OS options:\n");;
-	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
-	printf("-s: <os alias>\n-t: <os architecture\n\n");
+	printf("-n: <os name>\n-s: <os alias>\n-o: <os version>\n");
+	printf("-e: <version alias>\n-t: <os architecture\n\n");
+	printf("Package Options:\n");
+	printf("-p: <package name>\n\n");
 	printf("Need at least one OS name or alias option and package name\n");
 	printf("OS version / version alias, architecture and varient are optional\n");
-	printf("Not including these will add the package to all of them\n");
+	printf("Not including these will add the package to all of them\n\n");
 	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ]  [ -o | -e ]  \
 [ -t ] -p <package name>\n");
 	

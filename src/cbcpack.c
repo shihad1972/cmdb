@@ -163,9 +163,97 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE;
+	int retval = NONE, osnum = NONE;
+	cbc_s *base;
 
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add package");
+	init_cbc_struct(base);
+	if ((retval = run_multiple_query(cmc, base, BUILD_OS | VARIENT)) != 0) {
+		printf("Unable to run os and varient query\n");
+		free(base);
+		return retval;
+	}
+	if ((osnum = get_os_list_count(cpl, base)) != 0) {
+		printf("We have %d os\n", osnum);
+	} else {
+		printf("Unknown OS: ");
+		if (strncmp(cpl->os, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->os);
+		if (strncmp(cpl->alias, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->alias);
+		if (strncmp(cpl->version, "NULL", COMM_S) != 0) 
+			printf("%s ", cpl->version);
+		if (strncmp(cpl->ver_alias, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->ver_alias);
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			printf("%s ", cpl->arch);
+		printf("\n");
+		return OS_NOT_FOUND;
+	}
 	printf("Adding package %s\n", cpl->package);
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+get_os_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc)
+{
+	int retval = NONE, type;
+	cbc_build_os_s *bos = cbc->bos;
+
+	/* See what we are looking for */
+	if ((strncmp(cpl->version, "NULL", COMM_S) != 0) ||
+	    (strncmp(cpl->ver_alias, "NULL", COMM_S) != 0)) {
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			type = BOTH;
+		else
+			type = VER;
+	} else {
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			type = ARCH;
+		else
+			type = NONE;
+	}
+	/* 
+	 * Count number of build operating systems we will be inserting into db
+	 * Then we can create an array that size.
+	 */
+	if (type == NONE) {
+		while (bos) {
+			if ((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			    (strncmp(cpl->alias, bos->alias, MAC_S) == 0))
+				retval++;
+			bos = bos->next;
+		}
+	} else if (type == ARCH) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    (strncmp(cpl->arch, bos->arch, RANGE_S) == 0))
+				retval++;
+			bos = bos->next;
+		}
+	} else if (type == VER) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    ((strncmp(cpl->version, bos->version, MAC_S) == 0) ||
+			     (strncmp(cpl->ver_alias, bos->ver_alias, MAC_S) == 0)))
+				retval++;
+			bos = bos->next;
+		}
+	} else if (type == BOTH) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    ((strncmp(cpl->version, bos->version, MAC_S) == 0) ||
+			     (strncmp(cpl->ver_alias, bos->ver_alias, MAC_S) == 0)) &&
+			    (strncmp(cpl->arch, bos->arch, RANGE_S) == 0))
+				retval++;
+			bos = bos->next;
+		}
+	}
 	return retval;
 }
 
@@ -177,3 +265,4 @@ remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	printf("Removing package %s\n", cpl->package);
 	return retval;
 }
+
