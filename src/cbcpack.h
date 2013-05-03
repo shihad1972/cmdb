@@ -64,6 +64,15 @@ int
 get_os_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
 
 int
+get_comm_line_os_details(cbcpack_comm_line_s *cpl);
+
+int
+get_os_list(cbcpack_comm_line_s *cpl, cbc_s *cbc, unsigned long int *id, int num);
+
+int
+get_vari_list(cbcpack_comm_line_s *cpl, cbc_s *cbc, unsigned long int *id, int num);
+
+int
 get_vari_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
 
 int

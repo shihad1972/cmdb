@@ -163,7 +163,7 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE, osnum = NONE, varinum = NONE;
+	int retval = NONE, osnum = NONE, varinum = NONE, i;
 	unsigned long int *osid, *variid, *temp;
 	size_t len;
 	cbc_s *base;
@@ -192,10 +192,167 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	len = (size_t)varinum;
 	if (!(variid = malloc(len * sizeof(unsigned long int))))
 		report_error(MALLOC_FAIL, "variid in add_package");
+	if ((retval = get_os_list(cpl, base, osid, osnum)) != 0) {
+		fprintf(stderr, "Unable to get OS list!\n");
+		clean_cbc_struct(base);
+		free(osid);
+		free(variid);
+		return retval;
+	}
+	printf("OS id's\n");
+	temp = osid;
+	for (i = 0; i < osnum; i++) {
+		printf("%lu ", *temp);
+		temp++;
+	}
+	printf("\n");
+	if ((retval = get_vari_list(cpl, base, variid, varinum)) != 0) {
+		fprintf(stderr, "Unable to get varient list!\n");
+		clean_cbc_struct(base);
+		free(osid);
+		free(variid);
+		return retval;
+	}
+	printf("Varient ID's\n");
+	temp = variid;
+	for (i = 0; i < varinum; i++) {
+		printf("%lu ", *temp);
+		temp++;
+	}
+	printf("\n");
 
 	free(osid);
 	free(variid);
 	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+get_os_list(cbcpack_comm_line_s *cpl, cbc_s *cbc, unsigned long int *id, int num)
+{
+	int retval = NONE, counter = NONE, type = NONE;
+	cbc_build_os_s *bos = cbc->bos;
+
+	type = get_comm_line_os_details(cpl);
+	if (type == NONE) {
+		while (bos) {
+			if ((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			    (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) {
+				if (counter < num) {
+					*id = bos->os_id;
+					id++;
+					counter++;
+				} else {
+					retval = TOO_MANY_OS;
+				}
+			}
+			bos = bos->next;
+		}
+	} else if (type == ARCH) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    (strncmp(cpl->arch, bos->arch, RANGE_S) == 0)) {
+				if (counter < num) {
+					*id = bos->os_id;
+					id++;
+					counter++;
+				} else {
+					retval = TOO_MANY_OS;
+				}
+			}
+			bos = bos->next;
+		}
+	} else if (type == VER) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    ((strncmp(cpl->version, bos->version, MAC_S) == 0) ||
+			     (strncmp(cpl->ver_alias, bos->ver_alias, MAC_S) == 0))) {
+				if (counter < num) {
+					*id = bos->os_id;
+					id++;
+					counter++;
+				} else {
+					retval = TOO_MANY_OS;
+				}
+			}
+			bos = bos->next;
+		}
+	} else if (type == BOTH) {
+		while (bos) {
+			if (((strncmp(cpl->os, bos->os, MAC_S) == 0) ||
+			     (strncmp(cpl->alias, bos->alias, MAC_S) == 0)) &&
+			    ((strncmp(cpl->version, bos->version, MAC_S) == 0) ||
+			     (strncmp(cpl->ver_alias, bos->ver_alias, MAC_S) == 0)) &&
+			    (strncmp(cpl->arch, bos->arch, RANGE_S) == 0)) {
+				if (counter < num) {
+					*id = bos->os_id;
+					id++;
+					counter++;
+				} else {
+					retval = TOO_MANY_OS;
+				}
+			}
+			bos = bos->next;
+		}
+	}
+	return retval;
+}
+
+int
+get_comm_line_os_details(cbcpack_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	/* See what we are looking for */
+	if ((strncmp(cpl->version, "NULL", COMM_S) != 0) ||
+	    (strncmp(cpl->ver_alias, "NULL", COMM_S) != 0)) {
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			retval = BOTH;
+		else
+			retval = VER;
+	} else {
+		if (strncmp(cpl->arch, "NULL", COMM_S) != 0)
+			retval = ARCH;
+		else
+			retval = NONE;
+	}
+	return retval;
+}
+
+int
+get_vari_list(cbcpack_comm_line_s *cpl, cbc_s *cbc, unsigned long int *id, int num)
+{
+	int retval = NONE, counter = NONE;
+	cbc_varient_s *vari = cbc->varient;
+
+	if ((strncmp(cpl->varient, "NULL", COMM_S) == 0) &&
+	    (strncmp(cpl->valias, "NULL", COMM_S) == 0)) {
+		while (vari) {
+			if (counter < num) {
+				*id = vari->varient_id;
+				id++;
+				counter++;
+			} else {
+				return TOO_MANY_VARIENT;
+			}
+			vari = vari->next;
+		}
+	} else {
+		while (vari) {
+			if ((strncmp(cpl->varient, vari->varient, MAC_S) == 0) ||
+			    (strncmp(cpl->valias, vari->valias, MAC_S) == 0)) {
+				if (counter < num) {
+					*id = vari->varient_id;
+					counter++;
+				} else {
+					return TOO_MANY_VARIENT;
+				}
+			}
+			vari = vari->next;
+		}
+	}
 	return retval;
 }
 
