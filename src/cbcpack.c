@@ -163,8 +163,9 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE, osnum = NONE;
+	int retval = NONE, osnum = NONE, varinum = NONE;
 	cbc_s *base;
+	cbc_varient_s *vari;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add package");
@@ -190,6 +191,33 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 			printf("%s ", cpl->arch);
 		printf("\n");
 		return OS_NOT_FOUND;
+	}
+	vari = base->varient;
+	if ((strncmp(cpl->varient, "NULL", COMM_S) != 0) ||
+	    (strncmp(cpl->valias, "NULL", COMM_S) != 0)) {
+		while (vari) {
+			if ((strncmp(vari->varient, cpl->varient, HOST_S) == 0) ||
+			    (strncmp(vari->valias, cpl->valias, MAC_S) == 0))
+				varinum++;
+			vari = vari->next;
+		}
+	} else {
+		while (vari) {
+			varinum++;
+			vari = vari->next;
+		}
+	}
+	if (varinum > 0) {
+		printf("We have %d varients\n", varinum);
+	} else {
+		printf("No varients found ");
+		if (strncmp(cpl->varient, "NULL", COMM_S) != 0)
+			printf("for varient %s\n", cpl->varient);
+		else if (strncmp(cpl->valias, "NULL", COMM_S) != 0)
+			printf("for valias %s\n", cpl->valias);
+		else
+			printf("in DB. Please check with cbcvarient -l\n");
+		return NO_VARIENT;
 	}
 	printf("Adding package %s\n", cpl->package);
 	clean_cbc_struct(base);
