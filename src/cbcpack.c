@@ -164,6 +164,8 @@ int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
 	int retval = NONE, osnum = NONE, varinum = NONE;
+	unsigned long int *osid, *variid, *temp;
+	size_t len;
 	cbc_s *base;
 	cbc_varient_s *vari;
 
@@ -220,6 +222,15 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		return NO_VARIENT;
 	}
 	printf("Adding package %s\n", cpl->package);
+	len = (size_t)osnum;
+	if (!(osid = malloc(len * sizeof(unsigned long int))))
+		report_error(MALLOC_FAIL, "osid in add_package");
+	len = (size_t)varinum;
+	if (!(variid = malloc(len * sizeof(unsigned long int))))
+		report_error(MALLOC_FAIL, "variid in add_package");
+
+	free(osid);
+	free(variid);
 	clean_cbc_struct(base);
 	return retval;
 }
