@@ -163,14 +163,17 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE, osnum = NONE, varinum = NONE;
+	int retval = NONE, osnum = NONE, varinum = NONE, packnum = NONE;
 	unsigned long int *osid, *variid;
 	size_t len;
 	cbc_s *base;
+	cbc_package_s *pack, *link;
+	dbdata_s *data;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add package");
 	init_cbc_struct(base);
+	cbc_init_initial_dbdata(&data, OS_VARIENT_ID_ON_PACKAGE);
 	if ((retval = run_multiple_query(cmc, base, BUILD_OS | VARIENT)) != 0) {
 		printf("Unable to run os and varient query\n");
 		free(base);
@@ -201,9 +204,43 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		free(variid);
 		return retval;
 	}
-
+	snprintf(data->args.text, RBUFF_S, "%s", cpl->package);
+	if ((packnum = cbc_run_search(cmc, data, OS_VARIENT_ID_ON_PACKAGE)) > 0) {
+		retval = check_for_package(osid, osnum, variid, varinum, data);
+		if (retval > 0) {
+			if (strncmp(cpl->os, "NULL", COMM_S) == 0) 
+				printf("Package %s already in a build for alias %s\n",
+			    cpl->package, cpl->alias);
+			else
+				printf("Package %s already in a build for os %s\n",
+			    cpl->package, cpl->os);
+			free(osid);
+			free(variid);
+			clean_cbc_struct(base);
+			clean_dbdata_struct(data);
+			return PACKAGE_EXISTS;
+		}
+	}
+	build_package_list(osid, osnum, variid, varinum, cpl->package, base);
+	pack = link = base->package;
+	while (pack) {
+		base->package = pack;
+		printf("OS ID: %lu\tVarient ID: %lu\n", pack->os_id, pack->vari_id);
+		if ((retval = run_insert(cmc, base, BPACKAGES)) != 0) {
+			printf("Unable to insert package %s\n", pack->package);
+			free(osid);
+			free(variid);
+			base->package = link;
+			clean_cbc_struct(base);
+			clean_dbdata_struct(data);
+			return DB_INSERT_FAILED;
+		}
+		pack = pack->next;
+	}
+	base->package = link;
 	free(osid);
 	free(variid);
+	clean_dbdata_struct(data);
 	clean_cbc_struct(base);
 	return retval;
 }
@@ -442,6 +479,72 @@ get_vari_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc)
 			printf("in DB. Please check with cbcvarient -l\n");
 	}
 	return retval;
+}
+
+int
+check_for_package(unsigned long int *osid, int osnum, unsigned long int *variid, int varinum, dbdata_s *data)
+{
+	int retval = NONE, count = NONE, i, j, k;
+	unsigned long int *os = osid, *vari = variid;
+	dbdata_s *temp = data;
+	while (temp) {
+		count++;
+		if (temp->next) 
+			temp = temp->next->next;
+	}
+	temp = data;
+	for (i = 0; i < count; i++) {
+		vari = variid;
+		for (j = 0; j < varinum; j++) {
+			os = osid;
+			for (k = 0; k < osnum; k++) {
+				if ((*os == temp->fields.number) &&
+				    (*vari == temp->next->fields.number))
+					retval++;
+				os++;
+			}
+			vari++;
+		}
+		if (temp->next)
+			temp = temp->next->next;
+	}
+
+	return retval;
+}
+
+void
+build_package_list(unsigned long int *os, int osnum, unsigned long int *vari, int varinum, char *package, cbc_s *base)
+{
+	int i, j;
+	unsigned long int *oid, *vid;
+	cbc_package_s *pack, *list, *tmp;
+
+	list = '\0';
+	pack = '\0';
+	vid = vari;
+	for (i = 0; i < varinum; i++) {
+		oid = os;
+		for (j = 0; j < osnum; j++) {
+			if (!(tmp = malloc(sizeof(cbc_package_s))))
+				report_error(MALLOC_FAIL, "tmp in build_package_list");
+			init_package(tmp);
+			snprintf(tmp->package, HOST_S, "%s", package);
+			tmp->vari_id = *vid;
+			tmp->os_id = *oid;
+			if (list) {
+				pack = list;
+				while (pack->next) {
+					pack = pack->next;
+				}
+				pack->next = tmp;
+			} else {
+				list = tmp;
+			}	
+			oid++;
+		}
+		vid++;
+	}
+	base->package = list;
 }
 
 int

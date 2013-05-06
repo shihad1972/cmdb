@@ -105,7 +105,7 @@ INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
  bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?, ?)\
+INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?)\
 ","\
 INSERT INTO default_part (minimum, maximum, priority,\
 mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?,\
@@ -150,7 +150,8 @@ SELECT varient_id FROM varient WHERE varient = ?","\
 SELECT varient_id FROM varient WHERE valias = ?","\
 SELECT os_id FROM build_os WHERE os = ?","\
 SELECT os_id FROM build_os WHERE alias = ?","\
-SELECT os_id FROM build_os WHERE os = ? AND version = ?"
+SELECT os_id FROM build_os WHERE os = ? AND version = ?","\
+SELECT os_id, varient_id FROM packages WHERE package = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -218,10 +219,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -249,7 +250,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, NONE }
+	{ DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][5] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT } ,
@@ -266,7 +268,8 @@ const unsigned int cbc_search_field_types[][5] = {
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE }
 };
 
 int
@@ -926,6 +929,8 @@ setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 		setup_bind_mysql_build_part_scheme(buffer, base, i);
 	else if (type == DPARTS)
 		setup_bind_mysql_build_def_part(buffer, base, i);
+	else if (type == BPACKAGES)
+		setup_bind_mysql_build_package(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1436,6 +1441,18 @@ setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->dpart->log_vol);
 }
 
+void
+setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->package->package);
+	else if (i == 1)
+		*buffer = &(base->package->vari_id);
+	else if (i == 2)
+		*buffer = &(base->package->os_id);
+}
+
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1808,6 +1825,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = setup_bind_sqlite_build_part_scheme(state, base->sscheme);
 	else if (type == DPARTS)
 		retval = setup_bind_sqlite_build_part(state, base->dpart);
+	else if (type == BPACKAGES)
+		retval = setup_bind_sqlite_build_pack(state, base->package);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -2430,6 +2449,29 @@ state, 6, (sqlite3_int64)part->link_id.def_scheme_id)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 7, part->log_vol, (int)strlen(part->log_vol), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind logical volume %s\n", part->log_vol);
+		return retval;
+	}
+	return retval;
+}
+
+int
+setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, pack->package, (int)strlen(pack->package), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind package name %s\n", pack->package);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)pack->vari_id)) > 0) {
+		fprintf(stderr, "Cannot bind varient ID %lu\n", pack->vari_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)pack->os_id)) > 0) {
+		fprintf(stderr, "Cannot bind OS ID %lu\n", pack->os_id);
 		return retval;
 	}
 	return retval;

@@ -76,6 +76,12 @@ int
 get_vari_list_count(cbcpack_comm_line_s *cpl, cbc_s *cbc);
 
 int
+check_for_package(unsigned long int *osid, int osnum, unsigned long int *variid, int varinum, dbdata_s *data);
+
+void
+build_package_list(unsigned long int *osid, int osnum, unsigned long int *varrid, int varinum, char *package, cbc_s *base);
+
+int
 remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
 
 #endif /* __CBCPACK_H__ */

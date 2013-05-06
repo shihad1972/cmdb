@@ -77,7 +77,8 @@ enum {			/* cbc search SQL statements */
 	VARIENT_ID_ON_VALIAS = 11,
 	OS_ID_ON_NAME_SHORT = 12,
 	OS_ID_ON_ALIAS_SHORT = 13,
-	OS_ID_ON_NAME_AND_VERSION = 14
+	OS_ID_ON_NAME_AND_VERSION = 14,
+	OS_VARIENT_ID_ON_PACKAGE = 15
 };
 
 # ifdef HAVE_MYSQL
@@ -203,6 +204,9 @@ setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i);
 void
 setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i);
 
+void
+setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -294,6 +298,9 @@ setup_bind_sqlite_build_part_scheme(sqlite3_stmt *state, cbc_seed_scheme_s *seed
 
 int
 setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part);
+
+int
+setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

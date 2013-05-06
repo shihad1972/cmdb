@@ -1,3 +1,8 @@
+06/05/2013
+Database access is pretty poor. Multiple inserts need multiple statements
+and the memory allocation for a large result set is bad too (each result
+has an individual malloc.)
+
 28/04/2013
 The varients perhaps should be able to be added together, so for example you
 can create a cluster varient that will install all the packages necessary

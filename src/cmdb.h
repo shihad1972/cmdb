@@ -167,7 +167,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	LOG_VOL_EXISTS = 173,
 	PARTITION_EXISTS = 174,
 	TOO_MANY_OS = 175,
-	TOO_MANY_VARIENT = 176
+	TOO_MANY_VARIENT = 176,
+	PACKAGE_EXISTS = 177
 	
 };
 
