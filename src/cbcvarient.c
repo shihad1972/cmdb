@@ -81,6 +81,12 @@ main(int argc, char *argv[])
 	else
 		printf("Unknown action type\n");
 	if (retval != 0) {
+		if (retval == OS_NOT_FOUND) {
+			if (strncmp(cvcl->os, "NULL", COMM_S) != 0)
+				snprintf(error, HOST_S, "%s", cvcl->os);
+			else if (strncmp(cvcl->alias, "NULL", COMM_S) != 0)
+				snprintf(error, HOST_S, "alias %s", cvcl->alias);
+		}
 		free(cmc);
 		free(cvcl);
 		report_error(retval, error);
@@ -352,7 +358,7 @@ display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 int
 display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE;
+	int retval = NONE, i = NONE;
 	unsigned long int osid;
 	cbc_build_os_s *bos = base->bos;
 
@@ -362,6 +368,14 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
 		if ((retval = get_os_alias(base, cvl)) != 0)
 			return retval;
+	while (bos) {
+		if ((strncmp(bos->alias, cvl->alias, MAC_S)) == 0)
+			i++;
+		bos = bos->next;
+	}
+	bos = base->bos;
+	if (i == 0)
+		return OS_NOT_FOUND;
 	printf("\nDisplaying build packages for os %s\n", cvl->alias);
 	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) &&
 	    (strncmp(cvl->arch, "NULL", COMM_S) != 0)) {
