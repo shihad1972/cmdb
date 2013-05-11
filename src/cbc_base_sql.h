@@ -59,7 +59,8 @@ enum {			/* cbc delete SQL statements */
 	BDOM_DEL_DOMAIN = 0,
 	BDOM_DEL_DOM_ID = 1,
 	BOS_DEL_BOS_ID = 2,
-	VARI_DEL_VARI_ID = 3
+	VARI_DEL_VARI_ID = 3,
+	PACK_DEL_PACK_ID = 4
 };
 
 enum {			/* cbc search SQL statements */

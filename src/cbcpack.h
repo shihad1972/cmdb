@@ -84,4 +84,8 @@ build_package_list(unsigned long int *osid, int osnum, unsigned long int *varrid
 int
 remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl);
 
+int
+get_package_rm_list(char *pack, cbc_s *base, unsigned long int *vari, int varnum, unsigned long int *os, int osnum, dbdata_s **data);
+
+
 #endif /* __CBCPACK_H__ */

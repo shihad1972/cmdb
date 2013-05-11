@@ -129,7 +129,8 @@ const char *cbc_sql_delete[] = { "\
 DELETE FROM build_domain WHERE domain = ?","\
 DELETE FROM build_domain WHERE bd_id = ?","\
 DELETE FROM build_os WHERE os_id = ?","\
-DELETE FROM varient WHERE varient_id = ?"
+DELETE FROM varient WHERE varient_id = ?","\
+DELETE FROM packages WHERE pack_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -216,7 +217,7 @@ const unsigned int cbc_update_args[] = {
 	2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1
+	1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1
@@ -231,6 +232,7 @@ const unsigned int cbc_update_types[][2] = {
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE }
@@ -419,6 +421,12 @@ cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
 		if (!(data = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
 		init_dbdata_struct(data);
+/* 
+ * At this point we can add 1 argument of a type, say int, char[value]
+ * unsigned long int, struct etc. That would have to be passed to the function
+ * so we would have to pass the function a union containing all possible data
+ * types.
+ */
 		if (!(*list)) {
 			*list = dlist = data;
 		} else {

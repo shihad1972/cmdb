@@ -550,9 +550,112 @@ build_package_list(unsigned long int *os, int osnum, unsigned long int *vari, in
 int
 remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
-	int retval = NONE;
+	int retval = NONE, osnum = NONE, varinum = NONE;
+	unsigned long int *osid, *variid;
+	size_t len;
+	cbc_s *base;
+	dbdata_s *data = '\0', *list;
 
-	printf("Removing package %s\n", cpl->package);
-	return retval;
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add package");
+	init_cbc_struct(base);
+	if ((retval = 
+run_multiple_query(cmc, base, BUILD_OS | VARIENT | BPACKAGE)) != 0) {
+		printf("Unable to run os and varient query\n");
+		free(base);
+		return retval;
+	}
+	if ((osnum = get_os_list_count(cpl, base)) == 0)
+		return OS_NOT_FOUND;
+	if ((varinum = get_vari_list_count(cpl, base)) == 0)
+		return NO_VARIENT;
+	len = (size_t)osnum;
+	if (!(osid = malloc(len * sizeof(unsigned long int))))
+		report_error(MALLOC_FAIL, "osid in add_package");
+	len = (size_t)varinum;
+	if (!(variid = malloc(len * sizeof(unsigned long int))))
+		report_error(MALLOC_FAIL, "variid in add_package");
+	if ((retval = get_os_list(cpl, base, osid, osnum)) != 0) {
+		fprintf(stderr, "Unable to get OS list!\n");
+		clean_cbc_struct(base);
+		free(osid);
+		free(variid);
+		return retval;
+	}
+	if ((retval = get_vari_list(cpl, base, variid, varinum)) != 0) {
+		fprintf(stderr, "Unable to get varient list!\n");
+		clean_cbc_struct(base);
+		free(osid);
+		free(variid);
+		return retval;
+	}
+	if ((retval = get_package_rm_list(
+cpl->package, base, variid, varinum, osid, osnum, &data)) == 0) {
+		fprintf(stderr, "Package %s not in database for os and / \
+or varient.\n", cpl->package);
+		clean_cbc_struct(base);
+		free(osid);
+		free(variid);
+		return retval;
+	}
+	list = data;
+	while (list) {
+		retval = cbc_run_delete(cmc, list, PACK_DEL_PACK_ID);
+		if (retval == 1) {
+			printf("Removed package id %lu\n", list->args.number);
+		} else if (retval == 0) {
+			printf("Unable to remove package id %lu\n", 
+			       list->args.number);
+			retval = CANNOT_DELETE_PACKAGE;
+			break;
+		} else if (retval > 1) {
+			printf("Multiple packages removed for id %lu\n",
+			       list->args.number);
+		}
+		list = list->next;
+	}
+	free(osid);
+	free(variid);
+	clean_dbdata_struct(data);
+	clean_cbc_struct(base);
+
+	return NONE;
 }
 
+int
+get_package_rm_list(char *package, cbc_s *base, unsigned long int *vari, int varnum, unsigned long int *os, int osnum, dbdata_s **data)
+{
+	int retval = NONE, i, j;
+	unsigned long int *vid = vari, *oid = os;
+	cbc_package_s *pack = base->package;
+	dbdata_s *tmp, *list;
+
+	for (i = 0; i < osnum; i++) {
+		vid = vari;
+		for (j = 0; j < varnum; j++) {
+			pack = base->package;
+			while (pack) {
+				if (
+(*oid == pack->os_id) && (*vid == pack->vari_id) && 
+(strncmp(pack->package, package, HOST_S) == 0)) {
+					if (!(tmp = malloc(sizeof(dbdata_s))))
+						report_error(MALLOC_FAIL, "tmp in get rm pack list");
+					init_dbdata_struct(tmp);
+					tmp->args.number = pack->pack_id;
+					list = *data;
+					if (list) {
+						while (list->next)
+							list = list->next;
+						list->next = tmp;
+					} else 
+						*data = tmp;
+					retval++;
+				}
+				pack = pack->next;
+			}
+			vid++;
+		}
+		oid++;
+	}
+	return retval;
+}
