@@ -242,7 +242,7 @@ int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
-	short int lvm;
+	short int lvm = 0;
 	unsigned long int scheme_id = 0;
 	cbc_pre_part_s *part, *dpart;
 	cbc_seed_scheme_s *seed;

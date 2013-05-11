@@ -462,5 +462,5 @@ AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-AC_CONFIG_SUBDIRS([cmdb-0.2.9])
+AC_CONFIG_SUBDIRS([cmdb-0.2.9.1])
 AC_OUTPUT
