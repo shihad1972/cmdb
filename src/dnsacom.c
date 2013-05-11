@@ -313,7 +313,6 @@ validate_comm_line(dnsa_comm_line_s *comm)
 		return retval;
 	return retval;
 }
-#ifdef HAVE_LIBPCRE
 #endif /* HAVE_LIBPCRE */
 
 void
