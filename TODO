@@ -1,3 +1,6 @@
+12/05/2013
+Update the cbc options as they are out of date
+
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements
 and the memory allocation for a large result set is bad too (each result
