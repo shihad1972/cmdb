@@ -297,6 +297,7 @@ parse_dnsa_config_error(int error)
 		fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
 }
 
+#ifdef HAVE_LIBPCRE
 int
 validate_comm_line(dnsa_comm_line_s *comm)
 {
@@ -312,6 +313,8 @@ validate_comm_line(dnsa_comm_line_s *comm)
 		return retval;
 	return retval;
 }
+#ifdef HAVE_LIBPCRE
+#endif /* HAVE_LIBPCRE */
 
 void
 init_dnsa_struct(dnsa_s *dnsa)
