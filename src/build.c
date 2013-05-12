@@ -398,9 +398,9 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
 			return retval;
 	printf("Got server id %lu\tname: %s\n", server_id, cml->name);
-	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
+	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
 	data->args.number = server_id;
-	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
+	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
 		printf("Cannot find tftp details for server id %lu\n", server_id);
 		clean_dbdata_struct(data);
 		return NO_TFTP_ERR;
@@ -417,6 +417,7 @@ data->next->next->fields.text);
 		retval = 0;
 	}
 	free(ip);
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -489,5 +490,6 @@ get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int serve
 		snprintf(cml->name, CONF_S, "%s", data->fields.text);
 		retval = NONE;
 	}
+	clean_dbdata_struct(data);
 	return retval;
 }
