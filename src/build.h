@@ -66,6 +66,9 @@ int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
+write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
 
 int

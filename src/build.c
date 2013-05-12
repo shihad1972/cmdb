@@ -378,6 +378,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 
 	if ((retval = write_dhcp_config(cmc, cml)) != 0)
 		return retval;
+	if ((retval = write_tftp_config(cmc, cml)) != 0)
+		return retval;
 	return retval;
 }
 
@@ -391,12 +393,13 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	uint32_t ip_addr;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in write_tftp_config");
+		report_error(MALLOC_FAIL, "ip in write_dhcp_config");
 	if ((retval = get_server_id(cmc, cml, &server_id)) != 0)
 		return retval;
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
 			return retval;
+/*	printf("Writing build files for server %s\n\n", cml->name); */
 	printf("Got server id %lu\tname: %s\n", server_id, cml->name);
 	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
 	data->args.number = server_id;
@@ -422,13 +425,31 @@ data->next->next->fields.text);
 }
 
 int
+write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	int retval = NONE;
+	unsigned long int server_id;
+	dbdata_s *data;
+
+	if ((retval = get_server_id(cmc, cml, &server_id)) != 0)
+		return retval;
+	if (strncmp(cml->name, "NULL", COMM_S) == 0)
+		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
+			return retval;
+	printf("\nTFTP\nGot server id %lu\tname %s\n", server_id, cml->name);
+	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
+	data->args.number = server_id;
+	
+	return retval;
+}
+
+int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
 {
 	int retval = NONE;
 	dbdata_s *data;
 
 	if (cml->server == NAME) {
-		printf("Writing build files for server %s\n\n", cml->name);
 		cbc_init_initial_dbdata(&data, SERVER_ID_ON_SNAME);
 		snprintf(data->args.text, CONF_S, "%s", cml->name);
 		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
@@ -444,7 +465,6 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 			retval = 0;
 		}
 	} else if (cml->server == UUID) {
-		printf("Writing build files for server uuid %s\n\n", cml->uuid);
 		cbc_init_initial_dbdata(&data, SERVER_ID_ON_UUID);
 		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
 		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {

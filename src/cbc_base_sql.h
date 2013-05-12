@@ -52,7 +52,7 @@ extern const unsigned int cbc_search_fields[];
 extern const unsigned int cbc_update_types[][2];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
-extern const unsigned int cbc_search_field_types[][5];
+extern const unsigned int cbc_search_field_types[][8];
 
 
 enum {			/* cbc delete SQL statements */
@@ -84,7 +84,8 @@ enum {			/* cbc search SQL statements */
 	DHCP_DETAILS = 17,
 	SERVER_ID_ON_UUID = 18,
 	SERVER_ID_ON_SNAME = 19,
-	SERVER_NAME_ON_ID = 20
+	SERVER_NAME_ON_ID = 20,
+	TFTP_DETAILS = 21
 };
 
 # ifdef HAVE_MYSQL
