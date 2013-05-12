@@ -73,6 +73,8 @@ main(int argc, char *argv[])
 		retval = display_build_config(cmc, cml);
 	else if (cml->action == LIST_CONFIG)
 		retval = list_build_servers(cmc);
+	else if (cml->action == WRITE_CONFIG)
+		retval = write_build_config(cmc, cml);
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 /*	print_cbc_command_line_values(cml); */

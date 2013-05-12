@@ -295,6 +295,12 @@ enum {			/* cbc create build error codes */
 };
 
 enum {
+	NAME = 1,
+	UUID = 2,
+	ID = 3
+};
+
+enum {
 	FALSE = 0,
 	TRUE = 1
 };

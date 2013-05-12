@@ -153,7 +153,14 @@ SELECT os_id FROM build_os WHERE os = ?","\
 SELECT os_id FROM build_os WHERE alias = ?","\
 SELECT os_id FROM build_os WHERE os = ? AND version = ?","\
 SELECT os_id, varient_id FROM packages WHERE package = ?","\
-SELECT name from server s, build b WHERE s.server_id = b.server_id"
+SELECT name from server s, build b WHERE s.server_id = b.server_id","\
+SELECT b.mac_addr, bi.ip, bd.domain FROM server s \
+  LEFT JOIN build b ON b.server_id = s.server_id \
+  LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
+  LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE s.server_id = ?","\
+SELECT server_id FROM server WHERE uuid = ?","\
+SELECT server_id FROM server WHERE name = ?","\
+SELECT name FROM server WHERE server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -221,10 +228,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -255,7 +262,11 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
-	{ NONE, NONE, NONE }
+	{ NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][5] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT } ,
@@ -274,6 +285,10 @@ const unsigned int cbc_search_field_types[][5] = {
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE }
 };
 

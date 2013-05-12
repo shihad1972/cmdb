@@ -59,6 +59,18 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 int
 list_build_servers(cbc_config_s *cbt);
 
+int
+write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
+write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
+get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
+
+int
+get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id);
+
 void
 print_build_config(cbc_s *details);
 

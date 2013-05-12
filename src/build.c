@@ -52,13 +52,13 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	while ((opt = getopt(argc, argv, "n:i:u:wdmcrl")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
-			cb->server = TRUE;
+			cb->server = NAME;
 		} else if (opt == 'u') {
 			snprintf(cb->uuid, CONF_S, "%s", optarg);
-			cb->server = TRUE;
+			cb->server = UUID;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
-			cb->server = TRUE;
+			cb->server = ID;
 		} else if (opt == 'm') {
 			cb->action = MOD_CONFIG;
 		} else if (opt == 'r') {
@@ -83,6 +83,9 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
+	else if ((cb->action == WRITE_CONFIG) &&
+		 (cb->server == 0))
+		return NO_NAME_OR_ID;
 /*	else if ((cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
@@ -365,5 +368,126 @@ list_build_servers(cbc_config_s *cmc)
 		retval = NONE;
 	}
 	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	int retval = NONE;
+
+	if ((retval = write_dhcp_config(cmc, cml)) != 0)
+		return retval;
+	return retval;
+}
+
+int
+write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	char *ip;
+	int retval = NONE;
+	unsigned long int server_id;
+	dbdata_s *data;
+	uint32_t ip_addr;
+
+	if (!(ip = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in write_tftp_config");
+	if ((retval = get_server_id(cmc, cml, &server_id)) != 0)
+		return retval;
+	if (strncmp(cml->name, "NULL", COMM_S) == 0)
+		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
+			return retval;
+	printf("Got server id %lu\tname: %s\n", server_id, cml->name);
+	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
+	data->args.number = server_id;
+	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
+		printf("Cannot find tftp details for server id %lu\n", server_id);
+		clean_dbdata_struct(data);
+		return NO_TFTP_ERR;
+	} else if (retval > 1) {
+		printf("Multiple tftp details for server id %lu\n", server_id);
+		clean_dbdata_struct(data);
+		return MULTI_TFTP_ERR;
+	} else {
+		ip_addr = htonl((uint32_t)data->next->fields.number);
+		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+		printf("host %s { hardware ethernet %s; fixed-address %s; \
+option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
+data->next->next->fields.text);
+		retval = 0;
+	}
+	free(ip);
+	return retval;
+}
+
+int
+get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	if (cml->server == NAME) {
+		printf("Writing build files for server %s\n\n", cml->name);
+		cbc_init_initial_dbdata(&data, SERVER_ID_ON_SNAME);
+		snprintf(data->args.text, CONF_S, "%s", cml->name);
+		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
+			printf("Server %s does not exist\n", cml->name);
+			clean_dbdata_struct(data);
+			return SERVER_NOT_FOUND;
+		} else if (retval > 1) {
+			printf("Multiple servers found for name %s\n", cml->name);
+			clean_dbdata_struct(data);
+			return MULTIPLE_SERVERS;
+		} else {
+			*server_id = data->fields.number;
+			retval = 0;
+		}
+	} else if (cml->server == UUID) {
+		printf("Writing build files for server uuid %s\n\n", cml->uuid);
+		cbc_init_initial_dbdata(&data, SERVER_ID_ON_UUID);
+		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
+		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
+			printf("Server with uuid %s does not exist\n", cml->uuid);
+			clean_dbdata_struct(data);
+			return SERVER_NOT_FOUND;
+		} else if (retval > 1) {
+			printf("Multiple servers found for uuid %s\n", cml->uuid);
+			clean_dbdata_struct(data);
+			return MULTIPLE_SERVERS;
+		} else {
+			*server_id = data->fields.number;
+			retval = 0;
+		}
+	} else if (cml->server == ID) {
+		printf("Writing build files for server id %lu\n\n", cml->server_id);
+		*server_id = cml->server_id;
+	} else {
+		return NO_NAME_UUID_ID;
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	cbc_init_initial_dbdata(&data, SERVER_NAME_ON_ID);
+	data->args.number = server_id;
+	if ((retval = cbc_run_search(cmc, data, SERVER_NAME_ON_ID)) == 0) {
+		printf("Cannot find server name based on id %lu\n", server_id);
+		clean_dbdata_struct(data);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		printf("Multiple servers found base on id %lu\n", server_id);
+		printf("Check your database!!!!\n");
+		clean_dbdata_struct(data);
+		return MULTIPLE_SERVERS;
+	} else {
+		snprintf(cml->name, CONF_S, "%s", data->fields.text);
+		retval = NONE;
+	}
 	return retval;
 }
