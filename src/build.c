@@ -83,7 +83,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		retval = DISPLAY_USAGE;
 	else if (cb->action == NONE)
 		retval = NO_ACTION;
-	else if ((cb->server == NONE) &&
+/*	else if ((cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
 	else if ((cb->action == ADD_CONFIG) &&
@@ -94,7 +94,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	 (cb->server == NONE))
 		retval = NO_NAME_OR_ID;
 	if (cb->action == CREATE_CONFIG)
-		snprintf(cb->action_type, MAC_S, "create config");
+		snprintf(cb->action_type, MAC_S, "create config"); */
 	return retval;
 	
 }
@@ -342,4 +342,28 @@ print_build_config(cbc_s *details)
 			part = part->next;
 		}
 	}
+}
+
+int
+list_build_servers(cbc_config_s *cmc)
+{
+	int retval = NONE;
+	dbdata_s *data, *list;
+
+	cbc_init_initial_dbdata(&data, SERVERS_WITH_BUILD);
+	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
+		printf("No servers have build configurations\n");
+		clean_dbdata_struct(data);
+		return NONE;
+	} else {
+		printf("We have %d servers with build configurations\n", retval);
+		list = data;
+		while (list) {
+			printf("%s\n", list->fields.text);
+			list = list->next;
+		}
+		retval = NONE;
+	}
+	clean_dbdata_struct(data);
+	return retval;
 }

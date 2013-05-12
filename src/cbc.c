@@ -71,6 +71,8 @@ main(int argc, char *argv[])
 	}
 	if (cml->action == DISPLAY_CONFIG)
 		retval = display_build_config(cmc, cml);
+	else if (cml->action == LIST_CONFIG)
+		retval = list_build_servers(cmc);
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 /*	print_cbc_command_line_values(cml); */

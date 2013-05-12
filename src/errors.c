@@ -296,7 +296,7 @@ display_cbc_usage(void)
 	printf("Action options:\n");
 	printf("-w: write build files\n-d: display build details\n");
 	printf("-m: modify build options\n-a: add build for server\n");
-	printf("-r: remove build for server\n-l: list servers with a build\n");
+	printf("-r: remove build for server\n-l: list servers with a build\n\n");
 	printf("Display, remove and write options:\n");
 	printf("cbc [ -d | -w | -r ] [ -n | -i |  -u ] <server specifier>\n\n");
 /*	printf("Add, display and create options:\n");

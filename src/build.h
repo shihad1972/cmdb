@@ -56,6 +56,9 @@ cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 
+int
+list_build_servers(cbc_config_s *cbt);
+
 void
 print_build_config(cbc_s *details);
 
