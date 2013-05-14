@@ -78,6 +78,9 @@ void
 print_build_config(cbc_s *details);
 
 void
+fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+
+void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
 
 void

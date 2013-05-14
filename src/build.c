@@ -388,29 +388,28 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *ip;
 	int retval = NONE;
-	unsigned long int server_id;
 	dbdata_s *data;
 	uint32_t ip_addr;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in write_dhcp_config");
-	if ((retval = get_server_id(cmc, cml, &server_id)) != 0)
+	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 		return retval;
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
+		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
 			return retval;
 /*	printf("Writing build files for server %s\n\n", cml->name); */
-	printf("Got server id %lu\tname: %s\n", server_id, cml->name);
+	printf("Got server id %lu\tname: %s\n", cml->server_id, cml->name);
 	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
-	data->args.number = server_id;
+	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
-		printf("Cannot find tftp details for server id %lu\n", server_id);
+		printf("Cannot find dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
-		return NO_TFTP_ERR;
+		return NO_DHCP_ERR;
 	} else if (retval > 1) {
-		printf("Multiple tftp details for server id %lu\n", server_id);
+		printf("Multiple dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
-		return MULTI_TFTP_ERR;
+		return MULTI_DHCP_ERR;
 	} else {
 		ip_addr = htonl((uint32_t)data->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
@@ -427,20 +426,65 @@ data->next->next->fields.text);
 int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
+	char out[BUFF_S];
 	int retval = NONE;
-	unsigned long int server_id;
 	dbdata_s *data;
 
-	if ((retval = get_server_id(cmc, cml, &server_id)) != 0)
-		return retval;
-	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml, server_id)) != 0)
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
-	printf("\nTFTP\nGot server id %lu\tname %s\n", server_id, cml->name);
+	if (strncmp(cml->name, "NULL", COMM_S) == 0)
+		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
+			return retval;
+	printf("\nTFTP\nGot server id %lu\tname %s\n", cml->server_id, cml->name);
 	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
-	data->args.number = server_id;
-	
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
+		printf("Cannot find TFTP details for server %s\n", cml->name);
+		clean_dbdata_struct(data);
+		return NO_TFTP_ERR;
+	} else if (retval > 1) {
+		printf("Multiple TFTP details for server %s\n", cml->name);
+		clean_dbdata_struct(data);
+		return MULTI_TFTP_ERR;
+	} else {
+		fill_tftp_output(cml, data, out);
+		printf("%s", out);
+		retval = 0;
+	}
 	return retval;
+}
+
+void
+fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+{
+	dbdata_s *list = data;
+	char *bline = list->fields.text;
+	list = list->next;
+	char *alias = list->fields.text;
+	list = list->next;
+	char *osver = list->fields.text;
+	list = list->next;
+	char *country = list->fields.text;
+	list = list->next;
+	char *locale = list->fields.text;
+	list = list->next;
+	char *keymap = list->fields.text;
+	list = list->next;
+	char *arg = list->fields.text;
+	list = list->next;
+	char *url = list->fields.text;
+	list = list->next;
+	char *arch = list->fields.text;
+	if (strncmp(alias, "debian", COMM_S) == 0) {
+	snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg, url, cml->name);
+	}
 }
 
 int

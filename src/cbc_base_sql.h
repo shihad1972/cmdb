@@ -52,7 +52,7 @@ extern const unsigned int cbc_search_fields[];
 extern const unsigned int cbc_update_types[][2];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
-extern const unsigned int cbc_search_field_types[][8];
+extern const unsigned int cbc_search_field_types[][9];
 
 
 enum {			/* cbc delete SQL statements */
