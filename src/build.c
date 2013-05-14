@@ -488,13 +488,22 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	list = list->next;
 	char *arch = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
-	snprintf(output, BUFF_S, "\
+		snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg, url, cml->name);
+	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img country=%s console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
+bline, arg, url, cml->name);
 	}
 }
 
