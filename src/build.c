@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <sys/stat.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -398,8 +400,8 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
 			return retval;
-/*	printf("Writing build files for server %s\n\n", cml->name); */
-	printf("Got server id %lu\tname: %s\n", cml->server_id, cml->name);
+/*	printf("Writing build files for server %s\n\n", cml->name); 
+	printf("Got server id %lu\tname: %s\n", cml->server_id, cml->name); */
 	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
@@ -414,7 +416,7 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		ip_addr = htonl((uint32_t)data->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
 		printf("host %s { hardware ethernet %s; fixed-address %s; \
-option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
+option domain-name \"%s\"; }\n\n", cml->name, data->fields.text, ip,
 data->next->next->fields.text);
 		retval = 0;
 	}
@@ -436,7 +438,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
 			return retval;
-	printf("\nTFTP\nGot server id %lu\tname %s\n", cml->server_id, cml->name);
+/*	printf("\nTFTP\nGot server id %lu\tname %s\n", cml->server_id, cml->name); */
 	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
@@ -482,7 +484,7 @@ default %s\n\
 \n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n",
+append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg, url, cml->name);
 	}
 }
@@ -524,7 +526,7 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 			retval = 0;
 		}
 	} else if (cml->server == ID) {
-		printf("Writing build files for server id %lu\n\n", cml->server_id);
+/*		printf("Writing build files for server id %lu\n\n", cml->server_id); */
 		*server_id = cml->server_id;
 	} else {
 		return NO_NAME_UUID_ID;
