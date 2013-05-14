@@ -48,6 +48,7 @@ typedef struct cbc_build_s {
 	unsigned long int os_id;
 	unsigned long int ip_id;
 	unsigned long int locale_id;
+	unsigned long int def_scheme_id;
 	struct cbc_build_s *next;
 } cbc_build_s;
 

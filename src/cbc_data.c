@@ -133,6 +133,7 @@ init_build_struct(cbc_build_s *build)
 	build->os_id = NONE;
 	build->ip_id = NONE;
 	build->locale_id = NONE;
+	build->def_scheme_id = NONE;
 	build->next = '\0';
 }
 

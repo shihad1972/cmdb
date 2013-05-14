@@ -175,7 +175,7 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | SPART | VARIENT;
+	  CSERVER | LOCALE | SPART | VARIENT | SSCHEME;
 	if ((retval = run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -241,7 +241,7 @@ int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 {
 	unsigned long int sid = details->server->server_id;
-	unsigned long int osid, bid, ipid, lid, vid, bdid, btid;
+	unsigned long int osid, bid, ipid, lid, vid, bdid, btid, ssid;
 	cbc_build_s *build = cbc->build;
 	cbc_build_domain_s *dom = cbc->bdom;
 	cbc_build_ip_s *bip = cbc->bip;
@@ -250,6 +250,7 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 	details->spart = cbc->spart;
 	cbc_locale_s *loc = cbc->locale;
 	cbc_varient_s *vari = cbc->varient;
+	cbc_seed_scheme_s *sch = cbc->sscheme;
 	osid = bid = ipid = lid = vid = bdid = btid = 0;
 
 	while (build) {
@@ -259,6 +260,7 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 			ipid = build->ip_id;
 			lid = build->locale_id;
 			vid = build->varient_id;
+			ssid = build->def_scheme_id;
 			details->build = build;
 		}
 		build = build->next;
@@ -299,6 +301,11 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 			details->varient = vari;
 		vari = vari->next;
 	}
+	while (sch) {
+		if (sch->def_scheme_id == ssid)
+			details->sscheme = sch;
+		sch = sch->next;
+	}
 	return NONE;
 }
 
@@ -338,6 +345,8 @@ print_build_config(cbc_s *details)
 		printf("No build IP associated with server %s\n", name);
 	if (part) {
 		printf("Partition information:\n");
+		if (details->sscheme)
+			printf("Name:\t%s\n", details->sscheme->name);
 		while (part) {
 			if (part->link_id.server_id == sid)
 				printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,

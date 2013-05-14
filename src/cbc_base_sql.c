@@ -61,7 +61,7 @@
 const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
- ip_id, locale_id FROM build","\
+ ip_id, locale_id, def_scheme_id FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain, country,\
  language, keymap, ntp_server, config_ntp, ldap_server, ldap_url, ldap_ssl,\
  ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
@@ -90,7 +90,7 @@ const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
  ?, ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
- os_id, ip_id, locale_id) VALUES (?, ?, ?, ?, ?, ?, ?)","\
+ os_id, ip_id, locale_id, def_scheme_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  domain, ntp_server, config_ntp, ldap_server,\
  ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
@@ -165,7 +165,7 @@ SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
   bt.arg, bt.url, bo.arch FROM build_type bt \
   LEFT JOIN build_os bo ON bo.alias=bt.alias \
   LEFT JOIN build b ON b.os_id = bo.os_id \
-  LEFT JOIN locale l ON l.os_id = bo.os_id WHERE b.server_id = ?"
+  LEFT JOIN locale l ON l.locale_id = b.locale_id WHERE b.server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -176,7 +176,7 @@ const int mycbc_sql_inserts[][24] = {
   0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
   MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
   MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
   MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
@@ -219,11 +219,11 @@ const int mycbc_sql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 8, 25, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
+	5, 9, 25, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 7, 20, 4, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
+	4, 8, 20, 4, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -1008,6 +1008,7 @@ store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	build->os_id = strtoul(row[5], NULL, 10);
 	build->ip_id = strtoul(row[6], NULL, 10);
 	build->locale_id = strtoul(row[7], NULL, 10);
+	build->def_scheme_id = strtoul(row[8], NULL, 10);
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1904,6 +1905,7 @@ store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 7);
 	list = base->build;
 	if (list) {
 		while (list->next)
