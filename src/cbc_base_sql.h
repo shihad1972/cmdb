@@ -85,7 +85,8 @@ enum {			/* cbc search SQL statements */
 	SERVER_ID_ON_UUID = 18,
 	SERVER_ID_ON_SNAME = 19,
 	SERVER_NAME_ON_ID = 20,
-	TFTP_DETAILS = 21
+	TFTP_DETAILS = 21,
+	NET_BUILD_DETAILS = 22,
 };
 
 # ifdef HAVE_MYSQL

@@ -69,6 +69,9 @@ int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
+write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
 
 int
@@ -79,6 +82,9 @@ print_build_config(cbc_s *details);
 
 void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+
+void
+fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt);

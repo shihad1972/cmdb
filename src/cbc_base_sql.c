@@ -165,7 +165,13 @@ SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
   bt.arg, bt.url, bo.arch FROM build_type bt \
   LEFT JOIN build_os bo ON bo.alias=bt.alias \
   LEFT JOIN build b ON b.os_id = bo.os_id \
-  LEFT JOIN locale l ON l.locale_id = b.locale_id WHERE b.server_id = ?"
+  LEFT JOIN locale l ON l.locale_id = b.locale_id WHERE b.server_id = ?","\
+SELECT l.locale, l.keymap, b.net_inst_int, bi.ip, bd.ns, \
+  bd.netmask, bd.gateway, bi.hostname, bd.domain FROM build b \
+  LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
+  LEFT JOIN build_os bo ON b.os_id = bo.os_id \
+  LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
+  LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -233,10 +239,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9, 9
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -272,6 +278,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -296,7 +303,8 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT }
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT }
 };
 
 int

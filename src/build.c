@@ -391,6 +391,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		return retval;
 	if ((retval = write_tftp_config(cmc, cml)) != 0)
 		return retval;
+	if ((retval = write_build_file(cmc, cml)) != 0)
+		return retval;
 	return retval;
 }
 
@@ -416,11 +418,11 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
 		printf("Cannot find dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
-		return NO_DHCP_ERR;
+		return NO_DHCP_B_ERR;
 	} else if (retval > 1) {
 		printf("Multiple dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
-		return MULTI_DHCP_ERR;
+		return MULTI_DHCP_B_ERR;
 	} else {
 		ip_addr = htonl((uint32_t)data->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
@@ -453,16 +455,53 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
 		printf("Cannot find TFTP details for server %s\n", cml->name);
 		clean_dbdata_struct(data);
-		return NO_TFTP_ERR;
+		return NO_TFTP_B_ERR;
 	} else if (retval > 1) {
 		printf("Multiple TFTP details for server %s\n", cml->name);
 		clean_dbdata_struct(data);
-		return MULTI_TFTP_ERR;
+		return MULTI_TFTP_B_ERR;
 	} else {
 		fill_tftp_output(cml, data, out);
 		printf("%s", out);
 		retval = 0;
 	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	char net_build[BUILD_S];
+	int retval = NONE;
+	size_t len;
+	dbdata_s *data;
+
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+			return retval;
+	if (strncmp(cml->name, "NULL", COMM_S) == 0)
+		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
+			return retval;
+	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
+		printf("Cannot find NET_BUILD_DETAILS for server %s\n",
+		       cml->name);
+		clean_dbdata_struct(data);
+		return NO_NET_BUILD_ERR;
+	} else if (retval > 1) {
+		printf("Multiple NET_BUILD_DETAILS for server %s\n", cml->name);
+		clean_dbdata_struct(data);
+		return MULTI_NET_BUILD_ERR;
+	} else {
+		fill_net_build_output(cml, data, net_build);
+		printf("%s", net_build);
+		retval = 0;
+	}
+	len = strlen(net_build);
+	printf("Length is %zu\n", len);
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -473,15 +512,12 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	char *bline = list->fields.text;
 	list = list->next;
 	char *alias = list->fields.text;
+	snprintf(cml->os, CONF_S, "%s", alias);
 	list = list->next;
 	char *osver = list->fields.text;
 	list = list->next;
 	char *country = list->fields.text;
-	list = list->next;
-	char *locale = list->fields.text;
-	list = list->next;
-	char *keymap = list->fields.text;
-	list = list->next;
+	list = list->next->next->next;
 	char *arg = list->fields.text;
 	list = list->next;
 	char *url = list->fields.text;
@@ -494,16 +530,60 @@ default %s\n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg, url, cml->name);
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
+url, cml->name);
 	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img country=%s console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
+append initrd=initrd-%s-%s-%s.img country=%s \
+console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
+	}
+}
+
+void
+fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+{
+	if (strncmp(cml->os, "debian", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+d-i console-setup/ask_detect boolean false\n\
+d-i debian-installer/locale string \n\
+d-i console-keymaps-at/keymap select \n\
+d-i keymap select \n\
+\n\
+d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
+d-i netcfg/enable boolean true\n\
+d-i netcfg/confirm_static boolean true\n\
+d-i netcfg/disable_dhcp boolean true\n\
+d-i netcfg/choose_interface select \n\
+d-i netcfg/get_nameservers string \n\
+d-i netcfg/get_ipaddress string \n\
+d-i netcfg/get_netmask string \n\
+d-i netcfg/get_gateway string \n\
+\n\
+d-i netcfg/get_hostname string \n\
+d-i netcfg/get_domain string \n");
+	} else if (strncmp(cml->os, "ubuntu", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+d-i console-setup/ask_detect boolean false\n\
+d-i debian-installer/locale string \n\
+d-i debian-installer/language string \n\
+d-i console-keymaps-at/keymap select \n\
+d-i keymap select \n\
+\n\
+d-i netcfg/enable boolean true\n\
+d-i netcfg/confirm_static boolean true\n\
+d-i netcfg/get_nameservers string \n\
+d-i netcfg/get_ipaddress string \n\
+d-i netcfg/get_netmask string \n\
+d-i netcfg/get_gateway string \n\
+\n\
+d-i netcfg/get_hostname string \n\
+d-i netcfg/get_domain string \n");
 	}
 }
 

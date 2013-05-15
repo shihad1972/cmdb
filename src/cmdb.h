@@ -29,9 +29,9 @@ enum {			/* Buffer Sizes */
 	TYPE_S = 24,
 	MAC_S = 32,
 	HOST_S = 64,
-	CONF_S = 80,
+	CONF_S = 128,
 	NAME_S = 128,
-	URL_S = 136,
+	URL_S = 256,
 	RBUFF_S = 256,
 	TBUFF_S = 512,
 	BUFF_S = 1024,
@@ -169,7 +169,13 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	TOO_MANY_OS = 175,
 	TOO_MANY_VARIENT = 176,
 	PACKAGE_EXISTS = 177,
-	CANNOT_DELETE_PACKAGE = 178
+	CANNOT_DELETE_PACKAGE = 178,
+	NO_DHCP_B_ERR = 179,
+	MULTI_DHCP_B_ERR = 180,
+	NO_TFTP_B_ERR = 181,
+	MULTI_TFTP_B_ERR = 182,
+	NO_NET_BUILD_ERR = 183,
+	MULTI_NET_BUILD_ERR = 184
 	
 };
 
