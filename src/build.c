@@ -472,7 +472,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net_build[BUILD_S];
+	char net_build[BUFF_S];
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -548,25 +548,59 @@ bline, arg, url, cml->name);
 void
 fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
+	dbdata_s *list = data;
+	char *ip, *ns, *nm, *gw;
+
+	if (!(ip = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+	if (!(ns = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+	if (!(nm = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+	if (!(gw = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+	char *locale = list->args.text;
+	list = list->next;
+	char *keymap = list->args.text;
+	list = list->next;
+	char *net_dev = list->args.text;
+	list = list->next;
+	uint32_t ip_addr = htonl((uint32_t)list->args.number);
+	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	list = list->next;
+	ip_addr = htonl((uint32_t)list->args.number);
+	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
+	list = list->next;
+	ip_addr = htonl((uint32_t)list->args.number);
+	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
+	list = list->next;
+	ip_addr = htonl((uint32_t)list->args.number);
+	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
+	list = list->next;
+	char *host = list->args.text;
+	list = list->next;
+	char *domain = list->args.text;
+
 	if (strncmp(cml->os, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
-d-i debian-installer/locale string \n\
-d-i console-keymaps-at/keymap select \n\
-d-i keymap select \n\
+d-i debian-installer/locale string %s\n\
+d-i console-keymaps-at/keymap select %s\n\
+d-i keymap select %s\n\
 \n\
 d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
 d-i netcfg/enable boolean true\n\
 d-i netcfg/confirm_static boolean true\n\
 d-i netcfg/disable_dhcp boolean true\n\
-d-i netcfg/choose_interface select \n\
-d-i netcfg/get_nameservers string \n\
-d-i netcfg/get_ipaddress string \n\
-d-i netcfg/get_netmask string \n\
-d-i netcfg/get_gateway string \n\
+d-i netcfg/choose_interface select %s\n\
+d-i netcfg/get_nameservers string %s\n\
+d-i netcfg/get_ipaddress string %s\n\
+d-i netcfg/get_netmask string %s\n\
+d-i netcfg/get_gateway string %s\n\
 \n\
-d-i netcfg/get_hostname string \n\
-d-i netcfg/get_domain string \n");
+d-i netcfg/get_hostname string %s\n\
+d-i netcfg/get_domain string %s\n",
+locale, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
 	} else if (strncmp(cml->os, "ubuntu", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
@@ -585,6 +619,10 @@ d-i netcfg/get_gateway string \n\
 d-i netcfg/get_hostname string \n\
 d-i netcfg/get_domain string \n");
 	}
+	free(ip);
+	free(gw);
+	free(ns);
+	free(nm);
 }
 
 int
