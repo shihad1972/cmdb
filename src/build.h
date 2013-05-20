@@ -87,6 +87,9 @@ void
 fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 void
+fill_build_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+
+void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
 
 void

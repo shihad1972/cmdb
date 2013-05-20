@@ -472,7 +472,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net_build[BUFF_S];
+	char net_build[BUFF_S], build_mirror[BUFF_S];
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -499,7 +499,24 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		printf("%s", net_build);
 		retval = 0;
 	}
-	len = strlen(net_build);
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, BUILD_MIRROR);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
+		printf("Cannot find BUILD_MIRROR for server %s\n",
+		       cml->name);
+		clean_dbdata_struct(data);
+		return NO_BUILD_MIRR_ERR;
+	} else if (retval > 1) {
+		printf("Multiple BUILD_MIRROR for server %s\n", cml->name);
+		clean_dbdata_struct(data);
+		return MULTI_BUILD_MIRR_ERR;
+	} else {
+		fill_build_mirror_output(cml, data, build_mirror);
+		printf("%s", build_mirror);
+		retval = 0;
+	}
+	len = strlen(net_build) + strlen(build_mirror);
 	printf("Length is %zu\n", len);
 	clean_dbdata_struct(data);
 	return retval;
@@ -559,29 +576,29 @@ fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
-	char *locale = list->args.text;
+	char *locale = list->fields.text;
 	list = list->next;
-	char *keymap = list->args.text;
+	char *keymap = list->fields.text;
 	list = list->next;
-	char *net_dev = list->args.text;
+	char *net_dev = list->fields.text;
 	list = list->next;
-	uint32_t ip_addr = htonl((uint32_t)list->args.number);
+	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
 	list = list->next;
-	ip_addr = htonl((uint32_t)list->args.number);
+	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
 	list = list->next;
-	ip_addr = htonl((uint32_t)list->args.number);
+	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
 	list = list->next;
-	ip_addr = htonl((uint32_t)list->args.number);
+	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
 	list = list->next;
-	char *host = list->args.text;
+	char *host = list->fields.text;
 	list = list->next;
-	char *domain = list->args.text;
+	char *domain = list->fields.text;
 
-	if (strncmp(cml->os, "debian", COMM_S) == 0) {
+	if (strncmp(cml->os, "debian", COMM_S) == 0)
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string %s\n\
@@ -601,7 +618,7 @@ d-i netcfg/get_gateway string %s\n\
 d-i netcfg/get_hostname string %s\n\
 d-i netcfg/get_domain string %s\n",
 locale, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
-	} else if (strncmp(cml->os, "ubuntu", COMM_S) == 0) {
+	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string \n\
@@ -618,11 +635,40 @@ d-i netcfg/get_gateway string \n\
 \n\
 d-i netcfg/get_hostname string \n\
 d-i netcfg/get_domain string \n");
-	}
 	free(ip);
 	free(gw);
 	free(ns);
 	free(nm);
+}
+
+void
+fill_build_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+{
+	char *mirror = data->fields.text;
+	char *ver_alias = data->next->fields.text;
+	char *alias = data->next->next->fields.text;
+	char *country = data->next->next->next->fields.text;
+	if (strncmp(cml->os, "debian", COMM_S) == 0) 
+		snprintf(output, BUFF_S, "\
+d-i netcfg/wireless_wep string\n\
+d-i hw-detect/load_firmware boolean true\n\
+\n\
+d-i mirror/country string manual\n\
+d-i mirror/http/hostname string %s\n\
+d-i mirror/http/directory string /%s\n\
+\n\
+d-i mirror/suite string %s\n\
+\n\
+### Account setup\n\
+d-i passwd/root-password-crypted password $1$d/0w8MHb$tdqENqvXIz53kZp2svuak1\n\
+d-i passwd/user-fullname string Monkey User\n\
+d-i passwd/username string monkey\n\
+d-i passwd/user-password-crypted password $1$Hir6Ul13$.T1tAO.yfK5g7WDKSw0nI/\n\
+d-i clock-setup/utc boolean true\n\
+\n\
+d-i time/zone string %s\n\
+", mirror, alias, ver_alias, country);
+
 }
 
 int

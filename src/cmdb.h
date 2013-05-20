@@ -175,7 +175,9 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_TFTP_B_ERR = 181,
 	MULTI_TFTP_B_ERR = 182,
 	NO_NET_BUILD_ERR = 183,
-	MULTI_NET_BUILD_ERR = 184
+	MULTI_NET_BUILD_ERR = 184,
+	NO_BUILD_MIRR_ERR = 185,
+	MULTI_BUILD_MIRR_ERR = 186
 	
 };
 
