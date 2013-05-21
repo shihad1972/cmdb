@@ -411,16 +411,12 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
 			return retval;
-/*	printf("Writing build files for server %s\n\n", cml->name); 
-	printf("Got server id %lu\tname: %s\n", cml->server_id, cml->name); */
 	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
-		printf("Cannot find dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
 		return NO_DHCP_B_ERR;
 	} else if (retval > 1) {
-		printf("Multiple dhcp details for server id %lu\n", cml->server_id);
 		clean_dbdata_struct(data);
 		return MULTI_DHCP_B_ERR;
 	} else {
@@ -446,18 +442,12 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
-	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
-			return retval;
-/*	printf("\nTFTP\nGot server id %lu\tname %s\n", cml->server_id, cml->name); */
 	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
-		printf("Cannot find TFTP details for server %s\n", cml->name);
 		clean_dbdata_struct(data);
 		return NO_TFTP_B_ERR;
 	} else if (retval > 1) {
-		printf("Multiple TFTP details for server %s\n", cml->name);
 		clean_dbdata_struct(data);
 		return MULTI_TFTP_B_ERR;
 	} else {
@@ -472,7 +462,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net_build[BUFF_S], build_mirror[BUFF_S];
+	char net_build[BUFF_S], build_mirror[BUFF_S], disk[FILE_S];
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -480,18 +470,12 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
-	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
-			return retval;
 	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
-		printf("Cannot find NET_BUILD_DETAILS for server %s\n",
-		       cml->name);
 		clean_dbdata_struct(data);
 		return NO_NET_BUILD_ERR;
 	} else if (retval > 1) {
-		printf("Multiple NET_BUILD_DETAILS for server %s\n", cml->name);
 		clean_dbdata_struct(data);
 		return MULTI_NET_BUILD_ERR;
 	} else {
@@ -503,12 +487,9 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	cbc_init_initial_dbdata(&data, BUILD_MIRROR);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
-		printf("Cannot find BUILD_MIRROR for server %s\n",
-		       cml->name);
 		clean_dbdata_struct(data);
 		return NO_BUILD_MIRR_ERR;
 	} else if (retval > 1) {
-		printf("Multiple BUILD_MIRROR for server %s\n", cml->name);
 		clean_dbdata_struct(data);
 		return MULTI_BUILD_MIRR_ERR;
 	} else {
@@ -516,9 +497,11 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		printf("%s", build_mirror);
 		retval = 0;
 	}
-	len = strlen(net_build) + strlen(build_mirror);
-	printf("Length is %zu\n", len);
 	clean_dbdata_struct(data);
+	if ((retval = fill_build_partition(cmc, cml, disk)) != 0)
+		return retval;
+	len = strlen(net_build) + strlen(build_mirror) + strlen(disk);
+	printf("Length is %zu\n", len);
 	return retval;
 }
 
@@ -648,7 +631,10 @@ fill_build_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	char *ver_alias = data->next->fields.text;
 	char *alias = data->next->next->fields.text;
 	char *country = data->next->next->next->fields.text;
-	if (strncmp(cml->os, "debian", COMM_S) == 0) 
+	char *ntpserv = data->next->next->next->next->next->fields.text;
+	char tmp[NAME_S];
+
+	if (strncmp(cml->os, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 d-i netcfg/wireless_wep string\n\
 d-i hw-detect/load_firmware boolean true\n\
@@ -668,7 +654,172 @@ d-i clock-setup/utc boolean true\n\
 \n\
 d-i time/zone string %s\n\
 ", mirror, alias, ver_alias, country);
+		if (data->next->next->next->next->fields.small == 0)
+			snprintf(tmp, NAME_S, "\
+d-i clock-setup/ntp boolean false\n\
+\n\
+");
+		else
+			snprintf(tmp, NAME_S, "\
+d-i clock-setup/ntp boolean true\n\
+d-i clock-setup/ntp-server string %s\n\
+\n\
+", ntpserv);
+		strncat(output, tmp, NAME_S);
+	}
+}
 
+int
+fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
+{
+	char *next, line[CONF_S], *fs;
+	int retval, i, j;
+	short int lvm;
+	size_t len, plen;
+	dbdata_s *data, *list;
+
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+			return retval;
+	cbc_init_initial_dbdata(&data, BASIC_PART);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BASIC_DISK;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_BASIC_DISK;
+	} else {
+		lvm = data->next->fields.small;
+		snprintf(cml->partition, CONF_S, "%s", data->fields.text);
+		plen = strlen(cml->partition);
+		if (lvm == 0)
+			snprintf(disk, FILE_S, "\
+d-i partman-auto/disk string %s\n\
+\n\
+d-i partman-auto/method string regular\n\
+d-i partman-auto/purge_lvm_from_device boolean true\n\
+d-i partman-auto/choose_recipe select monkey\n\
+d-i partman-md/device_remove_md boolean true\n\
+d-i partman-partitioning/confirm_write_new_label boolean true\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/confirm boolean true\n\
+\n\
+", data->fields.text);
+		else
+			snprintf(disk, FILE_S, "\
+d-i partman-auto/disk string %s\n\
+\n\
+d-i partman-auto/method string lvm\n\
+d-i partman-auto/purge_lvm_from_device boolean true\n\
+d-i partman-auto-lvm/guided_size string 100%%\n\
+d-i partman-lvm/device_remove_lvm boolean true\n\
+d-i partman-lvm/device_remove_lvm_span boolean true\n\
+d-i partman-lvm/confirm boolean true\n\
+d-i partman-auto/choose_recipe select monkey\n\
+d-i partman-md/device_remove_md boolean true\n\
+d-i partman-partitioning/confirm_write_new_label boolean true\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman-lvm/confirm_nooverwrite boolean true\n\
+d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/confirm boolean true\n\
+\n\
+", cml->partition);
+	}
+	len = strlen(disk);
+	next = (disk + len);
+	snprintf(next, CONF_S, "\
+d-i partman-auto/expert_recipe string                         \\\n");
+	next +=64;
+	snprintf(next, CONF_S, "\
+      monkey ::                                               \\\n");
+	next +=64;
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, FULL_PART);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, FULL_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	} else {
+		list = data;
+		if (lvm > 0) {
+			snprintf(next, URL_S + 1, "\
+              100 1000 1000000000 ext3                        \\\n\
+                       $defaultignore{ }                      \\\n\
+                       $primary{ }                            \\\n\
+                       method{ lvm }                          \\\n");
+			next +=256;
+			snprintf(line, HOST_S, "\
+                       device{ %s }", cml->partition);
+			plen = strlen(line);
+			for (i = (int)plen; i < 62; i++)
+				strcat(line, " ");
+			strcat(line, "\\\n");
+			snprintf(next, CONF_S, "%s", line);
+			next +=64;
+			snprintf(next, NAME_S + 1, "\
+                       vg_name{ systemlv }                    \\\n\
+              .                                               \\\n");
+			next += 128;
+			for (j = 0; j < retval; j++) {
+				snprintf(line, HOST_S + 1, "\
+              %lu %lu %lu %s",	list->fields.number,
+				list->next->fields.number,
+				list->next->next->fields.number,
+				list->next->next->next->fields.text);
+				plen = strlen(line);
+				for (i = (int)plen; i < 62; i++)
+					strcat(line, " ");
+				strcat(line, "\\\n");
+				snprintf(next, HOST_S + 1, "%s", line);
+				next += 64;
+				snprintf(next, NAME_S + 1, "\
+                       $lvmok                                 \\\n\
+                       in_vg{ systemlv }                      \\\n");
+				next += 128;
+				snprintf(line, HOST_S, "\
+                       lv_name{ %s }", list->next->next->next->next->fields.text);
+				plen = strlen(line);
+				for (i = (int)plen; i < 62; i++)
+					strcat(line, " ");
+				strcat(line, "\\\n");
+				snprintf(next, HOST_S + 1, "%s", line);
+				next += 64;
+				snprintf(next, HOST_S + 1, "\
+                       method{ format } format{ }             \\\n");
+				next += 64;
+				fs = list->next->next->next->fields.text;
+				if (strncmp(fs, "swap", COMM_S) != 0) {
+					snprintf(line, HOST_S, "\
+                       use_filesystem{ } filesystem{ %s }", fs);
+					plen = strlen(line);
+					for (i = (int)plen; i < 62; i++)
+						strcat(line, " ");
+					strcat(line, "\\\n");
+					snprintf(next, HOST_S + 1, "%s", line);
+					next +=64;
+					snprintf(line, HOST_S, "\
+                       mountpoint{ %s }", 
+	     list->next->next->next->next->next->fields.text);
+					plen = strlen(line);
+					for (i = (int)plen; i < 62; i++)
+						strcat(line, " ");
+					strcat(line, "\\\n");
+					snprintf(next, HOST_S + 1, "%s", line);
+					next += 64;
+				}
+				snprintf(next, HOST_S + 1, "\
+              .                                               \\\n");
+				next += 64;
+				list = list->next->next->next->next->next->next;
+			}
+			snprintf(next, COMM_S, "\n");
+		}
+	}
+	clean_dbdata_struct(data);
+	printf("%s", disk);
+	return NONE;
 }
 
 int

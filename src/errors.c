@@ -460,6 +460,22 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot insert build IP into DB");
 	else if (error == SERVER_BUILD_NOT_FOUND)
 		snprintf(errstr, MAC_S, "No server build");
+	else if (error == NO_DHCP_B_ERR)
+		snprintf(errstr, MAC_S, "Cannot find dhcp details");
+	else if (error == MULTI_DHCP_B_ERR)
+		snprintf(errstr, MAC_S, "Multiple dhcp details");
+	else if (error == NO_TFTP_B_ERR)
+		snprintf(errstr, MAC_S, "Cannot find TFTP details");
+	else if (error == MULTI_TFTP_B_ERR)
+		snprintf(errstr, MAC_S, "Multiple TFTP details");
+	else if (error == NO_NET_BUILD_ERR)
+		snprintf(errstr, MAC_S, "Cannot find NET_BUILD_DETAILS");
+	else if (error == MULTI_NET_BUILD_ERR)
+		snprintf(errstr, MAC_S, "Multiple NET_BUILD_DETAILS");
+	else if (error == NO_BUILD_MIRR_ERR)
+		snprintf(errstr, MAC_S, "Cannot find BUILD_MIRROR");
+	else if (error == MULTI_BUILD_MIRR_ERR)
+		snprintf(errstr, MAC_S, "Multiple BUILD_MIRROR");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

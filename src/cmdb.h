@@ -177,7 +177,10 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_NET_BUILD_ERR = 183,
 	MULTI_NET_BUILD_ERR = 184,
 	NO_BUILD_MIRR_ERR = 185,
-	MULTI_BUILD_MIRR_ERR = 186
+	MULTI_BUILD_MIRR_ERR = 186,
+	NO_BASIC_DISK = 187,
+	MULTI_BASIC_DISK = 188,
+	NO_FULL_DISK = 189
 	
 };
 
