@@ -173,7 +173,7 @@ SELECT l.locale, l.keymap, b.net_inst_int, bi.ip, bd.ns, \
   LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
   LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?","\
 SELECT mirror, bo.ver_alias, bo.alias, l.country, bd.config_ntp, bd.ntp_server\
-  FROM build_type bt LEFT JOIN build_os bo ON bo.alias = bt.alias \
+  , bo.arch FROM build_type bt LEFT JOIN build_os bo ON bo.alias = bt.alias \
   LEFT JOIN build b ON b.os_id = bo.os_id \
   LEFT JOIN locale l ON l.locale_id = b.locale_id \
   LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
@@ -181,7 +181,10 @@ SELECT mirror, bo.ver_alias, bo.alias, l.country, bd.config_ntp, bd.ntp_server\
 SELECT device, lvm FROM disk_dev WHERE server_id = ?","\
 SELECT priority, minimum, maximum, filesystem, logical_volume, mount_point \
   FROM default_part dp LEFT JOIN build b ON b.def_scheme_id=dp.def_scheme_id \
-  WHERE b.server_id = ?"
+  WHERE b.server_id = ?","\
+SELECT package FROM packages p \
+  LEFT JOIN build b ON b.varient_id = p.varient_id \
+  AND b.os_id = p.os_id WHERE server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -249,10 +252,10 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9, 9, 6, 2, 6
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9, 9, 7, 2, 6, 1
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -292,6 +295,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -318,9 +322,10 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE } ,
 	{ DBTEXT, DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE }
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int

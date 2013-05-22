@@ -89,6 +89,12 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 void
 fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
+int
+fill_kernel(cbc_comm_line_s *cml, char *output);
+
+void
+fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **output, int i);
+
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
 
@@ -102,7 +108,7 @@ char *
 add_pre_volume_group(cbc_comm_line_s *cml, char *next);
 
 int
-fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk);
+fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk);
 
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt);

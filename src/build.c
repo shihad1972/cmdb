@@ -462,7 +462,8 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net[BUFF_S], mirror[BUFF_S], disk[FILE_S];
+	char net[BUFF_S], mirror[BUFF_S], disk[FILE_S], kernel[BUFF_S];
+	char *pack;
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -495,12 +496,26 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_mirror_output(cml, data, mirror);
 		retval = 0;
 	}
-	clean_dbdata_struct(data);
-	if ((retval = fill_build_partition(cmc, cml, disk)) != 0)
+	if ((retval = fill_partition(cmc, cml, disk)) != 0)
 		return retval;
-	len = strlen(net) + strlen(mirror) + strlen(disk);
-	printf("%s%s%s", net, mirror, disk);
+	if ((retval = fill_kernel(cml, kernel)) != 0)
+		return retval;
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BUILD_PACKAGES;
+	} else {
+		fill_packages(cml, data, &pack, retval);
+		retval = 0;
+	}
+	clean_dbdata_struct(data);
+	len = strlen(net) + strlen(mirror) + strlen(disk) + strlen(kernel)
+	  + strlen(pack);
+	printf("%s%s%s%s%s", net, mirror, disk, kernel, pack);
 	printf("Length is %zu\n", len);
+	printf("Need %zu mallocs\n", (len / 1024) + 1);
 	return retval;
 }
 
@@ -542,6 +557,8 @@ console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
 	}
+	/* Store url for use in fill_packages */
+	snprintf(cml->config, CONF_S, "%s", url);
 }
 
 void
@@ -631,6 +648,7 @@ fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	char *alias = data->next->next->fields.text;
 	char *country = data->next->next->next->fields.text;
 	char *ntpserv = data->next->next->next->next->next->fields.text;
+	char *arch = data->next->next->next->next->next->next->fields.text;
 	char tmp[NAME_S];
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0) {
@@ -666,16 +684,18 @@ d-i clock-setup/ntp-server string %s\n\
 ", ntpserv);
 		strncat(output, tmp, NAME_S);
 	}
+	/* Store the arch for use in fill_kernel */
+	snprintf(cml->arch, MAC_S, "%s", arch);
 }
 
 int
-fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
+fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
 {
-	char *next, line[CONF_S];
+	char *next;
 	int retval;
 	short int lvm;
-	size_t len, plen;
-	dbdata_s *data, *list;
+	size_t len;
+	dbdata_s *data;
 
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
@@ -692,7 +712,6 @@ fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
 		add_pre_start_part(cml, data, disk);
 	}
 	lvm = data->next->fields.small;
-	plen = strlen(cml->partition);
 	len = strlen(disk);
 	next = (disk + len);
 	snprintf(next, CONF_S, "\
@@ -720,6 +739,77 @@ d-i partman-auto/expert_recipe string                         \\\n");
 	}
 	clean_dbdata_struct(data);
 	return NONE;
+}
+
+int
+fill_kernel(cbc_comm_line_s *cml, char *output)
+{
+	char *arch = cml->arch;
+	if (strncmp(arch, "i386", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+d-i base-installer/kernel/image string linux-image-2.6-686\n\
+\n\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n\
+d-i apt-setup/services-select multiselect security, volatile\n\
+d-i apt-setup/security_host string security.debian.org\n\
+d-i apt-setup/volatile_host string volatile.debian.org\n\
+\n\
+tasksel tasksel/first multiselect standard\n");
+		return NONE;
+	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+d-i base-installer/kernel/image string linux-image-2.6-amd64\n\
+\n\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n\
+d-i apt-setup/services-select multiselect security, volatile\n\
+d-i apt-setup/security_host string security.debian.org\n\
+d-i apt-setup/volatile_host string volatile.debian.org\n\
+\n\
+tasksel tasksel/first multiselect standard\n");
+		return NONE;
+	} else {
+		return NO_ARCH;
+	}
+}
+
+void
+fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **pack, int i)
+{
+	char *next;
+	int j, k = i;
+	size_t len;
+	dbdata_s *list = data;
+
+	if (!(*pack = malloc(BUFF_S * sizeof(char))))
+		report_error(MALLOC_FAIL, "pack in fill_packages");
+	snprintf(*pack, MAC_S, "\nd-i pkgsel/include string");
+	len = strlen(*pack);
+	next = *pack + len;
+	for (j = 0; j < k; j++) {
+		snprintf(next, HOST_S, " %s", list->fields.text);
+		len = strlen(list->fields.text);
+		next = next + len + 1;
+		list = list->next;
+	}
+	len = strlen(*pack);
+	if ((len + 331 + strlen(cml->config)) > BUFF_S)
+		if (!(realloc(*pack, BUFF_S * 2 * sizeof(char))))
+			report_error(MALLOC_FAIL, "realloc in fill_packages");
+	snprintf(next, TBUFF_S, "\n\
+d-i pkgsel/upgrade select none\n\
+\n\
+popularity-contest popularity-contest/participate boolean false\n\
+\n\
+d-i finish-install/keep-consoles boolean true\n\
+\n\
+d-i finish-install/reboot_in_progress note\n\
+\n\
+d-i cdrom-detect/eject boolean false\n\
+\n\
+d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh && chmod 755 base.sh && ./base.sh\n",
+		cml->config);
 }
 
 char *
