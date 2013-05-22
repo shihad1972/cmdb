@@ -462,7 +462,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net_build[BUFF_S], build_mirror[BUFF_S], disk[FILE_S];
+	char net[BUFF_S], mirror[BUFF_S], disk[FILE_S];
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -479,8 +479,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_NET_BUILD_ERR;
 	} else {
-		fill_net_build_output(cml, data, net_build);
-		printf("%s", net_build);
+		fill_net_output(cml, data, net);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
@@ -493,14 +492,14 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_BUILD_MIRR_ERR;
 	} else {
-		fill_build_mirror_output(cml, data, build_mirror);
-		printf("%s", build_mirror);
+		fill_mirror_output(cml, data, mirror);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
 	if ((retval = fill_build_partition(cmc, cml, disk)) != 0)
 		return retval;
-	len = strlen(net_build) + strlen(build_mirror) + strlen(disk);
+	len = strlen(net) + strlen(mirror) + strlen(disk);
+	printf("%s%s%s", net, mirror, disk);
 	printf("Length is %zu\n", len);
 	return retval;
 }
@@ -546,7 +545,7 @@ bline, arg, url, cml->name);
 }
 
 void
-fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	dbdata_s *list = data;
 	char *ip, *ns, *nm, *gw;
@@ -625,7 +624,7 @@ d-i netcfg/get_domain string \n");
 }
 
 void
-fill_build_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	char *mirror = data->fields.text;
 	char *ver_alias = data->next->fields.text;
@@ -672,8 +671,8 @@ d-i clock-setup/ntp-server string %s\n\
 int
 fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
 {
-	char *next, line[CONF_S], *fs;
-	int retval, i, j;
+	char *next, line[CONF_S];
+	int retval;
 	short int lvm;
 	size_t len, plen;
 	dbdata_s *data, *list;
@@ -690,11 +689,48 @@ fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
 		clean_dbdata_struct(data);
 		return MULTI_BASIC_DISK;
 	} else {
-		lvm = data->next->fields.small;
-		snprintf(cml->partition, CONF_S, "%s", data->fields.text);
-		plen = strlen(cml->partition);
-		if (lvm == 0)
-			snprintf(disk, FILE_S, "\
+		add_pre_start_part(cml, data, disk);
+	}
+	lvm = data->next->fields.small;
+	plen = strlen(cml->partition);
+	len = strlen(disk);
+	next = (disk + len);
+	snprintf(next, CONF_S, "\
+d-i partman-auto/expert_recipe string                         \\\n");
+	next +=64;
+	snprintf(next, CONF_S, "\
+      monkey ::                                               \\\n");
+	next +=64;
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, FULL_PART);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, FULL_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	} else {
+		if (lvm > 0) {
+			next = add_pre_volume_group(cml, next);
+			next = add_pre_lvm_part(data, retval, next);
+			snprintf(next, COMM_S, "\n\n");
+		} else {
+			next = add_pre_part(data, retval, next);
+			snprintf(next, COMM_S, "\n\n");
+		}
+		next++;
+	}
+	clean_dbdata_struct(data);
+	return NONE;
+}
+
+char *
+add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
+{
+	short int lvm = data->next->fields.small;
+	size_t plen;
+
+	snprintf(cml->partition, CONF_S, "%s", data->fields.text);
+	if (lvm == 0)
+		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
 \n\
 d-i partman-auto/method string regular\n\
@@ -707,8 +743,8 @@ d-i partman/choose_partition select Finish partitioning and write changes to dis
 d-i partman/confirm boolean true\n\
 \n\
 ", data->fields.text);
-		else
-			snprintf(disk, FILE_S, "\
+	else
+		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
 \n\
 d-i partman-auto/method string lvm\n\
@@ -726,24 +762,16 @@ d-i partman/choose_partition select Finish partitioning and write changes to dis
 d-i partman/confirm boolean true\n\
 \n\
 ", cml->partition);
-	}
-	len = strlen(disk);
-	next = (disk + len);
-	snprintf(next, CONF_S, "\
-d-i partman-auto/expert_recipe string                         \\\n");
-	next +=64;
-	snprintf(next, CONF_S, "\
-      monkey ::                                               \\\n");
-	next +=64;
-	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, FULL_PART);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, FULL_PART)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	} else {
-		list = data;
-		if (lvm > 0) {
+	plen = strlen(disk);
+	return (disk + plen);
+}
+
+char *
+add_pre_volume_group(cbc_comm_line_s *cml, char *next)
+{
+	char line[CONF_S];
+	int i;
+	size_t plen;
 			snprintf(next, URL_S + 1, "\
               100 1000 1000000000 ext3                        \\\n\
                        $defaultignore{ }                      \\\n\
@@ -762,66 +790,134 @@ d-i partman-auto/expert_recipe string                         \\\n");
                        vg_name{ systemlv }                    \\\n\
               .                                               \\\n");
 			next += 128;
-			for (j = 0; j < retval; j++) {
-				snprintf(line, HOST_S + 1, "\
-              %lu %lu %lu %s",	list->fields.number,
-				list->next->fields.number,
-				list->next->next->fields.number,
-				list->next->next->next->fields.text);
-				plen = strlen(line);
-				for (i = (int)plen; i < 62; i++)
-					strcat(line, " ");
-				strcat(line, "\\\n");
-				snprintf(next, HOST_S + 1, "%s", line);
-				next += 64;
-				snprintf(next, NAME_S + 1, "\
-                       $lvmok                                 \\\n\
-                       in_vg{ systemlv }                      \\\n");
-				next += 128;
-				snprintf(line, HOST_S, "\
-                       lv_name{ %s }", list->next->next->next->next->fields.text);
-				plen = strlen(line);
-				for (i = (int)plen; i < 62; i++)
-					strcat(line, " ");
-				strcat(line, "\\\n");
-				snprintf(next, HOST_S + 1, "%s", line);
-				next += 64;
-				snprintf(next, HOST_S + 1, "\
-                       method{ format } format{ }             \\\n");
-				next += 64;
-				fs = list->next->next->next->fields.text;
-				if (strncmp(fs, "swap", COMM_S) != 0) {
-					snprintf(line, HOST_S, "\
-                       use_filesystem{ } filesystem{ %s }", fs);
-					plen = strlen(line);
-					for (i = (int)plen; i < 62; i++)
-						strcat(line, " ");
-					strcat(line, "\\\n");
-					snprintf(next, HOST_S + 1, "%s", line);
-					next +=64;
-					snprintf(line, HOST_S, "\
-                       mountpoint{ %s }", 
-	     list->next->next->next->next->next->fields.text);
-					plen = strlen(line);
-					for (i = (int)plen; i < 62; i++)
-						strcat(line, " ");
-					strcat(line, "\\\n");
-					snprintf(next, HOST_S + 1, "%s", line);
-					next += 64;
-				}
-				snprintf(next, HOST_S + 1, "\
-              .                                               \\\n");
-				next += 64;
-				list = list->next->next->next->next->next->next;
-			}
-			snprintf(next, COMM_S, "\n");
-		}
-	}
-	clean_dbdata_struct(data);
-	printf("%s", disk);
-	return NONE;
+			return next;
 }
 
+char *
+add_pre_part(dbdata_s *data, int retval, char *disk)
+{
+	char *next = disk, line[CONF_S + 1], *fs, *mount;
+	int i, j, k = retval;
+	size_t len;
+	dbdata_s *list = data;
+
+	for (j = 0; j < k; j++) {
+		fs = list->next->next->next->fields.text;
+		mount = list->next->next->next->next->next->fields.text;
+		snprintf(line, HOST_S + 1, "\
+              %lu %lu %lu %s", list->fields.number,
+		list->next->fields.number,
+		list->next->next->fields.number,
+		fs);
+		len = strlen(line);
+		for (i = (int)len; i < 62; i++)
+			strcat(line, " ");
+		strcat(line, "\\\n");
+		snprintf(next, HOST_S + 1, "%s", line);
+		next += 64;
+		if ((strncmp(fs, "swap", COMM_S) != 0) &&
+		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
+			snprintf(next, HOST_S + 1, "\
+                       method{ format } format{ }             \\\n");
+			next += 64;
+			snprintf(line, HOST_S, "\
+                       use_filesystem{ } filesystem{ %s }", fs);
+			len = strlen(line);
+			for (i = (int)len; i < 62; i++)
+				strcat(line, " ");
+			strcat(line, "\\\n");
+			snprintf(next, HOST_S + 1, "%s", line);
+			next +=64;
+			snprintf(line, HOST_S, "\
+                       mountpoint{ %s }", mount);
+			len = strlen(line);
+			for (i = (int)len; i < 62; i++)
+				strcat(line, " ");
+			strcat(line, "\\\n");
+			snprintf(next, HOST_S + 1, "%s", line);
+			next += 64;
+		} else {
+			snprintf(next, HOST_S + 1, "\
+                       method{ swap } format{ }               \\\n");
+			next += 64;
+		}
+		snprintf(next, HOST_S + 1, "\
+              .                                               \\\n");
+		next += 64;
+		list = list->next->next->next->next->next->next;
+	}
+	next -=2;
+	return next;
+}
+
+char *
+add_pre_lvm_part(dbdata_s *data, int retval, char *disk)
+{
+	char *next = disk, line[CONF_S], *fs;
+	int i, j, k = retval;
+	size_t plen;
+	dbdata_s *list = data;
+
+	for (j = 0; j < k; j++) {
+		snprintf(line, HOST_S + 1, "\
+              %lu %lu %lu %s",	list->fields.number,
+		list->next->fields.number,
+		list->next->next->fields.number,
+		list->next->next->next->fields.text);
+		plen = strlen(line);
+		for (i = (int)plen; i < 62; i++)
+			strcat(line, " ");
+		strcat(line, "\\\n");
+		snprintf(next, HOST_S + 1, "%s", line);
+		next += 64;
+		snprintf(next, NAME_S + 1, "\
+                       $lvmok                                 \\\n\
+                       in_vg{ systemlv }                      \\\n");
+		next += 128;
+		snprintf(line, HOST_S, "\
+                       lv_name{ %s }", list->next->next->next->next->fields.text);
+		plen = strlen(line);
+		for (i = (int)plen; i < 62; i++)
+			strcat(line, " ");
+		strcat(line, "\\\n");
+		snprintf(next, HOST_S + 1, "%s", line);
+		next += 64;
+		fs = list->next->next->next->fields.text;
+		if ((strncmp(fs, "swap", COMM_S) != 0) &&
+		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
+			snprintf(next, HOST_S + 1, "\
+                       method{ format } format{ }             \\\n");
+			next += 64;
+			snprintf(line, HOST_S, "\
+                       use_filesystem{ } filesystem{ %s }", fs);
+			plen = strlen(line);
+			for (i = (int)plen; i < 62; i++)
+				strcat(line, " ");
+			strcat(line, "\\\n");
+			snprintf(next, HOST_S + 1, "%s", line);
+			next +=64;
+			snprintf(line, HOST_S, "\
+                       mountpoint{ %s }", 
+	     list->next->next->next->next->next->fields.text);
+			plen = strlen(line);
+			for (i = (int)plen; i < 62; i++)
+				strcat(line, " ");
+			strcat(line, "\\\n");
+			snprintf(next, HOST_S + 1, "%s", line);
+			next += 64;
+		} else {
+			snprintf(next, HOST_S + 1, "\
+                       method{ swap } format{ }               \\\n");
+			next += 64;
+		}
+		snprintf(next, HOST_S + 1, "\
+              .                                               \\\n");
+		next += 64;
+		list = list->next->next->next->next->next->next;
+	}
+	next -=2;
+	return next;
+}
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
 {

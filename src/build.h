@@ -84,10 +84,22 @@ void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 void
-fill_net_build_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 void
-fill_build_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+
+char *
+add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
+
+char *
+add_pre_lvm_part(dbdata_s *data, int retval, char *disk);
+
+char *
+add_pre_part(dbdata_s *data, int retval, char *disk);
+
+char *
+add_pre_volume_group(cbc_comm_line_s *cml, char *next);
 
 int
 fill_build_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk);
