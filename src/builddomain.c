@@ -57,12 +57,12 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	init_cbc_struct(base);
 	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		fprintf(stderr, "build query failed\n");
-		free(cbc);
+		clean_cbc_struct(base);
 		return retval;
 	}
 	if ((retval = get_build_domain(cdl, base)) != 0) {
 		fprintf(stderr, "build domain %s not found\n", cdl->domain);
-		free(cbc);
+		clean_cbc_struct(base);
 		return retval;
 	}
 	display_build_domain(base->bdom);
@@ -106,6 +106,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 \nAdded build domain %s to database\n", bdom->domain);
 
 	clean_cbc_struct(base);
+	free(data);
 	return retval;
 }
 
