@@ -1,7 +1,7 @@
 
 CREATE TABLE `build_type` (
   `bt_id` int(7) NOT NULL AUTO_INCREMENT,
-  `alias` varchar(25) NOT NULL DEFAULT 'none',
+  `alias` varchar(25) NOT NULL,
   `build_type` varchar(25) NOT NULL DEFAULT 'none',
   `arg` varchar(15) NOT NULL DEFAULT 'none',
   `url` varchar(79) NOT NULL DEFAULT 'none',
@@ -12,33 +12,33 @@ CREATE TABLE `build_type` (
 
 CREATE TABLE `service_type` (
   `service_type_id` int(7) NOT NULL AUTO_INCREMENT,
-  `service` varchar(15) NOT NULL DEFAULT 'none',
-  `detail` varchar(50) DEFAULT NULL,
+  `service` varchar(15) NOT NULL,
+  `detail` varchar(50) NOT NULL,
   PRIMARY KEY (`service_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `hard_type` (
   `hard_type_id` int(7) NOT NULL AUTO_INCREMENT,
-  `type` varchar(50) DEFAULT NULL,
-  `class` varchar(50) DEFAULT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'none',
+  `class` varchar(50) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`hard_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `customer` (
   `cust_id` int(7) NOT NULL AUTO_INCREMENT,
-  `name` varchar(60) DEFAULT NULL,
+  `name` varchar(60) NOT NULL,
   `address` varchar(63) NOT NULL DEFAULT 'none',
   `city` varchar(31) NOT NULL DEFAULT 'none',
-  `county` varchar(30) DEFAULT NULL,
-  `postcode` varchar(10) DEFAULT NULL,
-  `coid` varchar(8) DEFAULT NULL,
+  `county` varchar(30) NOT NULL DEFAULT 'none',
+  `postcode` varchar(10) NOT NULL DEFAULT 'none',
+  `coid` varchar(8) NOT NULL,
   PRIMARY KEY (`cust_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `varient` (
   `varient_id` int(7) NOT NULL AUTO_INCREMENT,
-  `varient` varchar(50) DEFAULT NULL,
-  `valias` varchar(20) DEFAULT NULL,
+  `varient` varchar(50) NOT NULL,
+  `valias` varchar(20) NOT NULL,
   PRIMARY KEY (`varient_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -57,21 +57,21 @@ CREATE TABLE `build_domain` (
   `gateway` int(4) unsigned NOT NULL DEFAULT '0',
   `ns` int(4) unsigned NOT NULL DEFAULT '0',
   `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
-  `ntp_server` varchar(63) NOT NULL DEFAULT 'shihad.org',
+  `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_url` varchar(127) NOT NULL DEFAULT 'ldap01.shihad.org',
+  `ldap_url` varchar(127) NOT NULL DEFAULT 'none',
   `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_dn` varchar(96) NOT NULL DEFAULT 'dc=shihad,dc=org',
-  `ldap_bind` varchar(127) NOT NULL DEFAULT 'cn=thargoid,dc=shihad,dc=org',
+  `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
+  `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
   `config_ldap` smallint(4) NOT NULL DEFAULT 0,
-  `log_server` varchar(63) NOT NULL DEFAULT 'logger.shihad.org',
+  `log_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_log` smallint(4) NOT NULL DEFAULT 0,
-  `smtp_server` varchar(63) NOT NULL DEFAULT 'weezer.epl.shihad.org',
+  `smtp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_email` smallint(4) NOT NULL DEFAULT 0,
-  `xymon_server` varchar(63) NOT NULL DEFAULT '192.168.1.50',
+  `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_server` varchar(63) NOT NULL DEFAULT 'ldap01.shihad.org',
-  `nfs_domain` varchar(79) NOT NULL DEFAULT 'shihad.org',
+  `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
+  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`bd_id`),
 
   INDEX (`config_ntp`, `config_ldap`, `config_log`),
@@ -81,10 +81,10 @@ CREATE TABLE `build_domain` (
 
 CREATE TABLE `contacts` (
   `cont_id` int(7) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `email` varchar(50) DEFAULT NULL,
-  `cust_id` int(7) DEFAULT NULL,
+  `name` varchar(50) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `cust_id` int(7) NOT NULL,
   PRIMARY KEY (`cont_id`),
 
   INDEX(`cust_id`),
@@ -97,13 +97,13 @@ CREATE TABLE `contacts` (
 
 CREATE TABLE `server` (
   `server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vendor` varchar(50) DEFAULT NULL,
-  `make` varchar(50) DEFAULT NULL,
-  `model` varchar(30) DEFAULT NULL,
-  `uuid` varchar(50) DEFAULT NULL,
-  `cust_id` int(7) DEFAULT NULL,
-  `vm_server_id` int(7) DEFAULT NULL,
-  `name` varchar(30) DEFAULT NULL,
+  `vendor` varchar(63) NOT NULL DEFAULT 'none',
+  `make` varchar(63) NOT NULL DEFAULT 'none',
+  `model` varchar(31) NOT NULL DEFAULT 'none',
+  `uuid` varchar(63) NOT NULL DEFAULT 'none',
+  `cust_id` int(7) NOT NULL,
+  `vm_server_id` int(7) NOT NULL DEFAULT 0,
+  `name` varchar(31) NOT NULL,
   PRIMARY KEY (`server_id`),
 
   INDEX(`cust_id`, `vm_server_id`),
@@ -116,9 +116,9 @@ CREATE TABLE `server` (
 
 CREATE TABLE `services` (
   `service_id` int(7) NOT NULL AUTO_INCREMENT,
-  `server_id` int(7) DEFAULT NULL,
-  `cust_id` int(7) DEFAULT NULL,
-  `service_type_id` int(7) DEFAULT NULL,
+  `server_id` int(7) NOT NULL,
+  `cust_id` int(7) NOT NULL,
+  `service_type_id` int(7) NOT NULL,
   `detail` varchar(63) NOT NULL DEFAULT 'none',
   `url` varchar(63) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`service_id`),
@@ -141,9 +141,9 @@ CREATE TABLE `services` (
 
 CREATE TABLE `vm_server_hosts` (
   `vm_server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vm_server` varchar(150) DEFAULT NULL,
-  `type` varchar(50) DEFAULT NULL,
-  `server_id` int(7) DEFAULT NULL,
+  `vm_server` varchar(127) NOT NULL,
+  `type` varchar(31) NOT NULL,
+  `server_id` int(7) NOT NULL,
   PRIMARY KEY (`vm_server_id`),
 
   INDEX (server_id),
@@ -156,9 +156,9 @@ CREATE TABLE `vm_server_hosts` (
 
 CREATE TABLE `build_ip` (
   `ip_id` int(7) NOT NULL AUTO_INCREMENT,
-  `ip` int(4) unsigned DEFAULT NULL,
-  `hostname` varchar(30) DEFAULT NULL,
-  `domainname` varchar(150) DEFAULT NULL,
+  `ip` int(4) unsigned NOT NULL,
+  `hostname` varchar(31) NOT NULL,
+  `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
   PRIMARY KEY (`ip_id`),
 
@@ -172,11 +172,11 @@ CREATE TABLE `build_ip` (
 
 CREATE TABLE `build_os` (
   `os_id` int(7) NOT NULL AUTO_INCREMENT,
-  `os` varchar(25) DEFAULT NULL,
-  `os_version` varchar(25) DEFAULT NULL,
-  `alias` varchar(20) DEFAULT NULL,
-  `ver_alias` varchar(25) NOT NULL DEFAULT 'none',
-  `arch` varchar(12) DEFAULT NULL,
+  `os` varchar(31) NOT NULL,
+  `os_version` varchar(31) DEFAULT NULL,
+  `alias` varchar(31) DEFAULT NULL,
+  `ver_alias` varchar(31) NOT NULL DEFAULT 'none',
+  `arch` varchar(15) DEFAULT NULL,
   `bt_id` int(7) DEFAULT NULL,
   PRIMARY KEY (`os_id`),
 
@@ -243,10 +243,10 @@ CREATE TABLE `default_part` (
 
 CREATE TABLE `hardware` (
   `hard_id` int(7) NOT NULL AUTO_INCREMENT,
-  `detail` varchar(50) DEFAULT NULL,
-  `device` varchar(30) DEFAULT NULL,
-  `server_id` int(7) DEFAULT NULL,
-  `hard_type_id` int(7) DEFAULT NULL,
+  `detail` varchar(63) NOT NULL,
+  `device` varchar(31) NOT NULL,
+  `server_id` int(7) NOT NULL,
+  `hard_type_id` int(7) NOT NULL,
   PRIMARY KEY (`hard_id`),
 
   INDEX (`server_id`, `hard_type_id`),
@@ -305,12 +305,12 @@ CREATE TABLE `packages` (
 
 CREATE TABLE `build` (
   `build_id` int(7) NOT NULL AUTO_INCREMENT,
-  `mac_addr` varchar(17) DEFAULT NULL,
-  `varient_id` int(7) DEFAULT NULL,
-  `net_inst_int` varchar(12) DEFAULT NULL,
-  `server_id` int(7) DEFAULT NULL,
-  `os_id` int(7) DEFAULT NULL,
-  `ip_id` int(7) DEFAULT NULL,
+  `mac_addr` varchar(17) NOT NULL,
+  `varient_id` int(7) NOT NULL,
+  `net_inst_int` varchar(15) NOT NULL,
+  `server_id` int(7) NOT NULL,
+  `os_id` int(7) NOT NULL,
+  `ip_id` int(7) NOT NULL,
   `locale_id` int(7) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   PRIMARY KEY (`build_id`),
