@@ -1073,10 +1073,7 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 	}
 	data->args.number = zone->id;
 	if ((retval = run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
-		printf("Unable to delete records in forward zone %s\n", cm->domain);
-		clean_dbdata_struct(data);
-		dnsa_clean_list(dnsa);
-		return CANNOT_DELETE_RECORD;
+		printf("zone %s was empty\n", cm->domain);;
 	} else {
 		printf("%d Records for zone %s deleted\n", retval, cm->domain);
 	}
