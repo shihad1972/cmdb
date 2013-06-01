@@ -35,7 +35,7 @@ create_cmdb_user() {
     groupadd -r cmdb
   fi
 
-  id cmdb 2>/dev/null
+  id cmdb >/dev/null 2>&1
   if [ $? -eq 0 ]; then
     echo "cmdb user exists. Not adding"
   else
@@ -47,31 +47,68 @@ create_cmdb_user() {
   fi
 
   for i in web sql cmdb-bin logs scripts inc
-    do mkdir /var/lib/cmdb/${i}
+    do if [ ! -d /var/lib/cmdb/${i} ]; then
+      mkdir /var/lib/cmdb/${i}
+     fi
   done
   chown -R cmdb:cmdb /var/lib/cmdb
   chmod -R 770 /var/lib/cmdb
-
 }
 
-get_host_from_user() {
+# Get Hostname
 
+get_host() {
   echo "Please input a host name"
   read HOSTNAME
-
 }
 
-get_domain_from_user() {
+# Get domain name
 
+get_domain() {
   echo "Please input a domain name"
   read DOMAIN
-
 }
 
-get_ip_from_user() {
+# Get IP address
 
+get_ip() {
   echo "Please input the IP address this server will use to build machines"
   read IPADDR
+}
+
+# Get Debian Mirror URL
+
+get_deb_mirror() {
+  echo "Please input the debian remote mirror you wish to use"
+  read DEBMIR
+}
+
+# Get CentOS Mirror URL
+
+get_cent_mirror() {
+  echo "Please input the centos remote mirror you wish to use"
+  read CENTMIR
+}
+
+# Get Ubuntu Mirror URL
+
+get_ubun_mirror() {
+  echo "Please input the ubuntu remote mirror you wish to use"
+  read UBUMIR
+}
+
+# Get Fedora Mirror URL
+
+get_fed_mirror() {
+  echo "Please input the ubuntu remote mirror you wish to use"
+  read FEDMIR
+}
+
+get_mirrors() {
+  get_cent_mirror
+  get_deb_mirror
+  get_fed_mirror
+  get_ubun_mirror
 }
 
 parse_command_line() {
@@ -90,20 +127,41 @@ parse_command_line() {
   done
 
   if [ -z $HOSTNAME ]; then
-    get_host_from_user
+    get_host
   fi
+
   if [ -z $DOMAIN ]; then
-    get_domain_from_user
+    get_domain
   fi
+
   if [ -z $IPADDR ]; then
-    get_ip_from_user
+    get_ip
   fi
   
 }
 
+create_cmdb_user
 
 parse_command_line
 
-echo "host: $HOSTNAME"
-echo "domain: $DOMAIN"
-echo "IP: $IPADDR"
+echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
+echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
+echo "This is where we shall store the build files."
+echo "They will be stored in /var/lib/cmdb/web/"
+echo " "
+echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
+echo " "
+
+get_mirrors
+# Check for OS type
+
+if which apt-get >/dev/null 2>&1; then
+  debian_base
+elif which yum >/dev/null 2>&1; then
+  redhat_base
+else
+  echo "No yum or apt-get?? What OS are you running?"
+  exit 1
+fi
+
+
