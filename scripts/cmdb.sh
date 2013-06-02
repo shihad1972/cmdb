@@ -22,6 +22,32 @@
 #  with this program; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+# Commands to use
+
+APACTL=`which apache2ctl`
+APTG=`which apt-get`
+DPKG=`which dpkg`
+YUM=`which yum`
+RPM=`which rpm`
+SERV=`which service`
+
+# Files and directories
+
+DHCPF="/etc/dhcp/dhcpd.hosts"
+DHCPD="/etc/dhcp/"
+BIND="/etc/bind/"
+
+if [ -d /var/lib/tftpboot/ ]; then
+  TFTP="/var/lib/tftpboot/"
+  echo "Found $TFTP"
+else if [ -d /srv/tftp/ ]; then 
+  TFTP="/srv/tftp/"
+  echo "Found $TFTP"
+else
+  TFTP=""
+  echo "No tftp directory found"
+fi
+
 
 #  Check for cmdb user and group; if not create them
 
@@ -140,6 +166,97 @@ parse_command_line() {
   
 }
 
+create_apache_config() {
+
+  echo "Creating config in ${APACNF}"
+  cat >${APACNF}cmdb.conf<<EOF
+#
+# This is the connfiguration file for the cmdb web portal used
+# by the cmdb build system, Muppett
+Alias /cmdb/ "/var/lib/cmdb/web/"
+<Directory "/var/lib/cmdb/web/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Order allow,deny
+    Allow from all
+</Directory>
+
+ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
+<Directory "/var/lib/cmdb/cgi-bin/">
+    AllowOverride None
+    Options ExecCGI Includes
+    Order allow,deny
+    Allow from all
+</Directory>
+
+EOF
+
+}
+
+debian_base() {
+
+  APACNF="/etc/apache2/conf.d/"
+  if [ -z "$APACTL" ]; then
+    echo "Installing apache2 package"
+    $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y
+  fi
+
+  if [ ! -d "$DHCPD" ]; then
+    echo "Installing isc-dhcp-server package"
+    $APTG install isc-dhcp-server -y
+  fi
+
+  if [ ! -d "$TFTP" ]; then
+    echo "Installing tftpd-hpa package"
+    $APTG install tftpd-hpa -y
+  fi
+
+  if [ ! -d "$BIND" ]; then
+    echo "Installing bind9 package"
+    $APTG install bind9 bind9-host -y
+  fi
+
+}
+
+redhat_base() {
+
+  CHKCON=`which chkconfig`
+
+  if [ -z "$CHKCON" ]; then
+    echo "Cannot find chkconfig. Do you have /sbin in your path?"
+    echo "Alternatively install it via yum and run this script again"
+    exit 3
+  fi
+
+  APACNF="/etc/httpd/conf.d/"
+
+  if [ -z "$APACTL" ]; then
+    echo "Installing httpd package"
+    $YUM install httpd php5 -y
+  fi
+
+  if [ ! -d "$DHCPD" ]; then
+    echo "Installing dhcp package"
+    $YUM install dhcp -y
+  fi
+
+# Need to check if syslinux is installed cos we need the pxelinux.0 file
+# from it
+
+  if [ ! -d "$TFTP" ]; then
+    echo "Installing atftp and syslinux package"
+    $YUM install atftp syslinux -y
+    echo "Setting tftp to start and restarting xinetd"
+    $CHKCON tftp on
+    $SERV xinetd restart
+    TFTP="/tftpboot"
+    mkdir ${TFTP}/pxelinux.cfg
+  fi
+
+  if [ ! -d "$BIND" ]; then
+    echo "Installing bind package"
+    $YUM install bind -y
+  fi
+}
 create_cmdb_user
 
 parse_command_line
@@ -152,7 +269,16 @@ echo " "
 echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
 echo " "
 
-get_mirrors
+# Need to have the sbin directories in $PATH. Otherwise chances are we will
+# not be able to run the commands we need.
+
+if ! echo $PATH | grep sbin; then
+  echo "Cannot find the sbin directories in your path"
+  echo "You will need these to run this script."
+  echo "You should probably run this script as root"
+  exit 1
+fi
+
 # Check for OS type
 
 if which apt-get >/dev/null 2>&1; then
@@ -161,7 +287,8 @@ elif which yum >/dev/null 2>&1; then
   redhat_base
 else
   echo "No yum or apt-get?? What OS are you running?"
-  exit 1
+  exit 2
 fi
 
+create_apache_config
 
