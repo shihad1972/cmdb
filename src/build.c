@@ -1187,6 +1187,38 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 			printf("LDAP authentication configuration skipped\n");
 	}
 	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, XYMON_CONFIG);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, XYMON_CONFIG)) == 0) {
+		printf("No build domain associated with %s?\n", cml->name);
+		clean_dbdata_struct(data);
+		return BUILD_DOMAIN_NOT_FOUND;
+	} else if (retval > 1) {
+		printf("Multiple build domains associated with %s?\n",
+		       cml->name);
+		clean_dbdata_struct(data);
+		return MULTIPLE_BUILD_DOMAINS;
+	} else {
+		if (data->fields.small > 0)
+			fill_xymon_config(cml, data, build);
+		else
+			printf("Xymon configuration skipped\n");
+	}
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, SMTP_CONFIG);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, SMTP_CONFIG)) == 0) {
+		printf("No build domain associated with %s?\n", cml->name);
+		clean_dbdata_struct(data);
+		return BUILD_DOMAIN_NOT_FOUND;
+	} else if (retval > 1) {
+		printf("Multiple build domains associated with %s?\n",
+		       cml->name);
+		clean_dbdata_struct(data);
+		return MULTIPLE_BUILD_DOMAINS;
+	} else {
+		fill_smtp_config(cml, data, build);
+	}
 	return NONE;
 }
 
@@ -1208,6 +1240,7 @@ fill_ldap_config(dbdata_s *data, string_len_s *build)
 	else
 		snprintf(url, URL_S, "ldap://%s", server);
 	snprintf(buff, BUFF_S, "\n\
+# Application Configuration\n\
 libnss-ldap     libnss-ldap/bindpw      password\n\
 libnss-ldap     libnss-ldap/rootbindpw  password\n\
 libnss-ldap     libnss-ldap/dblogin     boolean false\n\
@@ -1227,7 +1260,7 @@ libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
 			build->len *=2;
 		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_partition");
+			report_error(MALLOC_FAIL, "tmp in fill_ldap_config");
 		else
 			build->string = tmp;
 	}
@@ -1253,7 +1286,71 @@ libpam-ldap     libpam-ldap/dbrootlogin boolean true\n\
 			build->len *=2;
 		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_partition");
+			report_error(MALLOC_FAIL, "tmp in fill_ldap_config");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+{
+	dbdata_s *list = data->next;
+	char *server = list->fields.text;
+	char *domain = list->next->fields.text;
+	char buff[BUFF_S], *tmp;
+	size_t len;
+
+	snprintf(buff, BUFF_S, "\
+xymon-client    hobbit-client/HOBBITSERVERS     string  %s\n\
+xymon-client    hobbit-client/CLIENTHOSTNAME    string  %s.%s\n\
+", server, cml->name, domain);
+	len = strlen(buff);
+	if ((len + build->size) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "tmp in fill_xymon_config");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_smtp_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+{
+	short int relay = data->fields.small;
+	dbdata_s *list = data->next;
+	char *smtp = list->fields.text;
+	list = list->next;
+	char *domain = list->fields.text;
+	char buff[BUFF_S], *tmp;
+	size_t len;
+	if (relay > 0)
+		snprintf(buff, BUFF_S, "\n\
+postfix postfix/mailname        string  %s.%s\n\
+postfix postfix/main_mailer_type        select  Internet with smarthost\n\
+postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
+postfix postfix/relayhost       string  %s\n\
+", cml->name, domain, cml->name, domain, domain, smtp);
+	else
+		snprintf(buff, BUFF_S, "\
+postfix postfix/mailname        string  %s.%s\n\
+postfix postfix/main_mailer_type        select  Internet Site\n\
+postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
+", cml->name, domain, cml->name, domain, domain);
+	len = strlen(buff);
+	if ((len + build->size) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "tmp in fill_smtp_config");
 		else
 			build->string = tmp;
 	}

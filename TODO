@@ -2,6 +2,8 @@
 Should have the root password for the machine in the database and
 add this to the build file. Need to work out how to get hash
 
+Also need to add an email alias for root in smtp configuration
+
 01/06/2013
 Need to be able to add glue records to DNS zone files. Could check
 on NS records that have . in them??

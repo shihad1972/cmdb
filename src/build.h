@@ -131,6 +131,12 @@ void
 fill_ldap_config(dbdata_s *data, string_len_s *build);
 
 void
+fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+
+void
+fill_smtp_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+
+void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
 
 void

@@ -187,7 +187,16 @@ SELECT package FROM packages p \
   AND b.os_id = p.os_id WHERE server_id = ?","\
 SELECT bd.config_ldap, bd.ldap_server, bd.ldap_ssl, bd.ldap_dn, bd.ldap_bind \
   FROM build_domain bd LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
-  LEFT JOIN build b ON b.ip_id = bi.ip_id WHERE b.server_id = ?"
+  LEFT JOIN build b ON b.ip_id = bi.ip_id \
+  WHERE b.server_id = ?","\
+SELECT bd.config_xymon, bd.xymon_server, bd.domain FROM build_domain bd \
+  LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
+  LEFT JOIN build b ON b.ip_id = bi.ip_id \
+  WHERE b.server_id = ?","\
+SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
+  LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
+  LEFT JOIN build b ON b.ip_id = bi.ip_id \
+  WHERE b.server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -255,10 +264,12 @@ const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9, 9, 7, 2, 6, 1, 5
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
+	9, 7, 2, 6, 1, 5, 3, 3
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -300,6 +311,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -330,7 +343,9 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBTEXT, DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
-	{ DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE }
+	{ DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
