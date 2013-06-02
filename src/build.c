@@ -535,7 +535,6 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char *pack;
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
@@ -582,7 +581,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
 	} else {
-		fill_packages(cml, data, &pack, retval);
+		fill_packages(cml, data, &build, retval);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
@@ -590,7 +589,6 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	printf("%s", build.string);
 	printf("Length is %zu\t%zu\n", len, build.size);
 	free(build.string);
-	free(pack);
 	return retval;
 }
 
@@ -901,31 +899,31 @@ tasksel tasksel/first multiselect standard\n");
 }
 
 void
-fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **pack, int i)
+fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i)
 {
-	char *next, *tmp;
+	char *next, *tmp, *pack;
 	int j, k = i;
 	size_t len;
 	dbdata_s *list = data;
 
-	if (!(*pack = malloc(BUFF_S * sizeof(char))))
+	if (!(pack = malloc(BUFF_S * sizeof(char))))
 		report_error(MALLOC_FAIL, "pack in fill_packages");
-	snprintf(*pack, MAC_S, "\nd-i pkgsel/include string");
-	len = strlen(*pack);
-	next = *pack + len;
+	snprintf(pack, MAC_S, "\nd-i pkgsel/include string");
+	len = strlen(pack); /* should always be 26 */
+	next = pack + len;
 	for (j = 0; j < k; j++) {
 		snprintf(next, HOST_S, " %s", list->fields.text);
 		len = strlen(list->fields.text);
 		next = next + len + 1;
 		list = list->next;
 	}
-	len = strlen(*pack);
-	if ((len + 331 + strlen(cml->config)) > BUFF_S) {
-		tmp = realloc(*pack, BUFF_S * 2 * sizeof(char));
+	len = strlen(pack) + 331 + strlen(cml->config);
+	if (len > BUFF_S) {
+		tmp = realloc(pack, BUFF_S * 2 * sizeof(char));
 		if (!tmp)
 			report_error(MALLOC_FAIL, "realloc in fill_packages");
 		else
-			*pack = tmp;
+			pack = tmp;
 	}
 	snprintf(next, TBUFF_S, "\n\
 d-i pkgsel/upgrade select none\n\
@@ -940,6 +938,17 @@ d-i cdrom-detect/eject boolean false\n\
 \n\
 d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh && chmod 755 base.sh && ./base.sh\n",
 		cml->config);
+	if ((len + build->size) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "next in fill_partition");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", pack);
+	build->size += len;
 }
 
 char *

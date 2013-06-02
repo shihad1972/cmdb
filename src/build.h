@@ -107,7 +107,7 @@ int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
 
 void
-fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **output, int i);
+fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
