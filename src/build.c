@@ -506,13 +506,15 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char out[BUFF_S];
+	char out[BUFF_S], pxe[RBUFF_S];
 	int retval = NONE;
 	dbdata_s *data;
 
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
+	snprintf(pxe, RBUFF_S, "%s%s%s.cfg", cmc->tftpdir, cmc->pxe,
+		 cml->name);
 	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
@@ -523,7 +525,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		return MULTI_TFTP_B_ERR;
 	} else {
 		fill_tftp_output(cml, data, out);
-		printf("%s", out);
+		write_file(pxe, out);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
