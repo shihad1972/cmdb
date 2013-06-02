@@ -399,13 +399,20 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char *ip;
+	char *ip, line[RBUFF_S];
 	int retval = NONE;
-	dbdata_s *data;
 	uint32_t ip_addr;
+	dbdata_s *data;
+	cbc_dhcp_config_s *dhconf;
+	string_len_s *dhcp;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in write_dhcp_config");
+	if (!(dhcp = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "dhcp in write_dhcp_config");
+	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
+		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
+	dhcp->len = RBUFF_S;
 	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 		return retval;
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
@@ -422,14 +429,78 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		ip_addr = htonl((uint32_t)data->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-		printf("host %s { hardware ethernet %s; fixed-address %s; \
-option domain-name \"%s\"; }\n\n", cml->name, data->fields.text, ip,
+		fill_dhconf(cml->name, data, ip, dhconf);
+		snprintf(line, RBUFF_S, "host %s { hardware ethernet %s; fixed-address %s; \
+option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
 data->next->next->fields.text);
 		retval = 0;
 	}
+	strncpy(dhconf->file, cmc->dhcpconf, CONF_S);
+	fill_dhcp_hosts(line, dhcp, dhconf);
+	write_file(cmc->dhcpconf, dhcp->string);
+	/* Could use a free_strings macro here - check out 21st century C */
 	free(ip);
+	free(dhcp->string);
+	free(dhcp);
+	free(dhconf);
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+void
+fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf)
+{
+	strncpy(dhconf->name, name, CONF_S);
+	strncpy(dhconf->eth, data->fields.text, MAC_S);
+	strncpy(dhconf->ip, ip, RANGE_S);
+	strncpy(dhconf->domain, data->next->next->fields.text, RBUFF_S);
+}
+
+void
+fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
+{
+	char *buff, *cont, *tmp;
+	FILE *dhcp_hosts;
+	size_t len = 0, blen;
+
+	if (!(dhcp->string = calloc(dhcp->len, sizeof(char))))
+		report_error(MALLOC_FAIL, "dhcp->string in write_dhcp_config");
+	if (!(buff = calloc(RBUFF_S,  sizeof(char))))
+		report_error(MALLOC_FAIL, "buff in fill_dhcp_hosts");
+	if (!(dhcp_hosts = fopen(dhconf->file, "r")))
+		report_error(FILE_O_FAIL, dhconf->file);
+	while (fgets(buff, RBUFF_S, dhcp_hosts)) {
+		blen = strlen(buff);
+		if (dhcp->len < (blen + len)) {
+			dhcp->len *= 2;
+			tmp = realloc(dhcp->string, dhcp->len);
+			if (!tmp)
+				report_error(MALLOC_FAIL, "string in fill_dhcp_hosts");
+			else
+				dhcp->string = tmp;
+		}
+		cont = dhcp->string;
+		if (!(strstr(buff, dhconf->name))) {
+			if (!(strstr(buff, dhconf->eth))) {
+				if (!(strstr(buff, dhconf->ip))) {
+					strncpy(cont + len, buff, blen + 1);
+					len += blen;
+				}
+			}
+		}
+	}
+	fclose(dhcp_hosts);
+	if (dhcp->len < (len + RBUFF_S)) {
+		dhcp->len *= 2;
+		tmp = realloc(dhcp->string, dhcp->len);
+		if (!tmp) 
+			report_error(MALLOC_FAIL, "string in fill_dhcp_hosts");
+		else
+			dhcp->string = tmp;
+	}
+	cont = dhcp->string;
+	strncpy(cont + len, line, RBUFF_S);
+	free(buff);
 }
 
 int
@@ -516,6 +587,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	printf("%s%s%s%s%s", net, mirror, disk, kernel, pack);
 	printf("Length is %zu\n", len);
 	printf("Need %zu mallocs\n", (len / 1024) + 1);
+	free(pack);
 	return retval;
 }
 
@@ -777,7 +849,7 @@ tasksel tasksel/first multiselect standard\n");
 void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **pack, int i)
 {
-	char *next;
+	char *next, *tmp;
 	int j, k = i;
 	size_t len;
 	dbdata_s *list = data;
@@ -794,9 +866,13 @@ fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **pack, int i)
 		list = list->next;
 	}
 	len = strlen(*pack);
-	if ((len + 331 + strlen(cml->config)) > BUFF_S)
-		if (!(realloc(*pack, BUFF_S * 2 * sizeof(char))))
+	if ((len + 331 + strlen(cml->config)) > BUFF_S) {
+		tmp = realloc(*pack, BUFF_S * 2 * sizeof(char));
+		if (!tmp)
 			report_error(MALLOC_FAIL, "realloc in fill_packages");
+		else
+			*pack = tmp;
+	}
 	snprintf(next, TBUFF_S, "\n\
 d-i pkgsel/upgrade select none\n\
 \n\

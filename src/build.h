@@ -47,6 +47,14 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	unsigned long int locale;
 } cbc_comm_line_s;
 
+typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
+	char file[CONF_S];
+	char name[CONF_S];
+	char eth[MAC_S];
+	char ip[MAC_S];
+	char domain[RBUFF_S];
+} cbc_dhcp_config_s;
+
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
@@ -64,6 +72,12 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+void
+fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf);
+
+void
+fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf);
 
 int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);

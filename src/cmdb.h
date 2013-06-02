@@ -328,6 +328,11 @@ typedef struct dbdata_s {
 	struct dbdata_s *next;
 } dbdata_s;
 
+typedef struct string_len_s {
+	char *string;
+	size_t len;
+} string_len_s;
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 
