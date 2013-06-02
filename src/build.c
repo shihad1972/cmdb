@@ -387,12 +387,24 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
-	if ((retval = write_dhcp_config(cmc, cml)) != 0)
+	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
+		printf("Failed to write dhcpd.hosts file\n");
 		return retval;
-	if ((retval = write_tftp_config(cmc, cml)) != 0)
+	} else {
+		printf("dhcpd.hosts file written\n");
+	}
+	if ((retval = write_tftp_config(cmc, cml)) != 0) {
+		printf("Failed to write tftp configuration\n");
 		return retval;
-	if ((retval = write_build_file(cmc, cml)) != 0)
+	} else {
+		printf("tftp configuration file written\n");
+	}
+	if ((retval = write_build_file(cmc, cml)) != 0) {
+		printf("Failed to write build file\n");
 		return retval;
+	} else {
+		printf("build file written\n");
+	}
 	return retval;
 }
 
@@ -437,7 +449,7 @@ data->next->next->fields.text);
 	}
 	strncpy(dhconf->file, cmc->dhcpconf, CONF_S);
 	fill_dhcp_hosts(line, dhcp, dhconf);
-	write_file(cmc->dhcpconf, dhcp->string);
+	retval = write_file(cmc->dhcpconf, dhcp->string);
 	/* Could use a free_strings macro here - check out 21st century C */
 	free(ip);
 	free(dhcp->string);
@@ -525,9 +537,9 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		return MULTI_TFTP_B_ERR;
 	} else {
 		fill_tftp_output(cml, data, out);
-		write_file(pxe, out);
-		retval = 0;
+		retval = write_file(pxe, out);
 	}
+	if (retval == 0)
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -535,11 +547,12 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
+	char file[NAME_S];
 	int retval = NONE;
-	size_t len;
 	dbdata_s *data;
 	string_len_s build = {.len = BUFF_S};
 
+	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -585,9 +598,11 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	len = strlen(build.string);
-	printf("%s", build.string);
-	printf("Length is %zu\t%zu\n", len, build.size);
+	if ((retval = fill_app_config(cmc, cml, &build)) != 0) {
+		printf("Failed to get application configuration\n");
+		return retval;
+	}
+	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
 }
@@ -1147,6 +1162,105 @@ add_pre_lvm_part(dbdata_s *data, int retval, char *disk)
 	next -=2;
 	return next;
 }
+
+int
+fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+{
+	int retval;
+	dbdata_s *data;
+
+	cbc_init_initial_dbdata(&data, LDAP_CONFIG);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
+		printf("No build domain associated with %s?\n", cml->name);
+		clean_dbdata_struct(data);
+		return BUILD_DOMAIN_NOT_FOUND;
+	} else if (retval > 1) {
+		printf("Multiple build domains associated with %s?\n",
+		       cml->name);
+		clean_dbdata_struct(data);
+		return MULTIPLE_BUILD_DOMAINS;
+	} else {
+		if (data->fields.small > 0)
+			fill_ldap_config(data, build);
+		else
+			printf("LDAP authentication configuration skipped\n");
+	}
+	clean_dbdata_struct(data);
+	return NONE;
+}
+
+void
+fill_ldap_config(dbdata_s *data, string_len_s *build)
+{
+	char url[URL_S], buff[BUFF_S], *tmp;
+	dbdata_s *list = data->next;
+	char *server = list->fields.text;
+	list = list->next;
+	short int ssl = list->fields.small;
+	list = list->next;
+	char *base = list->fields.text;
+	list = list->next;
+	char *root = list->fields.text;
+	size_t len;
+	if (ssl > 0)
+		snprintf(url, URL_S, "ldaps://%s", server);
+	else
+		snprintf(url, URL_S, "ldap://%s", server);
+	snprintf(buff, BUFF_S, "\n\
+libnss-ldap     libnss-ldap/bindpw      password\n\
+libnss-ldap     libnss-ldap/rootbindpw  password\n\
+libnss-ldap     libnss-ldap/dblogin     boolean false\n\
+libnss-ldap     libnss-ldap/override    boolean true\n\
+libnss-ldap     shared/ldapns/base-dn   string  %s\n\
+libnss-ldap     libnss-ldap/rootbinddn  string  %s\n\
+libnss-ldap     shared/ldapns/ldap_version      select  3\n\
+libnss-ldap     libnss-ldap/binddn      string  %s\n\
+libnss-ldap     shared/ldapns/ldap-server       string %s\n\
+libnss-ldap     libnss-ldap/nsswitch    note\n\
+libnss-ldap     libnss-ldap/confperm    boolean false\n\
+libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
+\n", base, root, root, url);
+	len = strlen(buff);
+	if ((len + build->size) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "next in fill_partition");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+	snprintf(buff, BUFF_S, "\
+libpam-ldap     libpam-ldap/rootbindpw  password\n\
+libpam-ldap     libpam-ldap/bindpw      password\n\
+libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
+libpam-ldap     shared/ldapns/base-dn   string  %s\n\
+libpam-ldap     libpam-ldap/override    boolean true\n\
+libpam-ldap     shared/ldapns/ldap_version      select  3\n\
+libpam-ldap     libpam-ldap/dblogin     boolean false\n\
+libpam-ldap     shared/ldapns/ldap-server       string  %s\n\
+libpam-ldap     libpam-ldap/pam_password        select  crypt\n\
+libpam-ldap     libpam-ldap/binddn      string  %s\n\
+libpam-ldap     libpam-ldap/rootbinddn  string  %s\n\
+libpam-ldap     libpam-ldap/dbrootlogin boolean true\n\
+\n", base, url, root, root);
+	len = strlen(buff);
+	if ((len + build->size) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "next in fill_partition");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
 {

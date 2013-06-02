@@ -124,6 +124,12 @@ add_pre_volume_group(cbc_comm_line_s *cml, char *next);
 int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
+int
+fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+
+void
+fill_ldap_config(dbdata_s *data, string_len_s *build);
+
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
 
