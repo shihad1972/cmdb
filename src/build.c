@@ -253,7 +253,7 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 	cbc_locale_s *loc = cbc->locale;
 	cbc_varient_s *vari = cbc->varient;
 	cbc_seed_scheme_s *sch = cbc->sscheme;
-	osid = bid = ipid = lid = vid = bdid = btid = 0;
+	osid = bid = ipid = lid = vid = bdid = btid = ssid = 0;
 
 	while (build) {
 		if (build->server_id == sid) {
