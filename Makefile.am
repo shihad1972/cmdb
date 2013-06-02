@@ -55,6 +55,14 @@ cbcpart_SOURCES = \
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcpart.h
 
+cbc_sql_SOURCES = \
+		sql/mysql/all-tables-mysql.sql\
+		sql/sqlite/all-tables-sqlite.sql
+
+cbc_script_SOURCES = \
+		scripts/cmdb.sh\
+		scripts/create_ldif_for_domain.sh
+
 all:	$(bin_PROGRAMS)
 
 dnsa:
