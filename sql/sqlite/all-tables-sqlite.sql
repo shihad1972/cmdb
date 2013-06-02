@@ -173,9 +173,9 @@ CREATE TABLE `build_ip` (
 CREATE TABLE `build_os` (
   `os_id` INTEGER PRIMARY KEY,
   `os` varchar(31) NOT NULL,
-  `os_version` varchar(31) DEFAULT NULL,
-  `alias` varchar(31) DEFAULT NULL,
-  `ver_alias` varchar(31) NOT NULL DEFAULT 'none',
+  `os_version` varchar(15) DEFAULT NULL,
+  `alias` varchar(15) DEFAULT NULL,
+  `ver_alias` varchar(15) NOT NULL DEFAULT 'none',
   `arch` varchar(15) DEFAULT NULL,
   `bt_id` int(7) DEFAULT NULL,
   PRIMARY KEY (`os_id`),
