@@ -331,6 +331,7 @@ typedef struct dbdata_s {
 typedef struct string_len_s {
 	char *string;
 	size_t len;
+	size_t size;
 } string_len_s;
 
 extern char *optarg;

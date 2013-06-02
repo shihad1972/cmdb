@@ -535,15 +535,17 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char net[BUFF_S], mirror[BUFF_S], disk[FILE_S], kernel[BUFF_S];
 	char *pack;
 	int retval = NONE;
 	size_t len;
 	dbdata_s *data;
+	string_len_s build = {.len = BUFF_S};
 
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
+	if (!(build.string = calloc(build.len, sizeof(char))))
+		report_error(MALLOC_FAIL, "build.string in write_build_file");
 	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
@@ -553,7 +555,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_NET_BUILD_ERR;
 	} else {
-		fill_net_output(cml, data, net);
+		fill_net_output(cml, data, &build);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
@@ -566,12 +568,12 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_BUILD_MIRR_ERR;
 	} else {
-		fill_mirror_output(cml, data, mirror);
+		fill_mirror_output(cml, data, &build);
 		retval = 0;
 	}
-	if ((retval = fill_partition(cmc, cml, disk)) != 0)
+	if ((retval = fill_partition(cmc, cml, &build)) != 0)
 		return retval;
-	if ((retval = fill_kernel(cml, kernel)) != 0)
+	if ((retval = fill_kernel(cml, &build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
 	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
@@ -584,11 +586,10 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	len = strlen(net) + strlen(mirror) + strlen(disk) + strlen(kernel)
-	  + strlen(pack);
-	printf("%s%s%s%s%s", net, mirror, disk, kernel, pack);
-	printf("Length is %zu\n", len);
-	printf("Need %zu mallocs\n", (len / 1024) + 1);
+	len = strlen(build.string);
+	printf("%s", build.string);
+	printf("Length is %zu\t%zu\n", len, build.size);
+	free(build.string);
 	free(pack);
 	return retval;
 }
@@ -636,10 +637,12 @@ bline, arg, url, cml->name);
 }
 
 void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
+	char output[BUFF_S];
+	char *ip, *ns, *nm, *gw, *tmp;
 	dbdata_s *list = data;
-	char *ip, *ns, *nm, *gw;
+	size_t len;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
@@ -692,6 +695,7 @@ d-i netcfg/get_hostname string %s\n\
 d-i netcfg/get_domain string %s\n",
 locale, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
 	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
+/* Need to add the values into this!! */
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string \n\
@@ -708,6 +712,17 @@ d-i netcfg/get_gateway string \n\
 \n\
 d-i netcfg/get_hostname string \n\
 d-i netcfg/get_domain string \n");
+	if ((len = strlen(output)) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "string in fill_net_output");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string, len + 1, "%s", output);
+	build->size += len;
 	free(ip);
 	free(gw);
 	free(ns);
@@ -715,7 +730,7 @@ d-i netcfg/get_domain string \n");
 }
 
 void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
+fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
 	char *mirror = data->fields.text;
 	char *ver_alias = data->next->fields.text;
@@ -723,7 +738,8 @@ fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	char *country = data->next->next->next->fields.text;
 	char *ntpserv = data->next->next->next->next->next->fields.text;
 	char *arch = data->next->next->next->next->next->next->fields.text;
-	char tmp[NAME_S];
+	char ntp[NAME_S], output[BUFF_S], *tmp;
+	size_t len;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
@@ -746,26 +762,38 @@ d-i clock-setup/utc boolean true\n\
 d-i time/zone string %s\n\
 ", mirror, alias, ver_alias, country);
 		if (data->next->next->next->next->fields.small == 0)
-			snprintf(tmp, NAME_S, "\
+			snprintf(ntp, NAME_S, "\
 d-i clock-setup/ntp boolean false\n\
 \n\
 ");
 		else
-			snprintf(tmp, NAME_S, "\
+			snprintf(ntp, NAME_S, "\
 d-i clock-setup/ntp boolean true\n\
 d-i clock-setup/ntp-server string %s\n\
 \n\
 ", ntpserv);
-		strncat(output, tmp, NAME_S);
+		strncat(output, ntp, NAME_S);
 	}
+	len = strlen(output);
+	if ((build->size + len) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "tmp in fill_mirror_output");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", output);
+	build->size += len;
 	/* Store the arch for use in fill_kernel */
 	snprintf(cml->arch, MAC_S, "%s", arch);
 }
 
 int
-fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk)
+fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *next;
+	char *next, disk[FILE_S];
 	int retval;
 	short int lvm;
 	size_t len;
@@ -812,13 +840,26 @@ d-i partman-auto/expert_recipe string                         \\\n");
 		next++;
 	}
 	clean_dbdata_struct(data);
+	len = strlen(disk);
+	if ((build->size + len) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		next = realloc(build->string, build->len * sizeof(char));
+		if (!next)
+			report_error(MALLOC_FAIL, "next in fill_partition");
+		else
+			build->string = next;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", disk);
+	build->size += len;
 	return NONE;
 }
 
 int
-fill_kernel(cbc_comm_line_s *cml, char *output)
+fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *arch = cml->arch;
+	char *arch = cml->arch, *tmp, output[BUFF_S];
+	size_t len;
 	if (strncmp(arch, "i386", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 d-i base-installer/kernel/image string linux-image-2.6-686\n\
@@ -830,7 +871,6 @@ d-i apt-setup/security_host string security.debian.org\n\
 d-i apt-setup/volatile_host string volatile.debian.org\n\
 \n\
 tasksel tasksel/first multiselect standard\n");
-		return NONE;
 	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 d-i base-installer/kernel/image string linux-image-2.6-amd64\n\
@@ -842,10 +882,22 @@ d-i apt-setup/security_host string security.debian.org\n\
 d-i apt-setup/volatile_host string volatile.debian.org\n\
 \n\
 tasksel tasksel/first multiselect standard\n");
-		return NONE;
 	} else {
 		return NO_ARCH;
 	}
+	len = strlen(output);
+	if ((build->size + len) > build->len) {
+		while ((build->size + len) > build->len)
+			build->len *=2;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "next in fill_partition");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string + build->size, len + 1, "%s", output);
+	build->size += len;
+	return NONE;
 }
 
 void

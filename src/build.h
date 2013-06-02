@@ -98,13 +98,13 @@ void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
+fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 int
-fill_kernel(cbc_comm_line_s *cml, char *output);
+fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
 
 void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, char **output, int i);
@@ -122,7 +122,7 @@ char *
 add_pre_volume_group(cbc_comm_line_s *cml, char *next);
 
 int
-fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, char *disk);
+fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
