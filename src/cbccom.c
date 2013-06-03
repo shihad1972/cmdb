@@ -154,6 +154,7 @@ void
 init_cbc_config_values(cbc_config_s *cbc)
 {
 	sprintf(cbc->db, "cmdb");
+	sprintf(cbc->dbtype, "none");
 	sprintf(cbc->user, "root");
 	sprintf(cbc->host, "localhost");
 	sprintf(cbc->pass, "%s", "");
