@@ -320,7 +320,7 @@ display_cbc_usage(void)
 	printf("<varient> -l<locale_id> -p<scheme> [-n | -i | -u ] ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
-	printf("For these optioins.\n\n");
+	printf("For these options.\n\n");
 	printf("cbcos cbcdomain cbcvarient cbcpack cbclocale cbcpart\n");
 	
 }
