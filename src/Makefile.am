@@ -9,7 +9,7 @@ cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
 		cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h\
 		base_sql.h
 cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
-		cbc_data.c build.c\
+		cbc_data.c build.c createbuild.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \

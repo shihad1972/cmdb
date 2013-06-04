@@ -71,6 +71,9 @@ int
 write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
+create_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 void

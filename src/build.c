@@ -51,7 +51,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "n:i:u:wdmcrl")) != -1) {
+	while ((opt = getopt(argc, argv, "an:i:u:wdmcrl")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
