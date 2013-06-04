@@ -149,7 +149,7 @@ list_cbc_build_domain(cbc_config_s *cbc)
 	init_cbc_struct(base);
 	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		fprintf(stderr, "build query failed\n");
-		free(cbc);
+		free(base);
 		return retval;
 	}
 	bdom = base->bdom;
