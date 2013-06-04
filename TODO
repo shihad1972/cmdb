@@ -1,3 +1,8 @@
+04/06/2013
+For all build options there should be a default option so when you
+create a build you do not need to specify all the options.
+This will help for first install too, if I create some default options
+
 02/06/2013
 Should have the root password for the machine in the database and
 add this to the build file. Need to work out how to get hash
@@ -47,6 +52,7 @@ table, so it is linked to the build and not the build domain
 Need to check the pcre checks. Still we are missing some ifdef libpcre
 statements. Also none of the below programs are checking thier input.
 
+****** Done (bar cbclocale) May 2013 *******************
 *** CBC ***
 I want to split out the various parts of the build configuration into separate
 commands, so for example to add / delete / display build domains use
@@ -60,9 +66,10 @@ cbcpack
 still need:
 cbcpart
 cbclocale
+********************************************************
 
 *** ALL ***
-Need to sort out and install script for the database and decide what tables
+Need to sort out an install script for the database and decide what tables
 to populate at install time, and how to get the default values from the user
 Currently I am thinking make postinstall or perhaps make dbinstall
 
