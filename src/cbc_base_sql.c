@@ -62,8 +62,8 @@ const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
  ip_id, locale_id, def_scheme_id FROM build","\
-SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain, country,\
- language, keymap, ntp_server, config_ntp, ldap_server, ldap_url, ldap_ssl,\
+SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
+ ntp_server, config_ntp, ldap_server, ldap_url, ldap_ssl,\
  ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
  config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id FROM build_ip","\
@@ -250,7 +250,7 @@ const int mycbc_sql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 25, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
+	5, 9, 22, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -1083,47 +1083,44 @@ store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 	dom->gateway = strtoul(row[4], NULL, 10);
 	dom->ns = strtoul(row[5], NULL, 10);
 	snprintf(dom->domain, RBUFF_S, "%s", row[6]);
-	snprintf(dom->country, RANGE_S, "%s", row[7]);
-	snprintf(dom->language, RANGE_S, "%s", row[8]);
-	snprintf(dom->keymap, RANGE_S, "%s", row[9]);
-	if (strncmp("0", row[11], CH_S) == 0) {
+	if (strncmp("0", row[8], CH_S) == 0) {
 		dom->config_ntp = 0;
 	} else {
-		snprintf(dom->ntp_server, HOST_S, "%s", row[10]);
+		snprintf(dom->ntp_server, HOST_S, "%s", row[7]);
 		dom->config_ntp = 1;
 	}
-	if (strncmp("0", row[17], CH_S) == 0) {
+	if (strncmp("0", row[14], CH_S) == 0) {
 		dom->config_ldap = 0;
 	} else {
-		snprintf(dom->ldap_server, URL_S, "%s", row[12]);
-		snprintf(dom->ldap_url, URL_S, "%s", row[13]);
-		snprintf(dom->ldap_dn, URL_S, "%s", row[15]);
-		snprintf(dom->ldap_bind, URL_S, "%s", row[16]);
+		snprintf(dom->ldap_server, URL_S, "%s", row[9]);
+		snprintf(dom->ldap_url, URL_S, "%s", row[10]);
+		snprintf(dom->ldap_dn, URL_S, "%s", row[12]);
+		snprintf(dom->ldap_bind, URL_S, "%s", row[13]);
 		dom->config_ldap = 1;
 	}
-	if (strncmp("0", row[14], CH_S) == 0)
+	if (strncmp("0", row[11], CH_S) == 0)
 		dom->ldap_ssl = 0;
 	else
 		dom->ldap_ssl = 1;
-	if (strncmp("0", row[19], CH_S) == 0) {
+	if (strncmp("0", row[16], CH_S) == 0) {
 		dom->config_log = 0;
 	} else {
-		snprintf(dom->log_server, CONF_S, "%s", row[18]);
+		snprintf(dom->log_server, CONF_S, "%s", row[15]);
 		dom->config_log = 1;
 	}
-	if (strncmp("0", row[21], CH_S) == 0) {
+	if (strncmp("0", row[18], CH_S) == 0) {
 		dom->config_email = 0;
 	} else {
-		snprintf(dom->smtp_server, CONF_S, "%s", row[20]);
+		snprintf(dom->smtp_server, CONF_S, "%s", row[17]);
 		dom->config_email = 1;
 	}
-	if (strncmp("0", row[23], CH_S) == 0) {
+	if (strncmp("0", row[20], CH_S) == 0) {
 		dom->config_xymon = 0;
 	} else {
-		snprintf(dom->xymon_server, CONF_S, "%s", row[22]);
+		snprintf(dom->xymon_server, CONF_S, "%s", row[19]);
 		dom->config_xymon = 1;
 	}
-	snprintf(dom->nfs_domain, CONF_S, "%s", row[24]);
+	snprintf(dom->nfs_domain, CONF_S, "%s", row[21]);
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -1980,34 +1977,31 @@ store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	dom->gateway = (unsigned long int) sqlite3_column_int64(state, 4);
 	dom->ns = (unsigned long int) sqlite3_column_int64(state, 5);
 	snprintf(dom->domain, RBUFF_S, "%s", sqlite3_column_text(state, 6));
-	snprintf(dom->country, RANGE_S, "%s", sqlite3_column_text(state, 7));
-	snprintf(dom->language, RANGE_S, "%s", sqlite3_column_text(state, 8));
-	snprintf(dom->keymap, RANGE_S, "%s", sqlite3_column_text(state, 9));
-	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 11)) != 0)
+	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 8)) != 0)
 		snprintf(dom->ntp_server, HOST_S, "%s",
-		 sqlite3_column_text(state, 10));
-	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 17)) != 0) {
+		 sqlite3_column_text(state, 7));
+	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 14)) != 0) {
 		snprintf(dom->ldap_server, URL_S, "%s", 
-			 sqlite3_column_text(state, 12));
+			 sqlite3_column_text(state, 9));
 		snprintf(dom->ldap_url, URL_S, "%s", 
-			 sqlite3_column_text(state, 13));
+			 sqlite3_column_text(state, 10));
 		snprintf(dom->ldap_dn, URL_S, "%s",
-			 sqlite3_column_text(state, 15));
+			 sqlite3_column_text(state, 12));
 		snprintf(dom->ldap_bind, URL_S, "%s",
-			 sqlite3_column_text(state, 16));
+			 sqlite3_column_text(state, 13));
 	}
-	dom->ldap_ssl = (short int) sqlite3_column_int(state, 14);
-	if ((dom->config_log = (short int) sqlite3_column_int(state, 19)) != 0)
+	dom->ldap_ssl = (short int) sqlite3_column_int(state, 11);
+	if ((dom->config_log = (short int) sqlite3_column_int(state, 16)) != 0)
 		snprintf(dom->log_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 18));
-	if ((dom->config_email = (short int) sqlite3_column_int(state, 21)) != 0)
+			 sqlite3_column_text(state, 15));
+	if ((dom->config_email = (short int) sqlite3_column_int(state, 18)) != 0)
 		snprintf(dom->smtp_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 20));
-	if ((dom->config_xymon = (short int) sqlite3_column_int(state, 23)) != 0)
+			 sqlite3_column_text(state, 17));
+	if ((dom->config_xymon = (short int) sqlite3_column_int(state, 20)) != 0)
 		snprintf(dom->xymon_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 22));
+			 sqlite3_column_text(state, 19));
 	snprintf(dom->nfs_domain, CONF_S, "%s",
-		 sqlite3_column_text(state, 24));
+		 sqlite3_column_text(state, 21));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
