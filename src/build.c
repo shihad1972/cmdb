@@ -51,7 +51,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "an:i:u:wdmcrl")) != -1) {
+	while ((opt = getopt(argc, argv, "b:e:i:n:o:p:t:u:v:x:adlmrw")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
@@ -73,6 +73,20 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->action = ADD_CONFIG;
 		} else if (opt == 'l') {
 			cb->action = LIST_CONFIG;
+		} else if (opt == 'b') {
+			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+		} else if (opt == 'e') {
+			cb->locale = strtoul(optarg, NULL, 10);
+		} else if (opt == 'o') {
+			snprintf(cb->os, MAC_S, "%s", optarg);
+		} else if (opt == 'p') {
+			snprintf(cb->partition, CONF_S, "%s", optarg);
+		} else if (opt == 't') {
+			snprintf(cb->arch, RANGE_S, "%s", optarg);
+		} else if (opt == 'v') {
+			snprintf(cb->os_version, MAC_S, "%s", optarg);
+		} else if (opt == 'x') {
+			snprintf(cb->varient, CONF_S, "%s", optarg);
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;

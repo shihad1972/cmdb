@@ -62,6 +62,27 @@ int
 cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
+cbc_get_os(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
+cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
+cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
+cbc_get_seed_scheme(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
+cbc_get_locale(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
+cbc_get_build_config(cbc_s *cbc, cbc_s *details, cbc_build_s *build);
+
+int
+cbc_get_build_partitons(cbc_s *cbc, cbc_s *details);
+
+int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 
 int

@@ -316,8 +316,8 @@ display_cbc_usage(void)
 	printf("cbc -d [-p | -o | -b | -x (-g) | -l ] [-n | -i | -u ] ");
 	printf("[<server_specifier>]\n\n"); */
 	printf("Create and modify options:\n");
-	printf("cbc [ -a | -m ] -o<OS> -v<version> -a<arch> -b<domain> -x");
-	printf("<varient> -l<locale_id> -p<scheme> [-n | -i | -u ] ");
+	printf("cbc [ -a | -m ] -o<OS> -v<version> -t<arch> -b<domain> -x");
+	printf("<varient> -e<locale_id> -p<scheme> [-n | -i | -u ] ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("For these options.\n\n");

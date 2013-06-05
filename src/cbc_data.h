@@ -40,7 +40,7 @@ typedef struct cbc_boot_line_s {
 } cbc_boot_line_s;
 
 typedef struct cbc_build_s { 
-	char mac_addr[TYPE_S];
+	char mac_addr[MAC_S];
 	char net_int[RANGE_S];
 	unsigned long int build_id;
 	unsigned long int varient_id;

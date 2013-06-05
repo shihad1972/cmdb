@@ -26,7 +26,6 @@ enum {			/* Buffer Sizes */
 	CH_S = 2,
 	COMM_S = 8,
 	RANGE_S = 16,
-	TYPE_S = 24,
 	MAC_S = 32,
 	HOST_S = 64,
 	CONF_S = 128,
@@ -180,7 +179,10 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	MULTI_BUILD_MIRR_ERR = 186,
 	NO_BASIC_DISK = 187,
 	MULTI_BASIC_DISK = 188,
-	NO_FULL_DISK = 189
+	NO_FULL_DISK = 189,
+	LOCALE_NOT_FOUND = 190,
+	MULTIPLE_LOCALES = 191,
+	PARTITIONS_NOT_FOUND = 192
 	
 };
 
