@@ -177,11 +177,15 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 	int retval = NONE, delim = ',', i;
 	uint32_t ip_addr;
 
+/* This is taken from the calling function */
 	ip = optarg;
 	for (i = 0; i < 4; i++) {
-		tmp = strchr(network, delim);
-		*tmp = '\0';
-		tmp++;
+		if ((tmp = strchr(network, delim))) {
+			*tmp = '\0';
+			tmp++;
+		} else {
+			return USER_INPUT_INVALID;
+		}
 		if (inet_pton(AF_INET, ip, &ip_addr)) {
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		} else {

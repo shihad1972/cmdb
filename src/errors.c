@@ -159,63 +159,66 @@ display_cmdb_command_line_error(int retval, char *program)
 		program++;
 	}
 	if (retval == NO_NAME)
-		fprintf(stderr, "No name specified with -n\n");
+		fprintf(stderr, "No name specified with -n.\n");
 	else if (retval == NO_ID)
-		fprintf(stderr, "No ID specified with -i\n");
+		fprintf(stderr, "No ID specified with -i.\n");
 	else if (retval == NO_TYPE)
-		fprintf(stderr, "No type specified on command line\n");
+		fprintf(stderr, "No type specified on command line.\n");
 	else if (retval == NO_ACTION)
-		fprintf(stderr, "No action specified on command line\n");
+		fprintf(stderr, "No action specified on command line.\n");
 	else if (retval == NO_NAME_OR_ID)
-		fprintf(stderr, "No name or ID specified on command line\n");
+		fprintf(stderr, "No name or ID specified on command line.\n");
 	else if (retval == GENERIC_ERROR)
-		fprintf(stderr, "Unknown command line option\n");
+		fprintf(stderr, "Unknown command line option.\n");
 	else if (retval == NO_DOMAIN_NAME)
-		fprintf(stderr, "No domain specified on command line\n");
+		fprintf(stderr, "No domain specified on command line.\n");
 	else if (retval == NO_IP_ADDRESS)
-		fprintf(stderr, "No IP address specified on command line\n");
+		fprintf(stderr, "No IP address specified on command line.\n");
 	else if (retval == NO_HOST_NAME)
-		fprintf(stderr, "No hostname specified on command line\n");
+		fprintf(stderr, "No hostname specified on command line.\n");
 	else if (retval == NO_RECORD_TYPE) 
-		fprintf(stderr, "No record type specified on command line\n");
+		fprintf(stderr, "No record type specified on command line.\n");
 	else if (retval == NO_UUID)
-		fprintf(stderr, "No UUID specified on command line\n");
+		fprintf(stderr, "No UUID specified on command line.\n");
 	else if (retval == NO_MAKE)
-		fprintf(stderr, "No make specified on command line\n");
+		fprintf(stderr, "No make specified on command line.\n");
 	else if (retval == NO_MODEL)
-		fprintf(stderr, "No model specified on command line\n");
+		fprintf(stderr, "No model specified on command line.\n");
 	else if (retval == NO_VENDOR)
-		fprintf(stderr, "No vendor specified on command line\n");
+		fprintf(stderr, "No vendor specified on command line.\n");
 	else if (retval == NO_ADDRESS)
-		fprintf(stderr, "No address specified on command line\n");
+		fprintf(stderr, "No address specified on command line.\n");
 	else if (retval == NO_CITY)
-		fprintf(stderr, "No city specified on command line\n");
+		fprintf(stderr, "No city specified on command line.\n");
 	else if (retval == NO_COUNTY)
-		fprintf(stderr, "No county specified on command line\n");
+		fprintf(stderr, "No county specified on command line.\n");
 	else if (retval == NO_POSTCODE)
-		fprintf(stderr, "No postcode specified on command line\n");
+		fprintf(stderr, "No postcode specified on command line.\n");
 	else if (retval == NO_COID)
-		fprintf(stderr, "No coid specified on command line\n");
+		fprintf(stderr, "No coid specified on command line.\n");
 	else if (retval == NO_NAME_COID)
-		fprintf(stderr, "No server name or customer coid was specified\n");
+		fprintf(stderr, "No server name or customer coid was specified.\n");
 	else if (retval == NO_CONT_NAME)
-		fprintf(stderr, "No name specified with -N\n");
+		fprintf(stderr, "No name specified with -N.\n");
 	else if (retval == NO_PHONE)
-		fprintf(stderr, "No phone no. specified with -P\n");
+		fprintf(stderr, "No phone no. specified with -P.\n");
 	else if (retval == NO_PACKAGE)
-		fprintf(stderr, "No package supplied\n");
+		fprintf(stderr, "No package supplied.\n");
 	else if (retval == NO_OS_COMM)
-		fprintf(stderr, "No os or alias supplied\n");
+		fprintf(stderr, "No os or alias supplied.\n");
 	else if (retval == NO_VARIENT)
-		fprintf(stderr, "No varient or valias supplied\n");
+		fprintf(stderr, "No varient or valias supplied.\n");
 	else if (retval == NO_EMAIL)
-		fprintf(stderr, "No email address specified with -E\n");
+		fprintf(stderr, "No email address specified with -E.\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
-		fprintf(stderr, "Both domain name and IP given on command line\n");
+		fprintf(stderr, "Both domain name and IP given on command line.\n");
 	else if (retval == NO_PARTITION_INFO)
-		fprintf(stderr, "No partition information on command line\n");
+		fprintf(stderr, "No partition information on command line.\n");
 	else if (retval == NO_SCHEME_INFO)
-		fprintf(stderr, "No scheme name was supplied on the command line\n");
+		fprintf(stderr, "No scheme name was supplied on the command line.\n");
+	else if ((retval == USER_INPUT_INVALID) &&
+		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
+		fprintf(stderr, "Check your network input please. It seems wrong!\n");
 	else if (retval == DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONF_S) == 0))
 			display_cmdb_usage();
