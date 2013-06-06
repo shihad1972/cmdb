@@ -1050,7 +1050,7 @@ store_build_mysql(MYSQL_ROW row, cbc_s *base)
 		report_error(MALLOC_FAIL, "build in store_build_mysql");
 	init_build_struct(build);
 	build->build_id = strtoul(row[0], NULL, 10);
-	snprintf(build->mac_addr, TYPE_S, "%s", row[1]);
+	snprintf(build->mac_addr, MAC_S, "%s", row[1]);
 	build->varient_id = strtoul(row[2], NULL, 10);
 	snprintf(build->net_int, RANGE_S, "%s", row[3]);
 	build->server_id = strtoul(row[4], NULL, 10);
@@ -1944,7 +1944,7 @@ store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 		report_error(MALLOC_FAIL, "build in store_build_sqlite");
 	init_build_struct(build);
 	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
-	snprintf(build->mac_addr, TYPE_S, "%s", sqlite3_column_text(state, 1));
+	snprintf(build->mac_addr, MAC_S, "%s", sqlite3_column_text(state, 1));
 	build->varient_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	snprintf(build->net_int, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	build->server_id = (unsigned long int) sqlite3_column_int64(state, 4);
