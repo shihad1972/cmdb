@@ -288,13 +288,15 @@ AC_SUBST([PCRE_CFLAGS])
 AC_DEFUN([AX_CHECK_DNSA],[dnl
   AC_MSG_CHECKING([to enable dnsa])
   AC_ARG_WITH(dnsa,
-    [  --with-dnsa               compile the dnsa module],,
-         with-dnsa="yes")
+    [  --with-dnsa             compile the dnsa module],,
+         with_dnsa="yes")
   if test ".$with_dnsa" = ".no" ; then
     AC_MSG_RESULT([disabled])
     m4_ifval($2,$2)
   else
-    AC_DEFINE([HAVE_DNSA], [], [Compiling the dnsa module])
+    AC_DEFINE([HAVE_DNSA], [1], [Compile the dnsa module])
+    AC_MSG_RESULT([yes])
+    m4_ifval($1,$1)
   fi
 ])
 # ===========================================================================
