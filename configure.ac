@@ -293,6 +293,8 @@ AC_DEFUN([AX_CHECK_DNSA],[dnl
   if test ".$with_dnsa" = ".no" ; then
     AC_MSG_RESULT([disabled])
     m4_ifval($2,$2)
+  else
+    AC_DEFINE([HAVE_DNSA], [], [Compiling the dnsa module])
   fi
 ])
 # ===========================================================================
@@ -458,10 +460,12 @@ AC_DEFUN([AX_LIB_SQLITE3],
 AX_LIB_MYSQL
 AX_PATH_LIB_PCRE
 AX_LIB_SQLITE3
+AX_CHECK_DNSA
 
 AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
+AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
