@@ -1,3 +1,7 @@
+06/06/2013
+Need to define an autoconf macro for HAVE_DNSA so users can disable this
+if they so want
+
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
 it cannot add the zone due to the A records for the NS records are not
