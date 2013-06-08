@@ -49,4 +49,8 @@ get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base);
 void
 copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 
+# ifdef HAVE_DNSA
+
+# endif /* HAVE_DNSA */
+
 #endif /* __CBC_BUILD_DOMAIN_H__ */

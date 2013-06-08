@@ -97,7 +97,9 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		return BUILD_DOMAIN_EXISTS;
 	}
 	display_build_domain(bdom);
-	
+#ifdef HAVE_DNSA
+
+#endif
 	if ((retval = run_insert(cbc, base, BUILD_DOMAINS)) != 0)
 		printf("\
 \nUnable to add build domain %s to database\n", bdom->domain);
@@ -223,3 +225,7 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
 	snprintf(bdom->nfs_domain, CONF_S, "%s", cdl->nfsdomain);
 }
+
+#ifdef HAVE_DNSA
+
+#endif
