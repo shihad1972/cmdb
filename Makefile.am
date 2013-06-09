@@ -7,7 +7,7 @@ RM = rm -f
 ECHO = echo
 DIR = src
 SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack
 
 dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 		src/dnsa_base_sql.c src/base_sql.c\
@@ -22,7 +22,7 @@ cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c createbuild.c\
 cbcdomain_SOURCES = \
 		src/cbcdomain.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/builddomain.c\
-		src/cbccom.c\
+		src/cbccom.c src/dnsaacom.c src/zones.c src/dnsa_base_sql.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/builddomain.h src/cbcdomain.h
 
@@ -31,7 +31,7 @@ cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
 		src/cbc_base_sql.h src/cbcos.h
 
-cbcvarient_SOURCES = \
+cbcvarinet_SOURCES = \
 		src/cbcvarient.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
@@ -94,3 +94,4 @@ cbcpack:
 cbcpart:
 	$(ECHO) Building cbcpart: $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcpart
+

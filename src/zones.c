@@ -55,7 +55,7 @@ list_zones (dnsa_config_s *dc)
 	
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_query(dc, dnsa, ZONE)) != 0) {
+	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
 	}
@@ -99,7 +99,7 @@ list_rev_zones(dnsa_config_s *dc)
 
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0) {
+	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
 	}
@@ -126,7 +126,7 @@ display_zone(char *domain, dnsa_config_s *dc)
 		report_error(MALLOC_FAIL, "dnsa in display_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
 	}
@@ -191,7 +191,7 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
 	}
@@ -287,7 +287,7 @@ commit_fwd_zones(dnsa_config_s *dc)
 	filename = buffer;
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return MY_QUERY_FAIL;
 	}
@@ -463,11 +463,11 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 		serial_data.args.number = zone->serial;
 		id_data.args.number = zone->id;
 		serial_data.next = &id_data;
-		if ((retval = run_update(dc, &serial_data, ZONE_SERIAL)) != 0)
+		if ((retval = dnsa_run_update(dc, &serial_data, ZONE_SERIAL)) != 0)
 			fprintf(stderr, "Cannot update zone serial in database!\n");
 		else
 			fprintf(stderr, "Serial number updated\n");
-		run_update(dc, &id_data, ZONE_UPDATED_NO);
+		dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO);
 	}
 }
 
@@ -488,7 +488,7 @@ commit_rev_zones(dnsa_config_s *dc)
 	filename = buffer;
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return MY_QUERY_FAIL;
 	}
@@ -650,7 +650,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
 	dnsa->rev_zones = rzone;
-	if ((retval = run_multiple_query(
+	if ((retval = dnsa_run_multiple_query(
 		dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -668,7 +668,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return NONE;
 	}
 	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
-	if ((retval = run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
+	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
@@ -720,7 +720,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 		printf("Destination %s has %lu records; * denotes preferred PTR record\n",
 		records->dest, records->id);
 		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
-		i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+		i = dnsa_run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
 		for (j = 0; j < i; j++) {
 			snprintf(fqdn, RBUFF_S, "%s.%s",
 				 dlist->fields.text, dlist->next->fields.text);
@@ -764,7 +764,7 @@ mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
 	dnsa->zones = zone;
-	if ((retval = run_multiple_query(dc, dnsa,
+	if ((retval = dnsa_run_multiple_query(dc, dnsa,
 		 DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -796,7 +796,7 @@ mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	printf("IP: %s\tIP Addr: %lu\tRecord ID: %lu\n",
 	       dnsa->prefer->ip, dnsa->prefer->ip_addr, dnsa->prefer->record_id);
-	if ((retval = run_insert(dc, dnsa, PREFERRED_AS)) != 0)
+	if ((retval = dnsa_run_insert(dc, dnsa, PREFERRED_AS)) != 0)
 		fprintf(stderr, "Cannot insert preferred A record\n");
 	else
 		printf("Database updated with preferred A record\n");
@@ -833,7 +833,7 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 			rec = '\0';
 	}
 	snprintf(start->args.text, RANGE_S, "%s", name);
-	i = run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
+	i = dnsa_run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
 	list = start;
 	name = fqdn;
 	cl_name = cl_fqdn;
@@ -874,7 +874,7 @@ delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "dnsa in delete_preferred_a");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(&data);
-	if ((retval = run_query(dc, dnsa, PREFERRED_A)) != 0) {
+	if ((retval = dnsa_run_query(dc, dnsa, PREFERRED_A)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
@@ -895,7 +895,7 @@ delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return USER_INPUT_INVALID;
 	}
 	data.args.number = prefer->prefa_id;
-	if ((retval = run_delete(dc, &data, PREFERRED_AS)) != 1)
+	if ((retval = dnsa_run_delete(dc, &data, PREFERRED_AS)) != 1)
 		printf("Unable to delete IP %s from preferred list\n", ip_addr);
 	else
 		printf("Deleted IP %s from preferred list\n", ip_addr);
@@ -925,16 +925,16 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	retval = 0;
-	retval = run_search(dc, dnsa, ZONE_ID_ON_NAME);
+	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
 	snprintf(record->host, RBUFF_S, "%s", cm->host);
 	snprintf(record->type, RANGE_S, "%s", cm->rtype);
 	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
-	if ((retval = run_insert(dc, dnsa, RECORDS)) != 0)
+	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
 		fprintf(stderr, "Cannot insert record\n");
-	retval = run_update(dc, &data, ZONE_UPDATED_YES);
+	retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -949,7 +949,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_record");
 	init_dnsa_struct(dnsa);
-	if ((retval = run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
 		printf("DB search failed with %d\n", retval);
 		dnsa_clean_list(dnsa);
 		return NO_RECORDS;
@@ -993,7 +993,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	if ((retval = run_insert(dc, dnsa, ZONES)) != 0) {
+	if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
 		fprintf(stderr, "Unable to add zone %s\n", zone->name);
 		dnsa_clean_list(dnsa);
 		return CANNOT_INSERT_ZONE;
@@ -1006,7 +1006,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	init_dbdata_struct(&data);
 	data.args.number = zone->id;
-	if ((retval = run_update(dc, &data, ZONE_VALID_YES)) != 0)
+	if ((retval = dnsa_run_update(dc, &data, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
 	else
 		printf("Zone marked as valid in the database\n");
@@ -1033,7 +1033,7 @@ delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "data in delete_fwd_zone");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
-	if ((retval = run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
 		printf("Database query for zones and records failed\n");
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -1072,12 +1072,12 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 		}
 	}
 	data->args.number = zone->id;
-	if ((retval = run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
+	if ((retval = dnsa_run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
 		printf("zone %s was empty\n", cm->domain);;
 	} else {
 		printf("%d Records for zone %s deleted\n", retval, cm->domain);
 	}
-	if ((retval = run_delete(dc, data, ZONES)) == 0) {
+	if ((retval = dnsa_run_delete(dc, data, ZONES)) == 0) {
 		retval = CANNOT_DELETE_ZONE;
 		printf("Unable to delete forward zone %s in database\n", cm->domain);
 	} else if (retval == 1) {
@@ -1115,7 +1115,7 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	if ((retval = run_insert(dc, dnsa, REV_ZONES)) != 0) {
+	if ((retval = dnsa_run_insert(dc, dnsa, REV_ZONES)) != 0) {
 		fprintf(stderr, "Unable to add zone %s\n", zone->net_range);
 		dnsa_clean_list(dnsa);
 		return CANNOT_INSERT_ZONE;
@@ -1128,7 +1128,7 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	init_dbdata_struct(&data);
 	data.args.number = zone->rev_zone_id;
-	if ((retval = run_update(dc, &data, REV_ZONE_VALID_YES)) != 0)
+	if ((retval = dnsa_run_update(dc, &data, REV_ZONE_VALID_YES)) != 0)
 		printf("Unable to mark rev_zone %s as valid\n", zone->net_range);
 	else
 		printf("Rev zone %s marked as valid\n", zone->net_range);
@@ -1153,7 +1153,7 @@ delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "data in delete_reverse_zone");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
-	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0) {
+	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
 		printf("Query to get reverse zones from DB failed\n");
 		dnsa_clean_list(dnsa);
 		return NO_DOMAIN;
@@ -1166,10 +1166,10 @@ delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		rev = rev->next;
 	}
 	printf("Deleting record from reverse zone %s\n", cm->domain);
-	retval = run_delete(dc, data, REV_RECORDS_ON_REV_ZONE);
+	retval = dnsa_run_delete(dc, data, REV_RECORDS_ON_REV_ZONE);
 	printf("%d records deleted\n\n", retval);
 	printf("Deleting reverse zone %s\n", cm->domain);
-	retval = run_delete(dc, data, REV_ZONES);
+	retval = dnsa_run_delete(dc, data, REV_ZONES);
 	printf("%d zone(s) deleted\n", retval);
 
 	return NONE;
@@ -1184,7 +1184,7 @@ create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 
 	buffer = &filename[0];
 	retval = 0;
-	if ((retval = run_query(dc, dnsa, ZONE)) != 0)
+	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0)
 		return retval;
 	zone = dnsa->zones;
 	if (!(configfile = calloc(BUILD_S, sizeof(char))))
@@ -1214,7 +1214,7 @@ create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 	
 	buffer = &filename[0];
 	retval = 0;
-	if ((retval = run_query(dc, dnsa, REV_ZONE)) != 0)
+	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0)
 		return retval;
 	zone = dnsa->rev_zones;
 	if (!(configfile = calloc(BUILD_S, sizeof(char))))
@@ -1249,7 +1249,7 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	if ((retval = run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
+	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->name);
 		return ID_INVALID;
 	}
@@ -1281,7 +1281,7 @@ validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	if ((retval = run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
+	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->net_range);
 		return ID_INVALID;
 	}
@@ -1346,7 +1346,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	add = delete = '\0';
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
-	if ((retval = run_multiple_query(
+	if ((retval = dnsa_run_multiple_query(
 	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE | ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -1363,7 +1363,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	rec = dnsa->records; /* Holds duplicate A records */
 	dnsa->records = '\0';
-	if ((retval = run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
 		dnsa_clean_records(rec);
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -1384,14 +1384,14 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	while (list) {
 		data->args.number = list->record_id;
 		printf("Deleting record %lu\n", data->args.number);
-		run_delete(dc, data, REV_RECORDS);
+		dnsa_run_delete(dc, data, REV_RECORDS);
 		list = list->next;
 	}
 	dnsa->rev_records = list = add;
 	retval = 0;
 	while (dnsa->rev_records) {
 		printf("Adding PTR record for %s\n", dnsa->rev_records->host);
-		retval += run_insert(dc, dnsa, REV_RECORDS);
+		retval += dnsa_run_insert(dc, dnsa, REV_RECORDS);
 		dnsa->rev_records = dnsa->rev_records->next;
 	}
 	if (add || delete) {
@@ -1405,7 +1405,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		serial_d.args.number = dnsa->rev_zones->serial;
 		zone_info_d.args.number = dnsa->rev_zones->rev_zone_id;
 		serial_d.next = &zone_info_d;
-		if ((retval = run_update(dc, &serial_d, REV_ZONE_SERIAL)) != 0)
+		if ((retval = dnsa_run_update(dc, &serial_d, REV_ZONE_SERIAL)) != 0)
 			fprintf(stderr, "Cannot update rev zone serial!\n");
 		else
 			fprintf(stderr, "Rev zone serial number updated\n");
@@ -2066,12 +2066,12 @@ check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 
 	retval = 0;
 	if (type == FORWARD_ZONE) {
-		if ((retval = run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
+		if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
 			return retval;
 		else if (dnsa->zones->id != 0)
 			return ZONE_ALREADY_EXISTS;
 	} else if (type == REVERSE_ZONE) {
-		if ((retval = run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) !=0)
+		if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) !=0)
 			return retval;
 		else if (dnsa->rev_zones->rev_zone_id != 0)
 			return ZONE_ALREADY_EXISTS;
@@ -2153,7 +2153,7 @@ get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm)
 			printf("Deleting record ID %lu, type %s\n",
 			       list->id, list->type);
 			data->args.number = list->id;
-			retval += run_delete(dc, data, RECORDS);
+			retval += dnsa_run_delete(dc, data, RECORDS);
 		}
 		list = list->next;
 	}

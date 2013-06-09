@@ -97,7 +97,7 @@ enum {			/* cbc search SQL statements */
 };
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][24];
+extern const int cbc_mysql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
 int

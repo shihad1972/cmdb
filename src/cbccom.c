@@ -35,9 +35,16 @@
 #include "cmdb_cbc.h"
 
 #ifdef HAVE_LIBPCRE
+
 # include "checks.h"
+
 #endif /* HAVE_LIBPCRE */
 
+#ifdef HAVE_DNSA
+
+# include "cmdb_dnsa.h"
+
+#endif /* HAVE_DNSA */
 
 int
 parse_cbc_config_file(cbc_config_s *cbc, const char *config)
@@ -169,6 +176,35 @@ init_cbc_config_values(cbc_config_s *cbc)
 	cbc->port = 3306;
 	cbc->cliflag = 0;
 }
+
+void
+print_cbc_config(cbc_config_s *cbc)
+{
+	fprintf(stderr, "########\nConfig Values\n");
+	fprintf(stderr, "DB: %s\n", cbc->db);
+	fprintf(stderr, "USER: %s\n", cbc->user);
+	fprintf(stderr, "PASS: %s\n", cbc->pass);
+	fprintf(stderr, "HOST: %s\n", cbc->host);
+	fprintf(stderr, "PORT: %d\n", cbc->port);
+	fprintf(stderr, "SOCKET: %s\n", cbc->socket);
+	fprintf(stderr, "TMPDIR: %s\n", cbc->tmpdir);
+	fprintf(stderr, "TFTPDIR: %s\n", cbc->tftpdir);
+	fprintf(stderr, "PXE: %s\n", cbc->pxe);
+	fprintf(stderr, "TOPLEVELOS: %s\n", cbc->toplevelos);
+	fprintf(stderr, "DHCPCONF: %s\n", cbc->dhcpconf);
+	fprintf(stderr, "PRESEED: %s\n", cbc->preseed);
+	fprintf(stderr, "KICKSTART: %s\n", cbc->kickstart);
+	fprintf(stderr, "\n");
+}
+
+#ifdef HAVE_DNSA
+
+void
+copy_cbc_config_to_dnsa(cbc_config_s *cbc, dnsa_config_s *dc)
+{
+}
+
+#endif
 /*
 void
 init_cbc_build_values(cbc_build_s *build_config)
@@ -265,23 +301,3 @@ print_cbc_build_values(cbc_build_s *build_config)
 	fprintf(stderr, "\n");
 }
 */
-
-void
-print_cbc_config(cbc_config_s *cbc)
-{
-	fprintf(stderr, "########\nConfig Values\n");
-	fprintf(stderr, "DB: %s\n", cbc->db);
-	fprintf(stderr, "USER: %s\n", cbc->user);
-	fprintf(stderr, "PASS: %s\n", cbc->pass);
-	fprintf(stderr, "HOST: %s\n", cbc->host);
-	fprintf(stderr, "PORT: %d\n", cbc->port);
-	fprintf(stderr, "SOCKET: %s\n", cbc->socket);
-	fprintf(stderr, "TMPDIR: %s\n", cbc->tmpdir);
-	fprintf(stderr, "TFTPDIR: %s\n", cbc->tftpdir);
-	fprintf(stderr, "PXE: %s\n", cbc->pxe);
-	fprintf(stderr, "TOPLEVELOS: %s\n", cbc->toplevelos);
-	fprintf(stderr, "DHCPCONF: %s\n", cbc->dhcpconf);
-	fprintf(stderr, "PRESEED: %s\n", cbc->preseed);
-	fprintf(stderr, "KICKSTART: %s\n", cbc->kickstart);
-	fprintf(stderr, "\n");
-}

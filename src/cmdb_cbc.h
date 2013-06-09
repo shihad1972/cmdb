@@ -27,7 +27,7 @@
  *  (C) Iain M Conochie 2012 - 2013 */
 
 #ifndef __CMDB_CBC_H__
-#define __CMDB_CBC_H__
+# define __CMDB_CBC_H__
 
 
 typedef struct cbc_config_s {		/* Hold CMDB configuration values */
@@ -131,6 +131,13 @@ parse_cbc_config_error(int error);
 
 void
 print_cbc_config(cbc_config_s *cbc);
+
+# ifdef HAVE_DNSA
+
+void
+copy_cbc_config_to_dnsa(cbc_config_s *cbc, dnsa_config_s *dc);
+
+# endif /* HAVE_DNSA */
 /*
 void
 print_cbc_build_values(cbc_build_s *build_config);

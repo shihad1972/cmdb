@@ -201,7 +201,7 @@ SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
 
 #ifdef HAVE_MYSQL
 
-const int mysql_inserts[][24] = {
+const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0},
@@ -979,7 +979,7 @@ cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s 
 	int retval = NONE;
 	void *buffer;
 
-	mybind->buffer_type = mysql_inserts[type][i];
+	mybind->buffer_type = cbc_mysql_inserts[type][i];
 	if (mybind->buffer_type == MYSQL_TYPE_LONG)
 		mybind->is_unsigned = 1;
 	else

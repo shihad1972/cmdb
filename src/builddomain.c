@@ -46,6 +46,13 @@
 #include "cbcdomain.h"
 #include "builddomain.h"
 
+#ifdef HAVE_DNSA
+
+# include "cmdb_dnsa.h"
+# include "dnsa_base_sql.h"
+
+#endif /* HAVE_DNSA */
+
 int
 display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 {
@@ -98,6 +105,8 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	}
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
+
+	check_domain_in_dns(cbc, bdom->domain);
 
 #endif
 	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
@@ -227,5 +236,10 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 }
 
 #ifdef HAVE_DNSA
+
+int
+check_domain_in_dns(cbc_config_s *cbc, char *domain)
+{
+}
 
 #endif
