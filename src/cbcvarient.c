@@ -180,7 +180,7 @@ list_cbc_build_varient(cbc_config_s *cmc)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_varient");
 	init_cbc_struct(base);
-	if ((retval = run_query(cmc, base, VARIENT)) != 0) {
+	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
 		clean_cbc_struct(base);
 		return retval;
 	}
@@ -236,7 +236,7 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	snprintf(varient, HOST_S, "%s", data->args.text);
 	id = data->fields.number;
-	if ((retval = run_multiple_query(cmc, base, BUILD_OS | BPACKAGE)) != 0) {
+	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | BPACKAGE)) != 0) {
 		clean_dbdata_struct(data);
 		clean_cbc_struct(base);
 		return MY_QUERY_FAIL;
@@ -270,7 +270,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		report_error(MALLOC_FAIL, "vari in add_cbc_build_varient");
 	init_cbc_struct(base);
 	init_varient(vari);
-	if ((retval = run_query(cmc, base, VARIENT)) != 0) {
+	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
 		clean_cbc_struct(base);
 		clean_varient(vari);
 		return retval;
@@ -289,7 +289,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	snprintf(vari->varient, HOST_S, "%s", cvl->varient);
 	snprintf(vari->valias, MAC_S, "%s", cvl->valias);
 	base->varient = vari;
-	if ((retval = run_insert(cmc, base, VARIENTS)) != 0) {
+	if ((retval = cbc_run_insert(cmc, base, VARIENTS)) != 0) {
 		printf("Unable to add varient %s to database\n", cvl->varient);
 	} else {
 		printf("Varient %s added to database\n", cvl->varient);

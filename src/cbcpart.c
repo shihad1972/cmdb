@@ -160,7 +160,7 @@ list_seed_schemes(cbc_config_s *cbc)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_seed_schemes");
 	init_cbc_struct(base);
-	if ((retval = run_query(cbc, base, SSCHEME)) != 0) {
+	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
 		fprintf(stderr, "Seed scheme query failed\n");
 		free(base);
 		return retval;
@@ -187,7 +187,7 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_full_seed_scheme\n");
 	init_cbc_struct(base);
-	if ((retval = run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
+	if ((retval = cbc_run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
 		fprintf(stderr, "Seed scheme and default part query failed\n");
 		free(base);
 		return retval;
@@ -253,7 +253,7 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
 	init_cbc_struct(base);
-	if ((retval = run_query(cbc, base, SSCHEME)) != 0) {
+	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
 		clean_cbc_struct(base);
 		free(part);
 		fprintf(stderr, "Unable to get schemes from DB\n");
@@ -285,7 +285,7 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		clean_cbc_struct(base);
 		return EXTRA_LOG_VOL;
 	}
-	if ((retval = run_query(cbc, base, DPART)) != 0) {
+	if ((retval = cbc_run_query(cbc, base, DPART)) != 0) {
 		clean_cbc_struct(base);
 		free(part);
 		fprintf(stderr, "Unable to get partitions from DB\n");
@@ -320,7 +320,7 @@ part->log_vol, cpl->scheme);
 	}
 	clean_pre_part(base->dpart);
 	base->dpart = part;
-	if ((retval = run_insert(cbc, base, DPARTS)) != 0)
+	if ((retval = cbc_run_insert(cbc, base, DPARTS)) != 0)
 		printf("Unable to add partition to DB\n");
 	else
 		printf("Partition added to DB\n");
@@ -346,7 +346,7 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	base->sscheme = scheme;
 	scheme->lvm = cpl->lvm;
 	strncpy(scheme->name, cpl->scheme, CONF_S);
-	if ((retval = run_insert(cbc, base, SSCHEMES)) != 0) 
+	if ((retval = cbc_run_insert(cbc, base, SSCHEMES)) != 0) 
 		printf("Unable to add seed scheme to the database\n");
 	else
 		printf("Added seed scheme %s to database\n", scheme->name);

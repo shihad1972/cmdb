@@ -174,7 +174,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		report_error(MALLOC_FAIL, "base in add package");
 	init_cbc_struct(base);
 	cbc_init_initial_dbdata(&data, OS_VARIENT_ID_ON_PACKAGE);
-	if ((retval = run_multiple_query(cmc, base, BUILD_OS | VARIENT)) != 0) {
+	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | VARIENT)) != 0) {
 		printf("Unable to run os and varient query\n");
 		free(base);
 		return retval;
@@ -226,7 +226,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	while (pack) {
 		base->package = pack;
 		printf("OS ID: %lu\tVarient ID: %lu\n", pack->os_id, pack->vari_id);
-		if ((retval = run_insert(cmc, base, BPACKAGES)) != 0) {
+		if ((retval = cbc_run_insert(cmc, base, BPACKAGES)) != 0) {
 			printf("Unable to insert package %s\n", pack->package);
 			free(osid);
 			free(variid);
@@ -560,7 +560,7 @@ remove_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		report_error(MALLOC_FAIL, "base in add package");
 	init_cbc_struct(base);
 	if ((retval = 
-run_multiple_query(cmc, base, BUILD_OS | VARIENT | BPACKAGE)) != 0) {
+cbc_run_multiple_query(cmc, base, BUILD_OS | VARIENT | BPACKAGE)) != 0) {
 		printf("Unable to run os and varient query\n");
 		free(base);
 		return retval;

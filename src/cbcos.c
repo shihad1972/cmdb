@@ -168,7 +168,7 @@ list_cbc_build_os(cbc_config_s *cmc)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
 	init_cbc_struct(base);
-	if ((retval = run_multiple_query(cmc, base, BUILD_OS | BUILD_TYPE)) != 0) {
+	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | BUILD_TYPE)) != 0) {
 		clean_cbc_struct(base);
 		return retval;
 	}
@@ -205,7 +205,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
 	init_cbc_struct(base);
-	if ((retval = run_query(cmc, base, BUILD_OS)) != 0) {
+	if ((retval = cbc_run_query(cmc, base, BUILD_OS)) != 0) {
 		clean_cbc_struct(base);
 		return MY_QUERY_FAIL;
 	}
@@ -299,7 +299,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	snprintf(os->version, MAC_S, "%s", col->version);
 	snprintf(os->ver_alias, MAC_S, "%s", col->ver_alias);
 	snprintf(os->arch, RANGE_S, "%s", col->arch);
-	if ((retval = run_insert(cmc, cbc, BUILD_OSS)) != 0)
+	if ((retval = cbc_run_insert(cmc, cbc, BUILD_OSS)) != 0)
 		printf("Unable to add build os to database\n");
 	else
 		printf("Build os added to database\n");

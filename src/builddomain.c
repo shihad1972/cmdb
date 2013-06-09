@@ -55,7 +55,7 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_cbc_build_domain");
 	init_cbc_struct(base);
-	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
+	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		fprintf(stderr, "build query failed\n");
 		clean_cbc_struct(base);
 		return retval;
@@ -100,7 +100,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 #ifdef HAVE_DNSA
 
 #endif
-	if ((retval = run_insert(cbc, base, BUILD_DOMAINS)) != 0)
+	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
 		printf("\
 \nUnable to add build domain %s to database\n", bdom->domain);
 	else
@@ -149,7 +149,7 @@ list_cbc_build_domain(cbc_config_s *cbc)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
 	init_cbc_struct(base);
-	if ((retval = run_query(cbc, base, BUILD_DOMAIN)) != 0) {
+	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		fprintf(stderr, "build query failed\n");
 		free(base);
 		return retval;

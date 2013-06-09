@@ -201,7 +201,7 @@ SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
 
 #ifdef HAVE_MYSQL
 
-const int mycbc_sql_inserts[][24] = {
+const int mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0},
@@ -349,7 +349,7 @@ const unsigned int cbc_search_field_types[][9] = {
 };
 
 int
-run_query(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -357,12 +357,12 @@ run_query(cbc_config_s *config, cbc_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_query_mysql(config, base, type);
+		retval = cbc_run_query_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_query_sqlite(config, base, type);
+		retval = cbc_run_query_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -374,7 +374,7 @@ run_query(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -383,12 +383,12 @@ run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_multiple_query_mysql(config, base, type);
+		retval = cbc_run_multiple_query_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_multiple_query_sqlite(config, base, type);
+		retval = cbc_run_multiple_query_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -400,7 +400,7 @@ run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-run_insert(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -408,12 +408,12 @@ run_insert(cbc_config_s *config, cbc_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_insert_mysql(config, base, type);
+		retval = cbc_run_insert_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_insert_sqlite(config, base, type);
+		retval = cbc_run_insert_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -425,7 +425,7 @@ run_insert(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-get_query(int type, const char **query, unsigned int *fields)
+cbc_get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
 
@@ -579,7 +579,7 @@ cbc_mysql_init(cbc_config_s *dc, MYSQL *cbc_mysql)
 }
 
 int
-run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_RES *cbc_res;
@@ -591,7 +591,7 @@ run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 
 	retval = 0;
 	cbc_mysql_init(config, &cbc);
-	if ((retval = get_query(type, &query, &fields)) != 0) {
+	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
 	}
@@ -606,16 +606,16 @@ run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 	fields = mysql_num_fields(cbc_res);
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)) {
 		cmdb_mysql_cleanup_full(&cbc, cbc_res);
-		report_error(NO_SERVERS, "run_query_mysql");
+		report_error(NO_SERVERS, "cbc_run_query_mysql");
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res)))
-		store_result_mysql(cbc_row, base, type, fields);
+		cbc_store_result_mysql(cbc_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cbc, cbc_res);
 	return NONE;
 }
 
 int
-run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_STMT *cbc_stmt;
@@ -627,7 +627,7 @@ run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cbc_insert_fields[type]; i++)
-		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
+		if ((retval = cbc_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
 			return retval;
 	query = cbc_sql_insert[type];
 	cbc_mysql_init(config, &cbc);
@@ -646,54 +646,54 @@ run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
 	if (type & BOOT_LINE)
-		if ((retval = run_query_mysql(config, base, BOOT_LINE)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BOOT_LINE)) != 0)
 			return retval;
 	if (type & BUILD)
-		if ((retval = run_query_mysql(config, base, BUILD)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BUILD)) != 0)
 			return retval;
 	if (type & BUILD_DOMAIN)
-		if ((retval = run_query_mysql(config, base, BUILD_DOMAIN)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BUILD_DOMAIN)) != 0)
 			return retval;
 	if (type & BUILD_IP)
-		if ((retval = run_query_mysql(config, base, BUILD_IP)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BUILD_IP)) != 0)
 			return retval;
 	if (type & BUILD_OS)
-		if ((retval = run_query_mysql(config, base, BUILD_OS)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BUILD_OS)) != 0)
 			return retval;
 	if (type & BUILD_TYPE)
-		if ((retval = run_query_mysql(config, base, BUILD_TYPE)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BUILD_TYPE)) != 0)
 			return retval;
 	if (type & DISK_DEV)
-		if ((retval = run_query_mysql(config, base, DISK_DEV)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, DISK_DEV)) != 0)
 			return retval;
 	if (type & LOCALE)
-		if ((retval = run_query_mysql(config, base, LOCALE)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, LOCALE)) != 0)
 			return retval;
 	if (type & BPACKAGE)
-		if ((retval = run_query_mysql(config, base, BPACKAGE)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, BPACKAGE)) != 0)
 			return retval;
 	if (type & DPART)
-		if ((retval = run_query_mysql(config, base, DPART)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, DPART)) != 0)
 			return retval;
 	if (type & SPART)
-		if ((retval = run_query_mysql(config, base, SPART)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, SPART)) != 0)
 			return retval;
 	if (type & SSCHEME)
-		if ((retval = run_query_mysql(config, base, SSCHEME)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, SSCHEME)) != 0)
 			return retval;
 	if (type & CSERVER)
-		if ((retval = run_query_mysql(config, base, CSERVER)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, CSERVER)) != 0)
 			return retval;
 	if (type & VARIENT)
-		if ((retval = run_query_mysql(config, base, VARIENT)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, VARIENT)) != 0)
 			return retval;
 	if (type & VMHOST)
-		if ((retval = run_query_mysql(config, base, VMHOST)) != 0)
+		if ((retval = cbc_run_query_mysql(config, base, VMHOST)) != 0)
 			return retval;
 	return retval;
 }
@@ -766,10 +766,10 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
 	for (i = 0; i < cbc_search_args[type]; i++)
-		if ((retval = set_search_args_mysql(&args[i], i, type, data)) != 0)
+		if ((retval = cbc_set_search_args_mysql(&args[i], i, type, data)) != 0)
 			return retval;
 	for (i = 0; i < cbc_search_fields[type]; i++)
-		if ((retval = set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+		if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
 			return retval;
 	cbc_mysql_init(ccs, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
@@ -787,7 +787,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	while ((retval = mysql_stmt_fetch(cbc_stmt)) == 0) {
 		j++;
 		for (i = 0; i < cbc_search_fields[type]; i++)
-			if ((retval = set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+			if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
 				return retval;
 		if ((retval = mysql_stmt_bind_result(cbc_stmt, &fields[0])) != 0)
 			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
@@ -803,7 +803,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 }
 
 int
-set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
+cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
 	int retval = 0;
 	unsigned int j;
@@ -837,7 +837,7 @@ set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *ba
 }
 
 int
-set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
+cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
 	int retval = 0, j;
 	static int m = 0, stype = 0;
@@ -855,7 +855,7 @@ set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbd
 	mybind->length = 0;
 	if (k > 0) {
 		if (!(new = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "new in set_search_fields_mysql");
+			report_error(MALLOC_FAIL, "new in cbc_set_search_fields_mysql");
 		init_dbdata_struct(new);
 		while (list->next) {
 			list = list->next;
@@ -890,103 +890,103 @@ set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbd
 }
 
 void
-store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields)
+cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == BOOT_LINE) {
 		required = cbc_select_fields[BOOT_LINES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_boot_line_mysql(row, base);
+		cbc_store_boot_line_mysql(row, base);
 	} else if (type == BUILD) {
 		required = cbc_select_fields[BUILDS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_mysql(row, base);
+		cbc_store_build_mysql(row, base);
 	} else if (type == BUILD_DOMAIN) {
 		required = cbc_select_fields[BUILD_DOMAINS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_domain_mysql(row, base);
+		cbc_store_build_domain_mysql(row, base);
 	} else if (type == BUILD_IP) {
 		required = cbc_select_fields[BUILD_IPS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_ip_mysql(row, base);
+		cbc_store_build_ip_mysql(row, base);
 	} else if (type == BUILD_OS) {
 		required = cbc_select_fields[BUILD_OSS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_os_mysql(row, base);
+		cbc_store_build_os_mysql(row, base);
 	} else if (type == BUILD_TYPE) {
 		required = cbc_select_fields[BUILD_TYPES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_type_mysql(row, base);
+		cbc_store_build_type_mysql(row, base);
 	} else if (type == DISK_DEV) {
 		required = cbc_select_fields[DISK_DEVS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_disk_dev_mysql(row, base);
+		cbc_store_disk_dev_mysql(row, base);
 	} else if (type == LOCALE) {
 		required = cbc_select_fields[LOCALES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_locale_mysql(row, base);
+		cbc_store_locale_mysql(row, base);
 	} else if (type == BPACKAGE) {
 		required = cbc_select_fields[BPACKAGES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_package_mysql(row, base);
+		cbc_store_package_mysql(row, base);
 	} else if (type == DPART) {
 		required = cbc_select_fields[DPARTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_dpart_mysql(row, base);
+		cbc_store_dpart_mysql(row, base);
 	} else if (type == SPART) {
 		required = cbc_select_fields[SPARTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_spart_mysql(row, base);
+		cbc_store_spart_mysql(row, base);
 	} else if (type == SSCHEME) {
 		required = cbc_select_fields[SSCHEMES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_seed_scheme_mysql(row, base);
+		cbc_store_seed_scheme_mysql(row, base);
 	} else if (type == CSERVER) {
 		required = cbc_select_fields[CSERVERS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_server_mysql(row, base);
+		cbc_store_server_mysql(row, base);
 	} else if (type == VARIENT) {
 		required = cbc_select_fields[VARIENTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_varient_mysql(row, base);
+		cbc_store_varient_mysql(row, base);
 	} else if (type == VMHOST) {
 		required = cbc_select_fields[VMHOSTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_vmhost_mysql(row, base);
+		cbc_store_vmhost_mysql(row, base);
 	} else {
 		cbc_query_mismatch(NONE, NONE, NONE);
 	}
 }
 
 int
-setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base)
+cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base)
 {
 	int retval = NONE;
 	void *buffer;
 
-	mybind->buffer_type = mycbc_sql_inserts[type][i];
+	mybind->buffer_type = mysql_inserts[type][i];
 	if (mybind->buffer_type == MYSQL_TYPE_LONG)
 		mybind->is_unsigned = 1;
 	else
 		mybind->is_unsigned = 0;
 	mybind->is_null = 0;
 	mybind->length = 0;
-	if ((retval = setup_insert_mysql_buffer(type, &buffer, base, i)) != 0)
+	if ((retval = cbc_setup_insert_mysql_buffer(type, &buffer, base, i)) != 0)
 		return retval;
 	mybind->buffer = buffer;
 	if (mybind->buffer_type == MYSQL_TYPE_LONG)
@@ -997,34 +997,34 @@ setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *bas
 }
 
 int
-setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 {
 	int retval = NONE;
 
 	if (type == BUILD_DOMAINS)
-		setup_bind_mysql_build_domain(buffer, base, i);
+		cbc_setup_bind_mysql_build_domain(buffer, base, i);
 	else if (type == BUILD_OSS)
-		setup_bind_mysql_build_os(buffer, base, i);
+		cbc_setup_bind_mysql_build_os(buffer, base, i);
 	else if (type == VARIENTS)
-		setup_bind_mysql_build_varient(buffer, base, i);
+		cbc_setup_bind_mysql_build_varient(buffer, base, i);
 	else if (type == SSCHEMES)
-		setup_bind_mysql_build_part_scheme(buffer, base, i);
+		cbc_setup_bind_mysql_build_part_scheme(buffer, base, i);
 	else if (type == DPARTS)
-		setup_bind_mysql_build_def_part(buffer, base, i);
+		cbc_setup_bind_mysql_build_def_part(buffer, base, i);
 	else if (type == BPACKAGES)
-		setup_bind_mysql_build_package(buffer, base, i);
+		cbc_setup_bind_mysql_build_package(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
 }
 
 void
-store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_boot_line_s *boot, *list;
 
 	if (!(boot = malloc(sizeof(cbc_boot_line_s))))
-		report_error(MALLOC_FAIL, "boot in store_boot_line_mysql");
+		report_error(MALLOC_FAIL, "boot in cbc_store_boot_line_mysql");
 	init_boot_line(boot);
 	boot->boot_id = strtoul(row[0], NULL, 10);
 	snprintf(boot->os, MAC_S, "%s", row[1]);
@@ -1042,12 +1042,12 @@ store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_build_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_build_s *build, *list;
 
 	if (!(build = malloc(sizeof(cbc_build_s))))
-		report_error(MALLOC_FAIL, "build in store_build_mysql");
+		report_error(MALLOC_FAIL, "build in cbc_store_build_mysql");
 	init_build_struct(build);
 	build->build_id = strtoul(row[0], NULL, 10);
 	snprintf(build->mac_addr, MAC_S, "%s", row[1]);
@@ -1069,12 +1069,12 @@ store_build_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_build_domain_s *dom, *list;
 
 	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
-		report_error(MALLOC_FAIL, "dom in store_build_domain_mysql");
+		report_error(MALLOC_FAIL, "dom in cbc_store_build_domain_mysql");
 	init_build_domain(dom);
 	dom->bd_id = strtoul(row[0], NULL, 10);
 	dom->start_ip = strtoul(row[1], NULL, 10);
@@ -1132,12 +1132,12 @@ store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_build_ip_s *ip, *list;
 
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
-		report_error(MALLOC_FAIL, "ip in store_build_ip_mysql");
+		report_error(MALLOC_FAIL, "ip in cbc_store_build_ip_mysql");
 	init_build_ip(ip);
 	ip->ip_id = strtoul(row[0], NULL, 10);
 	ip->ip = strtoul(row[1], NULL, 10);
@@ -1155,12 +1155,12 @@ store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_build_os_s *os, *list;
 
 	if (!(os = malloc(sizeof(cbc_build_os_s))))
-		report_error(MALLOC_FAIL, "os in store_build_os_mysql");
+		report_error(MALLOC_FAIL, "os in cbc_store_build_os_mysql");
 	init_build_os(os);
 	os->os_id = strtoul(row[0], NULL, 10);
 	snprintf(os->os, MAC_S, "%s", row[1]);
@@ -1180,12 +1180,12 @@ store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_build_type_s *type, *list;
 
 	if (!(type = malloc(sizeof(cbc_build_type_s))))
-		report_error(MALLOC_FAIL, "type in store_build_type_mysql");
+		report_error(MALLOC_FAIL, "type in cbc_store_build_type_mysql");
 	init_build_type(type);
 	type->bt_id = strtoul(row[0], NULL, 10);
 	snprintf(type->alias, MAC_S, "%s", row[1]);
@@ -1205,12 +1205,12 @@ store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_disk_dev_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_disk_dev_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_disk_dev_s *disk, *list;
 
 	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
-		report_error(MALLOC_FAIL, "disk in store_disk_dev_mysql");
+		report_error(MALLOC_FAIL, "disk in cbc_store_disk_dev_mysql");
 	init_disk_dev(disk);
 	disk->disk_id = strtoul(row[0], NULL, 10);
 	disk->server_id = strtoul(row[1], NULL, 10);
@@ -1230,12 +1230,12 @@ store_disk_dev_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_locale_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_locale_s *loc, *list;
 
 	if (!(loc = malloc(sizeof(cbc_locale_s))))
-		report_error(MALLOC_FAIL, "loc in store_locale_mysql");
+		report_error(MALLOC_FAIL, "loc in cbc_store_locale_mysql");
 	init_locale(loc);
 	loc->locale_id = strtoul(row[0], NULL, 10);
 	snprintf(loc->locale, MAC_S, "%s", row[1]);
@@ -1256,12 +1256,12 @@ store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_package_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_package_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_package_s *pack, *list;
 
 	if (!(pack = malloc(sizeof(cbc_package_s))))
-		report_error(MALLOC_FAIL, "pack in store_package_mysql");
+		report_error(MALLOC_FAIL, "pack in cbc_store_package_mysql");
 	init_package(pack);
 	pack->pack_id = strtoul(row[0], NULL, 10);
 	snprintf(pack->package, HOST_S, "%s", row[1]);
@@ -1278,12 +1278,12 @@ store_package_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
+		report_error(MALLOC_FAIL, "part in cbc_store_dpart_mysql");
 	init_pre_part(part);
 	part->id.def_part_id = strtoul(row[0], NULL, 10);
 	part->min= strtoul(row[1], NULL, 10);
@@ -1304,12 +1304,12 @@ store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_spart_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in store_dpart_mysql");
+		report_error(MALLOC_FAIL, "part in cbc_store_dpart_mysql");
 	init_pre_part(part);
 	part->id.part_id = strtoul(row[0], NULL, 10);
 	part->min= strtoul(row[1], NULL, 10);
@@ -1330,12 +1330,12 @@ store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_seed_scheme_s *seed, *list;
 
 	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
-		report_error(MALLOC_FAIL, "seed in store_seed_scheme_mysql");
+		report_error(MALLOC_FAIL, "seed in cbc_store_seed_scheme_mysql");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = strtoul(row[0], NULL, 10);
 	snprintf(seed->name, CONF_S, "%s", row[1]);
@@ -1354,12 +1354,12 @@ store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_server_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_server_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cbc_server_s))))
-		report_error(MALLOC_FAIL, "server in store_server_mysql");
+		report_error(MALLOC_FAIL, "server in cbc_store_server_mysql");
 	init_cbc_server(server);
 	server->server_id = strtoul(row[0], NULL, 10);
 	snprintf(server->vendor, CONF_S, "%s", row[1]);
@@ -1380,12 +1380,12 @@ store_server_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_varient_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_varient_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_varient_s *vari, *list;
 
 	if (!(vari = malloc(sizeof(cbc_varient_s))))
-		report_error(MALLOC_FAIL, "vari in store_varient_mysql");
+		report_error(MALLOC_FAIL, "vari in cbc_store_varient_mysql");
 	init_varient(vari);
 	vari->varient_id = strtoul(row[0], NULL, 10);
 	snprintf(vari->varient, HOST_S, "%s", row[1]);
@@ -1401,12 +1401,12 @@ store_varient_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
+cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 {
 	cbc_vm_server_hosts_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
-		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
+		report_error(MALLOC_FAIL, "vmhost in cbc_store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = strtoul(row[0], NULL, 10);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", row[1]);
@@ -1423,7 +1423,7 @@ store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
-setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->bdom->start_ip);
@@ -1468,7 +1468,7 @@ setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 }
 
 void
-setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->bos->os);
@@ -1485,7 +1485,7 @@ setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
 }
 
 void
-setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->varient->varient);
@@ -1494,7 +1494,7 @@ setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
 }
 
 void
-setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->sscheme->name);
@@ -1503,7 +1503,7 @@ setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int i)
 }
 
 void
-setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->dpart->min);
@@ -1522,7 +1522,7 @@ setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 }
 
 void
-setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
+cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->package->package);
@@ -1538,7 +1538,7 @@ setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1548,7 +1548,7 @@ run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 
 	retval = 0;
 	file = config->file;
-	if ((retval = get_query(type, &query, &fields)) != 0) {
+	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
 	}
@@ -1557,11 +1557,11 @@ run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_query_sqlite");
 	}
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
-		store_result_sqlite(state, base, type, fields);
+		cbc_store_result_sqlite(state, base, type, fields);
 	
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cbc);
@@ -1570,7 +1570,7 @@ run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1585,9 +1585,9 @@ run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "run_insert_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_insert_sqlite");
 	}
-	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
+	if ((retval = cbc_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
 		sqlite3_close(cbc);
 		return retval;
@@ -1605,54 +1605,54 @@ run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
 	if (type & BOOT_LINE)
-		if ((retval = run_query_sqlite(config, base, BOOT_LINE)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BOOT_LINE)) != 0)
 			return retval;
 	if (type & BUILD)
-		if ((retval = run_query_sqlite(config, base, BUILD)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BUILD)) != 0)
 			return retval;
 	if (type & BUILD_DOMAIN)
-		if ((retval = run_query_sqlite(config, base, BUILD_DOMAIN)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BUILD_DOMAIN)) != 0)
 			return retval;
 	if (type & BUILD_IP)
-		if ((retval = run_query_sqlite(config, base, BUILD_IP)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BUILD_IP)) != 0)
 			return retval;
 	if (type & BUILD_OS)
-		if ((retval = run_query_sqlite(config, base, BUILD_OS)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BUILD_OS)) != 0)
 			return retval;
 	if (type & BUILD_TYPE)
-		if ((retval = run_query_sqlite(config, base, BUILD_TYPE)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BUILD_TYPE)) != 0)
 			return retval;
 	if (type & DISK_DEV)
-		if ((retval = run_query_sqlite(config, base, DISK_DEV)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, DISK_DEV)) != 0)
 			return retval;
 	if (type & LOCALE)
-		if ((retval = run_query_sqlite(config, base, LOCALE)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, LOCALE)) != 0)
 			return retval;
 	if (type & BPACKAGE)
-		if ((retval = run_query_sqlite(config, base, BPACKAGE)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, BPACKAGE)) != 0)
 			return retval;
 	if (type & DPART)
-		if ((retval = run_query_sqlite(config, base, DPART)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, DPART)) != 0)
 			return retval;
 	if (type & SPART)
-		if ((retval = run_query_sqlite(config, base, SPART)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, SPART)) != 0)
 			return retval;
 	if (type & SSCHEME)
-		if ((retval = run_query_sqlite(config, base, SSCHEME)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, SSCHEME)) != 0)
 			return retval;
 	if (type & CSERVER)
-		if ((retval = run_query_sqlite(config, base, CSERVER)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, CSERVER)) != 0)
 			return retval;
 	if (type & VARIENT)
-		if ((retval = run_query_sqlite(config, base, VARIENT)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, VARIENT)) != 0)
 			return retval;
 	if (type & VMHOST)
-		if ((retval = run_query_sqlite(config, base, VMHOST)) != 0)
+		if ((retval = cbc_run_query_sqlite(config, base, VMHOST)) != 0)
 			return retval;
 	return retval;
 }
@@ -1807,118 +1807,118 @@ get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 }
 
 void
-store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields)
+cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
 	if (type == BOOT_LINE) {
 		required = cbc_select_fields[BOOT_LINES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_boot_line_sqlite(state, base);
+		cbc_store_boot_line_sqlite(state, base);
 	} else if (type == BUILD) {
 		required = cbc_select_fields[BUILDS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_sqlite(state, base);
+		cbc_store_build_sqlite(state, base);
 	} else if (type == BUILD_DOMAIN) {
 		required = cbc_select_fields[BUILD_DOMAINS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_domain_sqlite(state, base);
+		cbc_store_build_domain_sqlite(state, base);
 	} else if (type == BUILD_IP) {
 		required = cbc_select_fields[BUILD_IPS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_ip_sqlite(state, base);
+		cbc_store_build_ip_sqlite(state, base);
 	} else if (type == BUILD_OS) {
 		required = cbc_select_fields[BUILD_OSS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_os_sqlite(state, base);
+		cbc_store_build_os_sqlite(state, base);
 	} else if (type == BUILD_TYPE) {
 		required = cbc_select_fields[BUILD_TYPES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_build_type_sqlite(state, base);
+		cbc_store_build_type_sqlite(state, base);
 	} else if (type == DISK_DEV) {
 		required = cbc_select_fields[DISK_DEVS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_disk_dev_sqlite(state, base);
+		cbc_store_disk_dev_sqlite(state, base);
 	} else if (type == LOCALE) {
 		required = cbc_select_fields[LOCALES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_locale_sqlite(state, base);
+		cbc_store_locale_sqlite(state, base);
 	} else if (type == BPACKAGE) {
 		required = cbc_select_fields[BPACKAGES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_package_sqlite(state, base);
+		cbc_store_package_sqlite(state, base);
 	} else if (type == DPART) {
 		required = cbc_select_fields[DPARTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_dpart_sqlite(state, base);
+		cbc_store_dpart_sqlite(state, base);
 	} else if (type == SPART) {
 		required = cbc_select_fields[SPARTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_spart_sqlite(state, base);
+		cbc_store_spart_sqlite(state, base);
 	} else if (type == SSCHEME) {
 		required = cbc_select_fields[SSCHEMES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_seed_scheme_sqlite(state, base);
+		cbc_store_seed_scheme_sqlite(state, base);
 	} else if (type == CSERVER) {
 		required = cbc_select_fields[CSERVERS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_server_sqlite(state, base);
+		cbc_store_server_sqlite(state, base);
 	} else if (type == VARIENT) {
 		required = cbc_select_fields[VARIENTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_varient_sqlite(state, base);
+		cbc_store_varient_sqlite(state, base);
 	} else if (type == VMHOST) {
 		required = cbc_select_fields[VMHOSTS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
-		store_vmhost_sqlite(state, base);
+		cbc_store_vmhost_sqlite(state, base);
 	} else {
 		cbc_query_mismatch(NONE, NONE, NONE);
 	}
 }
 
 int
-setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
+cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 {
 	int retval = NONE;
 
 	if (type == BUILD_DOMAINS)
-		retval = setup_bind_sqlite_build_domain(state, base->bdom);
+		retval = cbc_setup_bind_sqlite_build_domain(state, base->bdom);
 	else if (type == BUILD_OSS)
-		retval = setup_bind_sqlite_build_os(state, base->bos);
+		retval = cbc_setup_bind_sqlite_build_os(state, base->bos);
 	else if (type == VARIENTS)
-		retval = setup_bind_sqlite_build_varient(state, base->varient);
+		retval = cbc_setup_bind_sqlite_build_varient(state, base->varient);
 	else if (type == SSCHEMES)
-		retval = setup_bind_sqlite_build_part_scheme(state, base->sscheme);
+		retval = cbc_setup_bind_sqlite_build_part_scheme(state, base->sscheme);
 	else if (type == DPARTS)
-		retval = setup_bind_sqlite_build_part(state, base->dpart);
+		retval = cbc_setup_bind_sqlite_build_part(state, base->dpart);
 	else if (type == BPACKAGES)
-		retval = setup_bind_sqlite_build_pack(state, base->package);
+		retval = cbc_setup_bind_sqlite_build_pack(state, base->package);
 	else
 		retval = NO_TYPE;
 	return retval;
 }
 
 void
-store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_boot_line_s *boot, *list;
 
 	if (!(boot = malloc(sizeof(cbc_boot_line_s))))
-		report_error(MALLOC_FAIL, "boot in store_boot_line_sqlite");
+		report_error(MALLOC_FAIL, "boot in cbc_store_boot_line_sqlite");
 	init_boot_line(boot);
 	boot->boot_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(boot->os, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -1936,12 +1936,12 @@ store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_build_s *build, *list;
 
 	if (!(build = malloc(sizeof(cbc_build_s))))
-		report_error(MALLOC_FAIL, "build in store_build_sqlite");
+		report_error(MALLOC_FAIL, "build in cbc_store_build_sqlite");
 	init_build_struct(build);
 	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(build->mac_addr, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -1963,12 +1963,12 @@ store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_build_domain_s *dom, *list;
 
 	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
-		report_error(MALLOC_FAIL, "dom in store_build_domain_sqlite");
+		report_error(MALLOC_FAIL, "dom in cbc_store_build_domain_sqlite");
 	init_build_domain(dom);
 	dom->bd_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	dom->start_ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2013,12 +2013,12 @@ store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_build_ip_s *ip, *list;
 
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
-		report_error(MALLOC_FAIL, "ip in store_build_ip_sqlite");
+		report_error(MALLOC_FAIL, "ip in cbc_store_build_ip_sqlite");
 	init_build_ip(ip);
 	ip->ip_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	ip->ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2036,12 +2036,12 @@ store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_build_os_s *os, *list;
 
 	if (!(os = malloc(sizeof(cbc_build_os_s))))
-		report_error(MALLOC_FAIL, "os in store_build_os_sqlite");
+		report_error(MALLOC_FAIL, "os in cbc_store_build_os_sqlite");
 	init_build_os(os);
 	os->os_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(os->os, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2061,12 +2061,12 @@ store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_build_type_s *type, *list;
 
 	if (!(type = malloc(sizeof(cbc_build_type_s))))
-		report_error(MALLOC_FAIL, "type in store_build_type_sqlite");
+		report_error(MALLOC_FAIL, "type in cbc_store_build_type_sqlite");
 	init_build_type(type);
 	type->bt_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(type->alias, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2086,12 +2086,12 @@ store_build_type_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_disk_dev_s *disk, *list;
 
 	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
-		report_error(MALLOC_FAIL, "disk in store_disk_dev_sqlite");
+		report_error(MALLOC_FAIL, "disk in cbc_store_disk_dev_sqlite");
 	init_disk_dev(disk);
 	disk->disk_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	disk->server_id = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2108,12 +2108,12 @@ store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_locale_s *loc, *list;
 
 	if (!(loc = malloc(sizeof(cbc_locale_s))))
-		report_error(MALLOC_FAIL, "loc in store_locale_sqlite");
+		report_error(MALLOC_FAIL, "loc in cbc_store_locale_sqlite");
 	init_locale(loc);
 	loc->locale_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(loc->locale, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2134,12 +2134,12 @@ store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_package_s *pack, *list;
 
 	if (!(pack = malloc(sizeof(cbc_package_s))))
-		report_error(MALLOC_FAIL, "pack in store_package_sqlite");
+		report_error(MALLOC_FAIL, "pack in cbc_store_package_sqlite");
 	init_package(pack);
 	pack->pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(pack->package, HOST_S, "%s", sqlite3_column_text(state, 1));
@@ -2156,12 +2156,12 @@ store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
+		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.def_part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2187,12 +2187,12 @@ store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in store_dpart_sqlite");
+		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2218,12 +2218,12 @@ store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_seed_scheme_s *seed, *list;
 
 	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
-		report_error(MALLOC_FAIL, "seed in store_seed_scheme_sqlite");
+		report_error(MALLOC_FAIL, "seed in cbc_store_seed_scheme_sqlite");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = 
 	   (unsigned long int) sqlite3_column_int64(state, 0);
@@ -2241,12 +2241,12 @@ store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cbc_server_s))))
-		report_error(MALLOC_FAIL, "server in store_server_sqlite");
+		report_error(MALLOC_FAIL, "server in cbc_store_server_sqlite");
 	init_cbc_server(server);
 	server->server_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
@@ -2267,12 +2267,12 @@ store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_varient_s *vari, *list;
 
 	if (!(vari = malloc(sizeof(cbc_varient_s))))
-		report_error(MALLOC_FAIL, "vari in store_varient_sqlite");
+		report_error(MALLOC_FAIL, "vari in cbc_store_varient_sqlite");
 	init_varient(vari);
 	vari->varient_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vari->varient, HOST_S, "%s", sqlite3_column_text(state, 1));
@@ -2288,12 +2288,12 @@ store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 void
-store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
+cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	cbc_vm_server_hosts_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
-		report_error(MALLOC_FAIL, "vmhost in store_vmhost_mysql");
+		report_error(MALLOC_FAIL, "vmhost in cbc_store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -2310,7 +2310,7 @@ store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 int
-setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom)
+cbc_setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom)
 {
 	int retval;
 
@@ -2418,7 +2418,7 @@ state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0)
 }
 
 int
-setup_bind_sqlite_build_os(sqlite3_stmt *state, cbc_build_os_s *bos)
+cbc_setup_bind_sqlite_build_os(sqlite3_stmt *state, cbc_build_os_s *bos)
 {
 	int retval;
 
@@ -2455,7 +2455,7 @@ state, 5, bos->arch, (int)strlen(bos->arch), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_build_varient(sqlite3_stmt *state, cbc_varient_s *vari)
+cbc_setup_bind_sqlite_build_varient(sqlite3_stmt *state, cbc_varient_s *vari)
 {
 	int retval;
 
@@ -2473,7 +2473,7 @@ state, 2, vari->valias, (int)strlen(vari->valias), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_build_part_scheme(sqlite3_stmt *state, cbc_seed_scheme_s *seed)
+cbc_setup_bind_sqlite_build_part_scheme(sqlite3_stmt *state, cbc_seed_scheme_s *seed)
 {
 	int retval;
 
@@ -2490,7 +2490,7 @@ state, 1, seed->name, (int)strlen(seed->name), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part)
+cbc_setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part)
 {
 	int retval;
 
@@ -2533,7 +2533,7 @@ state, 7, part->log_vol, (int)strlen(part->log_vol), SQLITE_STATIC)) > 0) {
 }
 
 int
-setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack)
+cbc_setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack)
 {
 	int retval;
 

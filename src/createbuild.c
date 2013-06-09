@@ -64,7 +64,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	cbc->build = build;
 	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
 	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
-	if ((retval = run_multiple_query(cbt, cbc, query)) != 0) {
+	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
 		return MY_QUERY_FAIL;
