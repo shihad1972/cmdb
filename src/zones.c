@@ -2078,6 +2078,7 @@ check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 	}
 	return retval;
 }
+
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {

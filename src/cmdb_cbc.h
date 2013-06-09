@@ -28,7 +28,12 @@
 
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
+# include "../config.h"
+# ifdef HAVE_DNSA
 
+#  include "cmdb_dnsa.h"
+
+# endif /* HAVE_DNSA */
 
 typedef struct cbc_config_s {		/* Hold CMDB configuration values */
 	char dbtype[RANGE_S];
@@ -135,7 +140,7 @@ print_cbc_config(cbc_config_s *cbc);
 # ifdef HAVE_DNSA
 
 void
-copy_cbc_config_to_dnsa(cbc_config_s *cbc, dnsa_config_s *dc);
+fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc);
 
 # endif /* HAVE_DNSA */
 /*

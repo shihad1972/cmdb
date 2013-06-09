@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "../config.h"
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 
@@ -200,8 +201,16 @@ print_cbc_config(cbc_config_s *cbc)
 #ifdef HAVE_DNSA
 
 void
-copy_cbc_config_to_dnsa(cbc_config_s *cbc, dnsa_config_s *dc)
+fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
 {
+	snprintf(zone->name, RBUFF_S, "%s", domain);
+	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
+	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	zone->serial = get_zone_serial();
+	zone->refresh = dc->refresh;
+	zone->retry = dc->retry;
+	zone->expire = dc->expire;
+	zone->ttl = dc->ttl;
 }
 
 #endif

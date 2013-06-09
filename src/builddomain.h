@@ -51,9 +51,6 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 
 # ifdef HAVE_DNSA
 
-int
-check_domain_in_dns(cbc_config_s *cbc, char *domain);
-
 # endif /* HAVE_DNSA */
 
 #endif /* __CBC_BUILD_DOMAIN_H__ */

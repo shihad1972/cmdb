@@ -37,6 +37,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#include "../config.h"
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -106,7 +107,43 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
 
-	check_domain_in_dns(cbc, bdom->domain);
+	dnsa_config_s *dc;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+	if (!(dc = malloc(sizeof(dnsa_config_s))))
+		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
+	if (!(zone = malloc(sizeof(zone_info_s))))
+		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
+	
+	init_dnsa_struct(dnsa);
+/*
+ * This really needs to get put into the config struct 
+ */
+	const char configfile = "/etc/dnsa/dnsa.conf";
+	if ((retval = parse_dnsa_config_file(dc, configfile)) != 0) {
+		fprintf(stderr, "Error in config file %s\n", configfile);
+		free(dc);
+		free(dnsa);
+		free(zone);
+		free(data);
+		clean_cbc_struct(base);
+		return retval;
+	}
+	fill_fwd_zone_info(zone, bdom->domain, dc);
+	dnsa->zones = zone;
+	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
+		printf("Zone %s already in DNS\n", bdom->domain);
+		retval = NONE;
+	} else {
+		if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
+			fprintf(stderr, "Unable to add zone %s to dns\n", zone->name);
+			retval = 0;
+		} else {
+			fprintf(stderr, "Added zone %s\n", zone->name);
+		}
+	}
 
 #endif
 	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
@@ -236,10 +273,5 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 }
 
 #ifdef HAVE_DNSA
-
-int
-check_domain_in_dns(cbc_config_s *cbc, char *domain)
-{
-}
 
 #endif
