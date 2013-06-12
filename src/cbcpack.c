@@ -167,7 +167,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	unsigned long int *osid, *variid;
 	size_t len;
 	cbc_s *base;
-	cbc_package_s *pack, *link;
+	cbc_package_s *pack, *links;
 	dbdata_s *data;
 
 	if (!(base = malloc(sizeof(cbc_s))))
@@ -222,7 +222,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		}
 	}
 	build_package_list(osid, osnum, variid, varinum, cpl->package, base);
-	pack = link = base->package;
+	pack = links = base->package;
 	while (pack) {
 		base->package = pack;
 		printf("OS ID: %lu\tVarient ID: %lu\n", pack->os_id, pack->vari_id);
@@ -230,14 +230,14 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 			printf("Unable to insert package %s\n", pack->package);
 			free(osid);
 			free(variid);
-			base->package = link;
+			base->package = links;
 			clean_cbc_struct(base);
 			clean_dbdata_struct(data);
 			return DB_INSERT_FAILED;
 		}
 		pack = pack->next;
 	}
-	base->package = link;
+	base->package = links;
 	free(osid);
 	free(variid);
 	clean_dbdata_struct(data);

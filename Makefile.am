@@ -23,7 +23,8 @@ cbcdomain_SOURCES = \
 		src/cbcdomain.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/builddomain.c\
 		src/cbccom.c src/dnsaacom.c src/zones.c src/dnsa_base_sql.c\
-		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h\
+		src/cbc_dnsa.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_dnsa.h\
 		src/cbc_base_sql.h src/builddomain.h src/cbcdomain.h
 
 cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\

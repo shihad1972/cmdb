@@ -197,23 +197,6 @@ print_cbc_config(cbc_config_s *cbc)
 	fprintf(stderr, "KICKSTART: %s\n", cbc->kickstart);
 	fprintf(stderr, "\n");
 }
-
-#ifdef HAVE_DNSA
-
-void
-fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
-{
-	snprintf(zone->name, RBUFF_S, "%s", domain);
-	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
-	zone->serial = get_zone_serial();
-	zone->refresh = dc->refresh;
-	zone->retry = dc->retry;
-	zone->expire = dc->expire;
-	zone->ttl = dc->ttl;
-}
-
-#endif
 /*
 void
 init_cbc_build_values(cbc_build_s *build_config)

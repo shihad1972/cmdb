@@ -14,9 +14,9 @@ cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
 		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
-		cbc_base_sql.c builddomain.c cbccom.c\
+		cbc_base_sql.c builddomain.c cbccom.c zones.c cbc_dnsa.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
-		base_sql.h cbcdomain.h
+		base_sql.h cbcdomain.h cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 cbcos_SOURCES = \
 		cbcos.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
