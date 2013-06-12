@@ -31,7 +31,7 @@ CVHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcvarient.h
 CPHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpack.h
 CKHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
 
-all:	dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart cbcpack
+all:	dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
 dnsa:	$(DOBJECTS) $(DHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
