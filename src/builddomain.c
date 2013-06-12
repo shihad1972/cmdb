@@ -51,6 +51,7 @@
 
 # include "cmdb_dnsa.h"
 # include "dnsa_base_sql.h"
+# include "cbc_dnsa.h"
 
 #endif /* HAVE_DNSA */
 
@@ -121,7 +122,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 /*
  * This really needs to get put into the config struct 
  */
-	const char configfile = "/etc/dnsa/dnsa.conf";
+	char configfile[CONF_S] = "/etc/dnsa/dnsa.conf";
 	if ((retval = parse_dnsa_config_file(dc, configfile)) != 0) {
 		fprintf(stderr, "Error in config file %s\n", configfile);
 		free(dc);
@@ -131,7 +132,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		clean_cbc_struct(base);
 		return retval;
 	}
-	fill_fwd_zone_info(zone, bdom->domain, dc);
+	fill_cbc_fwd_zone(zone, bdom->domain, dc);
 	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
 		printf("Zone %s already in DNS\n", bdom->domain);
