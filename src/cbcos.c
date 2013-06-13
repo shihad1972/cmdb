@@ -281,15 +281,11 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	snprintf(data->args.text, MAC_S, "%s", name);
 	if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
 		clean_dbdata_struct(data);
-		free(cmc);
-		free(col);
 		return OS_NOT_FOUND;
 	}
 	snprintf(data->args.text, MAC_S, "%s", data->fields.text);
 	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
 		clean_dbdata_struct(data);
-		free(cmc);
-		free(col);
 		return OS_NOT_FOUND;
 	}
 	retval = NONE;
