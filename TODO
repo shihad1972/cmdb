@@ -1,3 +1,8 @@
+13/06/2013
+Need to add the slave zones to dnsa and also add  the ability to have
+glue records in a zone. Should probably also check what kind of types
+of records we can hold.
+
 06/06/2013
 Need to define an autoconf macro for HAVE_DNSA so users can disable this
 if they so want
@@ -73,9 +78,9 @@ cbcdomain
 cbcos
 cbcvarient
 cbcpack
+cbcpart
 
 still need:
-cbcpart
 cbclocale
 ********************************************************
 
