@@ -321,8 +321,11 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 		}
 		printf("VM Server:\t%s\n", vmhost->name);
 	} else {
-		while ((server->server_id != vmhost->server_id) && (vmhost)) {
-			vmhost = vmhost->next;
+		while (vmhost) {
+			if (server->server_id != vmhost->server_id)
+				vmhost = vmhost->next;
+			else
+				break;
 		}
 		if (server->server_id == vmhost->server_id) {
 			printf("VM Server host type %s\n", vmhost->type);
