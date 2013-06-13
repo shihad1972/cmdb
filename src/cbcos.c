@@ -279,9 +279,11 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	clean_dbdata_struct(data);
 	cbc_init_initial_dbdata(&data, OS_ALIAS_ON_OS);
 	snprintf(data->args.text, MAC_S, "%s", name);
-	if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
-		clean_dbdata_struct(data);
-		return OS_NOT_FOUND;
+	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
+		if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
+			clean_dbdata_struct(data);
+			return OS_NOT_FOUND;
+		}
 	}
 	snprintf(data->args.text, MAC_S, "%s", data->fields.text);
 	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
