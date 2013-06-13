@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 			printf("User input not valid\n");
 			exit (USER_INPUT_INVALID);
 		}
+		retval = 0;
 #endif /* HAVE_LIBPCRE */
 		if (cm->action == DISPLAY) {
 			display_server_info(cm->name, cm->id, cmc);
@@ -120,6 +121,7 @@ int main(int argc, char *argv[])
 			printf("User input not valid\n");
 			exit(USER_INPUT_INVALID);
 		}
+		retval = 0;
 #endif /* HAVE_LIBPCRE */
 		if (cm->action == DISPLAY) {
 			display_customer_info(cm->name, cm->id, cmc);
