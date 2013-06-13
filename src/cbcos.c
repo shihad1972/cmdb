@@ -259,10 +259,12 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	}
 	snprintf(data->args.text, MAC_S, "%s", name);
 	if ((retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME)) == 0) {
-		clean_dbdata_struct(data);
-		free(cmc);
-		free(col);
-		return OS_NOT_FOUND;
+		if (strncmp(col->alias, "NULL", MAC_S) == 0) {
+			clean_dbdata_struct(data);
+			free(cmc);
+			free(col);
+			return OS_NOT_FOUND;
+		}
 	}
 	retval = NONE;
 	if (check_for_build_os(col, data) != 0) {
