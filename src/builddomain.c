@@ -145,6 +145,18 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 			fprintf(stderr, "Added zone %s\n", zone->name);
 		}
 	}
+	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+		dnsa_clean_list(dnsa);
+		free(dc);
+		free(data);
+		clean_cbc_struct(base);
+		return retval;
+	}
+	data->args.number = zone->id;
+	if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0)
+		printf("Unable to mark zone as valid in database\n");
+	else
+		printf("Zone marked as valid in the database\n");
 
 #endif
 	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
