@@ -126,7 +126,7 @@ get_ubun_mirror() {
 # Get Fedora Mirror URL
 
 get_fed_mirror() {
-  echo "Please input the ubuntu remote mirror you wish to use"
+  echo "Please input the fedora remote mirror you wish to use"
   read FEDMIR
 }
 
