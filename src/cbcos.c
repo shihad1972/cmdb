@@ -277,6 +277,8 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		clean_dbdata_struct(data);
 		return BUILD_TYPE_NOT_FOUND;
 	}
+	os->bt_id = data->fields.number;
+	clean_dbdata_struct(data);
 	retval = NONE;
 /* Get all examples of this OS in the DB and check this particular one is
  * not already in the DB */
@@ -295,7 +297,6 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 			return OS_ALIAS_NEEDED;
 		}
 	}
-	os->bt_id = data->fields.number;
 	snprintf(os->alias, MAC_S, "%s", data->args.text);
 	snprintf(os->os, MAC_S, "%s", col->os);
 	snprintf(os->version, MAC_S, "%s", col->version);
