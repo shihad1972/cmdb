@@ -297,7 +297,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 			return OS_ALIAS_NEEDED;
 		}
 	}
-	snprintf(os->alias, MAC_S, "%s", data->args.text);
+	snprintf(os->alias, MAC_S, "%s", col->alias);
 	snprintf(os->os, MAC_S, "%s", col->os);
 	snprintf(os->version, MAC_S, "%s", col->version);
 	snprintf(os->ver_alias, MAC_S, "%s", col->ver_alias);
