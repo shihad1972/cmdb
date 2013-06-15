@@ -248,49 +248,53 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		report_error(MALLOC_FAIL, "os in add_cbc_build_os");
 	if (!(cbc = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "cbc in add_cbc_build_os");
-	cbc_init_initial_dbdata(&data, BUILD_OS_ON_NAME);
 	init_cbc_struct(cbc);
 	init_build_os(os);
 	cbc->bos = os;
-	if (*name >= 'a' && *name <= 'z') {
+/* Why convert? Use proper name when adding an os */
+/*	if (*name >= 'a' && *name <= 'z') {
 		retval = toupper(*name);
 		*name = (char)retval;
 		retval = NONE;
-	}
-	snprintf(data->args.text, MAC_S, "%s", name);
-	if ((retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME)) == 0) {
-		if (strncmp(col->alias, "NULL", MAC_S) == 0) {
-			clean_dbdata_struct(data);
-			return OS_NOT_FOUND;
-		}
-	}
-	retval = NONE;
-	if (check_for_build_os(col, data) != 0) {
-		clean_dbdata_struct(data);
-		return BUILD_OS_EXISTS;
-	}
-	if ((strncmp(data->next->fields.text, "none", COMM_S) != 0) &&
-	    (strncmp(col->ver_alias, "NULL", COMM_S) == 0)) {
-		clean_dbdata_struct(data);
-		return OS_ALIAS_NEEDED;
-	}
+	} */
+/* If we have a build alias we need to check if this is a valid OS in the 
+ * build_type table */
 	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
-	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, OS_ALIAS_ON_OS);
-	snprintf(data->args.text, MAC_S, "%s", name);
 	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
+		cbc_init_initial_dbdata(&data, OS_ALIAS_ON_OS);
+		snprintf(data->args.text, MAC_S, "%s", name);
 		if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
 			clean_dbdata_struct(data);
 			return OS_NOT_FOUND;
 		}
+		snprintf(col->alias, MAC_S, "%s", data->fields.text);
+		clean_dbdata_struct(data);
 	}
-	snprintf(data->args.text, MAC_S, "%s", data->fields.text);
+	cbc_init_initial_dbdata(&data, BUILD_TYPE_ID_ON_ALIAS);
+	snprintf(data->args.text, MAC_S, "%s", col->alias);
 	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
 		clean_dbdata_struct(data);
-		return OS_NOT_FOUND;
+		return BUILD_TYPE_NOT_FOUND;
 	}
 	retval = NONE;
+/* Get all examples of this OS in the DB and check this particular one is
+ * not already in the DB */
+	cbc_init_initial_dbdata(&data, BUILD_OS_ON_NAME);
+	snprintf(data->args.text, MAC_S, "%s", name);
+	retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME);
+	if (retval > 0) {
+		if (check_for_build_os(col, data) != 0) {
+			clean_dbdata_struct(data);
+			return BUILD_OS_EXISTS;
+		}
+		retval = NONE;
+		if ((strncmp(data->next->fields.text, "none", COMM_S) != 0) &&
+		    (strncmp(col->ver_alias, "none", COMM_S) == 0)) {
+			clean_dbdata_struct(data);
+			return OS_ALIAS_NEEDED;
+		}
+	}
 	os->bt_id = data->fields.number;
 	snprintf(os->alias, MAC_S, "%s", data->args.text);
 	snprintf(os->os, MAC_S, "%s", col->os);

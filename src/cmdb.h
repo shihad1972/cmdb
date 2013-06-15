@@ -182,7 +182,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_FULL_DISK = 189,
 	LOCALE_NOT_FOUND = 190,
 	MULTIPLE_LOCALES = 191,
-	PARTITIONS_NOT_FOUND = 192
+	PARTITIONS_NOT_FOUND = 192,
+	BUILD_TYPE_NOT_FOUND = 193
 	
 };
 
