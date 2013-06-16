@@ -156,10 +156,10 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 int
 cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 {
-	int retval = NONE, i;
+	int retval = NONE;
 	unsigned long int ip_addr = details->bdom->start_ip;
 	cbc_build_ip_s *ip = '\0';
-	dbdata_s *data = '\0', *list;
+	dbdata_s *data = '\0', *list = '\0';
 
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in cbc_get_build_ip");
@@ -170,6 +170,20 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 #ifdef HAVE_DNSA
 	get_dns_ip_list(cbt, details, data);
 #endif
+	if ((retval = cbc_find_build_ip(ip_addr, details, data, list)) != 0) {
+		clean_dbdata_struct(data);
+		return retval;
+	}
+	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr);
+	details->bip = ip;
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+cbc_find_build_ip(unsigned long int ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
+{
+	int retval, i;
 	while (ip_addr <= details->bdom->end_ip) {
 		i = FALSE;
 		list = data;
@@ -186,9 +200,6 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 		retval = NO_BUILD_IP;
 	else
 		retval = NONE;
-	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr);
-	details->bip = ip;
-	clean_dbdata_struct(data);
 	return retval;
 }
 

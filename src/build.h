@@ -71,6 +71,9 @@ int
 cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details);
 
 int
+cbc_find_build_ip(unsigned long int ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list);
+
+int
 cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
