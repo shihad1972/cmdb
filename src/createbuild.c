@@ -91,7 +91,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		free(details);
 		return BUILD_DOMAIN_NOT_FOUND;
 	}
-	if ((retval = cbc_get_build_ip(cbt, cml, cbc, details)) != 0) {
+	if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
 		return NO_BUILD_IP;
@@ -154,7 +154,7 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 }
 
 int
-cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
+cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 {
 	int retval = NONE, i;
 	unsigned long int ip_addr = details->bdom->start_ip;

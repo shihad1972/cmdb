@@ -68,7 +68,7 @@ int
 cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
-cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details);
 
 int
 cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
