@@ -127,7 +127,8 @@ enum {			/* Delete indexes that diverge from SELECT */
 
 enum {			/* Extended searches */
 	RECORDS_ON_DEST_AND_ID = 0,
-	RECORDS_ON_ZONE
+	RECORDS_ON_ZONE,
+	DEST_IN_RANGE
 };
 
 enum {			/* Search indexes and queries */

@@ -93,7 +93,8 @@ enum {			/* cbc search SQL statements */
 	BUILD_PACKAGES = 26,
 	LDAP_CONFIG = 27,
 	XYMON_CONFIG = 28,
-	SMTP_CONFIG = 29
+	SMTP_CONFIG = 29,
+	IP_ON_BD_ID = 30
 };
 
 # ifdef HAVE_MYSQL
