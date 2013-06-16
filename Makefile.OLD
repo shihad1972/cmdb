@@ -60,37 +60,28 @@ cbcpart_SOURCES = \
 all:	$(bin_PROGRAMS)
 
 dnsa:
-	$(ECHO) Building dnsa : $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) dnsa
 
 cmdb:
-	$(ECHO) Building cmdb : $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cmdb
 
 cbc:
-	$(ECHO) Building cbc : $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbc
 
 cbcdomain:
-	$(ECHO) Building cbcdomain: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcdomain
 
 cbcos:
-	$(ECHO) Building cbcos: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcos
 
 cbcvarient:
-	$(ECHO) Building cbcvarient: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcvarient
 
 cbcpack:
-	$(ECHO) Building cbcpack: $(MAKE) $(FLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcpack
 
 cbcpart:
-	$(ECHO) Building cbcpart: $(MAKE) $(MFLAGS)
 	cd $(DIR); $(MAKE) $(MFLAGS) cbcpart
 
 clean :
-	$(ECHO) Making Clean
 	cd $(DIR); $(MAKE) clean
