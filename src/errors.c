@@ -320,7 +320,8 @@ display_cbc_usage(void)
 	printf("[<server_specifier>]\n\n"); */
 	printf("Create and modify options:\n");
 	printf("cbc [ -a | -m ] -o<OS> -v<version> -t<arch> -b<domain> -x");
-	printf("<varient> -e<locale_id> -p<scheme> [-n | -i | -u ] ");
+	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> ");
+	printf("[-n | -i | -u ] ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("For these options.\n\n");
@@ -484,6 +485,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Multiple BUILD_MIRROR");
 	else if (error == VARIENT_NOT_FOUND)
 		snprintf(errstr, MAC_S, "Unknown build varient");
+	else if (error == NO_NETWORK_HARDWARE)
+		snprintf(errstr, MAC_S, "Network device not found");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

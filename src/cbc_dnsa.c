@@ -94,8 +94,8 @@ get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data)
 		report_error(MALLOC_FAIL, "dc in get_dns_ip_list");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in get_dns_ip_list");
-	copy_cbc_into_dnsa(dc, cbt);
 	init_dnsa_struct(dnsa);
+	copy_cbc_into_dnsa(dc, cbt);
 	if ((retval = dnsa_run_query(dc, dnsa, ALL_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		free(dc);
@@ -141,6 +141,42 @@ prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build)
 		}
 		rec = rec->next;
 	}
+}
+
+int
+check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
+{
+	int retval = NONE;
+	dbdata_s *data;
+	dnsa_config_s *dc;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+
+	if (!(dc = malloc(sizeof(dnsa_config_s))))
+		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in check_for_build_ip_in_dns");
+	if (!(zone = malloc(sizeof(zone_info_s))))
+		report_error(MALLOC_FAIL, "zone in check_for_build_ip_in_dns");
+	dnsa_init_initial_dbdata(&data, RECORDS_ON_ZONE);
+	init_dnsa_struct(dnsa);
+	dnsa->zones = zone;
+	dnsa_init_config_values(dc);
+	copy_cbc_into_dnsa(dc, cbt);
+	snprintf(zone->name, RBUFF_S, "%s", cml->build_domain);
+	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
+		clean_dbdata_struct(data);
+		free(dc);
+		return retval;
+	}
+	data->args.number = zone->id;
+	dnsa_clean_list(dnsa);
+	if ((retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE)) != 0) {
+		clean_dbdata_struct(data);
+		free(dc)
+		return retval;
+	}
+	return retval;
 }
 
 #endif /* HAVE_DNSA */

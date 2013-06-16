@@ -35,6 +35,7 @@
 #  include "cmdb_dnsa.h"
 #  include "cmdb_cbc.h"
 #  include "cbc_data.h"
+#  include "build.h"
 
 void
 fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc);
@@ -47,6 +48,9 @@ get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data);
 
 void
 prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build);
+
+int
+check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
 
 # endif /* HAVE_DNSA */
 

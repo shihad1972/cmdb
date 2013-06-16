@@ -57,7 +57,8 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
 	int retval = NONE, query = NONE;
 	cbc_s *cbc, *details;
-	cbc_build_s *build;
+	cbc_build_s *build, *list;
+	cbc_build_ip_s *bip;
 	
 	if (!(cbc = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "cbc in display_build_config");
@@ -68,8 +69,8 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	init_build_struct(build);
-	cbc->build = build;
-	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
+/*	cbc->build = build; */
+	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | BUILD |
 	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
@@ -81,6 +82,18 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		free(details);
 		return SERVER_NOT_FOUND;
 	}
+	list = cbc->build;
+	while (list) {
+		if (list->server_id == details->server->server_id) {
+			printf("Server %s already has a build in the database\n",
+			       details->server->name);
+			clean_cbc_struct(cbc);
+			free(details);
+			free(build);
+			return BUILD_IN_DATABASE;
+		}
+		list = list->next;
+	}
 	if ((retval = cbc_get_os(cml, cbc, details)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -90,11 +103,6 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		clean_cbc_struct(cbc);
 		free(details);
 		return BUILD_DOMAIN_NOT_FOUND;
-	}
-	if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return NO_BUILD_IP;
 	}
 	if ((retval = cbc_get_seed_scheme(cml, cbc, details)) != 0) {
 		clean_cbc_struct(cbc);
@@ -111,10 +119,76 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		free(details);
 		return LOCALE_NOT_FOUND;
 	}
-	cbc_get_build_config(cbc, details, build);
+	if ((retval = cbc_get_build_config(cbc, details, build)) != 0) {
+		clean_cbc_struct(cbc);
+		free(details);
+		return retval;
+	}
+	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
+		clean_cbc_struct(cbc);
+		free(details);
+		return retval;
+	}
+	bip = cbc->bip;
+	while (bip) {
+		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
+		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
+			printf("Build ip for %s.%s in database\n", 
+				bip->host, bip->domain);
+			break;
+		}
+		bip = bip->next;
+	}
+	if (!(bip)) {
+		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
+			clean_cbc_struct(cbc);
+			free(details);
+			return NO_BUILD_IP;
+		}
+		if ((retval = cbc_run_insert(cbt, details, BUILD_IPS)) != 0) {
+			clean_cbc_struct(cbc);
+			clean_build_ip(details->bip);
+			clean_pre_part(details->dpart);
+			free(details);
+			printf("Unable to insert IP into database");
+			return retval;
+		}
+		clean_build_ip(details->bip);
+		clean_build_ip(cbc->bip);
+		cbc->bip = '\0';
+		if ((retval = cbc_run_query(cbt, cbc, BUILD_IP)) != 0) {
+			clean_cbc_struct(cbc);
+			free(build);
+			free(details);
+			return retval;
+		}
+	}
+	bip = cbc->bip;
+	while (bip) {
+		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
+		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0))
+			build->ip_id = bip->ip_id;
+		bip = bip->next;
+	}
+#ifdef HAVE_DNSA
+	int dret = NONE;
+	dret = check_for_build_ip_in_dns(cbt, cml, details);
+	if (dret == 1)
+		printf("Unable to add IP to DNS\n");
+	else if (dret == 2)
+		printf("Hostname already in domain\n");
+	else if (dret == 3)
+		printf("Hostname modified in DNS\n");
+	else if (dret == 4)
+		printf("Domain not in database??\n");
+	else if (dret == 0)
+		printf("Hostname added to DNS\n");
+	else
+		return retval;
+#endif /* HAVE_DNSA */
 	clean_cbc_struct(cbc);
-	clean_build_ip(details->bip);
 	clean_pre_part(details->dpart);
+	free(build);
 	free(details);
 
 	return retval;
@@ -170,7 +244,7 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 #ifdef HAVE_DNSA
 	get_dns_ip_list(cbt, details, data);
 #endif
-	if ((retval = cbc_find_build_ip(ip_addr, details, data, list)) != 0) {
+	if ((retval = cbc_find_build_ip(&ip_addr, details, data, list)) != 0) {
 		clean_dbdata_struct(data);
 		return retval;
 	}
@@ -181,22 +255,22 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 }
 
 int
-cbc_find_build_ip(unsigned long int ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
+cbc_find_build_ip(unsigned long int *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
 {
 	int retval, i;
-	while (ip_addr <= details->bdom->end_ip) {
+	while (*ip_addr <= details->bdom->end_ip) {
 		i = FALSE;
 		list = data;
 		while (list) {
-			if (list->fields.number == ip_addr)
+			if (list->fields.number == *ip_addr)
 				i = TRUE;
 			list = list->next;
 		}
 		if (i == FALSE)
 			break;
-		ip_addr++;
+		++*ip_addr;
 	}
-	if (ip_addr > details->bdom->end_ip)
+	if (*ip_addr > details->bdom->end_ip)
 		retval = NO_BUILD_IP;
 	else
 		retval = NONE;
@@ -306,6 +380,45 @@ cbc_get_build_partitons(cbc_s *cbc, cbc_s *details)
 	if (!part)
 		retval = PARTITIONS_NOT_FOUND;
 	details->dpart = part;
+	return retval;
+}
+
+int
+cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = NONE;
+	dbdata_s *data, *list;
+
+	cbc_init_initial_dbdata(&data, NETWORK_CARD);
+	data->args.number = build->server_id;
+	if ((retval = cbc_run_search(cbt, data, NETWORK_CARD)) == 0) {
+		clean_dbdata_struct(data);
+		printf("No network hardware found for server %s\n",
+		  cml->name);
+		return NO_NETWORK_HARDWARE;
+	}
+	if (strncmp(cml->netcard, "NULL", COMM_S) == 0) {
+		printf("No network card specified. Choosing automatically\n");
+		snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
+		snprintf(build->net_int, RANGE_S, "%s", data->next->fields.text);
+		clean_dbdata_struct(data);
+		return NONE;
+	}
+	list = data;
+	while (list) {
+		if (strncmp(cml->netcard, list->next->fields.text, HOST_S) == 0) {
+			snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
+			snprintf(build->net_int, RANGE_S, "%s", data->next->fields.text);
+			break;
+		}
+		if (list->next)
+			list = list->next->next;
+	}
+	if (list)
+		retval = NONE;
+	else
+		retval = NO_NETWORK_HARDWARE;
+	clean_dbdata_struct(data);
 	return retval;
 }
 

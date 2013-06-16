@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
 	/* Get config values from config file */	
-	init_config_values(dc);
+	dnsa_init_config_values(dc);
 	id = parse_dnsa_config_file(dc, cm->config);
 	if (id > 1) {
 		parse_dnsa_config_error(retval);

@@ -148,7 +148,7 @@ int
 parse_dnsa_config_file(dnsa_config_s *dc, char *config);
 /*initialise configuration struct */
 void
-init_config_values(dnsa_config_s *dc);
+dnsa_init_config_values(dnsa_config_s *dc);
 void
 parse_dnsa_config_error(int error);
 /* Validate command line input */

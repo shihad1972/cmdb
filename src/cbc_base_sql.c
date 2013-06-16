@@ -97,7 +97,7 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  smtp_server, config_email, xymon_server, config_xymon, nfs_domain) VALUES (\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id) VALUES (?, ?, ?,\
- ?, ?)","\
+ ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
@@ -198,6 +198,9 @@ SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
   WHERE b.server_id = ?","\
 SELECT ip FROM build_ip WHERE bd_id = ?"
+/* This hard codes the network device to be hard_type_id 1 */,"\
+SELECT detail, device FROM hardware WHERE server_id = ? AND hard_type_id = 1 \
+  ORDER BY device"
 };
 
 #ifdef HAVE_MYSQL
@@ -266,11 +269,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
-	9, 7, 2, 6, 1, 5, 3, 3, 1
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -315,6 +318,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -348,7 +352,8 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -1016,6 +1021,10 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_build_def_part(buffer, base, i);
 	else if (type == BPACKAGES)
 		cbc_setup_bind_mysql_build_package(buffer, base, i);
+	else if (type == BUILD_IPS)
+		cbc_setup_bind_mysql_build_ip(buffer, base, i);
+	else if (type == BUILDS)
+		cbc_setup_bind_mysql_build(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -1535,6 +1544,40 @@ cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->package->os_id);
 }
 
+void
+cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->bip->ip);
+	else if (i == 1)
+		*buffer = &(base->bip->host);
+	else if (i == 2)
+		*buffer = &(base->bip->domain);
+	else if (i == 3)
+		*buffer = &(base->bip->bd_id);
+}
+
+void
+cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->build->mac_addr);
+	else if (i == 1)
+		*buffer = &(base->build->varient_id);
+	else if (i == 2)
+		*buffer = &(base->build->net_int);
+	else if (i == 3)
+		*buffer = &(base->build->server_id);
+	else if (i == 4)
+		*buffer = &(base->build->os_id);
+	else if (i == 5)
+		*buffer = &(base->build->ip_id);
+	else if (i == 6)
+		*buffer = &(base->build->locale_id);
+	else if (i == 7)
+		*buffer = &(base->build->def_scheme_id);
+}
+
 
 #endif /* HAVE_MYSQL */
 
@@ -1910,6 +1953,10 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build_part(state, base->dpart);
 	else if (type == BPACKAGES)
 		retval = cbc_setup_bind_sqlite_build_pack(state, base->package);
+	else if (type == BUILD_IPS)
+		retval = cbc_setup_bind_sqlite_build_ip(state, base->bip);
+	else if (type == BUILDS)
+		retval = cbc_setup_bind_sqlite_build(state, base->build);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -2313,6 +2360,54 @@ cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 }
 
 int
+cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, build->mac_addr, (int)strlen(build->mac_addr), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind mac addr %s\n", build->mac_addr);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)build->varient_id)) > 0) {
+		fprintf(stderr, "Cannot bind varient_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, build->net_int, (int)strlen(build->net_int), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind domain %s\n", build->net_int);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)build->server_id)) > 0) {
+		fprintf(stderr, "Cannot bind server_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)build->os_id)) > 0) {
+		fprintf(stderr, "Cannot bind os_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)build->ip_id)) > 0) {
+		fprintf(stderr, "Cannot bind ip_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)build->locale_id)) > 0) {
+		fprintf(stderr, "Cannot bind locale_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite3_int64)build->def_scheme_id)) > 0) {
+		fprintf(stderr, "Cannot bind def_scheme_id\n");
+		return retval;
+	}
+	return retval;
+}
+
+int
 cbc_setup_bind_sqlite_build_domain(sqlite3_stmt *state, cbc_build_domain_s *bdom)
 {
 	int retval;
@@ -2415,6 +2510,34 @@ state, 18, bdom->xymon_server, (int)strlen(bdom->xymon_server), SQLITE_STATIC)) 
 state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0){
 		fprintf(stderr,
 "Cannot bind nfs domain %s\n", bdom->nfs_domain);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_build_ip(sqlite3_stmt *state, cbc_build_ip_s *bip)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)bip->ip)) > 0) {
+		fprintf(stderr, "Cannot bind ip\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, bip->host, (int)strlen(bip->host), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind host %s\n", bip->host);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, bip->domain, (int)strlen(bip->domain), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind domain %s\n", bip->domain);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)bip->bd_id)) > 0) {
+		fprintf(stderr, "Cannot bind bd_id\n");
 		return retval;
 	}
 	return retval;

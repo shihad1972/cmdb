@@ -327,7 +327,7 @@ init_dnsa_struct(dnsa_s *dnsa)
 }
 
 void
-init_config_values(dnsa_config_s *dc)
+dnsa_init_config_values(dnsa_config_s *dc)
 {
 	char *buff;
 	buff = dc->socket;
