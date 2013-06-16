@@ -482,6 +482,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot find BUILD_MIRROR");
 	else if (error == MULTI_BUILD_MIRR_ERR)
 		snprintf(errstr, MAC_S, "Multiple BUILD_MIRROR");
+	else if (error == VARIENT_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Unknown build varient");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

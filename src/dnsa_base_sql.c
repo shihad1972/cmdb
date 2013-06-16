@@ -97,7 +97,8 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
  */
 const char *dnsa_sql_extended_search[] = { "\
 SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
-SELECT id, host, type, pri, destination FROM records WHERE zone = ?" /*,"\
+SELECT id, host, type, pri, destination FROM records WHERE zone = ?","\
+SELECT DISTINCT destination from records WHERE destination > ? AND destination < ?" /*,"\
 SELECT fqdn FROM preferred_a WHERE ip = ?" */
 };
 
@@ -170,19 +171,21 @@ const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1 };
 
 const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2 };
 
-const unsigned int dnsa_extended_search_fields[] = { 3, 5 /*, 1*/ };
+const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
-const unsigned int dnsa_extended_search_args[] = { 1, 1/* , 1 */ };
+const unsigned int dnsa_extended_search_args[] = { 1, 1, 2/* , 1 */ };
 
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT }/* ,
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT },
+	{ DBTEXT, NONE, NONE, NONE, NONE }/* ,
 	{ DBTEXT, NONE, NONE } */
 };
 
-const unsigned int dnsa_ext_search_arg_type[][1] = { /* What we are searching on */
-	{ DBTEXT } ,
-	{ DBINT } /*,
+const unsigned int dnsa_ext_search_arg_type[][2] = { /* What we are searching on */
+	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBTEXT, DBTEXT } /*,
 	{ DBTEXT } */
 };
 
@@ -451,7 +454,7 @@ dnsa_init_initial_dbdata(dbdata_s **list, int type)
 	dlist = *list = '\0';
 	for (i = 0; i < dnsa_extended_search_fields[type]; i++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
+			report_error(MALLOC_FAIL, "data in dnsa_init_initial_dbdata");
 		init_dbdata_struct(data);
 		if (!(*list)) {
 			*list = dlist = data;
@@ -460,6 +463,19 @@ dnsa_init_initial_dbdata(dbdata_s **list, int type)
 				dlist = dlist->next;
 			dlist->next = data;
 		}
+	}
+	while (i < dnsa_extended_search_args[type]) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "data in dnsa_init_initial_dbdata");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+		i++;
 	}
 }
 

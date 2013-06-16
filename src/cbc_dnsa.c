@@ -31,7 +31,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+/* For freeBSD ?? */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+/* End freeBSD */
+#include <arpa/inet.h>
 #include "../config.h"
+#include "base_sql.h"
+#include "cbc_data.h"
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 
@@ -45,6 +53,7 @@
 
 # include "cmdb_dnsa.h"
 # include "cbc_dnsa.h"
+# include "dnsa_base_sql.h"
 
 
 void
@@ -58,6 +67,84 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
+}
+
+void
+copy_cbc_into_dnsa(dnsa_config_s *dc, cbc_config_s *cbc)
+{
+	snprintf(dc->dbtype, RANGE_S, "%s", cbc->dbtype);
+	snprintf(dc->file, CONF_S, "%s", cbc->file);
+	snprintf(dc->db, CONF_S, "%s", cbc->db);
+	snprintf(dc->user, CONF_S, "%s", cbc->user);
+	snprintf(dc->host, CONF_S, "%s", cbc->host);
+	snprintf(dc->pass, CONF_S, "%s", cbc->pass);
+	snprintf(dc->socket, CONF_S, "%s", cbc->socket);
+	dc->port = cbc->port;
+	dc->cliflag = cbc->cliflag;
+}
+
+int
+get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data)
+{
+	char start[16], end[16];
+	int retval = NONE;
+	uint32_t ip_addr;
+	dnsa_s *dnsa;
+	dnsa_config_s *dc = '\0';
+
+	if (!(dc = calloc(sizeof(dnsa_config_s), sizeof(char))))
+		report_error(MALLOC_FAIL, "dc in get_dns_ip_list");
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in get_dns_ip_list");
+	copy_cbc_into_dnsa(dc, cbt);
+	init_dnsa_struct(dnsa);
+	if ((retval = dnsa_run_query(dc, dnsa, ALL_A_RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		free(dc);
+		return retval;
+	}
+	prep_dnsa_ip_list(data, dnsa, details->bdom);
+	dnsa_clean_list(dnsa);
+	free(dc);
+	return retval;
+}
+
+void
+prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build)
+{
+	int i;
+	uint32_t ip_addr;
+	unsigned long int ip;
+	dbdata_s *pos = data, *list;
+	record_row_s *rec = dnsa->records;
+	while (pos) {
+		if ((pos->fields.number > 0) && (pos->next))
+			pos = pos->next;
+		else
+			break;
+	}
+	while (rec) {
+		add_int_ip_to_fwd_records(rec);
+		if ((rec->ip_addr >= build->start_ip) && 
+		    (rec->ip_addr <= build->end_ip)) {
+			list = data;
+			i = FALSE;
+			while (list) {
+				if (list->fields.number == rec->ip_addr)
+					i = TRUE;
+				list = list->next;
+			}
+			if (i == FALSE) {
+				if (!(list = calloc(sizeof(dbdata_s), sizeof(char))))
+					report_error(MALLOC_FAIL, "list in prep_dnsa_ip_list");
+				init_dbdata_struct(list);
+				list->fields.number = rec->ip_addr;
+				pos->next = list;
+				pos = list;
+			}
+		}
+		rec = rec->next;
+	}
 }
 
 #endif /* HAVE_DNSA */

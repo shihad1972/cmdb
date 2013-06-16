@@ -44,6 +44,13 @@
 #include "cbc_base_sql.h"
 #include "build.h"
 
+#ifdef HAVE_DNSA
+
+# include "cmdb_dnsa.h"
+# include "dnsa_base_sql.h"
+# include "cbc_dnsa.h"
+
+#endif /* HAVE_DNSA */
 
 int
 create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
@@ -84,6 +91,11 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		free(details);
 		return BUILD_DOMAIN_NOT_FOUND;
 	}
+	if ((retval = cbc_get_build_ip(cbt, cml, cbc, details)) != 0) {
+		clean_cbc_struct(cbc);
+		free(details);
+		return NO_BUILD_IP;
+	}
 	if ((retval = cbc_get_seed_scheme(cml, cbc, details)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -101,6 +113,8 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	}
 	cbc_get_build_config(cbc, details, build);
 	clean_cbc_struct(cbc);
+	clean_build_ip(details->bip);
+	clean_pre_part(details->dpart);
 	free(details);
 
 	return retval;
@@ -136,6 +150,45 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 	}
 	if (!details->bdom)
 		retval = BUILD_DOMAIN_NOT_FOUND;
+	return retval;
+}
+
+int
+cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
+{
+	int retval = NONE, i;
+	unsigned long int ip_addr = details->bdom->start_ip;
+	cbc_build_ip_s *ip = '\0';
+	dbdata_s *data = '\0', *list;
+
+	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
+		report_error(MALLOC_FAIL, "ip in cbc_get_build_ip");
+	init_build_ip(ip);
+	cbc_init_initial_dbdata(&data, IP_ON_BD_ID);
+	data->args.number = details->bdom->bd_id;
+	retval = cbc_run_search(cbt, data, IP_ON_BD_ID);
+#ifdef HAVE_DNSA
+	get_dns_ip_list(cbt, details, data);
+#endif
+	while (ip_addr <= details->bdom->end_ip) {
+		i = FALSE;
+		list = data;
+		while (list) {
+			if (list->fields.number == ip_addr)
+				i = TRUE;
+			list = list->next;
+		}
+		if (i == FALSE)
+			break;
+		ip_addr++;
+	}
+	if (ip_addr > details->bdom->end_ip)
+		retval = NO_BUILD_IP;
+	else
+		retval = NONE;
+	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr);
+	details->bip = ip;
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -241,5 +294,16 @@ cbc_get_build_partitons(cbc_s *cbc, cbc_s *details)
 	}
 	if (!part)
 		retval = PARTITIONS_NOT_FOUND;
+	details->dpart = part;
 	return retval;
+}
+
+void
+cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr)
+{
+	ip->ip = ip_addr;
+	/* This will trim cml->name */
+	snprintf(ip->host, MAC_S, "%s", cml->name);
+	snprintf(ip->domain, RBUFF_S, "%s", bdom->domain);
+	ip->bd_id = bdom->bd_id;
 }
