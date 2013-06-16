@@ -68,6 +68,9 @@ int
 cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
+cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
+
+int
 cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
@@ -84,6 +87,9 @@ cbc_get_build_partitons(cbc_s *cbc, cbc_s *details);
 
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
+
+void
+cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr);
 
 int
 list_build_servers(cbc_config_s *cbt);
