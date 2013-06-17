@@ -72,10 +72,7 @@ CREATE TABLE `build_domain` (
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
   `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
   `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`bd_id`),
-
-  INDEX (`config_ntp`, `config_ldap`, `config_log`),
-  INDEX (`config_email`, `config_xymon`)
+  PRIMARY KEY (`bd_id`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -86,8 +83,6 @@ CREATE TABLE `contacts` (
   `email` varchar(50) NOT NULL,
   `cust_id` int(7) NOT NULL,
   PRIMARY KEY (`cont_id`),
-
-  INDEX(`cust_id`),
 
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
@@ -106,8 +101,6 @@ CREATE TABLE `server` (
   `name` varchar(31) NOT NULL,
   PRIMARY KEY (`server_id`),
 
-  INDEX(`cust_id`, `vm_server_id`),
-
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -122,8 +115,6 @@ CREATE TABLE `services` (
   `detail` varchar(63) NOT NULL DEFAULT 'none',
   `url` varchar(63) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`service_id`),
-
-  INDEX(`server_id`, `cust_id`, `service_type_id`),
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -146,8 +137,6 @@ CREATE TABLE `vm_server_hosts` (
   `server_id` int(7) NOT NULL,
   PRIMARY KEY (`vm_server_id`),
 
-  INDEX (server_id),
-
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -162,8 +151,6 @@ CREATE TABLE `build_ip` (
   `bd_id` int(7) NOT NULL,
   `server_id` int(7) NOT NULL,
   PRIMARY KEY (`ip_id`),
-
-  INDEX (`bd_id`, `server_id`),
 
   FOREIGN KEY(`bd_id`) 
     REFERENCES `build_domain`(`bd_id`)
@@ -185,8 +172,6 @@ CREATE TABLE `build_os` (
   `bt_id` int(7) DEFAULT NULL,
   PRIMARY KEY (`os_id`),
 
-  INDEX (`bt_id`),
-
   FOREIGN KEY(`bt_id`)
     REFERENCES `build_type`(`bt_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -199,8 +184,6 @@ CREATE TABLE `disk_dev` (
   `device` varchar(63) NOT NULL,
   `lvm` smallint(4) NOT NULL,
   PRIMARY KEY (`disk_id`),
-
-  INDEX (`server_id`),
 
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
@@ -219,8 +202,6 @@ CREATE TABLE `seed_part` (
   `logical_volume` varchar(31) NOT NULL,
   PRIMARY KEY (`part_id`),
 
-  INDEX (`server_id`),
-
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -238,8 +219,6 @@ CREATE TABLE `default_part` (
   `logical_volume` varchar(31) NOT NULL,
   PRIMARY KEY (`def_part_id`),
 
-  INDEX (`def_scheme_id`),
-
   FOREIGN KEY(`def_scheme_id`)
     REFERENCES `seed_schemes`(`def_scheme_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -253,8 +232,6 @@ CREATE TABLE `hardware` (
   `server_id` int(7) NOT NULL,
   `hard_type_id` int(7) NOT NULL,
   PRIMARY KEY (`hard_id`),
-
-  INDEX (`server_id`, `hard_type_id`),
 
   FOREIGN KEY(`server_id`)
     REFERENCES `server`(`server_id`)
@@ -277,8 +254,6 @@ CREATE TABLE `locale` (
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
   PRIMARY KEY (`locale_id`),
 
-  INDEX (`os_id`, `bt_id`),
-
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
     ON UPDATE CASCADE ON DELETE CASCADE,
@@ -295,8 +270,6 @@ CREATE TABLE `packages` (
   `varient_id` int(7) NOT NULL DEFAULT '0',
   `os_id` int(7) NOT NULL DEFAULT '0',
   PRIMARY KEY (`pack_id`),
-
-  INDEX (`os_id`, `varient_id`),
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -319,9 +292,6 @@ CREATE TABLE `build` (
   `locale_id` int(7) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   PRIMARY KEY (`build_id`),
-
-  INDEX (`varient_id`, `os_id`, `ip_id`),
-  INDEX (`server_id`, `locale_id`, `def_scheme_id`),
 
   FOREIGN KEY(`varient_id`)
     REFERENCES `varient`(`varient_id`)
@@ -403,8 +373,6 @@ CREATE TABLE `records` (
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
   PRIMARY KEY (`id`),
 
-  INDEX (`zone`),
-
   FOREIGN KEY (`zone`)
     REFERENCES `zones`(`id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -419,8 +387,6 @@ CREATE TABLE `rev_records` (
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
   PRIMARY KEY (`rev_record_id`),
 
-  INDEX (`rev_zone`),
-
   FOREIGN KEY (`rev_zone`)
     REFERENCES `rev_zones`(`rev_zone_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -434,8 +400,6 @@ CREATE TABLE `preferred_a` (
   `record_id` int(7) NOT NULL,
   `fqdn` varchar(255) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`prefa_id`),
-
-  INDEX (`record_id`),
 
   FOREIGN KEY (`record_id`)
     REFERENCES `records`(`id`)
