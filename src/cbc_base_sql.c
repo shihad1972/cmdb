@@ -66,7 +66,7 @@ SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
  ntp_server, config_ntp, ldap_server, ldap_url, ldap_ssl,\
  ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
  config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
-SELECT ip_id, ip, hostname, domainname, bd_id FROM build_ip","\
+SELECT ip_id, ip, hostname, domainname, bd_id, server_id FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id FROM\
  build_os ORDER BY alias, os_version","\
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
@@ -96,8 +96,8 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
  smtp_server, config_email, xymon_server, config_xymon, nfs_domain) VALUES (\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO build_ip (ip, hostname, domainname, bd_id) VALUES (?, ?, ?,\
- ?)","\
+INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES (?, ?, ?,\
+ ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
@@ -220,7 +220,7 @@ const int cbc_mysql_inserts[][24] = {
   MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
   MYSQL_TYPE_STRING, 0, 0, 0, 0} ,
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
   MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -254,11 +254,11 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 22, 5, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
+	5, 9, 22, 6, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 8, 20, 4, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
+	4, 8, 20, 5, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -1156,6 +1156,7 @@ cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(ip->host, MAC_S, "%s", row[2]);
 	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
 	ip->bd_id = strtoul(row[4], NULL, 10);
+	ip->server_id = strtoul(row[5], NULL, 10);
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -1555,6 +1556,8 @@ cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bip->domain);
 	else if (i == 3)
 		*buffer = &(base->bip->bd_id);
+	else if (i == 4)
+		*biffer = &(base->bip->server_id);
 }
 
 void
@@ -2075,6 +2078,7 @@ cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(ip->host, MAC_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(ip->domain, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	ip->bd_id = (unsigned long int) sqlite3_column_int64(state, 4);
+	ip->server_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -2541,6 +2545,11 @@ state, 4, (sqlite3_int64)bip->bd_id)) > 0) {
 		return retval;
 	}
 	return retval;
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)bip->server_id)) > 0) {
+		fprintf(stderr, "Cannot bind server_id\n");
+		return retval;
+	}
 }
 
 int

@@ -271,6 +271,7 @@ init_build_ip(cbc_build_ip_s *ip)
 	ip->ip = NONE;
 	ip->ip_id = NONE;
 	ip->bd_id = NONE;
+	ip->server_id = NONE;
 	ip->next = '\0';
 }
 

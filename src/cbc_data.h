@@ -88,6 +88,7 @@ typedef struct cbc_build_ip_s {
 	unsigned long int ip;
 	unsigned long int ip_id;
 	unsigned long int bd_id;
+	unsigned long int server_id;
 	struct cbc_build_ip_s *next;
 } cbc_build_ip_s;
 
