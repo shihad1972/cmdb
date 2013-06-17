@@ -173,7 +173,7 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	dnsa_clean_list(dnsa);
 	if ((retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE)) != 0) {
 		clean_dbdata_struct(data);
-		free(dc)
+		free(dc);
 		return retval;
 	}
 	return retval;

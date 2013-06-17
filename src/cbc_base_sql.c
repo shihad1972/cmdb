@@ -1557,7 +1557,7 @@ cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 3)
 		*buffer = &(base->bip->bd_id);
 	else if (i == 4)
-		*biffer = &(base->bip->server_id);
+		*buffer = &(base->bip->server_id);
 }
 
 void
