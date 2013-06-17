@@ -146,7 +146,7 @@ CREATE TABLE `vm_server_hosts` (
   `server_id` int(7) NOT NULL,
   PRIMARY KEY (`vm_server_id`),
 
-  INDEX (server_id),
+  INDEX (`server_id`),
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -160,12 +160,17 @@ CREATE TABLE `build_ip` (
   `hostname` varchar(31) NOT NULL,
   `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
+  `server_id` int(7) NOT NULL,
   PRIMARY KEY (`ip_id`),
 
-  INDEX (`bd_id`),
+  INDEX (`bd_id`, `server_id`),
 
   FOREIGN KEY(`bd_id`) 
     REFERENCES `build_domain`(`bd_id`)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+
+  FOREIGN KEY(`server_id`),
+    REfERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
