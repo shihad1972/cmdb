@@ -65,7 +65,7 @@ int
 add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
 
 void
-write_zone_and_reload_nameserver(cbc_config_s *cbt, cbc_comm_line_s *cml);
+write_zone_and_reload_nameserver(cbc_comm_line_s *cml);
 
 # endif /* HAVE_DNSA */
 

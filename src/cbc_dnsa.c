@@ -263,7 +263,7 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
 }
 
 void
-write_zone_and_reload_nameserver(cbc_config_s *cbt, cbc_comm_line_s *cml)
+write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 {
 	char config[NAME_S] = "/etc/dnsa/dnsa.conf", *buff;
 	int retval = NONE;
@@ -300,6 +300,8 @@ write_zone_and_reload_nameserver(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	snprintf(buff, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(buff)) != 0)
 		fprintf(stderr, "%s failed with %d\n", buff, retval);
+/* Here we need to be able to work out what the reverse zone is, build it in
+ * the database, and commit it on the name server */
 }
 
 #endif /* HAVE_DNSA */

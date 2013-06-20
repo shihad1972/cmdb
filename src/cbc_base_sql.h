@@ -95,7 +95,8 @@ enum {			/* cbc search SQL statements */
 	XYMON_CONFIG = 28,
 	SMTP_CONFIG = 29,
 	IP_ON_BD_ID = 30,
-	NETWORK_CARD = 31
+	NETWORK_CARD = 31,
+	HARD_DISK_DEV = 32
 };
 
 # ifdef HAVE_MYSQL
@@ -227,6 +228,9 @@ cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i);
 void
 cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i);
 
+void
+cbc_setup_bind_mysql_build_disk(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -327,6 +331,9 @@ cbc_setup_bind_sqlite_build_part(sqlite3_stmt *state, cbc_pre_part_s *part);
 
 int
 cbc_setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack);
+
+int
+cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

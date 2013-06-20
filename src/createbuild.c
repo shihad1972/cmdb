@@ -77,7 +77,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	return retval;                       \
 }
 #endif
-/*	cbc->build = build; */
+	details->build = build;
 	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | BUILD |
 	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
@@ -152,6 +152,10 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		}
 		bip = bip->next;
 	}
+	if ((retval = check_for_disk_device(cbt, details)) != 0) {
+		printf("Unable to find a disk device for the server\n");
+		CLEAN_CREATE_BUILD_CONFIG(retval);
+	}
 #ifdef HAVE_DNSA
 	int dret = NONE;
 	dret = check_for_build_ip_in_dns(cbt, cml, details);
@@ -165,10 +169,14 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("Domain not in database??\n");
 	else if (dret == 0) {
 		printf("Hostname added to DNS\n");
-		write_zone_and_reload_nameserver(cbt, cml);
+		write_zone_and_reload_nameserver(cml);
 	} else
 		return retval;
 #endif /* HAVE_DNSA */
+	if ((retval = cbc_run_insert(cbt, details, BUILDS)) != 0)
+		printf("Unable to add build to database\n");
+	else
+		printf("Build added to database\n");
 	clean_pre_part(details->dpart);
 	CLEAN_CREATE_BUILD_CONFIG(retval);
 #ifdef CLEAN_CREATE_BUILD_CONFIG
@@ -414,3 +422,38 @@ cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *
 	ip->bd_id = bdom->bd_id;
 	ip->server_id = server->server_id;
 }
+
+int
+check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
+{
+	int retval = NONE;
+	dbdata_s *data;
+	cbc_disk_dev_s *disk;
+
+	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
+		report_error(MALLOC_FAIL, "disk in check_for_disk_device");
+	init_disk_dev(disk);
+	details->diskd = disk;
+	cbc_init_initial_dbdata(&data, HARD_DISK_DEV);
+	data->args.number = disk->server_id = details->server->server_id;
+	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {
+		free(data);
+		printf("You need to add a hard disk to build %s\n",
+		       details->server->name);
+		return NO_BASIC_DISK;
+	} else if (retval > 1 )
+		printf("Using fist disk /dev/%s\n", data->fields.text);
+	snprintf(disk->device, HOST_S, "/dev/%s", data->fields.text);
+	free(data);
+	disk->lvm = details->sscheme->lvm;
+	if ((retval = cbc_run_insert(cbc, details, DISK_DEVS)) != 0) {
+		printf("Unable to insert disk %s into database\n",
+		       disk->device);
+		free(disk);
+		return retval;
+	}
+	details->diskd = '\0';
+	free(disk);
+	return retval;
+}
+

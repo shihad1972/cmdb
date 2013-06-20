@@ -102,7 +102,7 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
 (?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?, ?)","\
+INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
  bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?)\
@@ -198,8 +198,11 @@ SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
   WHERE b.server_id = ?","\
 SELECT ip FROM build_ip WHERE bd_id = ?"
-/* This hard codes the network device to be hard_type_id 1 */,"\
+/* This hard codes the network device to be hard_type_id 1
+ * and disk device to be 2 */,"\
 SELECT detail, device FROM hardware WHERE server_id = ? AND hard_type_id = 1 \
+  ORDER BY device","\
+SELECT device FROM hardware WHERE server_id = ? AND hard_type_id = 2 \
   ORDER BY device"
 };
 
@@ -269,11 +272,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1
 };
 
 const unsigned int cbc_update_types[][2] = {
@@ -319,6 +322,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -353,7 +357,8 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -1025,8 +1030,10 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_build_ip(buffer, base, i);
 	else if (type == BUILDS)
 		cbc_setup_bind_mysql_build(buffer, base, i);
+	else if (type == DISK_DEVS)
+		cbc_setup_bind_mysql_build_disk(buffer, base, i);
 	else
-		retval = NO_TYPE;
+		retval = INSERT_NOT_CONFIGURED;
 	return retval;
 }
 
@@ -1581,6 +1588,16 @@ cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->build->def_scheme_id);
 }
 
+void
+cbc_setup_bind_mysql_build_disk(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->diskd->server_id);
+	else if (i == 1)
+		*buffer = &(base->diskd->device);
+	else if (i == 2)
+		*buffer = &(base->diskd->lvm);
+}
 
 #endif /* HAVE_MYSQL */
 
@@ -1960,8 +1977,10 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build_ip(state, base->bip);
 	else if (type == BUILDS)
 		retval = cbc_setup_bind_sqlite_build(state, base->build);
+	else if (type == DISK_DEVS)
+		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
 	else
-		retval = NO_TYPE;
+		retval = INSERT_NOT_CONFIGURED;
 	return retval;
 }
 
@@ -2685,6 +2704,28 @@ state, 2, (sqlite3_int64)pack->vari_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 3, (sqlite3_int64)pack->os_id)) > 0) {
 		fprintf(stderr, "Cannot bind OS ID %lu\n", pack->os_id);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)disk->server_id)) > 0) {
+		fprintf(stderr, "Cannot bind server_id %lu\n", disk->server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, disk->device, (int)strlen(disk->device), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind disk device %s\n", disk->device);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(state, 3, disk->lvm)) > 0) {
+		fprintf(stderr, "Cannot bind LVM\n");
 		return retval;
 	}
 	return retval;
