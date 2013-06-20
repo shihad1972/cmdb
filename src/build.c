@@ -717,6 +717,7 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string %s\n\
 d-i console-keymaps-at/keymap select %s\n\
+d-i keyboard-configuration/xkb-keymap select %s\n\
 d-i keymap select %s\n\
 \n\
 d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
@@ -731,7 +732,7 @@ d-i netcfg/get_gateway string %s\n\
 \n\
 d-i netcfg/get_hostname string %s\n\
 d-i netcfg/get_domain string %s\n",
-locale, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
+locale, keymap, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
 	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
 /* Need to add the values into this!! */
 		snprintf(output, BUFF_S, "\
@@ -739,6 +740,7 @@ d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string \n\
 d-i debian-installer/language string \n\
 d-i console-keymaps-at/keymap select \n\
+d-i keyboard-configuration/xkb-keymap select \n\
 d-i keymap select \n\
 \n\
 d-i netcfg/enable boolean true\n\
