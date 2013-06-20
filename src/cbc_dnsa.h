@@ -52,6 +52,18 @@ prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build);
 int
 check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
 
+void
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, dnsa_config_s *dc, cbc_config_s *cbt, record_row_s *rec);
+
+void
+fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc);
+
+int
+do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data);
+
+int
+add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
+
 # endif /* HAVE_DNSA */
 
 #endif /* __CBC_DNSA_H__ */

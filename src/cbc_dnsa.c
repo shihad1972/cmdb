@@ -151,6 +151,7 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	dnsa_config_s *dc;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
+	record_row_s *rec;
 
 	if (!(dc = malloc(sizeof(dnsa_config_s))))
 		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
@@ -158,23 +159,105 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 		report_error(MALLOC_FAIL, "dnsa in check_for_build_ip_in_dns");
 	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in check_for_build_ip_in_dns");
+	if (!(rec = malloc(sizeof(record_row_s))))
+		report_error(MALLOC_FAIL, "rec in check_for_build_ip_in_dns");
+	setup_dnsa_build_ip_structs(zone, dnsa, dc, cbt, rec);
 	dnsa_init_initial_dbdata(&data, RECORDS_ON_ZONE);
-	init_dnsa_struct(dnsa);
-	dnsa->zones = zone;
-	dnsa_init_config_values(dc);
-	copy_cbc_into_dnsa(dc, cbt);
 	snprintf(zone->name, RBUFF_S, "%s", cml->build_domain);
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
 		clean_dbdata_struct(data);
+		dnsa_clean_list(dnsa);
 		free(dc);
 		return retval;
 	}
 	data->args.number = zone->id;
+	fill_rec_with_build_info(rec, zone, cbc);
+	retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE);
+	if (retval == 0) /* No hosts in zone so just add */ {
+		retval = add_build_host_to_dns(dc, dnsa);
+	} else {
+		retval = do_build_ip_dns_check(cbc->bip, data);
+		if (retval == 0)
+			retval = add_build_host_to_dns(dc, dnsa);
+	}
+	clean_dbdata_struct(data);
 	dnsa_clean_list(dnsa);
-	if ((retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE)) != 0) {
-		clean_dbdata_struct(data);
-		free(dc);
-		return retval;
+	free(dc);
+	return retval;
+}
+
+void
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, dnsa_config_s *dc, cbc_config_s *cbt, record_row_s *rec)
+{
+	init_zone_struct(zone);
+	init_dnsa_struct(dnsa);
+	init_record_struct(rec);
+	dnsa->zones = zone;
+	dnsa->records = rec;
+	dnsa_init_config_values(dc);
+	copy_cbc_into_dnsa(dc, cbt);
+}
+
+int
+do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data)
+{
+	char ipaddr[RANGE_S], *ip;
+	int retval = NONE;
+	uint32_t ip_addr;
+	dbdata_s *list = data;
+
+	ip = ipaddr;
+	if (!(list))
+		return NO_BUILD_IP;
+	while (list) {
+		if (list->next->next->next->next)
+			list = list->next->next->next->next;
+		else
+			break;
+/* This only checks if the IP is in DNS. Will have to add full check for name as well */
+		ip_addr = htonl((uint32_t)bip->ip);
+		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+		if (strncmp(list->fields.text, ip, RANGE_S) ==0) {
+			retval = 2;
+			break;
+		} else {
+			list = list->next;
+		}
+	}
+	return retval;
+}
+
+void
+fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc)
+{
+	char *dest = rec->dest;
+	uint32_t ip_addr;
+
+	rec->pri = 0;
+	snprintf(rec->type, COMM_S, "A");
+	rec->zone = zone->id;
+	snprintf(rec->host, MAC_S, "%s", cbc->server->name);
+	ip_addr = htonl((uint32_t)cbc->bip->ip);
+	inet_ntop(AF_INET, &ip_addr, dest, RANGE_S);
+}
+
+int
+add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
+{
+	int retval = NONE;
+	char *host = dnsa->records->host, *zone = dnsa->zones->name;
+	dbdata_s data;
+
+	data.args.number = dnsa->zones->id;
+	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0) {
+		fprintf(stderr, "Cannot insert host %s into zone %s\n",
+		  host, zone);
+	} else {
+		printf("Host %s added to zone %s\n", host, zone);
+		if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
+			fprintf(stderr, "Unable to mark zone as updated!\n");
+		else
+			printf("Zone marked as updated in database\n");
 	}
 	return retval;
 }

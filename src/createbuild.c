@@ -229,7 +229,7 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 		clean_dbdata_struct(data);
 		return retval;
 	}
-	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr);
+	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr, details->server);
 	details->bip = ip;
 	clean_dbdata_struct(data);
 	return retval;
@@ -404,11 +404,12 @@ cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build
 }
 
 void
-cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr)
+cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server)
 {
 	ip->ip = ip_addr;
 	/* This will trim cml->name */
 	snprintf(ip->host, MAC_S, "%s", cml->name);
 	snprintf(ip->domain, RBUFF_S, "%s", bdom->domain);
 	ip->bd_id = bdom->bd_id;
+	ip->server_id = server->server_id;
 }
