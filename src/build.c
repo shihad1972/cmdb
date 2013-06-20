@@ -685,11 +685,11 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
 	if (!(ns = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+		report_error(MALLOC_FAIL, "ns in fill_net_build_output");
 	if (!(nm = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+		report_error(MALLOC_FAIL, "nm in fill_net_build_output");
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
 	char *locale = list->fields.text;
 	list = list->next;
 	char *keymap = list->fields.text;
