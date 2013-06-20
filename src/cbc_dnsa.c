@@ -262,4 +262,44 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
 	return retval;
 }
 
+void
+write_zone_and_reload_nameserver(cbc_config_s *cbt, cbc_comm_line_s *cml)
+{
+	char config[NAME_S] = "/etc/dnsa/dnsa.conf", *buff;
+	int retval = NONE;
+	dnsa_config_s *dc;
+	dnsa_s *dnsa;
+	zone_info_s *zone;
+
+	buff = config;
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
+	if (!(dc = malloc(sizeof(dnsa_config_s))))
+		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
+	init_dnsa_struct(dnsa);
+	if ((retval = parse_dnsa_config_file(dc, config)) != 0) {
+		dnsa_clean_list(dnsa);
+		free(dc);
+		fprintf(stderr, "Unable to parse config file??\n");
+		return;
+	}
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+		dnsa_clean_list(dnsa);
+		free(dc);
+		fprintf(stderr, "Query for zones and records failed!\n");
+		return;
+	}
+	zone = dnsa->zones;
+	while (zone) {
+		if (strncmp(zone->name, cml->build_domain, RBUFF_S) == 0) {
+			check_for_updated_fwd_zone(dc, zone);
+			create_and_write_fwd_zone(dnsa, dc, zone);
+		}
+		zone = zone->next;
+	}
+	snprintf(buff, NAME_S, "%s reload", dc->rndc);
+	if ((retval = system(buff)) != 0)
+		fprintf(stderr, "%s failed with %d\n", buff, retval);
+}
+
 #endif /* HAVE_DNSA */

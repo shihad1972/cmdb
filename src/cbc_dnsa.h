@@ -64,6 +64,9 @@ do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data);
 int
 add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
 
+void
+write_zone_and_reload_nameserver(cbc_config_s *cbt, cbc_comm_line_s *cml);
+
 # endif /* HAVE_DNSA */
 
 #endif /* __CBC_DNSA_H__ */

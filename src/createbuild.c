@@ -163,9 +163,10 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("Hostname modified in DNS\n");
 	else if (dret == 4)
 		printf("Domain not in database??\n");
-	else if (dret == 0)
+	else if (dret == 0) {
 		printf("Hostname added to DNS\n");
-	else
+		write_zone_and_reload_nameserver(cbt, cml);
+	} else
 		return retval;
 #endif /* HAVE_DNSA */
 	clean_pre_part(details->dpart);
