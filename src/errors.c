@@ -487,6 +487,10 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Unknown build varient");
 	else if (error == NO_NETWORK_HARDWARE)
 		snprintf(errstr, MAC_S, "Network device not found");
+	else if (error == OS_NOT_FOUND)
+		snprintf(errstr, MAC_S, "OS not found");
+	else if (error == SCHEME_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Partition scheme not found");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

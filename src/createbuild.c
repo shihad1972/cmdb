@@ -69,65 +69,52 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	init_build_struct(build);
+#ifndef CLEAN_CREATE_BUILD_CONFIG
+# define CLEAN_CREATE_BUILD_CONFIG(retval) { \
+	clean_cbc_struct(cbc);               \
+	free(details);                       \
+	free(build);                         \
+	return retval;                       \
+}
+#endif
 /*	cbc->build = build; */
 	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | BUILD |
 	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return MY_QUERY_FAIL;
+		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
 	if ((retval = cbc_get_server(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return SERVER_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(SERVER_NOT_FOUND);
 	}
 	list = cbc->build;
 	while (list) {
 		if (list->server_id == details->server->server_id) {
 			printf("Server %s already has a build in the database\n",
 			       details->server->name);
-			clean_cbc_struct(cbc);
-			free(details);
-			free(build);
-			return BUILD_IN_DATABASE;
+			CLEAN_CREATE_BUILD_CONFIG(BUILD_IN_DATABASE);
 		}
 		list = list->next;
 	}
 	if ((retval = cbc_get_os(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return OS_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(OS_NOT_FOUND);
 	}
 	if ((retval = cbc_get_build_domain(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return BUILD_DOMAIN_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(BUILD_DOMAIN_NOT_FOUND);
 	}
 	if ((retval = cbc_get_seed_scheme(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return SCHEME_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(SCHEME_NOT_FOUND);
 	}
 	if ((retval = cbc_get_varient(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return VARIENT_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(VARIENT_NOT_FOUND);
 	}
 	if ((retval = cbc_get_locale(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return LOCALE_NOT_FOUND;
+		CLEAN_CREATE_BUILD_CONFIG(LOCALE_NOT_FOUND);
 	}
 	if ((retval = cbc_get_build_config(cbc, details, build)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return retval;
+		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
 	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return retval;
+		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
 	bip = cbc->bip;
 	while (bip) {
@@ -141,33 +128,28 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	}
 	if (!(bip)) {
 		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
-			clean_cbc_struct(cbc);
-			free(details);
-			return NO_BUILD_IP;
+			CLEAN_CREATE_BUILD_CONFIG(NO_BUILD_IP);
 		}
 		if ((retval = cbc_run_insert(cbt, details, BUILD_IPS)) != 0) {
-			clean_cbc_struct(cbc);
 			clean_build_ip(details->bip);
 			clean_pre_part(details->dpart);
-			free(details);
 			printf("Unable to insert IP into database");
-			return retval;
+			CLEAN_CREATE_BUILD_CONFIG(retval);
 		}
 		clean_build_ip(details->bip);
 		clean_build_ip(cbc->bip);
 		cbc->bip = '\0';
 		if ((retval = cbc_run_query(cbt, cbc, BUILD_IP)) != 0) {
-			clean_cbc_struct(cbc);
-			free(build);
-			free(details);
-			return retval;
+			CLEAN_CREATE_BUILD_CONFIG(retval);
 		}
 	}
 	bip = cbc->bip;
 	while (bip) {
 		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
-		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0))
+		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
 			build->ip_id = bip->ip_id;
+			details->bip = bip;
+		}
 		bip = bip->next;
 	}
 #ifdef HAVE_DNSA
@@ -186,12 +168,11 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	else
 		return retval;
 #endif /* HAVE_DNSA */
-	clean_cbc_struct(cbc);
 	clean_pre_part(details->dpart);
-	free(build);
-	free(details);
-
-	return retval;
+	CLEAN_CREATE_BUILD_CONFIG(retval);
+#ifdef CLEAN_CREATE_BUILD_CONFIG
+# undef CLEAN_CREATE_BUILD_CONFIG
+#endif
 }
 
 int
