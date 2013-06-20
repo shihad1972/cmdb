@@ -2563,12 +2563,12 @@ state, 4, (sqlite3_int64)bip->bd_id)) > 0) {
 		fprintf(stderr, "Cannot bind bd_id\n");
 		return retval;
 	}
-	return retval;
 	if ((retval = sqlite3_bind_int64(
 state, 5, (sqlite3_int64)bip->server_id)) > 0) {
 		fprintf(stderr, "Cannot bind server_id\n");
 		return retval;
 	}
+	return retval;
 }
 
 int

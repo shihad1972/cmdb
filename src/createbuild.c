@@ -133,7 +133,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		if ((retval = cbc_run_insert(cbt, details, BUILD_IPS)) != 0) {
 			clean_build_ip(details->bip);
 			clean_pre_part(details->dpart);
-			printf("Unable to insert IP into database");
+			printf("Unable to insert IP into database\n");
 			CLEAN_CREATE_BUILD_CONFIG(retval);
 		}
 		clean_build_ip(details->bip);
