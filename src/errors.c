@@ -493,6 +493,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Partition scheme not found");
 	else if (error == INSERT_NOT_CONFIGURED)
 		snprintf(errstr, MAC_S, "No Database insert function");
+	else if (error == CANNOT_FIND_BUILD_IP)
+		snprintf(errstr, MAC_S, "Cannot find the build IP!");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

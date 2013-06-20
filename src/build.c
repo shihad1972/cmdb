@@ -542,8 +542,16 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
-	snprintf(pxe, RBUFF_S, "%s%s%s.cfg", cmc->tftpdir, cmc->pxe,
-		 cml->name);
+	cbc_init_initial_dbdata(&data, BUILD_IP_ON_SERVER_ID);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_IP_ON_SERVER_ID)) == 0) {
+		clean_dbdata_struct(data);
+		return CANNOT_FIND_BUILD_IP;
+	} else if (retval > 1) 
+		fprintf(stderr, "Multiple build IP's! Using the first one!\n");
+	snprintf(pxe, RBUFF_S, "%s%s%lX", cmc->tftpdir, cmc->pxe,
+		 data->fields.number);
+	clean_dbdata_struct(data);
 	cbc_init_initial_dbdata(&data, TFTP_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
