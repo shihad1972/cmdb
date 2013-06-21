@@ -1004,33 +1004,34 @@ add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
 \n\
+d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman/confirm boolean true\n\
+d-i partman-auto/choose_recipe select monkey\n\
 d-i partman-auto/method string regular\n\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman-auto/choose_recipe select monkey\n\
 d-i partman-md/device_remove_md boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
-d-i partman/confirm_nooverwrite boolean true\n\
-d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
-d-i partman/confirm boolean true\n\
 \n\
-", data->fields.text);
+", cml->partition);
 	else
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
 \n\
+d-i partman-auto/choose_recipe select monkey\n\
+d-i partman-auto-lvm/guided_size string 100%%\n\
+d-i partman-auto-lvm/no_boot boolean true\n\
 d-i partman-auto/method string lvm\n\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman-auto-lvm/guided_size string 100%%\n\
+d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman/confirm boolean true\n\
+d-i partman-lvm/confirm boolean true\n\
+d-i partman-lvm/confirm_nooverwrite boolean true\n\
 d-i partman-lvm/device_remove_lvm boolean true\n\
 d-i partman-lvm/device_remove_lvm_span boolean true\n\
-d-i partman-lvm/confirm boolean true\n\
-d-i partman-auto/choose_recipe select monkey\n\
 d-i partman-md/device_remove_md boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
-d-i partman/confirm_nooverwrite boolean true\n\
-d-i partman-lvm/confirm_nooverwrite boolean true\n\
-d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
-d-i partman/confirm boolean true\n\
 \n\
 ", cml->partition);
 	plen = strlen(disk);
