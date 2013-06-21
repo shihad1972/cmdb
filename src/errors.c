@@ -300,12 +300,15 @@ display_cbc_usage(void)
 	printf("-l: list servers with a build\n-d: display build details\n");
 	printf("-m: modify build options\n-a: add build for server\n");
 	printf("-r: remove build for server\n-w: write build files\n\n");
-	printf("Display, remove and write options:\n");
-	printf("cbc [ -d | -w | -r ] [ -n | -i |  -u ] <server specifier>\n\n");
+	printf("Display and write options:\n");
+	printf("cbc ( -d | -w ) ( -n | -i |  -u ) <server specifier>\n\n");
+	printf("Remove options:\n");
+	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
+	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
-	printf("cbc [ -a | -m ] -o<OS> -v<version> -t<arch> -b<domain> -x");
+	printf("cbc ( -a | -m ) -o<OS> -v<version> -t<arch> -b<domain> -x");
 	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> ");
-	printf("[-n | -i | -u ] ");
+	printf("(-n | -i | -u ) ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("for these options.\n\n");
@@ -479,6 +482,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "No Database insert function");
 	else if (error == CANNOT_FIND_BUILD_IP)
 		snprintf(errstr, MAC_S, "Cannot find the build IP!");
+	else if (error == BUILD_IN_DATABASE)
+		snprintf(errstr, MAC_S, "Build for server already exists");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

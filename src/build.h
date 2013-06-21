@@ -42,7 +42,7 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char netcard[HOST_S];
 	short int action;
 	short int server;
-	short int package;
+	short int removeip;
 	unsigned long int server_id;
 	unsigned long int os_id;
 	unsigned long int locale;
@@ -187,5 +187,11 @@ print_cbc_command_line_values(cbc_comm_line_s *command_line);
 
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
+
+int
+modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
+
+int
+remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
 #endif /* __CBC_BUILD_H__ */

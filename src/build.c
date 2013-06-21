@@ -51,7 +51,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "b:e:i:k:n:o:p:t:u:v:x:adlmrw")) != -1) {
+	while ((opt = getopt(argc, argv, "b:e:i:k:n:o:p:t:u:v:x:adglmrw")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
@@ -167,7 +167,7 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 	cbt->server = NONE;
 	cbt->locale = 0;
 	cbt->os_id = 0;
-	cbt->package = 0;
+	cbt->removeip = 0;
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");

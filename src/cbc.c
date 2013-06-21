@@ -71,6 +71,10 @@ main(int argc, char *argv[])
 		retval = write_build_config(cmc, cml);
 	else if (cml->action == ADD_CONFIG)
 		retval = create_build_config(cmc, cml);
+	else if (cml->action == MOD_CONFIG)
+		retval = modify_build_config(cmc, cml);
+	else if (cml->action == RM_CONFIG)
+		retval = remove_build_config(cmc, cml);
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 	free(cmc);

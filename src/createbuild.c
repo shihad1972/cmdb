@@ -457,3 +457,18 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 	return retval;
 }
 
+int
+modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+{
+	int retval = NONE;
+
+	return retval;
+}
