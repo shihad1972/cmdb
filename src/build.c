@@ -55,28 +55,32 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
-		} else if (opt == 'u') {
-			snprintf(cb->uuid, CONF_S, "%s", optarg);
-			cb->server = UUID;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
 			cb->server = ID;
+		} else if (opt == 'u') {
+			snprintf(cb->uuid, CONF_S, "%s", optarg);
+			cb->server = UUID;
+		} else if (opt == 'a') {
+			cb->action = ADD_CONFIG;
+		} else if (opt == 'd') {
+			cb->action = DISPLAY_CONFIG;
+		} else if (opt == 'g') {
+			cb->removeip = TRUE;
+		} else if (opt == 'l') {
+			cb->action = LIST_CONFIG;
 		} else if (opt == 'm') {
 			cb->action = MOD_CONFIG;
 		} else if (opt == 'r') {
 			cb->action = RM_CONFIG;
 		} else if (opt == 'w') {
 			cb->action = WRITE_CONFIG;
-		} else if (opt == 'd') {
-			cb->action = DISPLAY_CONFIG;
-		} else if (opt == 'a') {
-			cb->action = ADD_CONFIG;
-		} else if (opt == 'l') {
-			cb->action = LIST_CONFIG;
 		} else if (opt == 'b') {
 			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
 			cb->locale = strtoul(optarg, NULL, 10);
+		} else if (opt == 'k') {
+			snprintf(cb->netcard, HOST_S, "%s", optarg);
 		} else if (opt == 'o') {
 			snprintf(cb->os, MAC_S, "%s", optarg);
 		} else if (opt == 'p') {
@@ -87,8 +91,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			snprintf(cb->os_version, MAC_S, "%s", optarg);
 		} else if (opt == 'x') {
 			snprintf(cb->varient, CONF_S, "%s", optarg);
-		} else if (opt == 'k') {
-			snprintf(cb->netcard, HOST_S, "%s", optarg);
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;

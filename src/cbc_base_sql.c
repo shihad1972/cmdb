@@ -130,7 +130,9 @@ DELETE FROM build_domain WHERE domain = ?","\
 DELETE FROM build_domain WHERE bd_id = ?","\
 DELETE FROM build_os WHERE os_id = ?","\
 DELETE FROM varient WHERE varient_id = ?","\
-DELETE FROM packages WHERE pack_id = ?"
+DELETE FROM packages WHERE pack_id = ?","\
+DELETE FROM build_ip WHERE server_id = ?","\
+DELETE FROM build WHERE server_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -269,7 +271,7 @@ const unsigned int cbc_update_args[] = {
 	2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
@@ -286,6 +288,8 @@ const unsigned int cbc_update_types[][2] = {
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
@@ -1755,7 +1759,8 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 				fprintf(stderr, "Cannot bind arg %ud\n", i);
 				return retval;
 			}
-		}
+		} else
+			return WRONG_TYPE;
 		list = list->next;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {

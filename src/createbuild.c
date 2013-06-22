@@ -468,7 +468,52 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 int
 remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
+#ifndef CLEAN_REMOVE_BUILD_CONFIG
+# define CLEAN_REMOVE_BUILD_CONFIG(retval) { \
+		free(data);                  \
+		free(cbc);                   \
+		free(scratch);               \
+		return retval;               \
+}
+#endif
 	int retval = NONE;
+	dbdata_s *data;
+	cbc_s *cbc, *scratch;
 
-	return retval;
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in remove_build_config");
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in remove_build_config");
+	if (!(scratch = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in remove_build_config");
+	init_dbdata_struct(data);
+	init_cbc_struct(cbc);
+	init_cbc_struct(scratch);
+	if ((retval = cbc_run_query(cbt, cbc, CSERVER)) != 0)
+		CLEAN_REMOVE_BUILD_CONFIG(retval);
+	if ((retval = cbc_get_server(cml, cbc, scratch)) != 0)
+		CLEAN_REMOVE_BUILD_CONFIG(retval);
+	data->args.number = scratch->server->server_id;
+	if ((retval = cbc_run_delete(cbt, data, BUILD_ON_SERVER_ID)) == 1)
+		printf("Build for server %s deleted\n", cml->name);
+	else if (retval == 0)
+		printf("Seems like there was no build for %s\n", cml->name);
+	else
+		printf("WOW! We have delete multiple builds for %s\n",
+		       cml->name);
+	if (cml->removeip == TRUE) {
+		printf("You have asked to delete the build IP for %s\n", 
+		       cml->name);
+		printf("If this server is still online, this IP can be reused\n");
+		printf("Duplicate IP addresses are a bad thing!\n");
+		if ((retval = cbc_run_delete(cbt, data, BUILD_IP_ON_SER_ID)) == 1)
+			printf("Delete 1 IP as requested\n");
+		else if (retval == 0)
+			printf("Don't worry, no build IP's deleted\n");
+		else
+			printf("Wow! Multiple build IP's deleted\n");
+	}
+	retval = NONE;
+	CLEAN_REMOVE_BUILD_CONFIG(retval);
+#undef CLEAN_REMOVE_BUILD_CONFIG
 }
