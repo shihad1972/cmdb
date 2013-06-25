@@ -127,6 +127,9 @@ cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
 
+int
+cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
@@ -147,6 +150,9 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
+int
+cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
 void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);
 
@@ -155,6 +161,9 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 
 int
 cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
+
+int
+cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
 
 int
 cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base);
@@ -255,7 +264,13 @@ int
 cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
+cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
 set_cbc_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+
+int
+set_cbc_update_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 
 int
 get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
