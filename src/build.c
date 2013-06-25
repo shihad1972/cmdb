@@ -196,7 +196,7 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | SPART | VARIENT | SSCHEME;
+	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -268,7 +268,7 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 	cbc_build_ip_s *bip = cbc->bip;
 	cbc_build_os_s *bos = cbc->bos;
 	cbc_build_type_s *type = cbc->btype;
-	details->spart = cbc->spart;
+	details->dpart = cbc->dpart;
 	cbc_locale_s *loc = cbc->locale;
 	cbc_varient_s *vari = cbc->varient;
 	cbc_seed_scheme_s *sch = cbc->sscheme;
@@ -334,10 +334,10 @@ void
 print_build_config(cbc_s *details)
 {
 	char *name = details->server->name;
-	unsigned long int sid = details->server->server_id;
+	unsigned long int sid = details->build->def_scheme_id;
 	char ip[RANGE_S], *addr;
 	uint32_t ip_addr;
-	cbc_pre_part_s *part = details->spart;
+	cbc_pre_part_s *part = details->dpart;
 
 	addr = ip;
 	if (details->bip) {
@@ -369,7 +369,7 @@ print_build_config(cbc_s *details)
 		if (details->sscheme)
 			printf("Name:\t%s\n", details->sscheme->name);
 		while (part) {
-			if (part->link_id.server_id == sid)
+			if (part->link_id.def_scheme_id == sid)
 				printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,
 				 part->mount);
 			part = part->next;
