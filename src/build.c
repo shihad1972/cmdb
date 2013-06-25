@@ -1458,3 +1458,27 @@ get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int serve
 	clean_dbdata_struct(data);
 	return retval;
 }
+
+int
+get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id)
+{
+	int retval = NONE;
+
+	return retval;
+}

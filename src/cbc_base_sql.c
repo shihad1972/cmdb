@@ -122,7 +122,8 @@ INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES\
 
 const char *cbc_sql_update[] = { "\
 UPDATE build_domain SET ntp_server = ? WHERE domain = ?","\
-UPDATE build_domain SET ntp_server = ? WHERE bd_id = ?"
+UPDATE build_domain SET ntp_server = ? WHERE bd_id = ?","\
+UPDATE build SET varient_id = ? WHERE server_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
