@@ -1,3 +1,13 @@
+30/06/2013
+Have a generic config struct (config_s) that all the others (e.g.
+dnsa_config_s) contain that can be shared between the programs. This way we
+can have standard SQL functions that can be shared amongst the programs.
+
+Problem with this is to work out a way of passing the program to the SQL
+search so that it will do a, e.g. cbc_search and get the correct values
+for number and type of args and fields. Also this will need to be the
+correct search itself. Could this config contain this information?
+
 15/06/2013
 When adding new build_os need to add locales for that os. Should probably
 base on build type

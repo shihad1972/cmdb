@@ -1389,52 +1389,6 @@ postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
 }
 
 int
-get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
-{
-	int retval = NONE;
-	dbdata_s *data;
-
-	if (cml->server == NAME) {
-		cbc_init_initial_dbdata(&data, SERVER_ID_ON_SNAME);
-		snprintf(data->args.text, CONF_S, "%s", cml->name);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
-			printf("Server %s does not exist\n", cml->name);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for name %s\n", cml->name);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == UUID) {
-		cbc_init_initial_dbdata(&data, SERVER_ID_ON_UUID);
-		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
-			printf("Server with uuid %s does not exist\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for uuid %s\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == ID) {
-/*		printf("Writing build files for server id %lu\n\n", cml->server_id); */
-		*server_id = cml->server_id;
-	} else {
-		return NO_NAME_UUID_ID;
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
 {
 	int retval = NONE;
@@ -1460,10 +1414,81 @@ get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int serve
 }
 
 int
-get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id)
+get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
 {
 	int retval = NONE;
+	dbdata_s *data;
 
+	if (cml->server == NAME) {
+		cbc_init_initial_dbdata(&data, SERVER_ID_ON_SNAME);
+		snprintf(data->args.text, CONF_S, "%s", cml->name);
+		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
+			printf("Server %s does not exist\n", cml->name);
+			clean_dbdata_struct(data);
+			return SERVER_NOT_FOUND;
+		} else if (retval > 1) {
+			printf("Multiple servers found for name %s\n", cml->name);
+			clean_dbdata_struct(data);
+			return MULTIPLE_SERVERS;
+		} else {
+			*server_id = cml->server_id = data->fields.number;
+			retval = 0;
+		}
+	} else if (cml->server == UUID) {
+		cbc_init_initial_dbdata(&data, SERVER_ID_ON_UUID);
+		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
+		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
+			printf("Server with uuid %s does not exist\n", cml->uuid);
+			clean_dbdata_struct(data);
+			return SERVER_NOT_FOUND;
+		} else if (retval > 1) {
+			printf("Multiple servers found for uuid %s\n", cml->uuid);
+			clean_dbdata_struct(data);
+			return MULTIPLE_SERVERS;
+		} else {
+			*server_id = cml->server_id = data->fields.number;
+			retval = 0;
+		}
+	} else if (cml->server == ID) {
+		*server_id = cml->server_id;
+	} else {
+		return NO_NAME_UUID_ID;
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id)
+{
+	char *var = cml->varient;
+	int retval = NONE;
+	dbdata_s *data;
+	
+	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VARIENT);
+	snprintf(data->args.text, CONF_S, "%s", var);
+	if ((retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT)) == 1) {
+		*varient_id = data->fields.number;
+		retval = NONE;
+	} else if (retval > 1) {
+		fprintf(stderr,
+			"Multiple variants or aliases found for %s\n", var);
+		retval = MULTIPLE_VARIENTS;
+	} else {
+		if ((retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS)) == 0) {
+			fprintf(stderr,
+				"Sorry, but %s is not a valid varient or alias\n", var);
+			retval = VARIENT_NOT_FOUND;
+		} else if (retval > 1) {
+			fprintf(stderr,
+				"Multiple variants or aliases found for %s\n", var);
+			retval = MULTIPLE_VARIENTS;
+		} else {
+			*varient_id = data->fields.number;
+			retval = NONE;
+		}
+	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -1480,5 +1505,29 @@ get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *de
 {
 	int retval = NONE;
 
+	return retval;
+}
+
+int
+get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_id)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	cbc_init_initial_dbdata(&data, BUILD_ID_ON_SERVER_ID);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_SERVER_ID)) == 1) {
+		build_id = data->fields.number;
+		retval = NONE;
+	} else if (retval > 1) {
+		fprintf(stderr,
+			"Multiple builds found for server %s\n", cml->name);
+		retval = MULTIPLE_SERVER_BUILDS;
+	} else {
+		fprintf(stderr,
+			"No build found for server %s\n", cml->name);
+		retval = SERVER_BUILD_NOT_FOUND;
+	}
+	clean_dbdata_struct(data);
 	return retval;
 }

@@ -99,7 +99,8 @@ enum {			/* cbc search SQL statements */
 	IP_ON_BD_ID = 30,
 	NETWORK_CARD = 31,
 	HARD_DISK_DEV = 32,
-	BUILD_IP_ON_SERVER_ID = 33
+	BUILD_IP_ON_SERVER_ID = 33,
+	BUILD_ID_ON_SERVER_ID = 34
 };
 
 # ifdef HAVE_MYSQL

@@ -461,7 +461,7 @@ int
 modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
-	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0;
+	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0, bid = 0;
 	dbdata_s *data;
 
 	if (cml->server_id == 0) {
@@ -470,6 +470,8 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	} else {
 		sid = cml->server_id;
 	}
+	if ((retval = get_build_id(cbt, cml, &bid)) != 0)
+		return retval;
 	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
 		if ((retval = get_varient_id(cbt, cml, &vid)) != 0)
 			return retval;

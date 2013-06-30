@@ -138,6 +138,9 @@ int
 get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id);
 
 int
+get_build_id(cbc_config_s *cbc, cbc_comm_line_s *cml, unsigned long int *build_id);
+
+int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id);
 
 void
