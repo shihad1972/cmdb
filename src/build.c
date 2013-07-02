@@ -1567,7 +1567,7 @@ get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_i
 	cbc_init_initial_dbdata(&data, BUILD_ID_ON_SERVER_ID);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_SERVER_ID)) == 1) {
-		build_id = data->fields.number;
+		*build_id = data->fields.number;
 		retval = NONE;
 	} else if (retval > 1) {
 		fprintf(stderr,
