@@ -1554,7 +1554,23 @@ int
 get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id)
 {
 	int retval = NONE;
+	dbdata_s *data;
 
+	cbc_init_initial_dbdata(&data, DEF_SCHEME_ID_ON_SCH_NAME);
+	snprintf(data->args.text, CONF_S, "%s", cml->partition);
+	if ((retval = cbc_run_search(cmc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 1) {
+		*def_scheme_id = data->fields.number;
+		retval = NONE;
+	} else if (retval > 1) {
+		fprintf(stderr,
+		 "Multiple partition schemes found with name %s\n", cml->partition);
+		retval = MULTIPLE_PART_NAMES;
+	} else {
+		fprintf(stderr,
+		 "No partition schemes found with name %s\n", cml->partition);
+		retval = PARTITIONS_NOT_FOUND;
+	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 

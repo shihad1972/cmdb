@@ -185,7 +185,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	MULTIPLE_LOCALES = 191,
 	PARTITIONS_NOT_FOUND = 192,
 	BUILD_TYPE_NOT_FOUND = 193,
-	BUILD_IN_DATABASE = 194
+	BUILD_IN_DATABASE = 194,
+	MULTIPLE_PART_NAMES = 195
 	
 };
 
