@@ -8,15 +8,29 @@ cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
 		cmdb_base_sql.c base_sql.c\
 		cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h\
 		base_sql.h
+if HAVE_DNSA
+cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
+		cbc_data.c build.c createbuild.c cbc_dnsa.c dnsa_base_sql.c\
+		dnsacom.c zones.c\
+		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
+		cbc_data.h build.h base_sql.h
+cbcdomain_SOURCES = \
+		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
+		cbc_base_sql.c builddomain.c cbccom.c zones.c cbc_dnsa.c\
+		dnsa_base_sql.c dnsacom.c\
+		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
+		base_sql.h cbcdomain.h cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
+else
 cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
 		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
-		cbc_base_sql.c builddomain.c cbccom.c zones.c cbc_dnsa.c\
+		cbc_base_sql.c builddomain.c cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
-		base_sql.h cbcdomain.h cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
+		base_sql.h cbcdomain.h
+endif
 cbcos_SOURCES = \
 		cbcos.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
