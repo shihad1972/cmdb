@@ -14,7 +14,7 @@ dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 		src/cmdb_dnsa.h src/cmdb.h src/checks.h\
 		src/dnsa_base_sql.h src/base_sql.h
 
-cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c createbuild.c\
+cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c src/createbuild.c\
 		src/base_sql.c src/cbc_data.c src/build.c src/cbc_base_sql.c\
 		src/cbc_dnsa.c src/dnsa_base_sql.c\
 		src/cmdb_cbc.h src/cmdb.h src/cbc_data.h src/build.h\
