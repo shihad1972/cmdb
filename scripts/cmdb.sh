@@ -40,7 +40,7 @@ BIND="/etc/bind/"
 if [ -d /var/lib/tftpboot/ ]; then
   TFTP="/var/lib/tftpboot/"
   echo "Found $TFTP"
-else if [ -d /srv/tftp/ ]; then 
+elif [ -d /srv/tftp/ ]; then 
   TFTP="/srv/tftp/"
   echo "Found $TFTP"
 else
