@@ -7,7 +7,7 @@ RM = rm -f
 ECHO = echo
 DIR = src
 SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
 dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 		src/dnsa_base_sql.c src/base_sql.c\
