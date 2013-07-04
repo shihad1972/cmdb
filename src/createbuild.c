@@ -481,6 +481,10 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
 		if ((retval = get_def_scheme_id(cbt, cml, &dsid)) != 0)
 			return retval;
+	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
+		return CANNOT_MODIFY_BUILD_DOMAIN;
+	if (cml->locale != 0)
+		return LOCALE_NOT_IMPLEMENTED;
 	return retval;
 }
 
