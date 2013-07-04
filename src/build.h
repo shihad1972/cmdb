@@ -141,6 +141,12 @@ int
 get_build_id(cbc_config_s *cbc, cbc_comm_line_s *cml, unsigned long int *build_id);
 
 int
+get_modify_query(unsigned long int ids[]);
+
+void
+cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[]);
+
+int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id);
 
 void

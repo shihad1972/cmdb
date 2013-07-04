@@ -488,6 +488,10 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot modify build domain.");
 	else if (error == LOCALE_NOT_IMPLEMENTED)
 		snprintf(errstr, MAC_S, "Locale not implemented, sorry.");
+	else if (error == NO_MODIFIERS)
+		snprintf(errstr, MAC_S, "No modifiers supplied.");
+	else if (error == PARTITIONS_NOT_FOUND)
+		snprintf(errstr, MAC_S, "Partition scheme not found.");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

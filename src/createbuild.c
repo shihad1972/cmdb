@@ -460,7 +460,7 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 int
 modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
-	int retval = NONE;
+	int retval = NONE, type = NONE;
 	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0, bid = 0;
 	dbdata_s *data;
 
@@ -481,10 +481,28 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
 		if ((retval = get_def_scheme_id(cbt, cml, &dsid)) != 0)
 			return retval;
+	unsigned long int ids[4] = { vid, osid, dsid, sid };
 	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
 		return CANNOT_MODIFY_BUILD_DOMAIN;
 	if (cml->locale != 0)
 		return LOCALE_NOT_IMPLEMENTED;
+	if ((type = get_modify_query(ids)) == 0) {
+		printf("No modifiers?\n");
+		return NO_MODIFIERS;
+	}
+	cbc_init_update_dbdata(&data, (unsigned)type);
+	cbc_prep_update_dbdata(data, type, ids);
+	if ((retval = cbc_run_update(cbt, data, type)) == 1) {
+		printf("Build updated\n");
+		retval = NONE;
+	} else if (retval == 0) {
+		printf("No build updated. Does server %s have a build?\n",
+		       cml->name);
+		retval = SERVER_BUILD_NOT_FOUND;
+	} else {
+		printf("Multiple builds??\n");
+		retval = MULTIPLE_SERVER_BUILDS;
+	}
 	return retval;
 }
 

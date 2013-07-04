@@ -49,7 +49,7 @@ extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_search_args[];
 extern const unsigned int cbc_search_fields[];
 
-extern const unsigned int cbc_update_types[][2];
+extern const unsigned int cbc_update_types[][4];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][9];
@@ -106,6 +106,18 @@ enum {			/* cbc search SQL statements */
 	DEF_SCHEME_ID_ON_SCH_NAME = 37
 };
 
+enum {			/* cbc update SQL statements */
+	UP_BUILD_DOM_NTP_ON_DOM = 0,
+	UP_BUILD_DOM_NTP_ON_DBID = 1,
+	UP_BUILD_VARIENT = 2,
+	UP_BUILD_OS = 3,
+	UP_BUILD_PART = 4,
+	UP_BUILD_VAR_OS = 5,
+	UP_BUILD_VAR_PART = 6,
+	UP_BUILD_OS_PART = 7,
+	UP_BUILD_VAR_OS_PART = 8
+};
+
 # ifdef HAVE_MYSQL
 extern const int cbc_mysql_inserts[][24];
 # endif /* HAVE_MYSQL */
@@ -124,6 +136,9 @@ cbc_get_query(int type, const char **query, unsigned int *fields);
 
 void
 cbc_init_initial_dbdata(dbdata_s **list, unsigned int type);
+
+void
+cbc_init_update_dbdata(dbdata_s **list, unsigned int type);
 
 int
 cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);

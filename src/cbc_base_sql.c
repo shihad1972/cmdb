@@ -123,7 +123,14 @@ INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES\
 const char *cbc_sql_update[] = { "\
 UPDATE build_domain SET ntp_server = ? WHERE domain = ?","\
 UPDATE build_domain SET ntp_server = ? WHERE bd_id = ?","\
-UPDATE build SET varient_id = ? WHERE server_id = ?"
+UPDATE build SET varient_id = ? WHERE server_id = ?","\
+UPDATE build SET os_id = ? WHERE server_id = ?","\
+UPDATE build SET def_scheme_id = ? WHERE server_id = ?","\
+UPDATE build SET varient_id = ?, os_id = ? WHERE server_id = ?","\
+UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
+UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
+UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
+  = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -273,7 +280,7 @@ const unsigned int cbc_insert_fields[] = {
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2
+	2, 2, 2, 2, 2, 3, 3, 3, 4
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1
@@ -287,9 +294,16 @@ const unsigned int cbc_search_fields[] = {
 	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1
 };
 
-const unsigned int cbc_update_types[][2] = {
-	{ DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBINT }
+const unsigned int cbc_update_types[][4] = {
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE } ,
+	{ DBINT, DBINT, DBINT, DBINT }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
@@ -338,7 +352,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBINT, NONE, NONE }
+	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
@@ -378,7 +392,7 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -534,6 +548,25 @@ cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
  * so we would have to pass the function a union containing all possible data
  * types.
  */
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
+}
+
+void
+cbc_init_update_dbdata(dbdata_s **list, unsigned int type)
+{
+	unsigned int i = NONE;
+	dbdata_s *data = '\0', *dlist = '\0';
+	for (i = 0; i < cbc_update_args[type]; i++) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "Data in init_update_dbdata");
+		init_dbdata_struct(data);
 		if (!(*list)) {
 			*list = dlist = data;
 		} else {

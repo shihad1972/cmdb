@@ -1598,6 +1598,74 @@ get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_i
 	return retval;
 }
 
+int
+get_modify_query(unsigned long int ids[])
+{
+	int retval = NONE;
+	unsigned long int vid = ids[0], osid = ids[1], dsid = ids[2];
+
+	if (vid > 0) {
+		if (osid > 0) {
+			if (dsid > 0) {
+				retval = UP_BUILD_VAR_OS_PART;
+			} else {
+				retval = UP_BUILD_VAR_OS;
+			}
+		} else {
+			if (dsid > 0) {
+				retval = UP_BUILD_VAR_PART;
+			} else {
+				retval = UP_BUILD_VARIENT;
+			}
+		}
+	} else {
+		if (osid > 0) {
+			if (dsid > 0) {
+				retval = UP_BUILD_OS_PART;
+			} else {
+				retval = UP_BUILD_OS;
+			}
+		} else {
+			if (dsid > 0) {
+				retval = UP_BUILD_PART;
+			}
+		}
+	}
+	return retval;
+}
+
+void
+cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
+{
+	if (type == UP_BUILD_VAR_OS_PART) {
+		data->args.number = ids[0];
+		data->next->args.number = ids[1];
+		data->next->next->args.number = ids[2];
+		data->next->next->next->args.number = ids[3];
+	} else if (type == UP_BUILD_VAR_OS) {
+		data->args.number = ids[0];
+		data->next->args.number = ids[1];
+		data->next->next->args.number = ids[3];
+	} else if (type == UP_BUILD_VAR_PART) {
+		data->args.number = ids[0];
+		data->next->args.number = ids[2];
+		data->next->next->args.number = ids[3];
+	} else if (type == UP_BUILD_OS_PART) {
+		data->args.number = ids[1];
+		data->next->args.number = ids[2];
+		data->next->next->args.number = ids[3];
+	} else if (type == UP_BUILD_VARIENT) {
+		data->args.number = ids[0];
+		data->next->args.number = ids[3];
+	} else if (type == UP_BUILD_OS) {
+		data->args.number = ids[1];
+		data->next->args.number = ids[3];
+	} else if (type == UP_BUILD_PART) {
+		data->args.number = ids[2];
+		data->next->args.number = ids[3];
+	}
+}
+
 void
 fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
 {
