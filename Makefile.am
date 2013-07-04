@@ -16,13 +16,14 @@ dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
 
 cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c createbuild.c\
 		src/base_sql.c src/cbc_data.c src/build.c src/cbc_base_sql.c\
-		src/cmdb_cbc.h src/cmdb.h src/cbc_data.h\
-		src/build.h src/cbc_base_sql.h
+		src/cbc_dnsa.c src/dnsa_base_sql.c\
+		src/cmdb_cbc.h src/cmdb.h src/cbc_data.h src/build.h\
+		src/cbc_base_sql.h src/dnsa_base_sql.h src/cbc_dnsa.h
 
 cbcdomain_SOURCES = \
 		src/cbcdomain.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/builddomain.c\
-		src/cbccom.c src/dnsaacom.c src/zones.c src/dnsa_base_sql.c\
+		src/cbccom.c src/dnsacom.c src/zones.c src/dnsa_base_sql.c\
 		src/cbc_dnsa.c\
 		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_dnsa.h\
 		src/cbc_base_sql.h src/builddomain.h src/cbcdomain.h
