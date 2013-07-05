@@ -237,33 +237,11 @@ display_cmdb_command_line_error(int retval, char *program)
 		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
 			display_cbcpart_usage();
 		exit(retval);
-	} else
+	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
-	if ((strncmp(program, "cmdb", CONF_S) == 0))
 		printf("Usage: run %s on its own or check man pages\n",
-	       program);
-	else if ((strncmp(program, "cbc", CONF_S) == 0))
-		printf("Usage: %s [ -w | -d ] [ -p | -k ] [-n <name> | -u <uuid> | -i <id> ]\n",
-	       program);
-	else if ((strncmp(program, "dnsa", CONF_S) ==0))
-		printf("Usage: %s [ -d | -w | -c | -l | -z | -a ] [ -f | -r ] -n \
-<domain/netrange> -i <IP address> -h <hostname> -t <record type>\n",
-	       program);
-	else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
-		printf("Usage: %s [ -a | -d | -l | -m | -r ] -n <domain name> \
-[ OPTIONS ]\n", program);
-	else if ((strncmp(program, "cbcos", CONF_S) == 0))
-		printf("Usage: %s [ -a | -d | -l | -r ] -n <os name> \
-[ OPTIONS ]\n", program);
-	else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
-		printf("Usage: %s [ -a | -d | -l | -r ] [ -x <varient> \
--k valias] [ OPTIONS ]\n", program);
-	else if ((strncmp(program, "cbcpack", CONF_S) == 0))
-		printf("Usage: %s [ -a | -r ] [ -x | -k ] [ -n | -s ] \
-[ -o | -e ] [ -t ] -p <package name>\n", program);
-	else if ((strncmp(program, "cbcpart", CONF_S) == 0))
-		printf("Usage: %s [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] \
-[ -t partition-info ]\n", program);
+		  program);
+	}
 	exit (retval);
 }
 
@@ -272,7 +250,7 @@ display_cmdb_usage(void)
 {
 	printf("CMDB: Configuration Management Database\n");
 	printf("Action options:\n");
-	printf("-d: display\n-l: list\n-a: add\n");
+	printf("-a: add\n-d: display\n-l: list\n");
 	printf("Type options:\n");
 	printf("-s: server\n-c: customer\n-t: contact\n");
 	printf("-e: services\n-h: hardware\n-v: virtual machine hosts\n");
@@ -297,8 +275,8 @@ display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
 	printf("Action options:\n");
-	printf("-l: list servers with a build\n-d: display build details\n");
-	printf("-m: modify build options\n-a: add build for server\n");
+	printf("-a: add build for server\n-d: display build details\n");
+	printf("-l: list servers with a build\n-m: modify build options\n");
 	printf("-r: remove build for server\n-w: write build files\n\n");
 	printf("Display and write options:\n");
 	printf("cbc ( -d | -w ) ( -n | -i |  -u ) <server specifier>\n\n");
