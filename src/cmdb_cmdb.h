@@ -201,9 +201,6 @@ int
 check_for_vm_host(cmdb_config_s *config, cmdb_s *cmdb, char *vmhost);
 int
 check_for_coid(cmdb_config_s *config, cmdb_s *cmdb, char *coid);
-/*
-int
-get_vm_host(cmdb_config_s *config, cmdb_s *cmdb, char *vmhost); */
 int
 get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid);
 void

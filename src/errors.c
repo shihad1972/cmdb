@@ -28,6 +28,8 @@
  *  (C) Iain M Conochie 2012 - 2013
  * 
  */
+#include "../config.h"
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -651,6 +653,14 @@ Unable to perform requested action on ");
 		fprintf(stderr, "%s", message);
 		fprintf(stderr, "%d\n", type);
 	}
+}
+
+void
+get_config_file_location(char *config)
+{
+	const char *conf = config;
+
+	snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
 }
 
 int

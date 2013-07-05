@@ -307,7 +307,7 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 	hostmaster = strchr(dc->hostmaster, '@');
 	if (hostmaster)
 		*hostmaster = '.';
-	/* The next 2 values need to be checked for a trailing /
+	/* The next 3 values need to be checked for a trailing /
 	 * If there is not one then add it
 	 */
 	

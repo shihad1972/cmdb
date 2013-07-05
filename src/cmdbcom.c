@@ -41,16 +41,9 @@
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
 {
-	int opt, retval;
-	
-	retval = NONE;
-	
-	comp->action = NONE;
-	comp->type = NONE;
+	int opt, retval = NONE;
+
 	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
-	strncpy(comp->name, "NULL", CONF_S);
-	strncpy(comp->id, "NULL", RANGE_S);
-	strncpy(comp->vmhost, "NULL", COMM_S);
 	if (!(base->server = malloc(sizeof(cmdb_server_s))))
 		report_error(MALLOC_FAIL, "base->server in parse_cmdb_comm_line");
 	if (!(base->customer = malloc(sizeof(cmdb_customer_s))))

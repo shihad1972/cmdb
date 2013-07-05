@@ -21,15 +21,6 @@
  *
  *  Contains main() function for cmdb program
  *
- *  Command line arguments:
- *
- *  -s: Choose a server
- *  -c: Choose a customer
- *  -t: Choose a contact
- *  -d: Display details
- *  -l: List <customers|contacts|servers>
- *  -n <name>: Name of customer / contact / server
- *  -i <id>: UUID's of servers OR COID of customer OR CONID of contact
  */
 
 #include "../config.h"

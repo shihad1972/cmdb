@@ -24,7 +24,7 @@
  *  (C) Iain M Conochie 2012 - 2013
  * 
  */
-
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
