@@ -252,7 +252,7 @@ display_cmdb_usage(void)
 	printf("Action options:\n");
 	printf("-a: add\n-d: display\n-l: list\n");
 	printf("Type options:\n");
-	printf("-s: server\n-c: customer\n-t: contact\n");
+	printf("-s: server\n-u: customer\n-t: contact\n");
 	printf("-e: services\n-h: hardware\n-v: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
