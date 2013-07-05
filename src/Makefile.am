@@ -49,7 +49,7 @@ cbcpart_SOURCES = \
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
 
-AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings
+AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_POSIX_C_SOURCE=200809L
 AM_LDFLAGS =
 
 if HAVE_MYSQL
