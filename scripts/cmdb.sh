@@ -197,22 +197,25 @@ debian_base() {
   APACNF="/etc/apache2/conf.d/"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
-    $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y
+    $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
   fi
+  echo "Adding www-data to cmdb group"
+  echo "If this is not your apache user you will have to do this manually"
+  usermod -a -G cmdb www-data
 
   if [ ! -d "$DHCPD" ]; then
     echo "Installing isc-dhcp-server package"
-    $APTG install isc-dhcp-server -y
+    $APTG install isc-dhcp-server -y > /dev/null 2>&1
   fi
 
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftpd-hpa package"
-    $APTG install tftpd-hpa -y
+    $APTG install tftpd-hpa -y > /dev/null 2>&1
   fi
 
   if [ ! -d "$BIND" ]; then
     echo "Installing bind9 package"
-    $APTG install bind9 bind9-host -y
+    $APTG install bind9 bind9-host -y > /dev/null 2>&1
   fi
 
 }
@@ -231,12 +234,15 @@ redhat_base() {
 
   if [ -z "$APACTL" ]; then
     echo "Installing httpd package"
-    $YUM install httpd php5 -y
+    $YUM install httpd php5 -y > /dev/null 2>&1
   fi
+  echo "Adding apache to cmdb group"
+  echo "If this is not your apache user you will have to do this manually"
+  usermod -a -G cmdb apache
 
   if [ ! -d "$DHCPD" ]; then
     echo "Installing dhcp package"
-    $YUM install dhcp -y
+    $YUM install dhcp -y > /dev/null 2>&1
   fi
 
 # Need to check if syslinux is installed cos we need the pxelinux.0 file
@@ -244,7 +250,7 @@ redhat_base() {
 
   if [ ! -d "$TFTP" ]; then
     echo "Installing atftp and syslinux package"
-    $YUM install atftp syslinux -y
+    $YUM install atftp syslinux -y > /dev/null 2>&1
     echo "Setting tftp to start and restarting xinetd"
     $CHKCON tftp on
     $SERV xinetd restart
@@ -254,9 +260,16 @@ redhat_base() {
 
   if [ ! -d "$BIND" ]; then
     echo "Installing bind package"
-    $YUM install bind -y
+    $YUM install bind -y > /dev/null 2>&1
   fi
 }
+# Need to be root
+
+if [[ $EUID -ne 0 ]]; then
+   echo "You must run this script as root!" 1>&2
+   exit 1
+fi
+
 create_cmdb_user
 
 parse_command_line
@@ -269,15 +282,6 @@ echo " "
 echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
 echo " "
 
-# Need to have the sbin directories in $PATH. Otherwise chances are we will
-# not be able to run the commands we need.
-
-if ! echo $PATH | grep sbin; then
-  echo "Cannot find the sbin directories in your path"
-  echo "You will need these to run this script."
-  echo "You should probably run this script as root"
-  exit 1
-fi
 
 # Check for OS type
 
