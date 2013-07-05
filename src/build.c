@@ -25,6 +25,7 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
+#include "../config.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,9 @@
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "build.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 
 int

@@ -24,7 +24,7 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
-
+#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +32,9 @@
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "build.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 int
 main(int argc, char *argv[])
