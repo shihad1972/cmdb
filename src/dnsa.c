@@ -27,10 +27,6 @@
 #include <string.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
-/*
-#include "forward.h"
-#include "reverse.h"
-*/
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
@@ -49,7 +45,7 @@ int main(int argc, char *argv[])
 	if (!(cm = malloc(sizeof(dnsa_comm_line_s))))
 		report_error(MALLOC_FAIL, "cm in dnsa.c");
 	
-	/* Get command line args. See above */
+	dnsa_init_all_config(dc, cm);
 	retval = parse_dnsa_command_line(argc, argv, cm);
 	if (retval < 0) {
 		free(domain);
@@ -57,8 +53,7 @@ int main(int argc, char *argv[])
 		free(cm);
 		display_cmdb_command_line_error(retval, argv[0]);
 	}
-	/* Get config values from config file */	
-	dnsa_init_config_values(dc);
+	/* Get config values from config file */
 	id = parse_dnsa_config_file(dc, cm->config);
 	if (id > 1) {
 		parse_dnsa_config_error(retval);

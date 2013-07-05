@@ -26,12 +26,12 @@
  * 
  */
 #include "../config.h"
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
-#include "checks.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
@@ -39,19 +39,56 @@
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
-	int i, retval;
-	
-	retval = 0;
+	int opt, retval = 0;
 
-	comp->action = NONE;
-	comp->type = NONE;
-	comp->prefix = NONE;
-	strncpy(comp->domain, "NULL", CONF_S);
-	strncpy(comp->dest, "NULL", RANGE_S);
-	strncpy(comp->rtype, "NULL", RANGE_S);
-	strncpy(comp->host, "NULL", RANGE_S);
-	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
-	
+	while ((opt = getopt(argc, argv, "abdeglruwxzFRh:i:n:p:t:")) != -1) {
+		if (opt == 'a') {
+			comp->action = ADD_HOST;
+			comp->type = FORWARD_ZONE;
+		} else if (opt == 'b') {
+			comp->action = BUILD_REV;
+			comp->type = REVERSE_ZONE;
+		} else if (opt == 'd') {
+			comp->action = DISPLAY_ZONE;
+		} else if (opt == 'e') {
+			comp->action = ADD_PREFER_A;
+			comp->type = REVERSE_ZONE;
+		} else if (opt == 'g') {
+			comp->action = DELETE_PREFERRED;
+			comp->type = REVERSE_ZONE;
+		} else if (opt == 'l') {
+			comp->action = LIST_ZONES;
+			snprintf(comp->domain, COMM_S, "all");
+		} else if (opt == 'r') {
+			comp->action = DELETE_RECORD;
+			comp->type = FORWARD_ZONE;
+		} else if (opt == 'u') {
+			comp->action = MULTIPLE_A;
+			comp->type = REVERSE_ZONE;
+		} else if (opt == 'w') {
+			comp->action = COMMIT_ZONES;
+			snprintf(comp->domain, COMM_S, "none");
+		} else if (opt == 'x') {
+			comp->action = DELETE_ZONE;
+		} else if (opt == 'z') {
+			comp->action = ADD_ZONE;
+		} else if (opt == 'F') {
+			comp->type = FORWARD_ZONE;
+		} else if (opt == 'R') {
+			comp->type = REVERSE_ZONE;
+		} else if (opt == 'h') {
+			snprintf(comp->host, RBUFF_S, "%s", optarg);
+		} else if (opt == 'i') {
+			snprintf(comp->dest, RBUFF_S, "%s", optarg);
+		} else if (opt == 'n') {
+			snprintf(comp->domain, CONF_S, "%s", optarg);
+		} else if (opt == 'p') {
+			comp->prefix = strtoul(optarg, NULL, 10);
+		} else if (opt == 't') {
+			snprintf(comp->rtype, RANGE_S, "%s", optarg);
+		}
+	}
+/*
 	for (i = 1; i < argc; i++) {
 		if ((strncmp(argv[i], "-s", COMM_S) == 0)) {
 			comp->action = DISPLAY_ZONE;
@@ -120,8 +157,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else {
 			retval = DISPLAY_USAGE;
 		}
-	}
-	if (comp->action == NONE && comp->type == NONE && strncmp(comp->domain, "NULL", CONF_S) == 0)
+	} */
+	if ((comp->action == NONE) && (comp->type == NONE) &&
+	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
 	else if (comp->action == NONE)
 		retval = NO_ACTION;
@@ -327,6 +365,13 @@ init_dnsa_struct(dnsa_s *dnsa)
 }
 
 void
+dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
+{
+	dnsa_init_config_values(dc);
+	dnsa_init_comm_line_struct(dcl);
+}
+
+void
 dnsa_init_config_values(dnsa_config_s *dc)
 {
 	char *buff;
@@ -345,6 +390,19 @@ dnsa_init_config_values(dnsa_config_s *dc)
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
 	sprintf(buff, "%s", "");
+}
+
+void
+dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
+{
+	dcl->action = NONE;
+	dcl->type = NONE;
+	dcl->prefix = NONE;
+	strncpy(dcl->domain, "NULL", CONF_S);
+	strncpy(dcl->dest, "NULL", RANGE_S);
+	strncpy(dcl->rtype, "NULL", RANGE_S);
+	strncpy(dcl->host, "NULL", RANGE_S);
+	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
 }
 
 void

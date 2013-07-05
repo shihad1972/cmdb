@@ -699,7 +699,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	records = dnsa->records;
 	if (records) {
 		printf("If you want to see the A records for a specific IP use the ");
-		printf("-i option\nE.G. dnsa -m -i <IP-Address>\n");
+		printf("-i option\nE.G. dnsa -u -i <IP-Address>\n");
 	}
 	clean_dbdata_struct(start);
 	dnsa_clean_list(dnsa);
