@@ -1,0 +1,96 @@
+.TH DNSA 8 "Version 0.2: 06 July 2013" "CMDB suite manuals"
+.SH NAME
+dnsa \- Domain Name System Administration
+.SH SYNOPSIS
+.B dnsa
+[
+.B action
+] [
+.B zone type
+] [
+.B options
+]
+
+.B dnsa
+[
+.B -abdeglruwxz
+] [
+.B -FR
+] [
+.B -hinpt
+]
+.SH DESCRIPTION
+\fBdnsa\fP is a tool to administer DNS zones and records. You are able to add
+individual zones and records, and also to add reverse zones and build those
+reverse zones based on what your forward zones look like. If you have multiple
+records pointing to one IP address, you can choose a preferred record for the
+PTR record for that IP address. dnsa does assume some working knowledge of DNS
+(i.e. what record types are used for etc), but the main goal is to simplify
+the administration of DNS. This can be useful even in a small to medium size
+organisation where you can have multiple sub-domains for different departments.
+dnsa tries not to limit you too much in your choices, and to give you a 
+flexible and powerful tool to organise your DNS infrastructure. It should be
+installed on the DNS server itself.
+.SH OPTIONS
+.B Actions (these do not take arguments)
+.IP -a
+add host record
+.IP -b
+build a reverse zone
+.IP -d
+display a zone
+.IP -e
+add a preferred forward record for the PTR
+.IP -g
+delete a preferred forward record
+.IP -l
+list zones
+.IP -r
+delete a record
+.IP -u
+display IP's with multiple A records
+.IP -w
+write and commit valid zones on the nameserver
+.IP -x
+delete zone
+.IP -z
+add zone
+.B Zone type (these do not take arguments)
+.IP -F
+Forward zone
+.IP -R
+Reverse zone
+.PP
+.B Name options
+.IP "-n zone name / network range
+.PP
+.B Options for adding a reverse zone
+.IP "-p prefix"
+.PP
+.B Options for adding a forward host
+.IP "-i IP address"
+.IP "-t record type (A, MX etc)
+.IP "-h host"
+.IP "-p priority (specifically for MX records)
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(8)

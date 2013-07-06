@@ -1,4 +1,4 @@
-.TH CMDB 8 "Version 0.2: 05 July 2013" "CMDB suite manuals"
+.TH CMDB 8 "Version 0.2: 06 July 2013" "CMDB suite manuals"
 .SH NAME
 cmdb \- Configuration Management Database CMDB
 .SH SYNOPSIS
@@ -38,15 +38,15 @@ of that program.
 
 We also have contacts for customers.
 .SH OPTIONS
-.B Actions
+.B Actions (these do not take arguments)
 .IP -a
-Add
+add
 .IP -d
-Display
+display
 .IP -l
-List
+list
 .PP
-.B Types
+.B Types (these do not take arguments)
 .IP -e
 services
 .IP -h
@@ -168,6 +168,12 @@ for further details.
 .SH ENVIRONMENT
 This suite of programs do not make use of environment variables at present
 although this may change in the future. Watch this space!
+.SH BUGS
+Currently you are unable to add hardware types and service types which is
+a bit crap so you will have to stick with what I have provided for now. Also
+the program cannot use environment variables at all which would be handy as
+all these options are a bit unwieldy. As this is pre-alpha software I don't
+think you can compain to much :) More to come though.
 .SH AUTHOR 
 Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
 .SH "SEE ALSO"
