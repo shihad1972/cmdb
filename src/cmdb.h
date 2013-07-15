@@ -347,6 +347,8 @@ typedef struct string_len_s {
 	size_t size;
 } string_len_s;
 
+typedef unsigned long int uli_t;
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 

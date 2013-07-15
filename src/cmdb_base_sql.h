@@ -32,6 +32,8 @@ extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
+extern const unsigned int cmdb_search_fields[];
+extern const unsigned int cmdb_search_args[];
 extern const unsigned int cmdb_search_arg_types[][1];
 extern const unsigned int cmdb_search_field_types[][1];
 
@@ -50,7 +52,11 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, c
 int
 run_search(cmdb_config_s *config, cmdb_s *base, int type);
 int
+cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type);
+int
 run_insert(cmdb_config_s *config, cmdb_s *base, int type);
+void
+cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
@@ -65,6 +71,8 @@ int
 run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type);
+int
+cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type);
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base);
 int
@@ -111,6 +119,12 @@ int
 run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
+int
+cmdb_run_search_sqlite(cmdb_config_s *cmdb, dbdata_s *data, int type);
+int
+set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+int
+get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *base, int type);
 void

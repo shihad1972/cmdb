@@ -112,6 +112,11 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1 };
 
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1 };
+
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1 };
+
+
 const unsigned int cmdb_search_arg_types[][1] = {
 	{ DBTEXT },
 	{ DBTEXT },
@@ -200,6 +205,32 @@ run_search(cmdb_config_s *config, cmdb_s *base, int type)
 #endif /* HAVE_SQLITE3 */
 	} else {
 		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+
+	return NONE;
+}
+
+int
+cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type)
+{
+	int retval = NONE;
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) ==0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = cmdb_run_search_mysql(cmdb, data, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = cmdb_run_search_sqlite(cmdb, data, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", cmdb->dbtype);
 		return DB_TYPE_INVALID;
 	}
 
@@ -299,6 +330,29 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 	} else {
 		fprintf(stderr, "Unknown query %d\n", type);
 		exit (NO_QUERY);
+	}
+}
+
+void
+cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type)
+{
+	unsigned int i = 0, max = 0;
+	dbdata_s *data, *dlist;
+	dlist = *list = '\0';
+	max = (cmdb_search_fields[type] >= cmdb_search_args[type]) ?
+		cmdb_search_fields[type] :
+		cmdb_search_args[type];
+	for (i = 0; i < max; i++) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
 	}
 }
 
@@ -441,6 +495,14 @@ and int for result, which is OK when searching on name and returning id
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
 	return 0;
+}
+
+int
+cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type)
+{
+	int retval = NONE;
+
+	return retval;
 }
 
 int
@@ -932,8 +994,8 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	const char *query = sql_search[type], *file = config->file;
 	int retval = NONE;
 	unsigned long int result;
-	size_t fields, args;
 	void *input, *output;
+	size_t fields, args;
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
@@ -968,6 +1030,127 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
+	return retval;
+}
+
+int
+cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
+{
+	const char *query = sql_search[type], *file = ccs->file;
+	int retval = NONE, i;
+	dbdata_s *list = data;
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
+
+	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0)
+		report_error(FILE_O_FAIL, file);
+	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_search_sqlite");
+	}
+	for (i = 0; (unsigned)i < search_args[type]; i++) {
+		if ((retval = set_cmdb_search_sqlite(state, list, type, i)) < 0)
+			break;
+		if (list->next) 
+			list = list->next;
+	}
+	if (retval == WRONG_TYPE) {
+		sqlite3_finalize(state);
+		sqlite3_close(cmdb);
+		return retval;
+	}
+	list = data;
+	i = NONE;
+	while ((sqlite3_step(state)) == SQLITE_ROW) {
+		if ((retval =
+		 get_cmdb_search_res_sqlite(state, list, type, i)) != 0)
+			break;
+		i++;
+	}
+	if (retval != WRONG_TYPE)
+		retval = i;
+	sqlite3_finalize(state);
+	sqlite3_close(cmdb);
+	return retval;
+}
+
+int
+get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
+{
+	int retval = NONE, j, k;
+	unsigned int u;
+	dbdata_s *data;
+
+	if (i > 0) {
+		for (k = 1; k <= i; i++) {
+			for (u = 1; u <= cmdb_search_fields[type]; u++)
+				if ((u != cmdb_search_fields[type]) || (k != i))
+					list = list->next;
+		}
+		for (j = 0; (unsigned)j < cmdb_search_fields[type]; j++) {
+			if (!(data = malloc(sizeof(dbdata_s))))
+				report_error(MALLOC_FAIL,
+				 "dbdata_s in get_cmdb_search_res_sqlite");
+			init_dbdata_struct(data);
+			if (cmdb_search_field_types[type][j] == DBTEXT)
+				snprintf(data->fields.text, RBUFF_S, "%s",
+				 sqlite3_column_text(state, j));
+			else if (cmdb_search_field_types[type][j] == DBINT)
+				data->fields.number =
+				 (uli_t)sqlite3_column_int64(state, j);
+			else if (cmdb_search_field_types[type][j] == DBSHORT)
+				data->fields.small =
+				 (short int)sqlite3_column_int(state, j);
+			else
+				return WRONG_TYPE;
+			list->next = data;
+		}
+	} else {
+		for (j = 0; (unsigned)j < cmdb_search_fields[type]; j++) {
+			if (cmdb_search_field_types[type][j] == DBTEXT)
+				snprintf(list->fields.text, RBUFF_S, "%s",
+				 sqlite3_column_text(state, j));
+			else if (cmdb_search_field_types[type][j] == DBINT)
+				list->fields.number =
+				 (uli_t)sqlite3_column_int64(state, j);
+			else if (cmdb_search_field_types[type][j] == DBSHORT)
+				list->fields.small =
+				 (short int)sqlite3_column_int(state, j);
+			else
+				return WRONG_TYPE;
+		}
+	}
+	return retval;
+}
+
+int
+set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
+{
+	int retval = NONE;
+
+	if (cmdb_search_arg_types[type][i] == DBTEXT) {
+		if ((retval = sqlite3_bind_text(
+state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
+			fprintf(stderr, "Cannot bind search arg %s\n",
+				list->args.text);
+			return retval;
+		}
+	} else if (cmdb_search_arg_types[type][i] == DBINT) {
+		if ((retval = sqlite3_bind_int64(
+state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
+			fprintf(stderr, "Cannot bind search number arg %lu\n",
+				list->args.number);
+			return retval;
+		}
+	} else if (cmdb_search_arg_types[type][i] == DBSHORT) {
+		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
+			fprintf(stderr, "Cannot bind search small arg %d\n",
+				list->args.small);
+			return retval;
+		}
+	} else {
+		retval = WRONG_TYPE;
+	}
 	return retval;
 }
 

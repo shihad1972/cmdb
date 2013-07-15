@@ -92,7 +92,8 @@ enum {			/* Search indexes and queries */
 	CUST_ID_ON_COID,
 	SERV_TYPE_ID_ON_SERVICE,
 	HARD_TYPE_ID_ON_HCLASS,
-	VM_ID_ON_NAME
+	VM_ID_ON_NAME,
+	HCLASS_ON_HARD_TYPE_ID
 };
 
 /* dnsa queries */

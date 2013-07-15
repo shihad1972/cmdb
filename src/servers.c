@@ -93,21 +93,21 @@ int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
-	int retval;
+	int retval = NONE;
+	dbdata_s *data;
 
-	if (!(input = calloc(RBUFF_S, sizeof(char))))
+	if (!(input = calloc(COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_hardware_to_database");
-	retval = 0;
+	cmdb_init_initial_dbdata(&data, HCLASS_ON_HARD_TYPE_ID);
 	printf("Adding to the DB...\n");
 	if ((retval = run_search(config, cmdb, SERVER_ID_ON_NAME)) != 0) {
 		printf("Unable to retrieve server_id for server %s\n",
 		 cmdb->server->name);
 		free(input);
 		return retval;
-	} else {
+	} else
 		cmdb->hardware->server_id = cmdb->server->server_id;
-	}
-	if (strncmp(cmdb->hardtype->hclass, "NULL", COMM_S) != 0) {
+/*	if (strncmp(cmdb->hardtype->hclass, "NULL", COMM_S) != 0) {
 		if ((retval = run_search(config, cmdb, HARD_TYPE_ID_ON_HCLASS)) != 0) {
 			printf("Unable to retrieve ht_id for class %s\n",
 			 cmdb->hardtype->hclass);
@@ -116,6 +116,19 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		} else {
 			cmdb->hardware->ht_id = cmdb->hardtype->ht_id;
 		}
+	} */
+	data->args.number = (uli_t)cmdb->hardware->ht_id;
+	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
+		fprintf(stderr, "Cannot find hardware class\n");
+		free(input);
+		clean_dbdata_struct(data);
+		return NONE;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple hardware classes\n");
+		fprintf(stderr, "Using %s\n", data->fields.text);
+		snprintf(cmdb->hardtype->hclass, HOST_S, "%s", data->fields.text);
+	} else {
+		snprintf(cmdb->hardtype->hclass, HOST_S, "%s", data->fields.text);
 	}
 	printf("Details Provided\n");
 	printf("Server name:\t%s, id %lu\n", cmdb->server->name, cmdb->hardware->server_id);
@@ -124,7 +137,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		printf("Device:\t%s\n", cmdb->hardware->device);
 	printf("Class:\t\t%s, id %lu\n", cmdb->hardtype->hclass, cmdb->hardware->ht_id);
 	printf("Are these detail correct? (y/n): ");
-	input = fgets(input, CONF_S, stdin);
+	input = fgets(input, CH_S, stdin);
 	chomp(input);
 	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
 		printf("Adding to DB....\n");
@@ -133,6 +146,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		retval = 1;
 	}
 	free(input);
+	clean_dbdata_struct(data);
 	return retval;
 }
 
