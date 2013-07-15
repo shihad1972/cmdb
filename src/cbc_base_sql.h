@@ -32,9 +32,6 @@ extern const char *cbc_sql_insert[];
 extern const char *cbc_sql_search[];
 extern const char *cbc_sql_update[];
 extern const char *cbc_sql_delete[];
-extern const char *cbc_sql_update[];
-extern const char *cbc_sql_delete[];
-extern const char *cbc_sql_search[];
 
 extern const unsigned int cbc_select_fields[];
 extern const unsigned int cbc_insert_fields[];
@@ -44,10 +41,6 @@ extern const unsigned int cbc_update_args[];
 extern const unsigned int cbc_update_fields[];
 extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_delete_fields[];
-extern const unsigned int cbc_update_args[];
-extern const unsigned int cbc_delete_args[];
-extern const unsigned int cbc_search_args[];
-extern const unsigned int cbc_search_fields[];
 
 extern const unsigned int cbc_update_types[][4];
 extern const unsigned int cbc_delete_types[][2];

@@ -1922,7 +1922,8 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);
-		list = list->next;
+		if (list->next)
+			list = list->next;
 	}
 	list = data;
 	i = 0;
