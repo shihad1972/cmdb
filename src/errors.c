@@ -281,7 +281,7 @@ display_cbc_usage(void)
 	printf("-l: list servers with a build\n-m: modify build options\n");
 	printf("-r: remove build for server\n-w: write build files\n\n");
 	printf("Display and write options:\n");
-	printf("cbc ( -d | -w ) ( -n | -i |  -u ) <server specifier>\n\n");
+	printf("cbc ( -d | -w ) ( -n | -i | -u ) <server specifier>\n\n");
 	printf("Remove options:\n");
 	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
