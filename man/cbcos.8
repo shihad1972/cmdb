@@ -1,0 +1,81 @@
+.TH cbcos 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.SH NAME
+cbcos \- Create Build Config Operating System
+.SH SYNOPSIS
+.B cbcos
+[
+.B action
+] [
+.B details
+]
+
+.B cbcos
+[
+.B -adlr
+] [
+.B -n <name> -e <version alias> -o <version> -s <os alias> -t <arch>
+]
+
+.SH DESCRIPTION
+\fBcbcos\fP is software to add new versions of operating systems to the build
+system. You are able to specify the version number and architecture type.
+Currently there are only 2 architecture types, \fIi386\fP and \fIx86_64\fP.
+You are also able to specify the version alias for debian based distros, where
+each version has a code name, such as \fIsqueeze\fP for version \fI6\fP, or in
+the ubuntu world, \fIprecise\fP for version \fI12.04\fP. These are required
+for debian based builds but are optional for redhat based builds. You are able
+to add, display, list and remove build operating systems. Currently the
+\fBcbc\fP system supports the following operating systems: \fI debian, ubuntu,
+centos, fedora\fP and \fIredhat\fP
+
+.SH OPTIONS
+.B Actions
+.IP -a
+add
+.IP -d
+display
+.IP -l
+list
+.IP -r
+remove
+.PP
+.B Details
+.IP "-n <name>"
+Formal name of the operating system, such as Debian.
+.IP "-e <version alias>"
+This is used to specify the code name of the debian or ubuntu based version.
+.IP "-o <version number>"
+The specific version number of the operating system.
+.IP "-s <os alias>"
+This is used to provide an alias to the more formal OS name.
+.IP "-t <architecture>
+Currently only \fIi386\fP and \fIx86_64\fP are available.
+.PP
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(7),
+.BR cbc(8),
+.BR cbcdomain(8),
+.BR cbclocale(8),
+.BR cbcpack(8),
+.BR cbcpart(8),
+.BR cbcvarient(8)

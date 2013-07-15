@@ -1,0 +1,126 @@
+.TH cbcdomain 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.SH NAME
+cbcdomain \- Create Build Config Domain
+.SH SYNOPSIS
+.B cbcdomain
+[
+.B action
+] [
+.B -n name
+] [
+.B -k network info
+] [
+.B LDAP info
+] [
+.B app options
+]
+
+.B cbcdomain
+[
+.B -adlmr
+] [
+.B -n name
+] [
+.B -k start_ip,end_ip,gateway,netmask,nameserver
+] [
+.B -b <basedn> -i <binddn> -s <server> ( -p )
+] [
+.B -e smtp server
+] [
+.B -f nfs domain
+] [
+.B -t ntp server
+] [
+.B -x xymon server
+]
+
+.SH DESCRIPTION
+\fBcbcdomain\fP is software to manipulate build domains for the cbc program.
+You can add, remove, display, modify and list build domains. Build domains
+contain network and network application information for a build, such as an
+IP range, smtp server, nfs domain, and LDAP directory for authentication
+information, ntp server and a xymon monitoring server. This information will
+be included in the build to automatically configure your server when built. The
+build domain contains a range of IP address which will be automatically
+assigned to the server build. If used in conjunction with \fBdnsa\fP then these
+IP addresses will be automatically added to the domain in DNS, with a PTR
+record created as well.
+
+A build domain can be thought of as a regular DNS domain name with some extras
+associated with it. These extras are application services that the server will
+likey need, such as an ntp or smtp relay server. The idea behind this is that
+if a group of machines are on a subnet, they are likely to be grouped together
+in the services they use. It is also handy to have a logical container for a
+group of servers, and in this case I find a DNS sub-domain to be ideal. In this
+scenario you can create multiple sub-domains for different projects, customer
+solutions or even different parts of the same project (prod, dr, qa etc)
+
+For a more in-depth discussion of how this fits into the build framework,
+please consult the \fBcbc(7)\fP man page.
+.SH OPTIONS
+.B Actions
+.IP -a
+add
+.IP -d
+display
+.IP -l
+list
+.IP -m
+modify
+.IP -r
+remove
+.PP
+.B Naming
+.IP "-n <domain name>
+.PP
+.B Network Information
+.IP "-k start_ip,end_ip,gateway,netmask,nameserver
+.PP
+.B LDAP Information
+.IP "-b <basedn>"
+.IP "-i <binddn>"
+.IP "-s <server>"
+.IP -p
+Use ssl in the connection.
+.PP
+.B Application Configuration
+.IP "-e <smtp server>"
+.IP "-f <NFS domain>"
+for NFS V4
+.IP "-t <ntp server>"
+.IP "-x <xymon server>"
+for the xymon monitoring system.
+.PP
+.B Options to use together
+.IP "Only one action option should be used"
+.IP "All actions apart from -m need a -n name"
+.IP "Network information required for -a; optional for -m"
+.IP "LDAP and App Config options are optional for -a and -m"
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(7),
+.BR cbc(8),
+.BR cbclocale(8),
+.BR cbcos(8),
+.BR cbcpack(8),
+.BR cbcpart(8),
+.BR cbcvarient(8)
