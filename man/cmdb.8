@@ -1,6 +1,6 @@
 .TH CMDB 8 "Version 0.2: 06 July 2013" "CMDB suite manuals"
 .SH NAME
-cmdb \- Configuration Management Database CMDB
+cmdb \- Configuration Management Database
 .SH SYNOPSIS
 .B cmdb 
 [ 
@@ -78,9 +78,9 @@ in the CMDB already.
 .B cmdb -a -s -C coid -M make -O model -U uuid -V vendor -n name [ -m vmhost ]
 .IP "-C COID"
 The COID is a unique identifier for the customer this server belongs. You
-should have at least one customer before you try to add servers
+should have at least one customer before you try to add servers.
 .IP "-M Make"
-This is the make, or line, or the server
+This is the make, or line, or the server.
 .IP "-O Model"
 This is the model of the server.
 .IP "-U UUID"
@@ -96,7 +96,7 @@ This is the server vendor.
 .IP "-A Address"
 This is the address for the customer, generally a street name and number. You
 can add a city area if you wish. Remember due to the shell tokenising, you
-will most likely have to put quotes around your entry here
+will most likely have to put quotes around your entry here.
 .IP "-C COID"
 The COID is a unique identifer you can use as a shortcut to refer to your
 customer. The general convention that the program will enforce is a character
@@ -122,7 +122,7 @@ in length.
 This is the service id number that you can retrieve from the database using
 the \fB-l -e\fP options to cmdb.
 .IP "-S service"
-This is a full descriptive name for the service
+This is a full descriptive name for the service.
 .PP
 .B To add a contact
 .PP
@@ -157,7 +157,7 @@ can find out the id by running \fBcmdb -l -h\fP
 The system wide configuration file for the cmdb / dnsa / cbc suite of
 programs. See
 .BR dnsa.conf (5)
-for further details
+for further details.
 .RE
 .I ~/.dnsa.conf
 .RS

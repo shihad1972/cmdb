@@ -1,0 +1,103 @@
+.TH cbc 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.SH NAME
+cbd \- Create Build Config
+.SH SYNOPSIS
+.B cbc
+[
+.B action
+] ( -n | -i | -i )
+.B <server specifier>
+[
+.B build options
+]
+
+.SH DESCRIPTION
+\fBcbc\fP allows you to create preseed and kickstart files for the debian
+preseed server build system, and the redhat kickstart build system. It will
+also create the needed TFTP and DHCP configuration files to allow for network
+booting. You are able to configure many aspects of build, including the
+Operating System type, version and the architecture on which it will run. You
+can also configure the partition scheme, locale and the packages installed on
+the system, which we call a build \fIvarient\fP. There is also a semi-automatic
+network configuration system, called \fIbuild domains\fP which do the job of
+assigning IP addresses to the build configuration.
+
+Please see the end of this man page for the manual pages for the ancillary
+programs which allow you to create the templates for all of these build
+options.
+
+.SH OPTIONS
+.B Actions (these do not take arguments, only one can be used)
+.IP -a
+add
+.IP -d
+display
+.IP -l
+list
+.IP -m
+modify
+.IP -r
+remove
+.IP -w
+write
+.PP
+.B Server Specifier (only one can be used)
+.IP "-n name"
+This is the name of the server.
+.IP "-i server_id"
+This is the server_id from the database.
+.IP "-u UUID"
+This is the Universal Unique Identifier of the server .
+.PP
+.B Build Options
+.IP "-o <Operating System>"
+This is the name of the operating system you want to install on the server.
+.IP "-v <version>"
+This is the version number of the operating system you want to install.
+.IP "-t <architecture>
+This is the artitechture of the operating system to be installed. Currently
+only i386 and x86_64 (amd64) are supported.
+.IP "-b <build domain>
+This is the name of the build domain the server build is to be a part of.
+.IP "-x <varient>"
+This is the build varient. This will contain a list of packages to install
+so it makes sense to use this as a functional name of the server, e.g. web,
+mysql, ldap etc.
+.IP "-e <locale_id>"
+This is the database locale_id of the locale you wish to have enabled on the
+server. This provides the information for the locale setting, as well as the
+timezone and keyboard mappings. You can create multiple combinations of these
+such as AU keymap but CEST timezone and PL locale, for example.
+.IP "-p <partition scheme>"
+This is the name of the partition scheme you wish to use for this installation.
+.IP "-k <network device>"
+This is the name of the network device used for the installation, such as 
+\fBeth0\fP
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(8),
+.BR cbcdomain(8),
+.BR cbclocale(8),
+.BR cbcos(8),
+.BR cbcpack(8),
+.BR cbcpart(8),
+.BR cbcvarient(8)
