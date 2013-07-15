@@ -1,0 +1,97 @@
+.TH cbcpart 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.SH NAME
+cbcpart \- Create Build Config Partitions
+.SH SYNOPSIS
+.B cbcpart
+[
+.B action
+] [
+.B selection
+] [
+.B details
+] [
+.B partition info
+]
+
+.B cbcpart
+[
+.B -adlr
+] [
+.B -p | -s
+] [
+.B -gnv
+] [
+.B -t
+]
+
+.SH DESCRIPTION
+\fBcbcpart\fP is software to manipulate partition schemes for the build system.
+You can add add a scheme, display a specific scheme, list all schemes or remove
+a specific scheme. Once you have added a scheme name, you can then define
+partitions to add to the scheme, or remove partitions from the scheme. You can
+also configure partition schemes to use \fBLVM\fP, the Logical Volume Manager
+for more flexible partition arangements.
+
+.SH OPTIONS
+.B action
+.IP -a
+add a partition or scheme.
+.IP -d
+display partitions in a scheme.
+.IP -l
+list all partition schemes.
+.IP -r
+remove a partition from a scheme or an entire partition scheme.
+
+\fBNote\fP: these options are mutually exclusive.
+.PP
+.B selection
+.IP -p
+work on a partition.
+.IP -s
+work on a scheme.
+
+\fBNote\fP: these options are mutually exclusive.
+.PP
+.B details
+.IP "-g <log vol name>"
+the name for the logical volume.
+.IP "-n <scheme name>"
+the name of the partition scheme.
+.IP -v
+when adding a partition scheme, this option marks the scheme as using LVM.
+.PP
+.B partition information
+.IP "-t min,max,priority,mount,fs"
+when adding a partition to a scheme, this is used to specify the partition
+information. The information you will provide is the minimum size, maximum
+size, the size priority, the mount point and the filesystem type.
+.PP
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(7),
+.BR cbc(8),
+.BR cbcdomain(8),
+.BR cbclocale(8),
+.BR cbcos(8),
+.BR cbcpack(8),
+.BR cbcvarient(8)
