@@ -63,6 +63,8 @@ EXTRA_DIST = \
 		scripts/cmdb.sh\
 		scripts/create_ldif_for_domain.sh
 
+dist_man_MANS = man/cbc.8 man/cbcdomain.8 man/cbcos.8 man/cbcpack.8 man/cbcpart.8 man/cmdb.8 man/dnsa.8
+
 all:	$(bin_PROGRAMS)
 
 dnsa:
