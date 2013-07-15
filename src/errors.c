@@ -324,7 +324,7 @@ display_cbcos_usage(void)
 	printf("All actions apart from -l need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
-	printf("-s: alias\n-t: <os architecture\n\n");
+	printf("-s: <alias>\n-t: <os architecture\n\n");
 	printf("cbcos [ -a | -d | -l | -r ] -n [ detail options ]\n\n");
 }
 
