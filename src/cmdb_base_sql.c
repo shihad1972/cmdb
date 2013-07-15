@@ -99,7 +99,8 @@ SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
 SELECT service_type_id FROM service_type WHERE service = ?","\
 SELECT hard_type_id FROM hard_type WHERE class = ?","\
-SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?"
+SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?","\
+SELECT class FROM hard_type WHERE hard_type_id = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -107,10 +108,27 @@ const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
 
-const unsigned int search_fields[] = { 1,1,1,1,1 };
+const unsigned int search_fields[] = { 1,1,1,1,1,1 };
 
-const unsigned int search_args[] = { 1,1,1,1,1 };
+const unsigned int search_args[] = { 1,1,1,1,1,1 };
 
+const unsigned int cmdb_search_arg_types[][1] = {
+	{ DBTEXT },
+	{ DBTEXT },
+	{ DBTEXT },
+	{ DBTEXT },
+	{ DBTEXT },
+	{ DBINT }
+};
+
+const unsigned int cmdb_search_field_types[][1] = {
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBTEXT }
+};
 
 int
 run_query(cmdb_config_s *config, cmdb_s *base, int type)
@@ -911,17 +929,13 @@ run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 int
 run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
-	const char *query, *file;
-	int retval;
+	const char *query = sql_search[type], *file = config->file;
+	int retval = NONE;
 	unsigned long int result;
 	size_t fields, args;
 	void *input, *output;
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
-
-	retval = 0;
-	file = config->file;
-	query = sql_search[type];
 
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);

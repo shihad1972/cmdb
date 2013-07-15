@@ -32,6 +32,8 @@ extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
+extern const unsigned int cmdb_search_arg_types[][1];
+extern const unsigned int cmdb_search_field_types[][1];
 
 # ifdef HAVE_MYSQL
 extern const int mysql_inserts[8][7];
