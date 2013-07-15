@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wordexp.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
@@ -658,9 +659,57 @@ Unable to perform requested action on ");
 void
 get_config_file_location(char *config)
 {
+	FILE *cnf;
+	wordexp_t *word;
 	const char *conf = config;
+	char **w;
+	int retval;
 
-	snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
+	if (!(word = calloc(sizeof(wordexp_t), 1)))
+		report_error(MALLOC_FAIL, "word in get_config_file_location");
+	snprintf(config, CONF_S, "~/.cmdb.conf");
+	if ((retval = wordexp(conf, word, WRDE_APPEND)) != 0) {
+		fprintf(stderr, "Call to wordexp failed!\n");
+		return;
+	} else {
+		w = word->we_wordv;
+		conf = *w;
+	}
+	if (!(cnf = fopen(conf, "r"))) {
+		snprintf(config, CONF_S, "~/.dnsa.conf");
+		conf = config;
+	} else {
+		fclose(cnf);
+		snprintf(config, CONF_S, "%s", conf);
+		wordfree(word);
+		free(word);
+		return;
+	}
+	if ((retval = wordexp(conf, word, WRDE_REUSE)) != 0) {
+		fprintf(stderr, "Call to wordexp failed\n");
+		return;
+	} else {
+		w = word->we_wordv;
+		conf = *w;
+	}
+	if (!(cnf = fopen(conf, "r"))) {
+		snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
+		conf = config;
+	} else {
+		fclose(cnf);
+		snprintf(config, CONF_S, "%s", conf);
+		wordfree(word);
+		free(word);
+		return;
+	}
+	wordfree(word);
+	free(word);
+	if (!(cnf = fopen(conf, "r"))) {
+		snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
+	} else {
+		fclose(cnf);
+		return;
+	}
 }
 
 int

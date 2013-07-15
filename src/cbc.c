@@ -41,11 +41,13 @@ main(int argc, char *argv[])
 {
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
-	char sretval[MAC_S];
-	const char *config = "/etc/dnsa/dnsa.conf";
+	char sretval[MAC_S], conf[CONF_S];
+	const char *config;
 	int retval;
 	
 	retval = 0;
+	get_config_file_location(conf);
+	config = conf;
 	if (!(cmc = malloc(sizeof(cbc_config_s))))
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_s))))
