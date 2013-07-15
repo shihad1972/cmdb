@@ -222,7 +222,11 @@ enum {			/* cmdb return codes */
 	NO_CONT_NAME = -26,
 	NO_DETAIL = -27,
 	NO_CLASS = -28,
-	DOMAIN_AND_IP_GIVEN = -29
+	DOMAIN_AND_IP_GIVEN = -29,
+	NO_OS_SPECIFIED = -30,
+	NO_BUILD_DOMAIN = -31,
+	NO_BUILD_VARIENT = -32,
+	NO_BUILD_PARTITION = -33
 };
 
 enum {			/* cmdb config file error codes */

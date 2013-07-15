@@ -54,9 +54,6 @@ typedef struct cbc_build_s {
 
 typedef struct cbc_build_domain_s {
 	char domain[RBUFF_S];
-	char country[RANGE_S];
-	char language[RANGE_S];
-	char keymap[RANGE_S];
 	char ntp_server[HOST_S];
 	char ldap_url[URL_S];
 	char ldap_dn[URL_S];

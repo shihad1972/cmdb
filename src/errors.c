@@ -219,6 +219,14 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "No partition information on command line.\n");
 	else if (retval == NO_SCHEME_INFO)
 		fprintf(stderr, "No scheme name was supplied on the command line.\n");
+	else if (retval == NO_OS_SPECIFIED)
+		fprintf(stderr, "No OS or not enough OS options supplied on command line.\n");
+	else if (retval == NO_BUILD_DOMAIN)
+		fprintf(stderr, "No Build Domain supplied on command line\n");
+	else if (retval == NO_BUILD_VARIENT)
+		fprintf(stderr, "No Build Varient supplied on command line\n");
+	else if (retval == NO_BUILD_PARTITION)
+		fprintf(stderr, "No Build Partition Scheme supplied on command line\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");

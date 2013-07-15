@@ -104,12 +104,24 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	if ((cb->action == NONE) && 
 	 (cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
-		retval = DISPLAY_USAGE;
+		return DISPLAY_USAGE;
 	else if (cb->action == NONE)
-		retval = NO_ACTION;
-	else if ((cb->action == WRITE_CONFIG) &&
+		return NO_ACTION;
+	else if ((cb->action != LIST_CONFIG) &&
 		 (cb->server == 0))
 		return NO_NAME_OR_ID;
+	if (cb->action == ADD_CONFIG) {
+		if ((strncmp(cb->os, "NULL", COMM_S) == 0) &&
+		    (strncmp(cb->arch, "NULL", COMM_S) == 0) &&
+		    (strncmp(cb->os_version, "NULL", COMM_S) == 0))
+			retval = NO_OS_SPECIFIED;
+		else if (strncmp(cb->build_domain, "NULL", COMM_S) == 0)
+			retval = NO_BUILD_DOMAIN;
+		else if (strncmp(cb->varient, "NULL", COMM_S) == 0)
+			retval = NO_BUILD_VARIENT;
+		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
+			retval = NO_BUILD_PARTITION;
+	}
 /*	else if ((cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
 		retval = NO_NAME_OR_ID;
