@@ -48,6 +48,7 @@ Still need to write cbclocale
 
 12/05/2013
 Update the cbc options as they are out of date
+*** Fixed (i am pretty sure, anyway) ***
 
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements
@@ -93,4 +94,7 @@ Also I will need to write man pages for each command....
 
 I need to write a proper error function if the fields in the SELECT statement
 are not equal to the specified fields. At the moment it just breaks the loop
+This is in the search function using the dbdata_s struct.
 *** Fixed *** reports an error (for some of them)
+Actually this at the moment just returns NO_TYPE and the functions do not even
+check the return code. Not sure how this is being passed up the function stack.
