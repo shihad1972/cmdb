@@ -497,9 +497,138 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
-cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type)
+cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 {
-	int retval = NONE;
+	MYSQL cmdb;
+	MYSQL_STMT *cmdb_stmt;
+	MYSQL_BIND args[cmdb_search_args[type]];
+	MYSQL_BIND fields[cmdb_search_fields[type]];
+	const char *query = sql_search[type];
+	int retval = NONE, j = NONE;
+	unsigned int i;
+
+	memset(args, 0, sizeof(args));
+	memset(fields, 0, sizeof(fields));
+	for (i = 0; i < cmdb_search_args[type]; i++)
+		if ((retval = cmdb_set_search_args_mysql(&args[i], i, type, data)) != 0)
+			return retval;
+	for (i = 0; i < cmdb_search_fields[type]; i++)
+		if ((retval = cmdb_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+			return retval;
+	cmdb_mysql_init(ccs, &cmdb);
+	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &args[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_result(cmdb_stmt, &fields[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_store_result(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	while ((retval = mysql_stmt_fetch(cmdb_stmt)) == 0) {
+		j++;
+		for (i = 0; i < cmdb_search_fields[type]; i++)
+			if ((retval = cmdb_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+				return retval;
+		if ((retval = mysql_stmt_bind_result(cmdb_stmt, &fields[0])) != 0)
+			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	}
+	if (retval != MYSQL_NO_DATA)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	else
+		retval = NONE;
+	mysql_stmt_free_result(cmdb_stmt);
+	mysql_stmt_close(cmdb_stmt);
+	cmdb_mysql_cleanup(&cmdb);
+	return j;
+}
+
+int
+cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
+{
+	int retval = 0;
+	unsigned int j;
+	void *buffer;
+	dbdata_s *list = base;
+
+	mybind->is_null = 0;
+	mybind->length = 0;
+	for (j = 0; j < i; j++)
+		list = list->next;
+	if (cmdb_search_arg_types[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
+		buffer = &(list->args.number);
+		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (cmdb_search_arg_types[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
+		buffer = &(list->args.text);
+		mybind->buffer_length = strlen(buffer);
+	} else if (cmdb_search_arg_types[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		buffer = &(list->args.small);
+		mybind->buffer_length = sizeof(short int);
+	} else {
+		return WRONG_TYPE;
+	}
+	mybind->buffer = buffer;
+	return retval;
+}
+
+int
+cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
+{
+	int retval = 0, j;
+	static int m = 0, stype = 0;
+	void *buffer;
+	dbdata_s *list, *new;
+	list = base;
+
+	if (stype == 0)
+		stype = type;
+	else if (stype != type) {
+		stype = type;
+		m = 0;
+	}
+	mybind->is_null = 0;
+	mybind->length = 0;
+	if (k > 0) {
+		if (!(new = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "new in cmdb_set_search_fields_mysql");
+		init_dbdata_struct(new);
+		while (list->next) {
+			list = list->next;
+		}
+		list->next = new;
+		list = base;
+	}
+	for (j = 0; j < m; j++)
+		list = list->next;
+	if (cmdb_search_field_types[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
+		buffer = &(list->fields.number);
+		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (cmdb_search_field_types[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
+		buffer = &(list->fields.text);
+		mybind->buffer_length = RBUFF_S;
+	} else if (cmdb_search_field_types[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		buffer = &(list->fields.small);
+		mybind->buffer_length = sizeof(short int);
+	} else {
+		return WRONG_TYPE;
+	}
+	mybind->buffer = buffer;
+	m++;
 
 	return retval;
 }

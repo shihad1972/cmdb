@@ -76,6 +76,10 @@ run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type);
 int
+cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
+int
+cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
+int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base);
 int
 setup_insert_mysql_bind_buffer(int type, void **input, cmdb_s *base, unsigned int i);
