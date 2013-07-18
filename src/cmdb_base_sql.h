@@ -57,6 +57,8 @@ int
 run_insert(cmdb_config_s *config, cmdb_s *base, int type);
 void
 cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type);
+void
+show_no_results(int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

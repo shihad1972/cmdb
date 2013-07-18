@@ -357,7 +357,8 @@ print_all_servers(cmdb_s *cmdb)
 	cmdb_customer_s *cust = cmdb->customer;
 	size_t len;
 
-	printf("Server\t\t\t\tCustomer\n");
+	if (server)
+		printf("Server\t\t\t\tCustomer\n");
 	while (server) {
 		id = server->cust_id;
 		len = strlen(server->name);

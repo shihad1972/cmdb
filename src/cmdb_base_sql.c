@@ -403,8 +403,7 @@ run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	fields = mysql_num_fields(cmdb_res);
 	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
-		cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
-		report_error(NO_SERVERS, "run_query_mysql");
+		show_no_results(type);
 	}
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
@@ -1649,3 +1648,16 @@ state, 4, (int)hard->ht_id)) > 0) {
 	return retval;
 }
 #endif /* HAVE_SQLITE3 */
+
+void
+show_no_results(int type)
+{
+	if (type == SERVER)
+		fprintf(stderr, "No servers to list\n");
+	else if (type == CUSTOMER)
+		fprintf(stderr, "No customers to list\n");
+	else if (type == SERVICE)
+		fprintf(stderr, "No services to list\n");
+	else
+		fprintf(stderr, "No unknown listing %d\n", type);
+}
