@@ -18,11 +18,13 @@ done
 
 if [ -z $DOMAIN ]; then
     echo "No domain specified"
+    echo "Usage: $0 -p passwd -d domain -a admin-user"
     exit 2
 fi
 
 if [ -z $PASSWORD ]; then
     echo "No password specified"
+    echo "Usage: $0 -p passwd -d domain -a admin-user"
     exit 3
 fi
 
