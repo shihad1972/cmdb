@@ -51,7 +51,7 @@ display_customer_info(char *name, char *coid, cmdb_config_s *config)
 
 	cmdb->customer = '\0';
 	if ((retval = run_multiple_query(config, cmdb,
-CUSTOMER | CONTACT | SERVICE)) != 0) {
+CUSTOMER | CONTACT | SERVICE | SERVER)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -332,6 +332,7 @@ print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 	printf("%s\n", cust->address);
 	printf("%s, %s\n", cust->city, cust->postcode);
 	print_customer_contacts(cmdb->contact, cust->cust_id);
+	print_customer_servers(cmdb->server, cust->cust_id);
 	print_services(cmdb->service, cust->cust_id, CUSTOMER);
 }
 
@@ -347,6 +348,23 @@ print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id)
 			if (i == 1)
 				printf("\nContacts:\n");
 			printf("%s, %s, %s\n", list->name, list->phone, list->email);
+		}
+		list = list->next;
+	}
+	return i;
+}
+
+int
+print_customer_servers(cmdb_server_s *server, unsigned long int cust_id)
+{
+	int i = 0;
+	cmdb_server_s *list = server;
+	while (list) {
+		if (list->cust_id == cust_id) {
+			i++;
+			if (i == 1)
+				printf("\nServers:\n");
+			printf("%s\n", list->name);
 		}
 		list = list->next;
 	}

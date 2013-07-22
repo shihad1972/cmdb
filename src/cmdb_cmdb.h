@@ -183,6 +183,8 @@ void
 display_customer_services(cmdb_config_s *config, char *coid);
 void
 display_customer_contacts(cmdb_config_s *config, char *coid);
+int
+print_customer_servers(cmdb_server_s *server, unsigned long int cust_id);
 void
 display_vm_hosts(cmdb_config_s *config);
 
