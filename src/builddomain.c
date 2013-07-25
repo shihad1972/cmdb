@@ -65,7 +65,10 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL, "base in display_cbc_build_domain");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
-		fprintf(stderr, "build query failed\n");
+		if (retval == 6)
+			fprintf(stderr, "No build domains\n");
+		else
+			fprintf(stderr, "build query failed\n");
 		clean_cbc_struct(base);
 		return retval;
 	}
@@ -209,7 +212,10 @@ list_cbc_build_domain(cbc_config_s *cbc)
 		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
-		fprintf(stderr, "build query failed\n");
+		if (retval == 6)
+			fprintf(stderr, "No build domains in DB\n");
+		else
+			fprintf(stderr, "build query failed\n");
 		free(base);
 		return retval;
 	}

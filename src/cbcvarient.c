@@ -86,6 +86,10 @@ main(int argc, char *argv[])
 				snprintf(error, HOST_S, "%s", cvcl->os);
 			else if (strncmp(cvcl->alias, "NULL", COMM_S) != 0)
 				snprintf(error, HOST_S, "alias %s", cvcl->alias);
+		} else if (retval == NO_RECORDS) {
+			free(cmc);
+			free(cvcl);
+			exit (retval);
 		}
 		free(cmc);
 		free(cvcl);
@@ -181,6 +185,8 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		report_error(MALLOC_FAIL, "base in list_cbc_build_varient");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
+		if (retval == 6)
+			fprintf(stderr, "No build varients in DB\n");
 		clean_cbc_struct(base);
 		return retval;
 	}
@@ -271,9 +277,13 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	init_cbc_struct(base);
 	init_varient(vari);
 	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
-		clean_cbc_struct(base);
-		clean_varient(vari);
-		return retval;
+		if (retval == 6) {
+			fprintf(stderr, "No build varients in DB\n");
+		} else {
+			clean_cbc_struct(base);
+			clean_varient(vari);
+			return retval;
+		}
 	}
 	dbvari = base->varient;
 	while (dbvari) {

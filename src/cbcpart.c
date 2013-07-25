@@ -161,7 +161,10 @@ list_seed_schemes(cbc_config_s *cbc)
 		report_error(MALLOC_FAIL, "base in list_seed_schemes");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
-		fprintf(stderr, "Seed scheme query failed\n");
+		if (retval == 6)
+			fprintf(stderr, "No Partition schemes in DB\n");
+		else
+			fprintf(stderr, "Seed scheme query failed\n");
 		free(base);
 		return retval;
 	}
@@ -254,9 +257,12 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
+		if (retval == 6)
+			fprintf(stderr, "No partition schemes in DB\n");
+		else
+			fprintf(stderr, "Unable to get schemes from DB\n");
 		clean_cbc_struct(base);
 		free(part);
-		fprintf(stderr, "Unable to get schemes from DB\n");
 		return retval;
 	}
 	seed = base->sscheme;
@@ -286,9 +292,12 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		return EXTRA_LOG_VOL;
 	}
 	if ((retval = cbc_run_query(cbc, base, DPART)) != 0) {
+		if (retval == 6)
+			fprintf(stderr, "No partition schemes in the DB\n");
+		else
+			fprintf(stderr, "Unable to get partitions from DB\n");
 		clean_cbc_struct(base);
 		free(part);
-		fprintf(stderr, "Unable to get partitions from DB\n");
 		return retval;
 	}
 	dpart = base->dpart;

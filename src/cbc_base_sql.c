@@ -695,7 +695,7 @@ cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 	fields = mysql_num_fields(cbc_res);
 	if (((cbc_rows = mysql_num_rows(cbc_res)) == 0)) {
 		cmdb_mysql_cleanup_full(&cbc, cbc_res);
-		report_error(NO_SERVERS, "cbc_run_query_mysql");
+		return NO_RECORDS;
 	}
 	while ((cbc_row = mysql_fetch_row(cbc_res)))
 		cbc_store_result_mysql(cbc_row, base, type, fields);

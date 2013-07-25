@@ -207,6 +207,11 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cmc, base, BUILD_OS)) != 0) {
+		if (retval == 6) {
+			fprintf(stderr, "No build OS's\n");
+			clean_cbc_struct(base);
+			return retval;
+		}
 		clean_cbc_struct(base);
 		return MY_QUERY_FAIL;
 	}
