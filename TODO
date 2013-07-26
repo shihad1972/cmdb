@@ -26,8 +26,6 @@ Need to add the first zone in for dnsa otherwise the software complains
 it cannot add the zone due to the A records for the NS records are not
 in the zone. DOH!
 
-Also need to add domain into DNS when we add a build domain to cbc.
-
 04/06/2013
 For all build options there should be a default option so when you
 create a build you do not need to specify all the options.
