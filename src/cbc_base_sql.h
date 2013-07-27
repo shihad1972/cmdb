@@ -42,7 +42,7 @@ extern const unsigned int cbc_update_fields[];
 extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_delete_fields[];
 
-extern const unsigned int cbc_update_types[][4];
+extern const unsigned int cbc_update_types[][5];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][9];
@@ -108,7 +108,22 @@ enum {			/* cbc update SQL statements */
 	UP_BUILD_VAR_OS = 5,
 	UP_BUILD_VAR_PART = 6,
 	UP_BUILD_OS_PART = 7,
-	UP_BUILD_VAR_OS_PART = 8
+	UP_BUILD_VAR_OS_PART = 8,
+	UP_DOM_BASEDN = 9,
+	UP_DOM_BINDDN = 10,
+	UP_DOM_LDAPSERV = 11,
+	UP_DOM_LDAPSSL = 12,
+	UP_DOM_BASEBINDDN = 13,
+	UP_DOM_BASEDNSERV = 14,
+	UP_DOM_BASEDNSSL = 15,
+	UP_DOM_BINDDNSERV = 16,
+	UP_DOM_BINDDNSSL = 17,
+	UP_DOM_LDAPSERVSSL = 18,
+	UP_DOM_BASEBINDDNSERV = 19,
+	UP_DOM_BASEDNSERVSSL = 20,
+	UP_DOM_BASEBINDDNSSL = 21,
+	UP_DOM_BINDDNSERVSSL = 22,
+	UP_DOM_LDAPALL = 23
 };
 
 # ifdef HAVE_MYSQL

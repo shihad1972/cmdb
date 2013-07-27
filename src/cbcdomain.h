@@ -29,6 +29,17 @@
 
 #ifndef __CBCDOMAIN_H__
 # define __CBCDOMAIN_H__
+enum {			/* cbcdomain modify types */
+	BASEDN = 1,
+	BINDDN = 2,
+	LDAPSERV = 4,
+	LDAPSSL = 8,
+	NFSDOM = 16,
+	NTPSERV = 32,
+	SMTPSERV = 64,
+	XYMONSERV = 128,
+	LOGSERV = 256
+};
 
 typedef struct cbcdomain_comm_line_s {
 	char domain[RBUFF_S];

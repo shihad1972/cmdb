@@ -75,9 +75,10 @@ main(int argc, char *argv[])
 		retval = add_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == RM_CONFIG)
 		retval = remove_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == MOD_CONFIG)
+	else if (cdcl->action == MOD_CONFIG) {
+		retval = modify_cbc_build_domain(cmc, cdcl);
 		printf("Modifying the build domain is not supported yet\n");
-	else
+	} else
 		printf("Unknown Action type\n");
 
 	free(cdcl);

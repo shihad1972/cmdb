@@ -202,6 +202,21 @@ remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 }
 
 int
+modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
+{
+	int retval = NONE, type = NONE;
+	dbdata_s *data;
+
+	if (!(data = calloc(sizeof(dbdata_s), sizeof(char))))
+		report_error(MALLOC_FAIL, "data in modify_cbc_build_domain");
+	if ((retval = get_mod_ldap_bld_dom(cdl, &type)) != 0) {
+		free (data);
+		return retval;
+	}
+	return retval;
+}
+
+int
 list_cbc_build_domain(cbc_config_s *cbc)
 {
 	int retval = NONE;
@@ -289,6 +304,67 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 	bdom->ns = cdl->ns;
 	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
 	snprintf(bdom->nfs_domain, CONF_S, "%s", cdl->nfsdomain);
+}
+
+int
+get_mod_ldap_bld_dom(cbcdomain_comm_line_s *cdl, int *query)
+{
+	int retval = NONE, type = NONE;
+
+	if (strncmp(cdl->basedn, "NULL", NAME_S) != 0)
+		type = type | BASEDN;
+	if (strncmp(cdl->binddn, "NULL", NAME_S) != 0)
+		type = type | BINDDN;
+	if (strncmp(cdl->ldapserver, "NULL", HOST_S) != 0)
+		type = type | LDAPSERV;
+	if (cdl->ldapssl != 0)
+		type = type | LDAPSSL;
+	if (!(type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEDN;
+	else if (!(type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_BINDDN;
+	else if (!(type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_LDAPSERV;
+	else if ((type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_LDAPSSL;
+	else if (!(type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEBINDDN;
+	else if (!(type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEDNSERV;
+	else if ((type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEDNSSL;
+	else if (!(type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_BINDDNSERV;
+	else if ((type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_BINDDNSSL;
+	else if ((type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_LDAPSERVSSL;
+	else if (!(type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) && 
+	     (type | BASEDN))
+		*query = UP_DOM_BASEBINDDNSERV;
+	else if ((type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEDNSERVSSL;
+	else if ((type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_BASEBINDDNSSL;
+	else if ((type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
+	    !(type | BASEDN))
+		*query = UP_DOM_BINDDNSERVSSL;
+	else if ((type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
+	     (type | BASEDN))
+		*query = UP_DOM_LDAPALL;
+	return retval;
 }
 
 #ifdef HAVE_DNSA

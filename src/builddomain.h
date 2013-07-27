@@ -44,10 +44,16 @@ int
 remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
 
 int
+modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
+
+int
 get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base);
 
 void
 copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
+
+int
+get_mod_ldap_bld_dom(cbcdomain_comm_line_s *cdl, int *query);
 
 # ifdef HAVE_DNSA
 

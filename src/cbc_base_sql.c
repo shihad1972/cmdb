@@ -130,7 +130,27 @@ UPDATE build SET varient_id = ?, os_id = ? WHERE server_id = ?","\
 UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
-  = ?"
+  = ?","\
+UPDATE build_domain SET ldap_dn = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_bind = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_url = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_bind = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_server = ? WHERE\
+  bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+  bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_ssl = ? WHERE\
+  bd_id = ?","\
+UPDATE build_domain SET ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+  bd_id = ?","\
+UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_server = ?\
+  ldap_ssl = ? WHERE bd_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -280,7 +300,7 @@ const unsigned int cbc_insert_fields[] = {
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2, 2, 2, 2, 3, 3, 3, 4
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1
@@ -294,16 +314,29 @@ const unsigned int cbc_search_fields[] = {
 	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1
 };
 
-const unsigned int cbc_update_types[][4] = {
-	{ DBTEXT, DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE } ,
-	{ DBINT, DBINT, DBINT, DBINT }
+const unsigned int cbc_update_types[][5] = {
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBSHORT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT}
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
