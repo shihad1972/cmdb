@@ -82,6 +82,8 @@ main(int argc, char *argv[])
 
 	free(cdcl);
 	free(cmc);
+	if (retval > 0)
+		report_error(retval, argv[0]);
 	exit(retval);
 }
 
@@ -165,6 +167,12 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		return NO_ACTION;
 	if (cdl->action != LIST_CONFIG && strncmp(cdl->domain, "NULL", COMM_S) == 0)
 		return NO_DOMAIN_NAME;
+	if ((cdl->action == MOD_CONFIG) && ((cdl->start_ip != 0) ||
+		                            (cdl->end_ip != 0) ||
+		                            (cdl->netmask != 0) ||
+		                            (cdl->gateway != 0) ||
+		                            (cdl->ns != 0)))
+		return NO_MOD_BUILD_DOM_NET;
 	return retval;
 }
 

@@ -148,6 +148,8 @@ report_error(int error, const char *errstr)
 	} else if (error == BUILD_OS_IN_USE) {
 		fprintf(stderr,
 "Cowardly refusal to delete build os %s\n", errstr);
+	} else if (error == DID_NOT_MOD_BUILD_DOMAIN) {
+		fprintf(stderr, "cbcdomain modified nothing??\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
 	}
@@ -227,6 +229,8 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "No Build Varient supplied on command line\n");
 	else if (retval == NO_BUILD_PARTITION)
 		fprintf(stderr, "No Build Partition Scheme supplied on command line\n");
+	else if (retval == NO_MOD_BUILD_DOM_NET)
+		fprintf(stderr, "Cowardly refusal to modify network settings for build domain\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");

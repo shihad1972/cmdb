@@ -204,22 +204,9 @@ remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 int
 modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 {
-	int retval = NONE, type = NONE;
+	int retval = NONE, type = NONE, i = NONE;
 	dbdata_s *data = '\0';
 
-	if ((retval = get_mod_ldap_bld_dom(cdl, &type)) != 0) {
-		free (data);
-		return retval;
-	}
-	cbc_init_update_dbdata(&data, (unsigned) type);
-	if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
-		fprintf(stderr, "No build domain for %s\n", data->args.text);
-		clean_dbdata_struct(data);
-		return NO_DOMAIN;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_DOMAIN;
-	}
 	if ((strncmp(cdl->basedn, "NULL", COMM_S) != 0) ||
 	    (strncmp(cdl->binddn, "NULL", COMM_S) != 0) ||
 	    (strncmp(cdl->ldapserver, "NULL", COMM_S) != 0) ||
@@ -228,6 +215,19 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		       cdl->domain);
 		printf("Ensure you have a full LDAP config \
 (server, basedn and binddn)\n\n");
+		if ((retval = get_mod_ldap_bld_dom(cdl, &type)) != 0) {
+			free (data);
+			return retval;
+		}
+		cbc_init_update_dbdata(&data, (unsigned) type);
+		if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
+			fprintf(stderr, "No build domain for %s\n", data->args.text);
+			clean_dbdata_struct(data);
+			return NO_DOMAIN;
+		} else if (retval > 1) {
+			clean_dbdata_struct(data);
+			return MULTI_DOMAIN;
+		}
 		cbc_fill_ldap_update_data(cdl, data, type);
 		if ((retval = cbc_run_update(cbc, data, type)) == 0)
 			printf("Build domain %s not modified\n", cdl->domain);
@@ -236,8 +236,12 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		else
 			printf("Multiple build domains for %s modified\n", cdl->domain);
 		clean_dbdata_struct(data);
+		i++;
 	}
-	return NONE;
+	if (i > 0)
+		return NONE;
+	else
+		return DID_NOT_MOD_BUILD_DOMAIN;
 }
 
 int
@@ -400,6 +404,7 @@ cbc_get_build_dom_id(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl, dbdata_s *da
 
 	if (!(dom = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "dom in cbc_get_build_dom_id");
+	init_dbdata_struct(dom);
 	snprintf(dom->args.text, RBUFF_S, "%s", cdl->domain);
 	if ((retval = cbc_run_search(cbc, dom, BD_ID_ON_DOMAIN)) == 0) {
 		fprintf(stderr, "Domain %s not found\n", cdl->domain);
