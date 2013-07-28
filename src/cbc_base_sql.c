@@ -131,25 +131,25 @@ UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
   = ?","\
-UPDATE build_domain SET ldap_dn = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_url = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_server = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ? WHERE\
   bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, ldap_ssl = ? WHERE\
   bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_ssl = ? WHERE\
   bd_id = ?","\
-UPDATE build_domain SET ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
   bd_id = ?","\
-UPDATE build_domain SET ldap_dn = ?, ldap_bind = ?, ldap_server = ?\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ?,\
   ldap_ssl = ? WHERE bd_id = ?"
 };
 
@@ -239,7 +239,8 @@ SELECT build_id FROM build WHERE server_id = ?","\
 SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
 SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
-SELECT bd_id FROM build_domain WHERE domain = ?"
+SELECT bd_id FROM build_domain WHERE domain = ?","\
+SELECT config_ldap FROM build_domain WHERE domain = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -308,11 +309,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1
 };
 
 const unsigned int cbc_update_types[][5] = {
@@ -333,6 +334,8 @@ const unsigned int cbc_update_types[][5] = {
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
@@ -387,6 +390,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -428,7 +432,8 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int

@@ -220,14 +220,23 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		clean_dbdata_struct(data);
 		return MULTI_DOMAIN;
 	}
-	cbc_fill_ldap_update_data(cdl, data, type);
-	if ((retval = cbc_run_update(cbc, data, type)) == 0)
-		printf("Build domain %s not modified\n", cdl->domain);
-	else if (retval == 1)
-		printf("Build domain %s modified\n", cdl->domain);
-	else
-		printf("Multiple build domains for %s modified\n", cdl->domain);
-	clean_dbdata_struct(data);
+	if ((strncmp(cdl->basedn, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->binddn, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->ldapserver, "NULL", COMM_S) != 0) ||
+	    (cdl->ldapssl != 0)) {
+		printf("Modifying ldap authentication config for domain %s\n",
+		       cdl->domain);
+		printf("Ensure you have a full LDAP config \
+(server, basedn and binddn)\n\n");
+		cbc_fill_ldap_update_data(cdl, data, type);
+		if ((retval = cbc_run_update(cbc, data, type)) == 0)
+			printf("Build domain %s not modified\n", cdl->domain);
+		else if (retval == 1)
+			printf("Build domain %s modified\n", cdl->domain);
+		else
+			printf("Multiple build domains for %s modified\n", cdl->domain);
+		clean_dbdata_struct(data);
+	}
 	return NONE;
 }
 
@@ -411,14 +420,114 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 {
 	unsigned long int bd_id = data->fields.number;
 	if (query == UP_DOM_BASEDN)  {
-		snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
-		data->next->args.number = bd_id;
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			data->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDN) {
-		snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
-		data->next->args.number = bd_id;
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next)
+			data->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSERV) {
-		snprintf(data->args.text, NAME_S, "%s", cdl->ldapserver);
-		data->next->args.number = bd_id;
+		if (data)
+			snprintf(data->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_LDAPSSL) {
+		if (data)
+			data->args.small = 1;
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEBINDDN) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEDNSERV) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEDNSSL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			data->next->args.small = 1;
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BINDDNSERV) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next)
+			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BINDDNSSL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next)
+			data->next->args.small = 1;
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_LDAPSERVSSL) {
+		if (data)
+			snprintf(data->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next)
+			data->next->args.small = 1;
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEBINDDNSERV) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next->next)
+			snprintf(data->next->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEDNSERVSSL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next)
+			data->next->next->args.small = 1;
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BASEBINDDNSSL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next->next)
+			data->next->next->args.small = 1;
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_BINDDNSERVSSL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next)
+			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next)
+			data->next->next->args.small = 1;
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
+	} else if (query == UP_DOM_LDAPALL) {
+		if (data)
+			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		if (data->next)
+			snprintf(data->next->args.text, NAME_S, "%s", cdl->binddn);
+		if (data->next->next)
+			snprintf(data->next->next->args.text, HOST_S, "%s", cdl->ldapserver);
+		if (data->next->next->next)
+			data->next->next->next->args.small = 1;
+		if (data->next->next->next->next)
+			data->next->next->next->next->args.number = bd_id;
 	}
 }
 

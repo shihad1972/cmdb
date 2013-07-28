@@ -1,3 +1,7 @@
+28/07/2013
+Need to remove ldap_url from build_domain database and in all the data
+structures for cbc_build_domain and SQL quries
+
 30/06/2013
 Have a generic config struct (config_s) that all the others (e.g.
 dnsa_config_s) contain that can be shared between the programs. This way we
