@@ -231,6 +231,8 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "No Build Partition Scheme supplied on command line\n");
 	else if (retval == NO_MOD_BUILD_DOM_NET)
 		fprintf(stderr, "Cowardly refusal to modify network settings for build domain\n");
+	else if (retval == MULTI_BUILD_DOM_APP_MOD)
+		fprintf(stderr, "Cowardly refusal to modify multiple application settings\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");

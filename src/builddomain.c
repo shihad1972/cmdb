@@ -236,6 +236,7 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		else
 			printf("Multiple build domains for %s modified\n", cdl->domain);
 		clean_dbdata_struct(data);
+		data = '\0';
 		i++;
 	}
 	if ((strncmp(cdl->logserver, "NULL", COMM_S) != 0) ||

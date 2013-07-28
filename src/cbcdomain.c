@@ -173,6 +173,27 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		                            (cdl->gateway != 0) ||
 		                            (cdl->ns != 0)))
 		return NO_MOD_BUILD_DOM_NET;
+	if ((cdl->action == MOD_CONFIG) &&
+	    (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0) &&
+	   ((cdl->conflog > 0) || (cdl->confsmtp > 0) || (cdl->confntp > 0) ||
+	    (cdl->confxymon > 0)))
+		return MULTI_BUILD_DOM_APP_MOD;
+	if ((cdl->action == MOD_CONFIG) && (cdl->conflog > 0) &&
+	   ((cdl->confsmtp > 0) || (cdl->confntp > 0) || (cdl->confxymon > 0) ||
+	   (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)))
+		return MULTI_BUILD_DOM_APP_MOD;
+	if ((cdl->action == MOD_CONFIG) && (cdl->confsmtp > 0) &&
+	   ((cdl->conflog > 0) || (cdl->confntp > 0) || (cdl->confxymon > 0) ||
+	   (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)))
+		return MULTI_BUILD_DOM_APP_MOD;
+	if ((cdl->action == MOD_CONFIG) && (cdl->confntp > 0) &&
+	   ((cdl->confsmtp > 0) || (cdl->conflog > 0) || (cdl->confxymon > 0) ||
+	   (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)))
+		return MULTI_BUILD_DOM_APP_MOD;
+	if ((cdl->action == MOD_CONFIG) && (cdl->confxymon > 0) &&
+	   ((cdl->confsmtp > 0) || (cdl->conflog > 0) || (cdl->confntp > 0) ||
+	   (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)))
+		return MULTI_BUILD_DOM_APP_MOD;
 	return retval;
 }
 

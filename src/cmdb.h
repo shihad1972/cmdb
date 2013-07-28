@@ -191,7 +191,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	LOCALE_NOT_IMPLEMENTED = 197,
 	NO_MODIFIERS = 198,
 	NO_MOD_BUILD_DOM_NET = 199,
-	DID_NOT_MOD_BUILD_DOMAIN = 200
+	DID_NOT_MOD_BUILD_DOMAIN = 200,
+	MULTI_BUILD_DOM_APP_MOD = 201
 	
 };
 
