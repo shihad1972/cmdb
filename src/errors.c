@@ -71,7 +71,7 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Unable to store DB result set: %s\n", errstr);
 	} else if (error == MY_INSERT_FAIL) {
 		fprintf(stderr, "Unable to insert into DB:\n%s\n", errstr);
-	} else if (error == MY_STATEMENT_FAIL) {
+	} else if ((error == MY_STATEMENT_FAIL) || (error == SQLITE_STATEMENT_FAILED)) {
 		fprintf(stderr, "DB statment failed with %s\n", errstr);
 	} else if (error == MY_BIND_FAIL) {
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
@@ -151,7 +151,7 @@ report_error(int error, const char *errstr)
 	} else if (error == DID_NOT_MOD_BUILD_DOMAIN) {
 		fprintf(stderr, "cbcdomain modified nothing??\n");
 	} else {
-		fprintf(stderr, "Unknown error code %d\n%s\n", error, errstr);
+		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
 	exit(error);
 }
@@ -324,7 +324,8 @@ display_cbcdomain_usage(void)
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("Application server configurations\n");
-	printf("-e smtp_server\n-f nfs_domain\n-t ntp_server\n-x xymon_server\n\n");
+	printf("-e smtp_server\n-f nfs_domain\n-g logging server\n");
+	printf("-t ntp_server\n-x xymon_server\n\n");
 	printf("cbcdomain [ -a | -d | -l | -m | -r ] -n [ app options ]\n\n");
 }
 

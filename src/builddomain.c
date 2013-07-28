@@ -238,6 +238,36 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		clean_dbdata_struct(data);
 		i++;
 	}
+	if ((strncmp(cdl->logserver, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0) ||
+	    (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)) {
+		printf("Modifying application configuration for domain %s\n",
+		       cdl->domain);
+		if ((retval = get_mod_app_bld_dom(cdl, &type)) != 0) {
+			free(data);
+			return retval;
+		}
+		cbc_init_update_dbdata(&data, (unsigned) type);
+		if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
+			fprintf(stderr, "No build domain for %s\n", data->args.text);
+			clean_dbdata_struct(data);
+			return NO_DOMAIN;
+		} else if (retval > 1) {
+			clean_dbdata_struct(data);
+			return MULTI_DOMAIN;
+		}
+		cbc_fill_app_update_data(cdl, data, type);
+		if ((retval = cbc_run_update(cbc, data, type)) == 0)
+			printf("Build domain %s not modified\n", cdl->domain);
+		else if (retval == 1)
+			printf("Build domain %s modified\n", cdl->domain);
+		else
+			printf("Multiple build domains for %s modified\n", cdl->domain);
+		clean_dbdata_struct(data);
+		i++;
+	}
 	if (i > 0)
 		return NONE;
 	else
@@ -397,6 +427,39 @@ get_mod_ldap_bld_dom(cbcdomain_comm_line_s *cdl, int *query)
 }
 
 int
+get_mod_app_bld_dom(cbcdomain_comm_line_s *cdl, int *query)
+{
+	int retval = NONE, type = NONE;
+
+	if (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)
+		type = type | NFSDOM;
+	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
+		type = type | NTPSERV;
+	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
+		type = type | SMTPSERV;
+	if (strncmp(cdl->logserver, "NULL", COMM_S) != 0)
+		type = type | LOGSERV;
+	if (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)
+		type = type | XYMONSERV;
+	if ((type & NFSDOM) && !(type & NTPSERV) && !(type & SMTPSERV) &&
+	   !(type & XYMONSERV) && !(type & LOGSERV))
+		*query = UP_DOM_NFS;
+	else if (!(type & NFSDOM) && (type & NTPSERV) && !(type & SMTPSERV) &&
+	   !(type & XYMONSERV) && !(type & LOGSERV))
+		*query = UP_DOM_NTP;
+	else if (!(type & NFSDOM) && !(type & NTPSERV) && (type & SMTPSERV) &&
+	   !(type & XYMONSERV) && !(type & LOGSERV))
+		*query = UP_DOM_SMTP;
+	else if (!(type & NFSDOM) && !(type & NTPSERV) && !(type & SMTPSERV) &&
+	   !(type & XYMONSERV) && (type & LOGSERV))
+		*query = UP_DOM_LOG;
+	else if (!(type & NFSDOM) && !(type & NTPSERV) && !(type & SMTPSERV) &&
+	   (type & XYMONSERV) && !(type & LOGSERV))
+		*query = UP_DOM_XYMON;
+	return retval;
+}
+
+int
 cbc_get_build_dom_id(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl, dbdata_s *data)
 {
 	int retval;
@@ -533,6 +596,38 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 			data->next->next->next->args.small = 1;
 		if (data->next->next->next->next)
 			data->next->next->next->next->args.number = bd_id;
+	}
+}
+
+void
+cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
+{
+	unsigned long int bd_id = data->fields.number;
+	if (query == UP_DOM_NFS) {
+		if (data)
+			snprintf(data->args.text, CONF_S, "%s", cdl->nfsdomain);
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_NTP) {
+		if (data)
+			snprintf(data->args.text, CONF_S, "%s", cdl->ntpserver);
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_SMTP) {
+		if (data)
+			snprintf(data->args.text, CONF_S, "%s", cdl->smtpserver);
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_LOG) {
+		if (data)
+			snprintf(data->args.text, CONF_S, "%s", cdl->logserver);
+		if (data->next)
+			data->next->args.number = bd_id;
+	} else if (query == UP_DOM_XYMON) {
+		if (data)
+			snprintf(data->args.text, CONF_S, "%s", cdl->xymonserver);
+		if (data->next)
+			data->next->args.number = bd_id;
 	}
 }
 

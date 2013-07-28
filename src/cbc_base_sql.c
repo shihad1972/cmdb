@@ -150,7 +150,12 @@ UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_ssl = 
 UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
   bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ?,\
-  ldap_ssl = ? WHERE bd_id = ?"
+  ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_nfs = 1, nfs_domain = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ntp = 1, ntp_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_email = 1, smtp_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_log = 1, log_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_xymon = 1, xymon_server = ? WHERE bd_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -302,7 +307,8 @@ const unsigned int cbc_insert_fields[] = {
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4,
+	4, 5, 2, 2, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1
@@ -340,7 +346,12 @@ const unsigned int cbc_update_types[][5] = {
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT}
+	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT} ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
@@ -1990,7 +2001,7 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_update_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
 	}
 	for (i = 0; (unsigned long)i < cbc_update_args[type]; i++) {
 		set_cbc_update_sqlite(state, list, type, i);
