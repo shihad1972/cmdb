@@ -55,6 +55,12 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 int
 get_mod_ldap_bld_dom(cbcdomain_comm_line_s *cdl, int *query);
 
+int
+cbc_get_build_dom_id(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl, dbdata_s *data);
+
+void
+cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query);
+
 # ifdef HAVE_DNSA
 
 # endif /* HAVE_DNSA */

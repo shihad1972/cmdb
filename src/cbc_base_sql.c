@@ -238,7 +238,8 @@ SELECT ip FROM build_ip WHERE server_id = ?","\
 SELECT build_id FROM build WHERE server_id = ?","\
 SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
-SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?"
+SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
+SELECT bd_id FROM build_domain WHERE domain = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -307,11 +308,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1
 };
 
 const unsigned int cbc_update_types[][5] = {
@@ -385,6 +386,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, DBTEXT, DBTEXT } ,
+	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
@@ -421,6 +423,7 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -1987,6 +1990,12 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	for (i = 0; (unsigned long)i < cbc_update_args[type]; i++) {
 		set_cbc_update_sqlite(state, list, type, i);
 		list = list->next;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Recieved error: %s\n", sqlite3_errmsg(cbc));
+		retval = sqlite3_finalize(state);
+		retval = sqlite3_close(cbc);
+		return NONE;
 	}
 	i = sqlite3_total_changes(cbc);
 	retval = sqlite3_finalize(state);

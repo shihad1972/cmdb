@@ -96,7 +96,8 @@ enum {			/* cbc search SQL statements */
 	BUILD_ID_ON_SERVER_ID = 34,
 	OS_ID_ON_NAME_VER_ALIAS = 35,
 	OS_ID_ON_ALIAS_VER_ALIAS = 36,
-	DEF_SCHEME_ID_ON_SCH_NAME = 37
+	DEF_SCHEME_ID_ON_SCH_NAME = 37,
+	BD_ID_ON_DOMAIN = 38
 };
 
 enum {			/* cbc update SQL statements */

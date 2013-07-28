@@ -205,15 +205,30 @@ int
 modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 {
 	int retval = NONE, type = NONE;
-	dbdata_s *data;
+	dbdata_s *data = '\0';
 
-	if (!(data = calloc(sizeof(dbdata_s), sizeof(char))))
-		report_error(MALLOC_FAIL, "data in modify_cbc_build_domain");
 	if ((retval = get_mod_ldap_bld_dom(cdl, &type)) != 0) {
 		free (data);
 		return retval;
 	}
-	return retval;
+	cbc_init_update_dbdata(&data, (unsigned) type);
+	if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
+		fprintf(stderr, "No build domain for %s\n", data->args.text);
+		clean_dbdata_struct(data);
+		return NO_DOMAIN;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_DOMAIN;
+	}
+	cbc_fill_ldap_update_data(cdl, data, type);
+	if ((retval = cbc_run_update(cbc, data, type)) == 0)
+		printf("Build domain %s not modified\n", cdl->domain);
+	else if (retval == 1)
+		printf("Build domain %s modified\n", cdl->domain);
+	else
+		printf("Multiple build domains for %s modified\n", cdl->domain);
+	clean_dbdata_struct(data);
+	return NONE;
 }
 
 int
@@ -319,52 +334,92 @@ get_mod_ldap_bld_dom(cbcdomain_comm_line_s *cdl, int *query)
 		type = type | LDAPSERV;
 	if (cdl->ldapssl != 0)
 		type = type | LDAPSSL;
-	if (!(type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
-	     (type | BASEDN))
+
+	if (!(type & LDAPSSL) && !(type & LDAPSERV) && !(type & BINDDN) && 
+	     (type & BASEDN))
 		*query = UP_DOM_BASEDN;
-	else if (!(type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
-	    !(type | BASEDN))
+	else if (!(type & LDAPSSL) && !(type & LDAPSERV) && (type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_BINDDN;
-	else if (!(type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
-	    !(type | BASEDN))
+	else if (!(type & LDAPSSL) && (type & LDAPSERV) && !(type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_LDAPSERV;
-	else if ((type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
-	    !(type | BASEDN))
+	else if ((type & LDAPSSL) && !(type & LDAPSERV) && !(type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_LDAPSSL;
-	else if (!(type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
-	     (type | BASEDN))
+	else if (!(type & LDAPSSL) && !(type & LDAPSERV) && (type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_BASEBINDDN;
-	else if (!(type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
-	     (type | BASEDN))
+	else if (!(type & LDAPSSL) && (type & LDAPSERV) && !(type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_BASEDNSERV;
-	else if ((type | LDAPSSL) && !(type | LDAPSERV) && !(type | BINDDN) &&
-	     (type | BASEDN))
+	else if ((type & LDAPSSL) && !(type & LDAPSERV) && !(type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_BASEDNSSL;
-	else if (!(type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
-	    !(type | BASEDN))
+	else if (!(type & LDAPSSL) && (type & LDAPSERV) && (type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_BINDDNSERV;
-	else if ((type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
-	    !(type | BASEDN))
+	else if ((type & LDAPSSL) && !(type & LDAPSERV) && (type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_BINDDNSSL;
-	else if ((type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
-	    !(type | BASEDN))
+	else if ((type & LDAPSSL) && (type & LDAPSERV) && !(type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_LDAPSERVSSL;
-	else if (!(type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) && 
-	     (type | BASEDN))
+	else if (!(type & LDAPSSL) && (type & LDAPSERV) && (type & BINDDN) && 
+	     (type & BASEDN))
 		*query = UP_DOM_BASEBINDDNSERV;
-	else if ((type | LDAPSSL) && (type | LDAPSERV) && !(type | BINDDN) &&
-	     (type | BASEDN))
+	else if ((type & LDAPSSL) && (type & LDAPSERV) && !(type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_BASEDNSERVSSL;
-	else if ((type | LDAPSSL) && !(type | LDAPSERV) && (type | BINDDN) &&
-	     (type | BASEDN))
+	else if ((type & LDAPSSL) && !(type & LDAPSERV) && (type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_BASEBINDDNSSL;
-	else if ((type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
-	    !(type | BASEDN))
+	else if ((type & LDAPSSL) && (type & LDAPSERV) && (type & BINDDN) &&
+	    !(type & BASEDN))
 		*query = UP_DOM_BINDDNSERVSSL;
-	else if ((type | LDAPSSL) && (type | LDAPSERV) && (type | BINDDN) &&
-	     (type | BASEDN))
+	else if ((type & LDAPSSL) && (type & LDAPSERV) && (type & BINDDN) &&
+	     (type & BASEDN))
 		*query = UP_DOM_LDAPALL;
 	return retval;
+}
+
+int
+cbc_get_build_dom_id(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl, dbdata_s *data)
+{
+	int retval;
+	dbdata_s *dom = '\0';
+
+	if (!(dom = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "dom in cbc_get_build_dom_id");
+	snprintf(dom->args.text, RBUFF_S, "%s", cdl->domain);
+	if ((retval = cbc_run_search(cbc, dom, BD_ID_ON_DOMAIN)) == 0) {
+		fprintf(stderr, "Domain %s not found\n", cdl->domain);
+		free(dom);
+		return retval;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple build domains %s\n", cdl->domain);
+		free(dom);
+		return retval;
+	}
+	data->fields.number = dom->fields.number;
+	free(dom);
+	return retval;
+}
+
+void
+cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
+{
+	unsigned long int bd_id = data->fields.number;
+	if (query == UP_DOM_BASEDN)  {
+		snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
+		data->next->args.number = bd_id;
+	} else if (query == UP_DOM_BINDDN) {
+		snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
+		data->next->args.number = bd_id;
+	} else if (query == UP_DOM_LDAPSERV) {
+		snprintf(data->args.text, NAME_S, "%s", cdl->ldapserver);
+		data->next->args.number = bd_id;
+	}
 }
 
 #ifdef HAVE_DNSA
