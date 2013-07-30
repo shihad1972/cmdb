@@ -59,7 +59,6 @@ CREATE TABLE `build_domain` (
   `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
   `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_url` varchar(127) NOT NULL DEFAULT 'none',
   `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
   `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
   `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
