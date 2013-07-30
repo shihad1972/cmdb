@@ -162,7 +162,6 @@ init_build_domain(cbc_build_domain_s *dom)
 {
 	snprintf(dom->domain, COMM_S, "NULL");
 	snprintf(dom->ntp_server, COMM_S, "NULL");
-	snprintf(dom->ldap_url, COMM_S, "NULL");
 	snprintf(dom->ldap_dn, COMM_S, "NULL");
 	snprintf(dom->ldap_bind, COMM_S, "NULL");
 	snprintf(dom->ldap_host, COMM_S, "NULL");
