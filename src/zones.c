@@ -107,7 +107,7 @@ list_rev_zones(dnsa_config_s *dc)
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
-		printf("%s\t/%lu\t%s\n",
+		printf("%s\t/%lu\t%s\t%s\t%s\n",
 rev->net_range, rev->prefix, rev->valid, rev->type, rev->master);
 		if (rev->next)
 			rev = rev->next;
