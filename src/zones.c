@@ -128,6 +128,8 @@ display_zone(char *domain, dnsa_config_s *dc)
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+		if (retval == 1)
+			printf("There are either no zones or records in the database\n");
 		dnsa_clean_list(dnsa);
 		return;
 	}
