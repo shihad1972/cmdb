@@ -398,10 +398,11 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	dcl->action = NONE;
 	dcl->type = NONE;
 	dcl->prefix = NONE;
-	strncpy(dcl->domain, "NULL", CONF_S);
-	strncpy(dcl->dest, "NULL", RANGE_S);
-	strncpy(dcl->rtype, "NULL", RANGE_S);
-	strncpy(dcl->host, "NULL", RANGE_S);
+	strncpy(dcl->domain, "NULL", COMM_S);
+	strncpy(dcl->dest, "NULL", COMM_S);
+	strncpy(dcl->rtype, "NULL", COMM_S);
+	strncpy(dcl->ztype, "NULL", COMM_S);
+	strncpy(dcl->host, "NULL", COMM_S);
 	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
 }
 

@@ -18,6 +18,7 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
 	char rtype[RANGE_S];
+	char ztype[RANGE_S];
 } dnsa_comm_line_s;
 
 typedef struct dnsa_config_s { /* Hold DNSA configuration values */

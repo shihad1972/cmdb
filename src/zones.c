@@ -404,18 +404,15 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 		report_error(MALLOC_FAIL, "buffer in create_and_write_fwd_zone");
 	filename = buffer;
 	retval = 0;
-	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-		create_fwd_zone_header(
-			dnsa, dc->hostmaster, zone->id, zonefile);
-		add_records_to_fwd_zonefile(dnsa, zone->id, &zonefile);
-		snprintf(filename, NAME_S, "%s%s",
-			 dc->dir, zone->name);
-		if ((retval = write_file(filename, zonefile)) != 0)
-			printf("Unable to write %s zonefile\n",
-			       zone->name);
-		else if ((retval = check_fwd_zone(zone->name, dc)) !=0)
-			snprintf(zone->valid, COMM_S, "no");
-	}
+	create_fwd_zone_header(dnsa, dc->hostmaster, zone->id, zonefile);
+	add_records_to_fwd_zonefile(dnsa, zone->id, &zonefile);
+	snprintf(filename, NAME_S, "%s%s",
+		 dc->dir, zone->name);
+	if ((retval = write_file(filename, zonefile)) != 0)
+		printf("Unable to write %s zonefile\n",
+		       zone->name);
+	else if ((retval = check_fwd_zone(zone->name, dc)) !=0)
+		snprintf(zone->valid, COMM_S, "no");
 	free(zonefile);
 	free(buffer);
 	return retval;
@@ -989,6 +986,8 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
+	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
+		snprintf(zone->type, RANGE_S, "master");
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
@@ -1266,6 +1265,17 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 	if ((retval = system(command)) != 0) {
 		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
 		return CHKZONE_FAIL;
+	} else {
+		dbdata_s *data;
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "data in validate_fwd_zone");
+		data->args.number = dnsa->zones->id;
+		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {
+			free(data);
+			fprintf(stderr, "Set zone updated in DB failed\n");
+			return retval;
+		}
+		free(data);
 	}
 	return retval;
 }
@@ -2085,6 +2095,7 @@ check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
+	memset(zone, 0, sizeof(zone));
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
