@@ -61,24 +61,24 @@ list_zones (dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\tSerial\t\tID\n");
+	printf("Name\t\t\t\tValid\tSerial\t\tID\tType\tMaster\n");
 	while (zone) {
 		len = strlen(zone->name);
 		if (len < 8)
-			printf("%s\t\t\t\t%s\t%lu\t%lu\n",
-			       zone->name, zone->valid, zone->serial, zone->id);
+			printf("%s\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n", 
+zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
 		else if (len < 16)
-			printf("%s\t\t\t%s\t%lu\t%lu\n",
-			       zone->name, zone->valid, zone->serial, zone->id);
+			printf("%s\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
+zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
 		else if (len < 24)
-			printf("%s\t\t%s\t%lu\t%lu\n",
-			       zone->name, zone->valid, zone->serial, zone->id);
+			printf("%s\t\t%s\t%lu\t%lu\t%s\t%s\n",
+zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
 		else if (len < 32)
-			printf("%s\t%s\t%lu\t%lu\n",
-			       zone->name, zone->valid, zone->serial, zone->id);
+			printf("%s\t%s\t%lu\t%lu\t%s\t%s\n",
+zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
 		else
-			printf("%s\n\t\t\t\t%s\t%lu\t%lu\n",
-			       zone->name, zone->valid, zone->serial, zone->id);
+			printf("%s\n\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
+zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -105,9 +105,10 @@ list_rev_zones(dnsa_config_s *dc)
 	}
 	rev = dnsa->rev_zones;
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Range\t\tprefix\tvalid\n");
+	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
-		printf("%s\t/%lu\t%s\n", rev->net_range, rev->prefix, rev->valid);
+		printf("%s\t/%lu\t%s\n",
+rev->net_range, rev->prefix, rev->valid, rev->type, rev->master);
 		if (rev->next)
 			rev = rev->next;
 		else

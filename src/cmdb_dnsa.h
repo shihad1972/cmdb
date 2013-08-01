@@ -79,6 +79,8 @@ typedef struct zone_info_s { /* Hold DNS zone */
 	char web_ip[RANGE_S];
 	char ftp_ip[RANGE_S];
 	char mail_ip[RANGE_S];
+	char type[RANGE_S];
+	char master[RBUFF_S];
 	unsigned long int id;
 	unsigned long int owner;
 	unsigned long int serial;
@@ -98,6 +100,8 @@ typedef struct rev_zone_info_s { /* Hold DNS zone */
 	char valid[RANGE_S];
 	char updated[RANGE_S];
 	char hostmaster[RBUFF_S];
+	char type[RANGE_S];
+	char master[RBUFF_S];
 	unsigned long int rev_zone_id;
 	unsigned long int owner;
 	unsigned long int prefix;

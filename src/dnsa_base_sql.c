@@ -58,10 +58,10 @@
  */
 const char *dnsa_sql_select[] = { "\
 SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, \
-valid, owner, updated FROM zones ORDER BY name","\
+valid, owner, updated, type, master FROM zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
-owner, updated FROM rev_zones ORDER BY start_ip","\
+owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
 SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
@@ -104,10 +104,10 @@ SELECT fqdn FROM preferred_a WHERE ip = ?" */
 
 const char *dnsa_sql_insert[] = {"\
 INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
-ttl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+ttl, type, master) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
-finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl) VALUES \
-(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master) \
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO records (zone, host, type, pri, destination) VALUES \
 (?, ?, ?, ?, ?)","\
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
@@ -139,29 +139,29 @@ DELETE FROM records WHERE zone = ?"
 
 #ifdef HAVE_MYSQL
 
-const int mysql_inserts[][13] = {
+const int mysql_inserts[][15] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, 
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-    0, 0, 0, 0, 0} ,
+    MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0} ,
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_LONG} , 
+    MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING} , 
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0} , 
+    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} , 
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0} ,
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+    0, 0, 0, 0, 0, 0} ,
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, 0, 0,
-    0, 0, 0, 0, 0, 0, 0}
+    0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int dnsa_select_fields[] = { 12, 17, 7, 5, 5, 2, 5 };
+const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5 };
 
-const unsigned int dnsa_insert_fields[] = { 8, 13, 5, 3, 0, 0, 4 };
+const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -523,13 +523,14 @@ dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	}
 	fields = mysql_num_fields(dnsa_res);
 	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
-		cmdb_mysql_cleanup_full(&dnsa, dnsa_res);
-		report_error(NO_SERVERS, "dnsa_run_query_mysql");
+		printf("No results in database\n");
+		retval = 1;
+	} else {
+		while ((dnsa_row = mysql_fetch_row(dnsa_res)))
+			dnsa_store_result_mysql(dnsa_row, base, type, fields);
 	}
-	while ((dnsa_row = mysql_fetch_row(dnsa_res)))
-		dnsa_store_result_mysql(dnsa_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&dnsa, dnsa_res);
-	return 0;
+	return retval;
 }
 
 int
@@ -631,6 +632,8 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(zone->valid, RANGE_S, "%s", row[9]);
 	zone->owner = strtoul(row[10], NULL, 10);
 	snprintf(zone->updated, RANGE_S, "%s", row[11]);
+	snprintf(zone->type, RANGE_S, "%s", row[12]);
+	snprintf(zone->master, RBUFF_S, "%s", row[13]);
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -697,6 +700,8 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(rev->valid, RANGE_S, "%s", row[14]);
 	rev->owner = strtoul(row[15], NULL, 10);
 	snprintf(rev->updated, RANGE_S, "%s", row[16]);
+	snprintf(rev->type, RANGE_S, "%s", row[17]);
+	snprintf(rev->master, RBUFF_S, "%s", row[18]);
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -1190,6 +1195,10 @@ dnsa_setup_insert_mysql_bind_buff_zone(void **input, dnsa_s *base, unsigned int 
 		*input = &(base->zones->expire);
 	else if (i == 7)
 		*input = &(base->zones->ttl);
+	else if (i == 8)
+		*input = &(base->zones->type);
+	else if (i == 9)
+		*input = &(base->zones->master);
 }
 
 void
@@ -1221,6 +1230,10 @@ dnsa_setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_s *base, unsigned 
 		*input = &(base->rev_zones->expire);
 	else if (i == 12)
 		*input = &(base->rev_zones->ttl);
+	else if (i == 13)
+		*input = &(base->rev_zones->type);
+	else if (i == 14)
+		*input = &(base->rev_zones->master);
 }
 
 void
@@ -1382,6 +1395,8 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(zone->valid, RANGE_S, "%s", sqlite3_column_text(state, 9));
 	zone->owner = (unsigned long int) sqlite3_column_int(state, 10);
 	snprintf(zone->updated, RANGE_S, "%s", sqlite3_column_text(state, 11));
+	snprintf(zone->type, RANGE_S, "%s", sqlite3_column_text(state, 12));
+	snprintf(zone->master, RBUFF_S, "%s", sqlite3_column_text(state, 13));
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -1423,6 +1438,8 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 14));
 	rev->owner = (unsigned long int) sqlite3_column_int(state, 15);
 	snprintf(rev->updated, RANGE_S, "%s", sqlite3_column_text(state, 16));
+	snprintf(rev->type, RANGE_S, "%s", sqlite3_column_text(state, 17));
+	snprintf(rev->master, RBUFF_S, "%s", sqlite3_column_text(state, 18));
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -1921,6 +1938,16 @@ state, 3, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind serial %lu\n", zone->ttl);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_text(
+state, 9, zone->type, (int)strlen(zone->type), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind type %s\n", zone->type);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 10, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind master %s\n", zone->master);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1985,6 +2012,16 @@ state, 8, zone->sec_dns, (int)strlen(zone->sec_dns), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int64(state, 13, (sqlite3_int64)zone->ttl)) > 0) {
 		fprintf(stderr, "Cannot bind ttl %lu\n", zone->ttl);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 14, zone->type, (int)strlen(zone->type), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind type %s\n", zone->type);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 15, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind master %s\n", zone->master);
 		return retval;
 	}
 	return retval;

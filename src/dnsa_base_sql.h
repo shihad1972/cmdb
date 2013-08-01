@@ -45,7 +45,7 @@ extern const unsigned int dnsa_delete_args[];
 extern const unsigned int dnsa_delete_arg_type[][1];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][13];
+extern const int mysql_inserts[][15];
 # endif /* HAVE_MYSQL */
 
 int

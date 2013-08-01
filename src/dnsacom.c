@@ -419,6 +419,8 @@ init_zone_struct(zone_info_s *zone)
 	snprintf(zone->web_ip, COMM_S, "NULL");
 	snprintf(zone->ftp_ip, COMM_S, "NULL");
 	snprintf(zone->mail_ip, COMM_S, "NULL");
+	snprintf(zone->type, COMM_S, "NULL");
+	snprintf(zone->master, COMM_S, "NULL");
 	zone->next = '\0';
 }
 
@@ -436,6 +438,8 @@ init_rev_zone_struct(rev_zone_info_s *rev)
 	snprintf(rev->updated, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");
 	snprintf(rev->hostmaster, COMM_S, "NULL");
+	snprintf(rev->type, COMM_S, "NULL");
+	snprintf(rev->master, COMM_S, "NULL");
 	rev->next = '\0';
 }
 
