@@ -35,6 +35,8 @@ CREATE TABLE `zones` (
   `valid` varchar(255) NOT NULL DEFAULT 'unknown',
   `owner` int(11) NOT NULL DEFAULT '1',
   `updated` varchar(255) NOT NULL DEFAULT 'yes',
+  `type` varchar(15) NOT NULL DEFAULT 'master',
+  `master` varchar(255),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -338,6 +338,8 @@ CREATE TABLE `zones` (
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
   `owner` int(11) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'yes',
+  `type` varchar(15) NOT NULL DEFAULT 'master',
+  `master` varchar(255),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -359,6 +361,8 @@ CREATE TABLE `rev_zones` (
   `valid` varchar(15) NOT NULL DEFAULT 'yes',
   `owner` int(7) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'unknown',
+  `type` varchar(15) NOT NULL DEFAULT 'master',
+  `master` varchar(255),
   PRIMARY KEY (`rev_zone_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
