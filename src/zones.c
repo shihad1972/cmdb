@@ -993,13 +993,11 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
 		printf("Zone %s already exists in database\n", zone->name);
 		dnsa_clean_list(dnsa);
-		free(zone);
 		return retval;
 	}
 	if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
 		fprintf(stderr, "Unable to add zone %s\n", zone->name);
 		dnsa_clean_list(dnsa);
-		free(zone);
 		return CANNOT_INSERT_ZONE;
 	} else {
 		fprintf(stderr, "Added zone %s\n", zone->name);
