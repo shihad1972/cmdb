@@ -463,16 +463,31 @@ create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *configfile)
 		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
 	len = BUILD_S;
 	retval = 0;
-	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
+	if (strncmp(zone->type, "master", COMM_S) == 0) {
+		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 			snprintf(buffer, TBUFF_S, "\
 zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", zone->name, dc->dir, zone->name);
-		if (strlen(configfile) + strlen(buffer) < len)
-			strncat(configfile, buffer, strlen(buffer));
-		else
-			retval = BUFFER_FULL;
+			if (strlen(configfile) + strlen(buffer) < len)
+				strncat(configfile, buffer, strlen(buffer));
+			else
+				retval = BUFFER_FULL;
+		}
+	} else if (strncmp(zone->type, "slave", COMM_S) == 0) {
+		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
+			snprintf(buffer, TBUFF_S, "\
+zone \"%s\" {\n\
+\t\t\ttype slave;\n\
+\t\t\tmasters { %s; };\n\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n\n", zone->name, zone->master, dc->dir, zone->name);
+			if (strlen(configfile) + strlen(buffer) < len)
+				strncat(configfile, buffer, strlen(buffer));
+			else
+				retval = BUFFER_FULL;
+		}
 	}
 	free(buffer);
 	return retval;
@@ -1024,7 +1039,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	init_dnsa_struct(dnsa);
 	init_zone_struct(zone);
 	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
-		snprintf(zone->type, RANGE_S, "master");
+		snprintf(cm->ztype, RANGE_S, "master");
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
@@ -2136,6 +2151,8 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	snprintf(zone->type, RANGE_S, "%s", cm->ztype);
+	snprintf(zone->master, RBUFF_S, "%s", cm->master);
 	zone->serial = get_zone_serial();
 	zone->refresh = dc->refresh;
 	zone->retry = dc->retry;

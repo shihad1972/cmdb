@@ -41,7 +41,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruwxzFRh:i:n:p:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglruwxzFRSM:h:i:n:p:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -76,6 +76,10 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'R') {
 			comp->type = REVERSE_ZONE;
+		} else if (opt == 'S') {
+			snprintf(comp->ztype, COMM_S, "slave");
+		} else if (opt == 'M') {
+			snprintf(comp->master, RBUFF_S, "%s", optarg);
 		} else if (opt == 'h') {
 			snprintf(comp->host, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
@@ -88,76 +92,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			snprintf(comp->rtype, RANGE_S, "%s", optarg);
 		}
 	}
-/*
-	for (i = 1; i < argc; i++) {
-		if ((strncmp(argv[i], "-s", COMM_S) == 0)) {
-			comp->action = DISPLAY_ZONE;
-		} else if ((strncmp(argv[i], "-z", COMM_S) == 0)) {
-			comp->action = ADD_ZONE;
-		} else if ((strncmp(argv[i], "-c", COMM_S) == 0)) {
-			comp->action = COMMIT_ZONES;
-			strncpy(comp->domain, "none", CONF_S);
-		} else if ((strncmp(argv[i], "-a", COMM_S) == 0)) {
-			comp->action = ADD_HOST;
-			comp->type = FORWARD_ZONE;
-		} else if ((strncmp(argv[i], "-l", COMM_S) == 0)) {
-			comp->action = LIST_ZONES;
-			strncpy(comp->domain, "all", CONF_S);
-		} else if ((strncmp(argv[i], "-b", COMM_S) == 0)) {
-			comp->action = BUILD_REV;
-			comp->type = REVERSE_ZONE;
-		} else if ((strncmp(argv[i], "-m", COMM_S) == 0)) {
-			comp->action = MULTIPLE_A;
-			comp->type = REVERSE_ZONE;
-		} else if ((strncmp(argv[i], "-e", COMM_S) == 0)) {
-			comp->action = ADD_PREFER_A;
-			comp->type = REVERSE_ZONE;
-		} else if ((strncmp(argv[i], "-d", COMM_S) == 0)) {
-			comp->action = DELETE_RECORD;
-			comp->type = FORWARD_ZONE;
-		} else if ((strncmp(argv[i], "-g", COMM_S) == 0)) {
-			comp->action = DELETE_PREFERRED;
-			comp->type = REVERSE_ZONE;
-		} else if ((strncmp(argv[i], "-x", COMM_S) == 0)) {
-			comp->action = DELETE_ZONE;
-		} else if ((strncmp(argv[i], "-f", COMM_S) == 0)) {
-			comp->type = FORWARD_ZONE;
-		} else if ((strncmp(argv[i], "-r", COMM_S) == 0)) {
-			comp->type = REVERSE_ZONE;
-		} else if ((strncmp(argv[i], "-n", COMM_S) == 0)) {
-			i++;
-			if (i >= argc) 
-				retval = NO_DOMAIN_NAME;
-			else
-				strncpy(comp->domain, argv[i], CONF_S);
-		} else if ((strncmp(argv[i], "-i", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_IP_ADDRESS;
-			else
-				strncpy(comp->dest, argv[i], RBUFF_S);
-		} else if ((strncmp(argv[i], "-h", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_HOST_NAME;
-			else
-				strncpy(comp->host, argv[i], RBUFF_S);
-		} else if ((strncmp(argv[i], "-t", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_RECORD_TYPE;
-			else
-				strncpy(comp->rtype, argv[i], RANGE_S);
-		} else if ((strncmp(argv[i], "-p", COMM_S) == 0)) {
-			i++;
-			if (i >= argc)
-				retval = NO_PREFIX;
-			else
-				comp->prefix = strtoul(argv[i], NULL, 10);
-		} else {
-			retval = DISPLAY_USAGE;
-		}
-	} */
+
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
@@ -186,6 +121,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = NO_RECORD_TYPE;
 	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
 		retval = NO_PREFIX;
+	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
+		 (strncmp(comp->master, "NULL", COMM_S) == 0))
+		retval = NO_MASTER;
 	else if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
 		comp->prefix = 100;
 		fprintf(stderr, "No priority specified for MX record, using 100\n");
@@ -403,6 +341,7 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	strncpy(dcl->rtype, "NULL", COMM_S);
 	strncpy(dcl->ztype, "NULL", COMM_S);
 	strncpy(dcl->host, "NULL", COMM_S);
+	strncpy(dcl->master, "NULL", COMM_S);
 	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
 }
 

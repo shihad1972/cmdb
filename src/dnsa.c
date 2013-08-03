@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	
 	dnsa_init_all_config(dc, cm);
 	retval = parse_dnsa_command_line(argc, argv, cm);
-	if (retval < 0) {
+	if (retval != 0) {
 		free(domain);
 		free(dc);
 		free(cm);

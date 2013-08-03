@@ -1,4 +1,4 @@
-.TH DNSA 8 "Version 0.2: 06 July 2013" "CMDB suite manuals"
+.TH DNSA 8 "Version 0.2: 03 August 2013" "CMDB suite manuals"
 .SH NAME
 dnsa \- Domain Name System Administration
 .SH SYNOPSIS
@@ -15,9 +15,9 @@ dnsa \- Domain Name System Administration
 [
 .B -abdeglruwxz
 ] [
-.B -FR
+.B -FRS
 ] [
-.B -hinpt
+.B -Mhinpt
 ]
 .SH DESCRIPTION
 \fBdnsa\fP is a tool to administer DNS zones and records. You are able to add
@@ -61,18 +61,36 @@ add zone
 Forward zone
 .IP -R
 Reverse zone
+.IP -S
+Slave zone
 .PP
 .B Name options
+.IP "-M master nameserver IP"
+This is the ip address of the master name server. This option is only useful
+if you are adding a slave zone (specified with the -S option above)
+.PP
 .IP "-n zone name / network range
+The name of the DNS zone / domain for forward zones or the IP range for
+reverse zones.
 .PP
 .B Options for adding a reverse zone
 .IP "-p prefix"
+The subnet prefix for a reverse zone. Regular classes (/8, /16 or /24)
+or classless prefixes (/24 -> /32) will be accepted. Classless prefixes
+between /8 -> /16 and /16 -> /24 will NOT be accepted.
 .PP
 .B Options for adding a forward host
 .IP "-i IP address"
-.IP "-t record type (A, MX etc)
+This is the destination of the record. If this is an A record type, then this
+will be the IP address of the host. If this is a CNAME then this will be the
+FQDN of the destination of the CNAME. Use the FQDN even if the CNAME points to
+an A record in the same domain.
+.IP "-t record type"
+This is the record type (A, MX, CNAME etc)
 .IP "-h host"
-.IP "-p priority (specifically for MX records)
+This is the host name of the record.
+.IP "-p priority (specifically for MX records)"
+When adding an MX record this is the priority of the MX record.
 .SH FILES
 .I /etc/dnsa/dnsa.conf
 .RS

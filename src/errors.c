@@ -233,6 +233,8 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "Cowardly refusal to modify network settings for build domain\n");
 	else if (retval == MULTI_BUILD_DOM_APP_MOD)
 		fprintf(stderr, "Cowardly refusal to modify multiple application settings\n");
+	else if (retval == NO_MASTER)
+		fprintf(stderr, "Slave zone specified but no master IP given\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
@@ -417,9 +419,10 @@ display_dnsa_usage(void)
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[-F|-R]\n");
 	printf("-x: Delete zone\n\t[-F|-R] -n\n");
-	printf("-z: add zone\n\t[-F|-R] -n (for reverse zone -p)\n\n");
+	printf("-z: add zone\n\t[-F|-R] (-S -M) -n (for reverse zone -p)\n\n");
 	printf("Zone type:\n");
-	printf("-F: forward zone\n-R: reverse zone\n\n");
+	printf("-F: forward zone\n-R: reverse zone\n-S: Slave zone\t");
+	printf("-M: Master IP address\n\n");
 	printf("Name options:\n");
 	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");
