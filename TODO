@@ -16,7 +16,7 @@ correct search itself. Could this config contain this information?
 When adding new build_os need to add locales for that os. Should probably
 base on build type
 
-13/06/2013
+13/06/2013 ** Slave zones added 03/07/2013 **
 Need to add the slave zones to dnsa and also add  the ability to have
 glue records in a zone. Should probably also check what kind of types
 of records we can hold.
