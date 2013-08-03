@@ -330,8 +330,10 @@ commit_fwd_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	while (zone) {
-		check_for_updated_fwd_zone(dc, zone);
-		create_and_write_fwd_zone(dnsa, dc, zone);
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+			check_for_updated_fwd_zone(dc, zone);
+			create_and_write_fwd_zone(dnsa, dc, zone);
+		}
 		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
 			printf("Configuration Buffer Full!\n");
 			break;
@@ -1067,9 +1069,16 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	} else {
 		fprintf(stderr, "Added zone %s\n", zone->name);
 	}
-	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
+	if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+		if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+			dnsa_clean_list(dnsa);
+			return retval;
+		}
+	} else {
+		if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
+		printf("Unable to get ID of zone %s\n", zone->name);
+		return ID_INVALID;
+		}
 	}
 	init_dbdata_struct(&data);
 	data.args.number = zone->id;
