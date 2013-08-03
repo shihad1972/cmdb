@@ -522,10 +522,7 @@ dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
 	}
 	fields = mysql_num_fields(dnsa_res);
-	if (((dnsa_rows = mysql_num_rows(dnsa_res)) == 0)) {
-		printf("No results in database\n");
-		retval = 1;
-	} else {
+	if (((dnsa_rows = mysql_num_rows(dnsa_res)) != 0)) {
 		while ((dnsa_row = mysql_fetch_row(dnsa_res)))
 			dnsa_store_result_mysql(dnsa_row, base, type, fields);
 	}
