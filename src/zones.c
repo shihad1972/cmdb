@@ -64,6 +64,8 @@ list_zones (dnsa_config_s *dc)
 	printf("Name\t\t\t\tValid\tSerial\t\tID\tType\tMaster\n");
 	while (zone) {
 		len = strlen(zone->name);
+		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
+			snprintf(zone->master, RANGE_S, "N/A");
 		if (len < 8)
 			printf("%s\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n", 
 zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
@@ -107,6 +109,8 @@ list_rev_zones(dnsa_config_s *dc)
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
+		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
+			snprintf(rev->master, RANGE_S, "N/A");
 		printf("%s\t/%lu\t%s\t%s\t%s\n",
 rev->net_range, rev->prefix, rev->valid, rev->type, rev->master);
 		if (rev->next)
@@ -122,6 +126,7 @@ display_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
 	dnsa_s *dnsa;
+	zone_info_s *zone;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in display_zone");
@@ -133,7 +138,21 @@ display_zone(char *domain, dnsa_config_s *dc)
 		dnsa_clean_list(dnsa);
 		return;
 	}
-	print_zone(dnsa, domain);
+	zone = dnsa->zones;
+	while (zone) {
+		if ((strncmp(zone->name, domain, RBUFF_S)) == 0)
+			break;
+		else
+			zone = zone->next;
+	}
+	if (zone) {
+		if ((strncmp(zone->type, "master", RANGE_S)) == 0)
+			print_zone(dnsa, domain);
+		else
+			printf("This is a slave zone. No records to display\n");
+	} else {
+		fprintf(stderr, "Zone %s not found\n", domain);
+	}
 	dnsa_clean_list(dnsa);
 }
 
@@ -189,6 +208,7 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
 	dnsa_s *dnsa;
+	rev_zone_info_s *rev;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
@@ -198,7 +218,21 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 		dnsa_clean_list(dnsa);
 		return;
 	}
-	print_rev_zone(dnsa, domain);
+	rev = dnsa->rev_zones;
+	while (rev) {
+		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0)
+			break;
+		else
+			rev = rev->next;
+	}
+	if (rev) {
+		if ((strncmp(rev->type, "master", RANGE_S)) == 0)
+			print_rev_zone(dnsa, domain);
+		else
+			printf("This is a slave reverse zone. No records to display\n");
+	} else {
+		fprintf(stderr, "Reverse zone %s not found\n", domain);
+	}
 	dnsa_clean_list(dnsa);
 }
 
@@ -299,7 +333,7 @@ commit_fwd_zones(dnsa_config_s *dc)
 		check_for_updated_fwd_zone(dc, zone);
 		create_and_write_fwd_zone(dnsa, dc, zone);
 		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
-			printf("Buffer Full!\n");
+			printf("Configuration Buffer Full!\n");
 			break;
 		}
 		zone = zone->next;
@@ -411,7 +445,7 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 	if ((retval = write_file(filename, zonefile)) != 0)
 		printf("Unable to write %s zonefile\n",
 		       zone->name);
-	else if ((retval = check_fwd_zone(zone->name, dc)) !=0)
+	if ((retval = check_fwd_zone(zone->name, dc)) !=0)
 		snprintf(zone->valid, COMM_S, "no");
 	free(zonefile);
 	free(buffer);
@@ -467,7 +501,8 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 			fprintf(stderr, "Cannot update zone serial in database!\n");
 		else
 			fprintf(stderr, "Serial number updated\n");
-		dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO);
+		if ((retval = dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO)) != 0)
+			fprintf(stderr, "Cannot set zone as not updated in database!\n");
 	}
 }
 
