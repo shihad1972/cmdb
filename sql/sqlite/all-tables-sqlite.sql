@@ -6,23 +6,20 @@ CREATE TABLE `build_type` (
   `arg` varchar(15) NOT NULL DEFAULT 'none',
   `url` varchar(79) NOT NULL DEFAULT 'none',
   `mirror` varchar(255) NOT NULL DEFAULT 'none',
-  `boot_line` varchar(127) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`bt_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `boot_line` varchar(127) NOT NULL DEFAULT 'none'
+);
 
 CREATE TABLE `service_type` (
   `service_type_id` INTEGER PRIMARY KEY,
   `service` varchar(15) NOT NULL,
-  `detail` varchar(50) NOT NULL,
-  PRIMARY KEY (`service_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `detail` varchar(50) NOT NULL
+);
 
 CREATE TABLE `hard_type` (
   `hard_type_id` INTEGER PRIMARY KEY,
   `type` varchar(50) NOT NULL DEFAULT 'none',
-  `class` varchar(50) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`hard_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `class` varchar(50) NOT NULL DEFAULT 'none'
+);
 
 CREATE TABLE `customer` (
   `cust_id` INTEGER PRIMARY KEY,
@@ -31,31 +28,28 @@ CREATE TABLE `customer` (
   `city` varchar(31) NOT NULL DEFAULT 'none',
   `county` varchar(30) NOT NULL DEFAULT 'none',
   `postcode` varchar(10) NOT NULL DEFAULT 'none',
-  `coid` varchar(8) NOT NULL,
-  PRIMARY KEY (`cust_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `coid` varchar(8) NOT NULL
+);
 
 CREATE TABLE `varient` (
   `varient_id` INTEGER PRIMARY KEY,
   `varient` varchar(50) NOT NULL,
-  `valias` varchar(20) NOT NULL,
-  PRIMARY KEY (`varient_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `valias` varchar(20) NOT NULL
+);
 
 CREATE TABLE `seed_schemes` (
   `def_scheme_id` INTEGER PRIMARY KEY,
   `scheme_name` varchar(79) NOT NULL,
-  `lvm` smallint(4) NOT NULL,
-  PRIMARY KEY (`def_scheme_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `lvm` smallint(4) NOT NULL
+);
 
 CREATE TABLE `build_domain` (
   `bd_id` INTEGER PRIMARY KEY,
-  `start_ip` int(4) unsigned NOT NULL DEFAULT '0',
-  `end_ip` int(4) unsigned NOT NULL DEFAULT '0',
-  `netmask` int(4) unsigned NOT NULL DEFAULT '0',
-  `gateway` int(4) unsigned NOT NULL DEFAULT '0',
-  `ns` int(4) unsigned NOT NULL DEFAULT '0',
+  `start_ip` UNSIGNED INTEGER NOT NULL DEFAULT '0',
+  `end_ip` UNSIGNED INTEGER NOT NULL DEFAULT '0',
+  `netmask` UNSIGNED INTEGER NOT NULL DEFAULT '0',
+  `gateway` UNSIGNED INTEGER NOT NULL DEFAULT '0',
+  `ns` UNSIGNED INTEGER NOT NULL DEFAULT '0',
   `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
   `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
@@ -70,10 +64,8 @@ CREATE TABLE `build_domain` (
   `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
   `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
-  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`bd_id`)
-
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none'
+);
 
 CREATE TABLE `contacts` (
   `cont_id` INTEGER PRIMARY KEY,
@@ -81,13 +73,12 @@ CREATE TABLE `contacts` (
   `phone` varchar(20) NOT NULL,
   `email` varchar(50) NOT NULL,
   `cust_id` int(7) NOT NULL,
-  PRIMARY KEY (`cont_id`),
 
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `server` (
   `server_id` INTEGER PRIMARY KEY,
@@ -98,13 +89,12 @@ CREATE TABLE `server` (
   `cust_id` int(7) NOT NULL,
   `vm_server_id` int(7) NOT NULL DEFAULT 0,
   `name` varchar(31) NOT NULL,
-  PRIMARY KEY (`server_id`),
 
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `services` (
   `service_id` INTEGER PRIMARY KEY,
@@ -113,7 +103,6 @@ CREATE TABLE `services` (
   `service_type_id` int(7) NOT NULL,
   `detail` varchar(63) NOT NULL DEFAULT 'none',
   `url` varchar(63) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`service_id`),
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -127,29 +116,27 @@ CREATE TABLE `services` (
     REFERENCES `service_type`(`service_type_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `vm_server_hosts` (
   `vm_server_id` INTEGER PRIMARY KEY,
   `vm_server` varchar(127) NOT NULL,
   `type` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
-  PRIMARY KEY (`vm_server_id`),
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `build_ip` (
   `ip_id` INTEGER PRIMARY KEY,
-  `ip` int(4) unsigned NOT NULL,
+  `ip` UNSIGNED INTEGER NOT NULL,
   `hostname` varchar(31) NOT NULL,
   `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
   `server_id` int(7) NOT NULL,
-  PRIMARY KEY (`ip_id`),
 
   FOREIGN KEY(`bd_id`) 
     REFERENCES `build_domain`(`bd_id`)
@@ -159,7 +146,7 @@ CREATE TABLE `build_ip` (
     REFERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `build_os` (
   `os_id` INTEGER PRIMARY KEY,
@@ -169,26 +156,24 @@ CREATE TABLE `build_os` (
   `ver_alias` varchar(15) NOT NULL DEFAULT 'none',
   `arch` varchar(15) DEFAULT NULL,
   `bt_id` int(7) DEFAULT NULL,
-  PRIMARY KEY (`os_id`),
 
   FOREIGN KEY(`bt_id`)
     REFERENCES `build_type`(`bt_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `disk_dev` (
   `disk_id` INTEGER PRIMARY KEY,
   `server_id` int(7) NOT NULL,
   `device` varchar(63) NOT NULL,
   `lvm` smallint(4) NOT NULL,
-  PRIMARY KEY (`disk_id`),
 
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `seed_part` (
   `part_id` INTEGER PRIMARY KEY,
@@ -199,13 +184,12 @@ CREATE TABLE `seed_part` (
   `filesystem` varchar(15) NOT NULL,
   `server_id` int(7) NOT NULL,
   `logical_volume` varchar(31) NOT NULL,
-  PRIMARY KEY (`part_id`),
 
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `default_part` (
   `def_part_id` INTEGER PRIMARY KEY,
@@ -216,13 +200,12 @@ CREATE TABLE `default_part` (
   `filesystem` varchar(15) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   `logical_volume` varchar(31) NOT NULL,
-  PRIMARY KEY (`def_part_id`),
 
   FOREIGN KEY(`def_scheme_id`)
     REFERENCES `seed_schemes`(`def_scheme_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `hardware` (
   `hard_id` INTEGER PRIMARY KEY,
@@ -230,7 +213,6 @@ CREATE TABLE `hardware` (
   `device` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
   `hard_type_id` int(7) NOT NULL,
-  PRIMARY KEY (`hard_id`),
 
   FOREIGN KEY(`server_id`)
     REFERENCES `server`(`server_id`)
@@ -240,7 +222,7 @@ CREATE TABLE `hardware` (
     REFERENCES `hard_type`(`hard_type_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `locale` (
   `locale_id` INTEGER PRIMARY KEY,
@@ -251,7 +233,6 @@ CREATE TABLE `locale` (
   `os_id` int(7) NOT NULL,
   `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
-  PRIMARY KEY (`locale_id`),
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -261,14 +242,13 @@ CREATE TABLE `locale` (
     REFERENCES `build_type`(`bt_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `packages` (
   `pack_id` INTEGER PRIMARY KEY,
   `package` varchar(63) NOT NULL DEFAULT 'none',
   `varient_id` int(7) NOT NULL DEFAULT '0',
   `os_id` int(7) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`pack_id`),
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -278,7 +258,7 @@ CREATE TABLE `packages` (
     REFERENCES `varient`(`varient_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `build` (
   `build_id` INTEGER PRIMARY KEY,
@@ -290,7 +270,6 @@ CREATE TABLE `build` (
   `ip_id` int(7) NOT NULL,
   `locale_id` int(7) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
-  PRIMARY KEY (`build_id`),
 
   FOREIGN KEY(`varient_id`)
     REFERENCES `varient`(`varient_id`)
@@ -316,17 +295,16 @@ CREATE TABLE `build` (
     REFERENCES `seed_schemes`(`def_scheme_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `options` (
-  `prefkey` varchar(255) NOT NULL,
+  `prefkey` varchar(255) UNIQUE NOT NULL,
   `preftype` varchar(255) NOT NULL DEFAULT '',
-  `prefval` varchar(255) DEFAULT NULL,
-  UNIQUE KEY `prefkey` (`prefkey`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `prefval` varchar(255) DEFAULT NULL
+);
 
 CREATE TABLE `zones` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` INTEGER PRIMARY KEY,
   `name` varchar(255) NOT NULL,
   `pri_dns` varchar(255) DEFAULT NULL,
   `sec_dns` varchar(255) DEFAULT NULL,
@@ -339,9 +317,8 @@ CREATE TABLE `zones` (
   `owner` int(11) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'yes',
   `type` varchar(15) NOT NULL DEFAULT 'master',
-  `master` varchar(255),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `master` varchar(255)
+);
 
 CREATE TABLE `rev_zones` (
   `rev_zone_id` INTEGER PRIMARY KEY,
@@ -349,8 +326,8 @@ CREATE TABLE `rev_zones` (
   `prefix` varchar(4) DEFAULT NULL,
   `net_start` varchar(255) DEFAULT NULL,
   `net_finish` varchar(255) DEFAULT NULL,
-  `start_ip` int(7) unsigned DEFAULT NULL,
-  `finish_ip` int(7) unsigned DEFAULT NULL,
+  `start_ip` UNSIGNED INTEGER DEFAULT NULL,
+  `finish_ip` UNSIGNED INTEGER DEFAULT NULL,
   `pri_dns` varchar(255) DEFAULT NULL,
   `sec_dns` varchar(255) DEFAULT NULL,
   `serial` int(7) NOT NULL DEFAULT '0',
@@ -362,9 +339,8 @@ CREATE TABLE `rev_zones` (
   `owner` int(7) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'unknown',
   `type` varchar(15) NOT NULL DEFAULT 'master',
-  `master` varchar(255),
-  PRIMARY KEY (`rev_zone_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `master` varchar(255)
+);
 
 CREATE TABLE `records` (
   `id` INTEGER PRIMARY KEY,
@@ -374,13 +350,12 @@ CREATE TABLE `records` (
   `pri` int(7) NOT NULL DEFAULT '0',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
-  PRIMARY KEY (`id`),
 
   FOREIGN KEY (`zone`)
     REFERENCES `zones`(`id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `rev_records` (
   `rev_record_id` INTEGER PRIMARY KEY,
@@ -388,35 +363,32 @@ CREATE TABLE `rev_records` (
   `host` varchar(11) NOT NULL DEFAULT 'NULL',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
-  PRIMARY KEY (`rev_record_id`),
 
   FOREIGN KEY (`rev_zone`)
     REFERENCES `rev_zones`(`rev_zone_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `preferred_a` (
   `prefa_id` INTEGER PRIMARY KEY,
   `ip` varchar(15) NOT NULL DEFAULT '0.0.0.0',
-  `ip_addr` int(4) unsigned NOT NULL DEFAULT '0',
+  `ip_addr` UNSIGNED INTEGER NOT NULL DEFAULT '0',
   `record_id` int(7) NOT NULL,
   `fqdn` varchar(255) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`prefa_id`),
 
   FOREIGN KEY (`record_id`)
     REFERENCES `records`(`id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+);
 
 CREATE TABLE `users` (
   `id` INTEGER PRIMARY KEY,
   `uid` int(7) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `admin` varchar(255) NOT NULL DEFAULT 'no',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `admin` varchar(255) NOT NULL DEFAULT 'no'
+);
 
 
