@@ -65,7 +65,7 @@ owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
 SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
-SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND type = 'A' ORDER BY destination","\
+SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
