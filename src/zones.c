@@ -997,10 +997,13 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	char fqdn[RBUFF_S], *name;
 	int retval = 0;
 	dnsa_s *dnsa;
+	dbdata_s data;
+	zone_info_s *zone;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_record");
 	init_dnsa_struct(dnsa);
+	init_dbdata_struct(&data);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
 		printf("DB search failed with %d\n", retval);
 		dnsa_clean_list(dnsa);
@@ -1008,6 +1011,15 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	name = fqdn;
 	snprintf(name, RBUFF_S, "%s.%s.", cm->host, cm->domain);
+	zone = dnsa->zones;
+	while (zone) {
+		if ((strncmp(zone->name, cm->domain, RBUFF_S)) == 0)
+			break;
+		else
+			zone = zone->next;
+	}
+	if (zone)
+		data.args.number = zone->id;
 	if ((retval = check_for_fwd_record_use(dnsa, name)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
@@ -1019,6 +1031,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return CANNOT_FIND_RECORD_ID;
 	}
 	printf("%d record(s) deleted\n", retval);
+	retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES);
 	dnsa_clean_list(dnsa);
 	return NONE;
 }
