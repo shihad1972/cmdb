@@ -1825,7 +1825,7 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 	size_t len;
 	rev_record_row_s *list = dnsa->rev_records;
 	record_row_s *fwd;
-
+/* Check for new preferred A records */
 	while (list) {
 		fwd = dnsa->records;
 		while (fwd) {
@@ -1837,6 +1837,22 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 				}
 			}
 			fwd = fwd->next;
+		}
+		list = list->next;
+	}
+/* Check for deleted A records */
+	list = dnsa->rev_records;
+	while (list) {
+		fwd = dnsa->records;
+		while (fwd) {
+			if (list->ip_addr == fwd->ip_addr)
+				break;
+			else
+				fwd = fwd->next;
+		}
+		if (!fwd) {
+			insert_into_rev_del_list(list, rev);
+			i++;
 		}
 		list = list->next;
 	}
