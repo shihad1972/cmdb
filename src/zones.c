@@ -669,11 +669,20 @@ create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, char *configfile)
 	retval = 0;
 	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-		snprintf(buffer, TBUFF_S, "\
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+			snprintf(buffer, TBUFF_S, "\
 zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", in_addr, dc->dir, zone->net_range);
+		} else {
+			snprintf(buffer, TBUFF_S, "\
+zone \"%s\" {\n\
+\t\t\ttype slave;\n\
+\t\t\tmasters { %s; };\n\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n\n", in_addr, zone->master, dc->dir, zone->net_range);
+		}
 		if (strlen(configfile) + strlen(buffer) < len)
 			strncat(configfile, buffer, strlen(buffer));
 		else
@@ -1198,9 +1207,16 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	} else {
 		fprintf(stderr, "Added zone %s\n", zone->net_range);
 	}
-	if ((retval = validate_rev_zone(dc, zone, dnsa)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
+	if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+		if ((retval = validate_rev_zone(dc, zone, dnsa)) != 0) {
+			dnsa_clean_list(dnsa);
+			return retval;
+		}
+	} else {
+		if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
+		printf("Unable to get ID of zone %s\n", zone->net_range);
+		return ID_INVALID;
+		}
 	}
 	init_dbdata_struct(&data);
 	data.args.number = zone->rev_zone_id;
@@ -2209,6 +2225,11 @@ fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *d
 	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
 	snprintf(zone->net_finish, RANGE_S, "%s", addr);
 	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
+	snprintf(zone->master, RBUFF_S, "%s", cm->master);
+	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0)
+		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
+	else
+		snprintf(zone->type, COMM_S, "master");
 }
 
 unsigned long int
