@@ -1,14 +1,16 @@
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
-dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c\
-		zones.c\
-		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
-		base_sql.h
 cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
 		cmdb_base_sql.c base_sql.c\
 		cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h\
 		base_sql.h
 if HAVE_DNSA
+bin_PROGRAMS += dnsa
+
+dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c\
+		zones.c\
+		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
+		base_sql.h
 cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c cbc_dnsa.c dnsa_base_sql.c\
 		dnsacom.c zones.c\

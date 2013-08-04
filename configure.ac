@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([cmdb], [0.2.12], [iain-at-thargoid-dot-co-dot-uk])
+AC_INIT([cmdb], [0.2.13.1], [iain-at-thargoid-dot-co-dot-uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -291,10 +291,10 @@ AC_SUBST([PCRE_CFLAGS])
 #
 AC_DEFUN([AX_CHECK_DNSA],[dnl
   AC_MSG_CHECKING([to enable dnsa])
-  AC_ARG_WITH([dnsa],
-    [  --with-dnsa             compile the dnsa module],,
-         with_dnsa="yes")
-  if test ".$with_dnsa" = ".no" ; then
+  AC_ARG_ENABLE([dnsa],
+    [  --enable-dnsa             compile the dnsa module],,
+         enable_dnsa="yes")
+  if test ".$enable_dnsa" = ".no" ; then
     AC_MSG_RESULT([disabled])
     m4_ifval($2,$2)
   else
@@ -477,7 +477,7 @@ AX_CHECK_DNSA
 AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
-AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
+AM_CONDITIONAL([HAVE_DNSA], [test ".$enable_dnsa" = ".yes"])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -490,5 +490,5 @@ AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-AC_CONFIG_SUBDIRS([cmdb-0.2.12])
+AC_CONFIG_SUBDIRS([cmdb-0.2.13.1])
 AC_OUTPUT

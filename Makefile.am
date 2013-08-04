@@ -7,26 +7,39 @@ RM = rm -f
 ECHO = echo
 DIR = src
 SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
-dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/zones.c src/checks.c\
-		src/dnsa_base_sql.c src/base_sql.c\
-		src/cmdb_dnsa.h src/cmdb.h src/checks.h\
-		src/dnsa_base_sql.h src/base_sql.h
+if HAVE_DNSA
+bin_PROGRAMS += dnsa
 
-cbc_SOURCES =	src/cbc.c src/errors.c src/checks.c src/cbccom.c src/createbuild.c\
-		src/base_sql.c src/cbc_data.c src/build.c src/cbc_base_sql.c\
-		src/cbc_dnsa.c src/dnsa_base_sql.c\
-		src/cmdb_cbc.h src/cmdb.h src/cbc_data.h src/build.h\
-		src/cbc_base_sql.h src/dnsa_base_sql.h src/cbc_dnsa.h
-
+dnsa_SOURCES =	src/dnsa.c src/dnsacom.c src/errors.c src/checks.c\
+		src/base_sql.c src/dnsa_base_sql.c src/zones.c\
+		src/cmdb_dnsa.h src/dnsa_base_sql.h src/cmdb.h src/checks.h\
+		src/base_sql.h
+cbc_SOURCES =	src/cbc.c src/cbccom.c src/errors.c src/checks.c src/base_sql.c\
+		src/cbc_base_sql.c src/cbc_data.c src/build.c src/createbuild.c\
+		src/cbc_dnsa.c src/dnsa_base_sql.c src/dnsacom.c src/zones.c\
+		src/cmdb_cbc.h src/cbc_base_sql.h src/cmdb.h src/checks.h \
+		src/cbc_data.h src/build.h src/base_sql.h
 cbcdomain_SOURCES = \
 		src/cbcdomain.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/builddomain.c\
-		src/cbccom.c src/dnsacom.c src/zones.c src/dnsa_base_sql.c\
-		src/cbc_dnsa.c\
-		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_dnsa.h\
-		src/cbc_base_sql.h src/builddomain.h src/cbcdomain.h
+		src/cbccom.c src/zones.c src/cbc_dnsa.c src/dnsa_base_sql.c\
+		src/dnsacom.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_base_sql.h\
+		src/builddomain.h src/base_sql.h src/cbcdomain.h\
+		src/cbc_dnsa.h src/cmdb_dnsa.h src/dnsa_base_sql.h
+else
+cbc_SOURCES =	src/cbc.c src/cbccom.c src/errors.c src/checks.c src/base_sql.c\
+		src/cbc_base_sql.c src/cbc_data.c src/build.c src/createbuild.c\
+		src/cmdb_cbc.h src/cbc_base_sql.h src/cmdb.h src/checks.h \
+		src/cbc_data.h src/build.h src/base_sql.h
+cbcdomain_SOURCES = \
+		src/cbcdomain.c src/errors.c src/checks.c src/base_sql.c\
+		src/cbc_data.c src/cbc_base_sql.c src/builddomain.c src/cbccom.c\
+		src/cmdb.h src/cmdb_cbc.h src/cbc_data.h src/cbc_base_sql.h\
+		src/builddomain.h src/base_sql.h src/cbcdomain.h
+endif
 
 cbcos_SOURCES = src/cbcos.c src/errors.c src/checks.c src/base_sql.c\
 		src/cbc_data.c src/cbc_base_sql.c src/cbccom.c\
@@ -61,7 +74,8 @@ EXTRA_DIST = \
 		sql/mysql/all-tables-mysql.sql\
 		sql/sqlite/all-tables-sqlite.sql\
 		scripts/cmdb.sh\
-		scripts/create_ldif_for_domain.sh
+		scripts/create_ldif_for_domain.sh\
+		conf/dnsa.conf
 
 dist_man_MANS = man/cbc.8 man/cbcdomain.8 man/cbcos.8 man/cbcpack.8 man/cbcpart.8 man/cmdb.8 man/dnsa.8
 
