@@ -37,6 +37,16 @@ DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
 BIND="/etc/bind/"
 
+# Options
+HAVE_DNSA="yes"
+
+DEBMIR="http://mirrors.melbourne.co.uk/debian/dists/"
+DEBBASE="/current/images/netboot/debian-installer/"
+DEBINST="/main/installer-"
+DEBDIST="squeezy wheezy jessie"
+DEBARCH="amd64 i386"
+DEBFILES="linux initrd.gz"
+
 if [ -d /var/lib/tftpboot/ ]; then
   TFTP="/var/lib/tftpboot/"
   echo "Found $TFTP"
@@ -44,7 +54,7 @@ elif [ -d /srv/tftp/ ]; then
   TFTP="/srv/tftp/"
   echo "Found $TFTP"
 else
-  TFTP=""
+  unset TFTP
   echo "No tftp directory found"
 fi
 
@@ -139,7 +149,7 @@ get_mirrors() {
 
 parse_command_line() {
 
-  while getopts "h:i:d:s:e:" opt; do
+  while getopts "h:i:d:s:e:n" opt; do
     case $opt in 
       h  ) HOSTNAME=$OPTARG
            ;;
@@ -147,7 +157,9 @@ parse_command_line() {
            ;;
       i  ) IPADDR=$OPTARG
            ;;
-      \? ) echo "Usage: $0 [-h hostname] [-d domain] [-i ip address]"
+      n  ) unset HAVE_DNSA
+           ;;
+      \? ) echo "Usage: $0 [-h hostname] [-d domain] [-i ip address] [ -n ]"
            exit 1
     esac
   done
@@ -162,6 +174,15 @@ parse_command_line() {
 
   if [ -z $IPADDR ]; then
     get_ip
+  fi
+
+  if [ $HAVE_DNSA ]; then
+    echo "Installing and configuring bind. If this is not what you want"
+    echo "then quit this script and run with the -n option"
+    echo "Hit enter to continue"
+    read
+  else
+    echo "Not configuring bind; detected -n option"
   fi
   
 }
@@ -192,6 +213,27 @@ EOF
 
 }
 
+create_bind_config() {
+
+  if [ ! -d $BIND ]; then
+    echo "Bind config directory is not $BIND"
+    echo "Please set the real bind config directory at the top of this script"
+    return 0
+  fi
+  echo "Creating bind 9 config in ${BIND}"
+  cat >>${BIND}/named.conf<<EOF
+
+include "/etc/bind/dnsa.conf";
+include "/etc/bind/dnsa-rev.conf";
+
+EOF
+
+  touch ${BIND}/dnsa.conf ${BIND}/dnsa-rev.conf
+  chown cmdb:cmdb ${BIND}/dnsa*
+  chmod 664 ${BIND}/dnsa*
+
+}
+
 debian_base() {
 
   APACNF="/etc/apache2/conf.d/"
@@ -209,13 +251,17 @@ debian_base() {
   fi
 
   if [ ! -d "$TFTP" ]; then
-    echo "Installing tftpd-hpa package"
-    $APTG install tftpd-hpa -y > /dev/null 2>&1
+    echo "Installing tftpd-hpa and syslinux packages"
+    echo "Please use /srv/tftp for the directory"
+    $APTG install tftpd-hpa syslinux -y > /dev/null 2>&1
+    TFTP=/srv/tftp
   fi
 
-  if [ ! -d "$BIND" ]; then
-    echo "Installing bind9 package"
-    $APTG install bind9 bind9-host -y > /dev/null 2>&1
+  if [ $HAVE_DNSA ]; then
+    if [ ! -d "$BIND" ]; then
+      echo "Installing bind9 package"
+      $APTG install bind9 bind9-host -y > /dev/null 2>&1
+    fi
   fi
 
 }
@@ -255,12 +301,13 @@ redhat_base() {
     $CHKCON tftp on
     $SERV xinetd restart
     TFTP="/tftpboot"
-    mkdir ${TFTP}/pxelinux.cfg
   fi
 
-  if [ ! -d "$BIND" ]; then
-    echo "Installing bind package"
-    $YUM install bind -y > /dev/null 2>&1
+  if [ $HAVE_DNSA ]; then
+    if [ ! -d "$BIND" ]; then
+      echo "Installing bind package"
+      $YUM install bind -y > /dev/null 2>&1
+    fi
   fi
 }
 # Need to be root
@@ -295,4 +342,8 @@ else
 fi
 
 create_apache_config
+
+if [ $HAVE_DNSA ]; then
+  create_bind_config
+fi
 
