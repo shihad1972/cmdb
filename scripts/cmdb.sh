@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Script to generate the initial configurations for the cmdb software
 #
@@ -43,9 +43,15 @@ HAVE_DNSA="yes"
 DEBMIR="http://mirrors.melbourne.co.uk/debian/dists/"
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
-DEBDIST="squeezy wheezy jessie"
+DEBDIST="wheezy"
 DEBARCH="amd64 i386"
 DEBFILES="linux initrd.gz"
+
+CENTMIR="http://mirrors.melbourne.co.uk/centos/"
+CENTBASE="/images/pxeboot/"
+CENTVER="5 6"
+CENTARCH="i386 x86_64"
+CENTFILE="vmlinuz initrd.img"
 
 if [ -d /var/lib/tftpboot/ ]; then
   TFTP="/var/lib/tftpboot/"
@@ -58,6 +64,12 @@ else
   echo "No tftp directory found"
 fi
 
+
+###############################################################################
+#
+# Functions Start
+#
+###############################################################################
 
 #  Check for cmdb user and group; if not create them
 
@@ -234,8 +246,54 @@ EOF
 
 }
 
+create_tftp_config() {
+
+  if [ ! -d $TFTP ]; then
+    echo "$TFTP is not a directory! Exiting.."
+    exit 4
+  fi
+
+  cd $TFTP
+  mkdir pxelinux.cfg
+  chmod 664 pxelinux.cfg
+  chown cmdb:cmdb pxelinux.cfg
+  if echo $CLIENT | grep debian >/dev/null 2>&1; then
+    cp /usr/lib/syslinux/pxelinux.0 .
+  fi
+  echo "Retrieving debian boot files..."
+  for i in $DEBDIST
+    do for j in $DEBARCH
+      do for k in $DEBFILES
+        do if echo $k | grep linu >/dev/null 2>&1; then
+          wget ${DEBMIR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O vmlinuz-debian-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got vmlinuz-debian-${i}-${j}.img"
+        elif echo $k | grep initrd >/dev/null 2>&1; then
+          wget ${DEBMIR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O initrd-debian-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got initrd-debian-${i}-${j}.img"
+        fi
+      done
+    done
+  done
+
+  echo "Retrieving centos boot files..."
+  for i in $CENTVER
+    do for j in $CENTARCH
+      do for k in $CENTFILE
+        do if echo $k | grep linu >/dev/null 2>&1; then
+          wget ${CENTMIR}${i}/os/${j}${CENTBASE}${k} -O vmlinuz-centos-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got vmlinuz-centos-${i}-${j}.img"
+        elif echo $k | grep initrd >/dev/null 2>&1; then
+          wget ${CENTMIR}${i}/os/${j}${CENTBASE}${k} -O initrd-centos-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got initrd-centos-${i}-${j}.img"
+        fi
+      done
+    done
+  done
+}
+
 debian_base() {
 
+  CLIENT="debian"
   APACNF="/etc/apache2/conf.d/"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
@@ -310,10 +368,17 @@ redhat_base() {
     fi
   fi
 }
+
+###############################################################################
+#
+# Functions End
+#
+###############################################################################
+
 # Need to be root
 
 if [[ $EUID -ne 0 ]]; then
-   echo "You must run this script as root!" 1>&2
+   echo "You must run this script as root" 1>&2
    exit 1
 fi
 
@@ -347,3 +412,4 @@ if [ $HAVE_DNSA ]; then
   create_bind_config
 fi
 
+create_tftp_config

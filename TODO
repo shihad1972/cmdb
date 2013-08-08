@@ -1,3 +1,6 @@
+09/08/2013
+Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
+
 28/07/2013
 Need to remove ldap_url from build_domain database and in all the data
 structures for cbc_build_domain and SQL quries
