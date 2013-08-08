@@ -1,4 +1,9 @@
-09/08/2013
+08/08/2013
+When adding or deleting a build domain then re-write the dhcpd.networks
+configuration file with all valid build domains. Will need to assume that
+the tftp host is also the DNS host.
+
+07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
 
 28/07/2013

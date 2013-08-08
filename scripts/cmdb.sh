@@ -199,6 +199,12 @@ parse_command_line() {
   
 }
 
+###############################################################################
+#
+# Applications Configuration
+#
+###############################################################################
+
 create_apache_config() {
 
   echo "Creating config in ${APACNF}"
@@ -246,6 +252,31 @@ EOF
 
 }
 
+create_dhcp_config() {
+
+  if [ ! -d $DHCPD ]; then
+    echo "Cannot find directory ${DHCPD}! for dhcpd configuration"
+    exit 5
+  fi
+  cd $DHCPD
+  mv dhcpd.conf dhcpd.old
+  cat > dhcpd.conf<<EOF
+
+  allow booting;
+
+  allow bootp;
+                                                                                                                             
+  ddns-update-style none;
+
+include "/etc/dhcp/dhcpd.networks";
+include "/etc/dhcp/dhcpd.hosts";
+EOF
+  touch dhcpd.networks dhcpd.hosts
+  chmod 664 dhcpd.networks dhcpd.hosts
+  chown cmdb:cmdb dhcpd.networks dhcpd.hosts
+
+}
+
 create_tftp_config() {
 
   if [ ! -d $TFTP ]; then
@@ -289,7 +320,20 @@ create_tftp_config() {
       done
     done
   done
+
 }
+
+###############################################################################
+#
+# End of Applications Configuration
+#
+###############################################################################
+
+###############################################################################
+#
+# OS Varient configurations
+#
+###############################################################################
 
 debian_base() {
 
@@ -368,6 +412,12 @@ redhat_base() {
     fi
   fi
 }
+
+###############################################################################
+#
+# End of OS Varient configurations
+#
+###############################################################################
 
 ###############################################################################
 #
