@@ -332,7 +332,13 @@ commit_fwd_zones(dnsa_config_s *dc)
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
 			check_for_updated_fwd_zone(dc, zone);
-			create_and_write_fwd_zone(dnsa, dc, zone);
+/*			create_and_write_fwd_zone(dnsa, dc, zone); */
+			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+				free(configfile);
+				free(buffer);
+				dnsa_clean_list(dnsa);
+				return retval;
+			}
 		}
 		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
 			printf("Configuration Buffer Full!\n");
@@ -447,8 +453,8 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 	if ((retval = write_file(filename, zonefile)) != 0)
 		printf("Unable to write %s zonefile\n",
 		       zone->name);
-	if ((retval = check_fwd_zone(zone->name, dc)) !=0)
-		snprintf(zone->valid, COMM_S, "no");
+/*	if ((retval = check_fwd_zone(zone->name, dc)) !=0)
+		snprintf(zone->valid, COMM_S, "no"); */
 	free(zonefile);
 	free(buffer);
 	return retval;
@@ -1332,7 +1338,10 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 {
 	char command[NAME_S], *buffer;
 	int retval;
+	dbdata_s *data;
 
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in validate_fwd_zone");
 	retval = 0;
 	buffer = &command[0];
 	snprintf(zone->valid, COMM_S, "yes");
@@ -1354,15 +1363,16 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 		 dc->chkz, zone->name, dc->dir, zone->name);
 	if ((retval = system(command)) != 0) {
 		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
+		data->args.number = zone->id;
+		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
+			fprintf(stderr, "Set zone not valid in DB failed\n");
+		free(data);
 		return CHKZONE_FAIL;
 	} else {
-		dbdata_s *data;
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "data in validate_fwd_zone");
-		data->args.number = dnsa->zones->id;
+		data->args.number = zone->id;
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {
 			free(data);
-			fprintf(stderr, "Set zone updated in DB failed\n");
+			fprintf(stderr, "Set zone valid in DB failed\n");
 			return retval;
 		}
 		free(data);

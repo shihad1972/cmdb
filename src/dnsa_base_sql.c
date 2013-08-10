@@ -122,7 +122,8 @@ UPDATE zones SET updated = 'yes' WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
 UPDATE zones SET serial = ? WHERE id = ?","\
 UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?","\
-UPDATE rev_zones SET serial = ? WHERE rev_zone_id = ?"
+UPDATE rev_zones SET serial = ? WHERE rev_zone_id = ?","\
+UPDATE zones SET valid = 'no' WHERE id = ?"
 };
 
 const char *dnsa_sql_delete[] = {"\
@@ -169,7 +170,7 @@ const unsigned int dnsa_search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1 };
 
-const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2 };
+const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2, 1 };
 
 const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
@@ -195,7 +196,8 @@ const unsigned int dnsa_update_arg_type[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, DBINT } ,
 	{ DBINT, NONE } ,
-	{ DBINT, DBINT }
+	{ DBINT, DBINT } ,
+	{ DBINT, NONE }
 };
 
 const unsigned int dnsa_delete_arg_type[][1] = {

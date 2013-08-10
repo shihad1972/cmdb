@@ -293,7 +293,9 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 	while (zone) {
 		if (strncmp(zone->name, cml->build_domain, RBUFF_S) == 0) {
 			check_for_updated_fwd_zone(dc, zone);
-			create_and_write_fwd_zone(dnsa, dc, zone);
+			/*create_and_write_fwd_zone(dnsa, dc, zone); */
+			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0)
+				printf("Zone %s not valid\n", zone->name);
 		}
 		zone = zone->next;
 	}
