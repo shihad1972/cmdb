@@ -38,7 +38,9 @@ DHCPD="/etc/dhcp/"
 BIND="/etc/bind/"
 
 # Options
+DB="sqlite"
 HAVE_DNSA="yes"
+SQL="${PWD}"
 
 DEBMIR="http://mirrors.melbourne.co.uk/debian/dists/"
 DEBBASE="/current/images/netboot/debian-installer/"
@@ -207,6 +209,13 @@ parse_command_line() {
 
 create_apache_config() {
 
+  echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
+  echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
+  echo "This is where we shall store the build files."
+  echo "They will be stored in /var/lib/cmdb/web/"
+  echo " "
+  echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
+  echo " "
   echo "Creating config in ${APACNF}"
   cat >${APACNF}cmdb.conf<<EOF
 #
@@ -419,6 +428,17 @@ redhat_base() {
 #
 ###############################################################################
 
+create_database() {
+  if echo $PWD | grep scripts; then > /dev/null 2>&1
+    echo "Hopefully you are in the scripts directory off the main tree"
+    SQL="${SQL}../sql"
+  else
+    echo "Assuming you are in the main source directory"
+    SQL="${SQL}/sql"
+  fi
+
+}
+
 ###############################################################################
 #
 # Functions End
@@ -432,17 +452,9 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-create_cmdb_user
-
 parse_command_line
 
-echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
-echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
-echo "This is where we shall store the build files."
-echo "They will be stored in /var/lib/cmdb/web/"
-echo " "
-echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
-echo " "
+create_cmdb_user
 
 
 # Check for OS type
@@ -463,3 +475,7 @@ if [ $HAVE_DNSA ]; then
 fi
 
 create_tftp_config
+
+create_dhcp_config
+
+create_database
