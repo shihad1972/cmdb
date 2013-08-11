@@ -30,26 +30,27 @@ DPKG=`which dpkg`
 YUM=`which yum`
 RPM=`which rpm`
 SERV=`which service`
+SQLITE=`which sqlite3`
+MYSQL=`which mysql`
 
 # Files and directories
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
 BIND="/etc/bind/"
+SQLFILE="/var/lib/cmdb/sql/cmdb.sql"
+MIRROR="mirrors.melbourne.co.uk"
 
 # Options
-DB="sqlite"
 HAVE_DNSA="yes"
 SQL="${PWD}"
 
-DEBMIR="http://mirrors.melbourne.co.uk/debian/dists/"
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
 DEBDIST="wheezy"
 DEBARCH="amd64 i386"
 DEBFILES="linux initrd.gz"
 
-CENTMIR="http://mirrors.melbourne.co.uk/centos/"
 CENTBASE="/images/pxeboot/"
 CENTVER="5 6"
 CENTARCH="i386 x86_64"
@@ -163,17 +164,21 @@ get_mirrors() {
 
 parse_command_line() {
 
-  while getopts "h:i:d:s:e:n" opt; do
+  while getopts "b:d:e:h:i:nm:s:" opt; do
     case $opt in 
-      h  ) HOSTNAME=$OPTARG
+      b  ) DB=$OPTARG
            ;;
       d  ) DOMAIN=$OPTARG
+           ;;
+      h  ) HOSTNAME=$OPTARG
            ;;
       i  ) IPADDR=$OPTARG
            ;;
       n  ) unset HAVE_DNSA
            ;;
-      \? ) echo "Usage: $0 [-h hostname] [-d domain] [-i ip address] [ -n ]"
+      m  ) MIRROR=$MIRROR
+           ;;
+      \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype [ -n ]"
            exit 1
     esac
   done
@@ -429,6 +434,7 @@ redhat_base() {
 ###############################################################################
 
 create_database() {
+
   if echo $PWD | grep scripts; then > /dev/null 2>&1
     echo "Hopefully you are in the scripts directory off the main tree"
     SQL="${SQL}../sql"
@@ -436,7 +442,21 @@ create_database() {
     echo "Assuming you are in the main source directory"
     SQL="${SQL}/sql"
   fi
-
+  if echo $DB | grep sqlite > /dev/null 2>&1; then
+    if [ -z $SQLITE ]; then
+      echo "No sqlite3 command. Exiting"
+      exit 6
+    fi
+    SQL=$SQL/sqlite/all-tables-sqlite.sql
+    $SQLITE -init $SQL $SQLFILE <<STOP
+.quit
+STOP
+  elif echo $DB | grep mysql > /dev/null 2>&1; then
+    SQL=$SQL/mysql/all-tables-mysql.sql
+  else
+    echo "Unknown database type $SQL"
+    exit 6
+  fi
 }
 
 ###############################################################################
@@ -453,6 +473,9 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 parse_command_line
+
+CENTMIR="http://${MIRROR}/centos/"
+DEBMIR="http://${MIRROR}/debian/dists/"
 
 create_cmdb_user
 
