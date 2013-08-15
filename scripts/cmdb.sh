@@ -56,6 +56,12 @@ CENTVER="5 6"
 CENTARCH="i386 x86_64"
 CENTFILE="vmlinuz initrd.img"
 
+UBUBASE="/current/images/netboot/ubuntu-installer/"
+UBUINST="/main/installer-"
+UBUDIST="precise quantal raring"
+UBUARCH="amd64 i386"
+UBUFILE="linux initrd.gz"
+
 if [ -d /var/lib/tftpboot/ ]; then
   TFTP="/var/lib/tftpboot/"
   echo "Found $TFTP"
@@ -273,7 +279,9 @@ create_dhcp_config() {
     exit 5
   fi
   cd $DHCPD
-  mv dhcpd.conf dhcpd.old
+  if [ -f dhcpd.conf ]; then
+    mv dhcpd.conf dhcpd.old
+  fi
   cat > dhcpd.conf<<EOF
 
   allow booting;
@@ -330,6 +338,21 @@ create_tftp_config() {
         elif echo $k | grep initrd >/dev/null 2>&1; then
           wget ${CENTMIR}${i}/os/${j}${CENTBASE}${k} -O initrd-centos-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got initrd-centos-${i}-${j}.img"
+        fi
+      done
+    done
+  done
+
+  echo "Retrieving ubuntu boot files..."
+  for i in $UBUDIST
+    do for j in $UBUARCH
+      do for k in $UBUFILE
+        do if echo $k | grep linu > /dev/null 2>&1; then
+          wget ${UBUMIR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O vmlinuz-ubuntu-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got vmlinuz-ubuntu-${i}-${j}.img"
+        elif echo $k | grep initrd > /dev/null 2>&1; then
+          wget ${UBUMIR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O initrd-ubuntu-${i}-${j}.img \
+>/dev/null 2>&1 && echo "Got initrd-ubuntu-${i}-${j}.img"
         fi
       done
     done
@@ -476,6 +499,7 @@ parse_command_line
 
 CENTMIR="http://${MIRROR}/centos/"
 DEBMIR="http://${MIRROR}/debian/dists/"
+UBUMIR="http://${MIRROR}/ubuntu/dists/"
 
 create_cmdb_user
 

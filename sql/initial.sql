@@ -26,7 +26,7 @@ INSERT INTO varient (varient, valias) VALUES ("IMAP Server", "imap");
 INSERT INTO varient (varient, valias) VALUES ("SMTP Server", "smtp");
 INSERT INTO varient (varient, valias) VALUES ("DNS Server", "dns");
 --
--- Create Debian package lists for the above builds
+-- Create package lists for the above builds
 INSERT INTO packages (package, varient_id, os_id) SELECT "logwatch", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "ntp", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "openssh-server", v.varient_id, o.os_id FROM varient v, build_os o;
@@ -36,3 +36,58 @@ INSERT INTO packages (package, varient_id, os_id) SELECT "sysstat", v.varient_id
 INSERT INTO packages (package, varient_id, os_id) SELECT "ntp", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "ntpdate", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "nfs4-acl-tools", v.varient_id, o.os_id FROM varient v, build_os o;
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "ldap-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "debian";
+INSERT INTO packages (package, varient_id, os_id) SELECT "ldap-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "ubuntu";
+INSERT INTO packages (package, varient_id, os_id) SELECT "openldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
+INSERT INTO packages (package, varient_id, os_id) SELECT "openldap-clients", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "apache2", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "libapache2-mod-php5", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql-client", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "apache2", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "libapache2-mod-php5", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql-client", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "httpd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "php", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "web";
+INSERT INTO packages (package, varient_id, os_id) SELECT "httpd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "php", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "lamp";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql-server", v.varient_id, o.os_id FROM varient v, build_os o WHERE v.valias = "lamp";
+INSERT INTO packages (package, varient_id, os_id) SELECT "mysql-server", v.varient_id, o.os_id FROM varient v, build_os o WHERE v.valias = "mysql";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "postfix", v.varient_id, o.os_id FROM varient v, build_os o WHERE v.valias = "smtp";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "dovecot", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "imap";
+INSERT INTO packages (package, varient_id, os_id) SELECT "dovecot-imapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "imap";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "slapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "ldap";
+INSERT INTO packages (package, varient_id, os_id) SELECT "slapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "openldap-servers";
+;
+INSERT INTO packages (package, varient_id, os_id) SELECT "bind9", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "dns";
+INSERT INTO packages (package, varient_id, os_id) SELECT "bind9utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "dns";
+INSERT INTO packages (package, varient_id, os_id) SELECT "bind9-host", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "dns";
+INSERT INTO packages (package, varient_id, os_id) SELECT "bind", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "dns";
+INSERT INTO packages (package, varient_id, os_id) SELECT "bind-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "dns";
+--
+-- Partitions
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base", 0), ("base-lvm", 1), ("base-var", 0), ("base-var-lvm", 1), ("full", 0), ("full-lvm", 1);
+;
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 30720, 100, "/", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name IN ("base", "base-var", "full");
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 15360, 100, "/var", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name IN ("base-var", "full");
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 40960, 100, "/usr", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name = "full";
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 20480, 100, "/home", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name = "full";
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 1024, 10240, 80, "swap", "swap", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name IN ("base", "base-var", "full");
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 30720, 100, "/", "ext4", def_scheme_id, "root" FROM seed_schemes WHERE scheme_name IN ("base-lvm", "base-var-lvm", "full-lvm");
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 15360, 100, "/var", "ext4", def_scheme_id, "var" FROM seed_schemes WHERE scheme_name IN ("base-var-lvm", "full-lvm");
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 40960, 100, "/usr", "ext4", def_scheme_id, "usr" FROM seed_schemes WHERE scheme_name = "full-lvm";
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 20480, 100, "/home", "ext4", def_scheme_id, "home" FROM seed_schemes WHERE scheme_name = "full-lvm";
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 1024, 10240, 80, "swap", "swap", def_scheme_id, "swap" FROM seed_schemes WHERE scheme_name IN ("base-lvm", "base-var-lvm", "full-lvm");
+--
+-- Service and hardware types
+INSERT INTO hard_type (type, class) VALUES ("network", "Network Card"), ("storage", "Hard Disk"), ("storage", "CD-ROM"), ("cpu", "AMD CPU"), ("cpu", "Intel CPU"), ("cpu", "Virtual CPU"), ("ram", "RAM Modules"), ("ram", "Virtual RAM"), ("fibre", "Fibre Card");
+INSERT INTO service_type (service, detail) VALUES ("imap", "Email retrieval system"), ("smtp", "Email delivery system"), ("http", "Web sites"), ("dns", "Domain name system"), ("mysql", "MySQL Database"), ("ldap", "LDAP Directory");
+--
+--
