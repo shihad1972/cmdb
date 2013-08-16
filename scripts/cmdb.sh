@@ -43,7 +43,8 @@ MIRROR="mirrors.melbourne.co.uk"
 
 # Options
 HAVE_DNSA="yes"
-SQL="${PWD}"
+SQL="${PWD}/sql"
+DBNAME="cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
@@ -234,6 +235,13 @@ create_apache_config() {
 # by the cmdb build system, Muppett
 Alias /cmdb/ "/var/lib/cmdb/web/"
 <Directory "/var/lib/cmdb/web/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Order allow,deny
+    Allow from all
+</Directory>
+
+Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
+<Directory "/var/lib/cmdb/scripts/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
@@ -458,24 +466,90 @@ redhat_base() {
 
 create_database() {
 
-  if echo $PWD | grep scripts; then > /dev/null 2>&1
-    echo "Hopefully you are in the scripts directory off the main tree"
-    SQL="${SQL}../sql"
-  else
-    echo "Assuming you are in the main source directory"
-    SQL="${SQL}/sql"
-  fi
   if echo $DB | grep sqlite > /dev/null 2>&1; then
     if [ -z $SQLITE ]; then
       echo "No sqlite3 command. Exiting"
       exit 6
     fi
-    SQL=$SQL/sqlite/all-tables-sqlite.sql
-    $SQLITE -init $SQL $SQLFILE <<STOP
+    SQLBASE=$SQL/sqlite/all-tables-sqlite.sql
+    $SQLITE -init $SQLBASE $SQLFILE <<STOP
 .quit
 STOP
+    if [ -z $DEBMIR ]; then
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+.quit
+STOP
+    else
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$DEBMIR", "auto=true priority=critical vga=788");
+.quit
+STOP
+    fi
+    if [ -z $UBUMIR ]; then
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+.quit
+STOP
+    else
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$UBUMIR", "auto=true priority=critical vga=788");
+.quit
+STOP
+    fi
+    if [ -z $CENTMIR ]; then
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+.quit
+STOP
+    else
+      $SQLITE <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$CENTMIR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+.quit
+STOP
+    fi
   elif echo $DB | grep mysql > /dev/null 2>&1; then
     SQL=$SQL/mysql/all-tables-mysql.sql
+    echo "Please enter the name of the mysql host"
+    read MYSQLHOST
+    echo "Please enter the root password for $MYSQLHOST"
+    read MYSQLPASS
+    if $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" > /dev/null 2>&1; then
+      echo "Connection successful"
+    else
+      echo "Cannot connect to mysql host. Are you sure root has access to ${MYSQLHOST}?"
+      exit 8
+    fi
+    echo "Creating db $DBNAME..."
+    $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "CREATE DATABASE $DBNAME"
+    echo "Adding initial entries to DB $DBNAME"
+    if [ -z $DEBMIR ]; then
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+STOP
+    else
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$DEBMIR", "auto=true priority=critical vga=788");
+STOP
+    fi
+    if [ -z $UBUMIR ]; then
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+STOP
+    else
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$UBUMIR", "auto=true priority=critical vga=788");
+STOP
+    fi
+    if [ -z $CENTMIR ]; then
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+STOP
+    else
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$CENTMIR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+STOP
+    fi
   else
     echo "Unknown database type $SQL"
     exit 6
@@ -495,8 +569,9 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ ! -f ${PWD}/sql/initial.sql ]; then
-  echo "Cannot find SQL initialisation file"
+
+if [ ! -f ${SQL}/initial.sql ]; then
+  echo "Cannot find SQL initialisation file $SQL"
   echo "Please run this script from the top level of the cmdb source directory"
   exit 7
 fi

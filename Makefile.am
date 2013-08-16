@@ -73,6 +73,7 @@ cbcpart_SOURCES = \
 EXTRA_DIST = \
 		sql/mysql/all-tables-mysql.sql\
 		sql/sqlite/all-tables-sqlite.sql\
+		sql/initial.sql\
 		scripts/cmdb.sh\
 		scripts/create_ldif_for_domain.sh\
 		conf/dnsa.conf
