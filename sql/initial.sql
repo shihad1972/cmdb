@@ -90,4 +90,4 @@ INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, d
 INSERT INTO hard_type (type, class) VALUES ("network", "Network Card"), ("storage", "Hard Disk"), ("storage", "CD-ROM"), ("cpu", "AMD CPU"), ("cpu", "Intel CPU"), ("cpu", "Virtual CPU"), ("ram", "RAM Modules"), ("ram", "Virtual RAM"), ("fibre", "Fibre Card");
 INSERT INTO service_type (service, detail) VALUES ("imap", "Email retrieval system"), ("smtp", "Email delivery system"), ("http", "Web sites"), ("dns", "Domain name system"), ("mysql", "MySQL Database"), ("ldap", "LDAP Directory");
 --
---
+-- Still need to add locales and options

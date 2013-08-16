@@ -182,9 +182,9 @@ parse_command_line() {
            ;;
       n  ) unset HAVE_DNSA
            ;;
-      m  ) MIRROR=$MIRROR
+      m  ) MIRROR=$OPTARG
            ;;
-      \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype [ -n ]"
+      \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype -m mirror [ -n ]"
            exit 1
     esac
   done
@@ -493,6 +493,12 @@ STOP
 if [[ $EUID -ne 0 ]]; then
    echo "You must run this script as root" 1>&2
    exit 1
+fi
+
+if [ ! -f ${PWD}/sql/initial.sql ]; then
+  echo "Cannot find SQL initialisation file"
+  echo "Please run this script from the top level of the cmdb source directory"
+  exit 7
 fi
 
 parse_command_line
