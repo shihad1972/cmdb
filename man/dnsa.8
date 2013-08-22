@@ -64,6 +64,15 @@ Reverse zone
 .IP -S
 Slave zone
 .PP
+.B Slave Zones
+
+When adding slave zones, it is useful to add the Fully Qualified Domain Name
+of the master DNS server that is used in the SOA of the zone. You can add this
+using the\fB -h\fP option as described below.
+
+Also, the secondary NS server will be taken from the pri_dns configuration option
+in config file, which is usually the server you are working on.
+.PP
 .B Name options
 .IP "-M master nameserver IP"
 This is the ip address of the master name server. This option is only useful
@@ -88,7 +97,8 @@ an A record in the same domain.
 .IP "-t record type"
 This is the record type (A, MX, CNAME etc)
 .IP "-h host"
-This is the host name of the record.
+This is the host name of the record. When adding a slave zone, this option can
+also be used to specify the FQDN of the master DNS server.
 .IP "-p priority (specifically for MX records)"
 When adding an MX record this is the priority of the MX record.
 .SH FILES

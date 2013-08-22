@@ -124,6 +124,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
 		 (strncmp(comp->master, "NULL", COMM_S) == 0))
 		retval = NO_MASTER;
+	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
+		 (strncmp(comp->host, "NULL", COMM_S) == 0))
+		retval = NO_MASTER_NAME;
 	else if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
 		comp->prefix = 100;
 		fprintf(stderr, "No priority specified for MX record, using 100\n");

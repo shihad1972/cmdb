@@ -2213,8 +2213,14 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
 	memset(zone, 0, sizeof(zone));
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
+		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
+	else
+		snprintf(zone->pri_dns, RBUFF_S, "%s", cm->host);
+	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
+		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	else
+		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
 	zone->serial = get_zone_serial();

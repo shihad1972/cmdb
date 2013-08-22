@@ -235,6 +235,8 @@ display_cmdb_command_line_error(int retval, char *program)
 		fprintf(stderr, "Cowardly refusal to modify multiple application settings\n");
 	else if (retval == NO_MASTER)
 		fprintf(stderr, "Slave zone specified but no master IP given\n");
+	else if (retval == NO_MASTER_NAME)
+		fprintf(stderr, "Slave zone specified but no master name given\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
