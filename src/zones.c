@@ -2217,7 +2217,10 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
 	else
 		snprintf(zone->pri_dns, RBUFF_S, "%s", cm->host);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
+		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	else
+		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
 	zone->serial = get_zone_serial();
