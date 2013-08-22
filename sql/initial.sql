@@ -36,6 +36,8 @@ INSERT INTO packages (package, varient_id, os_id) SELECT "sysstat", v.varient_id
 INSERT INTO packages (package, varient_id, os_id) SELECT "ntp", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "ntpdate", v.varient_id, o.os_id FROM varient v, build_os o;
 INSERT INTO packages (package, varient_id, os_id) SELECT "nfs4-acl-tools", v.varient_id, o.os_id FROM varient v, build_os o;
+INSERT INTO packages (package, varient_id, os_id) SELECT "less", v.varient_id, o.os_id FROM varient v, build_os o;
+INSERT INTO packages (package, varient_id, os_id) SELECT "locate", v.varient_id, o.os_id FROM varient v, build_os o;
 ;
 INSERT INTO packages (package, varient_id, os_id) SELECT "ldap-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "debian";
 INSERT INTO packages (package, varient_id, os_id) SELECT "ldap-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "ubuntu";

@@ -44,6 +44,7 @@ MIRROR="mirrors.melbourne.co.uk"
 # Options
 HAVE_DNSA="yes"
 SQL="${PWD}/sql"
+DB="sqlite"
 DBNAME="cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
@@ -111,6 +112,7 @@ create_cmdb_user() {
   done
   chown -R cmdb:cmdb /var/lib/cmdb
   chmod -R 770 /var/lib/cmdb
+  chmod g+s /var/lib/cmdb/*
 }
 
 # Get Hostname
@@ -169,49 +171,6 @@ get_mirrors() {
   get_ubun_mirror
 }
 
-parse_command_line() {
-
-  while getopts "b:d:e:h:i:nm:s:" opt; do
-    case $opt in 
-      b  ) DB=$OPTARG
-           ;;
-      d  ) DOMAIN=$OPTARG
-           ;;
-      h  ) HOSTNAME=$OPTARG
-           ;;
-      i  ) IPADDR=$OPTARG
-           ;;
-      n  ) unset HAVE_DNSA
-           ;;
-      m  ) MIRROR=$OPTARG
-           ;;
-      \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype -m mirror [ -n ]"
-           exit 1
-    esac
-  done
-
-  if [ -z $HOSTNAME ]; then
-    get_host
-  fi
-
-  if [ -z $DOMAIN ]; then
-    get_domain
-  fi
-
-  if [ -z $IPADDR ]; then
-    get_ip
-  fi
-
-  if [ $HAVE_DNSA ]; then
-    echo "Installing and configuring bind. If this is not what you want"
-    echo "then quit this script and run with the -n option"
-    echo "Hit enter to continue"
-    read
-  else
-    echo "Not configuring bind; detected -n option"
-  fi
-  
-}
 
 ###############################################################################
 #
@@ -220,6 +179,11 @@ parse_command_line() {
 ###############################################################################
 
 create_apache_config() {
+
+  if [ -f ${APACNF}cmdb.conf ]; then
+    echo "Apache already configured. Skipping"
+    return
+  fi
 
   echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
   echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
@@ -315,22 +279,34 @@ create_tftp_config() {
   fi
 
   cd $TFTP
-  mkdir pxelinux.cfg
+  if [ ! -d pxelinux.cfg ]; then
+    mkdir pxelinux.cfg
+  fi
   chmod 664 pxelinux.cfg
   chown cmdb:cmdb pxelinux.cfg
-  if echo $CLIENT | grep debian >/dev/null 2>&1; then
-    cp /usr/lib/syslinux/pxelinux.0 .
+  if [ ! -f pxelinux.0 ]; then
+    if echo $CLIENT | grep debian >/dev/null 2>&1; then
+      cp /usr/lib/syslinux/pxelinux.0 .
+    fi
   fi
   echo "Retrieving debian boot files..."
   for i in $DEBDIST
     do for j in $DEBARCH
       do for k in $DEBFILES
         do if echo $k | grep linu >/dev/null 2>&1; then
-          wget ${DEBMIR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O vmlinuz-debian-${i}-${j}.img \
+          if [ ! -f vmlinuz-debian-${i}-${j}.img ]; then
+            wget ${DEBMIRR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O vmlinuz-debian-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got vmlinuz-debian-${i}-${j}.img"
+          else
+            echo "Skipping vmlinuz-debian-${i}-${j}.img. Exists"
+          fi
         elif echo $k | grep initrd >/dev/null 2>&1; then
-          wget ${DEBMIR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O initrd-debian-${i}-${j}.img \
+          if [ ! -f initrd-debian-${i}-${j}.img ]; then
+            wget ${DEBMIRR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O initrd-debian-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got initrd-debian-${i}-${j}.img"
+          else
+            echo "Skipping initrd-debian-${i}-${j}.img. Exists"
+          fi
         fi
       done
     done
@@ -341,11 +317,19 @@ create_tftp_config() {
     do for j in $CENTARCH
       do for k in $CENTFILE
         do if echo $k | grep linu >/dev/null 2>&1; then
-          wget ${CENTMIR}${i}/os/${j}${CENTBASE}${k} -O vmlinuz-centos-${i}-${j}.img \
+          if [ ! -f vmlinuz-centos-${i}-${j}.img ]; then
+            wget ${CENTMIRR}${i}/os/${j}${CENTBASE}${k} -O vmlinuz-centos-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got vmlinuz-centos-${i}-${j}.img"
+          else
+            echo "Skipping vmlinuz-centos-${i}-${j}.img. Exists"
+          fi
         elif echo $k | grep initrd >/dev/null 2>&1; then
-          wget ${CENTMIR}${i}/os/${j}${CENTBASE}${k} -O initrd-centos-${i}-${j}.img \
+          if [ ! -f initrd-centos-${i}-${j}.img ]; then
+            wget ${CENTMIRR}${i}/os/${j}${CENTBASE}${k} -O initrd-centos-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got initrd-centos-${i}-${j}.img"
+          else
+            echo "Skipping initrd-centos-${i}-${j}.img. Exists"
+          fi
         fi
       done
     done
@@ -356,11 +340,19 @@ create_tftp_config() {
     do for j in $UBUARCH
       do for k in $UBUFILE
         do if echo $k | grep linu > /dev/null 2>&1; then
-          wget ${UBUMIR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O vmlinuz-ubuntu-${i}-${j}.img \
+          if [ ! -f vmlinuz-ubuntu-${i}-${j}.img ]; then
+            wget ${UBUMIRR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O vmlinuz-ubuntu-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got vmlinuz-ubuntu-${i}-${j}.img"
+          else
+            echo "Skipping vmlinuz-ubuntu-${i}-${j}.img. Exists"
+          fi
         elif echo $k | grep initrd > /dev/null 2>&1; then
-          wget ${UBUMIR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O initrd-ubuntu-${i}-${j}.img \
+          if [ ! -f initrd-ubuntu-${i}-${j}.img ]; then
+            wget ${UBUMIRR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O initrd-ubuntu-${i}-${j}.img \
 >/dev/null 2>&1 && echo "Got initrd-ubuntu-${i}-${j}.img"
+          else
+            echo "Skipping initrd-ubuntu-${i}-${j}.img. Exists"
+          fi
         fi
       done
     done
@@ -388,9 +380,13 @@ debian_base() {
     echo "Installing apache2 package"
     $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
   fi
-  echo "Adding www-data to cmdb group"
-  echo "If this is not your apache user you will have to do this manually"
-  usermod -a -G cmdb www-data
+  if ! id www-data | grep cmdb; then
+    echo "Adding www-data to cmdb group"
+    echo "If this is not your apache user you will have to do this manually"
+    usermod -a -G cmdb www-data
+  else
+    echo "www-data already in cmdb group"
+  fi
 
   if [ ! -d "$DHCPD" ]; then
     echo "Installing isc-dhcp-server package"
@@ -408,6 +404,18 @@ debian_base() {
     if [ ! -d "$BIND" ]; then
       echo "Installing bind9 package"
       $APTG install bind9 bind9-host -y > /dev/null 2>&1
+    fi
+  fi
+
+  if echo $DB | grep sqlite; then
+    if [ -z $SQLITE ]; then
+      echo "Installing sqlite3 command"
+      apt-get install -y sqlite3 > /dev/null 2>&1
+    fi
+  elif echo $DB | grep mysql; then
+    if [ -z $MYSQL ]; then
+      echo "Install mysql command"
+      apt-get install -y mysql-client > /dev/null 2>&1
     fi
   fi
 
@@ -429,9 +437,14 @@ redhat_base() {
     echo "Installing httpd package"
     $YUM install httpd php5 -y > /dev/null 2>&1
   fi
-  echo "Adding apache to cmdb group"
-  echo "If this is not your apache user you will have to do this manually"
-  usermod -a -G cmdb apache
+
+  if ! id www-data | grep cmdb; then
+    echo "Adding apache to cmdb group"
+    echo "If this is not your apache user you will have to do this manually"
+    usermod -a -G cmdb apache
+  else
+    echo "www-data already in cmdb group"
+  fi
 
   if [ ! -d "$DHCPD" ]; then
     echo "Installing dhcp package"
@@ -456,6 +469,18 @@ redhat_base() {
       $YUM install bind -y > /dev/null 2>&1
     fi
   fi
+
+  if echo $DB | grep sqlite; then
+    if [ -z $SQLITE ]; then
+      echo "Installing sqlite3 command"
+      yum install -y sqlite > /dev/null 2>&1
+    fi
+  elif echo $DB | grep mysql; then
+    if [ -z $MYSQL ]; then
+      echo "Install mysql command"
+      yum install -y mysql > /dev/null 2>&1
+    fi
+  fi
 }
 
 ###############################################################################
@@ -476,40 +501,42 @@ create_database() {
 .quit
 STOP
     if [ -z $DEBMIR ]; then
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
 .quit
 STOP
     else
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$DEBMIR", "auto=true priority=critical vga=788");
 .quit
 STOP
     fi
     if [ -z $UBUMIR ]; then
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
 .quit
 STOP
     else
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$UBUMIR", "auto=true priority=critical vga=788");
 .quit
 STOP
     fi
     if [ -z $CENTMIR ]; then
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
 .quit
 STOP
     else
-      $SQLITE <<STOP
+      $SQLITE $SQLFILE <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$CENTMIR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
 .quit
 STOP
     fi
+    cat ${SQL}/initial.sql | $SQLITE $SQLFILE
+    chown cmdb:cmdb $SQLFILE
   elif echo $DB | grep mysql > /dev/null 2>&1; then
-    SQL=$SQL/mysql/all-tables-mysql.sql
+    SQLBASE=$SQL/mysql/all-tables-mysql.sql
     echo "Please enter the name of the mysql host"
     read MYSQLHOST
     echo "Please enter the root password for $MYSQLHOST"
@@ -523,37 +550,93 @@ STOP
     echo "Creating db $DBNAME..."
     $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "CREATE DATABASE $DBNAME"
     echo "Adding initial entries to DB $DBNAME"
+    cat $SQLBASE | $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root $DBNAME -e
     if [ -z $DEBMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$DEBMIR", "auto=true priority=critical vga=788");
 STOP
     fi
     if [ -z $UBUMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$UBUMIR", "auto=true priority=critical vga=788");
 STOP
     fi
     if [ -z $CENTMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST -e <<STOP
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$CENTMIR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
 STOP
     fi
+    cat ${SQL}/initial.sql | mysql -h ${MYSQLHOST} -p${MYSQLPASS} $DBNAME -e
   else
     echo "Unknown database type $SQL"
     exit 6
   fi
+}
+
+create_config()
+{
+  if [ ! -d /etc/dnsa ]; then
+    echo "Creating directory /etc/dnsa"
+    mkdir /etc/dnsa
+  else
+    echo "/etc/dnsa exists. Continuing"
+  fi
+  
+  if [ ! -f /etc/dnsa/dnsa.conf ]; then
+    cat >/etc/dnsa/dnsa.conf <<FINISH
+## DB Driver
+DBTYPE=$DB
+
+## SQLITE PATH
+FILE=$SQLFILE
+
+## MYSQL DB Connectivity
+DB=$DBNAME		# Database
+USER=cmdb		# DB user
+PASS=			# DB pass
+HOST=$MYSQLHOST		# DB host
+PORT=3306
+
+## DNSA Settings
+
+DIR=/etc/bind/db/		# BIND data directory for zone files
+BIND=/etc/bind/			# BIND configuration directory
+DNSA=dnsa.conf			# DNSA configuration filename for bind
+REV=dnsa-rev.conf		# Reverse zone configuration file for bind
+RNDC=/usr/sbin/rndc		# Path to rndc command
+CHKZ=/usr/sbin/named-checkzone	# Path to checkzone command
+CHKC=/usr/sbin/named-checkconf	# Path to checkconf command
+REFRESH=28800
+RETRY=7200
+EXPIRE=1209600
+TTL=86400
+PRIDNS=
+SECDNS=
+HOSTMASTER=
+PRINS=
+SECNS=
+
+## CBC settings
+TMPDIR=/tmp/cmdb
+TFTPDIR=/srv/tftp/
+PXE=pxelinux.cfg
+TOPLEVELOS=/usr/local/zips
+PRESEED=preseed/
+KICKSTART=ks/
+DHCPCONF=/etc/dhcp/dhcpd.hosts
+
 }
 
 ###############################################################################
@@ -576,11 +659,55 @@ if [ ! -f ${SQL}/initial.sql ]; then
   exit 7
 fi
 
-parse_command_line
 
-CENTMIR="http://${MIRROR}/centos/"
-DEBMIR="http://${MIRROR}/debian/dists/"
-UBUMIR="http://${MIRROR}/ubuntu/dists/"
+while getopts "b:d:h:i:nm:" opt; do
+  case $opt in 
+    b  ) DB=$OPTARG
+         echo "Setting DB"
+         ;;
+    d  ) DOMAIN=$OPTARG
+         echo "Setting Domain"
+         ;;
+    h  ) HOSTNAME=$OPTARG
+         echo "Setting Hostname"
+         ;;
+    i  ) IPADDR=$OPTARG
+         echo "Setting IP address"
+         ;;
+    n  ) unset HAVE_DNSA
+         ;;
+    m  ) MIRROR=$OPTARG
+         echo "Setting mirror"
+         ;;
+    \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype -m mirror [ -n ]"
+         exit 1
+  esac
+done
+
+if [ -z $HOSTNAME ]; then
+  get_host
+fi
+
+if [ -z $DOMAIN ]; then
+  get_domain
+fi
+
+if [ -z $IPADDR ]; then
+  get_ip
+fi
+
+if [ $HAVE_DNSA ]; then
+  echo "Installing and configuring bind. If this is not what you want"
+  echo "then quit this script and run with the -n option"
+  echo "Hit enter to continue"
+  read
+else
+  echo "Not configuring bind; detected -n option"
+fi
+
+CENTMIRR="http://${MIRROR}/centos/"
+DEBMIRR="http://${MIRROR}/debian/dists/"
+UBUMIRR="http://${MIRROR}/ubuntu/dists/"
 
 create_cmdb_user
 
@@ -607,3 +734,5 @@ create_tftp_config
 create_dhcp_config
 
 create_database
+
+create_config
