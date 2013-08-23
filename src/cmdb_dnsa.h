@@ -6,20 +6,23 @@
 
 enum {			/* zone types; use NONE from action codes */
 	FORWARD_ZONE = 1,
-	REVERSE_ZONE = 2
+	REVERSE_ZONE = 2,
+	GLUE_ZONE = 3
 };
 
 typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	short int action;
 	short int type;
 	unsigned long int prefix;
+	char rtype[RANGE_S];
+	char ztype[RANGE_S];
 	char domain[CONF_S];
 	char config[CONF_S];
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
 	char master[RBUFF_S];
-	char rtype[RANGE_S];
-	char ztype[RANGE_S];
+	char glue_ip[MAC_S];
+	char glue_ns[TBUFF_S];
 } dnsa_comm_line_s;
 
 typedef struct dnsa_config_s { /* Hold DNSA configuration values */
@@ -117,6 +120,16 @@ typedef struct rev_zone_info_s { /* Hold DNS zone */
 	struct rev_zone_info_s *next;
 } rev_zone_info_s;
 
+typedef struct glue_zone_info_s {
+	char name[RBUFF_S];
+	char pri_ns[RBUFF_S];
+	char sec_ns[RBUFF_S];
+	char pri_dns[RANGE_S];
+	char sec_dns[RANGE_S];
+	unsigned long int id;
+	struct glue_zone_info_s *next;
+} glue_zone_info_s;
+
 typedef struct preferred_a_s { /* Hold the preferred A records for reverse */
 	unsigned long int prefa_id;
 	unsigned long int ip_addr;
@@ -144,6 +157,7 @@ typedef struct dnsa_s {
 	struct rev_record_row_s *rev_records;
 	struct preferred_a_s *prefer;
 	struct zone_file_s *file;
+	struct glue_zone_info_s *glue;
 } dnsa_s;
 
 /* Get command line args and pass them. Put actions into the struct */
@@ -194,6 +208,8 @@ int
 add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
 add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+int
+add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
 commit_fwd_zones(dnsa_config_s *dc);
 int

@@ -41,7 +41,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruwxzFRSM:h:i:n:p:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglruwxzFGI:M:N:RSh:i:n:p:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -76,10 +76,16 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'R') {
 			comp->type = REVERSE_ZONE;
+		} else if (opt == 'G') {
+			comp->type = GLUE_ZONE;
 		} else if (opt == 'S') {
 			snprintf(comp->ztype, COMM_S, "slave");
 		} else if (opt == 'M') {
 			snprintf(comp->master, RBUFF_S, "%s", optarg);
+		} else if (opt == 'I') {
+			snprintf(comp->glue_ip, MAC_S, "%s", optarg);
+		} else if (opt == 'N') {
+			snprintf(comp->glue_ns, TBUFF_S, "%s", optarg);
 		} else if (opt == 'h') {
 			snprintf(comp->host, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
@@ -127,6 +133,14 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
 		 (strncmp(comp->host, "NULL", COMM_S) == 0))
 		retval = NO_MASTER_NAME;
+	else if ((comp->type == GLUE_ZONE) &&
+		 (strncmp(comp->glue_ip, "NULL", COMM_S) == 0) &&
+		 (comp->action == ADD_ZONE))
+		retval = NO_GLUE_IP;
+	else if ((comp->type == GLUE_ZONE) &&
+		 (strncmp(comp->glue_ns, "NULL", COMM_S) == 0) &&
+		 (comp->action == ADD_ZONE))
+		retval = NO_GLUE_NS;
 	else if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
 		comp->prefix = 100;
 		fprintf(stderr, "No priority specified for MX record, using 100\n");
@@ -303,6 +317,7 @@ init_dnsa_struct(dnsa_s *dnsa)
 	dnsa->rev_records = '\0';
 	dnsa->prefer = '\0';
 	dnsa->file = '\0';
+	dnsa->glue = '\0';
 }
 
 void
@@ -345,6 +360,8 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	strncpy(dcl->ztype, "NULL", COMM_S);
 	strncpy(dcl->host, "NULL", COMM_S);
 	strncpy(dcl->master, "NULL", COMM_S);
+	strncpy(dcl->glue_ip, "NULL", COMM_S);
+	strncpy(dcl->glue_ns, "NULL", COMM_S);
 	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
 }
 
@@ -384,6 +401,18 @@ init_rev_zone_struct(rev_zone_info_s *rev)
 	snprintf(rev->type, COMM_S, "NULL");
 	snprintf(rev->master, COMM_S, "NULL");
 	rev->next = '\0';
+}
+
+void
+init_glue_zone_truct(glue_zone_info_s *glu)
+{
+	glu->id = 0;
+	snprintf(glu->name, COMM_S, "NULL");
+	snprintf(glu->pri_ns, COMM_S, "NULL");
+	snprintf(glu->sec_ns, COMM_S, "NULL");
+	snprintf(glu->pri_dns, COMM_S, "NULL");
+	snprintf(glu->sec_dns, COMM_S, "NULL");
+	glu->next = '\0';
 }
 
 void

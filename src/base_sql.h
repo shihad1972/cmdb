@@ -107,7 +107,8 @@ enum {			/* SELECT statements to use in multiple */
 	ALL_A_RECORD = 16,
 	DUPLICATE_A_RECORD = 32,
 	PREFERRED_A = 64,
-	RECORDS_ON_CNAME_TYPE = 128
+	RECORDS_ON_CNAME_TYPE = 128,
+	GLUE = 256
 };
 
 enum {			/* SELECT and INSERT indexes */
@@ -118,7 +119,8 @@ enum {			/* SELECT and INSERT indexes */
 	ALL_A_RECORDS,
 	DUPLICATE_A_RECORDS,
 	PREFERRED_AS,
-	RECORDS_ON_CNAME_TYPES
+	RECORDS_ON_CNAME_TYPES,
+	GLUES
 };
 
 enum {			/* Delete indexes that diverge from SELECT */

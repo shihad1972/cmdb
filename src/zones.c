@@ -2415,3 +2415,11 @@ get_pref_a_for_range(preferred_a_s **prefer, rev_zone_info_s *rev)
 		*prefer = list;
 	return i;
 }
+
+int
+add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
+{
+	int retval = NONE;
+
+	return retval;
+}

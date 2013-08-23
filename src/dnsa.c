@@ -114,6 +114,9 @@ int main(int argc, char *argv[])
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
+	} else if (cm->type == GLUE_ZONE) {
+		if (cm->action == ADD_ZONE)
+			retval = add_glue_zone(dc, cm);
 	}
 
 	free(domain);

@@ -68,7 +68,8 @@ SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
 SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
-SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
+SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
+SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_records"
 };
 /**
  * These SQL searches require the struct within dnsa_s to be initialised, as
@@ -113,7 +114,8 @@ INSERT INTO records (zone, host, type, pri, destination) VALUES \
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
 INSERT","\
 INSERT","\
-INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)"
+INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
+INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) VALUES (?, ?, ?, ?, ?, ?)"
 };
 
 const char *dnsa_sql_update[] = {"\
@@ -155,14 +157,16 @@ const int mysql_inserts[][15] = {
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0}
+    0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
+    MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5 };
+const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4 };
+const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -417,6 +421,9 @@ dnsa_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == PREFERRED_A) {
 		*query = dnsa_sql_select[PREFERRED_AS];
 		*fields = dnsa_select_fields[PREFERRED_AS];
+	} else if (type == GLUE) {
+		*query = dnsa_sql_select[GLUES];
+		*fields = dnsa_select_fields[GLUES];
 	} else {
 		fprintf(stderr, "Unknown query type %d\n", type);
 		retval = 1;
@@ -558,6 +565,9 @@ dnsa_run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	if (type & PREFERRED_A)
 		if ((retval = dnsa_run_query_mysql(config, base, PREFERRED_A)) != 0)
 			return retval;
+	if (type & GLUE)
+		if ((retval = dnsa_run_query_mysql(config, base, GLUE)) != 0)
+			return retval;
 	return retval;
 }
 
@@ -600,6 +610,11 @@ dnsa_store_result_mysql(MYSQL_ROW row, dnsa_s *base, int type, unsigned int fiel
 		if (fields != required)
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_preferred_a_mysql(row, base);
+	} else if (type == GLUE) {
+		required = dnsa_select_fields[GLUE];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		dnsa_store_glue_mysql(row, base);
 	} else {
 		dnsa_query_mismatch(NONE, NONE, NONE);
 	}
@@ -797,6 +812,11 @@ dnsa_store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	} else {
 		base->records = rec;
 	}
+}
+
+void
+dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *dnsa)
+{
 }
 
 int
@@ -1154,6 +1174,8 @@ dnsa_setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsign
 		dnsa_setup_insert_mysql_bind_buff_rev_records(input, base, i);
 	else if (type == PREFERRED_AS)
 		dnsa_setup_insert_mysql_bind_buff_pref_a(input, base, i);
+	else if (type == GLUE)
+		dnsa_setup_insert_mysql_bind_buff_glue(input, base, i);
 	else
 		retval = WRONG_TYPE;
 	
@@ -1259,6 +1281,11 @@ dnsa_setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned in
 		*input = &(base->prefer->fqdn);
 }
 
+void
+dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int i)
+{
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -1321,6 +1348,9 @@ dnsa_run_multiple_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	if (type & PREFERRED_A)
 		if ((retval = dnsa_run_query_sqlite(config, base, PREFERRED_A)) != 0)
 			return retval;
+	if (type & GLUE)
+		if ((retval = dnsa_run_query_sqlite(config, base, GLUE)) != 0)
+			return retval;
 	return retval;
 }
 
@@ -1363,6 +1393,11 @@ dnsa_store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned i
 		if (fields != required)
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_preferred_a_sqlite(state, base);
+	} else if (type == GLUE) {
+		required = dnsa_select_fields[GLUES];
+		if (fields != required)
+			dnsa_query_mismatch(fields, required, type);
+		dnsa_store_glue_sqlite(state, base);
 	} else {
 		dnsa_query_mismatch(NONE, NONE, NONE);
 	}
@@ -1559,6 +1594,11 @@ dnsa_store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->records = rec;
 	}
+}
+
+void
+dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
+{
 }
 
 int
@@ -1794,6 +1834,8 @@ dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 		retval = dnsa_setup_bind_sqlite_rev_records(state, base->rev_records);
 	else if (type == PREFERRED_AS)
 		retval = dnsa_setup_bind_sqlite_prefer_a(state, base->prefer);
+	else if (type == GLUES)
+		retval = dnsa_setup_bind_sqlite_glue(state, base->glue);
 	else
 		retval = WRONG_TYPE;
 	return retval;
@@ -1867,9 +1909,8 @@ dnsa_get_extended_results_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, 
 int
 dnsa_setup_bind_sqlite_records(sqlite3_stmt *state, record_row_s *record)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_int64(state, 1, (sqlite3_int64)record->zone)) > 0) {
 		fprintf(stderr, "Cannot bind zone %lu\n", record->zone);
 		return retval;
@@ -1899,9 +1940,8 @@ state, 5, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 int
 dnsa_setup_bind_sqlite_zones(sqlite3_stmt *state, zone_info_s *zone)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, zone->name, (int)strlen(zone->name), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind name %s\n", zone->name);
@@ -1953,9 +1993,8 @@ state, 10, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 int
 dnsa_setup_bind_sqlite_rev_zones(sqlite3_stmt *state, rev_zone_info_s *zone)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, zone->net_range, (int)strlen(zone->net_range), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind net_range %s\n", zone->net_range);
@@ -2029,7 +2068,7 @@ state, 15, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 int
 dnsa_setup_bind_sqlite_rev_records(sqlite3_stmt *state, rev_record_row_s *rev)
 {
-	int retval;
+	int retval = NONE;
 
 	if ((retval = sqlite3_bind_int64(state, 1, (sqlite3_int64)rev->rev_zone)) > 0) {
 		fprintf(stderr, "Cannot bind rev_zone %lu\n", rev->rev_zone);
@@ -2051,9 +2090,8 @@ state, 3, rev->dest, (int)strlen(rev->dest), SQLITE_STATIC)) > 0) {
 int
 dnsa_setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_s *prefer)
 {
-	int retval;
+	int retval= NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, prefer->ip, (int)strlen(prefer->ip), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind ip %s\n", prefer->ip);
@@ -2074,4 +2112,13 @@ state, 4, prefer->fqdn, (int)strlen(prefer->fqdn), SQLITE_STATIC)) > 0) {
 	}
 	return retval;
 }
+
+int
+dnsa_setup_bind_sqlite_glue(sqlite3_stmt *state, glue_zone_info_s *glue)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
 #endif /* HAVE_SQLITE3 */

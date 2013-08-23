@@ -107,6 +107,8 @@ dnsa_setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_s *base, unsign
 void
 dnsa_setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned int i);
 void
+dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int i);
+void
 dnsa_store_result_mysql(MYSQL_ROW row, dnsa_s *base, int type, unsigned int fields);
 void
 dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base);
@@ -122,6 +124,8 @@ void
 dnsa_store_preferred_a_mysql(MYSQL_ROW row, dnsa_s *dnsa);
 void
 dnsa_store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_s *dnsa);
+void
+dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *dnsa);
 
 # endif /* HAVE_MYSQL */
 
@@ -164,6 +168,8 @@ void
 dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base);
 void
 dnsa_store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base);
+void
+dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base);
 int
 dnsa_setup_bind_sqlite_records(sqlite3_stmt *state, record_row_s *record);
 int
@@ -174,6 +180,8 @@ int
 dnsa_setup_bind_sqlite_rev_records(sqlite3_stmt *state, rev_record_row_s *rev);
 int
 dnsa_setup_bind_sqlite_prefer_a(sqlite3_stmt *state, preferred_a_s *prefer);
+int
+dnsa_setup_bind_sqlite_glue(sqlite3_stmt *state, glue_zone_info_s *glue);
 
 # endif /* HAVE_SQLITE3 */
 

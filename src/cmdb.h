@@ -91,9 +91,11 @@ enum {			/* dnsa error codes */
 	MULTIPLE_ZONE_DELETED = 36,
 	NO_MASTER = 37,
 	NO_MASTER_NAME = 38,
-	MALLOC_FAIL = 40,
-	BUFFER_FULL = 41,
-	USER_INPUT_INVALID = 42
+	NO_GLUE_IP = 39,
+	NO_GLUE_NS = 40,
+	MALLOC_FAIL = 50,
+	BUFFER_FULL = 51,
+	USER_INPUT_INVALID = 52
 };
 
 enum {			/* cmdb error codes: start @ 100 to avoid conflict */
