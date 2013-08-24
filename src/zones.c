@@ -2420,6 +2420,47 @@ int
 add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE;
+	dnsa_s *dnsa;
+	glue_zone_info_s *glue;
 
+	if (!(glue = malloc(sizeof(glue_zone_info_s))))
+		report_error(MALLOC_FAIL, "glue in add_glue_zone");
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in add_glue_zone");
+	init_glue_zone_struct(glue);
+	init_dnsa_struct(dnsa);
+	dnsa->glue = glue;
+	if (strchr(cm->glue_ns, ','))
+		split_glue_ns(cm->glue_ns, glue);
+	else
+		snprintf(glue->pri_ns, RBUFF_S, "%s", cm->glue_ns);
+	if (strchr(cm->glue_ip, '.'))
+		split_glue_ip(cm->glue_ip, glue);
+	else
+		snprintf(glue->pri_dns, RANGE_S, "%s", cm->glue_ip);
+	printf("Name servers: %s\t%s\n", glue->pri_ns, glue->sec_ns);
+	printf("IP's of servers: %s\t%s\n", glue->pri_dns, glue->sec_dns);
 	return retval;
+}
+
+void
+split_glue_ns(char *ns, glue_zone_info_s *glue)
+{
+	char *pnt;
+	pnt = strchr(ns, ',');
+	*pnt = '\0';
+	pnt++;
+	snprintf(glue->pri_ns, RBUFF_S, "%s", ns);
+	snprintf(glue->sec_ns, RBUFF_S, "%s", pnt);
+}
+
+void
+split_glue_ip(char *ip, glue_zone_info_s *glue)
+{
+	char *pnt;
+	pnt = strchr(ip, ',');
+	*pnt = '\0';
+	pnt++;
+	snprintf(glue->pri_dns, RANGE_S, "%s", ip);
+	snprintf(glue->sec_dns, RANGE_S, "%s", pnt);
 }

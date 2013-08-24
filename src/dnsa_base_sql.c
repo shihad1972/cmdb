@@ -1284,6 +1284,18 @@ dnsa_setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned in
 void
 dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int i)
 {
+	if (i == 0)
+		*input = &(base->glue->name);
+	else if (i == 1)
+		*input = &(base->glue->zone_id);
+	else if (i == 2)
+		*input = &(base->glue->pri_dns);
+	else if (i == 3)
+		*input = &(base->glue->sec_dns);
+	else if (i == 4)
+		*input = &(base->glue->pri_ns);
+	else if (i == 5)
+		*input = &(base->glue->sec_ns);
 }
 
 #endif /* HAVE_MYSQL */
@@ -2118,6 +2130,35 @@ dnsa_setup_bind_sqlite_glue(sqlite3_stmt *state, glue_zone_info_s *glue)
 {
 	int retval = NONE;
 
+	if ((retval = sqlite3_bind_text(
+state, 1, glue->name, (int)strlen(glue->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind name %s\n", glue->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 2, (sqlite3_int64)glue->zone_id)) > 0) {
+		fprintf(stderr, "Cannot bind zone_id %lu\n", glue->zone_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, glue->pri_dns, (int)strlen(glue->pri_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind pri_dns %s\n", glue->pri_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, glue->sec_dns, (int)strlen(glue->sec_dns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind sec_dns %s\n", glue->sec_dns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, glue->pri_ns, (int)strlen(glue->pri_ns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind pri_ns %s\n", glue->pri_ns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 6, glue->sec_ns, (int)strlen(glue->sec_ns), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind sec_ns %s\n", glue->sec_ns);
+		return retval;
+	}
 	return retval;
 }
 

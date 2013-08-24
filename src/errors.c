@@ -412,7 +412,7 @@ display_dnsa_usage(void)
 	printf("Action options (and needed options)\n");
 	printf("-a: add host record\n\t-t -h -i -n (-p)\n");
 	printf("-b: build reverse zone\n\t-n\n");
-	printf("-d: show zone\n\t[-F|-R] -n\n");
+	printf("-d: show zone\n\t[-F|-R|-G] -n\n");
 	printf("-e: Add preferred A record for reverse DNS");
 	printf("\n\t-h -n -i\n");
 	printf("-g: Delete preferred A record\n\t -i\n");
@@ -421,10 +421,12 @@ display_dnsa_usage(void)
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[-F|-R]\n");
 	printf("-x: Delete zone\n\t[-F|-R] -n\n");
-	printf("-z: add zone\n\t[-F|-R] (-S -M) -n (for reverse zone -p)\n\n");
+	printf("-z: add zone\n\t[-F|-R|-G] (-S -M) (-N -I) -n (for reverse zone -p)\n\n");
 	printf("Zone type:\n");
-	printf("-F: forward zone\n-R: reverse zone\n-S: Slave zone\t");
-	printf("-M: Master IP address\n\n");
+	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n");
+	printf("Zone details:\n");
+	printf("-M: master IP address\n-N: name server(s) (comma separated)\n");
+	printf("-I: IP('s) (comma separated)\n\n");
 	printf("Name options:\n");
 	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");

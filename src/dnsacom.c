@@ -404,9 +404,9 @@ init_rev_zone_struct(rev_zone_info_s *rev)
 }
 
 void
-init_glue_zone_truct(glue_zone_info_s *glu)
+init_glue_zone_struct(glue_zone_info_s *glu)
 {
-	glu->id = 0;
+	glu->id = glu->zone_id = 0;
 	snprintf(glu->name, COMM_S, "NULL");
 	snprintf(glu->pri_ns, COMM_S, "NULL");
 	snprintf(glu->sec_ns, COMM_S, "NULL");
@@ -460,6 +460,8 @@ dnsa_clean_list(dnsa_s *dnsa)
 		dnsa_clean_rev_records(dnsa->rev_records);
 	if (dnsa->prefer)
 		dnsa_clean_prefer(dnsa->prefer);
+	if (dnsa->glue)
+		dnsa_clean_glue(dnsa->glue);
 	free(dnsa);
 }
 
@@ -588,6 +590,32 @@ dnsa_clean_prefer(preferred_a_s *list)
 			return;
 		if (prefer->next)
 			next = prefer->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+dnsa_clean_glue(glue_zone_info_s *list)
+{
+	glue_zone_info_s *glu, *next;
+
+	if (list)
+		glu = list;
+	else
+		return;
+	if (glu->next)
+		next = glu->next;
+	else
+		next = '\0';
+	while (glu) {
+		free(glu);
+		if (next)
+			glu = next;
+		else
+			return;
+		if (glu->next)
+			next = glu->next;
 		else
 			next = '\0';
 	}

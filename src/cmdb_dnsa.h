@@ -127,6 +127,7 @@ typedef struct glue_zone_info_s {
 	char pri_dns[RANGE_S];
 	char sec_dns[RANGE_S];
 	unsigned long int id;
+	unsigned long int zone_id;
 	struct glue_zone_info_s *next;
 } glue_zone_info_s;
 
@@ -192,6 +193,8 @@ init_rev_record_struct(rev_record_row_s *revrecord);
 void
 init_preferred_a_struct(preferred_a_s *prefer);
 void
+init_glue_zone_struct(glue_zone_info_s *glu);
+void
 dnsa_clean_list(dnsa_s *dnsa);
 void
 dnsa_clean_zones(zone_info_s *zone);
@@ -203,6 +206,8 @@ void
 dnsa_clean_rev_records(rev_record_row_s *rev);
 void
 dnsa_clean_prefer(preferred_a_s *list);
+void
+dnsa_clean_glue(glue_zone_info_s *glu);
 /* Zone action Functions */
 int
 add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
@@ -357,4 +362,9 @@ void
 add_dup_to_prefer_list(dnsa_s *dnsa, record_row_s *fwd);
 int
 get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
+/* Glue zone functins */
+void
+split_glue_ns(char *pri_ns, glue_zone_info_s *glue);
+void
+split_glue_ip(char *pri_ip, glue_zone_info_s *glue);
 #endif /* __CMDB_DNSA_H__ */
