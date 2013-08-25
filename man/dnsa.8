@@ -81,6 +81,9 @@ It can be useful to delegate control of a subdomain to other servers, and this
 options allows you to do so. You need to use the \fB-I\fP and, optionally, the
 \fB-N\fP options described below to create the \fBglue records\fP that control
 the delegation of the zone.
+\fBNote:\fP You must have the zone already setup on the delegated name servers.
+This includes the A records for the name servers. If you do not then you may
+get errors from bind about "out of zone" records.
 .PP
 .B Name options
 .IP "-M master nameserver IP"
