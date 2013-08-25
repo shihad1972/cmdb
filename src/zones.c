@@ -132,7 +132,7 @@ display_zone(char *domain, dnsa_config_s *dc)
 		report_error(MALLOC_FAIL, "dnsa in display_zone");
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
 		if (retval == 1)
 			printf("There are either no zones or records in the database\n");
 		dnsa_clean_list(dnsa);
@@ -159,7 +159,9 @@ display_zone(char *domain, dnsa_config_s *dc)
 void
 print_zone(dnsa_s *dnsa, char *domain)
 {
+	char *dot, name[HOST_S];
 	unsigned int i, j;
+	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
 	i = j = 0;
@@ -195,6 +197,25 @@ records->host, records->type, records->dest);
 			records = records->next;
 		} else {
 			records = records->next;
+		}
+	}
+	while (glue) {
+		if (glue->zone_id == zone->id) {
+			snprintf(name, HOST_S, "%s", glue->name);
+			dot = strchr(name, '.');
+			*dot = '\0';
+			if (strncmp(glue->sec_dns, "none", COMM_S))
+				printf("\
+%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n%s.%s\tIN\tA\t%s\n%s.%s\tIN\tA\t%s\n",
+name, glue->pri_ns, name, glue->sec_ns, name, glue->pri_ns, name, glue->pri_dns,
+glue->sec_ns, name, glue->sec_dns);
+			else
+				printf("\
+%s\tIN\tNS\t%s\n%s.%s\tIN\tA\t%s\n",
+name, glue->pri_ns, name, glue->pri_ns, glue->pri_dns);
+			glue = glue->next;
+		} else {
+			glue = glue->next;
 		}
 	}
 	if (i == 1)
@@ -324,7 +345,7 @@ commit_fwd_zones(dnsa_config_s *dc)
 	filename = buffer;
 	retval = 0;
 	init_dnsa_struct(dnsa);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return MY_QUERY_FAIL;
 	}
@@ -378,11 +399,11 @@ $TTL %lu\n\
 \t\t\t\t%lu\t\t; Expire\n\
 \t\t\t\t%lu\t\t); Cache TTL\n\
 ;\n\
-\t\tNS\t%s\n",
+\tIN\tNS\t%s\n",
 	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
 	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0) {
-		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
+		snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n",
 			 zone->sec_dns);
 		strncat(zonefile, buffer, strlen(buffer));
 	}
@@ -390,7 +411,7 @@ $TTL %lu\n\
 		if ((record->zone == id) && 
 			(strncmp(record->type, "MX", COMM_S) == 0)) {
 			snprintf(buffer, RBUFF_S + COMM_S, "\
-\t\tMX %lu\t%s\n", record->pri, record->dest);
+\tIN\tMX %lu\t%s\n", record->pri, record->dest);
 			strncat(zonefile, buffer, strlen(buffer));
 			record = record->next;
 		} else {
@@ -403,10 +424,12 @@ $TTL %lu\n\
 void
 add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
 {
-	char *buffer;
-	size_t len, size;
+	char *buffer, *dot, name[HOST_S];
+	size_t len, size, blen = 0;
+	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *record = dnsa->records;
 	len = BUILD_S;
+	size = strlen(*zonefile);
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
 	
@@ -419,16 +442,51 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
 			record = record->next;
 		} else {
 			snprintf(buffer, BUFF_S, "\
-%s\t%s\t%s\n", record->host, record->type, record->dest);
-			size = strlen(*zonefile);
-			if (strlen(buffer) + size > len) {
-				len = len + BUILD_S;
+%s\tIN %s\t%s\n", record->host, record->type, record->dest);
+			blen = strlen(buffer);
+			if (blen + size > len) {
+				len += BUILD_S;
 				if (!(realloc(*zonefile, len))) {
 					report_error(MALLOC_FAIL, "realloc of zonefile");
 				}
 			}
 			strncat(*zonefile, buffer, strlen(buffer));
 			record = record->next;
+			size += blen;
+		}
+	}
+	if (!(glue)) {
+		free(buffer);
+		return;
+	}
+	while (glue) {
+		if (glue->zone_id != id) {
+			glue = glue->next;
+		} else {
+			snprintf(name, HOST_S, "%s", glue->name);
+			dot = strchr(name, '.');
+			*dot = '\0';
+			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
+				snprintf(buffer, BUFF_S, "\
+%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n\
+%s.%s.\tA\t%s\n\
+%s.%s.\tA\t%s\n\n", name, glue->pri_ns, name, glue->sec_ns, name,
+              glue->pri_ns, glue->name, glue->pri_dns, glue->sec_ns,
+	      glue->name, glue->sec_dns);
+			else
+				snprintf(buffer, BUFF_S, "\
+%s\tIN\tNS\t%s.%s\n%s.%s.\tA\t%s\n\n", name, glue->pri_ns, name,
+              glue->pri_ns, glue->name, glue->pri_dns);
+			blen = strlen(buffer);
+			if (blen + size > len) {
+				len += BUILD_S;
+				if (!(realloc(*zonefile, len))) {
+					report_error(MALLOC_FAIL, "realloc of zonefile");
+				}
+			}
+			strncat(*zonefile, buffer, strlen(buffer));
+			glue = glue->next;
+			size += blen;
 		}
 	}
 	free(buffer);
@@ -2509,7 +2567,8 @@ get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
 	parent = strchr(dnsa->glue->name, '.');
 	parent++;
 	while (zone) {
-		if ((strncmp(zone->name, parent, RBUFF_S)) == 0)
+		if ((strncmp(zone->name, parent, RBUFF_S) == 0) &&
+		    (strncmp(zone->type, "master", COMM_S) == 0))
 			id = zone->id;
 		zone = zone->next;
 	}

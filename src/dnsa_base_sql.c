@@ -69,7 +69,7 @@ SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = 
 SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
-SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_records"
+SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_zones"
 };
 /**
  * These SQL searches require the struct within dnsa_s to be initialised, as
@@ -423,7 +423,7 @@ dnsa_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == PREFERRED_A) {
 		*query = dnsa_sql_select[PREFERRED_AS];
 		*fields = dnsa_select_fields[PREFERRED_AS];
-	} else if (type == GLUES) {
+	} else if (type == GLUE) {
 		*query = dnsa_sql_select[GLUES];
 		*fields = dnsa_select_fields[GLUES];
 	} else {
@@ -817,8 +817,28 @@ dnsa_store_duplicate_a_record_mysql(MYSQL_ROW row, dnsa_s *base)
 }
 
 void
-dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *dnsa)
+dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *base)
 {
+	glue_zone_info_s *glue, *list;
+
+	if (!(glue = malloc(sizeof(glue_zone_info_s))))
+		report_error(MALLOC_FAIL, "dnsa_store_glue_mysql");
+	init_glue_zone_struct(glue);
+	glue->id = strtoul(row[0], NULL, 10);
+	snprintf(glue->name, RBUFF_S, "%s", row[1]);
+	glue->zone_id = strtoul(row[2], NULL, 10);
+	snprintf(glue->pri_dns, RBUFF_S, "%s", row[3]);
+	snprintf(glue->sec_dns, RBUFF_S, "%s", row[4]);
+	snprintf(glue->pri_ns, RANGE_S, "%s", row[5]);
+	snprintf(glue->sec_ns, RANGE_S, "%s", row[6]);
+	list = base->glue;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = glue;
+	} else {
+		base->glue = glue;
+	}
 }
 
 int
@@ -1613,6 +1633,26 @@ dnsa_store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 void
 dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	glue_zone_info_s *glue, *list;
+
+	if (!(glue = malloc(sizeof(glue_zone_info_s))))
+		report_error(MALLOC_FAIL, "glue in dnsa_store_glue_sqlite");
+	init_glue_zone_struct(glue);
+	glue->id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(glue->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
+	glue->zone_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	snprintf(glue->pri_dns, RANGE_S, "%s", sqlite3_column_text(state, 3));
+	snprintf(glue->sec_dns, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(glue->pri_ns, RBUFF_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(glue->sec_ns, RBUFF_S, "%s", sqlite3_column_text(state, 6));
+	list = base->glue;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = glue;
+	} else {
+		base->glue = glue;
+	}
 }
 
 int
