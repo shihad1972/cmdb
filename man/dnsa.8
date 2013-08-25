@@ -15,9 +15,9 @@ dnsa \- Domain Name System Administration
 [
 .B -abdeglruwxz
 ] [
-.B -FRS
+.B -FRSG
 ] [
-.B -Mhinpt
+.B -IMNhinpt
 ]
 .SH DESCRIPTION
 \fBdnsa\fP is a tool to administer DNS zones and records. You are able to add
@@ -63,6 +63,8 @@ Forward zone
 Reverse zone
 .IP -S
 Slave zone
+.IP -G
+Glue records for delegated zone
 .PP
 .B Slave Zones
 
@@ -73,6 +75,13 @@ using the\fB -h\fP option as described below.
 Also, the secondary NS server will be taken from the pri_dns configuration option
 in config file, which is usually the server you are working on.
 .PP
+.B Delegate zones
+
+It can be useful to delegate control of a subdomain to other servers, and this
+options allows you to do so. You need to use the \fB-I\fP and, optionally, the
+\fB-N\fP options described below to create the \fBglue records\fP that control
+the delegation of the zone.
+.PP
 .B Name options
 .IP "-M master nameserver IP"
 This is the ip address of the master name server. This option is only useful
@@ -82,11 +91,23 @@ if you are adding a slave zone (specified with the -S option above)
 The name of the DNS zone / domain for forward zones or the IP range for
 reverse zones.
 .PP
+.IP "-N pri_ns_name,sec_ns_name"
+The name of the primary, and optionally, the secondary name server(s) that will
+create the \fBglue records\fP. These will prefix the subdomain to get the
+FQDN of the name server. If these are not supplied, then the standards \fBn1\fP
+and \fBns2\fP will be used.
+.PP
 .B Options for adding a reverse zone
 .IP "-p prefix"
 The subnet prefix for a reverse zone. Regular classes (/8, /16 or /24)
 or classless prefixes (/24 -> /32) will be accepted. Classless prefixes
 between /8 -> /16 and /16 -> /24 will NOT be accepted.
+.PP
+.B Options for adding a delegated zone and glue records
+.IP "-I pri_ns_ip,sec_ns_ip"
+These are the IP addresses of the primary, and optionally, secondary name
+servers that you are delegating the subdomain to, and will be used in the
+creation of the \fBglue records\fP.
 .PP
 .B Options for adding a forward host
 .IP "-i IP address"

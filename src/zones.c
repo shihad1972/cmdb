@@ -2435,10 +2435,16 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		split_glue_ns(cm->glue_ns, glue);
 	else
 		snprintf(glue->pri_ns, RBUFF_S, "%s", cm->glue_ns);
-	if (strchr(cm->glue_ip, '.'))
+	if (strchr(cm->glue_ip, ',')) {
 		split_glue_ip(cm->glue_ip, glue);
-	else
+		if (strncmp(glue->sec_ns, "none", COMM_S) == 0) {
+			printf("Removing 2nd IP as no 2nd name provided.\n");
+			snprintf(glue->sec_dns, COMM_S, "none");
+		}
+	} else {
 		snprintf(glue->pri_dns, RANGE_S, "%s", cm->glue_ip);
+		snprintf(glue->sec_ns, RANGE_S, "none");
+	}
 	snprintf(glue->name, RBUFF_S, "%s", cm->domain);
 	if ((retval = get_glue_zone_parent(dc, dnsa)) != 0) {
 		dnsa_clean_list(dnsa);

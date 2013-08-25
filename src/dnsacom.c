@@ -145,6 +145,10 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		comp->prefix = 100;
 		fprintf(stderr, "No priority specified for MX record, using 100\n");
 	}
+	if (retval == NO_GLUE_NS) {
+		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
+		retval = NONE;
+	}
 	return retval;
 }
 
@@ -409,9 +413,9 @@ init_glue_zone_struct(glue_zone_info_s *glu)
 	glu->id = glu->zone_id = 0;
 	snprintf(glu->name, COMM_S, "NULL");
 	snprintf(glu->pri_ns, COMM_S, "NULL");
-	snprintf(glu->sec_ns, COMM_S, "NULL");
+	snprintf(glu->sec_ns, COMM_S, "none");
 	snprintf(glu->pri_dns, COMM_S, "NULL");
-	snprintf(glu->sec_dns, COMM_S, "NULL");
+	snprintf(glu->sec_dns, COMM_S, "none");
 	glu->next = '\0';
 }
 
