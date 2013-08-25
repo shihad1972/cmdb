@@ -367,4 +367,8 @@ void
 split_glue_ns(char *pri_ns, glue_zone_info_s *glue);
 void
 split_glue_ip(char *pri_ip, glue_zone_info_s *glue);
+void
+setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue);
+int
+get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa);
 #endif /* __CMDB_DNSA_H__ */

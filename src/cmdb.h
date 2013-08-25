@@ -93,6 +93,7 @@ enum {			/* dnsa error codes */
 	NO_MASTER_NAME = 38,
 	NO_GLUE_IP = 39,
 	NO_GLUE_NS = 40,
+	NO_PARENT_ZONE = 41,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52

@@ -115,6 +115,7 @@ INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
 INSERT","\
 INSERT","\
 INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
+INSERT","\
 INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) VALUES (?, ?, ?, ?, ?, ?)"
 };
 
@@ -158,15 +159,16 @@ const int mysql_inserts[][15] = {
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0} ,
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
     MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5, 7 };
+const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5, 4, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4, 6 };
+const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4, 0, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -421,7 +423,7 @@ dnsa_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == PREFERRED_A) {
 		*query = dnsa_sql_select[PREFERRED_AS];
 		*fields = dnsa_select_fields[PREFERRED_AS];
-	} else if (type == GLUE) {
+	} else if (type == GLUES) {
 		*query = dnsa_sql_select[GLUES];
 		*fields = dnsa_select_fields[GLUES];
 	} else {
@@ -565,7 +567,7 @@ dnsa_run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	if (type & PREFERRED_A)
 		if ((retval = dnsa_run_query_mysql(config, base, PREFERRED_A)) != 0)
 			return retval;
-	if (type & GLUE)
+	if (type & GLUES)
 		if ((retval = dnsa_run_query_mysql(config, base, GLUE)) != 0)
 			return retval;
 	return retval;
@@ -1174,7 +1176,7 @@ dnsa_setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsign
 		dnsa_setup_insert_mysql_bind_buff_rev_records(input, base, i);
 	else if (type == PREFERRED_AS)
 		dnsa_setup_insert_mysql_bind_buff_pref_a(input, base, i);
-	else if (type == GLUE)
+	else if (type == GLUES)
 		dnsa_setup_insert_mysql_bind_buff_glue(input, base, i);
 	else
 		retval = WRONG_TYPE;

@@ -2422,14 +2422,15 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	int retval = NONE;
 	dnsa_s *dnsa;
 	glue_zone_info_s *glue;
+	zone_info_s *zone;
 
 	if (!(glue = malloc(sizeof(glue_zone_info_s))))
 		report_error(MALLOC_FAIL, "glue in add_glue_zone");
+	if (!(zone = malloc(sizeof(zone_info_s))))
+		report_error(MALLOC_FAIL, "zone in add_glue_zone");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_glue_zone");
-	init_glue_zone_struct(glue);
-	init_dnsa_struct(dnsa);
-	dnsa->glue = glue;
+	setup_glue_struct(dnsa, zone, glue);
 	if (strchr(cm->glue_ns, ','))
 		split_glue_ns(cm->glue_ns, glue);
 	else
@@ -2438,8 +2439,20 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		split_glue_ip(cm->glue_ip, glue);
 	else
 		snprintf(glue->pri_dns, RANGE_S, "%s", cm->glue_ip);
-	printf("Name servers: %s\t%s\n", glue->pri_ns, glue->sec_ns);
-	printf("IP's of servers: %s\t%s\n", glue->pri_dns, glue->sec_dns);
+	snprintf(glue->name, RBUFF_S, "%s", cm->domain);
+	if ((retval = get_glue_zone_parent(dc, dnsa)) != 0) {
+		dnsa_clean_list(dnsa);
+		printf("Zone %s has no parent!\n", cm->domain);
+		return retval;
+	}
+	if ((retval = dnsa_run_insert(dc, dnsa, GLUES)) != 0) {
+		dnsa_clean_list(dnsa);
+		fprintf(stderr, "Cannot insert glue zone %s into database\n",
+			cm->domain);
+		return retval;
+	}
+	printf("Glue records for zone %s added\n", cm->domain);
+	dnsa_clean_list(dnsa);
 	return retval;
 }
 
@@ -2463,4 +2476,41 @@ split_glue_ip(char *ip, glue_zone_info_s *glue)
 	pnt++;
 	snprintf(glue->pri_dns, RANGE_S, "%s", ip);
 	snprintf(glue->sec_dns, RANGE_S, "%s", pnt);
+}
+
+void
+setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue)
+{
+	init_glue_zone_struct(glue);
+	init_zone_struct(zone);
+	init_dnsa_struct(dnsa);
+	dnsa->glue = glue;
+	dnsa->zones = zone;
+}
+
+int
+get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
+{
+	char *parent;
+	int retval = NONE;
+	unsigned long int id = 0;
+	zone_info_s *zone = dnsa->zones;
+
+	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
+		fprintf(stderr, "Unable to get zones from database\n");
+		return retval;
+	}
+	parent = strchr(dnsa->glue->name, '.');
+	parent++;
+	while (zone) {
+		if ((strncmp(zone->name, parent, RBUFF_S)) == 0)
+			id = zone->id;
+		zone = zone->next;
+	}
+	if (id != 0) {
+		dnsa->glue->zone_id = id;
+		retval = NONE;
+	} else
+		retval = NO_PARENT_ZONE;
+	return retval;
 }
