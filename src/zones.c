@@ -1061,7 +1061,9 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	record->pri = cm->prefix;
 	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
 		fprintf(stderr, "Cannot insert record\n");
-	retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES);
+	else
+		if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
+			fprintf(stderr, "Cannot set zone as update\n");
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -2478,6 +2480,7 @@ int
 add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE;
+	dbdata_s data;
 	dnsa_s *dnsa;
 	glue_zone_info_s *glue;
 	zone_info_s *zone;
@@ -2515,6 +2518,9 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 			cm->domain);
 		return retval;
 	}
+	data.args.number = glue->zone_id;
+	if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
+		fprintf(stderr, "Cannot set zone as update\n");
 	printf("Glue records for zone %s added\n", cm->domain);
 	dnsa_clean_list(dnsa);
 	return retval;
