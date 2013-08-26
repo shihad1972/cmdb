@@ -169,7 +169,7 @@ CREATE TABLE `build_ip` (
     ON UPDATE CASCADE ON DELETE CASCADE,
 
   FOREIGN KEY(`server_id`),
-    REfERENCES `server`(`server_id`)
+    REFERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
