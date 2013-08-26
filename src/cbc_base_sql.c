@@ -151,7 +151,7 @@ UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, ldap_ss
   bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ?,\
   ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_nfs = 1, nfs_domain = ? WHERE bd_id = ?","\
+UPDATE build_domain SET nfs_domain = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_ntp = 1, ntp_server = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_email = 1, smtp_server = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_log = 1, log_server = ? WHERE bd_id = ?","\

@@ -168,7 +168,7 @@ CREATE TABLE `build_ip` (
     REFERENCES `build_domain`(`bd_id`)
     ON UPDATE CASCADE ON DELETE CASCADE,
 
-  FOREIGN KEY(`server_id`),
+  FOREIGN KEY(`server_id`)
     REFERENCES `server`(`server_id`)
     ON UPDATE CASCADE ON DELETE CASCADE
 
