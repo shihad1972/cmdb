@@ -1,3 +1,6 @@
+26/08/2013
+Add checks against all strtoul from DB as if given NULL it will segfault.
+
 08/08/2013
 When adding or deleting a build domain then re-write the dhcpd.networks
 configuration file with all valid build domains. Will need to assume that
