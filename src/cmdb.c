@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 			} else {
 				printf("Added into database\n");
 			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_server_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}
