@@ -111,7 +111,8 @@ SELECT cust_id FROM customer WHERE coid = ?","\
 SELECT service_type_id FROM service_type WHERE service = ?","\
 SELECT hard_type_id FROM hard_type WHERE class = ?","\
 SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?","\
-SELECT class FROM hard_type WHERE hard_type_id = ?"
+SELECT class FROM hard_type WHERE hard_type_id = ?","\
+SELECT cust_id FROM customer WHERE name = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -123,9 +124,9 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
@@ -135,7 +136,8 @@ const unsigned int cmdb_search_arg_types[][1] = {
 	{ DBTEXT },
 	{ DBTEXT },
 	{ DBTEXT },
-	{ DBINT }
+	{ DBINT },
+	{ DBTEXT }
 };
 
 const unsigned int cmdb_search_field_types[][1] = {
@@ -144,7 +146,8 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },
-	{ DBTEXT }
+	{ DBTEXT },
+	{ DBINT }
 };
 
 const unsigned int cmdb_delete_arg_type[][1] = {

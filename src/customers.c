@@ -137,6 +137,38 @@ add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 }
 
 int
+remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
+{
+	int retval = NONE, type = NONE;
+	dbdata_s data;
+	if (strncmp(cm->name, "NULL", COMM_S) != 0) {
+		snprintf(data.args.text, CONF_S, "%s", cm->name);
+		type = CUST_ID_ON_NAME;
+	} else if (strncmp(cm->id, "NULL", COMM_S) != 0) {
+		snprintf(data.args.text, CONF_S, "%s", cm->id);
+		type = CUST_ID_ON_COID;
+	} else
+		return NO_NAME;
+	if ((retval = cmdb_run_search(config, &data, type)) == 0) {
+		fprintf(stderr, "No customers found\n");
+		return CUSTOMER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple customers found\n");
+		return MULTIPLE_CUSTOMERS;
+	} else
+		data.args.number = data.fields.number;
+	if ((retval = cmdb_run_delete(config, &data, CUSTOMERS)) == 0) {
+		fprintf(stderr, "Customer not removed from DB\n");
+		return CUSTOMER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple customers removed from DB\n");
+		return MULTIPLE_CUSTOMERS;
+	} else
+		printf("Customer removed from database\n");
+	return NONE;
+}
+
+int
 add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;
