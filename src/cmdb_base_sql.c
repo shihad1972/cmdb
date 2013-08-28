@@ -112,7 +112,9 @@ SELECT service_type_id FROM service_type WHERE service = ?","\
 SELECT hard_type_id FROM hard_type WHERE class = ?","\
 SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?","\
 SELECT class FROM hard_type WHERE hard_type_id = ?","\
-SELECT cust_id FROM customer WHERE name = ?"
+SELECT cust_id FROM customer WHERE name = ?","\
+SELECT cont_id FROM contacts c LEFT JOIN customer s ON s.cust_id = c.cust_id\
+  WHERE c.name = ? AND s.coid = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -124,20 +126,21 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_arg_types[][1] = {
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBINT },
-	{ DBTEXT }
+const unsigned int cmdb_search_arg_types[][2] = {
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBINT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, DBTEXT }
 };
 
 const unsigned int cmdb_search_field_types[][1] = {
@@ -147,6 +150,7 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBTEXT },
+	{ DBINT },
 	{ DBINT }
 };
 
@@ -1926,6 +1930,10 @@ show_no_results(int type)
 		fprintf(stderr, "No customers to list\n");
 	else if (type == SERVICE)
 		fprintf(stderr, "No services to list\n");
+	else if (type == CONTACT)
+		fprintf(stderr, "No contacts to list\n");
+	else if (type == SERVICE_TYPE)
+		;
 	else
 		fprintf(stderr, "No unknown listing %d\n", type);
 }

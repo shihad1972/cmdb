@@ -145,6 +145,12 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Varient already exists in the database\n");
 	} else if (error == OS_ALIAS_NEEDED) {
 		fprintf(stderr, "Build os %s needs a version alias\n", errstr);
+	} else if (error == NO_CONTACT_INFO) {
+		fprintf(stderr, "Not enough information provided about the contact\n");
+	} else if (error == NO_CONTACT) {
+		fprintf(stderr, "This is not the contact you were looking for!\n");
+	} else if (error == MULTI_CONTACT) {
+		fprintf(stderr, "Multiple contacts found for that!\n");
 	} else if (error == BUILD_OS_IN_USE) {
 		fprintf(stderr,
 "Cowardly refusal to delete build os %s\n", errstr);
@@ -271,7 +277,7 @@ display_cmdb_usage(void)
 {
 	printf("CMDB: Configuration Management Database\n");
 	printf("Action options:\n");
-	printf("-a: add\n-d: display\n-l: list\n-r: remove");
+	printf("-a: add\n-d: display\n-l: list\n-r: remove\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
 	printf("-e: services\n-h: hardware\n-v: virtual machine hosts\n");

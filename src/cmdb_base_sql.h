@@ -35,7 +35,7 @@ extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 extern const unsigned int cmdb_search_fields[];
 extern const unsigned int cmdb_search_args[];
-extern const unsigned int cmdb_search_arg_types[][1];
+extern const unsigned int cmdb_search_arg_types[][2];
 extern const unsigned int cmdb_search_field_types[][1];
 extern const unsigned int cmdb_delete_args[];
 extern const unsigned int cmdb_delete_arg_type[][1];

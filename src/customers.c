@@ -169,6 +169,42 @@ remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 }
 
 int
+remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	if ((strncmp(cm->name, "NULL", COMM_S) == 0) || (strncmp(cm->id, "NULL", COMM_S) == 0))
+		return NO_CONTACT_INFO;
+	cmdb_init_initial_dbdata(&data, CONTACT_ID_ON_COID_NAME);
+	if (data)
+		snprintf(data->args.text, CONF_S, "%s", cm->name);
+	else
+		return NO_DATA;
+	if (data->next)
+		snprintf(data->next->args.text, CONF_S, "%s", cm->id);
+	else
+		return NO_DATA;
+	if ((retval  = cmdb_run_search(config, data, CONTACT_ID_ON_COID_NAME)) == 0) {
+		fprintf(stderr, "No contact found\n");
+		return NO_CONTACT;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple contacts found\n");
+		return MULTI_CONTACT;
+	} else
+		data->args.number = data->fields.number;
+	if ((retval = cmdb_run_delete(config, data, CONTACTS)) == 0) {
+		fprintf(stderr, "No contact removed\n");
+		return NO_CONTACT;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple contacts removed\n");
+		return MULTI_CONTACT;
+	} else 
+		printf("Contact removed\n");
+	return NONE;
+}
+
+int
 add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;

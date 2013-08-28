@@ -153,6 +153,8 @@ int main(int argc, char *argv[])
 			} else {
 				printf("Added %s to database\n", base->contact->name);
 			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_contact_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}
