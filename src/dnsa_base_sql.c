@@ -1844,7 +1844,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_delete_sqlite");
 	}
 	for (i = 1; i <= dnsa_delete_args[type]; i++) {
 		if (!list)
@@ -1863,7 +1863,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 		list = list->next;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
-		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
+		printf("Received error: %s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_finalize(state);
 		retval = sqlite3_close(dnsa);
 		return NONE;

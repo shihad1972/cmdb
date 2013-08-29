@@ -79,6 +79,17 @@ INSERT INTO hard_type (type, class) VALUES (?,?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
 };
 
+const char *cmdb_sql_delete[] = { "\
+DELETE FROM server WHERE server_id = ?","\
+DELETE FROM customer WHERE cust_id = ?","\
+DELETE FROM contacts WHERE cont_id = ?","\
+DELETE FROM services WHERE service_id = ?","\
+DELETE FROM service_type WHERE service_type_id = ?","\
+DELETE FROM hardware WHERE hard_id = ?","\
+DELETE FROM hard_type WHERE hard_type_id = ?","\
+DELETE FROM vm_server_hosts WHERE vm_server_hosts = ?"
+};
+
 #ifdef HAVE_MYSQL
 
 const int mysql_inserts[8][7] = {
@@ -100,7 +111,10 @@ SELECT cust_id FROM customer WHERE coid = ?","\
 SELECT service_type_id FROM service_type WHERE service = ?","\
 SELECT hard_type_id FROM hard_type WHERE class = ?","\
 SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?","\
-SELECT class FROM hard_type WHERE hard_type_id = ?"
+SELECT class FROM hard_type WHERE hard_type_id = ?","\
+SELECT cust_id FROM customer WHERE name = ?","\
+SELECT cont_id FROM contacts c LEFT JOIN customer s ON s.cust_id = c.cust_id\
+  WHERE c.name = ? AND s.coid = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -112,18 +126,21 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2 };
 
+const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_arg_types[][1] = {
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBTEXT },
-	{ DBINT }
+const unsigned int cmdb_search_arg_types[][2] = {
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBINT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, DBTEXT }
 };
 
 const unsigned int cmdb_search_field_types[][1] = {
@@ -132,9 +149,20 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },
-	{ DBTEXT }
+	{ DBTEXT },
+	{ DBINT },
+	{ DBINT }
 };
 
+const unsigned int cmdb_delete_arg_type[][1] = {
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT }
+};
+	
 int
 run_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
@@ -260,6 +288,30 @@ run_insert(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 
 	return NONE;
+}
+
+int
+cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	int retval = NONE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
+		fprintf(stderr, "No database type configured\n");
+		return NO_DB_TYPE;
+#ifdef HAVE_MYSQL
+	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+		retval = cmdb_run_delete_mysql(config, data, type);
+		return retval;
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+		retval = cmdb_run_delete_sqlite(config, data, type);
+		return retval;
+#endif /* HAVE_SQLITE3 */
+	} else {
+		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
+		return DB_TYPE_INVALID;
+	}
+	return retval;
 }
 
 int
@@ -658,6 +710,53 @@ run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	
+	mysql_stmt_close(cmdb_stmt);
+	cmdb_mysql_cleanup(&cmdb);
+	return retval;
+}
+
+int
+cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	MYSQL cmdb;
+	MYSQL_STMT *cmdb_stmt;
+	MYSQL_BIND my_bind[cmdb_delete_args[type]];
+	const char *query;
+	int retval = NONE;
+	unsigned int i;
+	dbdata_s *list = data;
+
+	memset(my_bind, 0, sizeof(my_bind));
+	for (i = 0; i < cmdb_delete_args[type]; i++) {
+		if (cmdb_delete_arg_type[type][i] == DBINT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
+			my_bind[i].is_null = 0;
+			my_bind[i].length = 0;
+			my_bind[i].is_unsigned = 1;
+			my_bind[i].buffer = &(list->args.number);
+			my_bind[i].buffer_length = sizeof(unsigned long int);
+			list = list->next;
+		} else if (cmdb_delete_arg_type[type][i] == MYSQL_TYPE_STRING) {
+			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
+			my_bind[i].is_null = 0;
+			my_bind[i].length = 0;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.text);
+			my_bind[i].buffer_length = strlen(list->args.text);
+			list = list->next;
+		}
+	}
+	query = cmdb_sql_delete[type];
+	cmdb_mysql_init(config, &cmdb);
+	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
+		return MY_STATEMENT_FAIL;
+	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
+	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+	retval = (int)mysql_stmt_affected_rows(cmdb_stmt);
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
 	return retval;
@@ -1317,6 +1416,50 @@ run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
+cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	const char *query = cmdb_sql_delete[type], *file = config->file;
+	int retval = NONE;
+	unsigned int i;
+	dbdata_s *list = data;
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
+
+	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0)
+		report_error(FILE_O_FAIL, file);
+	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
+		retval = sqlite3_close(cmdb);
+		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_delete");
+	}
+	for (i = 1; i <= cmdb_delete_args[type]; i++) {
+		if (!list)
+			break;
+		if (cmdb_delete_arg_type[type][i - 1] == DBTEXT) {
+			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
+				fprintf(stderr, "Cannot bind arg %s\n", list->args.text);
+				return retval;
+			}
+		} else if (cmdb_delete_arg_type[type][i - 1] == DBINT) {
+			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
+				fprintf(stderr, "Cannot bind arg %lu\n", list->args.number);
+				return retval;
+			}
+		}
+		list = list->next;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Received error: %s\n", sqlite3_errmsg(cmdb));
+		retval = sqlite3_finalize(state);
+		retval = sqlite3_close(cmdb);
+		return NONE;
+	}
+	retval = sqlite3_changes(cmdb);
+	sqlite3_finalize(state);
+	sqlite3_close(cmdb);
+	return retval;
+}
+
+int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 {
 	int retval;
@@ -1787,6 +1930,10 @@ show_no_results(int type)
 		fprintf(stderr, "No customers to list\n");
 	else if (type == SERVICE)
 		fprintf(stderr, "No services to list\n");
+	else if (type == CONTACT)
+		fprintf(stderr, "No contacts to list\n");
+	else if (type == SERVICE_TYPE)
+		;
 	else
 		fprintf(stderr, "No unknown listing %d\n", type);
 }

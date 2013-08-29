@@ -192,9 +192,15 @@ display_vm_hosts(cmdb_config_s *config);
 int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
+remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
+int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb);
 int
+remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
+int
 add_contact_to_database(cmdb_config_s *config, cmdb_s *base);
+int
+remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
 int
 add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb);
 int
