@@ -171,7 +171,7 @@ void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
 
 void
-fill_kick_base(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+fill_kick_base(dbdata_s *data, string_len_s *build);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);

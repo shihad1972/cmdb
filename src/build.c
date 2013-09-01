@@ -688,7 +688,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_KICKSTART_ERR;
 	} else {
-		fill_kick_base(cml, data, &build);
+		fill_kick_base(data, &build);
 		retval = NONE;
 	}
 	clean_dbdata_struct(data);
@@ -1452,7 +1452,7 @@ postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
 }
 
 void
-fill_kick_base(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+fill_kick_base(dbdata_s *data, string_len_s *build)
 {
 	char buff[FILE_S], *tmp;
 	char *serv = data->next->next->fields.text;
