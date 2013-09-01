@@ -434,11 +434,25 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		printf("tftp configuration file written\n");
 	}
-	if ((retval = write_build_file(cmc, cml)) != 0) {
-		printf("Failed to write build file\n");
-		return retval;
+	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
+	    (strncmp(cml->os, "ubuntu", COMM_S) == 0)) {
+		if ((retval = write_preseed_build_file(cmc, cml)) != 0) {
+			printf("Failed to write build file\n");
+			return retval;
+		} else {
+			printf("build file written\n");
+		}
+	} else if ((strncmp(cml->os, "centos", COMM_S) == 0) ||
+	           (strncmp(cml->os, "fedora", COMM_S) == 0)) {
+		if ((retval = write_kickstart_build_file(cmc, cml)) != 0) {
+			printf("Failed to write build file\n");
+			return retval;
+		} else {
+			printf("build file written\n");
+		}
 	} else {
-		printf("build file written\n");
+		printf("OS %s does not exist\n", cml->os);
+		return OS_DOES_NOT_EXIST;
 	}
 	return retval;
 }
@@ -582,25 +596,25 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_tftp_output(cml, data, out);
 		retval = write_file(pxe, out);
 	}
-	if (retval == 0)
 	clean_dbdata_struct(data);
 	return retval;
 }
 
 int
-write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
 	int retval = NONE;
 	dbdata_s *data;
 	string_len_s build = {.len = BUFF_S};
 
+	/* This should NOT be hard coded! */
 	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_build_file");
+		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
 	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
@@ -645,6 +659,39 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		printf("Failed to get application configuration\n");
 		return retval;
 	}
+	retval = write_file(file, build.string);
+	free(build.string);
+	return retval;
+}
+
+int
+write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	char file[NAME_S];
+	int retval = NONE;
+	dbdata_s *data;
+	string_len_s build = { .len = BUFF_S };
+
+	/* This should NOT be hard coded! */
+	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+			return retval;
+	if (!(build.string = calloc(build.len, sizeof(char))))
+		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
+	cbc_init_initial_dbdata(&data, KICK_BASE);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_KICKSTART_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_KICKSTART_ERR;
+	} else {
+		fill_kick_base(cml, data, &build);
+		retval = NONE;
+	}
+	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
@@ -1401,6 +1448,84 @@ postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
 			build->string = tmp;
 	}
 	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_kick_base(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+{
+	char buff[FILE_S], *tmp;
+	char *serv = data->next->next->fields.text;
+	char *dn = data->next->next->next->fields.text;
+	char *key = data->next->next->next->next->fields.text;
+	char *loc = data->next->next->next->next->next->fields.text;
+	char *tim = data->next->next->next->next->next->next->fields.text;
+	short int ldapconf = data->fields.small, ldapssl = data->next->fields.small;
+	size_t len;
+
+	if (ldapconf > 0) {
+		if (ldapssl > 0)
+			snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5 --enableldap --enableldaptls --enableldapauth \
+--ldapserver=%s --ldapbasedn=%s\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", serv, dn, key, loc, tim);
+		else
+			snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5 --enableldap --enableldapauth --ldapserver=%s --ldapbasedn=%s\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", serv, dn, key, loc, tim);
+	} else {
+		snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", key, loc, tim);
+	}
+	if ((len = strlen(buff)) > build->len) {
+		build->len = FILE_S;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "string in fill_kick_base");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string, len + 1, "%s", buff);
 	build->size += len;
 }
 

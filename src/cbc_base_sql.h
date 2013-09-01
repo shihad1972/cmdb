@@ -98,7 +98,8 @@ enum {			/* cbc search SQL statements */
 	OS_ID_ON_ALIAS_VER_ALIAS = 36,
 	DEF_SCHEME_ID_ON_SCH_NAME = 37,
 	BD_ID_ON_DOMAIN = 38,
-	CONFIG_LDAP_BUILD_DOM = 39
+	CONFIG_LDAP_BUILD_DOM = 39,
+	KICK_BASE = 40
 };
 
 enum {			/* cbc update SQL statements */

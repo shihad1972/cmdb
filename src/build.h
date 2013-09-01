@@ -123,7 +123,10 @@ int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
+write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
@@ -166,6 +169,9 @@ fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
 
 void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
+
+void
+fill_kick_base(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);

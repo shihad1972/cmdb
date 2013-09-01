@@ -245,7 +245,11 @@ SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
 SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
 SELECT bd_id FROM build_domain WHERE domain = ?","\
-SELECT config_ldap FROM build_domain WHERE domain = ?"
+SELECT config_ldap FROM build_domain WHERE domain = ?","\
+SELECT bd.config_ldap, bd.ldap_ssl, bd.ldap_server, bd.ldap_dn, l.keymap, \
+  l.locale, l.timezone FROM build b LEFT JOIN locale l ON b.locale_id = \
+  l.locale_id LEFT JOIN build_ip bip ON b.ip_id = bip.ip_id LEFT JOIN \
+  build_domain bd ON bd.bd_id = bip.bd_id WHERE b.server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -315,11 +319,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 9,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7
 };
 
 const unsigned int cbc_update_types[][5] = {
@@ -402,7 +406,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE }
+	{ DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][9] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
@@ -444,7 +449,8 @@ const unsigned int cbc_search_field_types[][9] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE }
 };
 
 int
@@ -1978,7 +1984,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	list = data;
 	i = 0;
-	while ((sqlite3_step(state)) == SQLITE_ROW) {
+	while ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		get_cbc_search_res_sqlite(state, list, type, i);
 		i++;
 	}
