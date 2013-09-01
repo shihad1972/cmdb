@@ -165,7 +165,8 @@ DELETE FROM build_os WHERE os_id = ?","\
 DELETE FROM varient WHERE varient_id = ?","\
 DELETE FROM packages WHERE pack_id = ?","\
 DELETE FROM build_ip WHERE server_id = ?","\
-DELETE FROM build WHERE server_id = ?"
+DELETE FROM build WHERE server_id = ?","\
+DELETE FROM disk_dev WHERE server_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -315,7 +316,7 @@ const unsigned int cbc_update_args[] = {
 	4, 5, 2, 2, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
@@ -359,6 +360,7 @@ const unsigned int cbc_update_types[][5] = {
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
