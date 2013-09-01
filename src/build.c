@@ -606,7 +606,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char file[NAME_S];
 	int retval = NONE;
 	dbdata_s *data;
-	string_len_s build = {.len = BUFF_S};
+	string_len_s build = {.len = BUFF_S, .size = NONE };
 
 	/* This should NOT be hard coded! */
 	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
@@ -670,7 +670,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char file[NAME_S];
 	int retval = NONE;
 	dbdata_s *data;
-	string_len_s build = { .len = BUFF_S };
+	string_len_s build = { .len = BUFF_S, .size = NONE };
 
 	/* This should NOT be hard coded! */
 	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
