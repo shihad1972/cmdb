@@ -1,3 +1,9 @@
+01/09/2013
+Need to check for overlaps in build_domains when adding a new one.
+Also if we want to add a dhcpd.network entry will probably need to check
+if one exists already, and also configuration of the IP on that network.
+We could always assume /24, but this will not always be the case.
+
 26/08/2013
 Add checks against all strtoul from DB as if given NULL it will segfault.
 
