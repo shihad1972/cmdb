@@ -669,7 +669,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
 	int retval = NONE;
-	dbdata_s *data;
+	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
 
 	/* This should NOT be hard coded! */
@@ -690,6 +690,34 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		fill_kick_base(data, &build);
 		retval = NONE;
+	}
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, BASIC_PART);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BASIC_DISK;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_BASIC_DISK;
+	}
+	cbc_init_initial_dbdata(&part, FULL_PART);
+	data->next->next = part;
+	part->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, part, FULL_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	}
+	fill_kick_partitions(cml, data, &build);
+	clean_dbdata_struct(data);
+	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build for %s has no packages associated.\n",
+		 cml->name);
+	} else {
+		fill_kick_packages(data, &build);
 	}
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
@@ -1463,6 +1491,7 @@ fill_kick_base(dbdata_s *data, string_len_s *build)
 	short int ldapconf = data->fields.small, ldapssl = data->next->fields.small;
 	size_t len;
 
+	/* root password is k1Ckstart */
 	if (ldapconf > 0) {
 		if (ldapssl > 0)
 			snprintf(buff, FILE_S, "\
@@ -1476,7 +1505,7 @@ keyboard %s\n\
 lang %s\n\
 logging --level=info\n\
 reboot\n\
-rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+rootpw --isencrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
@@ -1493,7 +1522,7 @@ keyboard %s\n\
 lang %s\n\
 logging --level=info\n\
 reboot\n\
-rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+rootpw --isencrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
@@ -1527,6 +1556,113 @@ install\n\
 	}
 	snprintf(build->string, len + 1, "%s", buff);
 	build->size += len;
+}
+
+void
+fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+{
+	char *device = data->fields.text, buff[FILE_S], *tmp;
+	short int lvm = data->next->fields.small;
+	dbdata_s *part = data->next->next;
+	size_t len;
+
+	if (lvm > 0)
+		snprintf(buff, FILE_S, "\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n\
+part phys --size=1 --grow\n\
+volgroup %s --pesize=32768 phys\n\
+",  device, cml->name);
+	else
+		snprintf(buff, FILE_S, "\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n\
+", device);
+	len = strlen(buff);
+	tmp = buff + len;
+	while (part) {
+		if (part->next) {
+			if (part->next->next) {
+				if (part->next->next->next) {
+					if (part->next->next->next->next) {
+						if (part->next->next->next->next->next) {
+							if (!(part->next->next->next->next->next)) {
+								break;
+							}
+						} else {
+							break;
+						}
+					} else {
+						break;
+					}
+				} else {
+					break;
+				}
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+		if (lvm > 0)
+			snprintf(tmp, BUFF_S, "\
+logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\n\
+", part->next->next->next->next->next->fields.text,
+   part->next->next->next->fields.text,
+   part->next->next->next->next->fields.text,
+   cml->name,
+   part->next->fields.number);
+		else
+			snprintf(tmp, BUFF_S, "\
+part %s --fstype=\"%s\" --size=%lu\n\
+", part->next->next->next->next->next->fields.text,
+   part->next->next->next->fields.text,
+   part->next->fields.number);
+		len = strlen(buff);
+		tmp = buff + len;
+		part = part->next->next->next->next->next->next;
+	}
+	snprintf(tmp, COMM_S, "\n");
+	len++;
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_kick_packages(dbdata_s *data, string_len_s *build)
+{
+	char buff[BUFF_S], *tmp;
+	size_t len = NONE;
+	dbdata_s *list = data;
+
+	snprintf(buff, MAC_S, "\
+%%packages\n\
+\n\
+@Base\n\
+");
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+	while (list) {
+		len = strlen(list->fields.text);
+		len++;
+		if ((build->size + len) > build->len)
+			resize_string_buff(build);
+		tmp = build->string + build->size;
+		snprintf(tmp, len + 1, "%s\n", list->fields.text);
+		build->size += len;
+		list = list->next;
+	}
+	tmp = build->string + build->size;
+	snprintf(tmp, CH_S, "\n");
+	build->size++;
 }
 
 int
@@ -1813,4 +1949,17 @@ fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
 	snprintf(data->args.text, CONF_S, "%s", cml->os);
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
 	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
+}
+
+void
+resize_string_buff(string_len_s *build)
+{
+	char *tmp;
+
+	build->len *=2;
+	tmp = realloc(build->string, build->len * sizeof(char));
+	if (!tmp)
+		report_error(MALLOC_FAIL, "tmp in resize_string_buff");
+	else
+		build->string = tmp;
 }

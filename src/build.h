@@ -173,6 +173,12 @@ fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
 void
 fill_kick_base(dbdata_s *data, string_len_s *build);
 
+void
+fill_kick_partitions(cbc_comm_line_s *cmc, dbdata_s *data, string_len_s *build);
+
+void
+fill_kick_packages(dbdata_s *data, string_len_s *build);
+
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
 
@@ -220,5 +226,8 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
 void
 fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml);
+
+void
+resize_string_buff(string_len_s *build);
 
 #endif /* __CBC_BUILD_H__ */
