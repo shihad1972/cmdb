@@ -820,7 +820,7 @@ d-i netcfg/get_domain string \n");
 	if ((len = strlen(output)) > build->len) {
 		while ((build->size + len) > build->len)
 			build->len *=2;
-		tmp = realloc(build->string, len * sizeof(char));
+		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
 			report_error(MALLOC_FAIL, "string in fill_net_output");
 		else
