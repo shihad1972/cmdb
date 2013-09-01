@@ -730,19 +730,28 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	dbdata_s *list = data;
 	char *bline = list->fields.text;
-	list = list->next;
+	if (list->next)
+		list = list->next;
 	char *alias = list->fields.text;
 	snprintf(cml->os, CONF_S, "%s", alias);
-	list = list->next;
+	if (list->next)
+		list = list->next;
 	char *osver = list->fields.text;
-	list = list->next;
+	if (list->next)
+		list = list->next;
 	char *country = list->fields.text;
-	list = list->next->next->next;
+	if (list->next->next->next)
+		list = list->next->next->next;
 	char *arg = list->fields.text;
-	list = list->next;
+	if (list->next)
+		list = list->next;
 	char *url = list->fields.text;
-	list = list->next;
+	if (list->next)
+		list = list->next;
 	char *arch = list->fields.text;
+	if (list->next)
+		list = list->next;
+	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 default %s\n\
@@ -762,6 +771,16 @@ append initrd=initrd-%s-%s-%s.img country=%s \
 console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
+	} else if (strncmp(alias, "centos", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd=%s-%s-%s.img ksdevice=%s console=tty0 ramdisk_size=8192\
+ %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
+url, cml->name);
 	}
 	/* Store url for use in fill_packages */
 	snprintf(cml->config, CONF_S, "%s", url);
