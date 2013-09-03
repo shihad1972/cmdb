@@ -1539,7 +1539,7 @@ keyboard %s\n\
 lang %s\n\
 logging --level=info\n\
 reboot\n\
-rootpw --isencrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
+rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
@@ -1556,7 +1556,7 @@ keyboard %s\n\
 lang %s\n\
 logging --level=info\n\
 reboot\n\
-rootpw --isencrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
+rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
