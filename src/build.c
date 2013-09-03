@@ -728,11 +728,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	PREP_DB_QUERY(data, BUILD_PACKAGES);
 	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
 		clean_dbdata_struct(data);
+		data = '\0';
 		fprintf(stderr, "Build for %s has no packages associated.\n",
 		 cml->name);
-	} else {
-		fill_kick_packages(data, &build);
 	}
+	fill_kick_packages(data, &build);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
