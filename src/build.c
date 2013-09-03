@@ -1725,9 +1725,9 @@ fill_kick_network_info(dbdata_s *data, string_len_s *build)
 	if (list)
 		domain = list->fields.text;
 	snprintf(buff, FILE_S, "\
-url --url=http://%s/%s/%s/%s\n\
+url --url=http://%s/%s/%s/os/%s\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
---hostname %s.%s --onboot=on\n\n", mirror, alias, arch, ver, dev, ip, nm, gw, ns, host, domain);
+--hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
