@@ -600,6 +600,12 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	return retval;
 }
 
+#ifndef PREP_DB_QUERY
+# define PREP_DB_QUERY(data, query) {          \
+	cbc_init_initial_dbdata(&data, query); \
+	data->args.number = cml->server_id;    \
+}
+#endif /* PREP_DB_QUERY */
 int
 write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
@@ -615,8 +621,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
-	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, NET_BUILD_DETAILS);
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_NET_BUILD_ERR;
@@ -628,8 +633,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_MIRROR);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, BUILD_MIRROR);
 	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_MIRR_ERR;
@@ -645,8 +649,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = fill_kernel(cml, &build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, BUILD_PACKAGES);
 	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
@@ -679,8 +682,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
-	cbc_init_initial_dbdata(&data, KICK_BASE);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, KICK_BASE);
 	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_KICKSTART_ERR;
@@ -692,8 +694,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = NONE;
 	}
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BASIC_PART);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, BASIC_PART);
 	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BASIC_DISK;
@@ -701,17 +702,30 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_BASIC_DISK;
 	}
-	cbc_init_initial_dbdata(&part, FULL_PART);
+	PREP_DB_QUERY(part, FULL_PART);
 	data->next->next = part;
-	part->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, part, FULL_PART)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_FULL_DISK;
 	}
 	fill_kick_partitions(cml, data, &build);
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, KICK_NET_DETAILS);
+	if ((retval = cbc_run_search(cmc, data, KICK_NET_DETAILS)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build for %s has no network information.\n",
+		 cml->name);
+		return NO_NET_BUILD_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build for %s has multiple network configs.\n",
+		 cml->name);
+		return MULTI_NET_BUILD_ERR;
+	} else {
+		fill_kick_network_info(data, &build);
+	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, BUILD_PACKAGES);
 	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build for %s has no packages associated.\n",
@@ -725,6 +739,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	return retval;
 }
 
+#undef PREP_DB_QUERY
 void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
@@ -1652,6 +1667,76 @@ part %s --fstype=\"%s\" --size=%lu\n\
 }
 
 void
+fill_kick_network_info(dbdata_s *data, string_len_s *build)
+{
+	char buff[FILE_S], ip[RANGE_S], nm[RANGE_S], gw[RANGE_S], ns[RANGE_S];
+	char *tmp, *addr, *mirror, *alias, *arch, *ver, *dev, *host, *domain;
+	size_t len = NONE;
+	uint32_t ip_addr;
+	dbdata_s *list = data;	
+	if (list) {
+		mirror = list->fields.text;
+		list = list->next;
+	}
+	if (list) {
+		alias = list->fields.text;
+		list = list->next;
+	}
+	if (list) {
+		arch = list->fields.text;
+		list = list->next;
+	}
+	if (list) {
+		ver = list->fields.text;
+		list = list->next;
+	}
+	if (list) {
+		dev = list->fields.text;
+		list = list->next;
+	}
+	if (list) {
+		addr = ip;
+		ip_addr = htonl((uint32_t)list->fields.number);
+		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+		list = list->next;
+	}
+	if (list) {
+		addr = nm;
+		ip_addr = htonl((uint32_t)list->fields.number);
+		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+		list = list->next;
+	}
+	if (list) {
+		addr = gw;
+		ip_addr = htonl((uint32_t)list->fields.number);
+		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+		list = list->next;
+	}
+	if (list) {
+		addr = ns;
+		ip_addr = htonl((uint32_t)list->fields.number);
+		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+		list = list->next;
+	}
+	if (list) {
+		host = list->fields.text;
+		list = list->next;
+	}
+	if (list)
+		domain = list->fields.text;
+	snprintf(buff, FILE_S, "\
+url --url=http://%s/%s/%s/%s\n\
+network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
+--hostname %s.%s --onboot=on\n\n", mirror, alias, arch, ver, dev, ip, nm, gw, ns, host, domain);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size +=len;
+}
+
+void
 fill_kick_packages(dbdata_s *data, string_len_s *build)
 {
 	char buff[BUFF_S], *tmp;
@@ -1682,6 +1767,11 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 	tmp = build->string + build->size;
 	snprintf(tmp, CH_S, "\n");
 	build->size++;
+}
+
+void
+add_kick_base_script(dbdata_s *data, string_len_s *build)
+{
 }
 
 int

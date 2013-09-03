@@ -177,7 +177,13 @@ void
 fill_kick_partitions(cbc_comm_line_s *cmc, dbdata_s *data, string_len_s *build);
 
 void
+fill_kick_network_info(dbdata_s *data, string_len_s *build);
+
+void
 fill_kick_packages(dbdata_s *data, string_len_s *build);
+
+void
+add_kick_base_script(dbdata_s *data, string_len_s *build);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);

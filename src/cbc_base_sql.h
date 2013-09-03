@@ -45,7 +45,7 @@ extern const unsigned int cbc_delete_fields[];
 extern const unsigned int cbc_update_types[][5];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
-extern const unsigned int cbc_search_field_types[][10];
+extern const unsigned int cbc_search_field_types[][11];
 
 
 enum {			/* cbc delete SQL statements */
@@ -100,7 +100,8 @@ enum {			/* cbc search SQL statements */
 	DEF_SCHEME_ID_ON_SCH_NAME = 37,
 	BD_ID_ON_DOMAIN = 38,
 	CONFIG_LDAP_BUILD_DOM = 39,
-	KICK_BASE = 40
+	KICK_BASE = 40,
+	KICK_NET_DETAILS = 41
 };
 
 enum {			/* cbc update SQL statements */
