@@ -1573,7 +1573,7 @@ keyboard %s\n\
 lang %s\n\
 logging --level=info\n\
 reboot\n\
-rootpw --isencrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+rootpw --iscrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
