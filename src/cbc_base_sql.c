@@ -255,7 +255,9 @@ SELECT bt.mirror, bt.alias, bo.arch, bo.os_version, b.net_inst_int, bi.ip, \
   bd.netmask, bd.gateway, bd.ns, bi.hostname, bi.domainname FROM build b \
   LEFT JOIN build_ip bi ON bi.ip_id = b.ip_id LEFT JOIN build_domain bd ON \
   bi.bd_id = bd.bd_id LEFT JOIN build_os bo ON b.os_id = bo.os_id LEFT JOIN \
-  build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?"
+  build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?","\
+SELECT url FROM build_type bt LEFT JOIN build_os bo ON bt.bt_id = bo.bt_id \
+  LEFT JOIN build b ON b.os_id = bo.os_id WHERE b.server_id = ?"
 };
 
 #ifdef HAVE_MYSQL
@@ -325,11 +327,11 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11
+	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1
 };
 
 const unsigned int cbc_update_types[][5] = {
@@ -415,6 +417,7 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBTEXT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
@@ -459,7 +462,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT }
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -915,6 +919,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	MYSQL_STMT *cbc_stmt;
 	MYSQL_BIND args[cbc_search_args[type]];
 	MYSQL_BIND fields[cbc_search_fields[type]];
+	my_ulonglong numrows;
 	const char *query = cbc_sql_search[type];
 	int retval = 0, j = 0;
 	unsigned int i;
@@ -940,11 +945,14 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_store_result(cbc_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
+	numrows = mysql_stmt_num_rows(cbc_stmt);
 	while ((retval = mysql_stmt_fetch(cbc_stmt)) == 0) {
 		j++;
-		for (i = 0; i < cbc_search_fields[type]; i++)
-			if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
-				return retval;
+		if ((int)numrows > j) {
+			for (i = 0; i < cbc_search_fields[type]; i++)
+				if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+					return retval;
+		}
 		if ((retval = mysql_stmt_bind_result(cbc_stmt, &fields[0])) != 0)
 			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	}
@@ -1028,6 +1036,7 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 	dbdata_s *list, *new;
 	list = base;
 
+	/* Check if this is a new query. */
 	if (stype == 0)
 		stype = type;
 	else if (stype != type) {
@@ -1036,6 +1045,8 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 	}
 	mybind->is_null = 0;
 	mybind->length = 0;
+	/* Check if this is the first row returned. If not we need to create
+	 * a dbdata_s to hold the returned data */
 	if (k > 0) {
 		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in cbc_set_search_fields_mysql");
@@ -1046,6 +1057,8 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 		list->next = new;
 		list = base;
 	}
+	/* M is the number of dbdata_s in the linked list. Cannot check
+	 * list->next as this would not work for the first row */
 	for (j = 0; j < m; j++)
 		list = list->next;
 	if (cbc_search_field_types[type][i] == DBINT) {

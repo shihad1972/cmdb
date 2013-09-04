@@ -740,32 +740,35 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 
 #undef PREP_DB_QUERY
+#ifndef CHECK_DATA_LIST
+# define CHECK_DATA_LIST {         \
+	if (list->next)             \
+		list = list->next;  \
+	else                        \
+		return;             \
+}
+#endif /* CHECK_DATA_LIST */
 void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	dbdata_s *list = data;
 	char *bline = list->fields.text;
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *alias = list->fields.text;
 	snprintf(cml->os, CONF_S, "%s", alias);
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *osver = list->fields.text;
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *country = list->fields.text;
-	if (list->next->next->next)
-		list = list->next->next->next;
+	CHECK_DATA_LIST
+	CHECK_DATA_LIST
+	CHECK_DATA_LIST
 	char *arg = list->fields.text;
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *url = list->fields.text;
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *arch = list->fields.text;
-	if (list->next)
-		list = list->next;
+	CHECK_DATA_LIST
 	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
@@ -818,25 +821,25 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
 	char *locale = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *keymap = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *net_dev = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	char *host = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *domain = list->fields.text;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
