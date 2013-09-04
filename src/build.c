@@ -1598,9 +1598,13 @@ install\n\
 void
 fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
-	char *device = data->fields.text, buff[FILE_S], *tmp;
-	short int lvm = data->next->fields.small;
-	dbdata_s *part = data->next->next;
+	dbdata_s *list = data;
+	char *device = list->fields.text, buff[FILE_S], *tmp;
+	CHECK_DATA_LIST
+	short int lvm = list->fields.small;
+	CHECK_DATA_LIST
+	unsigned long int psize;
+	char *fs, *lv, *mount;
 	size_t len;
 
 	if (lvm > 0)
@@ -1608,8 +1612,9 @@ fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n\
-part phys --size=1 --grow\n\
-volgroup %s --pesize=32768 phys\n\
+part /boot --asprimary --fstype \"ext3\" --size=512\n\
+part pv.1 --asprimary --size=1 --grow\n\
+volgroup %s --pesize=32768 pv.1\n\
 ",  device, cml->name);
 	else
 		snprintf(buff, FILE_S, "\
@@ -1619,47 +1624,27 @@ clearpart --all --initlabel\n\
 ", device);
 	len = strlen(buff);
 	tmp = buff + len;
-	while (part) {
-		if (part->next) {
-			if (part->next->next) {
-				if (part->next->next->next) {
-					if (part->next->next->next->next) {
-						if (part->next->next->next->next->next) {
-							if (!(part->next->next->next->next->next)) {
-								break;
-							}
-						} else {
-							break;
-						}
-					} else {
-						break;
-					}
-				} else {
-					break;
-				}
-			} else {
-				break;
-			}
-		} else {
-			break;
-		}
-		if (lvm > 0)
+	while (list) {
+		CHECK_DATA_LIST
+		psize = list->fields.number;
+		CHECK_DATA_LIST
+		CHECK_DATA_LIST
+		fs = list->fields.text;
+		CHECK_DATA_LIST
+		lv = list->fields.text;
+		CHECK_DATA_LIST
+		mount = list->fields.text;
+		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
 			snprintf(tmp, BUFF_S, "\
 logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\n\
-", part->next->next->next->next->next->fields.text,
-   part->next->next->next->fields.text,
-   part->next->next->next->next->fields.text,
-   cml->name,
-   part->next->fields.number);
-		else
+", mount, fs, lv, cml->name, psize);
+		else if (strncmp(mount, "/boot", COMM_S) != 0)
 			snprintf(tmp, BUFF_S, "\
 part %s --fstype=\"%s\" --size=%lu\n\
-", part->next->next->next->next->next->fields.text,
-   part->next->next->next->fields.text,
-   part->next->fields.number);
+", mount, fs, psize);
 		len = strlen(buff);
 		tmp = buff + len;
-		part = part->next->next->next->next->next->next;
+		list = list->next;
 	}
 	snprintf(tmp, COMM_S, "\n");
 	len++;
@@ -1676,57 +1661,36 @@ fill_kick_network_info(dbdata_s *data, string_len_s *build)
 	char *tmp, *addr, *mirror, *alias, *arch, *ver, *dev, *host, *domain;
 	size_t len = NONE;
 	uint32_t ip_addr;
-	dbdata_s *list = data;	
-	if (list) {
-		mirror = list->fields.text;
-		list = list->next;
-	}
-	if (list) {
-		alias = list->fields.text;
-		list = list->next;
-	}
-	if (list) {
-		arch = list->fields.text;
-		list = list->next;
-	}
-	if (list) {
-		ver = list->fields.text;
-		list = list->next;
-	}
-	if (list) {
-		dev = list->fields.text;
-		list = list->next;
-	}
-	if (list) {
-		addr = ip;
-		ip_addr = htonl((uint32_t)list->fields.number);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-		list = list->next;
-	}
-	if (list) {
-		addr = nm;
-		ip_addr = htonl((uint32_t)list->fields.number);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-		list = list->next;
-	}
-	if (list) {
-		addr = gw;
-		ip_addr = htonl((uint32_t)list->fields.number);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-		list = list->next;
-	}
-	if (list) {
-		addr = ns;
-		ip_addr = htonl((uint32_t)list->fields.number);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-		list = list->next;
-	}
-	if (list) {
-		host = list->fields.text;
-		list = list->next;
-	}
-	if (list)
-		domain = list->fields.text;
+	dbdata_s *list = data;
+	mirror = list->fields.text;
+	CHECK_DATA_LIST
+	alias = list->fields.text;
+	CHECK_DATA_LIST
+	arch = list->fields.text;
+	CHECK_DATA_LIST
+	ver = list->fields.text;
+	CHECK_DATA_LIST
+	dev = list->fields.text;
+	CHECK_DATA_LIST
+	addr = ip;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = nm;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = gw;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = ns;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	host = list->fields.text;
+	CHECK_DATA_LIST
+	domain = list->fields.text;
 	snprintf(buff, FILE_S, "\
 url --url=http://%s/%s/%s/os/%s\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
