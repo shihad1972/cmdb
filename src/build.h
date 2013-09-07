@@ -123,7 +123,10 @@ int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
+write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
@@ -166,6 +169,21 @@ fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
 
 void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
+
+void
+fill_kick_base(dbdata_s *data, string_len_s *build);
+
+void
+fill_kick_partitions(cbc_comm_line_s *cmc, dbdata_s *data, string_len_s *build);
+
+void
+fill_kick_network_info(dbdata_s *data, string_len_s *build);
+
+void
+fill_kick_packages(dbdata_s *data, string_len_s *build);
+
+void
+add_kick_base_script(dbdata_s *data, string_len_s *build);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
@@ -214,5 +232,8 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
 void
 fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml);
+
+void
+resize_string_buff(string_len_s *build);
 
 #endif /* __CBC_BUILD_H__ */

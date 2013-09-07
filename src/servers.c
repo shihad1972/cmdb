@@ -90,6 +90,34 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 }
 
 int
+remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
+{
+	int retval = NONE;
+	dbdata_s data;
+	if (strncmp(cm->name, "NULL", COMM_S) != 0)
+		snprintf(data.args.text, CONF_S, "%s", cm->name);
+	else
+		return NO_NAME;
+	if ((retval = cmdb_run_search(config, &data, SERVER_ID_ON_NAME)) == 0) {
+		fprintf(stderr, "No results for server %s\n", data.args.text);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple results for server %s\n", data.args.text);
+		return MULTIPLE_SERVERS;
+	} else
+		data.args.number = data.fields.number;
+	if ((retval = cmdb_run_delete(config, &data, SERVERS)) == 0) {
+		fprintf(stderr, "Server %s not deleted\n", cm->name);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple servers with naem %s deleted\n", cm->name);
+		return MULTIPLE_SERVERS;
+	} else 
+		printf("Server %s deleted from database\n", cm->name);
+	return NONE;
+}
+
+int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	char *input;

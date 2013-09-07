@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 			} else {
 				printf("Added into database\n");
 			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_server_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}
@@ -129,7 +131,9 @@ int main(int argc, char *argv[])
 				exit(DB_INSERT_FAILED);
 			} else {
 				printf("Added %s to database\n", base->customer->name);
-			}	
+			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_customer_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}
@@ -149,6 +153,8 @@ int main(int argc, char *argv[])
 			} else {
 				printf("Added %s to database\n", base->contact->name);
 			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_contact_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}

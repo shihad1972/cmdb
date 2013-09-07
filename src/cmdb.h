@@ -197,7 +197,11 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_MODIFIERS = 198,
 	NO_MOD_BUILD_DOM_NET = 199,
 	DID_NOT_MOD_BUILD_DOMAIN = 200,
-	MULTI_BUILD_DOM_APP_MOD = 201
+	MULTI_BUILD_DOM_APP_MOD = 201,
+	NO_CONTACT_INFO = 202,
+	NO_CONTACT = 203,
+	MULTI_CONTACT = 204,
+	NO_DATA = 205
 	
 };
 
@@ -280,7 +284,8 @@ enum {			/* cmdb Action codes */
 	NONE = 0,
 	DISPLAY = 1,
 	LIST_OBJ = 2,
-	ADD_TO_DB = 3
+	ADD_TO_DB = 3,
+	RM_FROM_DB = 4
 };
 
 enum {			/* cbc action codes */

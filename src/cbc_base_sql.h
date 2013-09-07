@@ -45,7 +45,7 @@ extern const unsigned int cbc_delete_fields[];
 extern const unsigned int cbc_update_types[][5];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
-extern const unsigned int cbc_search_field_types[][9];
+extern const unsigned int cbc_search_field_types[][11];
 
 
 enum {			/* cbc delete SQL statements */
@@ -55,7 +55,8 @@ enum {			/* cbc delete SQL statements */
 	VARI_DEL_VARI_ID = 3,
 	PACK_DEL_PACK_ID = 4,
 	BUILD_IP_ON_SER_ID = 5,
-	BUILD_ON_SERVER_ID = 6
+	BUILD_ON_SERVER_ID = 6,
+	DISK_DEV_ON_SERVER_ID = 7
 };
 
 enum {			/* cbc search SQL statements */
@@ -98,7 +99,10 @@ enum {			/* cbc search SQL statements */
 	OS_ID_ON_ALIAS_VER_ALIAS = 36,
 	DEF_SCHEME_ID_ON_SCH_NAME = 37,
 	BD_ID_ON_DOMAIN = 38,
-	CONFIG_LDAP_BUILD_DOM = 39
+	CONFIG_LDAP_BUILD_DOM = 39,
+	KICK_BASE = 40,
+	KICK_NET_DETAILS = 41,
+	BUILD_TYPE_URL = 42
 };
 
 enum {			/* cbc update SQL statements */

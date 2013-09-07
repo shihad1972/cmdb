@@ -555,6 +555,8 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		else
 			printf("Wow! Multiple build IP's deleted\n");
 	}
+	if ((retval = cbc_run_delete(cbt, data, DISK_DEV_ON_SERVER_ID)) == 0)
+		printf("No disk dev to delete??\n");
 	retval = NONE;
 	CLEAN_REMOVE_BUILD_CONFIG(retval);
 #undef CLEAN_REMOVE_BUILD_CONFIG

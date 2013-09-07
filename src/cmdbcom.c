@@ -66,7 +66,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	cmdb_init_contact_t(base->contact);
 	cmdb_init_hardtype_t(base->hardtype);
 	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:dlatsuehv")) != -1) {
+	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlrstuv")) != -1) {
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -91,6 +91,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			 (comp->type != NONE) &&
 			 (strncmp(comp->id, "NULL", COMM_S) == 0))
 				snprintf(comp->id, MAC_S, "NOCOID");
+		} else if (opt == 'r') {
+			comp->action = RM_FROM_DB;
 		} else if (opt == 'n') {
 			snprintf(comp->name, CONF_S, "%s", optarg);
 		} else if (opt == 'i') {

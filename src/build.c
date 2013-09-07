@@ -434,11 +434,25 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		printf("tftp configuration file written\n");
 	}
-	if ((retval = write_build_file(cmc, cml)) != 0) {
-		printf("Failed to write build file\n");
-		return retval;
+	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
+	    (strncmp(cml->os, "ubuntu", COMM_S) == 0)) {
+		if ((retval = write_preseed_build_file(cmc, cml)) != 0) {
+			printf("Failed to write build file\n");
+			return retval;
+		} else {
+			printf("build file written\n");
+		}
+	} else if ((strncmp(cml->os, "centos", COMM_S) == 0) ||
+	           (strncmp(cml->os, "fedora", COMM_S) == 0)) {
+		if ((retval = write_kickstart_build_file(cmc, cml)) != 0) {
+			printf("Failed to write build file\n");
+			return retval;
+		} else {
+			printf("build file written\n");
+		}
 	} else {
-		printf("build file written\n");
+		printf("OS %s does not exist\n", cml->os);
+		return OS_DOES_NOT_EXIST;
 	}
 	return retval;
 }
@@ -582,27 +596,32 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_tftp_output(cml, data, out);
 		retval = write_file(pxe, out);
 	}
-	if (retval == 0)
 	clean_dbdata_struct(data);
 	return retval;
 }
 
+#ifndef PREP_DB_QUERY
+# define PREP_DB_QUERY(data, query) {          \
+	cbc_init_initial_dbdata(&data, query); \
+	data->args.number = cml->server_id;    \
+}
+#endif /* PREP_DB_QUERY */
 int
-write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
 	int retval = NONE;
 	dbdata_s *data;
-	string_len_s build = {.len = BUFF_S};
+	string_len_s build = {.len = BUFF_S, .size = NONE };
 
+	/* This should NOT be hard coded! */
 	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_build_file");
-	cbc_init_initial_dbdata(&data, NET_BUILD_DETAILS);
-	data->args.number = cml->server_id;
+		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
+	PREP_DB_QUERY(data, NET_BUILD_DETAILS);
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_NET_BUILD_ERR;
@@ -614,8 +633,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_MIRROR);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, BUILD_MIRROR);
 	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_MIRR_ERR;
@@ -631,8 +649,7 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = fill_kernel(cml, &build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_PACKAGES);
-	data->args.number = cml->server_id;
+	PREP_DB_QUERY(data, BUILD_PACKAGES);
 	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
@@ -650,24 +667,109 @@ write_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	return retval;
 }
 
+int
+write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	char file[NAME_S];
+	int retval = NONE;
+	dbdata_s *data, *part;
+	string_len_s build = { .len = BUFF_S, .size = NONE };
+
+	/* This should NOT be hard coded! */
+	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+			return retval;
+	if (!(build.string = calloc(build.len, sizeof(char))))
+		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
+	PREP_DB_QUERY(data, KICK_BASE);
+	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_KICKSTART_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_KICKSTART_ERR;
+	} else {
+		fill_kick_base(data, &build);
+		retval = NONE;
+	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, BASIC_PART);
+	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BASIC_DISK;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_BASIC_DISK;
+	}
+	PREP_DB_QUERY(part, FULL_PART);
+	data->next->next = part;
+	if ((retval = cbc_run_search(cmc, part, FULL_PART)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	}
+	fill_kick_partitions(cml, data, &build);
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, KICK_NET_DETAILS);
+	if ((retval = cbc_run_search(cmc, data, KICK_NET_DETAILS)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build for %s has no network information.\n",
+		 cml->name);
+		return NO_NET_BUILD_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build for %s has multiple network configs.\n",
+		 cml->name);
+		return MULTI_NET_BUILD_ERR;
+	} else {
+		fill_kick_network_info(data, &build);
+	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, BUILD_PACKAGES);
+	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+		clean_dbdata_struct(data);
+		data = '\0';
+		fprintf(stderr, "Build for %s has no packages associated.\n",
+		 cml->name);
+	}
+	fill_kick_packages(data, &build);
+	clean_dbdata_struct(data);
+	retval = write_file(file, build.string);
+	free(build.string);
+	return retval;
+}
+
+#undef PREP_DB_QUERY
+#ifndef CHECK_DATA_LIST
+# define CHECK_DATA_LIST {         \
+	if (list->next)             \
+		list = list->next;  \
+	else                        \
+		return;             \
+}
+#endif /* CHECK_DATA_LIST */
 void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	dbdata_s *list = data;
 	char *bline = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *alias = list->fields.text;
 	snprintf(cml->os, CONF_S, "%s", alias);
-	list = list->next;
+	CHECK_DATA_LIST
 	char *osver = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *country = list->fields.text;
-	list = list->next->next->next;
+	CHECK_DATA_LIST
+	CHECK_DATA_LIST
+	CHECK_DATA_LIST
 	char *arg = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *url = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *arch = list->fields.text;
+	CHECK_DATA_LIST
+	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 default %s\n\
@@ -687,6 +789,16 @@ append initrd=initrd-%s-%s-%s.img country=%s \
 console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
+	} else if (strncmp(alias, "centos", COMM_S) == 0) {
+		snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img ksdevice=%s console=tty0 ramdisk_size=8192\
+ %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
+url, cml->name);
 	}
 	/* Store url for use in fill_packages */
 	snprintf(cml->config, CONF_S, "%s", url);
@@ -709,25 +821,25 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
 	char *locale = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *keymap = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *net_dev = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
-	list = list->next;
+	CHECK_DATA_LIST
 	char *host = list->fields.text;
-	list = list->next;
+	CHECK_DATA_LIST
 	char *domain = list->fields.text;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
@@ -773,7 +885,7 @@ d-i netcfg/get_domain string \n");
 	if ((len = strlen(output)) > build->len) {
 		while ((build->size + len) > build->len)
 			build->len *=2;
-		tmp = realloc(build->string, len * sizeof(char));
+		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
 			report_error(MALLOC_FAIL, "string in fill_net_output");
 		else
@@ -1404,6 +1516,231 @@ postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
 	build->size += len;
 }
 
+void
+fill_kick_base(dbdata_s *data, string_len_s *build)
+{
+	char buff[FILE_S], *tmp;
+	char *serv = data->next->next->fields.text;
+	char *dn = data->next->next->next->fields.text;
+	char *key = data->next->next->next->next->fields.text;
+	char *loc = data->next->next->next->next->next->fields.text;
+	char *tim = data->next->next->next->next->next->next->fields.text;
+	short int ldapconf = data->fields.small, ldapssl = data->next->fields.small;
+	size_t len;
+
+	/* root password is k1Ckstart */
+	if (ldapconf > 0) {
+		if (ldapssl > 0)
+			snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5 --enableldap --enableldaptls --enableldapauth \
+--ldapserver=%s --ldapbasedn=%s\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", serv, dn, key, loc, tim);
+		else
+			snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5 --enableldap --enableldapauth --ldapserver=%s --ldapbasedn=%s\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", serv, dn, key, loc, tim);
+	} else {
+		snprintf(buff, FILE_S, "\
+auth --useshadow --enablemd5\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --iscrypted $6$OILHHW/y$vDpY5YosWhQnI/XO3wipIrrcAAag9tHPqPh31i.6r0hkauX2LVNYIzwWl/YvFqtVUYR7XWyep3spzeT.Q5Be0/\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n\
+\n", key, loc, tim);
+	}
+	if ((len = strlen(buff)) > build->len) {
+		build->len = FILE_S;
+		tmp = realloc(build->string, build->len * sizeof(char));
+		if (!tmp)
+			report_error(MALLOC_FAIL, "string in fill_kick_base");
+		else
+			build->string = tmp;
+	}
+	snprintf(build->string, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+{
+	dbdata_s *list = data;
+	char *device = list->fields.text, buff[FILE_S], *tmp;
+	CHECK_DATA_LIST
+	short int lvm = list->fields.small;
+	CHECK_DATA_LIST
+	unsigned long int psize;
+	char *fs, *lv, *mount;
+	size_t len;
+
+	if (lvm > 0)
+		snprintf(buff, FILE_S, "\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n\
+part /boot --asprimary --fstype \"ext3\" --size=512\n\
+part pv.1 --asprimary --size=1 --grow\n\
+volgroup %s --pesize=32768 pv.1\n\
+",  device, cml->name);
+	else
+		snprintf(buff, FILE_S, "\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n\
+", device);
+	len = strlen(buff);
+	tmp = buff + len;
+	while (list) {
+		CHECK_DATA_LIST
+		psize = list->fields.number;
+		CHECK_DATA_LIST
+		CHECK_DATA_LIST
+		fs = list->fields.text;
+		CHECK_DATA_LIST
+		lv = list->fields.text;
+		CHECK_DATA_LIST
+		mount = list->fields.text;
+		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
+			snprintf(tmp, BUFF_S, "\
+logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\n\
+", mount, fs, lv, cml->name, psize);
+		else if (strncmp(mount, "/boot", COMM_S) != 0)
+			snprintf(tmp, BUFF_S, "\
+part %s --fstype=\"%s\" --size=%lu\n\
+", mount, fs, psize);
+		len = strlen(buff);
+		tmp = buff + len;
+		list = list->next;
+	}
+	snprintf(tmp, COMM_S, "\n");
+	len++;
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+fill_kick_network_info(dbdata_s *data, string_len_s *build)
+{
+	char buff[FILE_S], ip[RANGE_S], nm[RANGE_S], gw[RANGE_S], ns[RANGE_S];
+	char *tmp, *addr, *mirror, *alias, *arch, *ver, *dev, *host, *domain;
+	size_t len = NONE;
+	uint32_t ip_addr;
+	dbdata_s *list = data;
+	mirror = list->fields.text;
+	CHECK_DATA_LIST
+	alias = list->fields.text;
+	CHECK_DATA_LIST
+	arch = list->fields.text;
+	CHECK_DATA_LIST
+	ver = list->fields.text;
+	CHECK_DATA_LIST
+	dev = list->fields.text;
+	CHECK_DATA_LIST
+	addr = ip;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = nm;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = gw;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	addr = ns;
+	ip_addr = htonl((uint32_t)list->fields.number);
+	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
+	CHECK_DATA_LIST
+	host = list->fields.text;
+	CHECK_DATA_LIST
+	domain = list->fields.text;
+	snprintf(buff, FILE_S, "\
+url --url=http://%s/%s/%s/os/%s\n\
+network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
+--hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size +=len;
+}
+
+void
+fill_kick_packages(dbdata_s *data, string_len_s *build)
+{
+	char buff[BUFF_S], *tmp;
+	size_t len = NONE;
+	dbdata_s *list = data;
+
+	snprintf(buff, MAC_S, "\
+%%packages\n\
+\n\
+@Base\n\
+");
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+	while (list) {
+		len = strlen(list->fields.text);
+		len++;
+		if ((build->size + len) > build->len)
+			resize_string_buff(build);
+		tmp = build->string + build->size;
+		snprintf(tmp, len + 1, "%s\n", list->fields.text);
+		build->size += len;
+		list = list->next;
+	}
+	tmp = build->string + build->size;
+	snprintf(tmp, CH_S, "\n");
+	build->size++;
+}
+
+void
+add_kick_base_script(dbdata_s *data, string_len_s *build)
+{
+}
+
 int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
 {
@@ -1688,4 +2025,17 @@ fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
 	snprintf(data->args.text, CONF_S, "%s", cml->os);
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
 	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
+}
+
+void
+resize_string_buff(string_len_s *build)
+{
+	char *tmp;
+
+	build->len *=2;
+	tmp = realloc(build->string, build->len * sizeof(char));
+	if (!tmp)
+		report_error(MALLOC_FAIL, "tmp in resize_string_buff");
+	else
+		build->string = tmp;
 }
