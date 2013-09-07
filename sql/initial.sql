@@ -45,6 +45,9 @@ INSERT INTO packages (package, varient_id, os_id) SELECT "libpam-ldap", v.varien
 INSERT INTO packages (package, varient_id, os_id) SELECT "hobbit-client", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
 INSERT INTO packages (package, varient_id, os_id) SELECT "openldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
 INSERT INTO packages (package, varient_id, os_id) SELECT "openldap-clients", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
+INSERT INTO packages (package, varient_id, os_id) SELECT "nss-pam-ldapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
+INSERT INTO packages (package, varient_id, os_id) SELECT "pam_ldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
+INSERT INTO packages (package, varient_id, os_id) SELECT "openssl-perl", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
 
 INSERT INTO packages (package, varient_id, os_id) SELECT "apache2", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "web";
 INSERT INTO packages (package, varient_id, os_id) SELECT "libapache2-mod-php5", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu") AND v.valias = "web";

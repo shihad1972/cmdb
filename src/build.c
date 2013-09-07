@@ -789,7 +789,8 @@ append initrd=initrd-%s-%s-%s.img country=%s \
 console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
-	} else if (strncmp(alias, "centos", COMM_S) == 0) {
+	} else if ((strncmp(alias, "centos", COMM_S) == 0) ||
+		   (strncmp(alias, "fedora", COMM_S) == 0)) {
 		snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
@@ -1691,10 +1692,16 @@ fill_kick_network_info(dbdata_s *data, string_len_s *build)
 	host = list->fields.text;
 	CHECK_DATA_LIST
 	domain = list->fields.text;
-	snprintf(buff, FILE_S, "\
-url --url=http://%s/%s/%s/os/%s\n\
+	if (strncmp(alias, "centos", COMM_S) == 0)
+		snprintf(buff, FILE_S, "\
+url --url=http://%s/%s/%s/%s/os/\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
 --hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
+	else if (strncmp(alias, "fedora", COMM_S) == 0)
+		snprintf(buff, FILE_S, "\
+url --url=http://%s/releases/%s/%s/os/%s\n\
+network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
+--hostname %s.%s --onboot=on\n\n", mirror, ver, alias, arch, dev, ip, nm, gw, ns, host, domain);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
