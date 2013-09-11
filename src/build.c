@@ -1699,9 +1699,9 @@ network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --names
 --hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
 	else if (strncmp(alias, "fedora", COMM_S) == 0)
 		snprintf(buff, FILE_S, "\
-url --url=http://%s/releases/%s/%s/os/%s\n\
+url --url=http://%s/releases/%s/Fedora/%s/os/\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
---hostname %s.%s --onboot=on\n\n", mirror, ver, alias, arch, dev, ip, nm, gw, ns, host, domain);
+--hostname %s.%s --onboot=on\n\n", mirror, ver, arch, dev, ip, nm, gw, ns, host, domain);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
