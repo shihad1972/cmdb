@@ -2304,7 +2304,7 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
-	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 8);
 	list = base->build;
 	if (list) {
 		while (list->next)
