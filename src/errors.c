@@ -295,6 +295,8 @@ display_cmdb_usage(void)
 	printf("-D: Detail\t-B: Device\t-I: hardware_id\n");
 	printf("For Contact (with -i coid to specify customer)\n");
 	printf("-N: Name\t-P: Phone\t-E: email\n");
+	printf("For VM Host Server (with -n name to specify server)\n");
+	printf("-O: VM_Host_type\n");
 }
 
 void

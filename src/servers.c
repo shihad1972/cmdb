@@ -505,3 +505,43 @@ service->servicetype->service, service->url);
 	}
 	return i;
 }
+
+int
+add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
+{
+	int retval = NONE;
+	dbdata_s *data;
+
+	if (!(base->server->model))
+		return NO_MODEL;
+	else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
+		return NO_MODEL;
+	if (strncmp(cm->name, "NULL", COMM_S) == 0)
+		return NO_NAME;
+	else
+		cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
+	snprintf(data->args.text, NAME_S, "%s", cm->name);
+	if ((retval = cmdb_run_search(cmc, data, SERVER_ID_ON_NAME)) == 0) {
+		clean_dbdata_struct(data);
+		printf("Server %s not found\n", cm->name);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		printf("Multiple servers found for %s\n", cm->name);
+		return MULTIPLE_SERVERS;
+	} else
+		retval = NONE;
+	if (!(base->vmhost)) {
+		if (!(base->vmhost = malloc(sizeof(cmdb_vm_host_s))))
+			report_error(MALLOC_FAIL, "base->vhost in add_vm_host_to_db");
+	}
+	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
+	snprintf(base->vmhost->type, CONF_S, "%s", base->server->model);
+	base->vmhost->server_id = data->fields.number;
+	if ((retval = run_insert(cmc, base, VM_HOSTS)) != 0)
+		printf("Error adding to database\n");
+	else
+		printf("VM host %s added to database\n", cm->name);
+	clean_dbdata_struct(data);
+	return retval;
+}

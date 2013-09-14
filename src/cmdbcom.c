@@ -58,6 +58,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
 	if (!(base->hardtype = malloc(sizeof(cmdb_hard_type_s))))
 		report_error(MALLOC_FAIL, "base->hardtype in parse_cmdb_comm_line");
+	if (!(base->vmhost = malloc(sizeof(cmdb_vm_host_s))))
+		report_error(MALLOC_FAIL, "base->vmhost in parse_cmdb_comm_line");
 	cmdb_init_server_t(base->server);
 	cmdb_init_customer_t(base->customer);
 	cmdb_init_service_t(base->service);
@@ -65,6 +67,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	cmdb_init_hardware_t(base->hardware);
 	cmdb_init_contact_t(base->contact);
 	cmdb_init_hardtype_t(base->hardtype);
+	cmdb_init_vmhost_t(base->vmhost);
 	while ((opt = getopt(argc, argv,
 	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlrstuv")) != -1) {
 		if (opt == 's') {
@@ -251,6 +254,12 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 				if (base->hardware->ht_id == 0) {
 					retval = NO_CLASS;
 				}
+			}
+		} else if (comp->type == VM_HOST) {
+			if (strncmp(comp->name, "NULL", COMM_S) == 0) {
+				retval = NO_NAME;
+			} else if (strncmp(base->server->model, "NULL", COMM_S) == 0) {
+				retval = NO_MODEL;
 			}
 		}
 	}

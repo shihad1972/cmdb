@@ -205,7 +205,13 @@ Hardware for server %s added to database\n",base->server->name);
 	} else if (cm->type == VM_HOST) {
 		if (cm->action == LIST_OBJ) {
 			display_vm_hosts(cmc);
+		} else if (cm->action == ADD_TO_DB) {
+			if ((retval = add_vm_host_to_db(cmc, cm, base)) == 0)
+				printf("Added vm host server %s to db\n", cm->name);
+			else
+				printf("Error adding vm host server %s to db\n", cm->name);
 		} else {
+			printf("Action not supported (yet)\n");
 			display_action_error(cm->action);
 		}
 	} else {

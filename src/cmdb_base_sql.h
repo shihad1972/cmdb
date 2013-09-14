@@ -101,6 +101,8 @@ setup_insert_mysql_bind_buff_service(void **buffer, cmdb_s *base, unsigned int i
 void
 setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_s *base, unsigned int i);
 void
+setup_insert_mysql_bind_buff_vmhost(void **buffer, cmdb_s *base, unsigned int i);
+void
 store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields);
 void
 store_server_mysql(MYSQL_ROW row, cmdb_s *base);
@@ -170,6 +172,8 @@ int
 setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_s *service);
 int
 setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_s *hard);
+int
+setup_bind_sqlite_vmhost(sqlite3_stmt *state, cmdb_vm_host_s *vmhost);
 
 # endif /* HAVE_SQLITE3 */
 

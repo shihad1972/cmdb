@@ -187,6 +187,8 @@ int
 print_customer_servers(cmdb_server_s *server, unsigned long int cust_id);
 void
 display_vm_hosts(cmdb_config_s *config);
+int
+add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base);
 
 /* New user input functions */
 int

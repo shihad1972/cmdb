@@ -802,6 +802,8 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_s *base, unsigned i
 		setup_insert_mysql_bind_buff_service(buffer, base, i);
 	else if (type == HARDWARES)
 		setup_insert_mysql_bind_buff_hardware(buffer, base, i);
+	else if (type == VM_HOSTS)
+		setup_insert_mysql_bind_buff_vmhost(buffer, base, i);
 	else
 		retval = NO_TYPE;
 	return retval;
@@ -883,6 +885,18 @@ setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_s *base, unsigned int 
 	else if (i == 3)
 		*buffer = &(base->hardware->ht_id);
 }
+
+void
+setup_insert_mysql_bind_buff_vmhost(void **buffer, cmdb_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->vmhost->name);
+	else if (i == 1)
+		*buffer = &(base->vmhost->type);
+	else if (i == 2)
+		*buffer = &(base->vmhost->server_id);
+}
+
 void
 store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 {
@@ -1473,6 +1487,8 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 		retval = setup_bind_sqlite_service(state, cmdb->service);
 	} else if (type == HARDWARES) {
 		retval = setup_bind_sqlite_hardware(state, cmdb->hardware);
+	} else if (type == VM_HOSTS) {
+		retval = setup_bind_sqlite_vmhost(state, cmdb->vmhost);
 	} else {
 		retval = NO_TYPE;
 	}
@@ -1747,9 +1763,8 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 int
 setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_s *server)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, server->name, (int)strlen(server->name), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind %s\n", server->name);
@@ -1792,9 +1807,8 @@ state, 7, (int)server->vm_server_id)) > 0) {
 int
 setup_bind_sqlite_customer(sqlite3_stmt *state, cmdb_customer_s *cust)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, cust->name, (int)strlen(cust->name), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind customer name %s\n", cust->name);
@@ -1831,9 +1845,8 @@ state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
 int
 setup_bind_sqlite_contact(sqlite3_stmt *state, cmdb_contact_s *cont)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, cont->name, (int)strlen(cont->name), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind cotact name %s\n", cont->name);
@@ -1860,9 +1873,8 @@ state, 4, (int)cont->cust_id)) > 0) {
 int
 setup_bind_sqlite_service(sqlite3_stmt *state, cmdb_service_s *service)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_int(
 state, 1, (int)service->server_id)) > 0) {
 		printf("Cannot bind server id %lu\n", service->server_id);
@@ -1894,9 +1906,8 @@ state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
 int
 setup_bind_sqlite_hardware(sqlite3_stmt *state, cmdb_hardware_s *hard)
 {
-	int retval;
+	int retval = NONE;
 
-	retval = 0;
 	if ((retval = sqlite3_bind_text(
 state, 1, hard->detail, (int)strlen(hard->detail), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind hardware detail %s\n", hard->detail);
@@ -1919,6 +1930,30 @@ state, 4, (int)hard->ht_id)) > 0) {
 	}
 	return retval;
 }
+
+int
+setup_bind_sqlite_vmhost(sqlite3_stmt *state, cmdb_vm_host_s *vmhost)
+{
+	int retval = NONE;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, vmhost->name, (int)strlen(vmhost->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind vmhost name %s\n", vmhost->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, vmhost->type, (int)strlen(vmhost->type), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind vmhost type %s\n", vmhost->type);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)vmhost->server_id)) > 0) {
+		printf("Cannot bind vmhost server_id %lu\n", vmhost->server_id);
+		return retval;
+	}
+	return retval;
+}
+
 #endif /* HAVE_SQLITE3 */
 
 void
