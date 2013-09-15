@@ -79,8 +79,8 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 }
 #endif
 	details->build = build;
-	query = BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | BUILD |
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
+	query = BUILD_DOMAIN| BUILD_TYPE | BUILD_OS | CSERVER |
+	LOCALE | DPART | VARIENT | SSCHEME;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
@@ -88,13 +88,18 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		CLEAN_CREATE_BUILD_CONFIG(SERVER_NOT_FOUND);
 	}
 	list = cbc->build;
-	while (list) {
-		if (list->server_id == details->server->server_id) {
-			printf("Server %s already has a build in the database\n",
-			       details->server->name);
-			CLEAN_CREATE_BUILD_CONFIG(BUILD_IN_DATABASE);
+	query = BUILD;
+	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
+		while (list) {
+			if (list->server_id == details->server->server_id) {
+				printf("Server %s already has a build in the database\n",
+				 details->server->name);
+				CLEAN_CREATE_BUILD_CONFIG(BUILD_IN_DATABASE);
+			}
+			list = list->next;
 		}
-		list = list->next;
+	} else if (retval != NO_RECORDS) {
+		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
 	if ((retval = cbc_get_os(cml, cbc, details)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(OS_NOT_FOUND);
@@ -118,14 +123,19 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
 	bip = cbc->bip;
-	while (bip) {
-		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
-		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
-			printf("Build ip for %s.%s in database\n", 
-				bip->host, bip->domain);
-			break;
+	query = BUILD_IP;
+	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
+		while (bip) {
+			if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
+			    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
+				printf("Build ip for %s.%s in database\n", 
+				 bip->host, bip->domain);
+				break;
+			}
+			bip = bip->next;
 		}
-		bip = bip->next;
+	} else if (retval != NO_RECORDS) {
+		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
 	if (!(bip)) {
 		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {

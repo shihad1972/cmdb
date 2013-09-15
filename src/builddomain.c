@@ -286,9 +286,10 @@ list_cbc_build_domain(cbc_config_s *cbc)
 		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
-		if (retval == 6)
+		if (retval == NO_RECORDS) {
 			fprintf(stderr, "No build domains in DB\n");
-		else
+			retval = NO_BUILD_DOMAIN;
+		} else
 			fprintf(stderr, "build query failed\n");
 		free(base);
 		return retval;
