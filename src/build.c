@@ -1885,6 +1885,11 @@ chmod 755 kick-ntp.sh\n\
 	build->size += len;
 }
 
+void
+add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf)
+{
+}
+
 int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
 {

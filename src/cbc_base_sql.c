@@ -229,7 +229,7 @@ SELECT bd.config_xymon, bd.xymon_server, bd.domain FROM build_domain bd \
   LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
   WHERE b.server_id = ?","\
-SELECT bd.config_email, bd.smtp_server, bd.domain FROM build_domain bd \
+SELECT bd.config_email, bd.smtp_server, bd.domain, bi.ip FROM build_domain bd \
   LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
   WHERE b.server_id = ?","\
@@ -333,7 +333,7 @@ const unsigned int cbc_search_args[] = {
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	9, 7, 2, 6, 1, 5, 3, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2
+	9, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2
 };
 
 const unsigned int cbc_update_types[][5] = {
@@ -453,7 +453,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBSHORT, DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -642,7 +642,7 @@ cbc_init_update_dbdata(dbdata_s **list, unsigned int type)
 		if (!(data = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "Data in init_update_dbdata");
 		init_dbdata_struct(data);
-		if (!(*list)) {
+		if (!(dlist)) {
 			*list = dlist = data;
 		} else {
 			while (dlist->next)

@@ -361,6 +361,11 @@ typedef struct string_len_s {
 	size_t size;
 } string_len_s;
 
+typedef struct string_l {
+	char *string;
+	struct string_l *next;
+} string_l;
+
 typedef unsigned long int uli_t;
 
 extern char *optarg;
@@ -416,4 +421,10 @@ void
 init_dbdata_struct(dbdata_s *data);
 void
 clean_dbdata_struct(dbdata_s *data);
+void
+init_string_l(string_l *string);
+void
+clean_string_l(string_l *list);
+void
+init_initial_string_l(string_l **string, int count);
 #endif

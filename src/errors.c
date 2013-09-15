@@ -812,7 +812,7 @@ void
 clean_dbdata_struct(dbdata_s *list)
 {
 	dbdata_s *data, *next;
-	
+
 	if (list)
 		data = list;
 	else
@@ -831,5 +831,52 @@ clean_dbdata_struct(dbdata_s *list)
 			next = data->next;
 		else
 			next = '\0';
+	}
+}
+
+void
+init_string_l(string_l *string)
+{
+	string->string = '\0';
+	string->next = '\0';
+}
+
+void
+clean_string_l(string_l *list)
+{
+	string_l *data, *next;
+
+	if (list)
+		data = list;
+	else
+		return;
+	next = data->next;
+	while (data) {
+		free(data);
+		if (next)
+			data = next;
+		else
+			return;
+		next = data->next;
+	}
+}
+
+void
+init_initial_string_l(string_l **string, int count)
+{
+	int i;
+	string_l *data, *list = '\0';
+
+	for (i = 0; i < count; i++) {
+		if (!(data = malloc(sizeof(string_l))))
+			report_error(MALLOC_FAIL, "data in init_initial_string_l");
+		init_string_l(data);
+		if (!(list)) {
+			*string = list = data;
+		} else {
+			while (list->next)
+				list = list->next;
+			list ->next = data;
+		}
 	}
 }

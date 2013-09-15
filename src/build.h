@@ -189,6 +189,9 @@ void
 add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url);
 
 void
+add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf);
+
+void
 add_kick_base_script(dbdata_s *data, string_len_s *build);
 
 char *
