@@ -1694,7 +1694,7 @@ fill_kick_network_info(dbdata_s *data, string_len_s *build)
 	domain = list->fields.text;
 	if (strncmp(alias, "centos", COMM_S) == 0)
 		snprintf(buff, FILE_S, "\
-url --url=http://%s/%s/%s/%s/os/\n\
+url --url=http://%s/%s/%s/os/%s\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
 --hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
 	else if (strncmp(alias, "fedora", COMM_S) == 0)
