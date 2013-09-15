@@ -754,6 +754,16 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if (data->fields.small > 0)
 			add_kick_ntp_config(data, &build, url);
 	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, LDAP_CONFIG)
+	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
+		fprintf(stderr, "Cannot get LDAP config for %s\n", cml->name);
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple LDAP configs for %s\n", cml->name);
+	} else {
+		if (data->fields.small > 0)
+			add_kick_ldap_config(data, &build, url);
+	}
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
@@ -1776,6 +1786,59 @@ add_kick_base_script(dbdata_s *data, string_len_s *build)
 cd /root\n\
 wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
 \n", list->fields.text);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url)
+{
+	char buff[BUFF_S], *tmp, *server = '\0', *dn = '\0';
+	short int ssl = NONE;
+	size_t len = NONE;
+	dbdata_s *list = data;
+
+	if (list->next) {
+		list = list->next;
+		server = list->fields.text;
+	} else {
+		fprintf(stderr, "ldap config linked list has no server\n");
+		return;
+	}
+	if (list->next) {
+		list = list->next;
+		ssl = list->fields.small;
+	} else {
+		fprintf(stderr, "ldap config linked list has no ssl\n");
+		return;
+	}
+	if (list->next) {
+		list = list->next;
+		dn = list->fields.text;
+	} else {
+		fprintf(stderr, "ldap config linked list has no dn\n");
+		return;
+	}
+	if (ssl > 0)
+/* Will need to get this from the database */
+		snprintf(buff, BUFF_S, "\
+wget %sBuka-Root-CA.pem\n\
+cp Buka-Root-CA.pem /etc/openldap/cacerts\n\
+/usr/bin/c_rehash /etc/openldap/cacerts\n\
+/usr/sbin/authconfig --update --enableldap --enableldapauth --enableldaptls \
+--ldapserver=%s --ldapbasedn=%s\n\
+/sbin/chkconfig nscd on\n\
+\n", url, server, dn);
+	else
+		snprintf(buff, BUFF_S, "\
+/usr/sbin/authconfig --update --enableldap --enableldapauth --ldapserver=%s \
+--ldapbasedn=%s\n\
+/sbin/chkconfig nscd on\n\
+\n", server, dn);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
