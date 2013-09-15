@@ -1830,13 +1830,13 @@ wget %sBuka-Root-CA.pem\n\
 cp Buka-Root-CA.pem /etc/openldap/cacerts\n\
 /usr/bin/c_rehash /etc/openldap/cacerts\n\
 /usr/sbin/authconfig --update --enableldap --enableldapauth --enableldaptls \
---ldapserver=%s --ldapbasedn=%s\n\
+--ldapserver=%s --ldapbasedn=%s --enablemkhomedir\n\
 /sbin/chkconfig nscd on\n\
 \n", url, server, dn);
 	else
 		snprintf(buff, BUFF_S, "\
 /usr/sbin/authconfig --update --enableldap --enableldapauth --ldapserver=%s \
---ldapbasedn=%s\n\
+--ldapbasedn=%s --enablemkhomedir\n\
 /sbin/chkconfig nscd on\n\
 \n", server, dn);
 	len = strlen(buff);
@@ -1873,9 +1873,9 @@ add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url)
 		return;
 	}
 	snprintf(buff, BUFF_S, "\
-wget %sscripts/ntp.sh\n\
-chmod 755 ntp.sh\n\
-./ntp.sh %s > ntp.log 2>&1\n\
+wget %sscripts/kick-ntp.sh\n\
+chmod 755 kick-ntp.sh\n\
+./kick-ntp.sh %s > ntp.log 2>&1\n\
 \n", url, server);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
