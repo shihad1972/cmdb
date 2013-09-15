@@ -102,7 +102,8 @@ enum {			/* cbc search SQL statements */
 	CONFIG_LDAP_BUILD_DOM = 39,
 	KICK_BASE = 40,
 	KICK_NET_DETAILS = 41,
-	BUILD_TYPE_URL = 42
+	BUILD_TYPE_URL = 42,
+	NTP_CONFIG = 43
 };
 
 enum {			/* cbc update SQL statements */

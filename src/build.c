@@ -670,7 +670,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char file[NAME_S];
+	char file[NAME_S], url[CONF_S];
 	int retval = NONE;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
@@ -743,7 +743,17 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Multiple url's?? Perhaps multiple build domains\n");
 	}
 	add_kick_base_script(data, &build);
+	snprintf(url, CONF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, NTP_CONFIG);
+	if ((retval = cbc_run_search(cmc, data, NTP_CONFIG)) == 0) {
+		fprintf(stderr, "Cannot find NTP config for %s\n", cml->name);
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple NTP configs for %s\n", cml->name);
+	} else {
+		if (data->fields.small > 0)
+			add_kick_ntp_config(data, &build, url);
+	}
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
@@ -1763,8 +1773,47 @@ add_kick_base_script(dbdata_s *data, string_len_s *build)
 	snprintf(buff, BUFF_S, "\
 \n\
 %%post\n\
+cd /root\n\
 wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
 \n", list->fields.text);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url)
+{
+	char buff[BUFF_S], *tmp, *server;
+	size_t len = NONE;
+
+	if (data->next) {
+		server = data->next->fields.text;
+	} else {
+		fprintf(stderr,
+		 "Only one data struct in linked list in ntp config\n");
+		return;
+	}
+	if (strncmp(url, "NULL", COMM_S) == 0) {
+		fprintf(stderr, "url set to NULL in ntp config\n");
+		return;
+	}
+	if (!(server)) {
+		fprintf(stderr, "Nothing in DB for ntp server\n");
+		return;
+	}
+	if (strncmp(server, "NULL", COMM_S) == 0) {
+		fprintf(stderr, "ntp_server set to NULL\n");
+		return;
+	}
+	snprintf(buff, BUFF_S, "\
+wget %sscripts/ntp.sh\n\
+chmod 755 ntp.sh\n\
+./ntp.sh %s > ntp.log 2>&1\n\
+\n", url, server);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
