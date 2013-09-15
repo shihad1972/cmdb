@@ -734,6 +734,16 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	}
 	fill_kick_packages(data, &build);
 	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, BUILD_TYPE_URL);
+	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_URL)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build type for %s has no url??\n", cml->name);
+		return NO_BUILD_URL;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple url's?? Perhaps multiple build domains\n");
+	}
+	add_kick_base_script(data, &build);
+	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
@@ -1746,6 +1756,21 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 void
 add_kick_base_script(dbdata_s *data, string_len_s *build)
 {
+	char buff[BUFF_S], *tmp;
+	size_t len = NONE;
+	dbdata_s *list = data;
+
+	snprintf(buff, BUFF_S, "\
+\n\
+%%post\n\
+wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
+\n", list->fields.text);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
 }
 
 int

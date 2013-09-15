@@ -506,6 +506,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Partition scheme not found.");
 	else if (error == NO_BASIC_DISK)
 		snprintf(errstr, MAC_S, "Cannot find partitions.");
+	else if (error == NO_BUILD_URL)
+		snprintf(errstr, MAC_S, "No url in build domain.");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }
