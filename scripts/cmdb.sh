@@ -294,11 +294,11 @@ create_tftp_config() {
     do for j in $DEBARCH
       do for k in $DEBFILES
         do if echo $k | grep linu >/dev/null 2>&1; then
-          if [ ! -f vmlinuz-debian-${i}-${j}.img ]; then
-            wget ${DEBMIRR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O vmlinuz-debian-${i}-${j}.img \
->/dev/null 2>&1 && echo "Got vmlinuz-debian-${i}-${j}.img"
+          if [ ! -f vmlinuz-debian-${i}-${j} ]; then
+            wget ${DEBMIRR}${i}${DEBINST}${j}${DEBBASE}${j}/${k} -O vmlinuz-debian-${i}-${j} \
+>/dev/null 2>&1 && echo "Got vmlinuz-debian-${i}-${j}"
           else
-            echo "Skipping vmlinuz-debian-${i}-${j}.img. Exists"
+            echo "Skipping vmlinuz-debian-${i}-${j}. Exists"
           fi
         elif echo $k | grep initrd >/dev/null 2>&1; then
           if [ ! -f initrd-debian-${i}-${j}.img ]; then
@@ -317,11 +317,11 @@ create_tftp_config() {
     do for j in $CENTARCH
       do for k in $CENTFILE
         do if echo $k | grep linu >/dev/null 2>&1; then
-          if [ ! -f vmlinuz-centos-${i}-${j}.img ]; then
-            wget ${CENTMIRR}${i}/os/${j}${CENTBASE}${k} -O vmlinuz-centos-${i}-${j}.img \
->/dev/null 2>&1 && echo "Got vmlinuz-centos-${i}-${j}.img"
+          if [ ! -f vmlinuz-centos-${i}-${j} ]; then
+            wget ${CENTMIRR}${i}/os/${j}${CENTBASE}${k} -O vmlinuz-centos-${i}-${j} \
+>/dev/null 2>&1 && echo "Got vmlinuz-centos-${i}-${j}"
           else
-            echo "Skipping vmlinuz-centos-${i}-${j}.img. Exists"
+            echo "Skipping vmlinuz-centos-${i}-${j}. Exists"
           fi
         elif echo $k | grep initrd >/dev/null 2>&1; then
           if [ ! -f initrd-centos-${i}-${j}.img ]; then
@@ -340,11 +340,11 @@ create_tftp_config() {
     do for j in $UBUARCH
       do for k in $UBUFILE
         do if echo $k | grep linu > /dev/null 2>&1; then
-          if [ ! -f vmlinuz-ubuntu-${i}-${j}.img ]; then
-            wget ${UBUMIRR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O vmlinuz-ubuntu-${i}-${j}.img \
->/dev/null 2>&1 && echo "Got vmlinuz-ubuntu-${i}-${j}.img"
+          if [ ! -f vmlinuz-ubuntu-${i}-${j} ]; then
+            wget ${UBUMIRR}${i}${UBUINST}${j}${UBUBASE}${j}/${k} -O vmlinuz-ubuntu-${i}-${j} \
+>/dev/null 2>&1 && echo "Got vmlinuz-ubuntu-${i}-${j}"
           else
-            echo "Skipping vmlinuz-ubuntu-${i}-${j}.img. Exists"
+            echo "Skipping vmlinuz-ubuntu-${i}-${j}. Exists"
           fi
         elif echo $k | grep initrd > /dev/null 2>&1; then
           if [ ! -f initrd-ubuntu-${i}-${j}.img ]; then
