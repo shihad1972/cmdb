@@ -14,6 +14,9 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubu
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "13.04", alias, "raring", "i386", bt_id FROM build_type WHERE alias = "ubuntu";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "13.04", alias, "raring", "x86_64", bt_id FROM build_type WHERE alias = "ubuntu";
 --
+-- Create default locales
+INSERT INTO locale (os_id, bt_id) SELECT os_id, bt_id FROM build_os;
+--
 -- Create build varients
 INSERT INTO varient (varient, valias) VALUES ("Web Server", "web");
 INSERT INTO varient (varient, valias) VALUES ("MySQL Server", "mysql");
