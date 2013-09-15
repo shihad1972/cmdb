@@ -96,7 +96,7 @@ done
 
 cat >/tmp/${USER}-add.ldif <<EOF
 # ${USER}, people, ${DOMAIN}
-dn: uid=${USER},${directory%?}
+dn: uid=${USER},ou=people,${directory%?}
 uid: $USER
 cn: $NAME $SURNAME
 sn: $SURNAME
@@ -119,7 +119,7 @@ if echo $GROUP | grep yes >/dev/null 2>&1; then
 gidNumber: $USERID
 
 # ${USER}, group, ${DOMAIN}
-dn: cn=${USER},${directory%?}
+dn: cn=${USER},ou=group,${directory%?}
 cn: $USER
 gidNumber: ${USERID}
 objectClass: posixGroup

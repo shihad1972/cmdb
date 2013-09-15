@@ -4,6 +4,8 @@ card and hard disk seperately, and also that we have to know the ID's
 that they are in the database. Better to add them WHEN we add the
 server.
 
+Need to add Root-CA field into the build_domain table of database.
+
 **When building a non-existant reverse network block in dnsa we get a
   segmentation fault
 **Reverse slaves do not work
