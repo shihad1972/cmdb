@@ -1,3 +1,9 @@
+15/09/2013
+When addding a server, it's bullshit that we have to add the network
+card and hard disk seperately, and also that we have to know the ID's
+that they are in the database. Better to add them WHEN we add the
+server.
+
 01/09/2013
 Need to check for overlaps in build_domains when adding a new one.
 Also if we want to add a dhcpd.network entry will probably need to check
