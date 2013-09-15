@@ -23,7 +23,7 @@ if [ ! -d /etc/ntp ]; then
 fi
 
 NTPSERVER=$1
-cat /etc/ntp.conf <<EOF
+cat > /etc/ntp.conf <<EOF
 server $NTPSERVER
 
 EOF
@@ -34,3 +34,4 @@ $NTPSERVER
 EOF
 
 /sbin/chkconfig ntpd on
+/sbin/chkconfig ntpdate on
