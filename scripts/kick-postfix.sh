@@ -7,7 +7,8 @@
 # Kickstart Postfix Config script
 #
 # During kickstart installation, configure
-# postfix SMTPD server with some default settings.
+# postfix SMTP server with some default settings,
+# including an alias for root
 #
 #
 # Will require the hostname and domainname to be passed

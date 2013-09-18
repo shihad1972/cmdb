@@ -637,6 +637,7 @@ PRESEED=preseed/
 KICKSTART=ks/
 DHCPCONF=/etc/dhcp/dhcpd.hosts
 
+FINISH
 }
 
 ###############################################################################
