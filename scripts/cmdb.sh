@@ -698,6 +698,12 @@ done
 
 if [ -z $HOSTNAME ]; then
   get_host
+else
+  echo "Using $HOSTNAME as hostname: Change? (Y/N)"
+  read answer
+  if [ $answer != "y" && $answer != 'Y' ]; then
+    get_host
+  fi
 fi
 
 if [ -z $DOMAIN ]; then
