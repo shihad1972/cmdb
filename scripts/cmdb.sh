@@ -43,7 +43,7 @@ MIRROR="mirrors.melbourne.co.uk"
 
 # Options
 HAVE_DNSA="yes"
-SQL="${PWD}/sql"
+SQL="/var/lib/cmdb/sql"
 DB="sqlite"
 DBNAME="cmdb"
 
