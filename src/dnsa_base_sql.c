@@ -613,7 +613,7 @@ dnsa_store_result_mysql(MYSQL_ROW row, dnsa_s *base, int type, unsigned int fiel
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_preferred_a_mysql(row, base);
 	} else if (type == GLUE) {
-		required = dnsa_select_fields[GLUE];
+		required = dnsa_select_fields[GLUES];
 		if (fields != required)
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_glue_mysql(row, base);
