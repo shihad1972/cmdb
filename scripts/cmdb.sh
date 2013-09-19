@@ -24,14 +24,14 @@
 
 # Commands to use
 
-APACTL=`which apache2ctl`
-APTG=`which apt-get`
-DPKG=`which dpkg`
-YUM=`which yum`
-RPM=`which rpm`
-SERV=`which service`
-SQLITE=`which sqlite3`
-MYSQL=`which mysql`
+APACTL=`which apache2ctl > /dev/null 2>&1`
+APTG=`which apt-get > /dev/null 2>&1`
+DPKG=`which dpkg > /dev/null 2>&1`
+YUM=`which yum > /dev/null 2>&1`
+RPM=`which rpm > /dev/null 2>&1`
+SERV=`which service > /dev/null 2>&1`
+SQLITE=`which sqlite3 > /dev/null 2>&1`
+MYSQL=`which mysql > /dev/null 2>&1`
 
 # Files and directories
 
@@ -380,7 +380,7 @@ debian_base() {
     echo "Installing apache2 package"
     $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
   fi
-  if ! id www-data | grep cmdb; then
+  if ! id www-data | grep cmdb > /dev/null 2>&1; then
     echo "Adding www-data to cmdb group"
     echo "If this is not your apache user you will have to do this manually"
     usermod -a -G cmdb www-data
@@ -407,7 +407,7 @@ debian_base() {
     fi
   fi
 
-  if echo $DB | grep sqlite; then
+  if echo $DB | grep sqlite > /dev/null 2>&1; then
     if [ -z $SQLITE ]; then
       echo "Installing sqlite3 command"
       apt-get install -y sqlite3 > /dev/null 2>&1
@@ -438,12 +438,12 @@ redhat_base() {
     $YUM install httpd php5 -y > /dev/null 2>&1
   fi
 
-  if ! id www-data | grep cmdb; then
+  if ! id apache | grep cmdb > /dev/null 2>&1; then
     echo "Adding apache to cmdb group"
     echo "If this is not your apache user you will have to do this manually"
     usermod -a -G cmdb apache
   else
-    echo "www-data already in cmdb group"
+    echo "apache already in cmdb group"
   fi
 
   if [ ! -d "$DHCPD" ]; then
@@ -455,12 +455,12 @@ redhat_base() {
 # from it
 
   if [ ! -d "$TFTP" ]; then
-    echo "Installing atftp and syslinux package"
-    $YUM install atftp syslinux -y > /dev/null 2>&1
+    echo "Installing tftp-server and syslinux package"
+    $YUM install tftp-server syslinux -y #> /dev/null 2>&1
     echo "Setting tftp to start and restarting xinetd"
-    $CHKCON tftp on
+    $CHKCON xinetd on
     $SERV xinetd restart
-    TFTP="/tftpboot"
+    TFTP="/var/lib/tftpboot"
   fi
 
   if [ $HAVE_DNSA ]; then
@@ -638,6 +638,7 @@ KICKSTART=ks/
 DHCPCONF=/etc/dhcp/dhcpd.hosts
 
 FINISH
+  fi
 }
 
 ###############################################################################
