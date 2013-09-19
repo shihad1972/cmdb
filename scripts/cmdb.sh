@@ -24,26 +24,26 @@
 
 # Commands to use
 
-APACTL=`which apache2ctl > /dev/null 2>&1`
-APTG=`which apt-get > /dev/null 2>&1`
-DPKG=`which dpkg > /dev/null 2>&1`
-YUM=`which yum > /dev/null 2>&1`
-RPM=`which rpm > /dev/null 2>&1`
-SERV=`which service > /dev/null 2>&1`
-SQLITE=`which sqlite3 > /dev/null 2>&1`
-MYSQL=`which mysql > /dev/null 2>&1`
+APACTL=`which apache2ctl 2>/dev/null`
+APTG=`which apt-get 2>/dev/null`
+DPKG=`which dpkg 2>/dev/null`
+YUM=`which yum 2>/dev/null`
+RPM=`which rpm 2>/dev/null`
+SERV=`which service 2>/dev/null`
+SQLITE=`which sqlite3 2>/dev/null`
+MYSQL=`which mysql 2>/dev/null`
 
 # Files and directories
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
 BIND="/etc/bind/"
-SQLFILE="/var/lib/cmdb/sql/cmdb.sql"
 MIRROR="mirrors.melbourne.co.uk"
 
 # Options
 HAVE_DNSA="yes"
 SQL="/var/lib/cmdb/sql"
+SQLFILE="${SQL}/initial.sql"
 DB="sqlite"
 DBNAME="cmdb"
 
@@ -473,12 +473,12 @@ redhat_base() {
   if echo $DB | grep sqlite; then
     if [ -z $SQLITE ]; then
       echo "Installing sqlite3 command"
-      yum install -y sqlite > /dev/null 2>&1
+      yum install sqlite -y> /dev/null 2>&1
     fi
   elif echo $DB | grep mysql; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
-      yum install -y mysql > /dev/null 2>&1
+      yum install mysql -y> /dev/null 2>&1
     fi
   fi
 }
@@ -496,7 +496,7 @@ create_database() {
       echo "No sqlite3 command. Exiting"
       exit 6
     fi
-    SQLBASE=$SQL/sqlite/all-tables-sqlite.sql
+    SQLBASE=$SQL/all-tables-sqlite.sql
     $SQLITE -init $SQLBASE $SQLFILE <<STOP
 .quit
 STOP
@@ -536,7 +536,7 @@ STOP
     cat ${SQL}/initial.sql | $SQLITE $SQLFILE
     chown cmdb:cmdb $SQLFILE
   elif echo $DB | grep mysql > /dev/null 2>&1; then
-    SQLBASE=$SQL/mysql/all-tables-mysql.sql
+    SQLBASE=$SQL/all-tables-mysql.sql
     echo "Please enter the name of the mysql host"
     read MYSQLHOST
     echo "Please enter the root password for $MYSQLHOST"
@@ -716,9 +716,9 @@ create_cmdb_user
 
 # Check for OS type
 
-if which apt-get >/dev/null 2>&1; then
+if [ ! -z $APTG ]; then
   debian_base
-elif which yum >/dev/null 2>&1; then
+elif [ ! -z $YUM ]; then
   redhat_base
 else
   echo "No yum or apt-get?? What OS are you running?"
