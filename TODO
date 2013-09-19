@@ -6,6 +6,9 @@ Only need one initial customer; techies. Need to think more about
 internal customers; again most of the crap should be able to be added
 later
 
+The base.sh install script for debian could download a config script
+for that host using the hostname.
+
 Start using proper error(s) from the functions I call
 
 15/09/2013
