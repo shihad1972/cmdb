@@ -670,13 +670,18 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char file[NAME_S], url[CONF_S];
+	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
+	string_l name, surl;
 
+	name.string = server;
+	name.next = &surl;
+	surl.string = url;
+	surl.next = '\0';
 	/* This should NOT be hard coded! */
-	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
+	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", server);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -714,12 +719,12 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = cbc_run_search(cmc, data, KICK_NET_DETAILS)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build for %s has no network information.\n",
-		 cml->name);
+		 server);
 		return NO_NET_BUILD_ERR;
 	} else if (retval > 1) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build for %s has multiple network configs.\n",
-		 cml->name);
+		 server);
 		return MULTI_NET_BUILD_ERR;
 	} else {
 		fill_kick_network_info(data, &build);
@@ -730,14 +735,14 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		data = '\0';
 		fprintf(stderr, "Build for %s has no packages associated.\n",
-		 cml->name);
+		 server);
 	}
 	fill_kick_packages(data, &build);
 	clean_dbdata_struct(data);
 	PREP_DB_QUERY(data, BUILD_TYPE_URL);
 	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_URL)) == 0) {
 		clean_dbdata_struct(data);
-		fprintf(stderr, "Build type for %s has no url??\n", cml->name);
+		fprintf(stderr, "Build type for %s has no url??\n", server);
 		return NO_BUILD_URL;
 	} else if (retval > 1) {
 		fprintf(stderr, "Multiple url's?? Perhaps multiple build domains\n");
@@ -747,9 +752,9 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	clean_dbdata_struct(data);
 	PREP_DB_QUERY(data, NTP_CONFIG);
 	if ((retval = cbc_run_search(cmc, data, NTP_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot find NTP config for %s\n", cml->name);
+		fprintf(stderr, "Cannot find NTP config for %s\n", server);
 	} else if (retval > 1) {
-		fprintf(stderr, "Multiple NTP configs for %s\n", cml->name);
+		fprintf(stderr, "Multiple NTP configs for %s\n", server);
 	} else {
 		if (data->fields.small > 0)
 			add_kick_ntp_config(data, &build, url);
@@ -757,13 +762,24 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	clean_dbdata_struct(data);
 	PREP_DB_QUERY(data, LDAP_CONFIG)
 	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot get LDAP config for %s\n", cml->name);
+		fprintf(stderr, "Cannot get LDAP config for %s\n", server);
 	} else if (retval > 1) {
-		fprintf(stderr, "Multiple LDAP configs for %s\n", cml->name);
+		fprintf(stderr, "Multiple LDAP configs for %s\n", server);
 	} else {
 		if (data->fields.small > 0)
 			add_kick_ldap_config(data, &build, url);
 	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, SMTP_CONFIG)
+	if ((retval = cbc_run_search(cmc, data, SMTP_CONFIG)) == 0) {
+		fprintf(stderr, "Cannot get SMTP config for %s\n", server);
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple SMTP configs for %s\n", server);
+	} else {
+		if (data->fields.small > 0)
+			add_kick_smtp_config(data, &build, &name);
+	}
+	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
@@ -1888,6 +1904,50 @@ chmod 755 kick-ntp.sh\n\
 void
 add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf)
 {
+	char buff[BUFF_S], *tmp, *server, *domain, *ip;
+	uint32_t ip_addr;
+	size_t len = NONE;
+	dbdata_s *list = data;
+
+	if (!(ip = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in display_build_domain");
+	if (list->next) {
+		list = list->next;
+		server = list->fields.text;
+	} else {
+		fprintf(stderr,
+		 "Only one data struct in linked list in smtp config\n");
+		return;
+	}
+	if (list->next) {
+		list = list->next;
+		domain = list->fields.text;
+	} else {
+		fprintf(stderr,
+		 "Only two data structs in linked list in smtp config\n");
+		return;
+	}
+	if (list->next) {
+		list = list->next;
+		ip_addr = htonl((uint32_t)list->fields.number);
+		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+	} else {
+		fprintf(stderr,
+		 "Only three data structs in linked list in smtp config\n");
+		return;
+	}
+	snprintf(buff, BUFF_S, "\
+wget %sscripts/kick-postfix.sh\n\
+chmod 755 kick-postfix.sh\n\
+./kick-postfix.sh -h %s -i %s -d %s -r %s > postfix.log 2>&1\n\
+\n", conf->next->string, conf->string, ip, domain, server);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+	free(ip);
 }
 
 int
