@@ -1,3 +1,13 @@
+19/09/2013
+Cut down the amount of crap you have to add with a server; especially
+the vendor stuff. Only need the ethernet and hard disk and server
+name for a build. 
+Only need one initial customer; techies. Need to think more about
+internal customers; again most of the crap should be able to be added
+later
+
+Start using proper error(s) from the functions I call
+
 15/09/2013
 When addding a server, it's bullshit that we have to add the network
 card and hard disk seperately, and also that we have to know the ID's
