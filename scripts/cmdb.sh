@@ -550,7 +550,9 @@ STOP
     echo "Please enter the name of the mysql host"
     read MYSQLHOST
     echo "Please enter the root password for $MYSQLHOST"
-    read MYSQLPASS
+    read -s MYSQLPASS
+    echo "Please enter password for new cmdb user"
+    read -s CMDBPASS
     if $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" > /dev/null 2>&1; then
       echo "Connection successful"
     else
@@ -559,36 +561,43 @@ STOP
     fi
     echo "Creating db $DBNAME..."
     $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "CREATE DATABASE $DBNAME"
+    echo "Creating cmdb user"
+    $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e <<STOP "\
+CREATE USER 'cmdb'@'${HOSTNAME}.${DOMAIN}' IDENTIFIED BY '${CMDBPASS}';
+CREATE USER 'cmdb'@'${IPADDR}' IDENTIFIED BY '${CMDBPASS}';
+GRANT ALL ON cmdb.* TO 'cmdb'@'${HOSTNAME}.${DOMAIN}';
+GRANT ALL ON cmdb.* TO 'cmdb'@'${IPADDR}';"
+STOP
     echo "Adding initial entries to DB $DBNAME"
-    cat $SQLBASE | $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root $DBNAME -e
+    cat $SQLBASE | $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root $DBNAME
     if [ -z $DEBMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e  <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('debian', 'preseed', 'url', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$MIRROR', 'auto=true priority=critical vga=788');"
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$DEBMIR", "auto=true priority=critical vga=788");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('debian', 'preseed', 'url', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$DEBMIR', 'auto=true priority=critical vga=788');"
 STOP
     fi
     if [ -z $UBUMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "auto=true priority=critical vga=788");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('ubuntu', 'preseed', 'url', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$MIRROR', 'auto=true priority=critical vga=788');"
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$UBUMIR", "auto=true priority=critical vga=788");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('ubuntu', 'preseed', 'url', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$UBUMIR', 'auto=true priority=critical vga=788');"
 STOP
     fi
     if [ -z $CENTMIR ]; then
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$MIRROR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('centos', 'kickstart', 'ks', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$MIRROR', 'ksdevice=eth0 console=tty0 ramdisk_size=8192');"
 STOP
     else
-      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP
-INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://${HOSTNAME}.${DOMAIN}/cmdb/", "$CENTMIR", "ksdevice=eth0 console=tty0 ramdisk_size=8192");
+      $MYSQL -u root -p${MYSQLPASS} -h $MYSQLHOST $DBNAME -e <<STOP "\
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ('centos', 'kickstart', 'ks', 'http://${HOSTNAME}.${DOMAIN}/cmdb/', '$CENTMIR', 'ksdevice=eth0 console=tty0 ramdisk_size=8192');"
 STOP
     fi
-    cat ${SQL}/initial.sql | mysql -h ${MYSQLHOST} -p${MYSQLPASS} $DBNAME -e
+    cat ${SQL}/initial.sql | mysql -h ${MYSQLHOST} -p${MYSQLPASS} $DBNAME
   else
     echo "Unknown database type $SQL"
     exit 6
@@ -613,9 +622,9 @@ DBTYPE=$DB
 FILE=$SQLFILE
 
 ## MYSQL DB Connectivity
-DB=$DBNAME		# Database
+DB=$DBNAME	# Database
 USER=cmdb		# DB user
-PASS=			# DB pass
+PASS=${CMDBPASS}	# DB pass
 HOST=$MYSQLHOST		# DB host
 PORT=3306
 
@@ -648,6 +657,8 @@ KICKSTART=ks/
 DHCPCONF=/etc/dhcp/dhcpd.hosts
 
 FINISH
+  else
+    echo "dnsa.conf file exists"
   fi
 }
 
@@ -701,7 +712,9 @@ if [ -z $HOSTNAME ]; then
 else
   echo "Using $HOSTNAME as hostname: Change? (Y/N)"
   read answer
-  if [ $answer != "y" && $answer != 'Y' ]; then
+  if [ $answer != "y" ] && [ $answer != "Y" ]; then
+    echo "Using $HOSTNAME"
+  else
     get_host
   fi
 fi
