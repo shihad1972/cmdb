@@ -37,13 +37,12 @@ MYSQL=`which mysql 2>/dev/null`
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
-BIND="/etc/bind/"
 MIRROR="mirrors.melbourne.co.uk"
 
 # Options
 HAVE_DNSA="yes"
 SQL="/var/lib/cmdb/sql"
-SQLFILE="${SQL}/initial.sql"
+SQLFILE="${SQL}/cmdb.sql"
 DB="sqlite"
 DBNAME="cmdb"
 
@@ -75,6 +74,16 @@ else
   echo "No tftp directory found"
 fi
 
+if [ -d /etc/bind ]; then
+  BIND="/etc/bind/"
+  echo "Found ${BIND}"
+elif [ -d /var/named ]; then
+  BIND="/var/named"
+  echo "Found ${BIND}"
+else
+  unset BIND
+  echo "No bind directory found"
+fi
 
 ###############################################################################
 #
@@ -456,7 +465,7 @@ redhat_base() {
 
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftp-server and syslinux package"
-    $YUM install tftp-server syslinux -y #> /dev/null 2>&1
+    $YUM install tftp-server syslinux -y > /dev/null 2>&1
     echo "Setting tftp to start and restarting xinetd"
     $CHKCON xinetd on
     $SERV xinetd restart
@@ -467,6 +476,7 @@ redhat_base() {
     if [ ! -d "$BIND" ]; then
       echo "Installing bind package"
       $YUM install bind -y > /dev/null 2>&1
+      BIND="/var/named"
     fi
   fi
 

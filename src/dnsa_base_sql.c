@@ -827,10 +827,10 @@ dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *base)
 	glue->id = strtoul(row[0], NULL, 10);
 	snprintf(glue->name, RBUFF_S, "%s", row[1]);
 	glue->zone_id = strtoul(row[2], NULL, 10);
-	snprintf(glue->pri_dns, RBUFF_S, "%s", row[3]);
-	snprintf(glue->sec_dns, RBUFF_S, "%s", row[4]);
-	snprintf(glue->pri_ns, RANGE_S, "%s", row[5]);
-	snprintf(glue->sec_ns, RANGE_S, "%s", row[6]);
+	snprintf(glue->pri_dns, RANGE_S, "%s", row[3]);
+	snprintf(glue->sec_dns, RANGE_S, "%s", row[4]);
+	snprintf(glue->pri_ns, RBUFF_S "%s", row[5]);
+	snprintf(glue->sec_ns, RBUFF_S, "%s", row[6]);
 	list = base->glue;
 	if (list) {
 		while (list->next)
