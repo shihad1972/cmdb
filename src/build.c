@@ -1164,8 +1164,10 @@ d-i finish-install/reboot_in_progress note\n\
 \n\
 d-i cdrom-detect/eject boolean false\n\
 \n\
-d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh && chmod 755 base.sh && ./base.sh\n",
-		cml->config);
+d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh \
+&& chmod 755 base.sh && ./base.sh %s %s\n",
+		cml->config, cml->name, cml->config);
+	len = strlen(pack);
 	if ((len + build->size) > build->len) {
 		while ((build->size + len) > build->len)
 			build->len *=2;

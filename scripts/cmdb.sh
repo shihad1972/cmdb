@@ -220,6 +220,13 @@ Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
     Allow from all
 </Directory>
 
+Alias /cmdb/hosts/ "/var/lib/cmdb/hosts/"
+<Directory "/var/lib/cmdb/hosts/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Order allow,deny
+    Allow from all
+</Directory>
+
 ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
 <Directory "/var/lib/cmdb/cgi-bin/">
     AllowOverride None
