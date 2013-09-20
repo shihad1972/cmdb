@@ -779,6 +779,15 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if (data->fields.small > 0)
 			add_kick_smtp_config(data, &build, &name);
 	}
+	clean_dbdata_struct(data);PREP_DB_QUERY(data, LOG_CONFIG);
+	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
+		fprintf(stderr, "Cannot find LOG config for %s\n", server);
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple LOG configs for %s\n", server);
+	} else {
+		if (data->fields.small > 0)
+			add_kick_log_config(data, &build, url);
+	}
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
@@ -1863,35 +1872,61 @@ cp Buka-Root-CA.pem /etc/openldap/cacerts\n\
 	build->size += len;
 }
 
+#ifndef CHECK_KICK_CONFIG
+# define CHECK_KICK_CONFIG(conf) {                \
+	if (data->next) {                         \
+		server = data->next->fields.text; \
+	} else {                                  \
+		fprintf(stderr,                   \
+		 "Only one data struct in linked list in conf config\n"); \
+		return;                           \
+	}                                         \
+	if (strncmp(url, "NULL", COMM_S) == 0) {  \
+		fprintf(stderr, "url set to NULL in conf config\n");      \
+		return;                           \
+	}                                         \
+	if (!(server)) {                          \
+		fprintf(stderr, "Nothing in DB for conf server\n");       \
+		return;                           \
+	}                                         \
+	if (strncmp(server, "NULL", COMM_S) == 0) {                      \
+		fprintf(stderr, "conf server set to NULL\n");             \
+		return;                           \
+	}                                         \
+}
+#endif /* CHECK_KICK_CONFIG */
+
 void
 add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url)
 {
 	char buff[BUFF_S], *tmp, *server;
 	size_t len = NONE;
 
-	if (data->next) {
-		server = data->next->fields.text;
-	} else {
-		fprintf(stderr,
-		 "Only one data struct in linked list in ntp config\n");
-		return;
-	}
-	if (strncmp(url, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "url set to NULL in ntp config\n");
-		return;
-	}
-	if (!(server)) {
-		fprintf(stderr, "Nothing in DB for ntp server\n");
-		return;
-	}
-	if (strncmp(server, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "ntp_server set to NULL\n");
-		return;
-	}
+	CHECK_KICK_CONFIG(ntp)
 	snprintf(buff, BUFF_S, "\
 wget %sscripts/kick-ntp.sh\n\
 chmod 755 kick-ntp.sh\n\
 ./kick-ntp.sh %s > ntp.log 2>&1\n\
+\n", url, server);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+add_kick_log_config(dbdata_s *data, string_len_s *build, char *url)
+{
+	char buff[BUFF_S], *tmp, *server;
+	size_t len = NONE;
+
+	CHECK_KICK_CONFIG(log)
+	snprintf(buff, BUFF_S, "\
+wget %sscripts/log.sh\n\
+chmod 755 log.sh\n\
+./log.sh %s > logging.log 2>&1\n\
 \n", url, server);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)

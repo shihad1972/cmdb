@@ -23,15 +23,18 @@ if [ ! -d /etc/ntp ]; then
 fi
 
 NTPSERVER=$1
-cat > /etc/ntp.conf <<EOF
+
+if [ -n ${NTPSERVER} ]; then
+  cat > /etc/ntp.conf <<EOF
 server $NTPSERVER
 
 EOF
 
-cat > /etc/ntp/step-tickers <<EOF
+  cat > /etc/ntp/step-tickers <<EOF
 $NTPSERVER
 
 EOF
 
-/sbin/chkconfig ntpd on
-/sbin/chkconfig ntpdate on
+  /sbin/chkconfig ntpd on
+  /sbin/chkconfig ntpdate on
+fi

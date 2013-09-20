@@ -194,6 +194,9 @@ add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf);
 void
 add_kick_base_script(dbdata_s *data, string_len_s *build);
 
+void
+add_kick_log_config(dbdata_s *data, string_len_s *build, char *url);
+
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
 

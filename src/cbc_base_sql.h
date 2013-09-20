@@ -103,7 +103,8 @@ enum {			/* cbc search SQL statements */
 	KICK_BASE = 40,
 	KICK_NET_DETAILS = 41,
 	BUILD_TYPE_URL = 42,
-	NTP_CONFIG = 43
+	NTP_CONFIG = 43,
+	LOG_CONFIG = 44
 };
 
 enum {			/* cbc update SQL statements */
