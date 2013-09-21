@@ -17,7 +17,7 @@ else
 fi
 
 if [ -n "${host}" ]; then
-  if wget ${url}hosts/${host}.sh ]; then
+  if wget ${url}hosts/${host}.sh; then
     chmod 755 ${host}.sh
     ./${host}.sh > host.log 2>&1
   fi
