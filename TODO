@@ -1,3 +1,10 @@
+21/09/2013
+Base.sh debian script does not seem to be able to take arguments so
+I think I need to have a script run on the web server to create a
+script to finish off the build, given an argument of the server name.
+e.g. script.php?server-name. This can then test to see if the access
+is from the server's IP address.
+
 19/09/2013
 Cut down the amount of crap you have to add with a server; especially
 the vendor stuff. Only need the ethernet and hard disk and server
