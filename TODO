@@ -1,3 +1,8 @@
+24/09/2013
+add_pre_lvm_part does not check it's bounds properly and can
+overflow the char * it is sent. Need to send in a string_len_s and
+use the resize buffer function.
+
 21/09/2013
 Base.sh debian script does not seem to be able to take arguments so
 I think I need to have a script run on the web server to create a
