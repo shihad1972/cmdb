@@ -4,10 +4,8 @@
 #
 # (C) 2011 Iain Conochie
 #
-host=$1
-url=$2
-chroot /target
-cd /root
+host=`cat config.txt | awk '{print $1}'`
+url=`cat config.txt | awk '{print $2}'`
 
 if [ -z ${url} ]; then
   echo "No url was passed to this script"
@@ -20,6 +18,11 @@ if [ -n "${host}" ]; then
   if wget ${url}hosts/${host}.sh; then
     chmod 755 ${host}.sh
     ./${host}.sh > host.log 2>&1
+  else
+    echo "No host script for $host"
   fi
+else
+  echo "host not set"
 fi
 
+#rm config.txt
