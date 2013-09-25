@@ -202,7 +202,8 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_CONTACT = 203,
 	MULTI_CONTACT = 204,
 	NO_DATA = 205,
-	NO_BUILD_URL = 206
+	NO_BUILD_URL = 206,
+	NO_CONFIG = 207
 	
 };
 

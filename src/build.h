@@ -129,6 +129,9 @@ int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
+write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml);
+
+int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
 
 int

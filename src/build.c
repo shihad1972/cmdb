@@ -442,6 +442,12 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		} else {
 			printf("build file written\n");
 		}
+		if ((retval = write_pre_host_script(cmc, cml)) != 0) {
+			fprintf(stderr, "Failed to write host script\n");
+			return retval;
+		} else {
+			printf("host script written\n");
+		}
 	} else if ((strncmp(cml->os, "centos", COMM_S) == 0) ||
 	           (strncmp(cml->os, "fedora", COMM_S) == 0)) {
 		if ((retval = write_kickstart_build_file(cmc, cml)) != 0) {
@@ -613,8 +619,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	dbdata_s *data;
 	string_len_s build = {.len = BUFF_S, .size = NONE };
 
-	/* This should NOT be hard coded! */
-	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", cml->name);
+	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -679,8 +684,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	name.next = &surl;
 	surl.string = url;
 	surl.next = '\0';
-	/* This should NOT be hard coded! */
-	snprintf(file, NAME_S, "/var/lib/cmdb/web/%s.cfg", server);
+	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -794,34 +798,112 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 
 #ifndef CHECK_DATA_LIST
-# define CHECK_DATA_LIST {         \
+# define CHECK_DATA_LIST(retval) {        \
 	if (list->next)             \
 		list = list->next;  \
 	else                        \
-		return;             \
+		return retval;             \
 }
 #endif /* CHECK_DATA_LIST */
+
+#ifndef PRINT_STRING_WITH_LENGTH_CHECK
+# define PRINT_STRING_WITH_LENGTH_CHECK {            \
+	len = strlen(line);                          \
+	if ((build->size + len) > build->len)        \
+		resize_string_buff(build);           \
+	pos = build->string + build->size;           \
+	snprintf(pos, len + 1, "%s", line);          \
+	build->size += len;                          \
+}
+#endif /* PRINT_STRING_WITH_LENGTH_CHECK */
+int
+write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
+{
+	char *server, line[RBUFF_S], *pos;
+	int retval = NONE;
+	dbdata_s *list, *data;
+	size_t len = NONE;
+	string_len_s *build;
+
+	if (!(build = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "build in write_pre_host_script");
+	build->len = NONE;
+	build->size = BUFF_S;
+	if (!(build->string = calloc(build->len, sizeof(char))))
+		report_error(MALLOC_FAIL, "build.string in write_pre_host_script");
+	if (cml->server_id == 0)
+		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+			return retval;
+	if (!(cml->name))
+		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
+			return retval;
+	server = cml->name;
+	snprintf(build->string, RBUFF_S, "\
+#!/bin/sh\n\
+#\n\
+#\n\
+# Auto Generated install script for %s\n\
+\n", server);
+	len = strlen(build->string);
+	build->size = len;
+	PREP_DB_QUERY(list, ALL_CONFIG)
+	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
+		clean_dbdata_struct(list);
+		fprintf(stderr, "Cannot get config from build domain\n");
+		return NO_CONFIG;
+	} else if (retval > 1) {
+		fprintf(stderr, "Associated with multiple build domains?\n");
+	}
+	retval = NONE;
+	snprintf(line, RBUFF_S, "\
+#\n\
+#\n\
+######################\n\
+\n\
+\n\
+WGET = `which wget`\n\
+\n\
+$WGET %sscripts/motd.sh\n\
+chmod 755 motd.sh\n\
+./motd.sh\n\
+\n", cml->config);
+	PRINT_STRING_WITH_LENGTH_CHECK
+	CHECK_DATA_LIST(0)
+	if (list->next->fields.small > 0)
+		snprintf(line, RBUFF_S, "\
+$WGET %sscripts/seed_switch.sh\n\
+chmod 755 seed_switch.sh\n\
+./seed_switch.sh\n\
+\n", cml->config);
+	PRINT_STRING_WITH_LENGTH_CHECK
+	CHECK_DATA_LIST(0)
+	clean_dbdata_struct(list);
+	free(build->string);
+	free(build);
+	return retval;
+}
+
 void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 {
 	dbdata_s *list = data;
 	char *bline = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *alias = list->fields.text;
 	snprintf(cml->os, CONF_S, "%s", alias);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *osver = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *country = list->fields.text;
-	CHECK_DATA_LIST
-	CHECK_DATA_LIST
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
+	CHECK_DATA_LIST()
+	CHECK_DATA_LIST()
 	char *arg = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *url = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *arch = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
@@ -875,25 +957,25 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
 	char *locale = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *keymap = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *net_dev = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *host = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	char *domain = list->fields.text;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
@@ -1630,9 +1712,9 @@ fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
 	dbdata_s *list = data;
 	char *device = list->fields.text, buff[FILE_S], *tmp;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	short int lvm = list->fields.small;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	unsigned long int psize;
 	char *fs, *lv, *mount;
 	size_t len;
@@ -1655,14 +1737,14 @@ clearpart --all --initlabel\n\
 	len = strlen(buff);
 	tmp = buff + len;
 	while (list) {
-		CHECK_DATA_LIST
+		CHECK_DATA_LIST()
 		psize = list->fields.number;
-		CHECK_DATA_LIST
-		CHECK_DATA_LIST
+		CHECK_DATA_LIST()
+		CHECK_DATA_LIST()
 		fs = list->fields.text;
-		CHECK_DATA_LIST
+		CHECK_DATA_LIST()
 		lv = list->fields.text;
-		CHECK_DATA_LIST
+		CHECK_DATA_LIST()
 		mount = list->fields.text;
 		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
 			snprintf(tmp, BUFF_S, "\
@@ -1693,33 +1775,33 @@ fill_kick_network_info(dbdata_s *data, string_len_s *build)
 	uint32_t ip_addr;
 	dbdata_s *list = data;
 	mirror = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	alias = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	arch = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	ver = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	dev = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	addr = ip;
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	addr = nm;
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	addr = gw;
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	addr = ns;
 	ip_addr = htonl((uint32_t)list->fields.number);
 	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	host = list->fields.text;
-	CHECK_DATA_LIST
+	CHECK_DATA_LIST()
 	domain = list->fields.text;
 	if (strncmp(alias, "centos", COMM_S) == 0)
 		snprintf(buff, FILE_S, "\
@@ -2259,3 +2341,4 @@ resize_string_buff(string_len_s *build)
 }
 
 #undef PREP_DB_QUERY
+#undef PRINT_STRING_WITH_LENGTH_CHECK
