@@ -1151,7 +1151,7 @@ d-i finish-install/reboot_in_progress note\n\
 d-i cdrom-detect/eject boolean false\n\
 \n\
 d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh \
-&& chmod 755 base.sh && ./base.sh %s %s\n",
+&& chmod 755 base.sh && echo \"%s %s\" > config.txt && ./base.sh\n",
 		cml->config, cml->name, cml->config);
 	len = strlen(pack);
 	if ((len + build->size) > build->len) {
@@ -1216,38 +1216,30 @@ void
 add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
 {
 	char line[RBUFF_S], *next;
-	int i;
 	size_t plen;
 
-	snprintf(line, URL_S + 1, "\
-              100 1000 1000000000 ext3                        \\\n\
-                       $defaultignore{ }                      \\\n\
-                       $primary{ }                            \\\n\
-                       method{ lvm }                          \\\n");
-	if ((build->size + URL_S) > build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, URL_S + 1, "%s", line);
-	plen = strlen(next);
-	build->size += plen;
-	snprintf(line, HOST_S, "\
-                       device{ %s }", cml->partition);
-	plen = strlen(line);
-	for (i = (int)plen; i < 62; i++)
-		strcat(line, " ");
-	strcat(line, "\\\n");
-	plen = strlen(next);
-	next += plen;
-	snprintf(next, CONF_S, "%s", line);
-	next +=64;
-	snprintf(next, NAME_S + 1, "\
-                       vg_name{ systemlv }                    \\\n\
-              .                                               \\\n");
+	snprintf(line, RBUFF_S, "\
+              100 1000 1000000000 ext3       \\\n\
+                       $defaultignore{ }     \\\n\
+                       $primary{ }           \\\n\
+                       method{ lvm }         \\\n");
 	plen = strlen(line);
 	if ((build->size + plen) > build->len)
 		resize_string_buff(build);
 	next = build->string + build->size;
 	snprintf(next, plen + 1, "%s", line);
+	plen = strlen(next);
+	build->size += plen;
+	snprintf(line, RBUFF_S, "\
+                       device{ %s }  \\\n\
+                       vg_name{ systemlv }    \\\n\
+              .              \\\n", cml->partition);
+	plen = strlen(line);
+	if ((build->size + plen) > build->len)
+		resize_string_buff(build);
+	next = build->string + build->size;
+	snprintf(next, plen + 1, "%s", line);
+	build->size += plen;
 }
 void
 add_pre_part(dbdata_s *data, int retval, string_len_s *build)
