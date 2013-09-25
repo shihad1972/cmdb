@@ -200,14 +200,14 @@ add_kick_log_config(dbdata_s *data, string_len_s *build, char *url);
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
 
-char *
-add_pre_lvm_part(dbdata_s *data, int retval, char *disk);
+void
+add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *disk);
 
-char *
-add_pre_part(dbdata_s *data, int retval, char *disk);
+void
+add_pre_part(dbdata_s *data, int retval, string_len_s *disk);
 
-char *
-add_pre_volume_group(cbc_comm_line_s *cml, char *next);
+void
+add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *disk);
 
 int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
