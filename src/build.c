@@ -871,9 +871,9 @@ chmod 755 motd.sh\n\
 	CHECK_DATA_LIST(0)
 	if (list->next->fields.small > 0)
 		snprintf(line, RBUFF_S, "\
-$WGET %sscripts/seed_switch.sh\n\
-chmod 755 seed_switch.sh\n\
-./seed_switch.sh\n\
+$WGET %sscripts/ldap-auth.sh\n\
+chmod 755 ldap-auth.sh\n\
+./ldap-auth.sh\n\
 \n", cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
