@@ -39,13 +39,13 @@ else
   unset TGT
 fi
 
-cat > $TGT/usr/share/firstboot/001-autodir <<EOF
+cat > $TGT/usr/share/firstboot/001-autodir.sh <<EOF
 #!/bin/sh
 #
 apt-get install -y autodir
 sed -i s/RUN_AUTOHOME=\"no\"/RUN_AUTOHOME=\"yes\"/g /etc/default/autodir
-/sbin/service autodir restart
+/usr/sbin/service autodir restart
 
 EOF
 
-chmod 755 $TGT/usr/share/firstboot/001-autodir
+chmod 755 $TGT/usr/share/firstboot/001-autodir.sh

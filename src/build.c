@@ -819,7 +819,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char *server, line[RBUFF_S], *pos;
+	char *server, line[TBUFF_S], *pos;
 	int retval = NONE;
 	dbdata_s *list, *data, *tmp;
 	size_t len = NONE;
@@ -862,7 +862,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Associated with multiple build domains?\n");
 	}
 	retval = NONE;
-	snprintf(line, RBUFF_S, "\
+	snprintf(line, TBUFF_S, "\
 #\n\
 #\n\
 ######################\n\
@@ -877,7 +877,7 @@ chmod 755 firstboot.sh\n\
 $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
 ./motd.sh > motd.log 2>&1\n\
-\n", cml->config, cml->config);
+\n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
 	if (list->fields.small > 0) {

@@ -22,6 +22,7 @@
 if [ -d /target ]; then
    TGT=/target
 fi
+mkdir ${TGT}/usr/share/firstboot
 
 cat >${TGT}/etc/rc.local <<EOF
 #!/bin/sh -e
@@ -35,7 +36,7 @@ for i in /usr/share/firstboot/*; do
 
 done
 
-chmod 644 /usr/share/firstboot/*
+chmod 644 /usr/share/firstboot/*.sh
 
 exit 0
 EOF
