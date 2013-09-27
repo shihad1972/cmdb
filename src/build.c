@@ -871,9 +871,12 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 WGET=/usr/bin/wget\n\
 \n\
 $WGET %sscripts/disable_install.php > disable.log 2>&1\n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh > firstboot.log 2>&1\n\
 $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh\n\
+./motd.sh > motd.log 2>&1\n\
 \n", cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
@@ -881,7 +884,7 @@ chmod 755 motd.sh\n\
 		snprintf(line, RBUFF_S, "\
 $WGET %sscripts/ldap-auth.sh\n\
 chmod 755 ldap-auth.sh\n\
-./ldap-auth.sh\n\
+./ldap-auth.sh > auth.log 2>&1\n\
 \n", cml->config);
 		PRINT_STRING_WITH_LENGTH_CHECK
 	}

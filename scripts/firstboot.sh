@@ -1,8 +1,9 @@
 #!/bin/sh
 #
-#  Update the /etc/nsswitch.conf of a new installation to use ldap
+#  Script to generate firstboot scripts and run them on firstboot
 #
-#  (C) Iain M Conochie <iain-AT-thargoid-DOT-co-DOT-uk> 2013
+#
+#  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -19,33 +20,24 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 if [ -d /target ]; then
-  TGT=/target/root
-else
-  TGT=/root
+   TGT=/target
 fi
 
-DIR=`pwd`
+cat >${TGT}/etc/rc.local <<EOF
+#!/bin/sh -e
 
-if [ $DIR != $TGT ]; then
-  cd $TGT
-fi
+for i in /usr/share/firstboot/*; do
 
-mv ../etc/nsswitch.conf ../etc/nsswitch.BAK
-cat ../etc/nsswitch.BAK | sed -e s/compat/files\ ldap/g > ../etc/nsswitch.conf
+    if [ -x \$i ]; then
 
-if [ -d /target ]; then
-  TGT=/target
-else
-  unset TGT
-fi
+        \$i >>/usr/share/firstboot/scripts.log 2>&1
+    fi
 
-cat > $TGT/usr/share/firstboot/001-autodir <<EOF
-#!/bin/sh
-#
-apt-get install -y autodir
-sed -i s/RUN_AUTOHOME=\"no\"/RUN_AUTOHOME=\"yes\"/g /etc/default/autodir
-/sbin/service autodir restart
+done
 
+chmod 644 /usr/share/firstboot/*
+
+exit 0
 EOF
 
-chmod 755 $TGT/usr/share/firstboot/001-autodir
+chmod 755 ${TGT}/etc/rc.local
