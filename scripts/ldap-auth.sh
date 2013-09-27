@@ -22,10 +22,14 @@ if [ -d /target ]; then
   TGT=/target/root
 else
   TGT=/root
+fi
 
 DIR=`pwd`
 
 if [ $DIR != $TGT ]; then
-  cd TGT && sed -ibak s/compat/files\ ldap/g ../etc/nsswitch.conf
+  cd $TGT
 fi
+
+mv ../etc/nsswitch.conf ../etc/nsswitch.BAK
+cat ../etc/nsswitch.BAK | sed -e s/compat/files\ ldap/g > ../etc/nsswitch.conf
 

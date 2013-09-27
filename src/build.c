@@ -821,15 +821,21 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *server, line[RBUFF_S], *pos;
 	int retval = NONE;
-	dbdata_s *list, *data;
+	dbdata_s *list, *data, *tmp;
 	size_t len = NONE;
 	string_len_s *build;
 
 	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_pre_host_script");
-	build->len = NONE;
-	build->size = BUFF_S;
-	if (!(build->string = calloc(build->len, sizeof(char))))
+		report_error(MALLOC_FAIL, "build in write_pre_host_script");/*
+	if (!(list = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "list in write_pre_host_script");
+	if (!(data  = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in write_pre_host_script");
+	init_dbdata_struct(list);
+	init_dbdata_struct(data); */
+	build->len = BUFF_S;
+	build->size = NONE;
+	if (!(build->string = calloc(build->len,  sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_pre_host_script");
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
@@ -843,10 +849,11 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 #\n\
 #\n\
 # Auto Generated install script for %s\n\
-\n", server);
+#\n", server);
 	len = strlen(build->string);
 	build->size = len;
 	PREP_DB_QUERY(list, ALL_CONFIG)
+	tmp = list;
 	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
 		clean_dbdata_struct(list);
 		fprintf(stderr, "Cannot get config from build domain\n");
@@ -861,23 +868,28 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 ######################\n\
 \n\
 \n\
-WGET = `which wget`\n\
+WGET=/usr/bin/wget\n\
 \n\
+$WGET %sscripts/disable_install.php > disable.log 2>&1\n\
 $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
 ./motd.sh\n\
-\n", cml->config);
+\n", cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
-	if (list->next->fields.small > 0)
+	if (list->fields.small > 0) {
 		snprintf(line, RBUFF_S, "\
 $WGET %sscripts/ldap-auth.sh\n\
 chmod 755 ldap-auth.sh\n\
 ./ldap-auth.sh\n\
 \n", cml->config);
-	PRINT_STRING_WITH_LENGTH_CHECK
+		PRINT_STRING_WITH_LENGTH_CHECK
+	}
 	CHECK_DATA_LIST(0)
-	clean_dbdata_struct(list);
+	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
+	retval = write_file(line, build->string);
+	clean_dbdata_struct(tmp);
+/*	clean_dbdata_struct(data); */
 	free(build->string);
 	free(build);
 	return retval;
@@ -1232,9 +1244,9 @@ d-i finish-install/reboot_in_progress note\n\
 \n\
 d-i cdrom-detect/eject boolean false\n\
 \n\
-d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh \
-&& chmod 755 base.sh && echo \"%s %s\" > config.txt && ./base.sh\n",
-		cml->config, cml->name, cml->config);
+d-i preseed/late_command string cd /target/root; wget %shosts/%s.sh \
+&& sh /target/root/%s.sh\n",
+		cml->config, cml->name, cml->name);
 	len = strlen(pack);
 	if ((len + build->size) > build->len) {
 		while ((build->size + len) > build->len)
@@ -1247,6 +1259,7 @@ d-i preseed/late_command string cd /target/root; wget %sscripts/base.sh \
 	}
 	snprintf(build->string + build->size, len + 1, "%s", pack);
 	build->size += len;
+	free(pack);
 }
 
 char *
@@ -1489,6 +1502,7 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 	} else {
 		fill_smtp_config(cml, data, build);
 	}
+	clean_dbdata_struct(data);
 	return NONE;
 }
 
