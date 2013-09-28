@@ -892,6 +892,7 @@ $WGET %sscripts/ldap-auth.sh\n\
 chmod 755 ldap-auth.sh\n\
 ./ldap-auth.sh ssl %s>> scripts.log 2>&1\n\
 \n", cml->config, cml->config);
+			PRINT_STRING_WITH_LENGTH_CHECK
 		}
 	}
 	CHECK_DATA_LIST(0)
