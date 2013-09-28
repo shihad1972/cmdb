@@ -826,13 +826,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	string_len_s *build;
 
 	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_pre_host_script");/*
-	if (!(list = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "list in write_pre_host_script");
-	if (!(data  = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in write_pre_host_script");
-	init_dbdata_struct(list);
-	init_dbdata_struct(data); */
+		report_error(MALLOC_FAIL, "build in write_pre_host_script");
 	build->len = BUFF_S;
 	build->size = NONE;
 	if (!(build->string = calloc(build->len,  sizeof(char))))
@@ -860,6 +854,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		return NO_CONFIG;
 	} else if (retval > 1) {
 		fprintf(stderr, "Associated with multiple build domains?\n");
+		fprintf(stderr, "Using 1st one!!!\n");
 	}
 	retval = NONE;
 	snprintf(line, TBUFF_S, "\
@@ -870,13 +865,15 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 \n\
 WGET=/usr/bin/wget\n\
 \n\
-$WGET %sscripts/disable_install.php > disable.log 2>&1\n\
+$WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
+\n\
 $WGET %sscripts/firstboot.sh\n\
 chmod 755 firstboot.sh\n\
-./firstboot.sh > firstboot.log 2>&1\n\
+./firstboot.sh >> scripts.log 2>&1\n\
+\n\
 $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log 2>&1\n\
+./motd.sh >> scripts.log 2>&1\n\
 \n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
@@ -884,15 +881,34 @@ chmod 755 motd.sh\n\
 		snprintf(line, RBUFF_S, "\
 $WGET %sscripts/ldap-auth.sh\n\
 chmod 755 ldap-auth.sh\n\
-./ldap-auth.sh > auth.log 2>&1\n\
+./ldap-auth.sh >> scripts.log 2>&1\n\
 \n", cml->config);
 		PRINT_STRING_WITH_LENGTH_CHECK
 	}
 	CHECK_DATA_LIST(0)
+	PREP_DB_QUERY(data, LOG_CONFIG)
+	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Cannot get log config from build domain\n");
+		return NO_CONFIG;
+	} else if (retval > 1) {
+		fprintf(stderr, "Associated with multiple build domains?\n");
+		fprintf(stderr, "Using 1st one!!!\n");
+	}
+	if (data->fields.small > NONE) {
+		server = data->next->fields.text;
+		snprintf(line, RBUFF_S, "\
+$WGET %sscripts/log.sh\n\
+chmod 755 log.sh\n\
+./log.sh %s>> scripts.log 2>&1\n\
+\n", cml->config, server);
+		PRINT_STRING_WITH_LENGTH_CHECK
+	}
+	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
 	clean_dbdata_struct(tmp);
-/*	clean_dbdata_struct(data); */
+	clean_dbdata_struct(data);
 	free(build->string);
 	free(build);
 	return retval;

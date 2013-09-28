@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 #  Build script to configure rsyslog to log remotely to a logging 
 #  server
@@ -23,9 +23,15 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 LOG=$1
-DIR=/etc/rsyslog.d
+
+if [ -d /target ]; then
+  TGT=/target
+fi
+
+DIR=${TGT}/etc/rsyslog.d
 
 if [ ! -d ${DIR} ]; then
+  echo "$DIR does not exist"
   exit 0
 fi
 
@@ -46,3 +52,7 @@ if [ -n "${LOG}" ]; then
 # ### end of the forwarding rule ###
 
 STOP
+else
+  echo "No logging server passed to the script"
+fi
+
