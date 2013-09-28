@@ -105,7 +105,8 @@ enum {			/* cbc search SQL statements */
 	BUILD_TYPE_URL = 42,
 	NTP_CONFIG = 43,
 	LOG_CONFIG = 44,
-	ALL_CONFIG = 45
+	ALL_CONFIG = 45,
+	NFS_DOMAIN = 46
 };
 
 enum {			/* cbc update SQL statements */
