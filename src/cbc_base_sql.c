@@ -262,7 +262,7 @@ SELECT bd.config_ntp, bd.ntp_server FROM build_domain bd \
   LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
 SELECT bd.config_log, bd.log_server FROM build_domain bd \
   LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
-SELECT config_ntp, config_ldap, config_log, config_xymon, config_email \
+SELECT config_ntp, config_ldap, ldap_ssl, config_log, config_xymon, config_email \
   FROM build_domain bd NATURAL JOIN build_ip bi WHERE bi.server_id = ?","\
 SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
   bi.server_id = ?"
@@ -341,7 +341,7 @@ const unsigned int cbc_search_args[] = {
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	9, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 5, 1
+	2, 6, 1
 };
 
 const unsigned int cbc_update_types[][5] = {

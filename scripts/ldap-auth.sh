@@ -18,6 +18,8 @@
 #  with this program; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+ssl=$1
+url=$2
 if [ -d /target ]; then
   TGT=/target/root
 else
@@ -48,4 +50,18 @@ sed -i s/RUN_AUTOHOME=\"no\"/RUN_AUTOHOME=\"yes\"/g /etc/default/autodir
 
 EOF
 
-chmod 755 $TGT/usr/share/firstboot/001-autodir.sh
+chmod 755 ${TGT}/usr/share/firstboot/001-autodir.sh
+
+if [ -n ${ssl} ] && [ -n ${url} ]; then
+  wget ${url}Root-CA.pem
+  mv Root-CA.pem ${TGT}/etc/ssl/certs
+  cat ${TGT}/usr/share/firstboot/002-getca.sh <<EOF
+#!/bin/sh
+#
+/usr/bin/c_rehash /etc/ssl/certs/
+
+EOF
+  chmod 755 ${TGT}/usr/share/firstboot/002-getca.sh
+else
+  echo "Either url ${url} or ssl ${ssl} not set"
+fi

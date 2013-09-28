@@ -878,12 +878,21 @@ chmod 755 motd.sh\n\
 	PRINT_STRING_WITH_LENGTH_CHECK
 	CHECK_DATA_LIST(0)
 	if (list->fields.small > 0) {
-		snprintf(line, RBUFF_S, "\
+		CHECK_DATA_LIST(0)
+		if (list->fields.small == 0) {
+			snprintf(line, RBUFF_S, "\
 $WGET %sscripts/ldap-auth.sh\n\
 chmod 755 ldap-auth.sh\n\
 ./ldap-auth.sh >> scripts.log 2>&1\n\
 \n", cml->config);
-		PRINT_STRING_WITH_LENGTH_CHECK
+			PRINT_STRING_WITH_LENGTH_CHECK
+		} else {
+			snprintf(line, RBUFF_S, "\
+$WGET %sscripts/ldap-auth.sh\n\
+chmod 755 ldap-auth.sh\n\
+./ldap-auth.sh ssl %s>> scripts.log 2>&1\n\
+\n", cml->config, cml->config);
+		}
 	}
 	CHECK_DATA_LIST(0)
 	PREP_DB_QUERY(data, LOG_CONFIG)
@@ -1940,8 +1949,8 @@ add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url)
 	if (ssl > 0)
 /* Will need to get this from the database */
 		snprintf(buff, BUFF_S, "\
-wget %sBuka-Root-CA.pem\n\
-cp Buka-Root-CA.pem /etc/openldap/cacerts\n\
+wget %sRoot-CA.pem\n\
+cp Root-CA.pem /etc/openldap/cacerts\n\
 /usr/bin/c_rehash /etc/openldap/cacerts\n\
 /usr/sbin/authconfig --update --enableldap --enableldapauth --enableldaptls \
 --ldapserver=%s --ldapbasedn=%s --enablemkhomedir\n\
