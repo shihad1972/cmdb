@@ -1090,10 +1090,10 @@ d-i mirror/http/directory string /%s\n\
 d-i mirror/suite string %s\n\
 \n\
 ### Account setup\n\
-d-i passwd/root-password-crypted password $1$d/0w8MHb$tdqENqvXIz53kZp2svuak1\n\
-d-i passwd/user-fullname string Monkey User\n\
-d-i passwd/username string monkey\n\
-d-i passwd/user-password-crypted password $1$Hir6Ul13$.T1tAO.yfK5g7WDKSw0nI/\n\
+d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
+d-i passwd/user-fullname string Admin User\n\
+d-i passwd/username string sysadmin\n\
+d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
 d-i clock-setup/utc boolean true\n\
 \n\
 d-i time/zone string %s\n\

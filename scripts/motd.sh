@@ -1,7 +1,11 @@
 #!/bin/sh
 #
 #  Edit motd to display legal banner
-cat <<EOF>> /etc/motd
+if [ -d /target ]; then
+  TGT=/target
+fi
+
+cat <<EOF>> ${TGT}/etc/motd
 
                THIS DEVICE IS PART OF A PRIVATE NETWORK
 
