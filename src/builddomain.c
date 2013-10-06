@@ -661,13 +661,13 @@ print_build_dom_servers(dbdata_s *data)
 		report_error(MALLOC_FAIL, "ip in print_build_dom_servers");
 	printf("Servers build in domain\n");
 	while (list) {
-		ip_addr = htonl((uint32_t)data->next->fields.number);
+		ip_addr = htonl((uint32_t)list->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-		len = strlen(data->fields.text);
+		len = strlen(list->fields.text);
 		if (len >= 8)
-			printf("%s\t%s\n", data->fields.text, ip);
+			printf("%s\t%s\n", list->fields.text, ip);
 		else
-			printf("%s\t\t%s\n", data->fields.text, ip);
+			printf("%s\t\t%s\n", list->fields.text, ip);
 		list = list->next->next;
 	}
 	free(ip);
