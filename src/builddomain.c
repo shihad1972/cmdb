@@ -78,6 +78,7 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		return retval;
 	}
 	display_build_domain(base->bdom);
+	list_build_dom_servers(cbc, base->bdom->bd_id);
 	clean_cbc_struct(base);
 	return retval;
 }
@@ -631,6 +632,45 @@ cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next)
 			data->next->args.number = bd_id;
 	}
+}
+
+void
+list_build_dom_servers(cbc_config_s *cbc, unsigned long int id)
+{
+	int retval;
+	dbdata_s *data = '\0';
+
+	cbc_init_initial_dbdata(&data, BUILD_DOM_SERVERS);
+	data->args.number = id;
+	if ((retval = cbc_run_search(cbc, data, BUILD_DOM_SERVERS)) == 0)
+		printf("No severs build in domain\n");
+	else
+		print_build_dom_servers(data);
+	clean_dbdata_struct(data);
+}
+
+void
+print_build_dom_servers(dbdata_s *data)
+{
+	char *ip;
+	uint32_t ip_addr;
+	dbdata_s *list = data;
+	size_t len;
+
+	if (!(ip = calloc(RANGE_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ip in print_build_dom_servers");
+	printf("Servers build in domain\n");
+	while (list) {
+		ip_addr = htonl((uint32_t)data->next->fields.number);
+		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+		len = strlen(data->fields.text);
+		if (len >= 8)
+			printf("%s\t%s\n", data->fields.text, ip);
+		else
+			printf("%s\t\t%s\n", data->fields.text, ip);
+		list = list->next->next;
+	}
+	free(ip);
 }
 
 #ifdef HAVE_DNSA
