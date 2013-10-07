@@ -567,7 +567,7 @@ dnsa_run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	if (type & PREFERRED_A)
 		if ((retval = dnsa_run_query_mysql(config, base, PREFERRED_A)) != 0)
 			return retval;
-	if (type & GLUES)
+	if (type & GLUE)
 		if ((retval = dnsa_run_query_mysql(config, base, GLUE)) != 0)
 			return retval;
 	return retval;
