@@ -659,7 +659,7 @@ print_build_dom_servers(dbdata_s *data)
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in print_build_dom_servers");
-	printf("Servers build in domain\n");
+	printf("Servers built in domain\n");
 	while (list) {
 		ip_addr = htonl((uint32_t)list->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
