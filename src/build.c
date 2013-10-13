@@ -2059,7 +2059,7 @@ add_kick_xymon_config (dbdata_s *data, string_len_s *build, char *url, char *hos
 	snprintf(buff, BUFF_S, "\
 wget %sscripts/xymon-client.sh\n\
 chmod 755 xymon-client.sh\n\
-./xymon-client.sh %s %s %s > xymon.log 2>&1\n\
+./xymon-client.sh %s %sscripts %s > xymon.log 2>&1\n\
 \n", url, host, url, server);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
