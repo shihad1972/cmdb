@@ -1923,7 +1923,7 @@ wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
 \n\
 wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log", list->fields.text, list->fields.text);
+./motd.sh > motd.log\n", list->fields.text, list->fields.text);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);

@@ -346,5 +346,5 @@ fi
 cd /root
 
 rm -rvf /usr/local/src/xymon*
-rm -rvf xymon*
+#rm -rvf xymon*
 
