@@ -18,9 +18,9 @@ IP=$3
 # Version of the client.
 VER=4.3.12
 
-[ -n $HOST ] || echo "No host set" && exit 1
-[ -n $URL ] || echo "No url set" && exit 1
-[ -n $VER ] || echo "No version set" && exit 1
+[ -n $HOST ] || echo "No host set"
+[ -n $URL ] || echo "No url set"
+[ -n $VER ] || echo "No version set"
 
 getent group xymon > /dev/null
 RETVAL=$?
@@ -32,7 +32,7 @@ RETVAL=$?
 
 if [ -d /target ]; then
   echo "Running from within debian install. No Go!"
-  ecit 1
+  exit 1
 fi
 
 cd /root
@@ -128,8 +128,8 @@ cat > /etc/init.d/xymon-client <<EOF
 #----------------------------------------------------------------------------#
 #
 # chkconfig: 2345 80 20
-# description: Xymon is a network monitoring tool that can monitor hosts \
-#               and services. The client reports local system statistics \
+# description: Xymon is a network monitoring tool that can monitor hosts \\
+#               and services. The client reports local system statistics \\
 #               (cpu, memory, disk, etc) to Xymon server.
 #
 # processname: xymonlaunch
@@ -165,8 +165,8 @@ PATH="\$PATH"
 
 
 # Default settings for this client
-MACHINEDOTS="`uname -n`"                         # This system's hostname
-SERVEROSTYPE="`uname -s | tr '[A-Z/]' '[a-z_]'`" # This system's operating system in lowercase
+MACHINEDOTS="\`uname -n\`"                         # This system's hostname
+SERVEROSTYPE="\`uname -s | tr '[A-Z/]' '[a-z_]'\`" # This system's operating system in lowercase
 CONFIGCLASS=""                                   # This system's config class
 
 
@@ -184,21 +184,21 @@ fi
 [ -n "\$CLIENTCLASS" ]           && CONFIGCLASS="\$CLIENTCLASS"
 
 
-MACHINE="`echo \$MACHINEDOTS | sed -e 's/\./,/g'`"
+MACHINE="\`echo \$MACHINEDOTS | sed -e 's/\./,/g'\`"
 XYMONOSSCRIPT="xymonclient-\${SERVEROSTYPE}.sh"
 XYMONLAUNCHOPTS="\$XYMONLAUNCHOPTS"
 
 export MACHINE MACHINEDOTS SERVEROSTYPE XYMONOSSCRIPT XYMONLAUNCHOPTS XYMONCLIENTHOME CONFIGCLASS
 
 # Values used in the remainder of the initscript
-envfile="/etc/xymon-client/xymonclient.cfg"
-configfile="/etc/xymon-client/clientlaunch.cfg"
+envfile="/opt/xymon/client/etc/xymonclient.cfg"
+configfile="/opt/xymon/client/etc/clientlaunch.cfg"
 logfile="/var/log/xymon/xymonlaunch.log"
 pidfile="/var/run/xymon/xymonlaunch.pid"
 
 
 # Check to make sure our pidfile's directory exists
-rundir="`dirname $pidfile`"
+rundir="\`dirname \$pidfile\`"
 [ -d "\$rundir" ] || install -d -o "\$user" -g "\$user" "\$rundir" || exit 1
 
 
@@ -212,8 +212,8 @@ checkruntime() {
 
     # Do we have servers to report back to?
     if [ x"\$NAME" = x"xymon-client" -a -z "\$XYMSRV" -a -z "\$XYMONSERVERS" ]; then
-        echo "Please configure XYMONSERVERS in /etc/sysconfig/xymon-client"
-        failure "Please configure XYMONSERVERS in /etc/sysconfig/xymon-client"
+        echo "Please configure XYMONSERVERS in /etc/default/xymon-client"
+        failure "Please configure XYMONSERVERS in /etc/default/xymon-client"
         exit 1
     fi
 
@@ -238,7 +238,7 @@ start() {
             SUCMD=su
             [ -x /sbin/runuser ] && SUCMD=/sbin/runuser
 
-            \$SUCMD -m -s /bin/dash "\$user" -c \
+            \$SUCMD -m -s /bin/dash "\$user" -c \\
                 "\$DAEMON \$XYMONLAUNCHOPTS --env=\$envfile --config=\$configfile --log=\$logfile --pidfile=\$pidfile" >/dev/null 2>&1
             RETVAL=\$?
             [ "\$RETVAL" -eq 0 ] && success && touch /var/lock/subsys/\$prog || failure
@@ -273,7 +273,7 @@ restart() {
 reload() {
         echo -n $"Reloading \$NAME configuration files: "
         cat \$rundir/*.pid 2>/dev/null | xargs -r kill -HUP
-        RETVAL=$?
+        RETVAL=$\?
         [ "\$RETVAL" -eq 0 ] && success $"\$NAME reloaded" || failure $"\$NAME reloaded"
         echo
         return \$RETVAL

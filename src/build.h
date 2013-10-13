@@ -189,6 +189,9 @@ void
 add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url);
 
 void
+add_kick_xymon_config (dbdata_s *data, string_len_s *build, char *url, char *host);
+
+void
 add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url);
 
 void

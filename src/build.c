@@ -782,7 +782,8 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if (data->fields.small > 0)
 			add_kick_smtp_config(data, &build, &name);
 	}
-	clean_dbdata_struct(data);PREP_DB_QUERY(data, LOG_CONFIG);
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, LOG_CONFIG);
 	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
 		fprintf(stderr, "Cannot find LOG config for %s\n", server);
 	} else if (retval > 1) {
@@ -790,6 +791,16 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		if (data->fields.small > 0)
 			add_kick_log_config(data, &build, url);
+	}
+	clean_dbdata_struct(data);
+	PREP_DB_QUERY(data, XYMON_CONFIG);
+	if ((retval = cbc_run_search(cmc, data, XYMON_CONFIG)) == 0){
+		fprintf(stderr, "Cannot find XYMON config for %s\n", server);
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple XYMON configs for %s\n", server);
+	} else {
+		if (data->fields.small > 0)
+			add_kick_xymon_config(data, &build, url, server);
 	}
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
@@ -2030,6 +2041,26 @@ wget %sscripts/log.sh\n\
 chmod 755 log.sh\n\
 ./log.sh %s > logging.log 2>&1\n\
 \n", url, server);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+add_kick_xymon_config (dbdata_s *data, string_len_s *build, char *url, char *host)
+{
+	char buff[BUFF_S], *tmp, *server;
+	size_t len = NONE;
+
+	CHECK_KICK_CONFIG(xymon)
+	snprintf(buff, BUFF_S, "\
+wget %sscripts/xymon-client.sh\n\
+chmod 755 xymon-client.sh\n\
+./xymon-client.sh %s %s %s > xymon.log 2>&1\n\
+\n", url, host, url, server);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
