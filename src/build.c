@@ -170,11 +170,10 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 }
 
 void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt/*, cbc_build_s *cbt*/)
+init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
 {
 	init_cbc_config_values(cct);
 	init_cbc_comm_values(cclt);
-/*	init_cbc_build_values(cbt); */
 }
 
 void
@@ -802,6 +801,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if (data->fields.small > 0)
 			add_kick_xymon_config(data, &build, url, server);
 	}
+	add_kick_final_config(&build, url);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
@@ -2061,6 +2061,25 @@ wget %sscripts/xymon-client.sh\n\
 chmod 755 xymon-client.sh\n\
 ./xymon-client.sh %s %sscripts %s > xymon.log 2>&1\n\
 \n", url, host, url, server);
+	len = strlen(buff);
+	if ((build->size + len) > build->len)
+		resize_string_buff(build);
+	tmp = build->string + build->size;
+	snprintf(tmp, len + 1, "%s", buff);
+	build->size += len;
+}
+
+void
+add_kick_final_config (string_len_s *build, char *url)
+{
+	char buff[BUFF_S];
+	size_t len = NONE;
+
+	snprintf(buff, BUFF_S, "\
+wget %sscripts/kick-final.sh\n\
+chmod 755 kick-final.sh\n\
+./kick-final.sh > final.log 2>&1\n\
+\n", url);
 	len = strlen(buff);
 	if ((build->size + len) > build->len)
 		resize_string_buff(build);
