@@ -41,7 +41,7 @@ tar xf xymon-${VER}.tar.gz
 cd xymon-${VER}
 
 if [ -x /usr/bin/yum ]; then
-  /usr/bin/yum -y install gcc
+  /usr/bin/yum -y install gcc make
 elif [ -x /usr/bin/apt-get ]; then
   /usr/bin/apt-get install -y build_essential
 else
