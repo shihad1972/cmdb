@@ -116,7 +116,7 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:k:lmn:o:p:rs:t:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:k:lmn:o:p:rs:t:vx:")) != -1) {
 		if (opt == 'a')
 			cpl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -127,6 +127,8 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 			cpl->action = MOD_CONFIG;
 		else if (opt == 'r')
 			cpl->action = RM_CONFIG;
+		else if (opt == 'v')
+			cpl->action = CVERSION;
 		else if (opt == 'e')
 			snprintf(cpl->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'k')
@@ -150,12 +152,14 @@ parse_cbcpack_comm_line(int argc, char *argv[], cbcpack_comm_line_s *cpl)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cpl->action == 0 && argc != 1)
+	if (cpl->action == CVERSION)
+		return CVERSION;
+	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
-	if (strncmp(cpl->package, "NULL", COMM_S) == 0)
+	if (strncmp(cpl->package, "NULL", COMM_S) == NONE)
 		return NO_PACKAGE;
-	if ((strncmp(cpl->os, "NULL", COMM_S) == 0) &&
-	    (strncmp(cpl->alias, "NULL", COMM_S) == 0))
+	if ((strncmp(cpl->os, "NULL", COMM_S) == NONE) &&
+	    (strncmp(cpl->alias, "NULL", COMM_S) == NONE))
 		return NO_OS_COMM;
 	return NONE;
 }

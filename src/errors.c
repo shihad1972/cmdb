@@ -246,6 +246,8 @@ display_cmdb_command_line_error(int retval, char *program)
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+	else if (retval == CVERSION)
+		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONF_S) == 0))
 			display_cmdb_usage();
@@ -276,11 +278,12 @@ void
 display_cmdb_usage(void)
 {
 	printf("CMDB: Configuration Management Database\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action options:\n");
 	printf("-a: add\n-d: display\n-l: list\n-r: remove\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
-	printf("-e: services\n-h: hardware\n-v: virtual machine hosts\n");
+	printf("-e: services\n-h: hardware\n-o: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-m: vmhost server name for adding a server\n");
@@ -303,6 +306,7 @@ void
 display_cbc_usage(void)
 {
 	printf("cbc: Create Build Configuration\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action options:\n");
 	printf("-a: add build for server\n-d: display build details\n");
 	printf("-l: list servers with a build\n-m: modify build options\n");
@@ -313,7 +317,7 @@ display_cbc_usage(void)
 	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
-	printf("cbc ( -a | -m ) -o<OS> -v<version> -t<arch> -b<domain> -x");
+	printf("cbc ( -a | -m ) -o<OS> -s<version> -t<arch> -b<domain> -x");
 	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> ");
 	printf("(-n | -i | -u ) ");
 	printf("<server_specifier>\n\n");
@@ -327,6 +331,7 @@ void
 display_cbcdomain_usage(void)
 {
 	printf("cbcdomain: Program to manipulate build domains\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add build domain\n-d: display build domain details\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
@@ -347,6 +352,7 @@ void
 display_cbcos_usage(void)
 {
 	printf("cbcos: Program to manipulate build operating systems\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
 	printf("All actions apart from -l need -n <OS name>\n\n");
@@ -360,6 +366,7 @@ void
 display_cbcvarient_usage(void)
 {
 	printf("cbcvarient: Program to manipulate build varients\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add varient\n-d: display varient\n-l: list varients\n");
 	printf("-r: remove varient\n");
@@ -377,18 +384,19 @@ void
 display_cbcpart_usage(void)
 {
 	printf("cbcpart: Program to manipulate build partitions & schemes\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add scheme / partition\n-d: display scheme\n");
 	printf("-l: list schemes\n-r: remove scheme / partition\n\n");
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
-	printf("-v: Use lvm (when adding a partition)\n");
+	printf("-m: Use lvm (when adding a partition)\n");
 	printf("-g: logical volume (if using lvm)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
 	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
-	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -v ] [ -g \
+	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -m ] [ -g \
 log vol ] [ -t <part def>]\n");
 }
 
@@ -396,6 +404,7 @@ void
 display_cbcpack_usage(void)
 {
 	printf("cbcpack: Program to manipulate build packages\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add package\n-r: remove package\n\n");
 	printf("Varient Options:\n");
@@ -417,6 +426,7 @@ void
 display_dnsa_usage(void)
 {
 	printf("dnsa: Domain Name System Administratiom\n\n");
+	printf("Version: %s\n", VERSION);
 	printf("Action options (and needed options)\n");
 	printf("-a: add host record\n\t-t -h -i -n (-p)\n");
 	printf("-b: build reverse zone\n\t-n\n");

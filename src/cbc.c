@@ -55,7 +55,7 @@ main(int argc, char *argv[])
 
 	init_all_config(cmc, cml);
 	retval = parse_cbc_command_line(argc, argv, cml);
-	if (retval < 0) {
+	if (retval != 0) {
 		free(cmc);
 		free(cml);
 		display_cmdb_command_line_error(retval, argv[0]);

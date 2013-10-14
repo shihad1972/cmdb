@@ -118,7 +118,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:f:g:i:k:lmn:prs:t:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:f:g:i:k:lmn:prs:t:vx:")) != -1) {
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'b') {
@@ -156,6 +156,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'x') {
 			snprintf(cdl->xymonserver, HOST_S, "%s", optarg);
 			cdl->confxymon = 1;
+		} else if (opt == 'v') {
+			cdl->action = CVERSION;
 		} else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
@@ -163,7 +165,9 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cdl->action == 0)
+	if (cdl->action == CVERSION)
+		return CVERSION;
+	if (cdl->action == NONE)
 		return NO_ACTION;
 	if (cdl->action != LIST_CONFIG && strncmp(cdl->domain, "NULL", COMM_S) == 0)
 		return NO_DOMAIN_NAME;

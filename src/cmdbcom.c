@@ -69,7 +69,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	cmdb_init_hardtype_t(base->hardtype);
 	cmdb_init_vmhost_t(base->vmhost);
 	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlrstuv")) != -1) {
+	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlorstuv")) != -1) {
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -80,10 +80,12 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->type = SERVICE;
 		} else if (opt == 'h') {
 			comp->type = HARDWARE;
-		} else if (opt == 'v') {
+		} else if (opt == 'o') {
 			comp->type = VM_HOST;
 		} else if (opt == 'd') {
 			comp->action = DISPLAY;
+		} else if (opt == 'v') {
+			comp->action = CVERSION;
 		} else if (opt == 'l') {
 			comp->action = LIST_OBJ;
 			snprintf(comp->name, MAC_S, "all");
@@ -175,6 +177,8 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
 		(comp->type == NONE && comp->action == NONE))
 		retval = DISPLAY_USAGE;
+	else if (comp->action == CVERSION)
+		retval = CVERSION;
 	else if ((comp->type == NONE) && (comp->action != NONE))
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))

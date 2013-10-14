@@ -111,7 +111,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:lmn:o:rs:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:lmn:o:rs:t:v")) != -1) {
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -122,6 +122,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = RM_CONFIG;
 		else if (opt == 'm')
 			col->action = MOD_CONFIG;
+		else if (opt == 'v')
+			col->action = CVERSION;
 		else if (opt == 'e')
 			snprintf(col->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'n')
@@ -139,6 +141,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
+	if (col->action == CVERSION)
+		return CVERSION;
 	if (col->action == 0 && argc != 1) {
 		printf("No action provided\n");
 		return NO_ACTION;

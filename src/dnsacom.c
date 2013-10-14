@@ -41,7 +41,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruwxzFGI:M:N:RSh:i:n:p:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:p:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -96,12 +96,16 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->prefix = strtoul(optarg, NULL, 10);
 		} else if (opt == 't') {
 			snprintf(comp->rtype, RANGE_S, "%s", optarg);
+		} else if (opt == 'v') {
+			comp->action = CVERSION;
 		}
 	}
 
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
+	else if (comp->action == CVERSION)
+		retval = CVERSION;
 	else if (comp->action == NONE)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)

@@ -55,7 +55,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "b:e:i:k:n:o:p:t:u:v:x:adglmrw")) != -1) {
+	while ((opt = getopt(argc, argv, "b:e:i:k:n:o:p:s:t:u:x:adglmrvw")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
@@ -91,10 +91,12 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			snprintf(cb->partition, CONF_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(cb->arch, RANGE_S, "%s", optarg);
-		} else if (opt == 'v') {
+		} else if (opt == 's') {
 			snprintf(cb->os_version, MAC_S, "%s", optarg);
 		} else if (opt == 'x') {
 			snprintf(cb->varient, CONF_S, "%s", optarg);
+		} else if (opt == 'v') {
+			cb->action = CVERSION;
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;
@@ -105,6 +107,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	 (cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
 		return DISPLAY_USAGE;
+	else if (cb->action == CVERSION)
+		return CVERSION;
 	else if (cb->action == NONE)
 		return NO_ACTION;
 	else if ((cb->action != LIST_CONFIG) &&
@@ -2072,7 +2076,7 @@ chmod 755 xymon-client.sh\n\
 void
 add_kick_final_config (string_len_s *build, char *url)
 {
-	char buff[BUFF_S];
+	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
 
 	snprintf(buff, BUFF_S, "\

@@ -103,7 +103,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "adg:ln:prst:v")) != -1) {
+	while ((opt = getopt(argc, argv, "adg:lmn:prst:v")) != -1) {
 		if (opt == 'a')
 			cpl->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -112,8 +112,10 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = LIST_CONFIG;
 		else if (opt == 'r')
 			cpl->action = RM_CONFIG;
-		else if (opt == 'v')
+		else if (opt == 'm')
 			cpl->lvm = TRUE;
+		else if (opt == 'v')
+			cpl->action = CVERSION;
 		else if (opt == 'g') {
 			if (cpl->lvm < 1) {
 				fprintf(stderr, "LVM not set before logvol\n");
@@ -135,10 +137,12 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cpl->action == 0 && argc != 1)
+	if (cpl->action == CVERSION)
+		return CVERSION;
+	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
 	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) && 
-	     cpl->type == 0)
+	     cpl->type == NONE)
 		return NO_TYPE;
 	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) &&
 	    (strncmp(cpl->partition, "NULL", COMM_S) == 0) &&

@@ -287,7 +287,8 @@ enum {			/* cmdb Action codes */
 	DISPLAY = 1,
 	LIST_OBJ = 2,
 	ADD_TO_DB = 3,
-	RM_FROM_DB = 4
+	RM_FROM_DB = 4,
+	CVERSION = 5
 };
 
 enum {			/* cbc action codes */
