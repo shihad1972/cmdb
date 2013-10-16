@@ -109,7 +109,7 @@ shadowMax: 99999
 shadowWarning: 7
 loginShell: /bin/bash
 uidNumber: ${USERID}
-userPassword:: $PASSWD
+userPassword: $PASSWD
 homeDirectory: /home/${USER}
 gecos: $NAME $SURNAME
 mail: ${USER}@${DOMAIN}
