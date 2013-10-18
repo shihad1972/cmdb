@@ -1446,16 +1446,26 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 		fs = mnt = lv = '\0';
 		if (list)
 			pri = list->fields.number;
-		if (list->next)
-			min = list->next->fields.number;
-		if (list->next->next)
-			max = list->next->next->fields.number;
-		if (list->next->next->next)
-			fs = list->next->next->next->fields.text;
-		if (list->next->next->next->next)
-			lv = list->next->next->next->next->fields.text;
-		if (list->next->next->next->next->next)
-			mnt = list->next->next->next->next->next->fields.text;
+		if (list->next) {
+			list = list->next;
+			min = list->fields.number;
+		}
+		if (list->next) {
+			list = list->next;
+			max = list->fields.number;
+		}
+		if (list->next) {
+			list = list->next;
+			fs = list->fields.text;
+		}
+		if (list->next) {
+			list = list->next;
+			lv = list->fields.text;
+		}
+		if (list->next->) {
+			list = list->next;
+			mnt = list->fields.text;
+		}
 		snprintf(line, RBUFF_S, "\
               %lu %lu %lu %s  \\\n\
                        $lvmok                                 \\\n\
@@ -1485,7 +1495,8 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 		next = build->string + build->size;
 		snprintf(next, len + 1, "%s", line);
 		build->size += len;
-		list = list->next->next->next->next->next->next;
+		if (list->next)
+			list = list->next;
 	}
 	build->size -= 2;
 }
