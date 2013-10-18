@@ -1462,7 +1462,7 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 			list = list->next;
 			lv = list->fields.text;
 		}
-		if (list->next->) {
+		if (list->next) {
 			list = list->next;
 			mnt = list->fields.text;
 		}
