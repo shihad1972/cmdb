@@ -2,6 +2,7 @@
 add_pre_lvm_part does not check it's bounds properly and can
 overflow the char * it is sent. Need to send in a string_len_s and
 use the resize buffer function.
+Fixed: 25/09/2013
 
 21/09/2013
 Base.sh debian script does not seem to be able to take arguments so
@@ -9,6 +10,7 @@ I think I need to have a script run on the web server to create a
 script to finish off the build, given an argument of the server name.
 e.g. script.php?server-name. This can then test to see if the access
 is from the server's IP address.
+Fixed: We now create a separate script for each host.
 
 19/09/2013
 Cut down the amount of crap you have to add with a server; especially
@@ -60,6 +62,7 @@ Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
 28/07/2013
 Need to remove ldap_url from build_domain database and in all the data
 structures for cbc_build_domain and SQL quries
+Done: 30/07/2013
 
 30/06/2013
 Have a generic config struct (config_s) that all the others (e.g.
@@ -79,6 +82,10 @@ base on build type
 Need to add the slave zones to dnsa and also add  the ability to have
 glue records in a zone. Should probably also check what kind of types
 of records we can hold.
+01/06/2013
+Need to be able to add glue records to DNS zone files. Could check
+on NS records that have . in them??
+** Glue zones added too **
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
@@ -99,10 +106,6 @@ Should have the root password for the machine in the database and
 add this to the build file. Need to work out how to get hash
 
 Also need to add an email alias for root in smtp configuration
-
-01/06/2013
-Need to be able to add glue records to DNS zone files. Could check
-on NS records that have . in them??
 
 23/05/2013
 Still need to write cbclocale
