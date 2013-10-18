@@ -62,6 +62,7 @@ CREATE TABLE `build_domain` (
   `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
   `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
   `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
+  `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ldap` smallint(4) NOT NULL DEFAULT 0,
   `log_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_log` smallint(4) NOT NULL DEFAULT 0,
@@ -69,7 +70,6 @@ CREATE TABLE `build_domain` (
   `config_email` smallint(4) NOT NULL DEFAULT 0,
   `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
   `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`bd_id`),
 
