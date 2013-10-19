@@ -63,6 +63,13 @@ UBUDIST="precise quantal raring"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
+if [ `which cbc` ]
+  DBCAP=`cbc -q`
+else
+  echo "Cannot find cbc! Exiting"
+  exit 9
+fi
+
 if [ -d /var/lib/tftpboot/ ]; then
   TFTP="/var/lib/tftpboot/"
   echo "Found $TFTP"
@@ -713,6 +720,17 @@ while getopts "b:d:h:i:nm:" opt; do
          exit 1
   esac
 done
+
+if [ $DBCAP != "both" && $DBCAP != "none" ]; then
+  if [ $DB != $DBCAP ]; then
+    echo "Cannot use DB $DB"
+    echo "We only have $DBCAP"
+    DB=$DBCAP
+  fi
+elif [ $DBCAP = "none" ]; then
+  echo "No database capability in cbc! Exiting.."
+  exit 10
+fi
 
 if [ -z $HOSTNAME ]; then
   get_host
