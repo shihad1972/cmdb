@@ -61,4 +61,8 @@ parse_cbc_config_error(int error);
 void
 print_cbc_config(cbc_config_s *cbc);
 
+int
+query_config();
+
+
 #endif

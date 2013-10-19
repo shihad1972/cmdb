@@ -55,7 +55,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "b:e:i:k:n:o:p:s:t:u:x:adglmrvw")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:gi:k:lmn:o:p:qrs:t:u:vwx:")) != -1) {
 		if (opt == 'n') {
 			snprintf(cb->name, CONF_S, "%s", optarg);
 			cb->server = NAME;
@@ -75,6 +75,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->action = LIST_CONFIG;
 		} else if (opt == 'm') {
 			cb->action = MOD_CONFIG;
+		} else if (opt == 'q') {
+			cb->action = QUERY_CONFIG;
 		} else if (opt == 'r') {
 			cb->action = RM_CONFIG;
 		} else if (opt == 'w') {
@@ -109,6 +111,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		return DISPLAY_USAGE;
 	else if (cb->action == CVERSION)
 		return CVERSION;
+	else if (cb->action == QUERY_CONFIG)
+		return NONE;
 	else if (cb->action == NONE)
 		return NO_ACTION;
 	else if ((cb->action != LIST_CONFIG) &&

@@ -79,6 +79,8 @@ main(int argc, char *argv[])
 		retval = modify_build_config(cmc, cml);
 	else if (cml->action == RM_CONFIG)
 		retval = remove_build_config(cmc, cml);
+	else if (cml->action == QUERY_CONFIG)
+		retval = query_config();
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 	free(cmc);
@@ -90,4 +92,22 @@ main(int argc, char *argv[])
 		report_error(CREATE_BUILD_FAILED, sretval);
 	}
 	exit(retval);
+}
+
+int
+query_config()
+{
+	int retval = NONE;
+#if defined HAVE_MYSQL
+# if defined HAVE_SQLITE3
+	printf("both\n");
+# else
+	printf("mysql\n");
+# endif
+#elif defined HAVE_SQLITE3
+	printf("sqlite\n");
+#else
+	printf("none\n");
+#endif
+	return retval;
 }

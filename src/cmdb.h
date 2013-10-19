@@ -298,7 +298,8 @@ enum {			/* cbc action codes */
 	CREATE_CONFIG = 14,
 	MOD_CONFIG = 15,
 	RM_CONFIG = 16,
-	LIST_CONFIG = 17
+	LIST_CONFIG = 17,
+	QUERY_CONFIG = 18
 };
 
 enum {			/* dnsa action codes */
