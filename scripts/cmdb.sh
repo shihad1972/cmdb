@@ -206,13 +206,6 @@ create_apache_config() {
 #
 # This is the connfiguration file for the cmdb web portal used
 # by the cmdb build system, Muppett
-Alias /cmdb/ "/var/lib/cmdb/web/"
-<Directory "/var/lib/cmdb/web/">
-    Options Indexes FollowSymLinks Includes MultiViews
-    Order allow,deny
-    Allow from all
-</Directory>
-
 Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
 <Directory "/var/lib/cmdb/scripts/">
     Options Indexes FollowSymLinks Includes MultiViews
@@ -222,6 +215,13 @@ Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
 
 Alias /cmdb/hosts/ "/var/lib/cmdb/hosts/"
 <Directory "/var/lib/cmdb/hosts/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Order allow,deny
+    Allow from all
+</Directory>
+
+Alias /cmdb/ "/var/lib/cmdb/web/"
+<Directory "/var/lib/cmdb/web/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
@@ -717,7 +717,8 @@ done
 if [ -z $HOSTNAME ]; then
   get_host
 else
-  echo "Using $HOSTNAME as hostname: Change? (Y/N)"
+  echo "Using $HOSTNAME as hostname. We do not want a FQDN here"
+  echo "Change? (Y/N)"
   read answer
   if [ $answer != "y" ] && [ $answer != "Y" ]; then
     echo "Using $HOSTNAME"
