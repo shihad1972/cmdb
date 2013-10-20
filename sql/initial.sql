@@ -80,7 +80,12 @@ INSERT INTO packages (package, varient_id, os_id) SELECT "bind", v.varient_id, o
 INSERT INTO packages (package, varient_id, os_id) SELECT "bind-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos" AND v.valias = "dns";
 --
 -- Partitions
-INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base", 0), ("base-lvm", 1), ("base-var", 0), ("base-var-lvm", 1), ("full", 0), ("full-lvm", 1);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base", 0);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base-lvm", 1);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base-var", 0);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("base-var-lvm", 1);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("full", 0);
+INSERT INTO seed_schemes (scheme_name, lvm) VALUES ("full-lvm", 1);
 
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 30720, 100, "/", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name IN ("base", "base-var", "full");
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 5120, 15360, 100, "/var", "ext4", def_scheme_id, "none" FROM seed_schemes WHERE scheme_name IN ("base-var", "full");
@@ -94,7 +99,21 @@ INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, d
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume) SELECT 1024, 10240, 80, "swap", "swap", def_scheme_id, "swap" FROM seed_schemes WHERE scheme_name IN ("base-lvm", "base-var-lvm", "full-lvm");
 --
 -- Service and hardware types
-INSERT INTO hard_type (type, class) VALUES ("network", "Network Card"), ("storage", "Hard Disk"), ("storage", "CD-ROM"), ("cpu", "AMD CPU"), ("cpu", "Intel CPU"), ("cpu", "Virtual CPU"), ("ram", "RAM Modules"), ("ram", "Virtual RAM"), ("fibre", "Fibre Card");
-INSERT INTO service_type (service, detail) VALUES ("imap", "Email retrieval system"), ("smtp", "Email delivery system"), ("http", "Web sites"), ("dns", "Domain name system"), ("mysql", "MySQL Database"), ("ldap", "LDAP Directory");
+INSERT INTO hard_type (type, class) VALUES ("network", "Network Card");
+INSERT INTO hard_type (type, class) VALUES ("storage", "Hard Disk");
+INSERT INTO hard_type (type, class) VALUES ("storage", "CD-ROM");
+INSERT INTO hard_type (type, class) VALUES ("cpu", "AMD CPU");
+INSERT INTO hard_type (type, class) VALUES ("cpu", "Intel CPU");
+INSERT INTO hard_type (type, class) VALUES ("cpu", "Virtual CPU");
+INSERT INTO hard_type (type, class) VALUES ("ram", "RAM Modules");
+INSERT INTO hard_type (type, class) VALUES ("ram", "Virtual RAM");
+INSERT INTO hard_type (type, class) VALUES ("fibre", "Fibre Card");
+
+INSERT INTO service_type (service, detail) VALUES ("imap", "Email retrieval system");
+INSERT INTO service_type (service, detail) VALUES ("smtp", "Email delivery system");
+INSERT INTO service_type (service, detail) VALUES ("http", "Web sites");
+INSERT INTO service_type (service, detail) VALUES ("dns", "Domain name system");
+INSERT INTO service_type (service, detail) VALUES ("mysql", "MySQL Database");
+INSERT INTO service_type (service, detail) VALUES ("ldap", "LDAP Directory");
 --
 -- Still need to add locales and options
