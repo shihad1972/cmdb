@@ -1417,7 +1417,7 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 		next += len;
 		if ((strncmp(fs, "swap", COMM_S) != 0) &&
 		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
-			snprintf(line, RBUFF_S + 1, "\
+			snprintf(line, RBUFF_S, "\
                      method{ format } format{ } \\\n\
                      use_filesystem{ } filesystem{ %s } \\\n\
                      mountpoint{ %s }     \\\n", fs, mnt);
