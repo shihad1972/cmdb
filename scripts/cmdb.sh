@@ -63,7 +63,7 @@ UBUDIST="precise quantal raring"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
-if [ `which cbc` ]
+if [ `which cbc` ];  then
   DBCAP=`cbc -q`
 else
   echo "Cannot find cbc! Exiting"
@@ -721,7 +721,7 @@ while getopts "b:d:h:i:nm:" opt; do
   esac
 done
 
-if [ $DBCAP != "both" && $DBCAP != "none" ]; then
+if [ $DBCAP != "both" ] && [ $DBCAP != "none" ]; then
   if [ $DB != $DBCAP ]; then
     echo "Cannot use DB $DB"
     echo "We only have $DBCAP"
