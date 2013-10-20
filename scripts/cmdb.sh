@@ -32,6 +32,7 @@ RPM=`which rpm 2>/dev/null`
 SERV=`which service 2>/dev/null`
 SQLITE=`which sqlite3 2>/dev/null`
 MYSQL=`which mysql 2>/dev/null`
+ROUTERS=`netstat -rn | grep ^0.0.0.0 | awk '{print $2}'`
 
 # Files and directories
 
@@ -244,6 +245,7 @@ ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
 
 EOF
 
+  [[ `$SERV httpd status` ]] || $SERV httpd start
 }
 
 create_bind_config() {
@@ -264,7 +266,7 @@ EOF
   touch ${BIND}/dnsa.conf ${BIND}/dnsa-rev.conf
   chown cmdb:cmdb ${BIND}/dnsa*
   chmod 664 ${BIND}/dnsa*
-
+  
 }
 
 create_dhcp_config() {
@@ -291,7 +293,27 @@ EOF
   touch dhcpd.networks dhcpd.hosts
   chmod 664 dhcpd.networks dhcpd.hosts
   chown cmdb:cmdb dhcpd.networks dhcpd.hosts
+  chgrp cmdb ${DHCPD}
+  NDOMAIN=`echo $DOMAIN | tr [:lower:] [:upper:]`
+  BASEIP=`echo "$IP" | awk -F '.' '{print $1 "." $2 "." $3}'`
+  cat > dhcpd.networks<<EOF
 
+  shared-network $NDOMAIN {
+	option domain-name "$DOMAIN";
+	option domain-name-servers $IP;
+	option domain-search "$DOMAIN";
+	option routers $ROUTERS;
+	
+	subnet ${BASEIP}.0 netmask 255.255.255.0 {
+	
+		authoratative;
+		next-server $IP;
+		filename "pxelinux.0";
+	}
+}
+
+EOF
+  [[ `$SERV dhcpd status` ]] || $SERV dhcpd start
 }
 
 create_tftp_config() {
@@ -468,11 +490,13 @@ redhat_base() {
   else
     echo "apache already in cmdb group"
   fi
+  $CHKCON httpd on
 
-  if [ ! -d "$DHCPD" ]; then
+  if [ ! -x /usr/sbin/dhcpd ]; then
     echo "Installing dhcp package"
     $YUM install dhcp -y > /dev/null 2>&1
   fi
+  $CHKCON dhcpd on
 
 # Need to check if syslinux is installed cos we need the pxelinux.0 file
 # from it
@@ -491,6 +515,7 @@ redhat_base() {
       echo "Installing bind package"
       $YUM install bind -y > /dev/null 2>&1
       BIND="/var/named"
+      $CHKCON named on
     fi
   fi
 
@@ -582,6 +607,12 @@ CREATE USER 'cmdb'@'${IPADDR}' IDENTIFIED BY '${CMDBPASS}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${HOSTNAME}.${DOMAIN}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${IPADDR}';"
 STOP
+    if [ $MYSQLHOST = 'localhost' ]; then
+      $MYSQL -p${MYSQLPASS} -u root -e <<STOP "
+CREATE USER 'cmdb'@'localhost' IDENTIFIED BY '${CMDBPASS}';
+GRANT ALL ON cmdb.* TO 'cmdb'@'localhost';"
+STOP
+    fi
     echo "Adding initial entries to DB $DBNAME"
     cat $SQLBASE | $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root $DBNAME
     if [ -z $DEBMIR ]; then
@@ -636,11 +667,12 @@ DBTYPE=$DB
 FILE=$SQLFILE
 
 ## MYSQL DB Connectivity
-DB=$DBNAME	# Database
-USER=cmdb		# DB user
-PASS=${CMDBPASS}	# DB pass
-HOST=$MYSQLHOST		# DB host
-PORT=3306
+DB=$DBNAME			# Database
+USER=cmdb			# DB user
+PASS=${CMDBPASS}		# DB pass
+HOST=$MYSQLHOST			# DB host
+PORT=3306			# DB port
+SOCKET=/var/lib/mysql/mysql.sock
 
 ## DNSA Settings
 

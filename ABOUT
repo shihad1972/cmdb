@@ -1,32 +1,71 @@
-This software package will build 3 programs which are documented below.
 
-CMDB: Configuration Management Database
+###############################################################################
+#
+#
+# Welcome to the cmdb suite of programs
+#
+# cmdb: Configuration Management Database
+#
+# dnsa: Domain Name System Administration
+#
+# cbc: Create build configuration
+#
+#       The cbc suite contains:
+#
+#       cbcvarient -> Manipulate Build Varients
+#       cbcos      -> Manipulate Build Operating Ssystems
+#       cbcdomain  -> Manipulate Build Domains
+#       cbcpack    -> Manipulate Build Package Lists
+#       cbcpart    -> Manipulate Build Partition Schemes
+#       cbc        -> Create Build Configuration
+#
+#
+###############################################################################
 
-cmdb stores information about your servers that can be useful in the
-administration of your estate of servers. For example you can assign hardware
-to the server and store other pieces of information about your servers
-(datacenter, power outlets, network ports etc). You can also assign your
-servers to customers (projects) so that they can be grouped into logical
-containers.
+ This 3 suites of programs will allow you to keep track of servers in your
+estate and create individual build files for the servers, whilst being able to
+maintain DNS records for the servers. Let's describe the 3 suites now
 
-CBC: Create Build Configuration
+#####
+#
+# cmdb
+#
+#####
 
-cbc takes hardware information stored in cmdb and uses it to create a build
-script for your server, along with various options stored in CBC itself
-(build domain for IP address, Operating system / Version / Architecture) and
-also various bits of configuration that you may wish to perform on a new
-server build (NTP setup, LDAP Authentication etc. For a full list please see
-the man pages.) It will also interact with external programs needed to
-automate a build (TFTP and DHCPD for network boot). The build file will be
-placed in an apropriate sub-directory of your apache base directory for
-distribution to the building server via HTTP.
+ cmdb will store configuration details about your servers, and these details
+will be used to create automatic build files for your servers. Details stored
+include hardware details (include the MAC address of the network card; useful
+for network booting!) and switch / power ports and rack locations. You can
+group servers by customer, which can be an external customer or an internal
+customer, for example a specific project. You can also store the serial numbers
+and hardware types.
 
-DNSA: Domain Name System Administration
+#####
+#
+# dnsa
+#
+#####
 
-dnsa aims to be front end administration software for the BIND DNS. It uses
-a mysql database to store the records for your various domains and contains
-programs to be able to write out these zone files and create the configuration
-files that BIND uses. 
+ dnsa allows you manipulate DNS records for your servers and the services that
+run on them. It will also automatically build the reverse DNS zones, based on
+the forward names in DNS. For IP addresses that have multiple forward records
+you can choose a preferrred A record. 
+
+#####
+#
+# cbc
+#
+####
+
+ The cbc suite allows you to create multiple configurations for server builds.
+There is multiple OS support, you can create partition schemes, build varients
+that can be used to install different server types, e.g. web, database, mail.
+You can also configure base OS services, such as logging, authentication types,
+NTP, monitoring services, smtp relay, and locales and languages. The cbc
+program will create the DHCP and TFTP configuration to allow network booting of
+your servers, as well as the build configuration file for either preseed or
+kickstart build types. 
+
 
 For the license see the COPYING file in this directory
 
