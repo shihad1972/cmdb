@@ -1527,7 +1527,7 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 		return MULTIPLE_BUILD_DOMAINS;
 	} else {
 		if (data->fields.small > 0)
-			fill_ldap_config(data, build);
+			fill_ldap_config(data, build, cml->os);
 		else
 			printf("LDAP authentication configuration skipped\n");
 	}
@@ -1569,9 +1569,9 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 }
 
 void
-fill_ldap_config(dbdata_s *data, string_len_s *build)
+fill_ldap_config(dbdata_s *data, string_len_s *build, char *os)
 {
-	char url[URL_S], buff[BUFF_S], *tmp;
+	char url[URL_S], buff[BUFF_S];
 	dbdata_s *list = data->next;
 	char *server = list->fields.text;
 	list = list->next;
@@ -1601,21 +1601,14 @@ libnss-ldap     libnss-ldap/confperm    boolean false\n\
 libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
 \n", base, root, root, url);
 	len = strlen(buff);
-	if ((len + build->size) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_ldap_config");
-		else
-			build->string = tmp;
-	}
+	if ((len + build->size) > build->len)
+		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
 	snprintf(buff, BUFF_S, "\
 libpam-ldap     libpam-ldap/rootbindpw  password\n\
 libpam-ldap     libpam-ldap/bindpw      password\n\
-libpam-runtime  libpam-runtime/profiles multiselect     unix, winbind, ldap\n\
+libpam-runtime  libpam-runtime/profiles multiselect     unix, ldap\n\
 libpam-ldap     shared/ldapns/base-dn   string  %s\n\
 libpam-ldap     libpam-ldap/override    boolean true\n\
 libpam-ldap     shared/ldapns/ldap_version      select  3\n\
@@ -1627,17 +1620,31 @@ libpam-ldap     libpam-ldap/rootbinddn  string  %s\n\
 libpam-ldap     libpam-ldap/dbrootlogin boolean true\n\
 \n", base, url, root, root);
 	len = strlen(buff);
-	if ((len + build->size) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_ldap_config");
-		else
-			build->string = tmp;
-	}
+	if ((len + build->size) > build->len)
+		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
+	if ((strncmp(os, "ubuntu", COMM_S)) == 0) {
+		snprintf(buff, BUFF_S, "\
+ldap-auth-config        ldap-auth-config/bindpw password\n\
+ldap-auth-config        ldap-auth-config/rootbindpw     password\n\
+ldap-auth-config        ldap-auth-config/binddn string  cn=proxyuser,dc=example,dc=net\n\
+ldap-auth-config        ldap-auth-config/dbrootlogin    boolean true\n\
+ldap-auth-config        ldap-auth-config/rootbinddn     string  %s\n\
+ldap-auth-config        ldap-auth-config/pam_password   select  md5\n\
+ldap-auth-config        ldap-auth-config/move-to-debconf        boolean true\n\
+ldap-auth-config        ldap-auth-config/ldapns/ldap-server     string  %s\n\
+ldap-auth-config        ldap-auth-config/ldapns/base-dn string  %s\n\
+ldap-auth-config        ldap-auth-config/override       boolean true\n\
+ldap-auth-config        ldap-auth-config/ldapns/ldap_version    select  3\n\
+ldap-auth-config        ldap-auth-config/dblogin        boolean false\n\
+\n", root, url, base);
+		len = strlen(buff);
+		if ((len + build->size) > build->len)
+			resize_string_buff(build);
+		snprintf(build->string + build->size, len + 1, "%s", buff);
+		build->size += len;
+	}
 }
 
 void

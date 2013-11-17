@@ -225,7 +225,7 @@ int
 fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 void
-fill_ldap_config(dbdata_s *data, string_len_s *build);
+fill_ldap_config(dbdata_s *data, string_len_s *build, char *os);
 
 void
 fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
