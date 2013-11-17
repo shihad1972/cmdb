@@ -1024,6 +1024,8 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	char *host = list->fields.text;
 	CHECK_DATA_LIST()
 	char *domain = list->fields.text;
+	CHECK_DATA_LIST()
+	char *lang = list->fields.text;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
 		snprintf(output, BUFF_S, "\
@@ -1050,21 +1052,23 @@ locale, keymap, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
 /* Need to add the values into this!! */
 		snprintf(output, BUFF_S, "\
 d-i console-setup/ask_detect boolean false\n\
-d-i debian-installer/locale string \n\
-d-i debian-installer/language string \n\
-d-i console-keymaps-at/keymap select \n\
-d-i keyboard-configuration/xkb-keymap select \n\
-d-i keymap select \n\
+d-i debian-installer/locale string %s\n\
+d-i debian-installer/language string %s\n\
+d-i console-keymaps-at/keymap select %s\n\
+d-i keymap select %s\n\
 \n\
 d-i netcfg/enable boolean true\n\
 d-i netcfg/confirm_static boolean true\n\
-d-i netcfg/get_nameservers string \n\
-d-i netcfg/get_ipaddress string \n\
-d-i netcfg/get_netmask string \n\
-d-i netcfg/get_gateway string \n\
+d-i netcfg/disable_dhcp boolean true\n\
+d-i netcfg/choose_interface select %s\n\
+d-i netcfg/get_nameservers string %s\n\
+d-i netcfg/get_ipaddress string %s\n\
+d-i netcfg/get_netmask string %s\n\
+d-i netcfg/get_gateway string %s\n\
 \n\
-d-i netcfg/get_hostname string \n\
-d-i netcfg/get_domain string \n");
+d-i netcfg/get_hostname string %s\n\
+d-i netcfg/get_domain string %s\n",
+locale, lang, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
 	if ((len = strlen(output)) > build->len) {
 		while ((build->size + len) > build->len)
 			build->len *=2;
@@ -1094,7 +1098,7 @@ fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	char ntp[NAME_S], output[BUFF_S], *tmp;
 	size_t len;
 
-	if (strncmp(cml->os, "debian", COMM_S) == 0) {
+	if (strncmp(cml->os, "debian", COMM_S) == 0)
 		snprintf(output, BUFF_S, "\
 d-i netcfg/wireless_wep string\n\
 d-i hw-detect/load_firmware boolean true\n\
@@ -1114,19 +1118,35 @@ d-i clock-setup/utc boolean true\n\
 \n\
 d-i time/zone string %s\n\
 ", mirror, alias, ver_alias, country);
-		if (data->next->next->next->next->fields.small == 0)
+	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
+		snprintf(output, BUFF_S, "\
+d-i mirror/country string manual\n\
+d-i mirror/http/hostname string %s\n\
+d-i mirror/http/directory string /%s\n\
+\n\
+d-i mirror/suite string %s\n\
+\n\
+### Account setup\n\
+d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
+d-i passwd/user-fullname string Admin User\n\
+d-i passwd/username string sysadmin\n\
+d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
+d-i clock-setup/utc boolean true\n\
+\n\
+d-i time/zone string %s\n\
+", mirror, alias, ver_alias, country);
+	if (data->next->next->next->next->fields.small == 0)
 			snprintf(ntp, NAME_S, "\
 d-i clock-setup/ntp boolean false\n\
 \n\
 ");
-		else
+	else
 			snprintf(ntp, NAME_S, "\
 d-i clock-setup/ntp boolean true\n\
 d-i clock-setup/ntp-server string %s\n\
 \n\
 ", ntpserv);
-		strncat(output, ntp, NAME_S);
-	}
+	strncat(output, ntp, NAME_S);
 	len = strlen(output);
 	if ((build->size + len) > build->len) {
 		while ((build->size + len) > build->len)
@@ -1199,29 +1219,26 @@ d-i partman-auto/expert_recipe string                         \\\n\
 int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *arch = cml->arch, *tmp, output[BUFF_S];
+	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
 	size_t len;
 	if (strncmp(arch, "i386", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
-\n\
-d-i base-installer/kernel/image string linux-image-2.6-686\n\
-\n\
+\n\n\
 d-i apt-setup/non-free boolean true\n\
 d-i apt-setup/contrib boolean true\n\
 d-i apt-setup/services-select multiselect security\n\
-d-i apt-setup/security_host string security.debian.org\n\
-\n\
-tasksel tasksel/first multiselect standard\n");
+d-i apt-setup/security_host string security.%s.org\n\
+\n\n\
+tasksel tasksel/first multiselect standard\n", os);
 	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
-d-i base-installer/kernel/image string linux-image-2.6-amd64\n\
 \n\
 d-i apt-setup/non-free boolean true\n\
 d-i apt-setup/contrib boolean true\n\
 d-i apt-setup/services-select multiselect security\n\
-d-i apt-setup/security_host string security.debian.org\n\
+d-i apt-setup/security_host string security.%s.org\n\
 \n\
-tasksel tasksel/first multiselect standard\n");
+tasksel tasksel/first multiselect standard\n", os);
 	} else {
 		return NO_ARCH;
 	}

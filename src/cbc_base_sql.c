@@ -203,7 +203,7 @@ SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
   LEFT JOIN build b ON b.os_id = bo.os_id \
   LEFT JOIN locale l ON l.locale_id = b.locale_id WHERE b.server_id = ?","\
 SELECT l.locale, l.keymap, b.net_inst_int, bi.ip, bd.ns, \
-  bd.netmask, bd.gateway, bi.hostname, bd.domain FROM build b \
+  bd.netmask, bd.gateway, bi.hostname, bd.domain, l.language FROM build b \
   LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
   LEFT JOIN build_os bo ON b.os_id = bo.os_id \
   LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
@@ -342,7 +342,7 @@ const unsigned int cbc_search_args[] = {
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	9, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
+	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
 	2, 6, 1, 2
 };
 
@@ -460,7 +460,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBTEXT, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE } ,

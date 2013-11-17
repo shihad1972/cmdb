@@ -64,34 +64,6 @@ UBUDIST="precise quantal raring"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
-if [ `which cbc` ];  then
-  DBCAP=`cbc -q`
-else
-  echo "Cannot find cbc! Exiting"
-  exit 9
-fi
-
-if [ -d /var/lib/tftpboot/ ]; then
-  TFTP="/var/lib/tftpboot/"
-  echo "Found $TFTP"
-elif [ -d /srv/tftp/ ]; then 
-  TFTP="/srv/tftp/"
-  echo "Found $TFTP"
-else
-  unset TFTP
-  echo "No tftp directory found"
-fi
-
-if [ -d /etc/bind ]; then
-  BIND="/etc/bind/"
-  echo "Found ${BIND}"
-elif [ -d /var/named ]; then
-  BIND="/var/named"
-  echo "Found ${BIND}"
-else
-  unset BIND
-  echo "No bind directory found"
-fi
 
 ###############################################################################
 #
@@ -714,21 +686,6 @@ FINISH
 #
 ###############################################################################
 
-# Need to be root
-
-if [[ $EUID -ne 0 ]]; then
-   echo "You must run this script as root" 1>&2
-   exit 1
-fi
-
-
-if [ ! -f ${SQL}/initial.sql ]; then
-  echo "Cannot find SQL initialisation file $SQL"
-  echo "Please run this script from the top level of the cmdb source directory"
-  exit 7
-fi
-
-
 while getopts "b:d:h:i:nm:" opt; do
   case $opt in 
     b  ) DB=$OPTARG
@@ -752,6 +709,50 @@ while getopts "b:d:h:i:nm:" opt; do
          exit 1
   esac
 done
+
+if [ `which cbc` ];  then
+  DBCAP=`cbc -q`
+else
+  echo "Cannot find cbc! Exiting"
+  exit 9
+fi
+
+if [ -d /var/lib/tftpboot/ ]; then
+  TFTP="/var/lib/tftpboot/"
+  echo "Found $TFTP"
+elif [ -d /srv/tftp/ ]; then 
+  TFTP="/srv/tftp/"
+  echo "Found $TFTP"
+else
+  unset TFTP
+  echo "No tftp directory found"
+fi
+
+if [ -d /etc/bind ]; then
+  BIND="/etc/bind/"
+  echo "Found ${BIND}"
+elif [ -d /var/named ]; then
+  BIND="/var/named"
+  echo "Found ${BIND}"
+else
+  unset BIND
+  echo "No bind directory found"
+fi
+
+# Need to be root
+if [[ $EUID -ne 0 ]]; then
+   echo "You must run this script as root" 1>&2
+   exit 1
+fi
+
+
+if [ ! -f ${SQL}/initial.sql ]; then
+  echo "Cannot find SQL initialisation file $SQL"
+  echo "Please run this script from the top level of the cmdb source directory"
+  exit 7
+fi
+
+
 
 if [ $DBCAP != "both" ] && [ $DBCAP != "none" ]; then
   if [ $DB != $DBCAP ]; then
