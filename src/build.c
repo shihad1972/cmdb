@@ -104,7 +104,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			retval = DISPLAY_USAGE;
 		}
 	}
-/* This needs updated to reflect the new command line options */
 	if ((cb->action == NONE) && 
 	 (cb->server == NONE) &&
 	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
@@ -130,18 +129,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
 			retval = NO_BUILD_PARTITION;
 	}
-/*	else if ((cb->server == NONE) &&
-	 (strncmp(cb->action_type, "NULL", CONF_S) == 0))
-		retval = NO_NAME_OR_ID;
-	else if ((cb->action == ADD_CONFIG) &&
-	 (strncmp(cb->action_type, "NULL", CONF_S) == 0) &&
-	 (cb->server == NONE))
-		retval = NO_NAME_OR_ID;
-	else if ((cb->action == CREATE_CONFIG) &&
-	 (cb->server == NONE))
-		retval = NO_NAME_OR_ID;
-	if (cb->action == CREATE_CONFIG)
-		snprintf(cb->action_type, MAC_S, "create config"); */
 	return retval;
 	
 }
@@ -1216,13 +1203,13 @@ fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 	size_t len;
 	if (strncmp(arch, "i386", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
+\n\
 d-i base-installer/kernel/image string linux-image-2.6-686\n\
 \n\
 d-i apt-setup/non-free boolean true\n\
 d-i apt-setup/contrib boolean true\n\
-d-i apt-setup/services-select multiselect security, volatile\n\
+d-i apt-setup/services-select multiselect security\n\
 d-i apt-setup/security_host string security.debian.org\n\
-d-i apt-setup/volatile_host string volatile.debian.org\n\
 \n\
 tasksel tasksel/first multiselect standard\n");
 	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
@@ -1231,9 +1218,8 @@ d-i base-installer/kernel/image string linux-image-2.6-amd64\n\
 \n\
 d-i apt-setup/non-free boolean true\n\
 d-i apt-setup/contrib boolean true\n\
-d-i apt-setup/services-select multiselect security, volatile\n\
+d-i apt-setup/services-select multiselect security\n\
 d-i apt-setup/security_host string security.debian.org\n\
-d-i apt-setup/volatile_host string volatile.debian.org\n\
 \n\
 tasksel tasksel/first multiselect standard\n");
 	} else {
@@ -1245,7 +1231,7 @@ tasksel tasksel/first multiselect standard\n");
 			build->len *=2;
 		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_partition");
+			report_error(MALLOC_FAIL, "next in fill_kernel");
 		else
 			build->string = tmp;
 	}
@@ -1387,7 +1373,7 @@ add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
 void
 add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 {
-	char *next, line[RBUFF_S], *fs, *mnt;
+	char *next, line[TBUFF_S], *fs, *mnt;
 	int j, k = retval;
 	unsigned long int pri, min, max;
 	size_t len;

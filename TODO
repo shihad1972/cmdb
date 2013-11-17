@@ -1,3 +1,8 @@
+09/11/2013
+Remove libnss_ldap and libpam_ldap and replace with libnss_ldapd and
+libpam_ldapd as the former do not allow sudo to run. Need to update packages
+for debian and ubuntu on this one. Also the writing out preseed file
+
 24/09/2013
 add_pre_lvm_part does not check it's bounds properly and can
 overflow the char * it is sent. Need to send in a string_len_s and
