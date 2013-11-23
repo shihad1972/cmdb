@@ -1,3 +1,11 @@
+23/11/2013
+Allow mysql to be network aware, so that we can have multiple build
+servers. We could do this by adding a build_server table and then
+build_server_id (or a snappier name) to the server table. This can
+then be added to the end of the SQL statement to be more precise
+about the result returned. We could also use this to add enable /
+disable instead of delete in the database.
+
 09/11/2013
 Remove libnss_ldap and libpam_ldap and replace with libnss_ldapd and
 libpam_ldapd as the former do not allow sudo to run. Need to update packages

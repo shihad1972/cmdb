@@ -1,6 +1,6 @@
 #
 #
-# Makefile for DNSA c programs
+# Makefile.am for DNSA c programs
 #
 #
 RM = rm -f
