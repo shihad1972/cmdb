@@ -1624,6 +1624,26 @@ libpam-ldapd    libpam-ldap/dbrootlogin boolean true\n\
 		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
+	snprintf(buff, BUFF_S, "\
+nslcd   nslcd/ldap-bindpw       password\n\
+nslcd   nslcd/ldap-sasl-authcid string\n\
+nslcd   nslcd/ldap-sasl-realm   string\n\
+nslcd   nslcd/ldap-sasl-mech    select\n\
+nslcd   nslcd/ldap-starttls     boolean true\n\
+nslcd   nslcd/ldap-base string  %s\n\
+nslcd   nslcd/ldap-sasl-krb5-ccname     string  /var/run/nslcd/nslcd.tkt\n\
+nslcd   nslcd/ldap-auth-type    select  none\n\
+nslcd   nslcd/ldap-reqcert      select  demand\n\
+nslcd   nslcd/ldap-sasl-authzid string\n\
+nslcd   nslcd/ldap-uris string  %s\n\
+nslcd   nslcd/ldap-sasl-secprops        string\n\
+nslcd   nslcd/ldap-binddn       string %s\n\
+\n", base, url, root);
+	len = strlen(buff);
+	if ((len + build->size) > build->len)
+		resize_string_buff(build);
+	snprintf(build->string + build->size, len + 1, "%s", buff);
+	build->size += len;
 	if ((strncmp(os, "ubuntu", COMM_S)) == 0) {
 		snprintf(buff, BUFF_S, "\
 ldap-auth-config        ldap-auth-config/bindpw password\n\

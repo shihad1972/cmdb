@@ -58,10 +58,16 @@ if [ -n ${ssl} ] && [ -n ${url} ]; then
   cat > ${TGT}/usr/share/firstboot/002-getca.sh <<EOF
 #!/bin/sh
 #
+
 echo "TLS_CACERT /etc/ssl/certs/Root-CA.pem" >> /etc/ldap/ldap.conf
 echo "ssl	on" >> /etc/libnss-ldap.conf
 /usr/bin/c_rehash /etc/ssl/certs/
 service nscd restart
+
+if [ -f /etc/nslcd.conf ]; then
+  echo "tls_cacertfile  /etc/ssl/certs/Root-CA.pem" >> /etc/nslcd.conf
+  service nslcd restart
+fi
 
 EOF
   chmod 755 ${TGT}/usr/share/firstboot/002-getca.sh
