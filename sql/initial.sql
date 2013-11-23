@@ -40,8 +40,8 @@ INSERT INTO packages (package, varient_id, os_id) SELECT "less", v.varient_id, o
 
 INSERT INTO packages (package, varient_id, os_id) SELECT "locate", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
 INSERT INTO packages (package, varient_id, os_id) SELECT "ldap-utils", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
-INSERT INTO packages (package, varient_id, os_id) SELECT "libnss-ldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
-INSERT INTO packages (package, varient_id, os_id) SELECT "libpam-ldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
+INSERT INTO packages (package, varient_id, os_id) SELECT "libnss-ldapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
+INSERT INTO packages (package, varient_id, os_id) SELECT "libpam-ldapd", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
 INSERT INTO packages (package, varient_id, os_id) SELECT "hobbit-client", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias IN ("debian", "ubuntu");
 INSERT INTO packages (package, varient_id, os_id) SELECT "openldap", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
 INSERT INTO packages (package, varient_id, os_id) SELECT "openldap-clients", v.varient_id, o.os_id FROM varient v, build_os o WHERE o.alias = "centos";
