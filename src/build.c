@@ -1587,18 +1587,18 @@ fill_ldap_config(dbdata_s *data, string_len_s *build, char *os)
 		snprintf(url, URL_S, "ldap://%s", server);
 	snprintf(buff, BUFF_S, "\n\
 # Application Configuration\n\
-libnss-ldap     libnss-ldap/bindpw      password\n\
-libnss-ldap     libnss-ldap/rootbindpw  password\n\
-libnss-ldap     libnss-ldap/dblogin     boolean false\n\
-libnss-ldap     libnss-ldap/override    boolean true\n\
-libnss-ldap     shared/ldapns/base-dn   string  %s\n\
-libnss-ldap     libnss-ldap/rootbinddn  string  %s\n\
-libnss-ldap     shared/ldapns/ldap_version      select  3\n\
-libnss-ldap     libnss-ldap/binddn      string  %s\n\
-libnss-ldap     shared/ldapns/ldap-server       string %s\n\
-libnss-ldap     libnss-ldap/nsswitch    note\n\
-libnss-ldap     libnss-ldap/confperm    boolean false\n\
-libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
+libnss-ldapd    libnss-ldap/bindpw      password\n\
+libnss-ldapd    libnss-ldap/rootbindpw  password\n\
+libnss-ldapd    libnss-ldap/dblogin     boolean false\n\
+libnss-ldapd    libnss-ldap/override    boolean true\n\
+libnss-ldapd    shared/ldapns/base-dn   string  %s\n\
+libnss-ldapd    libnss-ldap/rootbinddn  string  %s\n\
+libnss-ldapd    shared/ldapns/ldap_version      select  3\n\
+libnss-ldapd    libnss-ldap/binddn      string  %s\n\
+libnss-ldapd    shared/ldapns/ldap-server       string %s\n\
+libnss-ldapd    libnss-ldap/nsswitch    note\n\
+libnss-ldapd    libnss-ldap/confperm    boolean false\n\
+libnss-ldapd    libnss-ldap/dbrootlogin boolean true\n\
 \n", base, root, root, url);
 	len = strlen(buff);
 	if ((len + build->size) > build->len)
@@ -1606,18 +1606,18 @@ libnss-ldap     libnss-ldap/dbrootlogin boolean true\n\
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
 	snprintf(buff, BUFF_S, "\
-libpam-ldap     libpam-ldap/rootbindpw  password\n\
-libpam-ldap     libpam-ldap/bindpw      password\n\
+libpam-ldapd    libpam-ldap/rootbindpw  password\n\
+libpam-ldapd    libpam-ldap/bindpw      password\n\
 libpam-runtime  libpam-runtime/profiles multiselect     unix, ldap\n\
-libpam-ldap     shared/ldapns/base-dn   string  %s\n\
-libpam-ldap     libpam-ldap/override    boolean true\n\
-libpam-ldap     shared/ldapns/ldap_version      select  3\n\
-libpam-ldap     libpam-ldap/dblogin     boolean false\n\
-libpam-ldap     shared/ldapns/ldap-server       string  %s\n\
-libpam-ldap     libpam-ldap/pam_password        select  crypt\n\
-libpam-ldap     libpam-ldap/binddn      string  %s\n\
-libpam-ldap     libpam-ldap/rootbinddn  string  %s\n\
-libpam-ldap     libpam-ldap/dbrootlogin boolean true\n\
+libpam-ldapd    shared/ldapns/base-dn   string  %s\n\
+libpam-ldapd    libpam-ldap/override    boolean true\n\
+libpam-ldapd    shared/ldapns/ldap_version      select  3\n\
+libpam-ldapd    libpam-ldap/dblogin     boolean false\n\
+libpam-ldapd    shared/ldapns/ldap-server       string  %s\n\
+libpam-ldapd    libpam-ldap/pam_password        select  crypt\n\
+libpam-ldapd    libpam-ldap/binddn      string  %s\n\
+libpam-ldapd    libpam-ldap/rootbinddn  string  %s\n\
+libpam-ldapd    libpam-ldap/dbrootlogin boolean true\n\
 \n", base, url, root, root);
 	len = strlen(buff);
 	if ((len + build->size) > build->len)
