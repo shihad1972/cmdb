@@ -4,6 +4,8 @@ it still adds somthing into the build tables, as adding the correct
 one and trying to write the build file results in an error. Perhaps
 should look at doing this as a transaction (sort of).
 
+Also i want to be able to use -n <domain> in dnsa -w [ -F | -R ]
+
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build
 servers. We could do this by adding a build_server table and then
