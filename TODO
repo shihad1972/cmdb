@@ -1,3 +1,9 @@
+05/12/2013
+Using cbc to add a build, if there is an error on the command line
+it still adds somthing into the build tables, as adding the correct
+one and trying to write the build file results in an error. Perhaps
+should look at doing this as a transaction (sort of).
+
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build
 servers. We could do this by adding a build_server table and then
