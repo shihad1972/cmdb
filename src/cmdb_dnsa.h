@@ -278,6 +278,8 @@ void
 print_multiple_a_records(dnsa_config_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int
 get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
+void
+list_glue_zones(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* Various zone functions */
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
@@ -371,4 +373,6 @@ void
 setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue);
 int
 get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa);
+void
+print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone);
 #endif /* __CMDB_DNSA_H__ */

@@ -2530,6 +2530,36 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 }
 
 void
+list_glue_zones(dnsa_config_s *dc, dnsa_comm_line_s *cm)
+{
+	int retval = NONE;
+	dnsa_s *dnsa;
+	glue_zone_info_s *glue;
+	zone_info_s *zone;
+
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in list_glue_zones");
+	init_dnsa_struct(dnsa);
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | GLUE)) != 0) {
+		dnsa_clean_list(dnsa);
+		fprintf(stderr, "Cannot get list of zones and glue zones\n");
+		return;
+	}
+	glue = dnsa->glue;
+	zone = dnsa->zones;
+	if (glue)
+		printf("Glue zones\n");
+	else
+		printf("No glue zones\n");
+	while (glue) {
+		print_glue_zone(glue, zone);
+		retval++;
+		glue = glue->next;
+	}
+	dnsa_clean_list(dnsa);
+}
+
+void
 split_glue_ns(char *ns, glue_zone_info_s *glue)
 {
 	char *pnt;
@@ -2587,4 +2617,23 @@ get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
 	} else
 		retval = NO_PARENT_ZONE;
 	return retval;
+}
+
+void
+print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
+{
+	zone_info_s *list;
+	if (zone)
+		list = zone;
+	else {
+		fprintf(stderr, "No zone info passed to print_glue_zone??\n");
+		exit(NO_ZONE_LIST);
+	}
+	if (list->id == glue->zone_id) {
+		printf("%s\t%s\t%s,%s\t%s,%s\n",
+zone->name, glue->name, glue->pri_ns, glue->sec_ns, glue->pri_dns, glue->sec_dns);
+		list = list->next;
+	} else {
+		list = list->next;
+	}
 }

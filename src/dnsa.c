@@ -117,6 +117,10 @@ int main(int argc, char *argv[])
 	} else if (cm->type == GLUE_ZONE) {
 		if (cm->action == ADD_ZONE)
 			retval = add_glue_zone(dc, cm);
+		else if (cm->action == LIST_ZONES)
+			list_glue_zones(dc, cm);
+		else
+			printf("Action code %d not implemented\n", cm->action);
 	}
 
 	free(domain);
