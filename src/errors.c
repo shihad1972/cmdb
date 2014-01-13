@@ -156,6 +156,8 @@ report_error(int error, const char *errstr)
 "Cowardly refusal to delete build os %s\n", errstr);
 	} else if (error == DID_NOT_MOD_BUILD_DOMAIN) {
 		fprintf(stderr, "cbcdomain modified nothing??\n");
+	} else if (error == NO_CONTACT_DATA) {
+		fprintf(stderr, "Contact query to database failed\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -494,10 +496,14 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Multiple BUILD_MIRROR.");
 	else if (error == VARIENT_NOT_FOUND)
 		snprintf(errstr, MAC_S, "Unknown build varient.");
+	else if (error == MULTIPLE_VARIENTS)
+		snprintf(errstr, MAC_S, "Multiple varients found.");
 	else if (error == NO_NETWORK_HARDWARE)
 		snprintf(errstr, MAC_S, "Network device not found.");
 	else if (error == OS_NOT_FOUND)
 		snprintf(errstr, MAC_S, "OS not found.");
+	else if (error == MULTIPLE_OS)
+		snprintf(errstr, MAC_S, "Multiple OS found.");
 	else if (error == SCHEME_NOT_FOUND)
 		snprintf(errstr, MAC_S, "Partition scheme not found.");
 	else if (error == INSERT_NOT_CONFIGURED)
@@ -518,6 +524,10 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot find partitions.");
 	else if (error == NO_BUILD_URL)
 		snprintf(errstr, MAC_S, "No url in build domain.");
+	else if (error == NO_LOG_CONFIG)
+		snprintf(errstr, MAC_S, "Cannot get log config.");
+	else if (error == NO_BD_CONFIG)
+		snprintf(errstr, MAC_S, "Cannot get build domain config.");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

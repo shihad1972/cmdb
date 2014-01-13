@@ -180,11 +180,11 @@ remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 	if (data)
 		snprintf(data->args.text, CONF_S, "%s", cm->name);
 	else
-		return NO_DATA;
+		return NO_CONTACT_DATA;
 	if (data->next)
 		snprintf(data->next->args.text, CONF_S, "%s", cm->id);
 	else
-		return NO_DATA;
+		return NO_CONTACT_DATA;
 	if ((retval  = cmdb_run_search(config, data, CONTACT_ID_ON_COID_NAME)) == 0) {
 		fprintf(stderr, "No contact found\n");
 		return NO_CONTACT;

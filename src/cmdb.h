@@ -99,7 +99,7 @@ enum {			/* dnsa error codes */
 	USER_INPUT_INVALID = 52
 };
 
-enum {			/* cmdb error codes: start @ 100 to avoid conflict */
+enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_SERVERS = 100,
 	SERVER_NOT_FOUND = 101,
 	MULTIPLE_SERVERS = 102,
@@ -201,9 +201,10 @@ enum {			/* cmdb error codes: start @ 100 to avoid conflict */
 	NO_CONTACT_INFO = 202,
 	NO_CONTACT = 203,
 	MULTI_CONTACT = 204,
-	NO_DATA = 205,
+	NO_CONTACT_DATA = 205,
 	NO_BUILD_URL = 206,
-	NO_CONFIG = 207
+	NO_BD_CONFIG = 207,
+	NO_LOG_CONFIG = 208
 	
 };
 

@@ -856,8 +856,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	tmp = list;
 	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
 		clean_dbdata_struct(list);
-		fprintf(stderr, "Cannot get config from build domain\n");
-		return NO_CONFIG;
+		return NO_BD_CONFIG;
 	} else if (retval > 1) {
 		fprintf(stderr, "Associated with multiple build domains?\n");
 		fprintf(stderr, "Using 1st one!!!\n");
@@ -905,8 +904,7 @@ chmod 755 ldap-auth.sh\n\
 	PREP_DB_QUERY(data, LOG_CONFIG)
 	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
 		clean_dbdata_struct(data);
-		fprintf(stderr, "Cannot get log config from build domain\n");
-		return NO_CONFIG;
+		return NO_LOG_CONFIG;
 	} else if (retval > 1) {
 		fprintf(stderr, "Associated with multiple build domains?\n");
 		fprintf(stderr, "Using 1st one!!!\n");

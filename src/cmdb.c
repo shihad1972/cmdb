@@ -221,6 +221,8 @@ Hardware for server %s added to database\n",base->server->name);
 	free(cmc);
 	free(cm);
 	free(cmdb_config);
+	if (retval > 0)
+		report_error(retval, "");
 	exit (retval);
 }
 
