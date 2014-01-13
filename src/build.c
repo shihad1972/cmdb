@@ -1628,12 +1628,12 @@ nslcd   nslcd/ldap-sasl-authcid string\n\
 nslcd   nslcd/ldap-sasl-realm   string\n\
 nslcd   nslcd/ldap-sasl-mech    select\n\
 nslcd   nslcd/ldap-starttls     boolean true\n\
-nslcd   nslcd/ldap-base string  %s\n\
+nslcd   nslcd/ldap-base         string  %s\n\
 nslcd   nslcd/ldap-sasl-krb5-ccname     string  /var/run/nslcd/nslcd.tkt\n\
 nslcd   nslcd/ldap-auth-type    select  none\n\
 nslcd   nslcd/ldap-reqcert      select  demand\n\
 nslcd   nslcd/ldap-sasl-authzid string\n\
-nslcd   nslcd/ldap-uris string  %s\n\
+nslcd   nslcd/ldap-uris         string  %s\n\
 nslcd   nslcd/ldap-sasl-secprops        string\n\
 nslcd   nslcd/ldap-binddn       string %s\n\
 \n", base, url, root);

@@ -162,7 +162,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	printf("Server name:\t%s, id %lu\n", cmdb->server->name, cmdb->hardware->server_id);
 	printf("Detail:\t\t%s\n", cmdb->hardware->detail);
 	if (strlen(cmdb->hardware->device) != 0)
-		printf("Device:\t%s\n", cmdb->hardware->device);
+		printf("Device:\t\t%s\n", cmdb->hardware->device);
 	printf("Class:\t\t%s, id %lu\n", cmdb->hardtype->hclass, cmdb->hardware->ht_id);
 	printf("Are these detail correct? (y/n): ");
 	input = fgets(input, CH_S, stdin);
@@ -478,7 +478,7 @@ print_services(cmdb_service_s *service, unsigned long int id, int type)
 				i++;
 				if (i == 1)
 					printf("\nService Details:\n");
-				if ((strlen(service->servicetype->service)) < 7)
+				if ((strlen(service->servicetype->service)) < 8)
 					printf("%s\t\t%s\n",
 service->servicetype->service, service->url);
 				else
@@ -493,7 +493,7 @@ service->servicetype->service, service->url);
 				i++;
 				if (i == 1)
 					printf("\nService Details:\n");
-				if ((strlen(service->servicetype->service)) < 7)
+				if ((strlen(service->servicetype->service)) < 8)
 					printf("%s\t\t%s\n",
 service->servicetype->service, service->url);
 				else
