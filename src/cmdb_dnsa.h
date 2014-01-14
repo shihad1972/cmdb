@@ -375,4 +375,6 @@ int
 get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa);
 void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone);
+char *
+get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);
 #endif /* __CMDB_DNSA_H__ */

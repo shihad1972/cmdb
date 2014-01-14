@@ -2622,6 +2622,7 @@ get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
 void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 {
+	char *pri, *sec;
 	zone_info_s *list;
 	if (zone)
 		list = zone;
@@ -2629,11 +2630,47 @@ print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 		fprintf(stderr, "No zone info passed to print_glue_zone??\n");
 		exit(NO_ZONE_LIST);
 	}
-	if (list->id == glue->zone_id) {
-		printf("%s\t%s\t%s,%s\t%s,%s\n",
-zone->name, glue->name, glue->pri_ns, glue->sec_ns, glue->pri_dns, glue->sec_dns);
-		list = list->next;
-	} else {
-		list = list->next;
+	while (list) {
+		if (list->id == glue->zone_id) {
+			pri = get_zone_fqdn_name(list, glue, 0);
+			sec = get_zone_fqdn_name(list, glue, 1);
+			printf("%s\t%s\t%s,%s\t%s,%s\n",
+zone->name, glue->name, pri, sec, glue->pri_dns, glue->sec_dns);
+			list = list->next;
+			free(sec);
+			free(pri);
+		} else {
+			list = list->next;
+		}
 	}
+}
+
+char *
+get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
+{
+	char *fqdn;
+	size_t len;
+	
+	if (!(fqdn = calloc(URL_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "fqdn in get_zone_fqdn_name");
+	if (ns == 0) {
+		len = strlen(glue->pri_ns) - 1;
+		if (*(glue->pri_ns + len) == '.') {
+			*(glue->pri_ns + len) = '\0';
+			snprintf(fqdn, URL_S, "%s", glue->pri_ns);
+		} else {
+			snprintf(fqdn, URL_S, "%s.%s", glue->pri_ns, zone->name);
+		}
+	} else if (ns == 1) {
+		len = strlen(glue->sec_ns) - 1;
+		if (*(glue->sec_ns + len) == '.') {
+			*(glue->sec_ns + len) = '\0';
+			snprintf(fqdn, URL_S, "%s", glue->sec_ns);
+		} else {
+			snprintf(fqdn, URL_S, "%s.%s", glue->sec_ns, zone->name);
+		}
+	} else {
+		report_error(NOT_PRI_OR_SEC_NS, "get_zone_fqdn_name");
+	}
+	return fqdn;
 }

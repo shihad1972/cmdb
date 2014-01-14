@@ -158,6 +158,9 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "cbcdomain modified nothing??\n");
 	} else if (error == NO_CONTACT_DATA) {
 		fprintf(stderr, "Contact query to database failed\n");
+	} else if (error == NOT_PRI_OR_SEC_NS) {
+		fprintf(stderr,
+"Something other than pri or sec ns passed to %s\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
