@@ -377,4 +377,6 @@ void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone);
 char *
 get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);
+void
+glue_sort_fqdn(glue_zone_info_s *glue);
 #endif /* __CMDB_DNSA_H__ */

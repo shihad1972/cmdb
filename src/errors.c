@@ -161,6 +161,8 @@ report_error(int error, const char *errstr)
 	} else if (error == NOT_PRI_OR_SEC_NS) {
 		fprintf(stderr,
 "Something other than pri or sec ns passed to %s\n", errstr);
+	} else if (error == NO_GLUE_ZONE) {
+		fprintf(stderr, "No glue zone passed to %s\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}

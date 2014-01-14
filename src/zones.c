@@ -2584,11 +2584,17 @@ split_glue_ip(char *ip, glue_zone_info_s *glue)
 void
 setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue)
 {
-	init_glue_zone_struct(glue);
-	init_zone_struct(zone);
-	init_dnsa_struct(dnsa);
-	dnsa->glue = glue;
-	dnsa->zones = zone;
+	if (glue)
+		init_glue_zone_struct(glue);
+	else
+		report_error(NO_GLUE_ZONE, "setup_glue_struct");
+	if (zone)
+		init_zone_struct(zone);
+	if (dnsa) {
+		init_dnsa_struct(dnsa);
+		dnsa->glue = glue;
+		dnsa->zones = zone;
+	}
 }
 
 int
@@ -2673,4 +2679,9 @@ get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
 		report_error(NOT_PRI_OR_SEC_NS, "get_zone_fqdn_name");
 	}
 	return fqdn;
+}
+
+void
+glue_sort_fqdn(glue_zone_info_s *glue)
+{
 }
