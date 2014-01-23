@@ -524,8 +524,9 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 	FILE *dhcp_hosts;
 	size_t len = 0, blen;
 
-	if (!(dhcp->string = calloc(dhcp->len, sizeof(char))))
-		report_error(MALLOC_FAIL, "dhcp->string in write_dhcp_config");
+	if (dhcp)
+		if (!(dhcp->string = calloc(dhcp->len, sizeof(char))))
+			report_error(MALLOC_FAIL, "dhcp->string in fill_dhcp_hosts");
 	if (!(buff = calloc(RBUFF_S,  sizeof(char))))
 		report_error(MALLOC_FAIL, "buff in fill_dhcp_hosts");
 	if (!(dhcp_hosts = fopen(dhconf->file, "r")))
