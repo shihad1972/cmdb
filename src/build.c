@@ -2471,18 +2471,5 @@ fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
 	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
 }
 
-void
-resize_string_buff(string_len_s *build)
-{
-	char *tmp;
-
-	build->len *=2;
-	tmp = realloc(build->string, build->len * sizeof(char));
-	if (!tmp)
-		report_error(MALLOC_FAIL, "tmp in resize_string_buff");
-	else
-		build->string = tmp;
-}
-
 #undef PREP_DB_QUERY
 #undef PRINT_STRING_WITH_LENGTH_CHECK

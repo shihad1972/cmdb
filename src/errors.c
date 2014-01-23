@@ -905,3 +905,16 @@ init_initial_string_l(string_l **string, int count)
 		}
 	}
 }
+
+void
+resize_string_buff(string_len_s *build)
+{
+	char *tmp;
+
+	build->len *=2;
+	tmp = realloc(build->string, build->len * sizeof(char));
+	if (!tmp)
+		report_error(MALLOC_FAIL, "tmp in resize_string_buff");
+	else
+		build->string = tmp;
+}

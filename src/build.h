@@ -254,7 +254,4 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 void
 fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml);
 
-void
-resize_string_buff(string_len_s *build);
-
 #endif /* __CBC_BUILD_H__ */
