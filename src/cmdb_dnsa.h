@@ -3,6 +3,7 @@
 #ifndef __CMDB_DNSA_H__
 # define __CMDB_DNSA_H__
 # include "base_sql.h"
+# include "cmdb.h"
 
 enum {			/* zone types; use NONE from action codes */
 	FORWARD_ZONE = 1,
@@ -313,9 +314,11 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone);
 int
 create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *config);
 void
-create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonfile);
+create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonfile);
 void
-add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile);
+add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
+void
+check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue);
 int
 create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa);
 void
