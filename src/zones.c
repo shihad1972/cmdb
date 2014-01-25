@@ -452,7 +452,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			record = record->next;
 		} else {
 			snprintf(buffer, BUFF_S, "\
-%s\tIN %s\t%s\n", record->host, record->type, record->dest);
+%s\tIN\t%s\t%s\n", record->host, record->type, record->dest);
 			blen = strlen(buffer);
 			if (blen + size >= len)
 				resize_string_buff(zonefile);
@@ -525,7 +525,8 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
 		len = strlen(buff);
 		if ((len + zonefile->size) >= zonefile->len)
 			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len + 1, "%s", pns);
+		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+		zonefile->size += len;
 	}
 	free(pns);
 	free(sns);
