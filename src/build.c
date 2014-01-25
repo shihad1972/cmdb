@@ -816,7 +816,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 #ifndef PRINT_STRING_WITH_LENGTH_CHECK
 # define PRINT_STRING_WITH_LENGTH_CHECK {            \
 	len = strlen(line);                          \
-	if ((build->size + len) > build->len)        \
+	if ((build->size + len) >= build->len)        \
 		resize_string_buff(build);           \
 	pos = build->string + build->size;           \
 	snprintf(pos, len + 1, "%s", line);          \
@@ -1192,7 +1192,7 @@ d-i partman-auto/expert_recipe string                         \\\n\
       monkey ::                                               \\\n");
 	next +=128;
 	len = strlen(disk);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	next = build->string + build->size;
 	snprintf(next, len + 1, "%s", disk);
@@ -1369,7 +1369,7 @@ add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
                        $primary{ }           \\\n\
                        method{ lvm }         \\\n");
 	plen = strlen(line);
-	if ((build->size + plen) > build->len)
+	if ((build->size + plen) >= build->len)
 		resize_string_buff(build);
 	next = build->string + build->size;
 	snprintf(next, plen + 1, "%s", line);
@@ -1380,7 +1380,7 @@ add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
                        vg_name{ systemlv }    \\\n\
               .              \\\n", cml->partition);
 	plen = strlen(line);
-	if ((build->size + plen) > build->len)
+	if ((build->size + plen) >= build->len)
 		resize_string_buff(build);
 	next = build->string + build->size;
 	snprintf(next, plen + 1, "%s", line);
@@ -1410,7 +1410,7 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 			mnt = list->next->next->next->next->next->fields.text;
 		snprintf(line, HOST_S, "\
               %lu %lu %lu %s \\\n", pri, min, max, fs);
-		if ((build->size + HOST_S + 1) > build->len)
+		if ((build->size + HOST_S) >= build->len)
 			resize_string_buff(build);
 		next = build->string + build->size;
 		len = strlen(line);
@@ -1429,7 +1429,7 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 		}
 		strncat(line, "              .  \\\n", HOST_S + 1);
 		len = strlen(line);
-		if ((build->size + len) > build->len)
+		if ((build->size + len) >= build->len)
 			resize_string_buff(build);
 		snprintf(next, len + 1, "%s", line);
 		build->size += len;
@@ -1478,7 +1478,7 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
                        in_vg{ systemlv }                      \\\n\
                        lv_name{ %s } \\\n", pri, min, max, fs, lv);
 		len = strlen(line);
-		if ((build->size + len) > build->len)
+		if ((build->size + len) >= build->len)
 			resize_string_buff(build);
 		next = build->string + build->size;
 		snprintf(next, len + 1, "%s", line);
@@ -1496,7 +1496,7 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
               .         \\\n");
 		}
 		len = strlen(line);
-		if ((build->size + len) > build->len)
+		if ((build->size + len) >= build->len)
 			resize_string_buff(build);
 		next = build->string + build->size;
 		snprintf(next, len + 1, "%s", line);
@@ -1600,7 +1600,7 @@ libnss-ldapd    libnss-ldap/confperm    boolean false\n\
 libnss-ldapd    libnss-ldap/dbrootlogin boolean true\n\
 \n", base, root, root, url);
 	len = strlen(buff);
-	if ((len + build->size) > build->len)
+	if ((len + build->size) >= build->len)
 		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
@@ -1619,7 +1619,7 @@ libpam-ldapd    libpam-ldap/rootbinddn  string  %s\n\
 libpam-ldapd    libpam-ldap/dbrootlogin boolean true\n\
 \n", base, url, root, root);
 	len = strlen(buff);
-	if ((len + build->size) > build->len)
+	if ((len + build->size) >= build->len)
 		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
@@ -1639,7 +1639,7 @@ nslcd   nslcd/ldap-sasl-secprops        string\n\
 nslcd   nslcd/ldap-binddn       string %s\n\
 \n", base, url, root);
 	len = strlen(buff);
-	if ((len + build->size) > build->len)
+	if ((len + build->size) >= build->len)
 		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
@@ -1659,7 +1659,7 @@ ldap-auth-config        ldap-auth-config/ldapns/ldap_version    select  3\n\
 ldap-auth-config        ldap-auth-config/dblogin        boolean false\n\
 \n", root, url, base);
 		len = strlen(buff);
-		if ((len + build->size) > build->len)
+		if ((len + build->size) >= build->len)
 			resize_string_buff(build);
 		snprintf(build->string + build->size, len + 1, "%s", buff);
 		build->size += len;
@@ -1862,7 +1862,7 @@ part %s --fstype=\"%s\" --size=%lu\n\
 	}
 	snprintf(tmp, COMM_S, "\n");
 	len++;
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
@@ -1916,7 +1916,7 @@ url --url=http://%s/releases/%s/Fedora/%s/os/\n\
 network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
 --hostname %s.%s --onboot=on\n\n", mirror, ver, arch, dev, ip, nm, gw, ns, host, domain);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -1936,7 +1936,7 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 @Base\n\
 ");
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -1944,7 +1944,7 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 	while (list) {
 		len = strlen(list->fields.text);
 		len++;
-		if ((build->size + len) > build->len)
+		if ((build->size + len) >= build->len)
 			resize_string_buff(build);
 		tmp = build->string + build->size;
 		snprintf(tmp, len + 1, "%s\n", list->fields.text);
@@ -1973,7 +1973,7 @@ wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
 ./motd.sh > motd.log\n", list->fields.text, list->fields.text);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2026,7 +2026,7 @@ cp Root-CA.pem /etc/openldap/cacerts\n\
 /sbin/chkconfig nscd on\n\
 \n", server, dn);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2070,7 +2070,7 @@ chmod 755 kick-ntp.sh\n\
 ./kick-ntp.sh %s > ntp.log 2>&1\n\
 \n", url, server);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2090,7 +2090,7 @@ chmod 755 log.sh\n\
 ./log.sh %s > logging.log 2>&1\n\
 \n", url, server);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2110,7 +2110,7 @@ chmod 755 xymon-client.sh\n\
 ./xymon-client.sh %s %sscripts %s > xymon.log 2>&1\n\
 \n", url, host, url, server);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2129,7 +2129,7 @@ chmod 755 kick-final.sh\n\
 ./kick-final.sh > final.log 2>&1\n\
 \n", url);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
@@ -2177,7 +2177,7 @@ chmod 755 kick-postfix.sh\n\
 ./kick-postfix.sh -h %s -i %s -d %s -r %s > postfix.log 2>&1\n\
 \n", conf->next->string, conf->string, ip, domain, server);
 	len = strlen(buff);
-	if ((build->size + len) > build->len)
+	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);

@@ -408,9 +408,9 @@ $TTL %lu\n\
 		snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n",
 			 zone->sec_dns);
 		len = strlen(buffer);
-		if ((len + zonefile->size) > zonefile->len)
+		if ((len + zonefile->size) >= zonefile->len)
 			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len, "%s", buffer);
+		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
 		zonefile->size += len;
 	}
 	while (record) {
@@ -419,9 +419,9 @@ $TTL %lu\n\
 			snprintf(buffer, RBUFF_S + COMM_S, "\
 \tIN\tMX %lu\t%s\n", record->pri, record->dest);
 			len = strlen(buffer);
-			if ((len + zonefile->size) > zonefile->len)
+			if ((len + zonefile->size) >= zonefile->len)
 				resize_string_buff(zonefile);
-			snprintf(zonefile->string + zonefile->size, len, "%s", buffer);
+			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
 			zonefile->size += len;
 			record = record->next;
 		} else {
@@ -454,9 +454,9 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			snprintf(buffer, BUFF_S, "\
 %s\tIN %s\t%s\n", record->host, record->type, record->dest);
 			blen = strlen(buffer);
-			if (blen + size > len) 
+			if (blen + size >= len)
 				resize_string_buff(zonefile);
-			snprintf(zonefile->string + size, blen, "%s", buffer);
+			snprintf(zonefile->string + size, blen + 1, "%s", buffer);
 			record = record->next;
 			zonefile->size += blen;
 			size = zonefile->size;
@@ -476,16 +476,15 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			*dot = '\0';
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n\
+%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n\n\
 ", name, glue->pri_ns, name, glue->sec_ns, name);
 			else
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s.%s\n", name, glue->pri_ns, name);
+%s\tIN\tNS\t%s.%s\n\n", name, glue->pri_ns, name);
 			blen = strlen(buffer);
-			if (blen + size > len) {
+			if (blen + size >= len)
 				resize_string_buff(zonefile);
-			}
-			snprintf(zonefile->string + size, blen, "%s", buffer);
+			snprintf(zonefile->string + size, blen + 1, "%s", buffer);
 			zonefile->size += blen;
 			len = zonefile->len;
 			size = zonefile->size;
@@ -524,7 +523,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
 		add = 0;
 		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
 		len = strlen(buff);
-		if ((len + zonefile->size) > zonefile->len)
+		if ((len + zonefile->size) >= zonefile->len)
 			resize_string_buff(zonefile);
 		snprintf(zonefile->string + zonefile->size, len + 1, "%s", pns);
 	}
