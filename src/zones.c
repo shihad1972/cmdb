@@ -438,6 +438,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 	size_t len, size, blen = 0;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *record = dnsa->records;
+	zone_info_s *zone = dnsa->zones;
 	len = zonefile->len;
 	size = zonefile->size;
 	
@@ -462,6 +463,12 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			size = zonefile->size;
 			len = zonefile->len;
 		}
+	}
+	while (zone) {
+		if (zone->id == id)
+			break;
+		else
+			zone = zone->next;
 	}
 	if (!(glue)) {
 		free(buffer);
@@ -488,7 +495,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			zonefile->size += blen;
 			len = zonefile->len;
 			size = zonefile->size;
-			check_a_record_for_ns(zonefile, glue);
+			check_a_record_for_ns(zonefile, glue, zone->name);
 			glue = glue->next;
 		}
 	}
@@ -496,7 +503,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 }
 
 void
-check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
+check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent)
 {
 	char *host, *zone, *pns, *sns, *buff;
 	short int add = 0;
@@ -508,7 +515,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
 		return;
 	pns = strdup(glue->pri_ns);
 	sns = strdup(glue->sec_ns);
-	zone = glue->name;
+	zone = strdup(parent);
 	if ((host = strstr(pns, zone))) {
 		host--;
 		*host = '\0';
