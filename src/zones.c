@@ -504,11 +504,11 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
 	
 	if (!(buff = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buff in check_a_record_for_ns");
-	if (glue) {
-		pns = strdup(glue->pri_ns);
-		sns = strdup(glue->sec_ns);
-		zone = glue->name;
-	}
+	if (!(glue) || !(zonefile))
+		return;
+	pns = strdup(glue->pri_ns);
+	sns = strdup(glue->sec_ns);
+	zone = glue->name;
 	if ((host = strstr(pns, zone))) {
 		host--;
 		*host = '\0';
