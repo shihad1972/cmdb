@@ -476,11 +476,11 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			*dot = '\0';
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n\n\
-", name, glue->pri_ns, name, glue->sec_ns, name);
+%s\tIN\tNS\t%s\n\tIN\tNS\t%s\n\n\
+", name, glue->pri_ns, glue->sec_ns);
 			else
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s.%s\n\n", name, glue->pri_ns, name);
+%s\tIN\tNS\t%s\n\n", name, glue->pri_ns);
 			blen = strlen(buffer);
 			if (blen + size >= len)
 				resize_string_buff(zonefile);
