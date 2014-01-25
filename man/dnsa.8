@@ -82,7 +82,9 @@ in config file, which is usually the server you are working on.
 It can be useful to delegate control of a subdomain to other servers, and this
 options allows you to do so. You need to use the \fB-I\fP and, optionally, the
 \fB-N\fP options described below to create the \fBglue records\fP that control
-the delegation of the zone.
+the delegation of the zone. If you wish to use name servers that are not part
+of the parent zone, you must end the names specified by \fB-N\fP with a . to
+denote a FQDN. Otherwise, these records will be added to the parent zone.
 \fBNote:\fP You must have the zone already setup on the delegated name servers.
 This includes the A records for the name servers. If you do not then you may
 get errors from bind about "out of zone" records.
