@@ -138,6 +138,7 @@ DELETE","\
 DELETE","\
 DELETE FROM preferred_a WHERE prefa_id = ?","\
 DELETE FROM rev_records WHERE rev_zone = ?","\
+DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
@@ -174,7 +175,7 @@ const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
 const unsigned int dnsa_search_args[] = { 1, 1, 1, 1 };
 
-const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1 };
+const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1, 1, 1, 1 };
 
 const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2, 1 };
 
@@ -215,6 +216,7 @@ const unsigned int dnsa_delete_arg_type[][1] = {
 	{ NONE } ,
 	{ DBINT } ,
 	{ DBINT } ,
+	{ DBTEXT } ,
 	{ DBINT }
 };
 

@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
 		if (cm->action == ADD_ZONE)
 			retval = add_glue_zone(dc, cm);
 		else if (cm->action == LIST_ZONES)
-			list_glue_zones(dc, cm);
+			list_glue_zones(dc);
+		else if (cm->action == DELETE_ZONE)
+			delete_glue_zone(dc, cm);
 		else
 			printf("Action code %d not implemented\n", cm->action);
 	}

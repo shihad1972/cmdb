@@ -1,7 +1,7 @@
 /* 
  * 
  *  dnsa: DNS Administration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -476,8 +476,8 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			*dot = '\0';
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s\n\tIN\tNS\t%s\n\n\
-", name, glue->pri_ns, glue->sec_ns);
+%s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\n\
+", name, glue->pri_ns, name, glue->sec_ns);
 			else
 				snprintf(buffer, BUFF_S, "\
 %s\tIN\tNS\t%s\n\n", name, glue->pri_ns);
@@ -522,6 +522,24 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue)
 	if (add == 1) {
 		add = 0;
 		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
+		len = strlen(buff);
+		if ((len + zonefile->size) >= zonefile->len)
+			resize_string_buff(zonefile);
+		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+		zonefile->size += len;
+	}
+	if ((host = strstr(sns, zone))) {
+		host--;
+		*host = '\0';
+		add = 1;
+	} else {
+		len = strlen(sns);
+		host = sns + len - 1;
+		if (*host != '.')
+			add = 1;
+	}
+	if (add == 1) {
+		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
 		len = strlen(buff);
 		if ((len + zonefile->size) >= zonefile->len)
 			resize_string_buff(zonefile);
@@ -2573,8 +2591,52 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	return retval;
 }
 
+int
+delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
+{
+	int retval = NONE, c = NONE;
+	dnsa_s *dnsa;
+	dbdata_s data;
+	glue_zone_info_s *glue;
+
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in delete_glue_zone");
+	init_dnsa_struct(dnsa);
+	init_dbdata_struct(&data);
+	if ((retval = dnsa_run_query(dc, dnsa, GLUE)) != 0) {
+		dnsa_clean_list(dnsa);
+		fprintf(stderr, "Cannot get list of glue zones\n");
+		return NO_GLUE_ZONE;
+	}
+	glue = dnsa->glue;
+	while (glue) {
+		if (strncmp(cm->domain, glue->name, CONF_S) != 0) {
+			glue = glue->next;
+		} else {
+			c++;
+			snprintf(data.args.text, CONF_S, "%s", glue->name);
+			glue = glue->next;
+		}
+	}
+	if (c == 0) {
+		fprintf(stderr, "No glue zone %s found\n", cm->domain);
+		return NO_GLUE_ZONE;
+	} else if (c > 1) {
+		fprintf(stderr, "Multiple glue zones for %s found\n", cm->domain);
+	}
+	if ((retval = dnsa_run_delete(dc, &data, GLUES)) == 0)
+		fprintf(stderr, "Unable to delete glue zone %s\n", cm->domain);
+	else if (retval == 1)
+		printf("Glue zone %s deleted\n", cm->domain);
+	else if (retval > 1)
+		fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
+	retval = 0;
+	dnsa_clean_list(dnsa);
+	return retval;
+}
+
 void
-list_glue_zones(dnsa_config_s *dc, dnsa_comm_line_s *cm)
+list_glue_zones(dnsa_config_s *dc)
 {
 	int retval = NONE;
 	dnsa_s *dnsa;
@@ -2673,7 +2735,7 @@ void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 {
 	char *pri, *sec;
-	zone_info_s *list;
+	zone_info_s *list = '\0';
 	if (zone)
 		list = zone;
 	else {
@@ -2716,6 +2778,8 @@ get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
 		if (*(glue->sec_ns + len) == '.') {
 			*(glue->sec_ns + len) = '\0';
 			snprintf(fqdn, URL_S, "%s", glue->sec_ns);
+		} else if (strncmp(glue->sec_ns, "none", COMM_S) == 0) {
+			snprintf(fqdn, URL_S, "%s", glue->sec_ns);
 		} else {
 			snprintf(fqdn, URL_S, "%s.%s", glue->sec_ns, zone->name);
 		}
@@ -2724,8 +2788,9 @@ get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
 	}
 	return fqdn;
 }
-
+/*
 void
 glue_sort_fqdn(glue_zone_info_s *glue)
 {
 }
+*/

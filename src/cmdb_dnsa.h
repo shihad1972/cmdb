@@ -247,6 +247,8 @@ int
 get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
 delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+int
+delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* End addition 06/03/2013 */
 /* Added 07/03/2013 */
 int
@@ -280,7 +282,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int
 get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
-list_glue_zones(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+list_glue_zones(dnsa_config_s *dc);
 /* Various zone functions */
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);

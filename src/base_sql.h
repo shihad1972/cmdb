@@ -127,7 +127,7 @@ enum {			/* SELECT and INSERT indexes */
 
 enum {			/* Delete indexes that diverge from SELECT */
 	REV_RECORDS_ON_REV_ZONE = 7,
-	RECORDS_ON_FWD_ZONE = 8
+	RECORDS_ON_FWD_ZONE = 9
 };
 
 enum {			/* Extended searches */
