@@ -869,6 +869,13 @@ init_string_len(string_len_s *string)
 }
 
 void
+clean_string_len(string_len_s *string)
+{
+	free(string->string);
+	free(string);
+}
+
+void
 init_string_l(string_l *string)
 {
 	string->string = '\0';

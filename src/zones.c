@@ -645,20 +645,22 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 int
 commit_rev_zones(dnsa_config_s *dc)
 {
-	char *configfile, *buffer, *filename;
+	char *buffer, *filename;
 	int retval;
 	dnsa_s *dnsa;
+	string_len_s *config;
 	rev_zone_info_s *zone;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in commit_rev_zones");
-	if (!(configfile = calloc(BUILD_S, sizeof(char))))
+	if (!(config = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "zonefile in commit_rev_zones");
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in commit_rev_zones");
 	filename = buffer;
 	retval = 0;
 	init_dnsa_struct(dnsa);
+	init_string_len(config);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return MY_QUERY_FAIL;
@@ -666,20 +668,23 @@ commit_rev_zones(dnsa_config_s *dc)
 	zone = dnsa->rev_zones;
 	while (zone) {
 		create_and_write_rev_zone(dnsa, dc, zone);
-		if ((retval = create_rev_config(dc, zone, configfile)) != 0) {
-			fprintf(stderr, "Config file too big!\n");
-			break;
+		if ((retval = create_rev_config(dc, zone, config)) != 0) {
+			fprintf(stderr, "Error creating reverse config\n");
+			free(buffer);
+			free(config);
+			dnsa_clean_list(dnsa);
+			return CREATE_FILE_FAIL;
 		}
 		zone = zone->next;
 	}
 	snprintf(filename, TBUFF_S, "%s%s", dc->bind, dc->rev);
-	if ((retval = write_file(filename, configfile)) != 0)
+	if ((retval = write_file(filename, config->string)) != 0)
 		fprintf(stderr, "Writing %s failed with %d\n", buffer, retval);
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(buffer)) != 0)
 		fprintf(stderr, "%s failed with %d\n", buffer, retval);
 	free(buffer);
-	free(configfile);
+	clean_string_len(config);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -775,11 +780,11 @@ add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
 }
 
 int
-create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, char *configfile)
+create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, string_len_s *config)
 {
 	int retval;
 	char *buffer, *in_addr;
-	size_t len = BUILD_S;
+	size_t len = NONE;
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_rev_config");
@@ -802,10 +807,13 @@ zone \"%s\" {\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", in_addr, zone->master, dc->dir, zone->net_range);
 		}
-		if (strlen(configfile) + strlen(buffer) < len)
-			strncat(configfile, buffer, strlen(buffer));
-		else
-			retval = BUFFER_FULL;
+		len = strlen(buffer);
+		if ((config->size + len + 1) > config->len)
+			resize_string_buff(config);
+		snprintf(config->string + config->size, len + 1, "%s", buffer);
+		config->size += len;
+	} else {
+		fprintf(stderr, "Zone %s invalid\n", zone->net_range);
 	}
 	free(buffer);
 	free(in_addr);
@@ -1427,30 +1435,34 @@ create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 int
 create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
-	char *configfile, *buffer, filename[NAME_S];
+	char *buffer, filename[NAME_S];
 	int retval;
+	string_len_s *config;
 	rev_zone_info_s *zone;
-	
+
+	if (!(config = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "config in create_and_write_rev_config");
 	buffer = &filename[0];
 	retval = 0;
+	init_string_len(config);
 	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0)
 		return retval;
 	zone = dnsa->rev_zones;
-	if (!(configfile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
 	while (zone) {
-		if ((retval = create_rev_config(dc, zone, configfile)) != 0) {
-			printf("Buffer Full!\n");
-			break;
+		if ((retval = create_rev_config(dc, zone, config)) != 0) {
+			fprintf(stderr, "Cannot create reverse config\n");
+			free(config);
+			return CREATE_FILE_FAIL;
 		}
 		zone = zone->next;
 	}
 	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->rev);
-	if ((retval = write_file(filename, configfile)) != 0)
+	if ((retval = write_file(filename, config->string)) != 0)
 		fprintf(stderr, "Unable to write config file %s\n", filename);
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
+	clean_string_len(config);
 	return retval;
 }
 

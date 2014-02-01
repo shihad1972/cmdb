@@ -99,7 +99,8 @@ enum {			/* dnsa error codes */
 	NO_GLUE_ZONE = 44,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
-	USER_INPUT_INVALID = 52
+	USER_INPUT_INVALID = 52,
+	CREATE_FILE_FAIL = 60
 };
 
 enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
@@ -430,6 +431,8 @@ void
 clean_dbdata_struct(dbdata_s *data);
 void
 init_string_len(string_len_s *string);
+void
+clean_string_len(string_len_s *string);
 void
 init_string_l(string_l *string);
 void
