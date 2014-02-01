@@ -302,6 +302,8 @@ void
 add_int_ip_to_fwd_records(record_row_s *records);
 int
 add_int_ip_to_rev_records(dnsa_s *dnsa);
+int
+check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **host);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);

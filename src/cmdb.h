@@ -100,7 +100,9 @@ enum {			/* dnsa error codes */
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52,
-	CREATE_FILE_FAIL = 60
+	CANNOT_CONVERT = 53,
+	CREATE_FILE_FAIL = 60,
+	WRONG_PROTO = 61
 };
 
 enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */

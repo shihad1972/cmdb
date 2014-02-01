@@ -35,6 +35,7 @@
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <errno.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
@@ -581,11 +582,13 @@ int
 create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config)
 {
 	int retval;
-	char *buffer;
+	char *buffer, *buff, *host = '\0';
 	size_t len;
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
+	if (!(buff = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buff in create_fwd_config");
 	retval = 0;
 	if (strncmp(zone->type, "master", COMM_S) == 0) {
 		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -593,7 +596,15 @@ create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config)
 zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
-\t\t};\n\n", zone->name, dc->dir, zone->name);
+", zone->name, dc->dir, zone->name);
+/*\t\t};\n\n", zone->name, dc->dir, zone->name); */
+			if ((check_transfer_ip(dc, zone, &host)) == 0)
+				snprintf(buff, RBUFF_S, "\
+\t\t\ttransfer-source \"%s\";\n\
+\t\t};\n\n", host);
+			else
+				snprintf(buff, RBUFF_S, "\
+\t\t};\n\n");
 		}
 	} else if (strncmp(zone->type, "slave", COMM_S) == 0) {
 		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -605,12 +616,15 @@ zone \"%s\" {\n\
 \t\t};\n\n", zone->name, zone->master, dc->dir, zone->name);
 		}
 	}
-	len = strlen(buffer);
+	len = strlen(buffer) + strlen(buff);
 	if ((config->size + len) > config->len)
 		resize_string_buff(config);
-	snprintf(config->string + config->size, len + 1, "%s", buffer);
+	snprintf(config->string + config->size, len + 1, "%s%s", buffer, buff);
 	config->size += len;
 	free(buffer);
+	free(buff);
+	if (host)
+		free(host);
 	return retval;
 }
 
@@ -640,6 +654,69 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 		if ((retval = dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO)) != 0)
 			fprintf(stderr, "Cannot set zone as not updated in database!\n");
 	}
+}
+
+int
+check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
+{
+	char *host = '\0', *dhost = '\0', *dipstr = '\0';
+	int retval = NONE;
+	void *addr;
+	struct addrinfo hints, *srvnfo;
+	struct sockaddr_in *ipv4;
+
+	if (!(*ipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
+		report_error(MALLOC_FAIL, "ipstr in check_transfer_ip");
+	if (!(dipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
+		report_error(MALLOC_FAIL, "dipstr in check_transfer_ip");
+	if (!(host = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "host in check_transfer_ip");
+	dhost = strndup(zone->pri_dns, RBUFF_S);
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	if ((retval = gethostname(host, RBUFF_S)) != 0) {
+		fprintf(stderr, "%s", strerror(errno));
+		return retval;
+	}
+	if ((retval = getaddrinfo(dhost, "http", &hints, &srvnfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
+		return retval;
+	}
+	if (srvnfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+		if (!(inet_ntop(AF_INET, addr, *ipstr, INET_ADDRSTRLEN))) {
+			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+			return CANNOT_CONVERT;
+		}
+	} else {
+		report_error(WRONG_PROTO, "check_transfer_ip");
+	}
+	freeaddrinfo(srvnfo);
+	if ((retval = getaddrinfo(host, "http", &hints, &srvnfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
+		return retval;
+	}
+	if (srvnfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+		if (!(inet_ntop(AF_INET, addr, dipstr, INET_ADDRSTRLEN))) {
+			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+			return CANNOT_CONVERT;
+		}
+	} else {
+		report_error(WRONG_PROTO, "check_transfer_ip");
+	}
+	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) != 0) {
+		free(*ipstr);
+		*ipstr = '\0';
+		retval = CANNOT_CONVERT;
+	}
+	free(host);
+	free(dipstr);
+	return retval;
 }
 
 int
