@@ -693,44 +693,47 @@ int
 create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone)
 {
 	int retval;
-	char *zonefile, *buffer, *filename;
+	char *buffer, *filename;
 	unsigned long int id;
+	string_len_s  *zonefile;
 	
-	if (!(zonefile = calloc(BUILD_S, sizeof(char))))
+	if (!(zonefile = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "zonefile in create_rev_zones");
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_rev_zones");
+	init_string_len(zonefile);
 	filename = buffer;
 	retval = 0;
 	id = zone->rev_zone_id;
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 		create_rev_zone_header(
 			dnsa, dc->hostmaster, id, zonefile);
-		add_records_to_rev_zonefile(dnsa, id, &zonefile);
+		add_records_to_rev_zonefile(dnsa, id, zonefile);
 		snprintf(filename, NAME_S, "%s%s",
 			 dc->dir, zone->net_range);
-		if ((retval = write_file(filename, zonefile)) != 0)
+		if ((retval = write_file(filename, zonefile->string)) != 0)
 			printf("Unable to write %s zonefile\n",
 			       zone->net_range);
 		else if ((retval = check_zone(zone->net_range, dc)) != 0)
 			snprintf(zone->valid, COMM_S, "no");
 	}
-	free(zonefile);
+	clean_string_len(zonefile);
 	free(buffer);
 	return (retval);
 }
 
 void
-create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonefile)
+create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile)
 {
 	char *buffer;
+	size_t len;
 	
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer ins create_rev_zone_header");
 	rev_zone_info_s *zone = dnsa->rev_zones;
 	while (zone->rev_zone_id != id)
 		zone = zone->next;
-	snprintf(zonefile, BUILD_S, "\
+	snprintf(zonefile->string, BUILD_S, "\
 $TTL %lu\n\
 @\tIN\tSOA\t%s\t%s (\n\
 \t\t\t\t%lu\t; Serial\n\
@@ -742,37 +745,40 @@ $TTL %lu\n\
 \t\tNS\t%s\n",
 	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
 	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
+	zonefile->size = strlen(zonefile->string);
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0) {
 		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
 			 zone->sec_dns);
-		strncat(zonefile, buffer, strlen(buffer));
+		len = strlen(buffer);
+		if ((zonefile->size + len + 1) > zonefile->len)
+			resize_string_buff(zonefile);
+		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
+		zonefile->size += len;
 	}
+	free(buffer);
 }
 
 void
-add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile)
+add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile)
 {
 	char *buffer;
-	size_t len, size;
+	size_t len;
 	rev_record_row_s *record = dnsa->rev_records;
-	len = BUILD_S;
+	len = NONE;
+
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
-	
 	while (record) {
 		if (record->rev_zone != id) {
 			record = record->next;
 		} else {
 			snprintf(buffer, BUFF_S, "\
 %s\tPTR\t%s\n", record->host, record->dest);
-			size = strlen(*zonefile);
-			if (strlen(buffer) + size > len) {
-				len = len + BUILD_S;
-				if (!(realloc(*zonefile, len))) {
-					report_error(MALLOC_FAIL, "realloc of zonefile");
-				}
-			}
-			strncat(*zonefile, buffer, strlen(buffer));
+			len = strlen(buffer);
+			if ((zonefile->size + len + 1) > zonefile->len)
+				resize_string_buff(zonefile);
+			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
+			zonefile->size += len;
 			record = record->next;
 		}
 	}

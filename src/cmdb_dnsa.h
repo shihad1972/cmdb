@@ -335,9 +335,9 @@ print_rev_zone_info(rev_zone_info_s *zone);
 int
 create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone);
 void
-create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zonefile);
+create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile);
 void
-add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile);
+add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
 int
 create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, string_len_s *config);
 void
