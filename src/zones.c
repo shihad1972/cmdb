@@ -312,23 +312,6 @@ check_zone(char *domain, dnsa_config_s *dc)
 		retval = NONE;
 	return retval;
 }
-
-int
-check_rev_zone(char *domain, dnsa_config_s *dc)
-{
-	char *command, syscom[RBUFF_S];
-	int error, retval;
-	
-	command = &syscom[0];
-	snprintf(command, RBUFF_S, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
-	error = system(syscom);
-	if (error != 0)
-		retval = CHKZONE_FAIL;
-	else
-		retval = NONE;
-	return retval;
-}
-
 int
 commit_fwd_zones(dnsa_config_s *dc)
 {
@@ -724,7 +707,7 @@ create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone
 		if ((retval = write_file(filename, zonefile)) != 0)
 			printf("Unable to write %s zonefile\n",
 			       zone->net_range);
-		else if ((retval = check_rev_zone(zone->net_range, dc)) != 0)
+		else if ((retval = check_zone(zone->net_range, dc)) != 0)
 			snprintf(zone->valid, COMM_S, "no");
 	}
 	free(zonefile);

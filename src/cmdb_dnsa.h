@@ -339,8 +339,6 @@ create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, char *zo
 void
 add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, char **zonefile);
 int
-check_rev_zone(char *domain, dnsa_config_s *dc);
-int
 create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, char *configfile);
 void
 fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc);
