@@ -297,7 +297,7 @@ zone->net_range, zone->pri_dns, zone->serial);
 }
 
 int
-check_fwd_zone(char *domain, dnsa_config_s *dc)
+check_zone(char *domain, dnsa_config_s *dc)
 {
 	char *command, syscom[RBUFF_S];
 	int error, retval;
@@ -1474,14 +1474,12 @@ create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 int
 validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 {
-	char command[NAME_S], *buffer;
 	int retval;
 	dbdata_s *data;
 
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in validate_fwd_zone");
 	retval = 0;
-	buffer = &command[0];
 	snprintf(zone->valid, COMM_S, "yes");
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
@@ -1497,15 +1495,13 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 			zone->name);
 		return FILE_O_FAIL;
 	}
-	snprintf(buffer, NAME_S, "%s %s %s%s", 
-		 dc->chkz, zone->name, dc->dir, zone->name);
-	if ((retval = system(command)) != 0) {
+	if ((retval = check_zone(zone->name, dc)) != 0) {
 		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
 		data->args.number = zone->id;
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
 			fprintf(stderr, "Set zone not valid in DB failed\n");
 		free(data);
-		return CHKZONE_FAIL;
+		return retval;
 	} else {
 		data->args.number = zone->id;
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {

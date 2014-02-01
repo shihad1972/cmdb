@@ -310,7 +310,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* End add 05/03/2013 */
 /* Forward zone functions */
 int
-check_fwd_zone(char *domain, dnsa_config_s *dc);
+check_zone(char *domain, dnsa_config_s *dc);
 int
 create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone);
 int
