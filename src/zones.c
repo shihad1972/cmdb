@@ -533,7 +533,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 		if (*host != '.')
 			add = 1;
 	}
-	if ((add == 1) && (strncmp(sns, "none", COMM_S) != 0)) {
+	if (add == 1) {
 		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
 		len = strlen(buff);
 		if ((len + zonefile->size) >= zonefile->len)
