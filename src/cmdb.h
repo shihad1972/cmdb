@@ -429,6 +429,8 @@ init_dbdata_struct(dbdata_s *data);
 void
 clean_dbdata_struct(dbdata_s *data);
 void
+init_string_len(string_len_s *string);
+void
 init_string_l(string_l *string);
 void
 clean_string_l(string_l *list);

@@ -314,7 +314,7 @@ check_fwd_zone(char *domain, dnsa_config_s *dc);
 int
 create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone);
 int
-create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *config);
+create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config);
 void
 create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonfile);
 void

@@ -34,6 +34,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#include <netdb.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
@@ -331,19 +332,22 @@ check_rev_zone(char *domain, dnsa_config_s *dc)
 int
 commit_fwd_zones(dnsa_config_s *dc)
 {
-	char *configfile, *buffer, *filename;
+	char *buffer, *filename;
 	int retval;
 	dnsa_s *dnsa;
+	string_len_s *config;
 	zone_info_s *zone;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
-	if (!(configfile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "zonefile in commit_fwd_zones");
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in commit_fwd_zones");
+	if (!(config = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "config in commit_fwd_zones");
+	
 	filename = buffer;
-	retval = 0;
+	retval = NONE;
+	init_string_len(config);
 	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -353,28 +357,29 @@ commit_fwd_zones(dnsa_config_s *dc)
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
 			check_for_updated_fwd_zone(dc, zone);
-/*			create_and_write_fwd_zone(dnsa, dc, zone); */
 			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-				free(configfile);
 				free(buffer);
 				dnsa_clean_list(dnsa);
 				return retval;
 			}
 		}
-		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
-			printf("Configuration Buffer Full!\n");
-			break;
+		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
+			fprintf(stderr, "Cannot add %s to fwd config\n", zone->name);
+			free(buffer);
+			dnsa_clean_list(dnsa);
+			return retval;
 		}
 		zone = zone->next;
 	}
 	snprintf(filename, NAME_S, "%s%s", dc->bind, dc->dnsa);
-	if ((retval = write_file(filename, configfile)) != 0)
+	if ((retval = write_file(filename, config->string)) != 0)
 		fprintf(stderr, "Unable to write config file %s\n", filename);
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
 	free(buffer);
-	free(configfile);
+	free(config->string);
+	free(config);
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -555,6 +560,8 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	}
 	free(pns);
 	free(sns);
+	free(buff);
+	free(zone);
 }
 
 int
@@ -588,7 +595,7 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 }
 
 int
-create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *configfile)
+create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config)
 {
 	int retval;
 	char *buffer;
@@ -596,7 +603,6 @@ create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, char *configfile)
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
-	len = BUILD_S;
 	retval = 0;
 	if (strncmp(zone->type, "master", COMM_S) == 0) {
 		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -605,10 +611,6 @@ zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", zone->name, dc->dir, zone->name);
-			if (strlen(configfile) + strlen(buffer) < len)
-				strncat(configfile, buffer, strlen(buffer));
-			else
-				retval = BUFFER_FULL;
 		}
 	} else if (strncmp(zone->type, "slave", COMM_S) == 0) {
 		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -618,12 +620,13 @@ zone \"%s\" {\n\
 \t\t\tmasters { %s; };\n\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n\n", zone->name, zone->master, dc->dir, zone->name);
-			if (strlen(configfile) + strlen(buffer) < len)
-				strncat(configfile, buffer, strlen(buffer));
-			else
-				retval = BUFFER_FULL;
 		}
 	}
+	len = strlen(buffer);
+	if ((config->size + len) > config->len)
+		resize_string_buff(config);
+	snprintf(config->string + config->size, len + 1, "%s", buffer);
+	config->size += len;
 	free(buffer);
 	return retval;
 }
@@ -1405,30 +1408,36 @@ delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 int
 create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
-	char *configfile, *buffer, filename[NAME_S];
+	char *buffer, filename[NAME_S];
 	int retval;
+	string_len_s *config;
 	zone_info_s *zone;
 
-	buffer = &filename[0];
-	retval = 0;
+	if (!(config = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "config in create_and_write_fwd_config");
+	buffer = &filename[NONE];
+	retval = NONE;
+	init_string_len(config);
 	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0)
 		return retval;
 	zone = dnsa->zones;
-	if (!(configfile = calloc(BUILD_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "configfile in add_fwd_zone");
 	while (zone) {
-		if ((retval = create_fwd_config(dc, zone, configfile)) != 0) {
-			printf("Buffer Full!\n");
-			break;
+		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
+			free(config->string);
+			free(config);
+			fprintf(stderr, "Cannot add zone %s to config\n", zone->name);
+			return retval;
 		}
 		zone = zone->next;
 	}
 	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->dnsa);
-	if ((retval = write_file(filename, configfile)) != 0)
+	if ((retval = write_file(filename, config->string)) != 0)
 		fprintf(stderr, "Unable to write config file %s\n", filename);
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
+	free(config->string);
+	free(config);
 	return retval;
 }
 
@@ -2801,3 +2810,4 @@ glue_sort_fqdn(glue_zone_info_s *glue)
 {
 }
 */
+
