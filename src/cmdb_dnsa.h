@@ -304,6 +304,8 @@ int
 add_int_ip_to_rev_records(dnsa_s *dnsa);
 int
 check_notify_ip(dnsa_config_s *dc, zone_info_s *zone, char **host);
+int
+check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);
@@ -322,7 +324,7 @@ create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_l
 void
 add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
 void
-check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent);
+check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent, dnsa_s *dnsa);
 int
 create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa);
 void

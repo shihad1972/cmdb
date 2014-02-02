@@ -472,19 +472,19 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			*dot = '\0';
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\n\
-", glue->pri_ns, name, glue->sec_ns, name);
+\n%s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\
+", name, glue->pri_ns, name, glue->sec_ns);
 			else
 				snprintf(buffer, BUFF_S, "\
-%s\tIN\tNS\t%s\n\n", name, glue->pri_ns);
+\n%s\tIN\tNS\t%s\n", name, glue->pri_ns);
 			blen = strlen(buffer);
 			if (blen + size >= len)
 				resize_string_buff(zonefile);
 			snprintf(zonefile->string + size, blen + 1, "%s", buffer);
 			zonefile->size += blen;
+			check_a_record_for_ns(zonefile, glue, zone->name, dnsa);
 			len = zonefile->len;
 			size = zonefile->size;
-			check_a_record_for_ns(zonefile, glue, zone->name);
 			glue = glue->next;
 		}
 	}
@@ -492,7 +492,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 }
 
 void
-check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent)
+check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent, dnsa_s *dnsa)
 {
 	char *host, *zone, *pns, *sns, *buff;
 	short int add = 0;
@@ -517,35 +517,64 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	}
 	if (add == 1) {
 		add = 0;
-		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
-		len = strlen(buff);
-		if ((len + zonefile->size) >= zonefile->len)
-			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-		zonefile->size += len;
+		if (check_parent_for_a_record(glue->pri_ns, parent, dnsa)) {
+			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
+			len = strlen(buff);
+			if ((len + zonefile->size) >= zonefile->len)
+				resize_string_buff(zonefile);
+			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+			zonefile->size += len;
+		}
 	}
 	if ((host = strstr(sns, zone))) {
 		host--;
 		*host = '\0';
 		add = 1;
-	} else {
+	} else if (strncmp(glue->sec_dns, "none", COMM_S) != 0) {
 		len = strlen(sns);
 		host = sns + len - 1;
 		if (*host != '.')
 			add = 1;
 	}
 	if (add == 1) {
-		snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
-		len = strlen(buff);
-		if ((len + zonefile->size) >= zonefile->len)
-			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-		zonefile->size += len;
+		if (check_parent_for_a_record(glue->sec_ns, parent, dnsa)) {
+			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
+			len = strlen(buff);
+			if ((len + zonefile->size) >= zonefile->len)
+				resize_string_buff(zonefile);
+			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+			zonefile->size += len;
+		}
 	}
 	free(pns);
 	free(sns);
 	free(buff);
 	free(zone);
+}
+
+int
+check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
+{
+	int retval = 1;
+	unsigned long int zid = NONE;
+
+	if (!(dnsa) || !(dns) || !(parent))
+		return NONE;
+	zone_info_s *zone = dnsa->zones;
+	record_row_s *rec = dnsa->records;
+	while (zone) {
+		if (strncmp(parent, zone->name, RBUFF_S) == 0)
+			zid = zone->id;
+		zone = zone->next;
+	}
+	if (zid) {
+		while (rec) {
+			if ((zid == rec->zone) && (strncmp(dns, rec->host, RBUFF_S) == 0))
+				retval = NONE;
+			rec = rec->next;
+		}
+	}
+	return retval;
 }
 
 int
