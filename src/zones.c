@@ -473,7 +473,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
 %s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\n\
-", name, glue->pri_ns, name, glue->sec_ns);
+", glue->pri_ns, name, glue->sec_ns, name);
 			else
 				snprintf(buffer, BUFF_S, "\
 %s\tIN\tNS\t%s\n\n", name, glue->pri_ns);
