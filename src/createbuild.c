@@ -122,6 +122,10 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
+	if ((retval = check_for_disk_device(cbt, details)) != 0) {
+		printf("Unable to find a disk device for the server\n");
+		CLEAN_CREATE_BUILD_CONFIG(retval);
+	}
 	bip = cbc->bip;
 	query = BUILD_IP;
 	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
@@ -162,10 +166,6 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 			details->bip = bip;
 		}
 		bip = bip->next;
-	}
-	if ((retval = check_for_disk_device(cbt, details)) != 0) {
-		printf("Unable to find a disk device for the server\n");
-		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
 #ifdef HAVE_DNSA
 	int dret = NONE;
