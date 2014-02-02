@@ -306,6 +306,10 @@ int
 check_notify_ip(dnsa_config_s *dc, zone_info_s *zone, char **host);
 int
 check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa);
+void
+add_mx_record(string_len_s *zone, record_row_s *rec);
+void
+add_ns_record(string_len_s *zone, record_row_s *rec);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);

@@ -403,19 +403,14 @@ $TTL %lu\n\
 		zonefile->size += len;
 	}
 	while (record) {
-		if ((record->zone == id) && 
-			(strncmp(record->type, "MX", COMM_S) == 0)) {
-			snprintf(buffer, RBUFF_S + COMM_S, "\
-\tIN\tMX %lu\t%s\n", record->pri, record->dest);
-			len = strlen(buffer);
-			if ((len + zonefile->size) >= zonefile->len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
-			zonefile->size += len;
-			record = record->next;
-		} else {
-			record = record->next;
+		if
+((record->zone == id) && (strncmp(record->type, "MX", COMM_S) == 0)) {
+			add_mx_record(zonefile, record);
+		} else  if
+((record->zone == id) && (strncmp(record->type, "NS", COMM_S) == 0)) {
+			add_ns_record(zonefile, record);
 		}
+		record = record->next;
 	}
 	free(buffer);
 }
@@ -575,6 +570,41 @@ check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 		}
 	}
 	return retval;
+}
+
+void
+add_mx_record(string_len_s *zone, record_row_s *rec)
+{
+	char *buffer;
+	size_t len;
+
+	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
+	snprintf(buffer, RBUFF_S + COMM_S, "\
+\tIN\tMX %lu\t%s\n", rec->pri, rec->dest);
+	len = strlen(buffer);
+	if ((len + zone->size) >= zone->len)
+		resize_string_buff(zone);
+	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
+	zone->size += len;
+	free(buffer);
+}
+
+void
+add_ns_record(string_len_s *zone, record_row_s *rec)
+{
+	char *buffer;
+	size_t len;
+
+	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
+	snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n", rec->dest);
+	len = strlen(buffer);
+	if ((len + zone->size) >= zone->len)
+		resize_string_buff(zone);
+	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
+	zone->size += len;
+	free(buffer);
 }
 
 int

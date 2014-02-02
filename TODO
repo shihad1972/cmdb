@@ -1,3 +1,14 @@
+02/02/2014
+When adding a reverse slave zone, the insert takes it from the config
+file resulting in incorrect primary and secondary name severs in the
+database. Although this does not affect the functionality of the slave
+zone it looks untidy in the database. Forward zones seem to handle this
+better.
+
+Also, we do not need the name to be provided when adding slave zones.
+We should be able to do an DNS lookup on either the IP address or the
+name
+
 05/12/2013
 Using cbc to add a build, if there is an error on the command line
 it still adds somthing into the build tables, as adding the correct
