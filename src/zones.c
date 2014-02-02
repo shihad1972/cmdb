@@ -598,9 +598,9 @@ zone \"%s\" {\n\
 \t\t\tfile \"%s%s\";\n\
 ", zone->name, dc->dir, zone->name);
 /*\t\t};\n\n", zone->name, dc->dir, zone->name); */
-			if ((check_transfer_ip(dc, zone, &host)) == 0)
+			if ((check_notify_ip(dc, zone, &host)) == 0)
 				snprintf(buff, RBUFF_S, "\
-\t\t\ttransfer-source \"%s\";\n\
+\t\t\tnotify-source %s;\n\
 \t\t};\n\n", host);
 			else
 				snprintf(buff, RBUFF_S, "\
@@ -657,7 +657,7 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 }
 
 int
-check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
+check_notify_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
 {
 	char *host = '\0', *dhost = '\0', *dipstr = '\0';
 	int retval = NONE;
@@ -666,11 +666,11 @@ check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
 	struct sockaddr_in *ipv4;
 
 	if (!(*ipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "ipstr in check_transfer_ip");
+		report_error(MALLOC_FAIL, "ipstr in check_notify_ip");
 	if (!(dipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "dipstr in check_transfer_ip");
+		report_error(MALLOC_FAIL, "dipstr in check_notify_ip");
 	if (!(host = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "host in check_transfer_ip");
+		report_error(MALLOC_FAIL, "host in check_notify_ip");
 	dhost = strndup(zone->pri_dns, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -692,7 +692,7 @@ check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
 			return CANNOT_CONVERT;
 		}
 	} else {
-		report_error(WRONG_PROTO, "check_transfer_ip");
+		report_error(WRONG_PROTO, "check_notify_ip");
 	}
 	freeaddrinfo(srvnfo);
 	if ((retval = getaddrinfo(host, "http", &hints, &srvnfo)) != 0) {
@@ -707,9 +707,9 @@ check_transfer_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
 			return CANNOT_CONVERT;
 		}
 	} else {
-		report_error(WRONG_PROTO, "check_transfer_ip");
+		report_error(WRONG_PROTO, "check_notify_ip");
 	}
-	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) != 0) {
+	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) == 0) {
 		free(*ipstr);
 		*ipstr = '\0';
 		retval = CANNOT_CONVERT;
