@@ -446,12 +446,13 @@ display_dnsa_usage(void)
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[-F|-R]\n");
 	printf("-x: Delete zone\n\t[-F|-R] -n\n");
-	printf("-z: add zone\n\t[-F|-R|-G] (-S -M) (-N -I) -n (for reverse zone -p)\n\n");
+	printf("-z: add zone\n\t[-F|-R|-G] (-S -M) (-N -I) -n (-p prefix)\n\n");
 	printf("Zone type:\n");
 	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n");
 	printf("Zone details:\n");
 	printf("-M: master IP address\n-N: name server(s) (comma separated)\n");
-	printf("-I: IP('s) (comma separated)\n\n");
+	printf("-I: IP('s) (comma separated)\n");
+	printf("Reverse: -p\tSlave: -M -h\tGlue -N -I\n\n");
 	printf("Name options:\n");
 	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");
