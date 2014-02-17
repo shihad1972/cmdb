@@ -412,8 +412,8 @@ print_all_servers(cmdb_s *cmdb)
 		}
 		server = server->next;
 		cust = cmdb->customer;
+		free(customer);
 	}
-	free(customer);
 }
 
 void
