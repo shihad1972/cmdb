@@ -342,10 +342,20 @@ enum {			/* cbc create build error codes */
 	WRONG_OS_ARCH = 5
 };
 
-enum {
-	NAME = 1,
-	UUID = 2,
-	ID = 3
+enum {			/* Codes for regex checks from checks.c*/
+	NAME = 0,
+	UUID = 1,
+	ID = 2,
+	CUST_NAME = 3,
+	COID = 4,
+	MACADDR = 5,
+	IPADDR = 6,
+	DOMNAME = 7,
+	SERVICE_NAME = 9,
+	ADDRESS = 10,
+	DEVICE = 11,
+	DISKSIZE = 12,
+	DECIMAL = 13
 };
 
 enum {
