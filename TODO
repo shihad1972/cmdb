@@ -1,3 +1,12 @@
+17/02/2014
+The regex checks have not been added in. This bit me when I added a
+network card with the device and detail the wrong way round. Need
+to get the regex checks working.
+
+cmdb is directly adding the input into the server / customer structs.
+This is probably not the best way to do this, and is not what cbc or
+dnsa do. I should probably update this. 
+
 14/02/2014
 Adding a server with the wrong virtual machine host name crashes out
 but does not tell us why. We et a 15 code error message from mysql
@@ -30,26 +39,6 @@ build_server_id (or a snappier name) to the server table. This can
 then be added to the end of the SQL statement to be more precise
 about the result returned. We could also use this to add enable /
 disable instead of delete in the database.
-
-09/11/2013
-Remove libnss_ldap and libpam_ldap and replace with libnss_ldapd and
-libpam_ldapd as the former do not allow sudo to run. Need to update packages
-for debian and ubuntu on this one. Also the writing out preseed file
-***FIXED*** 23/11/2013
-
-24/09/2013
-add_pre_lvm_part does not check it's bounds properly and can
-overflow the char * it is sent. Need to send in a string_len_s and
-use the resize buffer function.
-Fixed: 25/09/2013
-
-21/09/2013
-Base.sh debian script does not seem to be able to take arguments so
-I think I need to have a script run on the web server to create a
-script to finish off the build, given an argument of the server name.
-e.g. script.php?server-name. This can then test to see if the access
-is from the server's IP address.
-Fixed: We now create a separate script for each host.
 
 19/09/2013
 Cut down the amount of crap you have to add with a server; especially
@@ -116,15 +105,6 @@ correct search itself. Could this config contain this information?
 15/06/2013
 When adding new build_os need to add locales for that os. Should probably
 base on build type
-
-13/06/2013 ** Slave zones added 03/07/2013 **
-Need to add the slave zones to dnsa and also add  the ability to have
-glue records in a zone. Should probably also check what kind of types
-of records we can hold.
-01/06/2013
-Need to be able to add glue records to DNS zone files. Could check
-on NS records that have . in them??
-** Glue zones added too **
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
