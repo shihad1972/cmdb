@@ -528,7 +528,7 @@ and int for result, which is OK when searching on name and returning id
 	
 	
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)

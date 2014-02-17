@@ -380,6 +380,7 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 void
 print_all_servers(cmdb_s *cmdb)
 {
+	char *customer;
 	unsigned long int id;
 	cmdb_server_s *server = cmdb->server;
 	cmdb_customer_s *cust = cmdb->customer;
@@ -390,21 +391,29 @@ print_all_servers(cmdb_s *cmdb)
 	while (server) {
 		id = server->cust_id;
 		len = strlen(server->name);
-		while (id != cust->cust_id && (cust)) {
-			cust = cust->next;
+		while (cust) {
+			if (id != cust->cust_id)
+				cust = cust->next;
+			else
+				break;
 		}
+		if (!(cust))
+			customer = strndup("No Customer", HOST_S);
+		else
+			customer = strndup(cust->coid, HOST_S);
 		if (len > 23) {
-			printf("%s\t%s\n", server->name, cust->coid);
+			printf("%s\t%s\n", server->name, customer);
 		} else if (len > 15) {
-			printf("%s\t\t%s\n", server->name, cust->coid);
+			printf("%s\t\t%s\n", server->name, customer);
 		} else if (len > 7) {
-			printf("%s\t\t\t%s\n", server->name, cust->coid);
+			printf("%s\t\t\t%s\n", server->name, customer);
 		} else {
-			printf("%s\t\t\t\t%s\n", server->name, cust->coid);
+			printf("%s\t\t\t\t%s\n", server->name, customer);
 		}
 		server = server->next;
 		cust = cmdb->customer;
-	}		
+	}
+	free(customer);
 }
 
 void
