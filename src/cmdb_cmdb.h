@@ -24,12 +24,30 @@
 #define __CMDB_CMDB_H__
 
 typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
+	char *vmhost;
+	char *config;
+	char *vendor;
+	char *make;
+	char *model;
+	char *id;
+	char *uuid;
+	char *stype;
+	char *name;
+	char *address;
+	char *city;
+	char *email;
+	char *detail;
+	char *hclass;
+	char *url;
+	char *device;
+	char *phone;
+	char *postcode;
+	char *county;
+	char *coid;
+	char *service;
 	short int action;
 	short int type;
-	char config[CONF_S];
-	char name[CONF_S];
-	char id[CONF_S];
-	char vmhost[NAME_S];
+	unsigned long int sid;
 } cmdb_comm_line_s;
 
 typedef struct cmdb_config_s { /* Hold CMDB configuration values */
@@ -190,6 +208,14 @@ display_vm_hosts(cmdb_config_s *config);
 int
 add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base);
 
+/* Fill struct functions. These use the pcre regex to check input */
+int
+fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
 /* New user input functions */
 int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb);
@@ -236,6 +262,8 @@ void
 clean_hardware_type_list(cmdb_hard_type_s *list);
 void
 clean_vmhost_list(cmdb_vm_host_s *list);
+void
+clean_cmdb_comm_line(cmdb_comm_line_s *list);
 
 /* New server functions for linked list */
 

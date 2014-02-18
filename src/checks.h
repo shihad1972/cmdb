@@ -41,7 +41,7 @@ enum {			/* regex search codes */
 	DOMAIN_REGEX,
 	PATH_REGEX,
 	FS_REGEX,
-	MAKE_REGEX,
+	ADDRESS_REGEX,
 	DEV_REGEX,
 	CAPACITY_REGEX,
 	OS_VER_REGEX

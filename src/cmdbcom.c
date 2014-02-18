@@ -37,37 +37,16 @@
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 #include "cmdb_base_sql.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
 {
 	int opt, retval = NONE;
 
-	strncpy(comp->config, "/etc/dnsa/dnsa.conf", CONF_S);
-	if (!(base->server = malloc(sizeof(cmdb_server_s))))
-		report_error(MALLOC_FAIL, "base->server in parse_cmdb_comm_line");
-	if (!(base->customer = malloc(sizeof(cmdb_customer_s))))
-		report_error(MALLOC_FAIL, "base->customer in parse_cmdb_comm_line");
-	if (!(base->contact = malloc(sizeof(cmdb_contact_s))))
-		report_error(MALLOC_FAIL, "base->contact in parse_cmdb_comm_line");
-	if (!(base->service = malloc(sizeof(cmdb_service_s))))
-		report_error(MALLOC_FAIL, "base->service in parse_cmdb_comm_line");
-	if (!(base->servicetype = malloc(sizeof(cmdb_service_sype_t))))
-		report_error(MALLOC_FAIL, "base->servicetype in parse_cmdb_comm_line");
-	if (!(base->hardware = malloc(sizeof(cmdb_hardware_s))))
-		report_error(MALLOC_FAIL, "base->hardware in parse_cmdb_comm_line");
-	if (!(base->hardtype = malloc(sizeof(cmdb_hard_type_s))))
-		report_error(MALLOC_FAIL, "base->hardtype in parse_cmdb_comm_line");
-	if (!(base->vmhost = malloc(sizeof(cmdb_vm_host_s))))
-		report_error(MALLOC_FAIL, "base->vmhost in parse_cmdb_comm_line");
-	cmdb_init_server_t(base->server);
-	cmdb_init_customer_t(base->customer);
-	cmdb_init_service_t(base->service);
-	cmdb_init_servicetype_t(base->servicetype);
-	cmdb_init_hardware_t(base->hardware);
-	cmdb_init_contact_t(base->contact);
-	cmdb_init_hardtype_t(base->hardtype);
-	cmdb_init_vmhost_t(base->vmhost);
+	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
 	while ((opt = getopt(argc, argv,
 	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlorstuv")) != -1) {
 		if (opt == 's') {
@@ -88,74 +67,58 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = CVERSION;
 		} else if (opt == 'l') {
 			comp->action = LIST_OBJ;
-			snprintf(comp->name, MAC_S, "all");
+			comp->name = strndup("all", COMM_S);
 		} else if (opt == 'a') {
 			comp->action = ADD_TO_DB;
-			if ((comp->type != HARDWARE) &&
+/*			if ((comp->type != HARDWARE) &&
 			 (comp->type != SERVICE) && 
 			 (comp->type != NONE) &&
 			 (strncmp(comp->id, "NULL", COMM_S) == 0))
-				snprintf(comp->id, MAC_S, "NOCOID");
+				snprintf(comp->id, MAC_S, "NOCOID"); */
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
 		} else if (opt == 'n') {
-			snprintf(comp->name, CONF_S, "%s", optarg);
+			comp->name = strndup(optarg, HOST_S);
 		} else if (opt == 'i') {
-			snprintf(comp->id, CONF_S, "%s", optarg);
+			comp->id = strndup(optarg, CONF_S);
 		} else if (opt == 'm') {
-			snprintf(comp->vmhost, NAME_S, "%s", optarg);
+			comp->vmhost = strndup(optarg, HOST_S);
 		} else if (opt == 'V') {
-			snprintf(base->server->vendor, CONF_S, "%s", optarg);
+			comp->vendor = strndup(optarg, CONF_S);
 		} else if (opt == 'M') {
-			snprintf(base->server->make, CONF_S, "%s", optarg);
+			comp->make = strndup(optarg, CONF_S);
 		} else if (opt == 'O') {
-			snprintf(base->server->model, CONF_S, "%s", optarg);
+			comp->model = strndup(optarg, CONF_S);
 		} else if (opt == 'U') {
-			snprintf(base->server->uuid, CONF_S, "%s", optarg);
+			comp->uuid = strndup(optarg, CONF_S);
 		} else if (opt == 'C') {
-			snprintf(base->customer->coid, RANGE_S, "%s", optarg);
+			comp->coid = strndup(optarg, RANGE_S);
 		} else if (opt == 'A') {
-			snprintf(base->customer->address, NAME_S, "%s", optarg);
+			comp->address = strndup(optarg, NAME_S);
 		} else if (opt == 'T') {
-			snprintf(base->customer->city, HOST_S, "%s", optarg);
+			comp->city = strndup(optarg, HOST_S);
 		} else if (opt == 'Y') {
-			snprintf(base->customer->county, MAC_S, "%s", optarg);
+			comp->county = strndup(optarg, MAC_S);
 		} else if (opt == 'Z') {
-			snprintf(base->customer->postcode, RANGE_S, "%s", optarg);
+			comp->postcode = strndup(optarg, RANGE_S);
 		} else if (opt == 'N') {
-			snprintf(base->contact->name, HOST_S, "%s", optarg);
+			comp->name = strndup(optarg, HOST_S);
 		} else if (opt == 'P') {
-			snprintf(base->contact->phone, MAC_S, "%s", optarg);
+			comp->phone = strndup(optarg, MAC_S);
 		} else if (opt == 'E') {
-			snprintf(base->contact->email, HOST_S, "%s", optarg);
+			comp->email = strndup(optarg, HOST_S);
 		} else if (opt == 'D') {
-			if (comp->type == SERVICE) {
-				snprintf(base->service->detail, HOST_S, "%s", optarg);
-			} else if (comp->type == HARDWARE) {
-				snprintf(base->hardware->detail, HOST_S, "%s", optarg);
-			} else {
-				printf("Please supply type before adding options\n");
-				retval = NO_TYPE;
-				return retval;
-			}
+			comp->detail = strndup(optarg, HOST_S);
 		} else if (opt == 'I') {
-			if (comp->type == SERVICE) {
-				base->service->service_type_id = strtoul(optarg, NULL, 10);
-			} else if (comp->type == HARDWARE) {
-				base->hardware->ht_id = strtoul(optarg, NULL, 10);
-			} else {
-				printf("Please supply type before adding options\n");
-				retval = NO_TYPE;
-				return retval;
-			}
+			comp->sid = strtoul(optarg, NULL, 10);
 		} else if (opt == 'L') {
-			snprintf(base->service->url, HOST_S, "%s", optarg);
+			comp->url = strndup(optarg, HOST_S);
 		} else if (opt == 'B') {
-			snprintf(base->hardware->device, MAC_S, "%s", optarg);
+			comp->device = strndup(optarg, MAC_S);
 		} else if (opt == 'S') {
-			snprintf(base->servicetype->service, RANGE_S, "%s", optarg);
+			comp->service = strndup(optarg, RANGE_S);
 		} else if (opt == 'H') {
-			snprintf(base->hardtype->hclass, HOST_S, "%s", optarg);
+			comp->hclass = strndup(optarg, HOST_S);
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;
@@ -173,9 +136,8 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 	int retval;
 
 	retval = NONE;
-	if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
-		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
-		(comp->type == NONE && comp->action == NONE))
+	if ((!(comp->name)) && (!(comp->id)) &&	(comp->type == 0) && 
+		(comp->action == 0))
 		retval = DISPLAY_USAGE;
 	else if (comp->action == CVERSION)
 		retval = CVERSION;
@@ -185,52 +147,17 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		retval = NO_ACTION;
 	else if ((comp->action == NONE) && (comp->type == NONE))
 		retval = NO_ACTION;
-	else if ((strncmp(comp->name, "NULL", CONF_S) == 0) &&
-		(strncmp(comp->id, "NULL", CONF_S) == 0) &&
+	else if ((!(comp->name)) && (!(comp->id)) &&
 		(comp->type != NONE || comp->action != NONE) &&
 		(comp->type != CONTACT))
 		retval = NO_NAME_OR_ID;
 	else if (comp->action == ADD_TO_DB) {
 		if (comp->type == SERVER) {
-			snprintf(base->server->name, MAC_S, "%s", comp->name);
-			if (strncmp(base->server->make, "NULL", COMM_S) == 0)
-				retval = NO_MAKE;
-			else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
-				retval = NO_MODEL;
-			else if (strncmp(base->server->vendor, "NULL", COMM_S) == 0)
-				retval = NO_VENDOR;
-			else if (strncmp(base->server->uuid, "NULL", COMM_S) == 0)
-				retval = NO_UUID;
-			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
-				retval = NO_COID;
-			else if (strncmp(base->server->name, "NULL", COMM_S) == 0)
-				retval = NO_NAME;
+			retval = fill_server_values(comp, base);
 		} else if (comp->type == CUSTOMER) {
-			snprintf(base->customer->name, HOST_S, "%s", comp->name);
-			if (strncmp(base->customer->address, "NULL", COMM_S) == 0)
-				retval = NO_ADDRESS;
-			else if (strncmp(base->customer->city, "NULL", COMM_S) == 0)
-				retval = NO_CITY;
-			else if (strncmp(base->customer->county, "NULL", COMM_S) == 0)
-				retval = NO_COUNTY;
-			else if (strncmp(base->customer->postcode, "NULL", COMM_S) == 0)
-				retval = NO_POSTCODE;
-			else if (strncmp(base->customer->coid, "NULL", COMM_S) == 0)
-				retval = NO_COID;
-			else if (strncmp(comp->name, "NULL", COMM_S) == 0)
-				retval = NO_NAME;
+			retval = fill_customer_values(comp, base);
 		} else if (comp->type == SERVICE) {
-			if ((strncmp(comp->name, "NULL", COMM_S) == 0) && 
-			   (strncmp(comp->id, "NULL", COMM_S) == 0)) {
-				retval = NO_NAME_COID;
-			} else if (strncmp(comp->name, "NULL", COMM_S) == 0) {
-				retval = NO_NAME;
-			} else if (strncmp(comp->id, "NULL", COMM_S) == 0) {
-				retval = NO_COID;
-			} else {
-				snprintf(base->server->name, MAC_S, "%s", comp->name);
-				snprintf(base->customer->coid, RANGE_S, "%s", comp->id);
-			}
+			retval = fill_service_values(comp, base);
 		} else if (comp->type == CONTACT) {
 			if (strncmp(comp->id, "NULL", COMM_S) == 0) {
 				retval = NO_COID;
@@ -338,10 +265,12 @@ init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
 	cm->action = 0;
 	cm->type = 0;
-	snprintf(cm->config, CONF_S, "NULL");
-	snprintf(cm->name, CONF_S, "NULL");
-	snprintf(cm->id, CONF_S, "NULL");
-	snprintf(cm->vmhost, NAME_S, "NULL");
+	cm->vmhost = cm->config = cm->vendor = '\0';
+	cm->make = cm->model = cm->id = cm->stype = '\0';
+	cm->name = cm->address = cm->city = cm->email = '\0';
+	cm->email = cm->detail = cm->hclass = cm->url = '\0';
+	cm->device = cm->phone = cm->postcode = cm->coid = '\0';
+	cm->service = cm->uuid = cm->county = '\0';
 }
 
 void
@@ -363,12 +292,12 @@ cmdb_init_struct(cmdb_s *cmdb)
 {
 	cmdb->server = '\0';
 	cmdb->customer = '\0';
-	cmdb->vmhost = '\0';
-	cmdb->hardware = '\0';
-	cmdb->hardtype = '\0';
 	cmdb->contact = '\0';
 	cmdb->service = '\0';
 	cmdb->servicetype = '\0';
+	cmdb->hardware = '\0';
+	cmdb->hardtype = '\0';
+	cmdb->vmhost = '\0';
 }
 
 void
@@ -628,3 +557,151 @@ clean_vmhost_list(cmdb_vm_host_s *list)
 	}
 }
 
+void
+clean_cmdb_comm_line(cmdb_comm_line_s *list)
+{
+#ifndef CLEAN_COMM_LIST
+# define CLEAN_COMM_LIST(list, member) {                \
+	if (list->member)                               \
+		free(list->member);                     \
+}
+#endif /* CLEAN_COMM_LIST */
+	CLEAN_COMM_LIST(list, vmhost);
+	CLEAN_COMM_LIST(list, config);
+	CLEAN_COMM_LIST(list, vendor);
+	CLEAN_COMM_LIST(list, make);
+	CLEAN_COMM_LIST(list, model);
+	CLEAN_COMM_LIST(list, id);
+	CLEAN_COMM_LIST(list, stype);
+	CLEAN_COMM_LIST(list, name);
+	CLEAN_COMM_LIST(list, address);
+	CLEAN_COMM_LIST(list, city);
+	CLEAN_COMM_LIST(list, email);
+	CLEAN_COMM_LIST(list, detail);
+	CLEAN_COMM_LIST(list, hclass);
+	CLEAN_COMM_LIST(list, url);
+	CLEAN_COMM_LIST(list, device);
+	CLEAN_COMM_LIST(list, phone);
+	CLEAN_COMM_LIST(list, postcode);
+	CLEAN_COMM_LIST(list, coid);
+	CLEAN_COMM_LIST(list, service);
+	CLEAN_COMM_LIST(list, uuid);
+	CLEAN_COMM_LIST(list, county);
+}
+
+#ifdef CLEAN_COMM_LIST
+# undef CLEAN_COMM_LIST
+#endif /* CLEAN_COMM_LIST */
+
+int
+fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+	cmdb_server_s *server;
+	cmdb_customer_s *cust;
+	cmdb_vm_host_s *vm;
+
+	if (!(server = malloc(sizeof(cmdb_server_s))))
+		report_error(MALLOC_FAIL, "server in fill_server_values");
+	if (!(cust = malloc(sizeof(cmdb_customer_s))))
+		report_error(MALLOC_FAIL, "cust in fill_server_values");
+	if (cm->vmhost) {
+		if (!(vm = malloc(sizeof(cmdb_vm_host_s))))
+			report_error(MALLOC_FAIL, "vm in fill_server_values");
+		cmdb_init_vmhost_t(vm);
+		cmdb->vmhost = vm;
+	}
+	cmdb_init_server_t(server);
+	cmdb_init_customer_t(cust);
+	cmdb->server = server;
+	cmdb->customer = cust;
+	if (cm->vendor) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->vendor, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "vendor");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->vendor, CONF_S, "%s", cm->vendor);
+	} else {
+		fprintf(stderr, "No vendor supplied. Setting to none\n");
+		snprintf(server->vendor, CONF_S, "none");
+	}
+	if (cm->make) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->make, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "make");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->make, CONF_S, "%s", cm->make);
+	} else {
+		fprintf(stderr, "No make supplied. Setting to none\n");
+		snprintf(server->make, COMM_S, "none");
+	}
+	if (cm->model) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->model, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "model");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->model, CONF_S, "%s", cm->model);
+	} else {
+		fprintf(stderr, "No model supplied. Setting to none\n");
+		snprintf(server->model, COMM_S, "none");
+	}
+	if (cm->uuid) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->uuid, UUID_REGEX)) < 0) {
+			if ((retval = validate_user_input(cm->uuid, FS_REGEX)) < 0)
+				report_error(USER_INPUT_INVALID, "uuid");
+			else
+				retval = NONE;
+		} else {
+			retval = NONE;
+		}
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->uuid, HOST_S, "%s", cm->uuid);
+	} else {
+		fprintf(stderr, "No UUID supplied. Setting to none\n");
+		snprintf(server->uuid, COMM_S, "none");
+	}
+	if (cm->name) {
+		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "name");
+		else
+			retval = NONE;
+	} else {
+		clean_cmdb_comm_line(cm);
+		cmdb_clean_list(cmdb);
+		return NO_NAME;
+	}
+	if (cm->name) {
+		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "coid");
+		else
+			retval = NONE;
+	} else {
+		clean_cmdb_comm_line(cm);
+		cmdb_clean_list(cmdb);
+		return NO_COID;
+	}
+	return retval;
+}
+
+int
+fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+
+	return retval;
+}
+
+int
+fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+
+	return retval;
+}

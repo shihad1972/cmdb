@@ -59,6 +59,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Incorrect action specified\n");
 	} else if (error == WRONG_TYPE) {
 		fprintf(stderr, "Incorrect domain type specified\n");
+	} else if (error == USER_INPUT_INVALID) {
+		fprintf(stderr, "Input %s not valid.\n", errstr);
 	} else if (error == DOMAIN_LIST_FAIL) {
 		fprintf(stderr, "No domains were found to list from the database\n");
 	} else if (error == MY_INIT_FAIL) {

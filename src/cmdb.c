@@ -30,9 +30,6 @@
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /*HAVE_LIBPCRE */
 
 int main(int argc, char *argv[])
 {
@@ -62,23 +59,6 @@ int main(int argc, char *argv[])
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
 	if (cm->type == SERVER) {
-#ifdef HAVE_LIBPCRE
-		if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
-			retval = validate_user_input(cm->id, UUID_REGEX);
-			if (retval < 0)
-				retval = validate_user_input(cm->id, NAME_REGEX);
-		} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
-			retval = validate_user_input(cm->name, NAME_REGEX);
-		} else {
-			printf("Both name and uuid set to NULL??\n");
-			exit (NO_NAME_UUID_ID);
-		}
-		if (retval < 0) {
-			printf("User input not valid\n");
-			exit (USER_INPUT_INVALID);
-		}
-		retval = 0;
-#endif /* HAVE_LIBPCRE */
 		if (cm->action == DISPLAY) {
 			display_server_info(cm->name, cm->id, cmc);
 		} else if (cm->action == LIST_OBJ) {
@@ -101,21 +81,6 @@ int main(int argc, char *argv[])
 			display_action_error(cm->action);
 		}
 	} else if (cm->type == CUSTOMER) {
-#ifdef HAVE_LIBPCRE
-		if ((strncmp(cm->id, "NULL", CONF_S) != 0)) {
-			retval = validate_user_input(cm->id, COID_REGEX);
-		} else if ((strncmp(cm->name, "NULL", CONF_S) != 0)) {
-			retval = validate_user_input(cm->name, CUSTOMER_REGEX);
-		} else {
-			printf("Both name and coid set to NULL??\n");
-			exit(NO_NAME_UUID_ID);
-		}
-		if (retval < 0) {
-			printf("User input not valid\n");
-			exit(USER_INPUT_INVALID);
-		}
-		retval = 0;
-#endif /* HAVE_LIBPCRE */
 		if (cm->action == DISPLAY) {
 			display_customer_info(cm->name, cm->id, cmc);
 		} else if (cm->action == LIST_OBJ) {
@@ -219,6 +184,7 @@ Hardware for server %s added to database\n",base->server->name);
 	}
 	cmdb_clean_list(base);
 	free(cmc);
+	clean_cmdb_comm_line(cm);
 	free(cm);
 	free(cmdb_config);
 	if (retval > 0)
