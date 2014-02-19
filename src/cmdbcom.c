@@ -783,6 +783,35 @@ int
 fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
 	int retval = NONE;
+	cmdb_service_s *servi;
 
+	if (!(servi = malloc(sizeof(cmdb_service_s))))
+		report_error(MALLOC_FAIL, "servi in fill_service_values");
+	cmdb_init_service_t(servi);
+	cmdb->service = servi;
+	if (cm->detail) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->detail, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "service detail");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(servi->detail, HOST_S, "%s", cm->detail);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_DETAIL;
+	}
+	if (cm->url) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->url, URL_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "service url");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(servi->url, URL_S, "%s", cm->url);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_URL;
+	}
 	return retval;
 }

@@ -96,7 +96,7 @@ typedef struct cmdb_contact_s {
 
 typedef struct cmdb_service_s {
 	char detail[HOST_S];
-	char url[HOST_S];
+	char url[URL_S];
 	unsigned long int service_id;
 	unsigned long int server_id;
 	unsigned long int cust_id;

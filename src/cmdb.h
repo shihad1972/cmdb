@@ -247,7 +247,8 @@ enum {			/* cmdb return codes */
 	NO_OS_SPECIFIED = -30,
 	NO_BUILD_DOMAIN = -31,
 	NO_BUILD_VARIENT = -32,
-	NO_BUILD_PARTITION = -33
+	NO_BUILD_PARTITION = -33,
+	NO_URL = -34
 };
 
 enum {			/* cmdb config file error codes */
