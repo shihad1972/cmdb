@@ -815,3 +815,52 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	}
 	return retval;
 }
+
+int
+fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+	cmdb_contact_s *cont;
+
+	if (!(cont = malloc(sizeof(cmdb_contact_s))))
+		report_error(MALLOC_FAIL, "cont in fill_contact_values");
+	cmdb_init_contact_t(cont);
+	cmdb->contact = cont;
+	if (cm->name) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->name, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "contact name");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cont->name, HOST_S, "%s", cm->name);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_NAME;
+	}
+	if (cm->phone) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->phone, PHONE_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "contact phone");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cont->phone, MAC_S, "%s", cm->phone);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_PHONE;
+	}
+	if (cm->email) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->email, EMAIL_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "contact email");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cont->email, HOST_S, "%s", cm->email);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_EMAIL;
+	}
+	return retval;
+}

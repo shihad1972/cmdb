@@ -215,6 +215,8 @@ int
 fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
 /* New user input functions */
 int
