@@ -668,23 +668,27 @@ fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		snprintf(server->uuid, COMM_S, "none");
 	}
 	if (cm->name) {
+#ifdef HAVE_LIBPCRE
 		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
 			report_error(USER_INPUT_INVALID, "name");
 		else
 			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->name, MAC_S, "%s", cm->name);
 	} else {
 		clean_cmdb_comm_line(cm);
-		cmdb_clean_list(cmdb);
 		return NO_NAME;
 	}
-	if (cm->name) {
+	if (cm->coid) {
+#ifdef HAVE_LIBPCRE
 		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
 			report_error(USER_INPUT_INVALID, "coid");
 		else
 			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
 		clean_cmdb_comm_line(cm);
-		cmdb_clean_list(cmdb);
 		return NO_COID;
 	}
 	return retval;
@@ -758,7 +762,6 @@ fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
 		clean_cmdb_comm_line(cm);
-		cmdb_clean_list(cmdb);
 		return NO_COID;
 	}
 	if (cm->name) {
@@ -771,7 +774,6 @@ fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		snprintf(cust->name, HOST_S, "%s", cm->name);
 	} else {
 		clean_cmdb_comm_line(cm);
-		cmdb_clean_list(cmdb);
 		return NO_NAME;
 	}
 	return retval;

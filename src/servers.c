@@ -64,7 +64,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		return retval;
 	}
 /* Check for vmhost. if so this server is a virtual machine */
-	if ((strncmp(cm->vmhost, "NULL", COMM_S)) != 0) {
+	if (cm->vmhost) {
 		printf("VM host: %s\n", cm->vmhost);
 		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
 		if ((retval = run_search(config, cmdb, VM_ID_ON_NAME)) != 0) {
