@@ -694,7 +694,86 @@ int
 fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
 	int retval = NONE;
+	cmdb_customer_s *cust;
 
+	if (!(cust = malloc(sizeof(cmdb_customer_s))))
+		report_error(MALLOC_FAIL, "cust in fill_customer_values");
+	cmdb_init_customer_t(cust);
+	cmdb->customer = cust;
+	if (cm->address) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->address, ADDRESS_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "address");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->address, NAME_S, "%s", cm->address);
+	} else {
+		fprintf(stderr, "No address supplied. Setting to none\n");
+		snprintf(cust->address, COMM_S, "none");
+	}
+	if (cm->city) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->city, ADDRESS_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "city");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->city, HOST_S, "%s", cm->city);
+	} else {
+		fprintf(stderr, "No city supplied. Setting to none\n");
+		snprintf(cust->city, COMM_S, "none");
+	}
+	if (cm->county) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->county, ADDRESS_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "county");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->county, MAC_S, "%s", cm->county);
+	} else {
+		fprintf(stderr, "No county supplied. Setting to none\n");
+		snprintf(cust->county, COMM_S, "none");
+	}
+	if (cm->postcode) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->postcode, POSTCODE_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "postcode");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->postcode, RANGE_S, "%s", cm->postcode);
+	} else {
+		fprintf(stderr, "No postcode supplied. Setting to none\n");
+		snprintf(cust->postcode, COMM_S, "none");
+	}
+	if (cm->coid) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "coid");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
+	} else {
+		clean_cmdb_comm_line(cm);
+		cmdb_clean_list(cmdb);
+		return NO_COID;
+	}
+	if (cm->name) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->name, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "customer name");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->name, HOST_S, "%s", cm->name);
+	} else {
+		clean_cmdb_comm_line(cm);
+		cmdb_clean_list(cmdb);
+		return NO_NAME;
+	}
 	return retval;
 }
 

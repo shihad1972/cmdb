@@ -44,7 +44,8 @@ enum {			/* regex search codes */
 	ADDRESS_REGEX,
 	DEV_REGEX,
 	CAPACITY_REGEX,
-	OS_VER_REGEX
+	OS_VER_REGEX,
+	POSTCODE_REGEX
 };
 
 int
