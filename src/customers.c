@@ -293,7 +293,7 @@ void
 display_service_types(cmdb_config_s *config)
 {
 	int retval;
-	cmdb_service_sype_t *list;
+	cmdb_service_type_s *list;
 	size_t len;
 	cmdb_s *cmdb;
 

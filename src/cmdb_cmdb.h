@@ -102,15 +102,15 @@ typedef struct cmdb_service_s {
 	unsigned long int cust_id;
 	unsigned long int service_type_id;
 	struct cmdb_service_s *next;
-	struct cmdb_service_sype_t *servicetype;
+	struct cmdb_service_type_s *servicetype;
 } cmdb_service_s;
 
-typedef struct cmdb_service_sype_t {
+typedef struct cmdb_service_type_s {
 	char service[RANGE_S];
 	char detail[MAC_S];
 	unsigned long int service_id;
-	struct cmdb_service_sype_t *next;
-} cmdb_service_sype_t;
+	struct cmdb_service_type_s *next;
+} cmdb_service_type_s;
 
 typedef struct cmdb_hardware_s {
 	char detail[HOST_S];
@@ -145,7 +145,7 @@ typedef struct cmdb_s {
 	struct cmdb_customer_s *customer;
 	struct cmdb_contact_s *contact;
 	struct cmdb_service_s *service;
-	struct cmdb_service_sype_t *servicetype;
+	struct cmdb_service_type_s *servicetype;
 } cmdb_s;
 
 void
@@ -175,7 +175,7 @@ cmdb_init_contact_t(cmdb_contact_s *cont);
 void
 cmdb_init_hardtype_t(cmdb_hard_type_s *type);
 void
-cmdb_init_servicetype_t(cmdb_service_sype_t *type);
+cmdb_init_servicetype_t(cmdb_service_type_s *type);
 void
 cmdb_init_vmhost_t(cmdb_vm_host_s *type);
 
@@ -259,7 +259,7 @@ clean_contact_list(cmdb_contact_s *list);
 void
 clean_service_list(cmdb_service_s *list);
 void
-clean_service_type_list(cmdb_service_sype_t *list);
+clean_service_type_list(cmdb_service_type_s *list);
 void
 clean_hardware_list(cmdb_hardware_s *list);
 void

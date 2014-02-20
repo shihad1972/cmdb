@@ -342,7 +342,7 @@ cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 }
 
 void
-cmdb_init_servicetype_t(cmdb_service_sype_t *type)
+cmdb_init_servicetype_t(cmdb_service_type_s *type)
 {
 	snprintf(type->service, COMM_S, "NULL");
 	snprintf(type->detail, COMM_S, "NULL");
@@ -462,9 +462,9 @@ clean_service_list(cmdb_service_s *list)
 }
 
 void
-clean_service_type_list(cmdb_service_sype_t *list)
+clean_service_type_list(cmdb_service_type_s *list)
 {
-	cmdb_service_sype_t *service, *next;
+	cmdb_service_type_s *service, *next;
 
 	service = list;
 	next = service->next;

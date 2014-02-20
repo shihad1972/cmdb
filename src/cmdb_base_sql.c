@@ -44,7 +44,7 @@ const struct cmdb_server_s servers;
 const struct cmdb_customer_s customers;
 const struct cmdb_contact_s contacts;
 const struct cmdb_service_s services;
-const struct cmdb_service_sype_t servtypes;
+const struct cmdb_service_type_s servtypes;
 const struct cmdb_hardware_s hardwares;
 const struct cmdb_hard_type_s hardtypes;
 const struct cmdb_vm_host_s vmhosts;
@@ -1027,7 +1027,7 @@ void
 store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 {
 	cmdb_service_s *service, *list;
-	cmdb_service_sype_t *type;
+	cmdb_service_type_s *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
@@ -1060,9 +1060,9 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_service_type_mysql(MYSQL_ROW row, cmdb_s *base)
 {
-	cmdb_service_sype_t *service, *list;
+	cmdb_service_type_s *service, *list;
 
-	if (!(service = malloc(sizeof(cmdb_service_sype_t))))
+	if (!(service = malloc(sizeof(cmdb_service_type_s))))
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = strtoul(row[0], NULL, 10);
@@ -1626,7 +1626,7 @@ void
 store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
 	cmdb_service_s *service, *list;
-	cmdb_service_sype_t *type;
+	cmdb_service_type_s *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
@@ -1660,9 +1660,9 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 void
 store_service_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
-	cmdb_service_sype_t *service, *list;
+	cmdb_service_type_s *service, *list;
 
-	if (!(service = malloc(sizeof(cmdb_service_sype_t))))
+	if (!(service = malloc(sizeof(cmdb_service_type_s))))
 		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
 
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
