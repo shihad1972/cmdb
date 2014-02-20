@@ -789,6 +789,56 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		clean_cmdb_comm_line(cm);
 		return NO_URL;
 	}
+	if (cm->service) {
+		cmdb_service_type_s *stype;
+		if (!(stype = malloc(sizeof(cmdb_service_type_s))))
+			report_error(MALLOC_FAIL, "stype in fill_service_values");
+		cmdb_init_servicetype_t(stype);
+		cmdb->servicetype = stype;
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->service, NAME_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "service service");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(stype->service, RANGE_S, "%s", cm->service);
+	}
+	if (cm->name) {
+		cmdb_server_s *server;
+		if (!(server = malloc(sizeof(cmdb_server_s))))
+			report_error(MALLOC_FAIL, "server in fill_service_values");
+		cmdb_init_server_t(server);
+		cmdb->server = server;
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "service name");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->name, MAC_S, "%s", cm->name);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_NAME;
+	}
+	if (cm->coid) {
+		cmdb_customer_s *cust;
+		if (!(cust = malloc(sizeof(cmdb_customer_s))))
+			report_error(MALLOC_FAIL, "cust in fill_service_values");
+		cmdb_init_customer_t(cust);
+		cmdb->customer = cust;
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "service coid");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_COID;
+	}
+	if (cm->sid != 0)
+		servi->service_id = cm->sid;
 	return retval;
 }
 
@@ -875,5 +925,24 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		clean_cmdb_comm_line(cm);
 		return NO_DEVICE;
 	}
+	if (cm->name) {
+		cmdb_server_s *server;
+		if (!(server = malloc(sizeof(cmdb_server_s))))
+			report_error(MALLOC_FAIL, "server in fill_hardware_values");
+		cmdb_init_server_t(server);
+		cmdb->server = server;
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "hardware server");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->name, MAC_S, "%s", cm->name);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_NAME;
+	}
+	if (cm->sid != 0)
+		hard->hard_id = cm->sid;
 	return retval;
 }
