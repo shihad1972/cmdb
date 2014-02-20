@@ -239,8 +239,8 @@ parse_cmdb_config_file(cmdb_config_s *dc, char *config)
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
-	cm->action = 0;
-	cm->type = 0;
+	cm->action = cm->type = 0;
+	cm->sid = 0;
 	cm->vmhost = cm->config = cm->vendor = '\0';
 	cm->make = cm->model = cm->id = cm->stype = '\0';
 	cm->name = cm->address = cm->city = cm->email = '\0';
