@@ -159,33 +159,9 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		} else if (comp->type == SERVICE) {
 			retval = fill_service_values(comp, base);
 		} else if (comp->type == CONTACT) {
-			if (strncmp(comp->id, "NULL", COMM_S) == 0) {
-				retval = NO_COID;
-			} else if (strncmp(base->contact->name, "NULL", COMM_S) == 0) {
-				retval = NO_CONT_NAME;
-			} else if (strncmp(base->contact->phone, "NULL", COMM_S) == 0) {
-				retval = NO_PHONE;
-			} else if (strncmp(base->contact->email, "NULL", COMM_S) == 0) {
-				retval = NO_EMAIL;
-			} else {
-				snprintf(base->customer->coid, RANGE_S, "%s", comp->id);
-			}
+			retval = fill_contact_values(comp, base);
 		} else if (comp->type == HARDWARE) {
-			if (strncmp(comp->name, "NULL", COMM_S) == 0) {
-				retval = NO_NAME;
-			} else if (strncmp(base->hardware->detail, "NULL", COMM_S) == 0) {
-				retval = NO_DETAIL;
-			} else if (strncmp(base->hardware->device, "NULL", COMM_S) == 0) {
-				*(base->hardware->device) = '\0';
-				snprintf(base->server->name, MAC_S, "%s", comp->name);
-			} else {
-				snprintf(base->server->name, MAC_S, "%s", comp->name);
-			}
-			if (strncmp(base->hardtype->hclass, "NULL", COMM_S) == 0) {
-				if (base->hardware->ht_id == 0) {
-					retval = NO_CLASS;
-				}
-			}
+			retval = fill_hardware_values(comp, base);
 		} else if (comp->type == VM_HOST) {
 			if (strncmp(comp->name, "NULL", COMM_S) == 0) {
 				retval = NO_NAME;
@@ -861,6 +837,43 @@ fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	} else {
 		clean_cmdb_comm_line(cm);
 		return NO_EMAIL;
+	}
+	return retval;
+}
+
+int
+fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+	cmdb_hardware_s *hard;
+
+	if (!(hard = malloc(sizeof(cmdb_hardware_s))))
+		report_error(MALLOC_FAIL, "hard in fill_hardware_values");
+	cmdb_init_hardware_t(hard);
+	cmdb->hardware = hard;
+	if (hard->detail) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->detail, CUSTOMER_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "hardware detail");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(hard->detail, HOST_S, "%s", cm->detail);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_DETAIL;
+	}
+	if (hard->device) {
+#ifdef HAVE_LIBPCRE
+		if ((retval = validate_user_input(cm->device, DEV_REGEX)) < 0)
+			report_error(USER_INPUT_INVALID, "hardware device");
+		else
+			retval = NONE;
+#endif /* HAVE_LIBPCRE */
+		snprintf(hard->device, MAC_S, "%s", cm->device);
+	} else {
+		clean_cmdb_comm_line(cm);
+		return NO_DEVICE;
 	}
 	return retval;
 }
