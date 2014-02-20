@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		free(domain);
 		free(dc);
 		free(cm);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	/* Get config values from config file */
 	id = parse_dnsa_config_file(dc, cm->config);

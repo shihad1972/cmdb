@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	if (retval != 0) {
 		cmdb_clean_list(base);
 		cmdb_main_free(cm, cmc, cmdb_config);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);

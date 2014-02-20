@@ -170,7 +170,7 @@ report_error(int error, const char *errstr)
 }
 
 void
-display_cmdb_command_line_error(int retval, char *program)
+display_command_line_error(int retval, char *program)
 {
 	if (strrchr(program, '/')) {
 		program = strrchr(program, '/');
