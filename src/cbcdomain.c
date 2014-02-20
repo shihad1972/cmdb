@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 	if ((retval = parse_cbcdomain_comm_line(argc, argv, cdcl)) != 0) {
 		free(cdcl);
 		free(cmc);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
 		free(cdcl);

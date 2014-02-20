@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
 		free(cvcl);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	if (strncmp(cvcl->varient, "NULL", COMM_S) != 0)
 		snprintf(error, URL_S, "name %s", cvcl->varient);

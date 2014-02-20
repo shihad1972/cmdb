@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 	if ((retval = parse_cbcpack_comm_line(argc, argv, cpcl)) != 0) {
 		free(cmc);
 		free(cpcl);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	if (strncmp(cpcl->package, "NULL", COMM_S) != 0)
 		snprintf(error, HOST_S, "%s", cpcl->package);

@@ -406,7 +406,7 @@ void
 get_error_string(int error, char *errstr);
 /* cmdb comand line error function */
 void
-display_cmdb_command_line_error(int retval, char *program);
+display_command_line_error(int retval, char *program);
 void
 display_cmdb_usage(void);
 void

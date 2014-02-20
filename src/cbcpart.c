@@ -55,7 +55,7 @@ main (int argc, char *argv[])
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpcl)) != 0) {
 		free(cmc);
 		free(cpcl);
-		display_cmdb_command_line_error(retval, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
