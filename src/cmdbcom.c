@@ -593,79 +593,58 @@ fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->customer = cust;
 	if (cm->vendor) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->vendor, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->vendor, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vendor");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->vendor, CONF_S, "%s", cm->vendor);
 	} else {
-		fprintf(stderr, "No vendor supplied. Setting to none\n");
-		snprintf(server->vendor, CONF_S, "none");
+		retval = retval | NO_VENDOR;
 	}
 	if (cm->make) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->make, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->make, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "make");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->make, CONF_S, "%s", cm->make);
 	} else {
-		fprintf(stderr, "No make supplied. Setting to none\n");
-		snprintf(server->make, COMM_S, "none");
+		retval = retval | NO_MAKE;
 	}
 	if (cm->model) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->model, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->model, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "model");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->model, CONF_S, "%s", cm->model);
 	} else {
-		fprintf(stderr, "No model supplied. Setting to none\n");
-		snprintf(server->model, COMM_S, "none");
+		retval = retval | NO_MODEL;
 	}
 	if (cm->uuid) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->uuid, UUID_REGEX)) < 0) {
-			if ((retval = validate_user_input(cm->uuid, FS_REGEX)) < 0)
+		if (validate_user_input(cm->uuid, UUID_REGEX) < 0)
+			if (validate_user_input(cm->uuid, FS_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "uuid");
-			else
-				retval = NONE;
-		} else {
-			retval = NONE;
-		}
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->uuid, HOST_S, "%s", cm->uuid);
 	} else {
-		fprintf(stderr, "No UUID supplied. Setting to none\n");
-		snprintf(server->uuid, COMM_S, "none");
+		retval = retval | NO_UUID;
 	}
 	if (cm->name) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->name, MAC_S, "%s", cm->name);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_NAME;
+		retval = retval | NO_NAME;
 	}
 	if (cm->coid) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+		if (validate_user_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "coid");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_COID;
+		retval = retval | NO_COID;
 	}
 	return retval;
 }
@@ -682,75 +661,57 @@ fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->customer = cust;
 	if (cm->address) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->address, ADDRESS_REGEX)) < 0)
+		if (validate_user_input(cm->address, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "address");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->address, NAME_S, "%s", cm->address);
 	} else {
-		fprintf(stderr, "No address supplied. Setting to none\n");
-		snprintf(cust->address, COMM_S, "none");
+		retval = retval | NO_ADDRESS;
 	}
 	if (cm->city) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->city, ADDRESS_REGEX)) < 0)
+		if (validate_user_input(cm->city, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "city");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->city, HOST_S, "%s", cm->city);
 	} else {
-		fprintf(stderr, "No city supplied. Setting to none\n");
-		snprintf(cust->city, COMM_S, "none");
+		retval = retval | NO_CITY;
 	}
 	if (cm->county) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->county, ADDRESS_REGEX)) < 0)
+		if (validate_user_input(cm->county, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "county");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->county, MAC_S, "%s", cm->county);
 	} else {
-		fprintf(stderr, "No county supplied. Setting to none\n");
-		snprintf(cust->county, COMM_S, "none");
+		retval = retval | NO_COUNTY;
 	}
 	if (cm->postcode) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->postcode, POSTCODE_REGEX)) < 0)
+		if (validate_user_input(cm->postcode, POSTCODE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "postcode");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->postcode, RANGE_S, "%s", cm->postcode);
 	} else {
-		fprintf(stderr, "No postcode supplied. Setting to none\n");
-		snprintf(cust->postcode, COMM_S, "none");
+		retval = retval | NO_POSTCODE;
 	}
 	if (cm->coid) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+		if (validate_user_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "coid");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_COID;
+		retval = retval | NO_COID;
 	}
 	if (cm->name) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->name, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->name, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "customer name");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->name, HOST_S, "%s", cm->name);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_NAME;
+		retval = retval | NO_NAME;
 	}
 	return retval;
 }
@@ -767,27 +728,21 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->service = servi;
 	if (cm->detail) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->detail, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->detail, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service detail");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(servi->detail, HOST_S, "%s", cm->detail);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_DETAIL;
+		retval = retval | NO_DETAIL;
 	}
 	if (cm->url) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->url, URL_REGEX)) < 0)
+		if (validate_user_input(cm->url, URL_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service url");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(servi->url, URL_S, "%s", cm->url);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_URL;
+		retval = retval | NO_URL;
 	}
 	if (cm->service) {
 		cmdb_service_type_s *stype;
@@ -796,12 +751,12 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		cmdb_init_servicetype_t(stype);
 		cmdb->servicetype = stype;
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->service, NAME_REGEX)) < 0)
+		if (validate_user_input(cm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service service");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(stype->service, RANGE_S, "%s", cm->service);
+	} else {
+		retval = retval | NO_SERVICE;
 	}
 	if (cm->name) {
 		cmdb_server_s *server;
@@ -810,15 +765,12 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		cmdb_init_server_t(server);
 		cmdb->server = server;
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service name");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->name, MAC_S, "%s", cm->name);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_NAME;
+		retval = retval | NO_NAME;
 	}
 	if (cm->coid) {
 		cmdb_customer_s *cust;
@@ -827,18 +779,17 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		cmdb_init_customer_t(cust);
 		cmdb->customer = cust;
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->coid, COID_REGEX)) < 0)
+		if (validate_user_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service coid");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_COID;
+		retval = retval | NO_COID;
 	}
 	if (cm->sid != 0)
 		servi->service_id = cm->sid;
+	else
+		retval = retval | NO_ID;
 	return retval;
 }
 
@@ -854,39 +805,30 @@ fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->contact = cont;
 	if (cm->name) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->name, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->name, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact name");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cont->name, HOST_S, "%s", cm->name);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_NAME;
+		retval = retval | NO_NAME;
 	}
 	if (cm->phone) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->phone, PHONE_REGEX)) < 0)
+		if (validate_user_input(cm->phone, PHONE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact phone");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cont->phone, MAC_S, "%s", cm->phone);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_PHONE;
+		retval = retval | NO_PHONE;
 	}
 	if (cm->email) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->email, EMAIL_REGEX)) < 0)
+		if (validate_user_input(cm->email, EMAIL_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact email");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(cont->email, HOST_S, "%s", cm->email);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_EMAIL;
+		retval = retval | NO_EMAIL;
 	}
 	return retval;
 }
@@ -903,27 +845,21 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->hardware = hard;
 	if (hard->detail) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->detail, CUSTOMER_REGEX)) < 0)
+		if (validate_user_input(cm->detail, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware detail");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(hard->detail, HOST_S, "%s", cm->detail);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_DETAIL;
+		retval = retval | NO_DETAIL;
 	}
 	if (hard->device) {
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->device, DEV_REGEX)) < 0)
+		if (validate_user_input(cm->device, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware device");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(hard->device, MAC_S, "%s", cm->device);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_DEVICE;
+		retval = retval | NO_DEVICE;
 	}
 	if (cm->name) {
 		cmdb_server_s *server;
@@ -932,17 +868,16 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		cmdb_init_server_t(server);
 		cmdb->server = server;
 #ifdef HAVE_LIBPCRE
-		if ((retval = validate_user_input(cm->name, NAME_REGEX)) < 0)
+		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware server");
-		else
-			retval = NONE;
 #endif /* HAVE_LIBPCRE */
 		snprintf(server->name, MAC_S, "%s", cm->name);
 	} else {
-		clean_cmdb_comm_line(cm);
-		return NO_NAME;
+		retval = retval |  NO_NAME;
 	}
 	if (cm->sid != 0)
 		hard->hard_id = cm->sid;
+	else
+		retval = retval | NO_ID;
 	return retval;
 }
