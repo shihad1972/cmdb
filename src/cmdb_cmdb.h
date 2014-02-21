@@ -219,6 +219,8 @@ int
 fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
 /* New user input functions */
 int

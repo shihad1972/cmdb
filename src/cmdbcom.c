@@ -362,6 +362,7 @@ cmdb_init_vmhost_t(cmdb_vm_host_s *type)
 void
 cmdb_main_free(cmdb_comm_line_s *cm, cmdb_config_s *cmc, char *cmdb_config)
 {
+	clean_cmdb_comm_line(cm);
 	free(cm);
 	free(cmc);
 	free(cmdb_config);
@@ -879,5 +880,50 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		hard->hard_id = cm->sid;
 	else
 		retval = retval | NO_ID;
+	return retval;
+}
+
+int
+fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = NONE;
+	cmdb_vm_host_s *vmhost;
+
+	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
+		report_error(MALLOC_FAIL, "vmhost in fill_vmhost_values");
+	cmdb_init_vmhost_t(vmhost);
+	cmdb->vmhost = vmhost;
+	if (cm->vmhost) {
+#ifdef HAVE_LIBPCRE
+		if (validate_user_input(cm->vmhost, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "vmhost hostname");
+#endif /* HAVE_LIBPCRE */
+		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
+	} else {
+		retval = retval | NO_VHOST;
+	}
+	if (cm->model) {
+#ifdef HAVE_LIBPCRE
+		if (validate_user_input(cm->model, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "vmhost type");
+#endif /* HAVE_LIBPCRE */
+		snprintf(vmhost->type, CONF_S, "%s", cm->model);
+	} else {
+		retval = retval | NO_TYPE;
+	}
+	if (cm->name) {
+#ifdef HAVE_LIBPCRE
+		cmdb_server_s *server;
+		if (!(server = malloc(sizeof(cmdb_server_s))))
+			report_error(MALLOC_FAIL, "server in fill_vmhost_values");
+		cmdb_init_server_t(server);
+		cmdb->server = server;
+		if (validate_user_input(cm->name, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "vmhost name");
+#endif /* HAVE_LIBPCRE */
+		snprintf(server->name, MAC_S, "%s", cm->name);
+	} else {
+		retval = retval | NO_NAME;
+	}
 	return retval;
 }
