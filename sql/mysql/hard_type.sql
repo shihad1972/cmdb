@@ -24,8 +24,8 @@ DROP TABLE IF EXISTS `hard_type`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `hard_type` (
   `hard_type_id` int(7) NOT NULL AUTO_INCREMENT,
-  `type` varchar(50) DEFAULT NULL,
-  `class` varchar(50) DEFAULT NULL,
+  `type` varchar(31) DEFAULT NULL,
+  `class` varchar(31) DEFAULT NULL,
   PRIMARY KEY (`hard_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

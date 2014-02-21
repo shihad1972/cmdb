@@ -24,13 +24,13 @@ DROP TABLE IF EXISTS `server`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `server` (
   `server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vendor` varchar(50) DEFAULT NULL,
-  `make` varchar(50) DEFAULT NULL,
-  `model` varchar(30) DEFAULT NULL,
-  `uuid` varchar(50) DEFAULT NULL,
+  `vendor` varchar(63) DEFAULT NULL,
+  `make` varchar(63) DEFAULT NULL,
+  `model` varchar(31) DEFAULT NULL,
+  `uuid` varchar(63) DEFAULT NULL,
   `cust_id` int(7) DEFAULT NULL,
   `vm_server_id` int(7) DEFAULT NULL,
-  `name` varchar(30) DEFAULT NULL,
+  `name` varchar(63) DEFAULT NULL,
   PRIMARY KEY (`server_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

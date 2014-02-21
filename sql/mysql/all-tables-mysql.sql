@@ -13,14 +13,14 @@ CREATE TABLE `build_type` (
 CREATE TABLE `service_type` (
   `service_type_id` int(7) NOT NULL AUTO_INCREMENT,
   `service` varchar(15) NOT NULL,
-  `detail` varchar(50) NOT NULL,
+  `detail` varchar(31) NOT NULL,
   PRIMARY KEY (`service_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `hard_type` (
   `hard_type_id` int(7) NOT NULL AUTO_INCREMENT,
-  `type` varchar(50) NOT NULL DEFAULT 'none',
-  `class` varchar(50) NOT NULL DEFAULT 'none',
+  `type` varchar(31) NOT NULL DEFAULT 'none',
+  `class` varchar(31) NOT NULL DEFAULT 'none',
   PRIMARY KEY (`hard_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -102,7 +102,7 @@ CREATE TABLE `server` (
   `uuid` varchar(63) NOT NULL DEFAULT 'none',
   `cust_id` int(7) NOT NULL,
   `vm_server_id` int(7) NOT NULL DEFAULT 0,
-  `name` varchar(31) NOT NULL,
+  `name` varchar(63) NOT NULL,
   PRIMARY KEY (`server_id`),
 
   INDEX(`cust_id`, `vm_server_id`),
@@ -140,7 +140,7 @@ CREATE TABLE `services` (
 
 CREATE TABLE `vm_server_hosts` (
   `vm_server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vm_server` varchar(127) NOT NULL,
+  `vm_server` varchar(255) NOT NULL,
   `type` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
   PRIMARY KEY (`vm_server_id`),

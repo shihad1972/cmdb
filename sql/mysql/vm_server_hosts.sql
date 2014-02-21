@@ -24,8 +24,8 @@ DROP TABLE IF EXISTS `vm_server_hosts`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `vm_server_hosts` (
   `vm_server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vm_server` varchar(150) DEFAULT NULL,
-  `type` varchar(50) DEFAULT NULL,
+  `vm_server` varchar(255) DEFAULT NULL,
+  `type` varchar(31) DEFAULT NULL,
   `server_id` int(7) DEFAULT NULL,
   PRIMARY KEY (`vm_server_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;

@@ -24,8 +24,8 @@ DROP TABLE IF EXISTS `service_type`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `service_type` (
   `service_type_id` int(7) NOT NULL AUTO_INCREMENT,
-  `service` varchar(20) DEFAULT NULL,
-  `detail` varchar(50) DEFAULT NULL,
+  `service` varchar(15) DEFAULT NULL,
+  `detail` varchar(31) DEFAULT NULL,
   PRIMARY KEY (`service_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
