@@ -155,9 +155,9 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	} else if (retval > 1) {
 		fprintf(stderr, "Multiple hardware classes\n");
 		fprintf(stderr, "Using %s\n", data->fields.text);
-		snprintf(cmdb->hardtype->hclass, HOST_S, "%s", data->fields.text);
+		snprintf(cmdb->hardtype->hclass, MAC_S, "%s", data->fields.text);
 	} else {
-		snprintf(cmdb->hardtype->hclass, HOST_S, "%s", data->fields.text);
+		snprintf(cmdb->hardtype->hclass, MAC_S, "%s", data->fields.text);
 	}
 	printf("Details Provided\n");
 	printf("Server name:\t%s, id %lu\n", cmdb->server->name, cmdb->hardware->server_id);
@@ -198,7 +198,7 @@ cmdb, SERVER | CUSTOMER | HARDWARE |  SERVICE | VM_HOST)) != 0) {
 	}
 	server = cmdb->server;
 	while(server) {
-		if ((strncmp(server->name, name, MAC_S) == 0)) {
+		if ((strncmp(server->name, name, HOST_S) == 0)) {
 			print_server_details(server, cmdb);
 			server = server->next;
 			i++;
@@ -295,7 +295,7 @@ display_server_hardware(cmdb_config_s *config, char *name)
 	hardware = cmdb->hardware;
 	printf("Server %s\n", name);
 	while (server) {
-		if ((strncmp(server->name, name, MAC_S) == 0)) {
+		if ((strncmp(server->name, name, HOST_S) == 0)) {
 			retval = print_hardware(hardware, server->server_id);
 			server = server->next;
 		} else {
@@ -328,7 +328,7 @@ display_server_services(cmdb_config_s *config, char *name)
 	service = cmdb->service;
 	printf("Server %s\n", name);
 	while (server) {
-		if ((strncmp(server->name, name, MAC_S) == 0)) {
+		if ((strncmp(server->name, name, HOST_S) == 0)) {
 			retval = print_services(service, server->server_id, SERVER);
 			server = server->next;
 		} else {
@@ -546,7 +546,7 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 			report_error(MALLOC_FAIL, "base->vhost in add_vm_host_to_db");
 	}
 	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
-	snprintf(base->vmhost->type, CONF_S, "%s", base->server->model);
+	snprintf(base->vmhost->type, MAC_S, "%s", base->server->model);
 	base->vmhost->server_id = data->fields.number;
 	if ((retval = run_insert(cmc, base, VM_HOSTS)) != 0)
 		printf("Error adding to database\n");

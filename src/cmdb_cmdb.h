@@ -67,7 +67,7 @@ typedef struct cmdb_server_s {
 	char make[CONF_S];
 	char model[CONF_S];
 	char uuid[CONF_S];
-	char name[MAC_S];
+	char name[HOST_S];
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
@@ -124,14 +124,14 @@ typedef struct cmdb_hardware_s {
 
 typedef struct cmdb_hard_type_s {
 	char type[MAC_S];
-	char hclass[HOST_S];
+	char hclass[MAC_S];
 	unsigned long int ht_id;
 	struct cmdb_hard_type_s *next;
 } cmdb_hard_type_s;
 
 typedef struct cmdb_vm_host_s {
 	char name[RBUFF_S];
-	char type[CONF_S];
+	char type[MAC_S];
 	unsigned long int id;
 	unsigned long int server_id;
 	struct cmdb_vm_host_s *next;

@@ -118,7 +118,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		} else if (opt == 'S') {
 			comp->service = strndup(optarg, RANGE_S);
 		} else if (opt == 'H') {
-			comp->hclass = strndup(optarg, HOST_S);
+			comp->hclass = strndup(optarg, MAC_S);
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;
@@ -634,7 +634,7 @@ fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
 #endif /* HAVE_LIBPCRE */
-		snprintf(server->name, MAC_S, "%s", cm->name);
+		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
 	}
@@ -769,7 +769,7 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service name");
 #endif /* HAVE_LIBPCRE */
-		snprintf(server->name, MAC_S, "%s", cm->name);
+		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
 	}
@@ -872,7 +872,7 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware server");
 #endif /* HAVE_LIBPCRE */
-		snprintf(server->name, MAC_S, "%s", cm->name);
+		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval |  NO_NAME;
 	}
@@ -907,7 +907,7 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		if (validate_user_input(cm->model, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost type");
 #endif /* HAVE_LIBPCRE */
-		snprintf(vmhost->type, CONF_S, "%s", cm->model);
+		snprintf(vmhost->type, MAC_S, "%s", cm->model);
 	} else {
 		retval = retval | NO_TYPE;
 	}
@@ -921,7 +921,7 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost name");
 #endif /* HAVE_LIBPCRE */
-		snprintf(server->name, MAC_S, "%s", cm->name);
+		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
 	}

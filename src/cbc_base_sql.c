@@ -1626,7 +1626,7 @@ cbc_store_server_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(server->uuid, CONF_S, "%s", row[4]);
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
-	snprintf(server->name, MAC_S, "%s", row[7]);
+	snprintf(server->name, HOST_S, "%s", row[7]);
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -1668,7 +1668,7 @@ cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = strtoul(row[0], NULL, 10);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", row[1]);
-	snprintf(vmhost->type, HOST_S, "%s", row[2]);
+	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[4], NULL, 10);
 	list = base->vmhost;
 	if (list) {
@@ -2629,7 +2629,7 @@ cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(server->uuid, CONF_S, "%s", sqlite3_column_text(state, 4));
 	server->cust_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	snprintf(server->name, MAC_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -2671,7 +2671,7 @@ cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(vmhost->type, HOST_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int64(state, 3);
 	list = base->vmhost;
 	if (list) {

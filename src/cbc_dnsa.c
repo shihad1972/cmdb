@@ -236,7 +236,7 @@ fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc)
 	rec->pri = 0;
 	snprintf(rec->type, COMM_S, "A");
 	rec->zone = zone->id;
-	snprintf(rec->host, MAC_S, "%s", cbc->server->name);
+	snprintf(rec->host, HOST_S, "%s", cbc->server->name);
 	ip_addr = htonl((uint32_t)cbc->bip->ip);
 	inet_ntop(AF_INET, &ip_addr, dest, RANGE_S);
 }

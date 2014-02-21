@@ -960,7 +960,7 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(server->uuid, CONF_S, "%s", row[4]);
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
-	snprintf(server->name, MAC_S, "%s", row[7]);
+	snprintf(server->name, HOST_S, "%s", row[7]);
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -1124,7 +1124,7 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 
 	hard->ht_id = strtoul(row[0], NULL, 10);
 	snprintf(hard->type, MAC_S, "%s", row[1]);
-	snprintf(hard->hclass, HOST_S, "%s", row[2]);
+	snprintf(hard->hclass, MAC_S, "%s", row[2]);
 	hard->next = '\0';
 	list = base->hardtype;
 	if (list) {
@@ -1558,7 +1558,7 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(server->uuid, CONF_S, "%s", sqlite3_column_text(state, 4));
 	server->cust_id = (unsigned long int) sqlite3_column_int(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int(state, 6);
-	snprintf(server->name, MAC_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -1724,7 +1724,7 @@ store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(hard->type, MAC_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(hard->hclass, HOST_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(hard->hclass, MAC_S, "%s", sqlite3_column_text(state, 2));
 	hard->next = '\0';
 	list = base->hardtype;
 	if (list) {
