@@ -36,7 +36,7 @@
 #endif /* HAVE_LIBPCRE */
 
 int
-add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb, int cl)
 {
 	char *input;
 	int retval;
@@ -50,18 +50,22 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
 	retval = 0;
-	printf("Details provided:\n");
+	if (cl != 0)
+		complete_server_values(cmdb, cl);
+/*	printf("Details provided:\n");
 	printf("Name: %s\n", cmdb->server->name);
 	printf("Vendor: %s\n", cmdb->server->vendor);
 	printf("Make: %s\n", cmdb->server->make);
 	printf("Model: %s\n", cmdb->server->model);
 	printf("UUID: %s\n", cmdb->server->uuid);
-	printf("COID: %s\n", cmdb->customer->coid);
-	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
-		printf("Unable to retrieve cust_id for COID %s\n",
-		 cmdb->customer->coid);
-		free(input);
-		return retval;
+	printf("COID: %s\n", cmdb->customer->coid); */
+	if (cmdb->customer) {
+		if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
+			printf("Unable to retrieve cust_id for COID %s\n",
+			 cmdb->customer->coid);
+			free(input);
+			return retval;
+		}
 	}
 /* Check for vmhost. if so this server is a virtual machine */
 	if (cm->vmhost) {
@@ -76,16 +80,18 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	} else {
 		printf("No vmhost supplied. This should be a stand alone server\n");
 	}
-	cmdb->server->cust_id = cmdb->customer->cust_id;
-	cmdb->server->vm_server_id = cmdb->vmhost->id;	
-	printf("Are these detail correct? (y/n): ");
+	if (cmdb->customer)
+		cmdb->server->cust_id = cmdb->customer->cust_id;
+	if (cmdb->vmhost)
+		cmdb->server->vm_server_id = cmdb->vmhost->id;	
+/*	printf("Are these detail correct? (y/n): ");
 	input = fgets(input, CONF_S, stdin);
 	chomp(input);
-	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
+	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) { */
 		retval = run_insert(config, cmdb, SERVERS);
-	} else {
+/*	} else {
 		retval = 1;
-	}
+	} */
 	free(input);
 	return retval;
 }
@@ -202,10 +208,12 @@ cmdb, SERVER | CUSTOMER | HARDWARE |  SERVICE | VM_HOST)) != 0) {
 			print_server_details(server, cmdb);
 			server = server->next;
 			i++;
-		} else if ((strncmp(server->uuid, uuid, CONF_S) == 0)) {
-			print_server_details(server, cmdb);
-			server = server->next;
-			i++;
+		} else if (uuid) {
+			if ((strncmp(server->uuid, uuid, CONF_S) == 0)) {
+				print_server_details(server, cmdb);
+				server = server->next;
+				i++;
+			}
 		} else {
 			server = server->next;
 		}
@@ -343,6 +351,7 @@ display_server_services(cmdb_config_s *config, char *name)
 void 
 print_server_details(cmdb_server_s *server, cmdb_s *base)
 {
+	int retval;
 	cmdb_customer_s *customer = base->customer;
 	cmdb_vm_host_s *vmhost = base->vmhost;
 	cmdb_hardware_s *hard = base->hardware;
@@ -354,10 +363,14 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 	printf("Vendor:\t\t%s\n", server->vendor);
 	printf("Make:\t\t%s\n", server->make);
 	printf("Model:\t\t%s\n", server->model);
-	while (server->cust_id != customer->cust_id)
-		customer = customer->next;
-	printf("Customer:\t%s\n", customer->name);
-	printf("COID:\t\t%s\n", customer->coid);
+	if (server->cust_id > 0) {
+		while (server->cust_id != customer->cust_id)
+			customer = customer->next;
+		printf("Customer:\t%s\n", customer->name);
+		printf("COID:\t\t%s\n", customer->coid);
+	} else {
+		printf("No Customer associated with this server!\n");
+	}
 	if (server->vm_server_id > 0) {
 		while (server->vm_server_id != vmhost->id) {
 			vmhost = vmhost->next;
@@ -373,9 +386,13 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 				}
 			}
 		}
+		if (!vmhost)
+			printf("Stand alone server\n");
 	}
-	print_hardware(hard, server->server_id);
-	print_services(service, server->server_id, SERVER);
+	if ((retval = print_hardware(hard, server->server_id)) == 0)
+		printf("No hardware for this server\n");
+	if ((retval = print_services(service, server->server_id, SERVER)) == 0)
+		printf("No services for this server\n");
 }
 
 void

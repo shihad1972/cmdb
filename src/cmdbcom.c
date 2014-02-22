@@ -163,11 +163,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		} else if (comp->type == HARDWARE) {
 			retval = fill_hardware_values(comp, base);
 		} else if (comp->type == VM_HOST) {
-			if (strncmp(comp->name, "NULL", COMM_S) == 0) {
-				retval = NO_NAME;
-			} else if (strncmp(base->server->model, "NULL", COMM_S) == 0) {
-				retval = NO_MODEL;
-			}
+			retval = fill_vmhost_values(comp, base);
 		}
 	}
 	return retval;
@@ -926,4 +922,17 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		retval = retval | NO_NAME;
 	}
 	return retval;
+}
+
+void
+complete_server_values(cmdb_s *cmdb, int cl)
+{
+	if (cl & NO_VENDOR)
+		snprintf(cmdb->server->vendor, COMM_S, "none");
+	if (cl & NO_MAKE)
+		snprintf(cmdb->server->make, COMM_S, "none");
+	if (cl & NO_MODEL)
+		snprintf(cmdb->server->model, COMM_S, "none");
+	if (cl & NO_UUID)
+		snprintf(cmdb->server->uuid, COMM_S, "none");
 }

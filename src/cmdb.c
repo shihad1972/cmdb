@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	cmdb_config_s *cmc;
 	cmdb_s *base;
 	char *cmdb_config;
-	int retval;
+	int retval, cl;
 
 	if (!(cmc = malloc(sizeof(cmdb_config_s))))
 		report_error(MALLOC_FAIL, "cmc in cmdb.c");
@@ -50,21 +50,21 @@ int main(int argc, char *argv[])
 	cmdb_init_struct(base);
 	init_cmdb_comm_line_values(cm);
 	init_cmdb_config_values(cmc);
-	retval = parse_cmdb_command_line(argc, argv, cm, base);
-	if (retval != 0) {
-		cmdb_clean_list(base);
+	if ((cl = parse_cmdb_command_line(argc, argv, cm, base)) == DISPLAY_USAGE) {
 		cmdb_main_free(cm, cmc, cmdb_config);
-		display_command_line_error(retval, argv[0]);
+		cmdb_clean_list(base);
+		display_command_line_error(cl, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	/* Need to decide what to do if we have an error here */
 	if (cm->type == SERVER) {
 		if (cm->action == DISPLAY) {
 			display_server_info(cm->name, cm->id, cmc);
 		} else if (cm->action == LIST_OBJ) {
 			display_all_servers(cmc);
 		} else if (cm->action == ADD_TO_DB) {
-			retval = add_server_to_database(cmc, cm, base);
+			retval = add_server_to_database(cmc, cm, base, cl);
 			if (retval > 0) {
 				free(cmc);
 				free(cm);

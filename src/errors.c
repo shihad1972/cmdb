@@ -274,7 +274,7 @@ display_command_line_error(int retval, char *program)
 			display_cbcpack_usage();
 		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
 			display_cbcpart_usage();
-		exit(retval);
+		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
 		printf("Usage: run %s on its own or check man pages\n",
