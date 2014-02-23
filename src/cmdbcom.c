@@ -120,9 +120,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		} else if (opt == 'H') {
 			comp->hclass = strndup(optarg, MAC_S);
 		} else {
-			printf("Unknown option: %c\n", opt);
-			retval = DISPLAY_USAGE;
-			return retval;
+			return DISPLAY_USAGE;
 		}
 	}
 
@@ -165,6 +163,9 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		} else if (comp->type == VM_HOST) {
 			retval = fill_vmhost_values(comp, base);
 		}
+	} else if (comp->action == DISPLAY) {
+		if (!comp->name)
+			retval = NO_NAME;
 	}
 	return retval;
 }

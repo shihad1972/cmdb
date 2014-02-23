@@ -54,6 +54,10 @@ int main(int argc, char *argv[])
 		cmdb_main_free(cm, cmc, cmdb_config);
 		cmdb_clean_list(base);
 		display_command_line_error(cl, argv[0]);
+	} else if ((cl == NO_NAME) || (cl == NO_NAME_OR_ID)) {
+		cmdb_main_free(cm, cmc, cmdb_config);
+		cmdb_clean_list(base);
+		display_command_line_error(cl, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
