@@ -56,23 +56,33 @@ CUSTOMER | CONTACT | SERVICE | SERVER)) != 0) {
 		return;
 	}
 	list = cmdb->customer;
-	while(list) {
-		if ((strncmp(list->name, name, MAC_S) == 0)) {
-			print_customer_details(list, cmdb);
-			list = list->next;
-			i++;
-		} else if ((strncmp(list->coid, coid, CONF_S) == 0)) {
-			print_customer_details(list, cmdb);
-			list = list->next;
-			i++;
-		} else {
-			list = list->next;
+	if (name) {
+		while(list) {
+			if ((strncmp(list->name, name, MAC_S) == 0)) {
+				print_customer_details(list, cmdb);
+				list = list->next;
+				i++;
+			} else {
+				list = list->next;
+			}
 		}
+	} else if (coid) {
+		while (list) {
+			if ((strncmp(list->coid, coid, CONF_S) == 0)) {
+				print_customer_details(list, cmdb);
+				list = list->next;
+				i++;
+			} else {
+				list = list->next;
+			}
+		}
+	} else {
+		fprintf(stderr, "No customer name or coid specified!\n");
+		i++;
 	}
 	cmdb_clean_list(cmdb);
 	if (i == 0)
 		printf("No customer found\n");
-	return;
 }
 
 void

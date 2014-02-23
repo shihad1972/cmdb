@@ -54,7 +54,11 @@ int main(int argc, char *argv[])
 		cmdb_main_free(cm, cmc, cmdb_config);
 		cmdb_clean_list(base);
 		display_command_line_error(cl, argv[0]);
-	} else if ((cl == NO_NAME) || (cl == NO_NAME_OR_ID)) {
+	} else if (cl == NO_NAME_OR_ID) {
+		cmdb_main_free(cm, cmc, cmdb_config);
+		cmdb_clean_list(base);
+		display_command_line_error(cl, argv[0]);
+	} else if ((cl == NO_NAME) && (cm->action != DISPLAY)) {
 		cmdb_main_free(cm, cmc, cmdb_config);
 		cmdb_clean_list(base);
 		display_command_line_error(cl, argv[0]);

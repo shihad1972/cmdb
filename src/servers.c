@@ -384,6 +384,7 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 				if (server->server_id == vmhost->server_id) {
 					printf("VM Server host type %s\n", vmhost->type);
 				}
+				vmhost = vmhost->next;
 			}
 		}
 		if (!vmhost)
