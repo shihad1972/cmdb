@@ -299,7 +299,7 @@ display_cmdb_usage(void)
 	printf("Adding options:\n");
 	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
-	printf("For customer (with -c; need -n for name)\n");
+	printf("For customer (with -u; need -n for name)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
 	printf("For services (with -i COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t\t[ -I service_id | -S service ]\n");

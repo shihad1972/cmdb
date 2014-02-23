@@ -118,31 +118,9 @@ display_all_customers(cmdb_config_s *config)
 int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
-	char *input;
-	int retval;
-	cmdb_customer_s *cust;
+	int retval = NONE;
 
-	if (!(input = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "input in add_customer_to_database");
-	retval = 0;
-	cust = cmdb->customer;
-	printf("Details provided:\n");
-	printf("Name:\t\t%s\n", cust->name);
-	printf("Address:\t%s\n", cust->address);
-	printf("City:\t\t%s\n", cust->city);
-	printf("County:\t\t%s\n", cust->county);
-	printf("Postcode:\t%s\n", cust->postcode);
-	printf("COID:\t\t%s\n", cust->coid);
-	printf("Are these detail correct? (y/n): ");
-	input = fgets(input, CONF_S, stdin);
-	chomp(input);
-	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
-		retval = run_insert(config, cmdb, CUSTOMERS);
-	} else {
-		retval = 1;
-	}
-	free(input);
-
+	retval = run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }
 
@@ -406,12 +384,32 @@ display_customer_contacts(cmdb_config_s *config, char *coid)
 void
 print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 {
+	int city = NONE, addr = NONE, post = NONE;
+	addr = strncmp(cust->address, "NULL", COMM_S);
+	city = strncmp(cust->city, "NULL", COMM_S);
+	post = strncmp(cust->postcode, "NULL", COMM_S);
 	printf("%s: Coid %s\n", cust->name, cust->coid);
-	printf("%s\n", cust->address);
-	printf("%s, %s\n", cust->city, cust->postcode);
-	print_customer_contacts(cmdb->contact, cust->cust_id);
-	print_customer_servers(cmdb->server, cust->cust_id);
-	print_services(cmdb->service, cust->cust_id, CUSTOMER);
+	if ((addr != 0) || (city != 0) || (post != 0)) {
+		printf("Address:\n");
+		if (strncmp(cust->address, "NULL", COMM_S) != 0)
+			printf("%s\n", cust->address);
+		else
+			printf("No Address for customer\n");
+		if ((city != 0) && (post != 0))
+			printf("%s, %s\n", cust->city, cust->postcode);
+		else if (city != 0)
+			printf("%s\n", cust->city);
+		else
+			printf("%s\n", cust->postcode);
+	} else {
+		printf("No address details for customer\n");
+	}
+	if ((print_customer_contacts(cmdb->contact, cust->cust_id)) == 0)
+		printf("\nCustomer has no associated contacts\n");
+	if ((print_customer_servers(cmdb->server, cust->cust_id)) == 0)
+		printf("\nCustomer has no associated servers\n");
+	if ((print_services(cmdb->service, cust->cust_id, CUSTOMER)) == 0)
+		printf("\nCustomer has no associated services\n");
 }
 
 int

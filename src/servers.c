@@ -52,16 +52,9 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	retval = 0;
 	if (cl != 0)
 		complete_server_values(cmdb, cl);
-/*	printf("Details provided:\n");
-	printf("Name: %s\n", cmdb->server->name);
-	printf("Vendor: %s\n", cmdb->server->vendor);
-	printf("Make: %s\n", cmdb->server->make);
-	printf("Model: %s\n", cmdb->server->model);
-	printf("UUID: %s\n", cmdb->server->uuid);
-	printf("COID: %s\n", cmdb->customer->coid); */
 	if (cmdb->customer) {
 		if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
-			printf("Unable to retrieve cust_id for COID %s\n",
+			fprintf(stderr, "Unable to retrieve cust_id for COID %s\n",
 			 cmdb->customer->coid);
 			free(input);
 			return retval;
@@ -72,26 +65,17 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		printf("VM host: %s\n", cm->vmhost);
 		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
 		if ((retval = run_search(config, cmdb, VM_ID_ON_NAME)) != 0) {
-			printf("Unable to retrieve vmhost %s id\n",
+			fprintf(stderr, "Unable to retrieve vmhost %s id\n",
 			 cm->vmhost);
 			free(input);
 			return retval;
 		}
-	} else {
-		printf("No vmhost supplied. This should be a stand alone server\n");
 	}
 	if (cmdb->customer)
 		cmdb->server->cust_id = cmdb->customer->cust_id;
 	if (cmdb->vmhost)
-		cmdb->server->vm_server_id = cmdb->vmhost->id;	
-/*	printf("Are these detail correct? (y/n): ");
-	input = fgets(input, CONF_S, stdin);
-	chomp(input);
-	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) { */
+		cmdb->server->vm_server_id = cmdb->vmhost->id;
 		retval = run_insert(config, cmdb, SERVERS);
-/*	} else {
-		retval = 1;
-	} */
 	free(input);
 	return retval;
 }
