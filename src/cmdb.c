@@ -50,15 +50,8 @@ int main(int argc, char *argv[])
 	cmdb_init_struct(base);
 	init_cmdb_comm_line_values(cm);
 	init_cmdb_config_values(cmc);
-	if ((cl = parse_cmdb_command_line(argc, argv, cm, base)) == DISPLAY_USAGE) {
-		cmdb_main_free(cm, cmc, cmdb_config);
-		cmdb_clean_list(base);
-		display_command_line_error(cl, argv[0]);
-	} else if (cl == NO_NAME_OR_ID) {
-		cmdb_main_free(cm, cmc, cmdb_config);
-		cmdb_clean_list(base);
-		display_command_line_error(cl, argv[0]);
-	} else if ((cl == NO_NAME) && (cm->action != DISPLAY)) {
+	cl = parse_cmdb_command_line(argc, argv, cm, base);
+	if ((retval = check_for_comm_line_errors(cl, cm)) != 0) {
 		cmdb_main_free(cm, cmc, cmdb_config);
 		cmdb_clean_list(base);
 		display_command_line_error(cl, argv[0]);

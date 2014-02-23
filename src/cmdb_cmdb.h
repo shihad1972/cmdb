@@ -155,6 +155,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comm, cmdb_s *b
 int
 check_cmdb_comm_options(cmdb_comm_line_s *conf, cmdb_s *cmdb);
 int
+check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm);
+int
 parse_cmdb_config_file(cmdb_config_s *dc, char *config);
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm);

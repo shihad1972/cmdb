@@ -195,36 +195,17 @@ remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 int
 add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
-	char *input;
-	int retval;
+	int retval = NONE;
 	cmdb_contact_s *cont;
-
-	if (!(input = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "input in add_customer_to_database");
-	retval = 0;
 
 	cont = cmdb->contact;
 	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
 		printf("Unable to retrieve cust_id for COID %s\n",
 		 cmdb->customer->coid);
-		free(input);
 		return retval;
 	}
-	cmdb->contact->cust_id = cmdb->customer->cust_id;
-	printf("Details Provided:\n");
-	printf("Name:\t\t%s\n", cont->name);
-	printf("Phone No.\t%s\n", cont->phone);
-	printf("Email:\t\t%s\n", cont->email);
-	printf("COID:\t\t%s\n", cmdb->customer->coid);
-	printf("Are these detail correct? (y/n): ");
-	input = fgets(input, CONF_S, stdin);
-	chomp(input);
-	if ((strncmp(input, "y", CH_S)) == 0 || (strncmp(input, "Y", CH_S) == 0)) {
-		retval = run_insert(config, cmdb, CONTACTS);
-	} else {
-		retval = 1;
-	}
-	free(input);
+	cont->cust_id = cmdb->customer->cust_id;
+	retval = run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
 

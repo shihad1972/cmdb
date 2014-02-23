@@ -171,6 +171,22 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 }
 
 int
+check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
+{
+	int retval = NONE;
+
+	if (cl == DISPLAY_USAGE)
+		retval = DISPLAY_USAGE;
+	else if (cl == NO_NAME_OR_ID)
+		retval = NO_NAME_OR_ID;
+	else if ((cl == NO_NAME) && (cm->action != DISPLAY))
+		retval = NO_NAME;
+	else if ((cl & NO_COID) && (cm->action == ADD_TO_DB) && (cm->type = CONTACT))
+		retval = NO_COID;
+	return retval;
+}
+
+int
 parse_cmdb_config_file(cmdb_config_s *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
@@ -827,6 +843,20 @@ fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		snprintf(cont->email, HOST_S, "%s", cm->email);
 	} else {
 		retval = retval | NO_EMAIL;
+	}
+	if (cm->id) {
+		cmdb_customer_s *cust;
+		if (!(cust = malloc(sizeof(cmdb_customer_s))))
+			report_error(MALLOC_FAIL, "cust in fill_contact_values");
+		cmdb_init_customer_t(cust);
+		cmdb->customer = cust;
+#ifdef HAVE_LIBPCRE
+		if (validate_user_input(cm->id, COID_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "contact COID");
+#endif /*HAVE_LIBPCRE */
+		snprintf(cust->coid, RANGE_S, "%s", cm->id);
+	} else {
+		retval = retval | NO_COID;
 	}
 	return retval;
 }
