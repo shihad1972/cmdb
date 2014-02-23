@@ -70,9 +70,7 @@ int main(int argc, char *argv[])
 		} else if (cm->action == ADD_TO_DB) {
 			retval = add_server_to_database(cmc, cm, base, cl);
 			if (retval > 0) {
-				free(cmc);
-				free(cm);
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				cmdb_clean_list(base);
 				printf("Error adding server to database\n");
 				exit(DB_INSERT_FAILED);
@@ -92,9 +90,7 @@ int main(int argc, char *argv[])
 		} else if (cm->action == ADD_TO_DB) {
 			retval = add_customer_to_database(cmc, base);
 			if (retval != 0) {
-				free(cmc);
-				free(cm);
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				cmdb_clean_list(base);
 				printf("Error %d adding customer to DB\n", retval);
 				exit(DB_INSERT_FAILED);
@@ -113,9 +109,7 @@ int main(int argc, char *argv[])
 			}
 		} else if (cm->action == ADD_TO_DB) {
 			if ((retval = add_contact_to_database(cmc, base)) != 0) {
-				free(cmc);
-				free(cm);
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				printf("Error %d adding contact to DB\n", retval);
 				cmdb_clean_list(base);
 				exit(DB_INSERT_FAILED);
@@ -137,9 +131,7 @@ int main(int argc, char *argv[])
 				display_customer_services(cmc, cm->id);
 		} else if (cm->action == ADD_TO_DB) {
 			if ((retval = add_service_to_database(cmc, base)) != 0) {
-				free(cmc);
-				free(cm);
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				printf("Error %d adding service %s to DB\n",
 					 retval, base->service->detail);
 				cmdb_clean_list(base);
@@ -157,9 +149,7 @@ int main(int argc, char *argv[])
 			display_server_hardware(cmc, cm->name);
 		} else if (cm->action == ADD_TO_DB) {
 			if ((retval = add_hardware_to_database(cmc, base)) != 0) {
-				free(cmc);
-				free(cm);
-				free(cmdb_config);
+				cmdb_main_free(cm, cmc, cmdb_config);
 				printf("Error %d adding hardware %s to DB\n",
 					 retval, base->hardtype->hclass);
 				cmdb_clean_list(base);
@@ -187,10 +177,7 @@ Hardware for server %s added to database\n",base->server->name);
 		display_type_error(cm->type);
 	}
 	cmdb_clean_list(base);
-	free(cmc);
-	clean_cmdb_comm_line(cm);
-	free(cm);
-	free(cmdb_config);
+	cmdb_main_free(cm, cmc, cmdb_config);
 	if (retval > 0)
 		report_error(retval, "");
 	exit (retval);
