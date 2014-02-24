@@ -190,6 +190,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No name or ID specified on command line.\n");
 	else if (retval == GENERIC_ERROR)
 		fprintf(stderr, "Unknown command line option.\n");
+	else if (retval == NO_SERVICE)
+		fprintf(stderr, "No service provided on command line\n");
 	else if (retval == NO_DOMAIN_NAME)
 		fprintf(stderr, "No domain specified on command line.\n");
 	else if (retval == NO_IP_ADDRESS)

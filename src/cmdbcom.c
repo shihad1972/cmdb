@@ -67,14 +67,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = CVERSION;
 		} else if (opt == 'l') {
 			comp->action = LIST_OBJ;
-			comp->name = strndup("all", COMM_S);
 		} else if (opt == 'a') {
 			comp->action = ADD_TO_DB;
-/*			if ((comp->type != HARDWARE) &&
-			 (comp->type != SERVICE) && 
-			 (comp->type != NONE) &&
-			 (strncmp(comp->id, "NULL", COMM_S) == 0))
-				snprintf(comp->id, MAC_S, "NOCOID"); */
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
 		} else if (opt == 'n') {
@@ -164,8 +158,20 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 			retval = fill_vmhost_values(comp, base);
 		}
 	} else if (comp->action == DISPLAY) {
-		if (!comp->name)
+		if (comp->type == CONTACT) {
+			if ((!(comp->id)) && (!(comp->coid)))
+				retval = NO_COID;
+		} else if (!comp->name) {
 			retval = NO_NAME;
+		}
+	} else if (comp->action == LIST_OBJ) {
+		if (comp->type == CONTACT)
+			if ((!(comp->id)) && (!(comp->coid)))
+				retval = NO_COID;
+	} else if (comp->action == RM_FROM_DB) {
+		if (comp->type == SERVICE)
+			if (!(comp->url) && (!(comp->service)))
+				retval = NO_SERVICE_URL;
 	}
 	return retval;
 }
@@ -177,12 +183,26 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 
 	if (cl == DISPLAY_USAGE)
 		retval = DISPLAY_USAGE;
-	else if (cl == NO_NAME_OR_ID)
+	else if ((cl == NO_NAME_OR_ID) && (cm->action != LIST_OBJ))
 		retval = NO_NAME_OR_ID;
 	else if ((cl == NO_NAME) && (cm->action != DISPLAY))
 		retval = NO_NAME;
 	else if ((cl & NO_COID) && (cm->action == ADD_TO_DB) && (cm->type = CONTACT))
 		retval = NO_COID;
+	else if (cm->type == SERVICE) {
+		if (cm->action == ADD_TO_DB) {
+			if ((cl & NO_COID) && (cl & NO_NAME))
+				retval = NO_NAME_COID;
+			else if (cl & NO_SERVICE)
+				retval = NO_SERVICE;
+		} else if (cm->action == DISPLAY) {
+			if ((cl & NO_COID) && (cl & NO_NAME))
+				retval = NO_NAME_COID;
+		}
+	} else if (cm->type == CONTACT) {
+		if (cl & NO_COID)
+			retval = NO_COID;
+	}
 	return retval;
 }
 
@@ -797,6 +817,17 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(USER_INPUT_INVALID, "service coid");
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
+	} else if (cm->id) {
+		cmdb_customer_s *cust;
+		if (!(cust = malloc(sizeof(cmdb_customer_s))))
+			report_error(MALLOC_FAIL, "cust in fill_service_values");
+		cmdb_init_customer_t(cust);
+		cmdb->customer = cust;
+#ifdef HAVE_LIBPCRE
+		if (validate_user_input(cm->id, COID_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "service coid");
+#endif /* HAVE_LIBPCRE */
+		snprintf(cust->coid, RANGE_S, "%s", cm->id);
 	} else {
 		retval = retval | NO_COID;
 	}

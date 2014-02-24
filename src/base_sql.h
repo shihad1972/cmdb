@@ -95,7 +95,10 @@ enum {			/* Search indexes and queries */
 	VM_ID_ON_NAME,
 	HCLASS_ON_HARD_TYPE_ID,
 	CUST_ID_ON_NAME,
-	CONTACT_ID_ON_COID_NAME
+	CONTACT_ID_ON_COID_NAME,
+	SERVICE_ID_ON_URL,
+	SERVICE_ID_ON_STYPE_ID,
+	SERVICE_ID_ON_URL_STYPE_ID
 };
 
 /* dnsa queries */

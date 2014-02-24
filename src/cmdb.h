@@ -210,7 +210,9 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_CONTACT_DATA = 205,
 	NO_BUILD_URL = 206,
 	NO_BD_CONFIG = 207,
-	NO_LOG_CONFIG = 208
+	NO_LOG_CONFIG = 208,
+	MULTI_SERVICES = 209,
+	NO_SERVICE_DATA = 210
 	
 };
 
@@ -246,6 +248,7 @@ enum {			/* command line error codes */
 	NO_PREFIX = -12,
 	NO_PARTITION_SCHEMES = -13,
 	NO_NAME_COID = -23,
+	NO_SERVICE_URL = -24,
 	NO_CONT_NAME = -26,
 	DOMAIN_AND_IP_GIVEN = -29,
 	NO_OS_SPECIFIED = -30,

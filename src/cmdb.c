@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	if ((retval = check_for_comm_line_errors(cl, cm)) != 0) {
 		cmdb_main_free(cm, cmc, cmdb_config);
 		cmdb_clean_list(base);
-		display_command_line_error(cl, argv[0]);
+		display_command_line_error(retval, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
 	retval = parse_cmdb_config_file(cmc, cmdb_config);
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 			display_action_error(cm->action);
 		}
 	} else if (cm->type == CONTACT) {
-		if (cm->action == DISPLAY) {
+		if ((cm->action == DISPLAY) || (cm->action == LIST_OBJ)) {
 			if (strncmp(cm->id, "NULL", CONF_S) != 0) {
 				display_customer_contacts(cmc, cm->id);
 			}
@@ -136,6 +136,8 @@ int main(int argc, char *argv[])
 			} else {
 				printf("Service %s added to database\n", base->service->detail);
 			}
+		} else if (cm->action == RM_FROM_DB) {
+			retval = remove_service_from_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}

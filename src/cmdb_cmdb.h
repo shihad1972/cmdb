@@ -242,6 +242,8 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *base);
 int
 remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
 int
+remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
+int
 add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb);
 int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb);
