@@ -116,8 +116,12 @@ SELECT cust_id FROM customer WHERE name = ?","\
 SELECT cont_id FROM contacts c LEFT JOIN customer s ON s.cust_id = c.cust_id\
   WHERE c.name = ? AND s.coid = ?","\
 SELECT service_id FROM services WHERE url = ?","\
-SELECT service_id FROM services WHERE service_type_id = ?","\
-SELECT service_id FROM services WHERE url = ? AND service_type_id = ?"
+SELECT service_id FROM services s LEFT JOIN service_type st ON\
+  s.service_type_id = st.service_type_id WHERE st.service = ?","\
+SELECT service_id FROM services s LEFT JOIN service_type st ON\
+  s.service_type_id = st.service_type_id WHERE s.url = ? AND st.service = ?","\
+SELECT service_id FROM services WHERE server_id = ?","\
+SELECT service_id FROM services WHERE cust_id = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -129,9 +133,9 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1,1,2,1,1,2 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
@@ -145,8 +149,10 @@ const unsigned int cmdb_search_arg_types[][2] = {
 	{ DBTEXT, NONE },
 	{ DBTEXT, DBTEXT },
 	{ DBTEXT, NONE },
+	{ DBTEXT, NONE },
+	{ DBTEXT, DBTEXT },
 	{ DBINT, NONE },
-	{ DBTEXT, DBINT }
+	{ DBINT, NONE }
 };
 
 const unsigned int cmdb_search_field_types[][1] = {
@@ -156,6 +162,8 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBTEXT },
+	{ DBINT },
+	{ DBINT },
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },

@@ -195,8 +195,78 @@ remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 int
 remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
-	int retval = NONE;
+	int retval = NONE, type = NONE;
+	unsigned long int id = NONE;
+	dbdata_s *data, *list;
 
+	if (cm->name) {
+		cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
+		snprintf(data->args.text, HOST_S, "%s", cm->name);
+		if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) == 0) {
+			clean_dbdata_struct(data);
+			return SERVER_ID_NOT_FOUND;
+		} else if (retval > 1) {
+			clean_dbdata_struct(data);
+			return MULTIPLE_SERVER_IDS;
+		} else {
+			id = data->fields.number;
+			type = SERVER;
+		}
+	} else if ((cm->coid) || (cm->id)) {
+		cmdb_init_initial_dbdata(&data, CUST_ID_ON_COID);
+		if (cm->coid)
+			snprintf(data->args.text, RANGE_S, "%s", cm->coid);
+		else if (cm->id)
+			snprintf(data->args.text, RANGE_S, "%s", cm->id);
+		else
+			return NO_COID;
+		if ((retval = cmdb_run_search(config, data, CUST_ID_ON_COID)) == 0) {
+			clean_dbdata_struct(data);
+			return CUSTOMER_NOT_FOUND;
+		} else if (retval > 1) {
+			clean_dbdata_struct(data);
+			return MULTIPLE_CUSTOMERS;
+		} else {
+			id = data->fields.number;
+			type = CUSTOMER;
+		}
+	} else {
+		return NO_NAME_COID;
+	}
+	clean_dbdata_struct(data);
+	if (cm->url) {
+		if (cm->service) {
+			cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_URL_SERVICE);
+			snprintf(data->args.text, HOST_S, "%s", cm->url);
+			snprintf(data->next->args.text, RANGE_S, "%s", cm->service);
+			retval = cmdb_run_search(config, data, SERVICE_ID_ON_URL_SERVICE);
+		} else {
+			cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_URL);
+			snprintf(data->args.text, HOST_S, "%s", cm->url);
+			retval = cmdb_run_search(config, data, SERVICE_ID_ON_URL);
+		}
+		if (retval == 0) {
+			fprintf(stderr, "No services found\n");
+			clean_dbdata_struct(data);
+			return NO_SERVICES;
+		} else if (retval > 1) {
+			fprintf(stderr, "Multiple services returned. Deleting first one\n");
+		}
+		data->args.number = data->fields.number;
+		if ((retval = cmdb_run_delete(config, data, SERVICES)) == 0) {
+			clean_dbdata_struct(data);
+			fprintf(stderr, "No services deleted\n");
+			return NO_SERVICES;
+		} else if (retval > 1) {
+			clean_dbdata_struct(data);
+			fprintf(stderr, "Multiple services deleted\n");
+			return MULTI_SERVICES;
+		} else {
+			printf("Service deleted\n");
+			clean_dbdata_struct(data);
+			retval = NONE;
+		}
+	}
 	return retval;
 }
 

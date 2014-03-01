@@ -47,6 +47,7 @@ typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
 	char *service;
 	short int action;
 	short int type;
+	short int force;
 	unsigned long int sid;
 } cmdb_comm_line_s;
 

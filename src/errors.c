@@ -222,6 +222,9 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No server name or customer coid was specified.\n");
 	else if (retval == NO_CONT_NAME)
 		fprintf(stderr, "No name specified with -N.\n");
+	else if (retval == NO_SERVICE_URL)
+		fprintf(stderr, "A service name or URL was not specified\n\
+If you wish to remove all services (for a server or customer) add the -f option\n");
 	else if (retval == NO_PHONE)
 		fprintf(stderr, "No phone no. specified with -P.\n");
 	else if (retval == NO_PACKAGE)
@@ -291,7 +294,7 @@ display_cmdb_usage(void)
 	printf("CMDB: Configuration Management Database\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action options:\n");
-	printf("-a: add\n-d: display\n-l: list\n-r: remove\n");
+	printf("-a: add\n-d: display\n-l: list\n-r: remove\n-f: force\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
 	printf("-e: services\n-h: hardware\n-o: virtual machine hosts\n");

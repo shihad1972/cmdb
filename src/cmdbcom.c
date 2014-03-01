@@ -48,7 +48,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 
 	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
 	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adehlorstuv")) != -1) {
+	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuv")) != -1) {
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -71,6 +71,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = ADD_TO_DB;
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
+		} else if (opt == 'f') {
+			comp->force = 1;
 		} else if (opt == 'n') {
 			comp->name = strndup(optarg, HOST_S);
 		} else if (opt == 'i') {
@@ -128,7 +130,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 	int retval;
 
 	retval = NONE;
-	if ((!(comp->name)) && (!(comp->id)) &&	(comp->type == 0) && 
+	if ((!(comp->name)) && (!(comp->id)) && (comp->type == 0) && 
 		(comp->action == 0))
 		retval = DISPLAY_USAGE;
 	else if (comp->action == CVERSION)
@@ -169,9 +171,12 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 			if ((!(comp->id)) && (!(comp->coid)))
 				retval = NO_COID;
 	} else if (comp->action == RM_FROM_DB) {
-		if (comp->type == SERVICE)
-			if (!(comp->url) && (!(comp->service)))
+		if (comp->type == SERVICE) {
+			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))
+				retval = NO_NAME_OR_ID;
+			else if ((!(comp->service)) && (!(comp->url)) && (comp->force != 1))
 				retval = NO_SERVICE_URL;
+		}
 	}
 	return retval;
 }
@@ -187,6 +192,8 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 		retval = NO_NAME_OR_ID;
 	else if ((cl == NO_NAME) && (cm->action != DISPLAY))
 		retval = NO_NAME;
+	else if ((cl == NO_SERVICE_URL))
+		retval = NO_SERVICE_URL;
 	else if ((cl & NO_COID) && (cm->action == ADD_TO_DB) && (cm->type = CONTACT))
 		retval = NO_COID;
 	else if (cm->type == SERVICE) {
@@ -272,7 +279,7 @@ parse_cmdb_config_file(cmdb_config_s *dc, char *config)
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
-	cm->action = cm->type = 0;
+	cm->action = cm->type = cm->force = 0;
 	cm->sid = 0;
 	cm->vmhost = cm->config = cm->vendor = '\0';
 	cm->make = cm->model = cm->id = cm->stype = '\0';
