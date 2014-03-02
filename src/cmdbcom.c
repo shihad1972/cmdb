@@ -188,6 +188,8 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 
 	if (cl == DISPLAY_USAGE)
 		retval = DISPLAY_USAGE;
+	else if (cl == CVERSION)
+		retval = CVERSION;
 	else if ((cl == NO_NAME_OR_ID) && (cm->action != LIST_OBJ))
 		retval = NO_NAME_OR_ID;
 	else if ((cl == NO_NAME) && (cm->action != DISPLAY))

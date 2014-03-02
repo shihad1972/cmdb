@@ -2,10 +2,12 @@
 The regex checks have not been added in. This bit me when I added a
 network card with the device and detail the wrong way round. Need
 to get the regex checks working.
+Fixed (for cmdb) Version: 0.2.16.11.8 02/03/2014
 
 cmdb is directly adding the input into the server / customer structs.
 This is probably not the best way to do this, and is not what cbc or
 dnsa do. I should probably update this. 
+Fixed Version: 0.2.16.11.8 02/03/2014
 
 14/02/2014
 Adding a server with the wrong virtual machine host name crashes out
@@ -43,7 +45,9 @@ disable instead of delete in the database.
 19/09/2013
 Cut down the amount of crap you have to add with a server; especially
 the vendor stuff. Only need the ethernet and hard disk and server
-name for a build. 
+name for a build.
+FIXED: Version 0.2.16.11.8, 02/03/2014
+
 Only need one initial customer; techies. Need to think more about
 internal customers; again most of the crap should be able to be added
 later
