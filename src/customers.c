@@ -266,7 +266,25 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 			clean_dbdata_struct(data);
 			retval = NONE;
 		}
-	}
+	} else if (cm->service) {
+		cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_SERVER_ID_SERVICE);
+		data->args.number = id;
+		snprintf(data->next->args.text, RANGE_S, "%s", cm->service);
+		if (type == SERVER)
+			retval = cmdb_run_search(config, data, SERVICE_ID_ON_SERVER_ID_SERVICE);
+		else if (type == CUSTOMER)
+			retval = cmdb_run_search(config, data, SERVICE_ID_ON_CUST_ID_SERVICE);
+		printf("%d services to delete\n", retval);
+		list = data;
+		while (list) {
+			list->args.number = list->fields.number;
+			retval = cmdb_run_delete(config, list, SERVICES);
+			list = list->next;
+		}
+		retval = NONE;
+	} else
+		retval = NO_SERVICE_URL;
+		
 	return retval;
 }
 

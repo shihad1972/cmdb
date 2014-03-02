@@ -121,7 +121,11 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 SELECT service_id FROM services s LEFT JOIN service_type st ON\
   s.service_type_id = st.service_type_id WHERE s.url = ? AND st.service = ?","\
 SELECT service_id FROM services WHERE server_id = ?","\
-SELECT service_id FROM services WHERE cust_id = ?"
+SELECT service_id FROM services WHERE cust_id = ?","\
+SELECT service_id FROM services s LEFT JOIN service_type st ON\
+  s.service_type_id = st.service_type_id WHERE s.server_id = ? AND st.service = ?","\
+SELECT service_id FROM services s LEFT JOIN service_type st ON\
+  s.service_type_id = st.service_type_id WHERE s.cust_id = ? AND st.service = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -133,9 +137,9 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1,1,2,1,1,2 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
@@ -152,7 +156,9 @@ const unsigned int cmdb_search_arg_types[][2] = {
 	{ DBTEXT, NONE },
 	{ DBTEXT, DBTEXT },
 	{ DBINT, NONE },
-	{ DBINT, NONE }
+	{ DBINT, NONE },
+	{ DBINT, DBTEXT },
+	{ DBINT, DBTEXT }
 };
 
 const unsigned int cmdb_search_field_types[][1] = {
@@ -162,6 +168,8 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBTEXT },
+	{ DBINT },
+	{ DBINT },
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },
@@ -1306,7 +1314,7 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_search_sqlite");
 	}
-	for (i = 0; (unsigned)i < search_args[type]; i++) {
+	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
 		if ((retval = set_cmdb_search_sqlite(state, list, type, i)) < 0)
 			break;
 		if (list->next) 
@@ -1340,7 +1348,7 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 	dbdata_s *data;
 
 	if (i > 0) {
-		for (k = 1; k <= i; i++) {
+		for (k = 1; k <= i; k++) {
 			for (u = 1; u <= cmdb_search_fields[type]; u++)
 				if ((u != cmdb_search_fields[type]) || (k != i))
 					list = list->next;

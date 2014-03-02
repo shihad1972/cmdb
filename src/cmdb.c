@@ -122,9 +122,9 @@ int main(int argc, char *argv[])
 		if (cm->action == LIST_OBJ) {
 			display_service_types(cmc);
 		} else if (cm->action == DISPLAY) {
-			if ((strncmp(cm->name, "NULL", CONF_S) != 0))
+			if (cm->name)
 				display_server_services(cmc, cm->name);
-			else if ((strncmp(cm->id, "NULL", CONF_S) != 0))
+			else if (cm->id)
 				display_customer_services(cmc, cm->id);
 		} else if (cm->action == ADD_TO_DB) {
 			if ((retval = add_service_to_database(cmc, base)) != 0) {

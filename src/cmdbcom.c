@@ -200,6 +200,10 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 		if (cm->action == ADD_TO_DB) {
 			if ((cl & NO_COID) && (cl & NO_NAME))
 				retval = NO_NAME_COID;
+			else if (cl & NO_COID)
+				retval = NO_COID;
+			else if (cl & NO_NAME)
+				retval = NO_NAME;
 			else if (cl & NO_SERVICE)
 				retval = NO_SERVICE;
 		} else if (cm->action == DISPLAY) {

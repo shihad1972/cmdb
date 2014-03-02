@@ -89,6 +89,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Unable to add record %s to database", errstr);
 	} else if (error == MALLOC_FAIL) {
 		fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
+	} else if (error == NO_SERVICE_URL) {
+		fprintf(stderr, "No service type or URL was provided.\n");
 	} else if (error == SERVER_NOT_FOUND) {
 		fprintf(stderr, "Server %s not found in database\n", errstr);
 	} else if (error == MULTIPLE_SERVERS) {
