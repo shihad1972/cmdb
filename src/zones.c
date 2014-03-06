@@ -202,19 +202,20 @@ records->host, records->type, records->dest);
 		}
 	}
 	while (glue) {
+		string_len_s *zonefile = '\0';
 		if (glue->zone_id == zone->id) {
 			snprintf(name, HOST_S, "%s", glue->name);
 			dot = strchr(name, '.');
 			*dot = '\0';
 			if (strncmp(glue->sec_dns, "none", COMM_S))
 				printf("\
-%s\tIN\tNS\t%s.%s\n\tIN\tNS\t%s.%s\n%s.%s\tIN\tA\t%s\n%s.%s\tIN\tA\t%s\n",
-name, glue->pri_ns, name, glue->sec_ns, name, glue->pri_ns, name, glue->pri_dns,
-glue->sec_ns, name, glue->sec_dns);
+%s\tIN\tNS\t%s\n\tIN\tNS\t%s\n",
+name, glue->pri_ns, glue->sec_ns);
 			else
 				printf("\
-%s\tIN\tNS\t%s\n%s.%s\tIN\tA\t%s\n",
-name, glue->pri_ns, name, glue->pri_ns, glue->pri_dns);
+%s\tIN\tNS\t%s\n",
+name, glue->pri_ns);
+			check_a_record_for_ns(zonefile, glue, zone->name, dnsa);
 			glue = glue->next;
 		} else {
 			glue = glue->next;
@@ -495,7 +496,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	
 	if (!(buff = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buff in check_a_record_for_ns");
-	if (!(glue) || !(zonefile))
+	if (!(glue))
 		return;
 	pns = strdup(glue->pri_ns);
 	sns = strdup(glue->sec_ns);
@@ -515,10 +516,14 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 		if (check_parent_for_a_record(glue->pri_ns, parent, dnsa)) {
 			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
 			len = strlen(buff);
-			if ((len + zonefile->size) >= zonefile->len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-			zonefile->size += len;
+			if (zonefile) {
+				if ((len + zonefile->size) >= zonefile->len)
+					resize_string_buff(zonefile);
+				snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+				zonefile->size += len;
+			} else {
+				printf("%s", buff);
+			}
 		}
 	}
 	if ((host = strstr(sns, zone))) {
@@ -535,10 +540,14 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 		if (check_parent_for_a_record(glue->sec_ns, parent, dnsa)) {
 			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
 			len = strlen(buff);
-			if ((len + zonefile->size) >= zonefile->len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-			zonefile->size += len;
+			if (zonefile) {
+				if ((len + zonefile->size) >= zonefile->len)
+					resize_string_buff(zonefile);
+				snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
+				zonefile->size += len;
+			} else {
+				printf("%s", buff);
+			}
 		}
 	}
 	free(pns);
@@ -2896,7 +2905,7 @@ print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 			pri = get_zone_fqdn_name(list, glue, 0);
 			sec = get_zone_fqdn_name(list, glue, 1);
 			printf("%s\t%s\t%s,%s\t%s,%s\n",
-zone->name, glue->name, pri, sec, glue->pri_dns, glue->sec_dns);
+list->name, glue->name, pri, sec, glue->pri_dns, glue->sec_dns);
 			list = list->next;
 			free(sec);
 			free(pri);
