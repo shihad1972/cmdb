@@ -915,16 +915,22 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		report_error(MALLOC_FAIL, "hard in fill_hardware_values");
 	cmdb_init_hardware_t(hard);
 	cmdb->hardware = hard;
-	if (hard->detail) {
+	if (cm->detail) {
 #ifdef HAVE_LIBPCRE
-		if (validate_user_input(cm->detail, CUSTOMER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "hardware detail");
+		/* Hard coded net device. Should change this sometime */
+		if (cm->sid == 1) {
+			if (validate_user_input(cm->detail, MAC_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "hardware detail");
+		} else {
+			if (validate_user_input(cm->detail, CUSTOMER_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "hardware detail");
+		}
 #endif /* HAVE_LIBPCRE */
 		snprintf(hard->detail, HOST_S, "%s", cm->detail);
 	} else {
 		retval = retval | NO_DETAIL;
 	}
-	if (hard->device) {
+	if (cm->device) {
 #ifdef HAVE_LIBPCRE
 		if (validate_user_input(cm->device, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware device");
@@ -948,7 +954,7 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		retval = retval |  NO_NAME;
 	}
 	if (cm->sid != 0)
-		hard->hard_id = cm->sid;
+		hard->ht_id = cm->sid;
 	else
 		retval = retval | NO_ID;
 	return retval;
