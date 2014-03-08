@@ -444,7 +444,7 @@ display_dnsa_usage(void)
 	printf("dnsa: Domain Name System Administratiom\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action options (and needed options)\n");
-	printf("-a: add host record\n\t-t -h -i -n (-p)\n");
+	printf("-a: add host record\n\t-t -h -i -n (-p) (-o -s)\n");
 	printf("-b: build reverse zone\n\t-n\n");
 	printf("-d: show zone\n\t[-F|-R|-G] -n\n");
 	printf("-e: Add preferred A record for reverse DNS");
@@ -469,7 +469,8 @@ display_dnsa_usage(void)
 	printf("-p: prefix\n\n");
 	printf("Host options for use with adding a host record:\n");
 	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host");
-	printf("\n-p: priority (for MX record)\n\n");
+	printf("\n-p: priority (for MX and SRV records)\n");
+	printf("-o: protocol -s: service (for SRV records)\n\n");
 }
 
 void

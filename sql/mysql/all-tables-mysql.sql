@@ -401,6 +401,8 @@ CREATE TABLE `records` (
   `zone` int(7) NOT NULL DEFAULT '0',
   `host` varchar(255) NOT NULL,
   `type` varchar(255) NOT NULL,
+  `protocol` varchar(15) NOT NULL,
+  `service` varchar(15) NOT NULL,
   `pri` int(7) NOT NULL DEFAULT '0',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',

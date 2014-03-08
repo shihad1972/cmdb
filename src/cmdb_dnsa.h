@@ -17,6 +17,8 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	unsigned long int prefix;
 	char rtype[RANGE_S];
 	char ztype[RANGE_S];
+	char service[RANGE_S];
+	char protocol[RANGE_S];
 	char domain[CONF_S];
 	char config[CONF_S];
 	char host[RBUFF_S];
@@ -59,6 +61,8 @@ typedef struct record_row_s { /* Hold dns record */
 	char host[RBUFF_S];
 	char type[RANGE_S];
 	char valid[RANGE_S];
+	char service[RANGE_S];
+	char protocol[RANGE_S];
 	unsigned long int id;
 	unsigned long int pri;
 	unsigned long int zone;
@@ -310,6 +314,8 @@ void
 add_mx_record(string_len_s *zone, record_row_s *rec);
 void
 add_ns_record(string_len_s *zone, record_row_s *rec);
+void
+add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);

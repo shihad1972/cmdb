@@ -41,7 +41,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:p:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -92,8 +92,12 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			snprintf(comp->dest, RBUFF_S, "%s", optarg);
 		} else if (opt == 'n') {
 			snprintf(comp->domain, CONF_S, "%s", optarg);
+		} else if (opt == 'o') {
+			snprintf(comp->protocol, RANGE_S, "%s", optarg);
 		} else if (opt == 'p') {
 			comp->prefix = strtoul(optarg, NULL, 10);
+		} else if (opt == 's') {
+			snprintf(comp->service, RANGE_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(comp->rtype, RANGE_S, "%s", optarg);
 		} else if (opt == 'v') {
@@ -368,6 +372,8 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	strncpy(dcl->ztype, "NULL", COMM_S);
 	strncpy(dcl->host, "NULL", COMM_S);
 	strncpy(dcl->master, "NULL", COMM_S);
+	strncpy(dcl->service, "NULL", COMM_S);
+	strncpy(dcl->protocol, "NULL", COMM_S);
 	strncpy(dcl->glue_ip, "NULL", COMM_S);
 	strncpy(dcl->glue_ns, "NULL", COMM_S);
 	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);

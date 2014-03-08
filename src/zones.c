@@ -409,6 +409,9 @@ $TTL %lu\n\
 		} else  if
 ((record->zone == id) && (strncmp(record->type, "NS", COMM_S) == 0)) {
 			add_ns_record(zonefile, record);
+		} else if
+((record->zone == id) && (strncmp(record->type, "SRV", COMM_S) == 0)) {
+			add_srv_record(zonefile, record, zone);
 		}
 		record = record->next;
 	}
@@ -434,6 +437,8 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 		} else if (strncmp(record->type, "MX", COMM_S) == 0) {
 			record = record->next;
 		} else if (strncmp(record->type, "NS", COMM_S) == 0) {
+			record = record->next;
+		} else if (strncmp(record->type, "SRV", COMM_S) == 0) {
 			record = record->next;
 		} else {
 			snprintf(buffer, BUFF_S, "\
@@ -579,7 +584,7 @@ add_mx_record(string_len_s *zone, record_row_s *rec)
 	size_t len;
 
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
+		report_error(MALLOC_FAIL, "buffer in add_mx_record");
 	snprintf(buffer, RBUFF_S + COMM_S, "\
 \tIN\tMX %lu\t%s\n", rec->pri, rec->dest);
 	len = strlen(buffer);
@@ -597,7 +602,7 @@ add_ns_record(string_len_s *zone, record_row_s *rec)
 	size_t len;
 
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
+		report_error(MALLOC_FAIL, "buffer in add_ns_record");
 	snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n", rec->dest);
 	len = strlen(buffer);
 	if ((len + zone->size) >= zone->len)
@@ -605,6 +610,58 @@ add_ns_record(string_len_s *zone, record_row_s *rec)
 	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
 	zone->size += len;
 	free(buffer);
+}
+
+void
+add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
+{
+	char *buffer, *host, *zname;
+	int retval;
+	unsigned short int port;
+	size_t len;
+	struct addrinfo hints, *srvinfo;
+	struct sockaddr_in *ipv4;
+
+	if (!(buffer = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buffer in add_srv_record");
+	if (!(host = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "host in add_srv_record");
+	snprintf(host, RBUFF_S, "%s.%s", rec->dest, zinfo->name);
+	zname = strndup(zinfo->name, RBUFF_S);
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
+		hints.ai_socktype = SOCK_STREAM;
+	else if ((strncmp("udp", rec->protocol, RANGE_S)) == 0)
+		hints.ai_socktype = SOCK_DGRAM;
+	else {
+		fprintf(stderr, "Unkown protocol type %s in %s\n",
+		 rec->protocol, rec->host);
+		return;
+	}
+        hints.ai_flags = AI_PASSIVE;
+	if ((retval = getaddrinfo(host, rec->service, &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
+		return;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		port = ipv4->sin_port;
+	} else {
+		report_error(WRONG_PROTO, "add_srv_record");
+	}
+	freeaddrinfo(srvinfo);
+	snprintf(buffer, BUFF_S, "\
+_%s._%s.%s. %lu IN SRV %lu 0 %u %s.%s.\n", rec->service, rec->protocol, zname,
+zinfo->ttl, rec->pri, port, rec->dest, zname);
+	len = strlen(buffer);
+	if ((len + zone->size) >= zone->len)
+		resize_string_buff(zone);
+	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
+	zone->size += len;
+	free(buffer);
+	free(host);
+	free(zname);
 }
 
 int
