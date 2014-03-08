@@ -98,6 +98,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->prefix = strtoul(optarg, NULL, 10);
 		} else if (opt == 's') {
 			snprintf(comp->service, RANGE_S, "%s", optarg);
+			snprintf(comp->host, RANGE_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(comp->rtype, RANGE_S, "%s", optarg);
 		} else if (opt == 'v') {
@@ -128,8 +129,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST && strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if (((comp->action == ADD_HOST || comp->action == DELETE_RECORD)
-	      && strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	else if ((comp->action == ADD_HOST || comp->action == DELETE_RECORD)
+	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;

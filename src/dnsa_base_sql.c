@@ -62,7 +62,7 @@ valid, owner, updated, type, master FROM zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
 owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
-SELECT id, zone, host, type, pri, destination, valid FROM records ORDER \
+SELECT id, zone, host, type, protocol, service, pri, destination, valid FROM records ORDER \
 BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
 SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
@@ -109,8 +109,8 @@ ttl, type, master) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master) \
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO records (zone, host, type, pri, destination) VALUES \
-(?, ?, ?, ?, ?)","\
+INSERT INTO records (zone, host, type, protocol, service, pri, destination) VALUES \
+(?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
 INSERT","\
 INSERT","\
@@ -151,9 +151,10 @@ const int mysql_inserts[][15] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
     MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING} , 
-{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} , 
+    MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING} ,
+{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
+    MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
+    0, 0, 0, 0, 0, 0, 0, 0} , 
 {MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0} ,
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
@@ -167,9 +168,9 @@ const int mysql_inserts[][15] = {
 
 #endif /* HAVE_MYSQL */
 
-const unsigned int dnsa_select_fields[] = { 14, 19, 7, 5, 5, 2, 5, 4, 7 };
+const unsigned int dnsa_select_fields[] = { 14, 19, 9, 5, 5, 2, 5, 4, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 10, 15, 5, 3, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 10, 15, 7, 3, 0, 0, 4, 0, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -674,9 +675,11 @@ dnsa_store_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	rec->zone = strtoul(row[1], NULL, 10);
 	snprintf(rec->host, RBUFF_S, "%s", row[2]);
 	snprintf(rec->type, RANGE_S, "%s", row[3]);
-	rec->pri = strtoul(row[4], NULL, 10);
-	snprintf(rec->dest, RBUFF_S, "%s", row[5]);
-	snprintf(rec->valid, RANGE_S, "%s", row[6]);
+	snprintf(rec->protocol, RANGE_S, "%s", row[4]);
+	snprintf(rec->service, RANGE_S, "%s", row[5]);
+	rec->pri = strtoul(row[6], NULL, 10);
+	snprintf(rec->dest, RBUFF_S, "%s", row[7]);
+	snprintf(rec->valid, RANGE_S, "%s", row[8]);
 	list = base->records;
 	if (list) {
 		while(list->next)
@@ -1216,8 +1219,12 @@ dnsa_setup_insert_mysql_bind_buff_record(void **input, dnsa_s *base, unsigned in
 	else if (i == 2)
 		*input = &(base->records->type);
 	else if (i == 3)
-		*input = &(base->records->pri);
+		*input = &(base->records->protocol);
 	else if (i == 4)
+		*input = &(base->records->service);
+	else if (i == 5)
+		*input = &(base->records->pri);
+	else if (i == 6)
 		*input = &(base->records->dest);
 }
 
@@ -1531,9 +1538,11 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	rec->zone = (unsigned long int) sqlite3_column_int64(state, 1);
 	snprintf(rec->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(rec->type, RANGE_S, "%s", sqlite3_column_text(state, 3));
-	rec->pri = (unsigned long int) sqlite3_column_int(state, 4);
-	snprintf(rec->dest, RBUFF_S, "%s", sqlite3_column_text(state, 5));
-	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 6));
+	snprintf(rec->protocol, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	snprintf(rec->service, RANGE_S, "%s", sqlite3_column_text(state, 5));
+	rec->pri = (unsigned long int) sqlite3_column_int(state, 6);
+	snprintf(rec->dest, RBUFF_S, "%s", sqlite3_column_text(state, 7));
+	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 8));
 	list = base->records;
 	if (list) {
 		while (list->next)
@@ -1981,12 +1990,22 @@ state, 3, record->type, (int)strlen(record->type), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind type %s\n", record->type);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int64(state, 4, (sqlite3_int64)record->pri)) > 0) {
+	if ((retval = sqlite3_bind_text(
+state, 4, record->protocol, (int)strlen(record->protocol), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind protocol %s\n", record->protocol);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, record->service, (int)strlen(record->service), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind service %s\n", record->service);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)record->pri)) > 0) {
 		fprintf(stderr, "Cannot bind pri %lu\n", record->pri);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_text(
-state, 5, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
+state, 7, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind destination %s\n", record->dest);
 		return retval;
 	}

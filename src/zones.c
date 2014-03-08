@@ -655,7 +655,7 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 	}
 	if (srvinfo->ai_family == AF_INET) {
 		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
-		port = ipv4->sin_port;
+		port = (unsigned short int) htons((uint16_t)ipv4->sin_port);
 	} else {
 		report_error(WRONG_PROTO, "add_srv_record");
 	}
@@ -1320,6 +1320,7 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
+	/* Should only do this for FQDN */
 	if (strncmp(cm->rtype, "CNAME", COMM_S) == 0)
 		add_trailing_dot(cm->dest);
 	retval = 0;
@@ -1328,6 +1329,10 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
 	snprintf(record->host, RBUFF_S, "%s", cm->host);
 	snprintf(record->type, RANGE_S, "%s", cm->rtype);
+	if (strncmp(cm->rtype, "SRV", COMM_S) == 0) {
+		snprintf(record->protocol, RANGE_S, "%s", cm->protocol);
+		snprintf(record->service, RANGE_S, "%s", cm->service);
+	}
 	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
 	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
