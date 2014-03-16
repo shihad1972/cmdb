@@ -105,7 +105,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->action = CVERSION;
 		}
 	}
-
+	if (strncmp(comp->rtype, "SRV", COMM_S) == 0)
+		snprintf(comp->host, RANGE_S, "%s", comp->service);
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;

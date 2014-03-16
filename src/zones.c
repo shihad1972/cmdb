@@ -644,7 +644,7 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 	else if ((strncmp("udp", rec->protocol, RANGE_S)) == 0)
 		hints.ai_socktype = SOCK_DGRAM;
 	else {
-		fprintf(stderr, "Unkown protocol type %s in %s\n",
+		fprintf(stderr, "Unknown protocol type %s for %s: not tcp nor udp\n",
 		 rec->protocol, rec->host);
 		return;
 	}
