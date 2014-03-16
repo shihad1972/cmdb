@@ -434,6 +434,7 @@ init_glue_zone_struct(glue_zone_info_s *glu)
 void
 init_record_struct(record_row_s *record)
 {
+	memset(record, 0, sizeof(record_row_s));
 	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
 	snprintf(record->host, COMM_S, "NULL");
