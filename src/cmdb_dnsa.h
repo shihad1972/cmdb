@@ -11,6 +11,15 @@ enum {			/* zone types; use NONE from action codes */
 	GLUE_ZONE = 3
 };
 
+enum {			/* record types; use NONE from action codes */
+	A = 1,
+	CNAME = 2,
+	SRV = 3,
+	NS = 4,
+	MX = 5,
+	TXT = 6
+};
+
 typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	short int action;
 	short int type;
@@ -277,6 +286,10 @@ void
 display_zone(char *domain, dnsa_config_s *dc);
 void
 print_zone(dnsa_s *dnsa, char *domain);
+void
+print_record(record_row_s *rec, char *zname);
+int
+get_port_number(record_row_s *rec, char *name, unsigned short int *port);
 void
 display_rev_zone(char *domain, dnsa_config_s *dc);
 void

@@ -45,7 +45,7 @@
 #endif /* HAVE_LIBPCRE */
 
 void
-list_zones (dnsa_config_s *dc)
+list_zones(dnsa_config_s *dc)
 {
 	int retval;
 	dnsa_s *dnsa;
@@ -183,18 +183,7 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 	}
 	while (records) {
 		if (zone->id == records->zone) {
-			if (strlen(records->host) < 8)
-				printf("%s\t\t\tIN\t%s\t%s\n",
-records->host, records->type, records->dest);
-			else if (strlen(records->host) < 16)
-				printf("%s\t\tIN\t%s\t%s\n",
-records->host, records->type, records->dest);
-			else if (strlen(records->host) < 24)
-				printf("%s\tIN\t%s\t%s\n",
-records->host, records->type, records->dest);
-			else
-				printf("%s\n\t\t\tIN\t%s\t%s\n",
-records->host, records->type, records->dest);
+			print_record(records, zone->name);
 			i++;
 			records = records->next;
 		} else {
@@ -225,6 +214,71 @@ name, glue->pri_ns);
 		printf("\n%u record\n", i);
 	else
 		printf("\n%u records\n", i);
+}
+
+void
+print_record(record_row_s *rec, char *zname)
+{
+	int retval = NONE;
+	unsigned short int port = NONE;
+
+	if (!(rec) || !(zname))
+		return;
+	if ((strncmp(rec->type, "SRV", COMM_S)) == 0) {
+		char *srv = rec->service, *proto = rec->protocol;
+		if ((retval = get_port_number(rec, zname, &port)) == 0)
+			printf("\t\t\tIN\tSRV\t%lu 0 %u _%s._%s.%s.\n",
+rec->pri, port, srv, proto, zname);
+	} else if ((strncmp(rec->type, "MX", COMM_S)) == 0) {
+		printf("\t\t\tIN\tMX\t%lu %s\n", rec->pri, rec->host);
+	} else {
+		if (strlen(rec->host) < 8)
+			printf("%s\t\t\tIN\t%s\t%s\n", rec->host, rec->type, rec->dest);
+		else if (strlen(rec->host) < 16)
+			printf("%s\t\tIN\t%s\t%s\n", rec->host, rec->type, rec->dest);
+		else if (strlen(rec->host) < 24)
+			printf("%s\tIN\t%s\t%s\n", rec->host, rec->type, rec->dest);
+		else
+			printf("%s\n\t\t\tIN\t%s\t%s\n", rec->host, rec->type, rec->dest);
+	}
+}
+
+int
+get_port_number(record_row_s *rec, char *name, unsigned short int *port)
+{
+	char *host;
+	int retval = NONE;
+	struct addrinfo hints, *srvinfo;
+	struct sockaddr_in *ipv4;
+
+	if (!(host = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "host in add_srv_record");
+	snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
+		hints.ai_socktype = SOCK_STREAM;
+	else if ((strncmp("udp", rec->protocol, RANGE_S)) == 0)
+		hints.ai_socktype = SOCK_DGRAM;
+	else {
+		fprintf(stderr, "Unkown protocol type %s in %s\n",
+		 rec->protocol, rec->host);
+		return WRONG_PROTO;
+	}
+        hints.ai_flags = AI_PASSIVE;
+	if ((retval = getaddrinfo(host, rec->service, &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
+		return retval;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		*port = (unsigned short int) htons((uint16_t)ipv4->sin_port);
+	} else {
+		report_error(WRONG_PROTO, "add_srv_record");
+	}
+	freeaddrinfo(srvinfo);
+	free(host);
+	return retval;
 }
 
 void
@@ -314,6 +368,7 @@ check_zone(char *domain, dnsa_config_s *dc)
 		retval = NONE;
 	return retval;
 }
+
 int
 commit_fwd_zones(dnsa_config_s *dc)
 {
