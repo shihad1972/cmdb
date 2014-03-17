@@ -105,7 +105,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->action = CVERSION;
 		}
 	}
-
+	if (strncmp(comp->rtype, "SRV", COMM_S) == 0)
+		snprintf(comp->host, RANGE_S, "%s", comp->service);
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
@@ -433,6 +434,7 @@ init_glue_zone_struct(glue_zone_info_s *glu)
 void
 init_record_struct(record_row_s *record)
 {
+	memset(record, 0, sizeof(record_row_s));
 	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
 	snprintf(record->host, COMM_S, "NULL");
