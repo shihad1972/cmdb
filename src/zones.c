@@ -681,7 +681,7 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 {
 	char *buffer, *host, *zname;
 	int retval;
-	unsigned short int port;
+	unsigned short int port = 0;
 	size_t len;
 	struct addrinfo hints, *srvinfo;
 	struct sockaddr_in *ipv4;
@@ -777,8 +777,7 @@ zone \"%s\" {\n\
 \t\t\ttype master;\n\
 \t\t\tfile \"%s%s\";\n\
 ", zone->name, dc->dir, zone->name);
-/*\t\t};\n\n", zone->name, dc->dir, zone->name); */
-			if ((check_notify_ip(dc, zone, &host)) == 0)
+			if ((check_notify_ip(zone, &host)) == 0)
 				snprintf(buff, RBUFF_S, "\
 \t\t\tnotify-source %s;\n\
 \t\t};\n\n", host);
@@ -837,7 +836,7 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 }
 
 int
-check_notify_ip(dnsa_config_s *dc, zone_info_s *zone, char **ipstr)
+check_notify_ip(zone_info_s *zone, char **ipstr)
 {
 	char *host = '\0', *dhost = '\0', *dipstr = '\0';
 	int retval = NONE;

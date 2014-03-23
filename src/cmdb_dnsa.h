@@ -320,7 +320,7 @@ add_int_ip_to_fwd_records(record_row_s *records);
 int
 add_int_ip_to_rev_records(dnsa_s *dnsa);
 int
-check_notify_ip(dnsa_config_s *dc, zone_info_s *zone, char **host);
+check_notify_ip(zone_info_s *zone, char **host);
 int
 check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa);
 void
