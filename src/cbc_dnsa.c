@@ -62,6 +62,7 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
 	snprintf(zone->name, RBUFF_S, "%s", domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	snprintf(zone->type, COMM_S, "master");
 	zone->serial = get_zone_serial();
 	zone->refresh = dc->refresh;
 	zone->retry = dc->retry;
