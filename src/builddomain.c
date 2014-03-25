@@ -296,7 +296,6 @@ list_cbc_build_domain(cbc_config_s *cbc)
 		return retval;
 	}
 	bdom = base->bdom;
-	printf("Build Domains\n\n");
 	while (bdom) {
 		printf("%s\n", bdom->domain);
 		bdom = bdom->next;

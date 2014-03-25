@@ -2143,7 +2143,7 @@ add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf)
 	dbdata_s *list = data;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in display_build_domain");
+		report_error(MALLOC_FAIL, "ip in add_kick_smtp_config");
 	if (list->next) {
 		list = list->next;
 		server = list->fields.text;
