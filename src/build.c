@@ -837,7 +837,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	build->len = BUFF_S;
 	build->size = NONE;
 	if (!(build->string = calloc(build->len,  sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_pre_host_script");
+		report_error(MALLOC_FAIL, "build->string in write_pre_host_script");
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;

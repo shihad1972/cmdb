@@ -1171,7 +1171,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_mysql");
 	vmhost->id = strtoul(row[0], NULL, 10);
 	snprintf(vmhost->name, RBUFF_S, "%s", row[1]);
-	snprintf(vmhost->type, CONF_S, "%s", row[2]);
+	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[3], NULL, 10);
 	vmhost->next = '\0';
 	list = base->vmhost;
@@ -1771,7 +1771,7 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_sqlite");
 	vmhost->id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(vmhost->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(vmhost->type, CONF_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int(state, 3);
 	vmhost->next = '\0';
 	list = base->vmhost;
