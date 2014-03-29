@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@
  *  Functions to get configuration values and also parse command line arguments
  * 
  *  part of the cbc program
- * 
- *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
 #include <unistd.h>
@@ -118,13 +116,21 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:f:g:i:k:lmn:prs:t:vx:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:f:g:i:jk:lmn:prs:t:vx:")) != -1) {
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'b') {
 			snprintf(cdl->basedn, NAME_S, "%s", optarg);
 		} else if (opt == 'd') {
 			cdl->action = DISPLAY_CONFIG;
+		} else if (opt == 'l') {
+			cdl->action = LIST_CONFIG;
+		} else if (opt == 'm') {
+			cdl->action = MOD_CONFIG;
+		} else if (opt == 'r') {
+			cdl->action = RM_CONFIG;
+		} else if (opt == 'j') {
+			cdl->action = LIST_SERVERS;
 		} else if (opt == 'e') {
 			snprintf(cdl->smtpserver, HOST_S, "%s", optarg);
 			cdl->confsmtp = 1;
@@ -137,16 +143,10 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			snprintf(cdl->binddn, NAME_S, "%s", optarg);
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'l') {
-			cdl->action = LIST_CONFIG;
-		} else if (opt == 'm') {
-			cdl->action = MOD_CONFIG;
 		} else if (opt == 'n') {
 			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'p') {
 			cdl->ldapssl = TRUE;
-		} else if (opt == 'r') {
-			cdl->action = RM_CONFIG;
 		} else if (opt == 's') {
 			snprintf(cdl->ldapserver, HOST_S, "%s", optarg);
 			cdl->confldap = 1;

@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -314,7 +314,8 @@ enum {			/* cbc action codes */
 	MOD_CONFIG = 15,
 	RM_CONFIG = 16,
 	LIST_CONFIG = 17,
-	QUERY_CONFIG = 18
+	QUERY_CONFIG = 18,
+	LIST_SERVERS = 19
 };
 
 enum {			/* dnsa action codes */

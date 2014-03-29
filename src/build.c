@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
  * 
  *  Contains functions to display / add / modify / delete build details in the
  *  database for the main cbc program.
- * 
- *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
 #include "../config.h"
