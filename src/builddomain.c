@@ -77,7 +77,8 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		clean_cbc_struct(base);
 		return retval;
 	}
-	display_build_domain(base->bdom);
+	if (cdl->action != LIST_SERVERS)
+		display_build_domain(base->bdom);
 	list_build_dom_servers(cbc, base->bdom->bd_id);
 	clean_cbc_struct(base);
 	return retval;

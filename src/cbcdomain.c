@@ -65,7 +65,8 @@ main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
-	if (cdcl->action == DISPLAY_CONFIG)
+	if ((cdcl->action == DISPLAY_CONFIG) ||
+		(cdcl->action == LIST_SERVERS))
 		retval = display_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == LIST_CONFIG)
 		retval = list_cbc_build_domain(cmc);
@@ -73,9 +74,9 @@ main(int argc, char *argv[])
 		retval = add_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == RM_CONFIG)
 		retval = remove_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == MOD_CONFIG) {
+	else if (cdcl->action == MOD_CONFIG)
 		retval = modify_cbc_build_domain(cmc, cdcl);
-	} else
+	else
 		printf("Unknown Action type\n");
 
 	free(cdcl);
