@@ -1,3 +1,9 @@
+29/03/2014
+If I change the id field in the database to a uuid then I can have
+a local file storage, i.e. not use a database. If I am to do this
+it may be helpful to be able to import and export these fields in
+raw text. libxml anyone?
+
 17/02/2014
 The regex checks have not been added in. This bit me when I added a
 network card with the device and detail the wrong way round. Need

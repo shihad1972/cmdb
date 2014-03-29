@@ -56,7 +56,7 @@ delete zone
 .IP -z
 add zone
 .IP -v
-version (no other argument needed)
+display version information
 .PP
 .B Zone type (these do not take arguments)
 .IP -F
@@ -67,6 +67,17 @@ Reverse zone
 Slave zone
 .IP -G
 Glue records for delegated zone
+.PP
+.B Name options for all zones.
+.IP "-n zone name / network range
+The name of the DNS zone / domain for forward zones or the IP range for
+reverse zones. 
+.PP 
+.B Options for adding a reverse zone
+.IP "-p prefix"
+The subnet prefix for a reverse zone. Regular classes (/8, /16 or /24)
+or classless prefixes (/24 -> /32) will be accepted. Classless prefixes
+between /8 -> /16 and /16 -> /24 will NOT be accepted.
 .PP
 .B Slave Zones
 
@@ -89,32 +100,24 @@ denote a FQDN. Otherwise, these records will be added to the parent zone.
 This includes the A records for the name servers. If you do not then you may
 get errors from bind about "out of zone" records.
 .PP
-.B Name options
+.B Name options for adding slave zones.
 .IP "-M master nameserver IP"
-This is the ip address of the master name server. This option is only useful
-if you are adding a slave zone (specified with the -S option above)
+This is the ip address of the master name server. 
 .PP
-.IP "-n zone name / network range
-The name of the DNS zone / domain for forward zones or the IP range for
-reverse zones.
-.PP
-.IP "-N pri_ns_name,sec_ns_name"
-The name of the primary, and optionally, the secondary name server(s) that will
-create the \fBglue records\fP. These will prefix the subdomain to get the
-FQDN of the name server. If these are not supplied, then the standards \fBn1\fP
-and \fBns2\fP will be used.
-.PP
-.B Options for adding a reverse zone
-.IP "-p prefix"
-The subnet prefix for a reverse zone. Regular classes (/8, /16 or /24)
-or classless prefixes (/24 -> /32) will be accepted. Classless prefixes
-between /8 -> /16 and /16 -> /24 will NOT be accepted.
+.IP "-h master nameserver IP"
+This is the FQDN of the dns master dns server.
 .PP
 .B Options for adding a delegated zone and glue records
 .IP "-I pri_ns_ip,sec_ns_ip"
 These are the IP addresses of the primary, and optionally, secondary name
 servers that you are delegating the subdomain to, and will be used in the
 creation of the \fBglue records\fP.
+.PP
+.IP "-N pri_ns_name,sec_ns_name"
+The name of the primary, and optionally, the secondary name server(s) that will
+create the \fBglue records\fP. These will prefix the subdomain to get the
+FQDN of the name server. If these are not supplied, then the standards \fBn1\fP
+and \fBns2\fP will be used.
 .PP
 .B Options for adding a forward host
 .IP "-i IP address"
@@ -133,6 +136,7 @@ When adding an MX record this is the priority of the MX record.
 This is either \fBtcp\fP or \fBudp\fP when creating an SRV record
 .IP "-s service"
 This is the name listed in \fB/etc/services\fP for creating an SRV record.
+.PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf
 .RS
