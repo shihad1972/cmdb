@@ -68,10 +68,10 @@ void
 cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query);
 
 void
-list_build_dom_servers(cbc_config_s *cbc, unsigned long int id);
+list_build_dom_servers(cbc_config_s *cbc, unsigned long int id, char *name);
 
 void
-print_build_dom_servers(dbdata_s *data);
+print_build_dom_servers(dbdata_s *data, char *name);
 
 # ifdef HAVE_DNSA
 
