@@ -1,4 +1,4 @@
-.TH DNSA 8 "Version 0.2: 17 March 2014" "CMDB suite manuals"
+.TH DNSA 8 "Version 0.2: 29 March 2014" "CMDB suite manuals"
 .SH NAME
 dnsa \- Domain Name System Administration
 .SH SYNOPSIS
@@ -104,7 +104,7 @@ get errors from bind about "out of zone" records.
 .IP "-M master nameserver IP"
 This is the ip address of the master name server. 
 .PP
-.IP "-h master nameserver IP"
+.IP "-h master nameserver"
 This is the FQDN of the dns master dns server.
 .PP
 .B Options for adding a delegated zone and glue records
@@ -157,6 +157,7 @@ although this may change in the future. Watch this space!
 .SH AUTHOR 
 Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
 .SH "SEE ALSO"
-.BR dnsa(5),
+.BR dnsa(7),
+.BR dnsa.conf(5),
 .BR cmdb(8),
 .BR cbc(8)
