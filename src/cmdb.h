@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -97,6 +97,7 @@ enum {			/* dnsa error codes */
 	NO_ZONE_LIST = 42,
 	NOT_PRI_OR_SEC_NS = 43,
 	NO_GLUE_ZONE = 44,
+	NO_PREFIX = 45,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52,
@@ -248,7 +249,6 @@ enum {			/* command line error codes */
 	NO_IP_ADDRESS = -9,
 	NO_HOST_NAME = -10,
 	NO_RECORD_TYPE = -11,
-	NO_PREFIX = -12,
 	NO_PARTITION_SCHEMES = -13,
 	NO_CONT_NAME = -26,
 	DOMAIN_AND_IP_GIVEN = -29,
@@ -314,7 +314,8 @@ enum {			/* cbc action codes */
 	MOD_CONFIG = 15,
 	RM_CONFIG = 16,
 	LIST_CONFIG = 17,
-	QUERY_CONFIG = 18
+	QUERY_CONFIG = 18,
+	LIST_SERVERS = 19
 };
 
 enum {			/* dnsa action codes */

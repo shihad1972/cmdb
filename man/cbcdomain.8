@@ -1,4 +1,4 @@
-.TH cbcdomain 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.TH cbcdomain 8 "Version 0.2: 29 March 2014" "CMDB suite manuals"
 .SH NAME
 cbcdomain \- Create Build Config Domain
 .SH SYNOPSIS
@@ -17,7 +17,7 @@ cbcdomain \- Create Build Config Domain
 
 .B cbcdomain
 [
-.B -adlmrv
+.B -adjlmrv
 ] [
 .B -n name
 ] [
@@ -43,15 +43,14 @@ information, ntp server and a xymon monitoring server. This information will
 be included in the build to automatically configure your server when built. The
 build domain contains a range of IP address which will be automatically
 assigned to the server build. If used in conjunction with \fBdnsa\fP then these
-IP addresses will be automatically added to the domain in DNS, with a PTR
-record created as well.
+IP addresses will be automatically added to the domain in DNS, while the PTR
+record will be created the next time the reverse zone is built.
 
 A build domain can be thought of as a regular DNS domain name with some extras
 associated with it. These extras are application services that the server will
 likey need, such as an ntp or smtp relay server. The idea behind this is that
 if a group of machines are on a subnet, they are likely to be grouped together
-in the services they use. It is also handy to have a logical container for a
-group of servers, and in this case I find a DNS sub-domain to be ideal. In this
+in the services they use. In this
 scenario you can create multiple sub-domains for different projects, customer
 solutions or even different parts of the same project (prod, dr, qa etc)
 
@@ -59,18 +58,21 @@ For a more in-depth discussion of how this fits into the build framework,
 please consult the \fBcbc(7)\fP man page.
 .SH OPTIONS
 .B Actions
+.IP "Action options require no addition parameter."
 .IP -a
-add
-.IP -d
-display
+Use this to add a build domain.
+.IP -d display
+Use this to display a build domain, using -n to specify
+.IP -j
+Use this to display servers build in a build domain, using -n to specify
 .IP -l
-list
+Use this to list the build domains. 
 .IP -m
-modify
+Use this to remove a build domain, using -n to specify
 .IP -r
-remove
+Use this to remove a build domain, using -n to specify
 .IP -v
-version (no other argument needed)
+Display version information
 .PP
 .B Naming
 .IP "-n <domain name>

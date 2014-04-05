@@ -77,8 +77,9 @@ display_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		clean_cbc_struct(base);
 		return retval;
 	}
-	display_build_domain(base->bdom);
-	list_build_dom_servers(cbc, base->bdom->bd_id);
+	if (cdl->action != LIST_SERVERS)
+		display_build_domain(base->bdom);
+	list_build_dom_servers(cbc, base->bdom->bd_id, cdl->domain);
 	clean_cbc_struct(base);
 	return retval;
 }
@@ -634,7 +635,7 @@ cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 }
 
 void
-list_build_dom_servers(cbc_config_s *cbc, unsigned long int id)
+list_build_dom_servers(cbc_config_s *cbc, unsigned long int id, char *name)
 {
 	int retval;
 	dbdata_s *data = '\0';
@@ -642,14 +643,14 @@ list_build_dom_servers(cbc_config_s *cbc, unsigned long int id)
 	cbc_init_initial_dbdata(&data, BUILD_DOM_SERVERS);
 	data->args.number = id;
 	if ((retval = cbc_run_search(cbc, data, BUILD_DOM_SERVERS)) == 0)
-		printf("No severs build in domain\n");
+		printf("No severs built in domain %s\n", name);
 	else
-		print_build_dom_servers(data);
+		print_build_dom_servers(data, name);
 	clean_dbdata_struct(data);
 }
 
 void
-print_build_dom_servers(dbdata_s *data)
+print_build_dom_servers(dbdata_s *data, char *name)
 {
 	char *ip;
 	uint32_t ip_addr;
@@ -658,7 +659,7 @@ print_build_dom_servers(dbdata_s *data)
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ip in print_build_dom_servers");
-	printf("Servers built in domain\n");
+	printf("Servers built in domain %s\n", name);
 	while (list) {
 		ip_addr = htonl((uint32_t)list->next->fields.number);
 		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
