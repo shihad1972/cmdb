@@ -1374,9 +1374,9 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	/* Should only do this for FQDN */
+	/* Should only do this for FQDN. User must specify this.
 	if (strncmp(cm->rtype, "CNAME", COMM_S) == 0)
-		add_trailing_dot(cm->dest);
+		add_trailing_dot(cm->dest); */
 	retval = 0;
 	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
