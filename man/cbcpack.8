@@ -1,4 +1,4 @@
-.TH cbcpack 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.TH cbcpack 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcpack \- Create Build Config Packages
 .SH SYNOPSIS
@@ -25,11 +25,12 @@ cbcpack \- Create Build Config Packages
 ]
 
 .SH DESCRIPTION
-\fBcbcpack\fP allows you to add and remove packages from build varients. For
-more details on build varients, see the \fBcbc(7)\fP and \fBcbcvarient(8)\fP
-man pages. You can specify the build varient and specific operating system
-name and version or you can add or remove packages from all varients or
-operating system versions by not specifying which os / varient you are using.
+\fBcbcpack\fP allows you to add and remove packages from build varients.
+For more details on build varients, see the \fBcbc(7)\fP and
+\fBcbcvarient(8)\fP man pages.
+You can specify the build varient and specific operating system name and
+version or you can add or remove packages from all varients or operating
+system versions by not specifying which os / varient you are using.
 The package names must match a specific package name for the os you are working
 on, as an erroneous package name can lead to the build to fail. 
 
@@ -64,7 +65,7 @@ specify the alias for the operating system.
 .IP "-t <architecture>
 specify the architecture of the operating system. Currently only \fBi386\fP and
 \fBx86_64\fP are available.
-
+.PP
 \fBNote\fP: only one of os name or os alias and os version or version alias
 needs to be given.
 .PP

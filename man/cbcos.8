@@ -1,4 +1,4 @@
-.TH cbcos 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.TH cbcos 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcos \- Create Build Config Operating System
 .SH SYNOPSIS
@@ -18,15 +18,18 @@ cbcos \- Create Build Config Operating System
 
 .SH DESCRIPTION
 \fBcbcos\fP is software to add new versions of operating systems to the build
-system. You are able to specify the version number and architecture type.
+system.
+You are able to specify the version number and architecture type.
 Currently there are only 2 architecture types, \fIi386\fP and \fIx86_64\fP.
 You are also able to specify the version alias for debian based distros, where
 each version has a code name, such as \fIsqueeze\fP for version \fI6\fP, or in
-the ubuntu world, \fIprecise\fP for version \fI12.04\fP. These are required
-for debian based builds but are optional for redhat based builds. You are able
-to add, display, list and remove build operating systems. Currently the
-\fBcbc\fP system supports the following operating systems: \fI debian, ubuntu,
-centos, fedora\fP and \fIredhat\fP
+the ubuntu world, \fIprecise\fP for version \fI12.04\fP.
+These are required for debian based builds but are optional for redhat based
+builds.
+You are able to add, display, list and remove build operating systems.
+Currently the \fBcbc\fP system supports the following operating systems:
+\fIdebian, ubuntu\fP and \fIcentos\fP. Soon there will be support for
+\fIredhat\fP.
 
 .SH OPTIONS
 .B Actions

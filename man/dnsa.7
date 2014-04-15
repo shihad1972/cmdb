@@ -1,13 +1,14 @@
-.TH DNSA 7 "Version 0.2: 30 March 2014" "CMDB suite manuals" "DNSA man pages"
+.TH DNSA 7 "Version 0.2: 30 March 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 dnsa \- Domain Name System Administration
 .SH DESCRIPTION
 \fBdnsa\fP is part of the \fIcmdb\fP suite of programs and enables you to manage
-DNS zones and records. Some familiarity with the DNS system is assumed, such
-as differnt record types. This document intends to describe the way \fBdnsa\fP
-functions and how to use it
+DNS zones and records.
+Some familiarity with the DNS system is assumed, such as differnt record types.
+This document intends to describe the way \fBdnsa\fP functions and how to use it
 .SH ZONES
-At the heart of dns are \fIzones\fP. These are logical units containing \fIrecords\fP. 
+At the heart of dns are \fIzones\fP.
+These are logical units containing \fIrecords\fP. 
 \fIdnsa\fP splits the zones into the following categories.
 
 .B Forward Zone
@@ -18,79 +19,94 @@ The forward zone holds the name to ip (\fBA\fP type) records, as well as \fBNS\f
 .B Reverse Zone
 
 These zones hold the ip to name (\fBPTR\fP) records, and are build based on the
-forward zones. You do not directly add \fBPTR\fP records; rather they are built
-based on the \fBA\fP records added to the forward zones. If there are many
-\fBA\fP records pointing to the same IP address, you can use \fIpreferred\fP 
-\fBA\fP records to chose which one will be used in the reverse zone.
+forward zones.
+You do not directly add \fBPTR\fP records; rather they are built based on the
+\fBA\fP records added to the forward zones.
+If there are many \fBA\fP records pointing to the same IP address, you can use
+\fIpreferred\fP \fBA\fP records to chose which one will be used in the reverse
+zone.
 
 .B Slave Zone
 
 These are forward zones that do not get any records added to them directly;
 rather these are secondary zones that take their input from a master name 
-server. They are used to ensure redundancy should the master name server go
-offline.
+server.
+They are used to ensure redundancy should the master name server go offline.
 
 .B Glue Zone
 
 It can be useful to delegate a sub-domain to another name server, so it can
-control the records for that sub-domain. To enable this, you have to add
-\fIglue records\fP to the main zone. Adding a glue zone will automatically add
-these \fIglue records\fP to the main zone. Ensure the delegated zone is 
-configured on the other name server before adding the glue zone.
+control the records for that sub-domain.
+To enable this, you have to add \fIglue records\fP to the main zone.
+Adding a glue zone will automatically add these \fIglue records\fP to the main
+zone.
+Ensure the delegated zone is configured on the other name server before adding
+the glue zone.
 
 .SH RECORDS
 \fBdnsa\fP supports a subset of the all the record types currently available
-in DNS. These are detailed below. Others may or may not work. Most records
-consist of 2 main parts; source and destination.
+in DNS.
+These are detailed below.
+Others may or may not work.
+Most records consist of 2 main parts; source and destination.
 
 .B A Records
 
-\fBA\fP records are the main type of name to ip address mappings. The consist
-of a host name as the source and an IP address as the destination.
+\fBA\fP records are the main type of name to ip address mappings.
+They consist of a host name as the source and an IP address as the destination.
 
 .B CNAME Records
 
-\fBCNAME\fP can be thought of as alias or pointer records. The point one name
-to another name. The name pointed to must have an \fBA\fP record associated
-with it, or the resolution will not complete. When adding a \fBCNAME\fP record
-you can state the pointed to hostname to be a FQDN, or if the host is in the
-same zone the you can ommit the domain name part. \fBPlease note:\fP when
-specifying a FQDN this must finish with a . to denote it as a FQDN.
+\fBCNAME\fP can be thought of as alias or pointer records.
+The point one name to another name.
+The name pointed to must have an \fBA\fP record associated with it, or the
+resolution will not complete.
+When adding a \fBCNAME\fP record you can state the pointed to hostname to be a
+FQDN, or if the host is in the same zone the you can ommit the domain name
+part.
+\fBPlease note:\fP when specifying a FQDN this must finish with a . to denote
+it as a FQDN.
 
 .B NS Records
 \fBNS\fP records specify which hosts function as name servers for the domain.
 The source is the current zone, specified with the @ symbol, and the
-destination is the host name. Please note, like \fBCNAME\fP records, the
-destination should have an \fBA\fP records associated with it or the
-resolution will not complete. 
+destination is the host name.
+Please note, like \fBCNAME\fP records, the destination should have an \fBA\fP
+records associated with it or the resolution will not complete. 
 
 .B MX Records
 \fBMX\fP records are used to identify Mail Exchangers, the end delivery point
-for email for the domain. \fBMX\fP records have a third part, namely a
-priority. This is used to determine which records take precedence over records.
+for email for the domain.
+\fBMX\fP records have a third part, namely a priority.
+This is used to determine which records take precedence over records.
 
 .B SRV Records
 \fBSRV\fP records are used to associate hosts with services, such as \fILDAP\fP
-or \fIkerberos\fP. They can be used for automatic client configuration for
-these services. There is a priority associated with them. They also have a
-weight associated with them (which \fBdnsa\fP does not currently support).
+or \fIkerberos\fP.
+They can be used for automatic client configuration for these services.
+There is a priority associated with them.
+They also have a weight associated with them (which \fBdnsa\fP does not
+currently support).
+.PP
 \fBPlease note:\fP There must be a service mapping in /etc/services for the
-service type you are trying to add a record for. This is so \fBdnsa\fP can
-automatically determine the port number for the service. Services defined in
-\fBSRV\fP records should have entries for this in any case.
+service type you are trying to add a record for.
+This is so \fBdnsa\fP can automatically determine the port number for the
+service.
+Services defined in \fBSRV\fP records should have entries for this in any case.
 
 .B TXT Records
-\fBTXT\fP records can be used to provide information to outside sources. These
-are most commonly used to provide \fISPF\fP information, although you are free
-to put in whatever information you see fit. \fBdnsa\fP limits the length to
-255 characters.
+\fBTXT\fP records can be used to provide information to outside sources.
+These are most commonly used to provide \fISPF\fP information, although you are
+free to put in whatever information you see fit.
+\fBdnsa\fP limits the length to 255 characters.
 
 .SH Committing zones on the name server
 
 You can add records to zones, but these are not automatically committed on the
-name server. Once you have made the changes to the zone you should commit them.
-Reverse zones should be build before committing. Slave and glue zones do not
-need committing. 
+name server.
+Once you have made the changes to the zone you should commit them.
+Reverse zones should be build before committing.
+Slave and glue zones do not need committing. 
 
 .SH Examples
 
@@ -150,3 +166,26 @@ dnsa -d -F -n myzone.com
 .PP
 dnsa -e -h host -i 10.11.12.13 -n myzone.com
 
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR 
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(8),
+.BR cmdb(8)

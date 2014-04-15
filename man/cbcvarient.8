@@ -1,4 +1,4 @@
-.TH cbcvarient 8 "Version 0.2: 15 July 2013" "CMDB suite manuals"
+.TH cbcvarient 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcvarient \- Create Build Config Varient.
 .SH SYNOPSIS
@@ -22,15 +22,17 @@ cbcvarient \- Create Build Config Varient.
 
 .SH DESCRIPTION
 \fBcbcvarient\fP is used to define build varients based on the packages to
-install. Thus, you can create a web server build containing packages like
-apache and various php modules, or an email server contain the specific email
-services you would like to provide. Each varient is based on a particular OS
-and version, due to the package names being different between the various OS's.
+install.
+Thus, you can create a web server build containing packages like apache and
+various php modules, or an email server contain the specific email services you
+would like to provide.
+Each varient is based on a particular OS and version, due to the package names
+being different between the various OS's.
 You will need to know the precise package names you wish to add the build
 varient, as these will be placed in the build file, and if the package name
-does not exist the build will fail. \fBcbcvarient\fP is used to create the
-template names for a build varient; use \fBcbcpack\fP to actually add packages
-to the build varient.
+does not exist the build will fail.
+\fBcbcvarient\fP is used to create the template names for a build varient;
+use \fBcbcpack\fP to actually add packages to the build varient.
 
 .SH OPTIONS
 .B actions

@@ -20,17 +20,18 @@ dnsa \- Domain Name System Administration
 .B -IMNhinopst
 ]
 .SH DESCRIPTION
-\fBdnsa\fP is a tool to administer DNS zones and records. You are able to add
-individual zones and records, and also to add reverse zones and build those
-reverse zones based on what your forward zones look like. If you have multiple
-records pointing to one IP address, you can choose a preferred record for the
-PTR record for that IP address. dnsa does assume some working knowledge of DNS
-(i.e. what record types are used for etc), but the main goal is to simplify
-the administration of DNS. This can be useful even in a small to medium size
-organisation where you can have multiple sub-domains for different departments.
+\fBdnsa\fP is a tool to administer DNS zones and records.
+You are able to add individual zones and records, and also to add reverse zones
+and build those reverse zones based on what your forward zones look like.
+If you have multiple records pointing to one IP address, you can choose a
+preferred record for the PTR record for that IP address.
+dnsa does assume some working knowledge of DNS (i.e. what record types are used
+for etc), but the main goal is to simplify the administration of DNS.
+This can be useful even in a small to medium size organisation where you can
+have multiple sub-domains for different departments.
 dnsa tries not to limit you too much in your choices, and to give you a 
-flexible and powerful tool to organise your DNS infrastructure. It should be
-installed on the DNS server itself.
+flexible and powerful tool to organise your DNS infrastructure.
+It should be installed on the DNS server itself.
 .SH OPTIONS
 .B Actions (these do not take arguments)
 .IP -a
@@ -75,30 +76,34 @@ reverse zones.
 .PP 
 .B Options for adding a reverse zone
 .IP "-p prefix"
-The subnet prefix for a reverse zone. Regular classes (/8, /16 or /24)
-or classless prefixes (/24 -> /32) will be accepted. Classless prefixes
-between /8 -> /16 and /16 -> /24 will NOT be accepted.
+The subnet prefix for a reverse zone.
+Regular classes (/8, /16 or /24) or classless prefixes (/24 -> /32) will be
+accepted.
+Classless prefixes between /8 -> /16 and /16 -> /24 will NOT be accepted.
 .PP
 .B Slave Zones
 
 When adding slave zones, it is useful to add the Fully Qualified Domain Name
-of the master DNS server that is used in the SOA of the zone. You can add this
-using the\fB -h\fP option as described below.
-
+of the master DNS server that is used in the SOA of the zone.
+You can add this using the\fB -h\fP option as described below.
+.PP
 Also, the secondary NS server will be taken from the pri_dns configuration option
 in config file, which is usually the server you are working on.
 .PP
 .B Delegate zones (a.k.a. glue zones)
 
 It can be useful to delegate control of a subdomain to other servers, and this
-options allows you to do so. You need to use the \fB-I\fP and, optionally, the
-\fB-N\fP options described below to create the \fBglue records\fP that control
-the delegation of the zone. If you wish to use name servers that are not part
-of the parent zone, you must end the names specified by \fB-N\fP with a . to
-denote a FQDN. Otherwise, these records will be added to the parent zone.
+options allows you to do so.
+You need to use the \fB-I\fP and, optionally, the \fB-N\fP options described
+below to create the \fBglue records\fP that control the delegation of the
+zone.
+If you wish to use name servers that are not part of the parent zone, you must
+end the names specified by \fB-N\fP with a . to denote a FQDN.
+Otherwise, these records will be added to the parent zone.
+.PP
 \fBNote:\fP You must have the zone already setup on the delegated name servers.
-This includes the A records for the name servers. If you do not then you may
-get errors from bind about "out of zone" records.
+This includes the A records for the name servers.
+If you do not then you may get errors from bind about "out of zone" records.
 .PP
 .B Name options for adding slave zones.
 .IP "-M master nameserver IP"
@@ -115,21 +120,23 @@ creation of the \fBglue records\fP.
 .PP
 .IP "-N pri_ns_name,sec_ns_name"
 The name of the primary, and optionally, the secondary name server(s) that will
-create the \fBglue records\fP. These will prefix the subdomain to get the
-FQDN of the name server. If these are not supplied, then the standards \fBn1\fP
-and \fBns2\fP will be used.
+create the \fBglue records\fP.
+These will prefix the subdomain to get the FQDN of the name server.
+If these are not supplied, then the standards \fBn1\fP and \fBns2\fP will be
+used.
 .PP
 .B Options for adding a forward host
 .IP "-i IP address"
-This is the destination of the record. If this is an A record type, then this
-will be the IP address of the host. If this is a CNAME then this will be the
-FQDN of the destination of the CNAME. Use the FQDN even if the CNAME points to
-an A record in the same domain.
+This is the destination of the record.
+If this is an A record type, then this will be the IP address of the host.
+If this is a CNAME then this will be the FQDN of the destination of the CNAME.
+Use the FQDN even if the CNAME points to an A record in the same domain.
 .IP "-t record type"
 This is the record type (A, MX, CNAME etc)
 .IP "-h host"
-This is the host name of the record. When adding a slave zone, this option can
-also be used to specify the FQDN of the master DNS server.
+This is the host name of the record.
+When adding a slave zone, this option can also be used to specify the FQDN of
+the master DNS server.
 .IP "-p priority (specifically for MX and SRV records)"
 When adding an MX record this is the priority of the MX record.
 .IP "-o protocol"
