@@ -181,6 +181,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
 /* Grab config values from file */
 int
 parse_dnsa_config_file(dnsa_config_s *dc, char *config);
+int
+read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf);
 /*initialise configuration and command line structs */
 void
 dnsa_init_config_values(dnsa_config_s *dc);

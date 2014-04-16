@@ -1,7 +1,7 @@
 /*
  * 
  *  dnsa: DNS Administration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_WORDEXP_H
+# include <wordexp.h>
+#endif /* HAVE_WORDEXP_H */
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #ifdef HAVE_LIBPCRE
@@ -165,6 +168,45 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 int
 parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 {
+	int retval = 0;
+	FILE *cnf;
+#ifdef HAVE_WORDEXP_H
+	char **uconf;
+	wordexp_t p;
+#endif /* HAVE_WORDEXP_H */
+
+	dc->port = 3306;
+	dc->cliflag = 0;
+
+	if (!(cnf = fopen(config, "r"))) {
+		fprintf(stderr, "Cannot open config file %s\n", config);
+		retval = CONF_ERR;
+	} else {
+		read_dnsa_config_values(dc, cnf);
+		fclose(cnf);
+	}
+#ifdef HAVE_WORDEXP
+	if ((retval = wordexp("~/.dnsa.conf", &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if ((cnf = fopen(*uconf, "r"))) {
+			read_dnsa_config_values(dc, cnf);
+			fclose(cnf);
+		}
+		wordfree(&p);
+	}
+#endif /* HAVE_WORDEXP */
+	if ((retval = add_trailing_slash(dc->dir)) != 0)
+		return DIR_ERR;
+	if ((retval = add_trailing_slash(dc->bind)) != 0)
+		return BIND_ERR;
+	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
+		return HOSTM_ERR;
+	return retval;
+}
+
+int
+read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf)
+{
 	char buff[RBUFF_S] = "";
 	char port[RANGE_S] = "";
 	char refresh[MAC_S] = "";
@@ -172,97 +214,83 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 	char expire[MAC_S] = "";
 	char ttl[MAC_S] = "";
 	char *hostmaster;
-	int retval;
+	int retval = 0;
 	unsigned long int portno;
-	FILE *cnf;	/* File handle for config file */
-
-	dc->port = 3306;
-	dc->cliflag = 0;
-
-	if (!(cnf = fopen(config, "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", config);
-		fprintf(stderr, "Using default values\n");
-		retval = CONF_ERR;
-	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DBTYPE=%s", dc->dbtype);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", dc->pass);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "FILE=%s", dc->file);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", dc->host);	
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", dc->user);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", dc->db);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "SOCKET=%s", dc->socket);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PORT=%s", port);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DIR=%s", dc->dir);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "BIND=%s", dc->bind);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "REV=%s", dc->rev);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DNSA=%s", dc->dnsa);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "RNDC=%s", dc->rndc);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKZ=%s", dc->chkz);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKC=%s", dc->chkc);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "REFRESH=%s", refresh);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "RETRY=%s", retry);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "EXPIRE=%s", expire);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "TTL=%s", ttl);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "PRIDNS=%s", dc->pridns);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "SECDNS=%s", dc->secdns);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "PRINS=%s", dc->prins);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "SECNS=%s", dc->secns);
-		rewind(cnf);
-		retval = NONE;
-		fclose(cnf);
-	}
 	
-	/* We need to check the value of portnop before we convert to int.
-	 * Obviously we cannot have a port > 65535
-	 */
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DBTYPE=%s", dc->dbtype);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PASS=%s", dc->pass);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "FILE=%s", dc->file);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "HOST=%s", dc->host);	
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "USER=%s", dc->user);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DB=%s", dc->db);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "SOCKET=%s", dc->socket);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PORT=%s", port);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DIR=%s", dc->dir);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "BIND=%s", dc->bind);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "REV=%s", dc->rev);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DNSA=%s", dc->dnsa);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "RNDC=%s", dc->rndc);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "CHKZ=%s", dc->chkz);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "CHKC=%s", dc->chkc);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "REFRESH=%s", refresh);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "RETRY=%s", retry);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "EXPIRE=%s", expire);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "TTL=%s", ttl);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "PRIDNS=%s", dc->pridns);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "SECDNS=%s", dc->secdns);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "PRINS=%s", dc->prins);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "SECNS=%s", dc->secns);
+	rewind(cnf);
+	retval = NONE;
+
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
 		retval = PORT_ERR;
@@ -276,20 +304,6 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 	hostmaster = strchr(dc->hostmaster, '@');
 	if (hostmaster)
 		*hostmaster = '.';
-	/* The next 3 values need to be checked for a trailing /
-	 * If there is not one then add it
-	 */
-	
-	if ((retval = add_trailing_slash(dc->dir)) != 0)
-		retval = DIR_ERR;
-	if ((retval = add_trailing_slash(dc->bind)) != 0)
-		retval = BIND_ERR;
-	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
-		retval = HOSTM_ERR; /*
-	if ((retval = add_trailing_dot(dc->prins)) != 0)
-		retval = PRINS_ERR;
-	if ((retval = add_trailing_dot(dc->secns)) != 0)
-		retval = SECNS_ERR; */
 	return retval;
 }
 

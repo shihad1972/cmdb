@@ -21,7 +21,7 @@ Fixed Version: 0.2.16.11.8 02/03/2014
 
 14/02/2014
 Adding a server with the wrong virtual machine host name crashes out
-but does not tell us why. We et a 15 code error message from mysql
+but does not tell us why. We get a 15 code error message from mysql
 (most likely when we try to prepare the insert and there is no
 vm_server_id)
 
@@ -100,11 +100,6 @@ the tftp host is also the DNS host.
 
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
-
-28/07/2013
-Need to remove ldap_url from build_domain database and in all the data
-structures for cbc_build_domain and SQL quries
-Done: 30/07/2013
 
 30/06/2013
 Have a generic config struct (config_s) that all the others (e.g.
