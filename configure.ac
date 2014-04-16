@@ -487,7 +487,7 @@ AC_TYPE_UINT32_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul])
+AC_CHECK_FUNCS([mkdir strchr strrchr strstr strtoul wordexp])
 
 AC_CONFIG_SUBDIRS([cmdb-0.2.16])
 AC_OUTPUT(Makefile src/Makefile man/Makefile scripts/Makefile sql/Makefile)
