@@ -45,6 +45,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
 		fprintf(stderr, "Argv is invalid\n");
+	} else if (error == CONF_ERR) {
+		fprintf(stderr, "Config file error\n");
+	} else if (error == PORT_ERR) {
+		fprintf(stderr, "MySQL port number invalid in config file\n");
 	} else if (error == NO_DOMAIN) {
 		fprintf(stderr, "No domain %s was found\n", errstr);
 	} else if (error == MULTI_DOMAIN) {

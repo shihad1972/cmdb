@@ -57,7 +57,11 @@ int main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	sprintf(cmdb_config, "%s", cm->config);
-	retval = parse_cmdb_config_file(cmc, cmdb_config);
+	if ((retval = parse_cmdb_config_file(cmc, cmdb_config)) != 0) {
+		cmdb_main_free(cm, cmc, cmdb_config);
+		cmdb_clean_list(base);
+		report_error(retval, "config");
+	}
 	/* Need to decide what to do if we have an error here */
 	if (cm->type == SERVER) {
 		if (cm->action == DISPLAY) {

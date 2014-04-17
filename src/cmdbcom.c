@@ -33,6 +33,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_WORDEXP_H
+# include <wordexp.h>
+#endif /* HAVE_WORDEXP_H */
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -224,75 +227,85 @@ parse_cmdb_config_file(cmdb_config_s *dc, char *config)
 {
 	FILE *cnf;	/* File handle for config file */
 	int retval;
-	unsigned long int portno;
-
-	char buff[CONF_S] = "";
-	char port[CONF_S] = "";
-
+#ifdef HAVE_WORDEXP_H
+	char **uconf;
+	wordexp_t p;
+#endif /* HAVE_WORDEXP_H */
+	
 	if (!(cnf = fopen(config, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", config);
-		fprintf(stderr, "Using default values\n");
-		retval = -1;
+		retval = CONF_ERR;
 	} else {
-		while ((fgets(buff, RANGE_S - 1, cnf))) {
-			sscanf(buff, "DBTYPE=%s", dc->dbtype);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "FILE=%s", dc->file);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "PASS=%s", dc->pass);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "HOST=%s", dc->host);	
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "USER=%s", dc->user);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "DB=%s", dc->db);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "SOCKET=%s", dc->socket);
-		}
-		rewind(cnf);
-		while ((fgets(buff, CONF_S - 1, cnf))) {
-			sscanf(buff, "PORT=%s", port);
-		}
-		retval = 0;
+		retval = read_cmdb_config_values(dc, cnf);
 		fclose(cnf);
 	}
+#ifdef HAVE_WORDEXP
+	if ((retval = wordexp("~/.dnsa.conf", &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if ((cnf = fopen(*uconf, "r"))) {
+			if ((retval = read_cmdb_config_values(dc, cnf)) != 0)
+				retval = UPORT_ERR;
+			fclose(cnf);
+		}
+		wordfree(&p);
+	}
+#endif /* HAVE_WORDEXP */
+	return retval;
+}
+
+int
+read_cmdb_config_values(cmdb_config_s *dc, FILE *cnf)
+{
+	char buff[CONF_S] = "";
+	char port[CONF_S] = "";
+	int retval = 0;
+	unsigned long int portno;
 	
-	/* We need to check the value of portno before we convert to int.
-	 * Obviously we cannot have a port > 65535
-	 */
+	while ((fgets(buff, RANGE_S - 1, cnf))) {
+		sscanf(buff, "DBTYPE=%s", dc->dbtype);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "FILE=%s", dc->file);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "PASS=%s", dc->pass);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "HOST=%s", dc->host);	
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "USER=%s", dc->user);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "DB=%s", dc->db);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "SOCKET=%s", dc->socket);
+	}
+	rewind(cnf);
+	while ((fgets(buff, CONF_S - 1, cnf))) {
+		sscanf(buff, "PORT=%s", port);
+	}
+	retval = 0;
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
-		retval = -2;
+		retval = PORT_ERR;
 	} else {
 		dc->port = (unsigned int) portno;
 	}
-	
 	return retval;
 }
 
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
-	cm->action = cm->type = cm->force = 0;
-	cm->sid = 0;
-	cm->vmhost = cm->config = cm->vendor = '\0';
-	cm->make = cm->model = cm->id = cm->stype = '\0';
-	cm->name = cm->address = cm->city = cm->email = '\0';
-	cm->email = cm->detail = cm->hclass = cm->url = '\0';
-	cm->device = cm->phone = cm->postcode = cm->coid = '\0';
-	cm->service = cm->uuid = cm->county = '\0';
+	memset(cm, 0, sizeof(cmdb_comm_line_s));
 }
 
 void
@@ -312,26 +325,18 @@ init_cmdb_config_values(cmdb_config_s *dc)
 void
 cmdb_init_struct(cmdb_s *cmdb)
 {
-	cmdb->server = '\0';
-	cmdb->customer = '\0';
-	cmdb->contact = '\0';
-	cmdb->service = '\0';
-	cmdb->servicetype = '\0';
-	cmdb->hardware = '\0';
-	cmdb->hardtype = '\0';
-	cmdb->vmhost = '\0';
+	memset(cmdb, 0, sizeof(cmdb_s));
 }
 
 void
 cmdb_init_server_t(cmdb_server_s *server)
 {
+	memset(server, 0, sizeof *server);
 	snprintf(server->vendor, COMM_S, "NULL");
 	snprintf(server->make, COMM_S, "NULL");
 	snprintf(server->model, COMM_S, "NULL");
 	snprintf(server->uuid, COMM_S, "NULL");
 	snprintf(server->name, COMM_S, "NULL");
-	server->vm_server_id = 0;
-	server->next = '\0';
 }
 
 void
@@ -349,24 +354,17 @@ cmdb_init_customer_t(cmdb_customer_s *cust)
 void
 cmdb_init_service_t(cmdb_service_s *service)
 {
+	memset(service, 0, sizeof *service);
 	snprintf(service->detail, COMM_S, "NULL");
 	snprintf(service->url, COMM_S, "NULL");
-	service->service_id = 0;
-	service->server_id = 0;
-	service->cust_id = 0;
-	service->service_type_id = 0;
-	service->next = '\0';
 }
 
 void
 cmdb_init_hardware_t(cmdb_hardware_s *hard)
 {
+	memset(hard, 0, sizeof *hard);
 	snprintf(hard->detail, COMM_S, "NULL");
 	snprintf(hard->device, COMM_S, "NULL");
-	hard->hard_id = 0;
-	hard->server_id = 0;
-	hard->ht_id = 0;
-	hard->next = '\0';
 }
 
 void
@@ -381,10 +379,9 @@ cmdb_init_contact_t(cmdb_contact_s *cont)
 void
 cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 {
+	memset(type, 0, sizeof *type);
 	snprintf(type->type, COMM_S, "NULL");
 	snprintf(type->hclass, COMM_S, "NULL");
-	type->ht_id = 0;
-	type->next = '\0';
 }
 
 void
@@ -398,11 +395,9 @@ cmdb_init_servicetype_t(cmdb_service_type_s *type)
 void
 cmdb_init_vmhost_t(cmdb_vm_host_s *type)
 {
+	memset(type, 0, sizeof *type);
 	snprintf(type->name, COMM_S, "NULL");
 	snprintf(type->type, COMM_S, "NULL");
-	type->id = 0;
-	type->server_id = 0;
-	type->next = '\0';
 }
 
 void
