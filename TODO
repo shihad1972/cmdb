@@ -1,3 +1,13 @@
+17/04/2014
+The applications in build domain should be associated with a "system" group
+of packages, separate from the "application" packages currently in the
+packages table. In preseed this would allow me to create a table that can
+have entries added to them by the user; the package names and the debconf
+configurations for those packages, as this is what the build domain
+applications currently do. For kickstart, there would be a configuration
+script associated with them. Can also have a config script associated
+with preseed.
+
 29/03/2014
 If I change the id field in the database to a uuid then I can have
 a local file storage, i.e. not use a database. If I am to do this
