@@ -159,30 +159,6 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "\n");
 }
 
-void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
-{
-	init_cbc_config_values(cct);
-	init_cbc_comm_values(cclt);
-}
-
-void
-init_cbc_comm_values(cbc_comm_line_s *cbt)
-{
-	memset(cbt, 0, sizeof *cbt);
-	snprintf(cbt->name, CONF_S, "NULL");
-	snprintf(cbt->uuid, CONF_S, "NULL");
-	snprintf(cbt->action_type, MAC_S, "NULL");
-	snprintf(cbt->os, CONF_S, "NULL");
-	snprintf(cbt->os_version, MAC_S, "NULL");
-	snprintf(cbt->partition, CONF_S, "NULL");
-	snprintf(cbt->varient, CONF_S, "NULL");
-	snprintf(cbt->build_domain, RBUFF_S, "NULL");
-	snprintf(cbt->arch, MAC_S, "NULL");
-	snprintf(cbt->netcard, COMM_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
-}
-
 int
 parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 {
@@ -310,6 +286,30 @@ parse_cbc_config_error(int error)
 		fprintf(stderr, "Cannot add trailing / to KICKSTART: > 79 characters\n");
 	else
 		fprintf(stderr, "Unkown error code: %d\n", error);
+}
+
+void
+init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
+{
+	init_cbc_config_values(cct);
+	init_cbc_comm_values(cclt);
+}
+
+void
+init_cbc_comm_values(cbc_comm_line_s *cbt)
+{
+	memset(cbt, 0, sizeof *cbt);
+	snprintf(cbt->name, CONF_S, "NULL");
+	snprintf(cbt->uuid, CONF_S, "NULL");
+	snprintf(cbt->action_type, MAC_S, "NULL");
+	snprintf(cbt->os, CONF_S, "NULL");
+	snprintf(cbt->os_version, MAC_S, "NULL");
+	snprintf(cbt->partition, CONF_S, "NULL");
+	snprintf(cbt->varient, CONF_S, "NULL");
+	snprintf(cbt->build_domain, RBUFF_S, "NULL");
+	snprintf(cbt->arch, MAC_S, "NULL");
+	snprintf(cbt->netcard, COMM_S, "NULL");
+	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
 }
 
 void
