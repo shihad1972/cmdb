@@ -30,95 +30,49 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_WORDEXP_H
+# include <wordexp.h>
+#endif /* HAVE_WORDEXP_H */
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 
 #ifdef HAVE_LIBPCRE
-
 # include "checks.h"
-
 #endif /* HAVE_LIBPCRE */
 
 #ifdef HAVE_DNSA
-
 # include "cmdb_dnsa.h"
-
 #endif /* HAVE_DNSA */
 
 int
 parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 {
-	FILE *cnf;	/* File handle for config file */
+	FILE *cnf;
 	int retval;
-	unsigned long int portno;
-
-	char buff[CONF_S] = "";
-	char port[CONF_S] = "";
+#ifdef HAVE_WORDEXP_H
+	char **uconf;
+	wordexp_t p;
+#endif /* HAVE_WORDEXP_H */
 
 	if (!(cnf = fopen(config, "r"))) {
 		fprintf(stderr, "Cannot open config file %s\n", config);
 		fprintf(stderr, "Using default values\n");
 		retval = CONF_ERR;
 	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DBTYPE=%s", cbc->dbtype);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", cbc->pass);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "FILE=%s", cbc->file);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", cbc->host);	
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", cbc->user);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", cbc->db);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "SOCKET=%s", cbc->socket);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PORT=%s", port);
-		rewind (cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "TMPDIR=%s", cbc->tmpdir);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "TFTPDIR=%s", cbc->tftpdir);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PXE=%s", cbc->pxe);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "TOPLEVELOS=%s", cbc->toplevelos);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PRESEED=%s", cbc->preseed);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "KICKSTART=%s", cbc->kickstart);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
-		retval = 0;
+		read_cbc_config_values(cbc, cnf);
 		fclose(cnf);
 	}
-	
-	/* We need to check the value of portno before we convert to int.
-	 * Obviously we cannot have a port > 65535
-	 */
-	portno = strtoul(port, NULL, 10);
-	if (portno > 65535) {
-		retval = PORT_ERR;
-		return retval;
-	} else {
-		cbc->port = (unsigned int) portno;
+#ifdef HAVE_WORDEXP
+	if ((retval = wordexp("~/.dnsa.conf", &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if ((cnf = fopen(*uconf, "r"))) {
+			if ((retval = read_cbc_config_values(cbc, cnf)) != 0)
+				retval = UPORT_ERR;
+			fclose(cnf);
+		}
+		wordfree(&p);
 	}
-
+#endif /* HAVE_WORDEXP */
 	if ((retval = add_trailing_slash(cbc->tmpdir)) != 0)
 		retval = TMP_ERR;
 	if ((retval = add_trailing_slash(cbc->tftpdir)) != 0)
@@ -132,6 +86,69 @@ parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 	if ((retval = add_trailing_slash(cbc->kickstart)) !=0)
 		retval = KICKSTART_ERR;
 
+	return retval;
+}
+
+int
+read_cbc_config_values(cbc_config_s *cbc, FILE *cnf)
+{
+	int retval = 0;
+	unsigned long int portno;
+	char buff[CONF_S] = "";
+	char port[CONF_S] = "";
+
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DBTYPE=%s", cbc->dbtype);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PASS=%s", cbc->pass);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "FILE=%s", cbc->file);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "HOST=%s", cbc->host);	
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "USER=%s", cbc->user);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DB=%s", cbc->db);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "SOCKET=%s", cbc->socket);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PORT=%s", port);
+	rewind (cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "TMPDIR=%s", cbc->tmpdir);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "TFTPDIR=%s", cbc->tftpdir);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PXE=%s", cbc->pxe);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "TOPLEVELOS=%s", cbc->toplevelos);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PRESEED=%s", cbc->preseed);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "KICKSTART=%s", cbc->kickstart);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DHCPCONF=%s", cbc->dhcpconf);
+	retval = 0;
+	portno = strtoul(port, NULL, 10);
+	if (portno > 65535) {
+		retval = PORT_ERR;
+		return retval;
+	} else {
+		cbc->port = (unsigned int) portno;
+	}
 	return retval;
 }
 

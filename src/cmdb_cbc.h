@@ -1,7 +1,7 @@
 /*
  *
  *  cbc: Create build config
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,10 +21,7 @@
  *
  *  Main header file for the cbc program
  *
- *
- *  Part of the CMDB program
- *
- *  (C) Iain M Conochie 2012 - 2013 */
+ */
 
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
@@ -51,6 +48,9 @@ typedef struct cbc_config_s {		/* Hold CMDB configuration values */
 
 int
 parse_cbc_config_file(cbc_config_s *dc, const char *config);
+
+int
+read_cbc_config_values(cbc_config_s *dc, FILE *cnf);
 
 void
 init_cbc_config_values(cbc_config_s *dc);

@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
 	char sretval[MAC_S], conf[CONF_S];
-	const char *config;
+	const char *config = '\0';
 	int retval;
 	
 	retval = 0;
