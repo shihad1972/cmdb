@@ -16,7 +16,7 @@ AC_PROG_MKDIR_P
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h stdlib.h string.h unistd.h wordexp.h ctype.h sys/types.h\
-		time.h sys/socket.h netint/in.h netdb.h errno.h])
+		time.h sys/socket.h netinet/in.h netdb.h errno.h])
 # ===========================================================================
 #      http://www.gnu.org/software/autoconf-archive/ax_check_mysql.html
 # ===========================================================================
