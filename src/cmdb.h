@@ -41,13 +41,6 @@ enum {			/* Buffer Sizes */
 	BUILD_S = 65536
 };
 
-enum {			/* Database Type errors */
-	NO_DB_TYPE = 1,
-	DB_TYPE_INVALID = 2,
-	NO_MYSQL = 3,
-	NO_SQLITE = 4
-};
-
 enum {			/* Database colum types */
 	DBTEXT = 1,
 	DBINT = 2,
@@ -108,6 +101,13 @@ enum {			/* dnsa error codes */
 	CANNOT_CONVERT = 53,
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61
+};
+
+enum {			/* Database Type errors */
+	NO_DB_TYPE = 91,
+	DB_TYPE_INVALID = 92,
+	NO_MYSQL = 93,
+	NO_SQLITE = 94
 };
 
 enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */

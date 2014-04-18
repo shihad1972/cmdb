@@ -84,6 +84,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
 	} else if (error == UNKNOWN_QUERY) {
 		fprintf(stderr, "Unknown query for type %s\n", errstr);
+	} else if (error == NO_DB_TYPE) {
+		fprintf(stderr, "No DB type configured\n");
+	} else if (error == DB_TYPE_INVALID) {
+		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
