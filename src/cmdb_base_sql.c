@@ -90,21 +90,6 @@ DELETE FROM hard_type WHERE hard_type_id = ?","\
 DELETE FROM vm_server_hosts WHERE vm_server_hosts = ?"
 };
 
-#ifdef HAVE_MYSQL
-
-const int mysql_inserts[8][7] = {
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG},
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0},
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , 0 , 0 , 0} ,
-{MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG, 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG, 0 , 0 , 0 , 0}
-};
-
-#endif /* HAVE_MYSQL */
-
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
@@ -142,6 +127,17 @@ const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
+
+const int cmdb_inserts[][7] = {
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0 }
+};
 
 const unsigned int cmdb_search_arg_types[][2] = {
 	{ DBTEXT, NONE },
@@ -517,7 +513,7 @@ and int for result, which is OK when searching on name and returning id
 	
 	
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -576,8 +572,6 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	}
 	if (retval != MYSQL_NO_DATA)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	else
-		retval = NONE;
 	mysql_stmt_free_result(cmdb_stmt);
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
@@ -611,7 +605,7 @@ cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		report_error(WRONG_TYPE, "cmdb_set_search_args_mysql");
+		report_error(DB_TYPE_INVALID, " in cmdb_set_search_args_mysql ");
 	}
 	mybind->buffer = buffer;
 }
@@ -661,7 +655,7 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 		buffer = &(list->fields.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		report_error(WRONG_TYPE, "cmdb_set_search_fields_mysql");
+		report_error(DB_TYPE_INVALID, " in cmdb_set_search_fields_mysql");
 	}
 	mybind->buffer = buffer;
 	m++;
@@ -680,11 +674,11 @@ cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i=0; i<insert_fields[type]; i++) 
 		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
-			return retval;
+			report_error(DB_TYPE_INVALID, " in cmdb_run_insert_mysql");
 	query = sql_insert[type];
 	cmdb_mysql_init(config, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -718,7 +712,7 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 			my_bind[i].buffer = &(list->args.number);
 			my_bind[i].buffer_length = sizeof(unsigned long int);
 			list = list->next;
-		} else if (cmdb_delete_arg_type[type][i] == MYSQL_TYPE_STRING) {
+		} else if (cmdb_delete_arg_type[type][i] == DBTEXT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
 			my_bind[i].is_null = 0;
 			my_bind[i].length = 0;
@@ -726,12 +720,22 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 			my_bind[i].buffer = &(list->args.text);
 			my_bind[i].buffer_length = strlen(list->args.text);
 			list = list->next;
+		} else if (cmdb_delete_arg_type[type][i] == DBSHORT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
+			my_bind[i].is_null = 0;
+			my_bind[i].length = 0;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.small);
+			my_bind[i].buffer_length = sizeof(short int);
+			list = list->next;
+		} else {
+			report_error(DB_TYPE_INVALID, " in cmdb_run_delete_mysql");
 		}
 	}
 	query = cmdb_sql_delete[type];
 	cmdb_mysql_init(config, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -751,19 +755,26 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base
 
 	retval = 0;
 	void *buffer;
-	bind->buffer_type = mysql_inserts[type][i];
-	if (bind->buffer_type == MYSQL_TYPE_LONG)
+	if (cmdb_inserts[type][i] == DBINT) {
 		bind->is_unsigned = 1;
-	else
+		bind->buffer_type = MYSQL_TYPE_LONG;
+		bind->buffer_length = sizeof(unsigned long int);
+	} else if (cmdb_inserts[type][i] == DBTEXT) {
 		bind->is_unsigned = 0;
+		bind->buffer_type = MYSQL_TYPE_STRING;
+	} else if (cmdb_inserts[type][i] == DBSHORT) {
+		bind->is_unsigned = 1;
+		bind->buffer_type = MYSQL_TYPE_SHORT;
+		bind->buffer_length = sizeof(short int);
+	} else {
+		return DB_TYPE_INVALID;
+	}
 	bind->is_null = 0;
 	bind->length = 0;
 	if ((retval = setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
 		return retval;
 	bind->buffer = buffer;
-	if (bind->buffer_type == MYSQL_TYPE_LONG)
-		bind->buffer_length = sizeof(unsigned long int);
-	else if (bind->buffer_type == MYSQL_TYPE_STRING)
+	if (bind->buffer_type == MYSQL_TYPE_STRING)
 		bind->buffer_length = strlen(buffer);
 	return retval;
 }
@@ -924,7 +935,7 @@ store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 			cmdb_query_mismatch(fields, required, type);
 		store_vm_hosts_mysql(row, base);
 	} else {
-		fprintf(stderr, "Unknown type %d\n",  type);
+		fprintf(stderr, "Unknown type %d. Cannot store.\n",  type);
 	}
 }
 
