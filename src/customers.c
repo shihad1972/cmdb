@@ -118,7 +118,7 @@ display_all_customers(cmdb_config_s *config)
 int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
-	int retval = NONE;
+	int retval = 0;
 
 	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
@@ -127,7 +127,7 @@ add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 int
 remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
-	int retval = NONE, type = NONE;
+	int retval = 0, type = 0;
 	dbdata_s data;
 	if (strncmp(cm->name, "NULL", COMM_S) != 0) {
 		snprintf(data.args.text, CONF_S, "%s", cm->name);
