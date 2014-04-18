@@ -1020,7 +1020,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 {
 	int retval = 0;
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 
 	mybind->is_null = 0;
@@ -1043,7 +1043,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		retval = WRONG_TYPE;
 	}
 	mybind->buffer = buffer;
 	return retval;
@@ -2011,7 +2011,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
 	const char *query = cbc_sql_search[type], *file = '\0';
 	int retval = 0, i;
-	dbdata_s *list;
+	dbdata_s *list = '\0';
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
@@ -2031,9 +2031,8 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);
-		if (list)
-			if (list->next)
-				list = list->next;
+		if (list->next)
+			list = list->next;
 	}
 	list = data;
 	i = 0;
