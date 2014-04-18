@@ -62,11 +62,11 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	cbc_build_ip_s *bip;
 	
 	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in display_build_config");
+		report_error(MALLOC_FAIL, "cbc in create_build_config");
 	if (!(details = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "details in display_build_config");
+		report_error(MALLOC_FAIL, "details in create_build_config");
 	if (!(build = malloc(sizeof(cbc_build_s))))
-		report_error(MALLOC_FAIL, "build in display_build_config");
+		report_error(MALLOC_FAIL, "build in create_build_config");
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	init_build_struct(build);
