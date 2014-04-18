@@ -75,7 +75,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		cmdb->server->cust_id = cmdb->customer->cust_id;
 	if (cmdb->vmhost)
 		cmdb->server->vm_server_id = cmdb->vmhost->id;
-		retval = run_insert(config, cmdb, SERVERS);
+		retval = cmdb_run_insert(config, cmdb, SERVERS);
 	free(input);
 	return retval;
 }
@@ -141,7 +141,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		snprintf(cmdb->hardtype->hclass, MAC_S, "%s", data->fields.text);
 	}
 	printf("Adding to DB....\n");
-	retval = run_insert(config, cmdb, HARDWARES);
+	retval = cmdb_run_insert(config, cmdb, HARDWARES);
 	return retval;
 }
 
@@ -157,7 +157,7 @@ display_server_info(char *name, char *uuid, cmdb_config_s *config)
 
 	cmdb_init_struct(cmdb);
 	i = 0;
-	if ((retval = run_multiple_query(config,
+	if ((retval = cmdb_run_multiple_query(config,
 cmdb, SERVER | CUSTOMER | HARDWARE |  SERVICE | VM_HOST)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -194,7 +194,7 @@ display_all_servers(cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
-	if ((retval = run_multiple_query(config, cmdb, SERVER | CUSTOMER)) != 0) {
+	if ((retval = cmdb_run_multiple_query(config, cmdb, SERVER | CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -218,7 +218,7 @@ display_hardware_types(cmdb_config_s *config)
 
 	cmdb_init_struct(cmdb);
 	cmdb->hardtype = '\0';
-	if ((retval = run_query(config, cmdb, HARDWARE_TYPE)) != 0) {
+	if ((retval = cmdb_run_query(config, cmdb, HARDWARE_TYPE)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -254,7 +254,7 @@ display_server_hardware(cmdb_config_s *config, char *name)
 		report_error(MALLOC_FAIL, "cmdb in display server hardware");
 
 	cmdb_init_struct(cmdb);
-	if ((retval = run_multiple_query(config, cmdb, SERVER | HARDWARE)) != 0) {
+	if ((retval = cmdb_run_multiple_query(config, cmdb, SERVER | HARDWARE)) != 0) {
 		cmdb_clean_list(cmdb);
 		printf("Query for server %s hardware failed\n", name);
 		return;
@@ -287,7 +287,7 @@ display_server_services(cmdb_config_s *config, char *name)
 		report_error(MALLOC_FAIL, "cmdb in display server services");
 
 	cmdb_init_struct(cmdb);
-	if ((retval = run_multiple_query(config, cmdb, SERVER | SERVICE)) != 0) {
+	if ((retval = cmdb_run_multiple_query(config, cmdb, SERVER | SERVICE)) != 0) {
 		cmdb_clean_list(cmdb);
 		printf("Query for server %s services failed\n", name);
 		return;
@@ -408,7 +408,7 @@ display_vm_hosts(cmdb_config_s *config)
 
 	cmdb_init_struct(cmdb);
 	cmdb->vmhost = '\0';
-	if ((retval = run_query(config, cmdb, VM_HOST)) != 0) {
+	if ((retval = cmdb_run_query(config, cmdb, VM_HOST)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -526,7 +526,7 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
 	snprintf(base->vmhost->type, MAC_S, "%s", base->server->model);
 	base->vmhost->server_id = data->fields.number;
-	if ((retval = run_insert(cmc, base, VM_HOSTS)) != 0)
+	if ((retval = cmdb_run_insert(cmc, base, VM_HOSTS)) != 0)
 		printf("Error adding to database\n");
 	else
 		printf("VM host %s added to database\n", cm->name);

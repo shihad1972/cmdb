@@ -182,7 +182,7 @@ Hardware for server %s added to database\n",base->server->name);
 	cmdb_clean_list(base);
 	cmdb_main_free(cm, cmc, cmdb_config);
 	if (retval > 0)
-		report_error(retval, "");
+		report_error(retval, " from main ");
 	exit (retval);
 }
 

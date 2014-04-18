@@ -1883,7 +1883,10 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 
 	retval = 0;
 	query = cbc_sql_insert[type];
-	file = config->file;
+	if (config)
+		file = config->file;
+	else
+		report_error(NO_DATA, "config in cbc_run_insert_sqlite");
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
 	}
@@ -1964,13 +1967,21 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_delete[type], *file = ccs->file;
+	const char *query = cbc_sql_delete[type], *file = '\0';
 	int retval = 0;
 	unsigned int i;
-	dbdata_s *list = data;
+	dbdata_s *list = '\0';
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
+	if (ccs)
+		file = ccs->file;
+	else
+		report_error(NO_DATA, "ccs in cbc_run_delete_sqlite");
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cbc_run_delete_sqlite");
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {

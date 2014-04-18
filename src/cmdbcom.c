@@ -37,7 +37,6 @@
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
-#include "cmdb_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
@@ -303,12 +302,13 @@ read_cmdb_config_values(cmdb_config_s *dc, FILE *cnf)
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm)
 {
-	memset(cm, 0, sizeof(cmdb_comm_line_s));
+	memset(cm, 0, sizeof *cm);
 }
 
 void
 init_cmdb_config_values(cmdb_config_s *dc)
 {
+	memset(dc, 0, sizeof *dc);
 	snprintf(dc->dbtype, RANGE_S, "none");
 	snprintf(dc->file, CONF_S, "none");
 	snprintf(dc->db, CONF_S, "cmdb");
@@ -317,13 +317,12 @@ init_cmdb_config_values(cmdb_config_s *dc)
 	snprintf(dc->pass, CONF_S, "%s", "");
 	snprintf(dc->socket, CONF_S, "%s", "");
 	dc->port = 3306;
-	dc->cliflag = 0;
 }
 
 void
 cmdb_init_struct(cmdb_s *cmdb)
 {
-	memset(cmdb, 0, sizeof(cmdb_s));
+	memset(cmdb, 0, sizeof *cmdb);
 }
 
 void
@@ -340,13 +339,13 @@ cmdb_init_server_t(cmdb_server_s *server)
 void
 cmdb_init_customer_t(cmdb_customer_s *cust)
 {
+	memset(cust, 0, sizeof *cust);
 	snprintf(cust->address, COMM_S, "NULL");
 	snprintf(cust->city, COMM_S, "NULL");
 	snprintf(cust->county, COMM_S, "NULL");
 	snprintf(cust->postcode, COMM_S, "NULL");
 	snprintf(cust->coid, COMM_S, "NULL");
 	snprintf(cust->name, COMM_S, "NULL");
-	cust->next = '\0';
 }
 
 void
@@ -368,10 +367,10 @@ cmdb_init_hardware_t(cmdb_hardware_s *hard)
 void
 cmdb_init_contact_t(cmdb_contact_s *cont)
 {
+	memset (cont, 0, sizeof *cont);
 	snprintf(cont->name, COMM_S, "NULL");
 	snprintf(cont->phone, COMM_S, "NULL");
 	snprintf(cont->email, COMM_S, "NULL");
-	cont->next = '\0';
 }
 
 void
@@ -385,9 +384,9 @@ cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 void
 cmdb_init_servicetype_t(cmdb_service_type_s *type)
 {
+	memset(type, 0, sizeof *type);
 	snprintf(type->service, COMM_S, "NULL");
 	snprintf(type->detail, COMM_S, "NULL");
-	type->next = '\0';
 }
 
 void

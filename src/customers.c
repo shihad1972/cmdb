@@ -50,7 +50,7 @@ display_customer_info(char *name, char *coid, cmdb_config_s *config)
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
-	if ((retval = run_multiple_query(config, cmdb,
+	if ((retval = cmdb_run_multiple_query(config, cmdb,
 CUSTOMER | CONTACT | SERVICE | SERVER)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -99,7 +99,7 @@ display_all_customers(cmdb_config_s *config)
 	cmdb_init_struct(cmdb);
 
 	cmdb->customer = '\0';
-	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0) {
+	if ((retval = cmdb_run_query(config, cmdb, CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -118,16 +118,16 @@ display_all_customers(cmdb_config_s *config)
 int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
-	int retval = NONE;
+	int retval = 0;
 
-	retval = run_insert(config, cmdb, CUSTOMERS);
+	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }
 
 int
 remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
-	int retval = NONE, type = NONE;
+	int retval = 0, type = 0;
 	dbdata_s data;
 	if (strncmp(cm->name, "NULL", COMM_S) != 0) {
 		snprintf(data.args.text, CONF_S, "%s", cm->name);
@@ -301,7 +301,7 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		return retval;
 	}
 	cont->cust_id = cmdb->customer->cust_id;
-	retval = run_insert(config, cmdb, CONTACTS);
+	retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
 
@@ -332,7 +332,7 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
-	retval = run_insert(config, cmdb, SERVICES);
+	retval = cmdb_run_insert(config, cmdb, SERVICES);
 	return retval;
 }
 void
@@ -350,7 +350,7 @@ display_service_types(cmdb_config_s *config)
 	cmdb_init_struct(cmdb);
 
 	cmdb->servicetype = '\0';
-	if ((retval = run_query(config, cmdb, SERVICE_TYPE)) != 0) {
+	if ((retval = cmdb_run_query(config, cmdb, SERVICE_TYPE)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
 	}
@@ -381,7 +381,7 @@ display_customer_services(cmdb_config_s *config, char *coid)
 		report_error(MALLOC_FAIL, "cmdb in display_customer_services");
 
 	cmdb_init_struct(cmdb);
-	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | SERVICE)) != 0) {
+	if ((retval = cmdb_run_multiple_query(config, cmdb, CUSTOMER | SERVICE)) != 0) {
 		cmdb_clean_list(cmdb);
 		printf("Query for customer %s services failed\n", coid);
 		return;
@@ -415,7 +415,7 @@ display_customer_contacts(cmdb_config_s *config, char *coid)
 
 	i = 0;
 	cmdb_init_struct(cmdb);
-	if ((retval = run_multiple_query(config, cmdb, CUSTOMER | CONTACT)) != 0) {
+	if ((retval = cmdb_run_multiple_query(config, cmdb, CUSTOMER | CONTACT)) != 0) {
 		cmdb_clean_list(cmdb);
 		printf("Query for customer %s contacts failed\n", coid);
 		return;
@@ -511,7 +511,7 @@ get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid)
 	int retval;
 	cmdb_customer_s *cust, *next;
 
-	if ((retval = run_query(config, cmdb, CUSTOMER)) != 0)
+	if ((retval = cmdb_run_query(config, cmdb, CUSTOMER)) != 0)
 		return retval;
 
 	cust = cmdb->customer;
