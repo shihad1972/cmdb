@@ -1171,15 +1171,14 @@ cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	retval = 0;
 	file = config->file;
 	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+		report_error(retval, "cmdb_run_query_sqlite");
 	}
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_query_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_query_sqlite");
 	}
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
@@ -1238,7 +1237,7 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in run_search_sqlite");
 	}
 /*
    As in the MySQL function we assume that we are sending text and recieving
@@ -1285,7 +1284,7 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");
 	}
 	if (data)
 		list = data;
@@ -1297,10 +1296,10 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 		if (list->next) 
 			list = list->next;
 	}
-	if (retval == WRONG_TYPE) {
+	if (retval == DB_WRONG_TYPE) {
 		sqlite3_finalize(state);
 		sqlite3_close(cmdb);
-		return retval;
+		report_error(retval, query);
 	}
 	list = data;
 	i = NONE;
@@ -1310,11 +1309,11 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 			break;
 		i++;
 	}
-	if (retval != WRONG_TYPE)
-		retval = i;
 	sqlite3_finalize(state);
 	sqlite3_close(cmdb);
-	return retval;
+	if (retval == DB_WRONG_TYPE)
+		report_error(retval, query);
+	return i;
 }
 
 int
@@ -1345,7 +1344,7 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				data->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				return DB_WRONG_TYPE;
 			list->next = data;
 		}
 	} else {
@@ -1360,7 +1359,7 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				list->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				return DB_WRONG_TYPE;
 		}
 	}
 	return retval;
@@ -1374,25 +1373,25 @@ set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 	if (cmdb_search_arg_types[type][i] == DBTEXT) {
 		if ((retval = sqlite3_bind_text(
 state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-			fprintf(stderr, "Cannot bind search arg %s\n",
-				list->args.text);
+			fprintf(stderr, "Cannot bind search arg %s: %s\n",
+				list->args.text, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else if (cmdb_search_arg_types[type][i] == DBINT) {
 		if ((retval = sqlite3_bind_int64(
 state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
-			fprintf(stderr, "Cannot bind search number arg %lu\n",
-				list->args.number);
+			fprintf(stderr, "Cannot bind search number arg %lu: %s\n",
+				list->args.number, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else if (cmdb_search_arg_types[type][i] == DBSHORT) {
 		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
-			fprintf(stderr, "Cannot bind search small arg %d\n",
-				list->args.small);
+			fprintf(stderr, "Cannot bind search small arg %d: %s\n",
+				list->args.small, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else {
-		retval = WRONG_TYPE;
+		retval = DB_WRONG_TYPE;
 	}
 	return retval;
 }
@@ -1413,18 +1412,21 @@ cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_insert_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_insert_sqlite");
 	}
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
-		printf("Error binding result! %d\n", retval);
+		if (retval == DB_TYPE_INVALID)
+			fprintf(stderr, "Unknown data type %d in cmdb_run_insert_sqlite", type);
+		else
+			fprintf(stderr, "Error binding result! %s\n", sqlite3_errmsg(cmdb));
 		sqlite3_close(cmdb);
+		return SQLITE_INSERT_FAILED;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
 		retval = sqlite3_finalize(state);
 		retval = sqlite3_close(cmdb);
-		retval = SQLITE_INSERT_FAILED;
-		return retval;
+		return SQLITE_INSERT_FAILED;
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
@@ -1445,20 +1447,28 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_delete");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_delete");
 	}
 	for (i = 1; i <= cmdb_delete_args[type]; i++) {
 		if (!list)
 			break;
 		if (cmdb_delete_arg_type[type][i - 1] == DBTEXT) {
 			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-				fprintf(stderr, "Cannot bind arg %s\n", list->args.text);
+				fprintf(stderr, "Cannot bind arg %s: %s\n",
+				 list->args.text, sqlite3_errstr(retval));
 				return retval;
 			}
 		} else if (cmdb_delete_arg_type[type][i - 1] == DBINT) {
 			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
-				fprintf(stderr, "Cannot bind arg %lu\n", list->args.number);
+				fprintf(stderr, "Cannot bind arg %lu: %s\n",
+				 list->args.number, sqlite3_errstr(retval));
 				return retval;
+			}
+		} else if (cmdb_delete_arg_type[type][i - 1] == DBSHORT) {
+			if ((retval = sqlite3_bind_int(state, (int)i , list->args.small)) > 0) {
+				fprintf(stderr, "Cannot bind search small arg %d: %s\n",
+				 list->args.small, sqlite3_errstr(retval));
+			return retval;
 			}
 		}
 		list = list->next;
@@ -1492,7 +1502,7 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 	} else if (type == VM_HOSTS) {
 		retval = setup_bind_sqlite_vmhost(state, cmdb->vmhost);
 	} else {
-		retval = NO_TYPE;
+		report_error(DB_TYPE_INVALID, "in setup_insert_sqlite_bind");
 	}
 	return retval;
 }
@@ -1542,7 +1552,7 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_s *base, int type, unsigned int fi
 			cmdb_query_mismatch(fields, required, type);
 		store_vm_hosts_sqlite(state, base);
 	} else {
-		fprintf(stderr, "Unknown type %d\n",  type);
+		fprintf(stderr, "Unknown type %d. Cannot store.\n",  type);
 	}
 }
 

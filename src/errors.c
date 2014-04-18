@@ -80,6 +80,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB statment failed with %s\n", errstr);
 	} else if (error == MY_BIND_FAIL) {
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
+	} else if (error == SQLITE_BIND_FAILED) {
+		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
 	} else if (error == DB_WRONG_TYPE) {
 		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
 	} else if (error == UNKNOWN_QUERY) {
