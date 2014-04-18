@@ -80,6 +80,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB statment failed with %s\n", errstr);
 	} else if (error == MY_BIND_FAIL) {
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
+	} else if (error == DB_WRONG_TYPE) {
+		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
+	} else if (error == NO_DATA) {
+		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
 	} else if (error == CHKZONE_FAIL) {
@@ -130,6 +134,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No Hardware types were found\n");
 	} else if (error == BUILD_DOMAIN_NOT_FOUND) {
 		fprintf(stderr, "No build domains found\n");
+	} else if (error == BUILD_DOMAIN_EXISTS) {
+		fprintf(stderr, "Build domain %s exists\n", errstr);
 	} else if (error == CREATE_BUILD_FAILED) {
 		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
 	} else if (error == ID_INVALID) {
@@ -912,3 +918,75 @@ resize_string_buff(string_len_s *build)
 	else
 		build->string = tmp;
 }
+
+#ifdef HAVE_SQLITE3
+# ifndef HAVE_SQLITE3_ERRSTR
+const char *
+sqlite3_errstr(int error)
+{
+	if (error == SQLITE_ERROR)
+		return "SQL error or missing database";
+	else if (error == SQLITE_INTERNAL)
+		return "Internal logic error in SQLite";
+	else if (error == SQLITE_PERM)
+		return "Access permission denied";
+	else if (error == SQLITE_ABORT)
+		return "Callback routine requested an abort";
+	else if (error == SQLITE_BUSY)
+		return "The database file is locked";
+	else if (error == SQLITE_NOMEM)
+		return "A malloc() failed";
+	else if (error == SQLITE_READONLY)
+		return "Attempt to write a readonly database";
+	else if (error == SQLITE_INTERRUPT)
+		return "Operation terminated by sqlite3_interrupt()";
+	else if (error == SQLITE_IOERR)
+		return "Some kind of disk I/O error occurred";
+	else if (error == SQLITE_CORRUPT)
+		return "The database disk image is malformed";
+	else if (error == SQLITE_NOTFOUND)
+		return "Unknown opcode in sqlite3_file_control()";
+	else if (error == SQLITE_FULL)
+		return "Insertion failed because database is full";
+	else if (error == SQLITE_CANTOPEN)
+		return "Unable to open the database file";
+	else if (error == SQLITE_PROTOCOL)
+		return "Database lock protocol error";
+	else if (error == SQLITE_EMPTY)
+		return "Database is empty";
+	else if (error == SQLITE_SCHEMA)
+		return "The database schema changed";
+	else if (error == SQLITE_TOOBIG)
+		return "String or BLOB exceeds size limit";
+	else if (error == SQLITE_CONSTRAINT)
+		return "Abort due to constraint violation";
+	else if (error == SQLITE_MISMATCH)
+		return "Data type mismatch";
+	else if (error == SQLITE_MISUSE)
+		return "Library used incorrectly";
+	else if (error == SQLITE_NOLFS)
+		return "Uses OS features not supported on host";
+	else if (error == SQLITE_AUTH)
+		return "Authorization denied";
+	else if (error == SQLITE_FORMAT)
+		return "Auxiliary database format error";
+	else if (error == SQLITE_RANGE)
+		return "2nd parameter to sqlite3_bind out of range";
+	else if (error == SQLITE_NOTADB)
+		return "File opened that is not a database file";
+#  ifdef SQLITE_NOTICE
+	else if (error == SQLITE_NOTICE)
+		return "Notifications from sqlite3_log()";
+#  endif /* SQLITE_NOTICE */
+#  ifdef SQLITE_WARNING
+	else if (error == SQLITE_WARNING)
+		return "Warnings from sqlite3_log()";
+#  endif /* SQLITE_WARNING */
+	else if (error == SQLITE_ROW)
+		return "sqlite3_step() has another row ready";
+	else if (error == SQLITE_DONE)
+		return "sqlite3_step() has finished executing";
+	return "Unknown error code";
+}
+# endif /* HAVE_SQLITE3_ERRSTR */
+#endif /* HAVE_SQLITE3 */

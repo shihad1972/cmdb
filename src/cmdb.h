@@ -21,7 +21,10 @@
  */
 
 #ifndef __CMDB_H__
-#define __CMDB_H__
+# define __CMDB_H__
+# ifdef HAVE_SQLITE3
+#  include <sqlite3.h>
+# endif /* HAVE_SQLITE3 */
 enum {			/* Buffer Sizes */
 	CH_S = 2,
 	COMM_S = 8,
@@ -48,7 +51,8 @@ enum {			/* Database Type errors */
 enum {			/* Database colum types */
 	DBTEXT = 1,
 	DBINT = 2,
-	DBSHORT = 3
+	DBSHORT = 3,
+	FLYBY
 };
 
 enum {			/* dnsa error codes */
@@ -163,6 +167,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	SQLITE_INSERT_FAILED = 153,
 	DB_INSERT_FAILED = 154,
 	DB_UPDATE_FAILED = 155,
+	DB_WRONG_TYPE = 156,
+	NO_DATA = 157,
 	BUILD_DOMAIN_EXISTS = 160,
 	BUILD_OS_EXISTS = 161,
 	OS_ALIAS_NEEDED = 162,
@@ -447,4 +453,10 @@ void
 init_initial_string_l(string_l **string, int count);
 void
 resize_string_buff(string_len_s *build);
+# ifdef HAVE_SQLITE3
+#  ifndef HAVE_SQLITE3_ERRSTR
+const char *
+sqlite3_errstr(int error);
+#  endif /* HAVE_SQLITE3_ERRSTR */
+# endif /* HAVE_SQLITE3 */
 #endif
