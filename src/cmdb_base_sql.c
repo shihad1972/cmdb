@@ -340,7 +340,7 @@ cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type)
 }
 
 int
-get_query(int type, const char **query, unsigned int *fields)
+cmdb_get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval;
 	
@@ -377,7 +377,7 @@ get_query(int type, const char **query, unsigned int *fields)
 }
 
 void
-get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
+cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
 {
 	if (type == SERVER_ID_ON_NAME) {
 		*input = &(base->server->name);
@@ -466,7 +466,7 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	
 	retval = 0;
 	cmdb_mysql_init(config, &cmdb);
-	if ((retval = get_query(type, &query, &fields)) != 0) {
+	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
 	}
@@ -537,7 +537,7 @@ Will need to check if we have char or int here. Hard coded char for search,
 and int for result, which is OK when searching on name and returning id
 */	
 	query = sql_search[type];
-	get_search(type, &arg_len, &res_len, &input, &output, base);
+	cmdb_get_search(type, &arg_len, &res_len, &input, &output, base);
 	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
 	my_bind[0].buffer = input;
 	my_bind[0].buffer_length = arg_len;
@@ -1202,7 +1202,7 @@ cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	
 	retval = 0;
 	file = config->file;
-	if ((retval = get_query(type, &query, &fields)) != 0) {
+	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) {
 		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
 		return retval;
 	}
@@ -1276,7 +1276,7 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
    As in the MySQL function we assume that we are sending text and recieving
    numerical data. Searching on name for ID is ok for this
 */
-	get_search(type, &fields, &args, &input, &output, base);
+	cmdb_get_search(type, &fields, &args, &input, &output, base);
 	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_BIND_FAILED, "run_search_sqlite");

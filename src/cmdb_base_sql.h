@@ -49,9 +49,9 @@ cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type);
 int
-get_query(int type, const char **query, unsigned int *fields);
+cmdb_get_query(int type, const char **query, unsigned int *fields);
 void
-get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, cmdb_s *base);
+cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, cmdb_s *base);
 int
 run_search(cmdb_config_s *config, cmdb_s *base, int type);
 int
