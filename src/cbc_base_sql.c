@@ -808,13 +808,13 @@ cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 
 	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
+	query = cbc_sql_insert[type];
 	for (i = 0; i < cbc_insert_fields[type]; i++)
 		if ((retval = cbc_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
-			return retval;
-	query = cbc_sql_insert[type];
+			report_error(DB_WRONG_TYPE, query);
 	cbc_mysql_init(config, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_bind_param(cbc_stmt, &my_bind[0])) != 0)
@@ -917,6 +917,8 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 			mybind[i].buffer = &(list->args.small);
 			mybind[i].buffer_length = sizeof(short int);
 			list = list->next;
+		} else {
+			report_error(DB_WRONG_TYPE, query);
 		}
 	}
 	cbc_mysql_init(ccs, &cbc);
@@ -950,13 +952,13 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	memset(fields, 0, sizeof(fields));
 	for (i = 0; i < cbc_search_args[type]; i++)
 		if ((retval = cbc_set_search_args_mysql(&args[i], i, type, data)) != 0)
-			return retval;
+			report_error(DB_WRONG_TYPE, query);
 	for (i = 0; i < cbc_search_fields[type]; i++)
 		if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
-			return retval;
+			report_error(DB_WRONG_TYPE, query);
 	cbc_mysql_init(ccs, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_bind_param(cbc_stmt, &args[0])) != 0)
@@ -973,15 +975,13 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 		if ((int)numrows > j) {
 			for (i = 0; i < cbc_search_fields[type]; i++)
 				if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
-					return retval;
+					report_error(DB_WRONG_TYPE, query);
 		}
 		if ((retval = mysql_stmt_bind_result(cbc_stmt, &fields[0])) != 0)
 			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	}
 	if (retval != MYSQL_NO_DATA)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	else
-		retval = NONE;
 	mysql_stmt_free_result(cbc_stmt);
 	mysql_stmt_close(cbc_stmt);
 	cmdb_mysql_cleanup(&cbc);
@@ -1001,10 +1001,10 @@ cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	memset(args, 0, sizeof(args));
 	for (i = 0; i < cbc_update_args[type]; i++)
 		if ((retval = cbc_set_update_args_mysql(&args[i], i, type, data)) != 0)
-			return retval;
+			report_error(DB_WRONG_TYPE, query);
 	cbc_mysql_init(ccs, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	if ((retval = mysql_stmt_bind_param(cbc_stmt, &args[0])) != 0)
@@ -1020,7 +1020,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 {
 	int retval = 0;
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 
 	mybind->is_null = 0;
@@ -1043,7 +1043,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		retval = WRONG_TYPE;
 	}
 	mybind->buffer = buffer;
 	return retval;
@@ -1892,7 +1892,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_insert_sqlite");
 	}
 	if ((retval = cbc_setup_insert_sqlite_bind(state, base, type)) != 0) {
-		printf("Error binding result! %d\n", retval);
+		printf("Error: %s\n", sqlite3_errmsg(cbc));
 		sqlite3_close(cbc);
 		return retval;
 	}
@@ -2009,17 +2009,25 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 int
 cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_search[type], *file = ccs->file;
+	const char *query = cbc_sql_search[type], *file = '\0';
 	int retval = 0, i;
-	dbdata_s *list = data;
+	dbdata_s *list = '\0';
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cbc_run_search_sqlite");
+	if (ccs)
+		file = ccs->file;
+	else
+		report_error(NO_DATA, "css in cbc_run_search_sqlite");
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
 	}
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);
@@ -2076,26 +2084,17 @@ set_cbc_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 
 	if (cbc_search_arg_types[type][i] == DBTEXT) {
 		if ((retval = sqlite3_bind_text(
-state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-			fprintf(stderr, "Cannot bind search text arg %s\n",
-				list->args.text);
-			return retval;
-		}
+state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0)
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 	} else if (cbc_search_arg_types[type][i] == DBINT) {
 		if ((retval = sqlite3_bind_int64(
-state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
-			fprintf(stderr, "Cannot bind search number arg %lu\n",
-				list->args.number);
-			return retval;
-		}
+state, i + 1, (sqlite3_int64)list->args.number)) > 0)
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 	} else if (cbc_search_arg_types[type][i] == DBSHORT) {
-		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
-			fprintf(stderr, "Cannot bind search small arg %d\n",
-				list->args.small);
-			return retval;
-		}
+		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0)
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_WRONG_TYPE, cbc_sql_search[type]);
 	}
 	return retval;
 }
@@ -2108,25 +2107,19 @@ set_cbc_update_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 	if (cbc_update_types[type][i] == DBTEXT) {
 		if ((retval = sqlite3_bind_text(
 state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-			fprintf(stderr, "Cannot bind search text arg %s\n",
-				list->args.text);
-			return retval;
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 		}
 	} else if (cbc_update_types[type][i] == DBINT) {
 		if ((retval = sqlite3_bind_int64(
 state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
-			fprintf(stderr, "Cannot bind search number arg %lu\n",
-				list->args.number);
-			return retval;
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 		}
 	} else if (cbc_update_types[type][i] == DBSHORT) {
 		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
-			fprintf(stderr, "Cannot bind search small arg %d\n",
-				list->args.small);
-			return retval;
+			report_error(MY_BIND_FAIL, sqlite3_errstr(retval));
 		}
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_WRONG_TYPE, cbc_sql_update[type]);
 	}
 	return retval;
 }
@@ -2155,7 +2148,7 @@ get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 			else if (cbc_search_field_types[type][j] == DBSHORT)
 				data->fields.small = (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				report_error(DB_WRONG_TYPE, cbc_sql_search[type]);
 			list->next = data;
 			list = list->next;
 		}
@@ -2168,7 +2161,7 @@ get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 			else if (cbc_search_field_types[type][j] == DBSHORT)
 				list->fields.small = (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				report_error(DB_WRONG_TYPE, cbc_sql_search[type]);
 			list = list->next;
 		}
 	}

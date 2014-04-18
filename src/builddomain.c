@@ -100,16 +100,13 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
 	init_cbc_struct(base);
 	init_build_domain(bdom);
+	init_dbdata_struct(data);
 	base->bdom = bdom;
 	copy_build_domain_values(cdl, bdom);
 	snprintf(data->args.text, RBUFF_S, "%s", bdom->domain);
 	retval = cbc_run_search(cbc, data, BUILD_DOMAIN_COUNT);
-	if (data->fields.number > 0) {
-		printf("Domain %s already in database\n", bdom->domain);
-		free(data);
-		clean_cbc_struct(base);
-		return BUILD_DOMAIN_EXISTS;
-	}
+	if (retval > 0)
+		report_error(BUILD_DOMAIN_EXISTS, bdom->domain);
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
 
