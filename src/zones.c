@@ -2607,7 +2607,7 @@ check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
-	memset(zone, 0, sizeof(zone));
+	memset(zone, 0, sizeof *zone);
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
 		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);

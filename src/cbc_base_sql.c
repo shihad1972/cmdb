@@ -1043,7 +1043,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		retval = WRONG_TYPE;
+		return WRONG_TYPE;
 	}
 	mybind->buffer = buffer;
 	return retval;
@@ -2031,8 +2031,9 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);
-		if (list->next)
-			list = list->next;
+		if (list)
+			if (list->next)
+				list = list->next;
 	}
 	list = data;
 	i = 0;
