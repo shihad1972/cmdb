@@ -45,9 +45,9 @@ extern const int mysql_inserts[8][7];
 # endif /* HAVE_MYSQL */
 
 int
-run_query(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type);
 int
-run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type);
 int
 get_query(int type, const char **query, unsigned int *fields);
 void
@@ -71,9 +71,9 @@ show_no_results(int type);
 void
 cmdb_mysql_init(cmdb_config_s *dc, MYSQL *cmdb_mysql);
 int
-run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
-run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
@@ -127,9 +127,9 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base);
 #  include <sqlite3.h>
 
 int
-run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
-run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int

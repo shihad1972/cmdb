@@ -189,7 +189,7 @@ const unsigned int cmdb_delete_arg_type[][1] = {
 };
 	
 int
-run_query(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -197,12 +197,12 @@ run_query(cmdb_config_s *config, cmdb_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_query_mysql(config, base, type);
+		retval = cmdb_run_query_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_query_sqlite(config, base, type);
+		retval = cmdb_run_query_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -214,7 +214,7 @@ run_query(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -222,12 +222,12 @@ run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_multiple_query_mysql(config, base, type);
+		retval = cmdb_run_multiple_query_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_multiple_query_sqlite(config, base, type);
+		retval = cmdb_run_multiple_query_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -454,7 +454,7 @@ cmdb_mysql_init(cmdb_config_s *dc, MYSQL *cmdb_mysql)
 }
 
 int
-run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
@@ -489,32 +489,32 @@ run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
-		if ((retval = run_query_mysql(config, base, SERVER)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVER)) != 0)
 			return retval;
 	if ((type & CUSTOMER) == CUSTOMER)
-		if ((retval = run_query_mysql(config, base, CUSTOMER)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, CUSTOMER)) != 0)
 			return retval;
 	if ((type & CONTACT) == CONTACT)
-		if ((retval = run_query_mysql(config, base, CONTACT)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, CONTACT)) != 0)
 			return retval;
 	if ((type & SERVICE) == SERVICE) {
-		if ((retval = run_query_mysql(config, base, SERVICE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVICE)) != 0)
 			return retval;
 	}
 	if ((type & HARDWARE) == HARDWARE) {
-		if ((retval = run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_mysql(config, base, HARDWARE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, HARDWARE)) != 0)
 			return retval;
 	}
 	if ((type & VM_HOST) == VM_HOST)
-		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
 	return 0;
 }
@@ -1192,7 +1192,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1211,7 +1211,7 @@ run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_query_sqlite");
 	}
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
@@ -1224,32 +1224,32 @@ run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
-		if ((retval = run_query_sqlite(config, base, SERVER)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVER)) != 0)
 			return retval;
 	if ((type & CUSTOMER) == CUSTOMER)
-		if ((retval = run_query_sqlite(config, base, CUSTOMER)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, CUSTOMER)) != 0)
 			return retval;
 	if ((type & CONTACT) == CONTACT)
-		if ((retval = run_query_sqlite(config, base, CONTACT)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, CONTACT)) != 0)
 			return retval;
 	if ((type & SERVICE) == SERVICE) {
-		if ((retval = run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVICE)) != 0)
 			return retval;
 	}
 	if ((type & HARDWARE) == HARDWARE) {
-		if ((retval = run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_sqlite(config, base, HARDWARE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, HARDWARE)) != 0)
 			return retval;
 	}
 	if ((type & VM_HOST) == VM_HOST)
-		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
 	return 0;
 }
