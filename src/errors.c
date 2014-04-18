@@ -82,6 +82,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
 	} else if (error == DB_WRONG_TYPE) {
 		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
+	} else if (error == UNKNOWN_QUERY) {
+		fprintf(stderr, "Unknown query for type %s\n", errstr);
 	} else if (error == NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {

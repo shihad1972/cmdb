@@ -120,7 +120,7 @@ add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
 
-	retval = run_insert(config, cmdb, CUSTOMERS);
+	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }
 
@@ -301,7 +301,7 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		return retval;
 	}
 	cont->cust_id = cmdb->customer->cust_id;
-	retval = run_insert(config, cmdb, CONTACTS);
+	retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
 
@@ -332,7 +332,7 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
-	retval = run_insert(config, cmdb, SERVICES);
+	retval = cmdb_run_insert(config, cmdb, SERVICES);
 	return retval;
 }
 void

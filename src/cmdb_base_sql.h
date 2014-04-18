@@ -50,14 +50,14 @@ int
 cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_get_query(int type, const char **query, unsigned int *fields);
-void
+int
 cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, cmdb_s *base);
 int
 run_search(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type);
 int
-run_insert(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_insert(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type);
 void
@@ -75,7 +75,7 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
-run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
@@ -131,7 +131,7 @@ cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
-run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
+cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
 run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int

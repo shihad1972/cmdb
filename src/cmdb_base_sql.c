@@ -291,7 +291,7 @@ cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type)
 }
 
 int
-run_insert(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
@@ -299,12 +299,12 @@ run_insert(cmdb_config_s *config, cmdb_s *base, int type)
 		return NO_DB_TYPE;
 #ifdef HAVE_MYSQL
 	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_insert_mysql(config, base, type);
+		retval = cmdb_run_insert_mysql(config, base, type);
 		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
 	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_insert_sqlite(config, base, type);
+		retval = cmdb_run_insert_sqlite(config, base, type);
 		return retval;
 #endif /* HAVE_SQLITE3 */
 	} else {
@@ -370,15 +370,16 @@ cmdb_get_query(int type, const char **query, unsigned int *fields)
 		*query = sql_select[VM_HOSTS];
 		*fields = select_fields[VM_HOSTS];
 	} else {
-		fprintf(stderr, "Unknown query type %d\n", type);
-		retval = 1;
+		retval = UNKNOWN_QUERY;
 	}
 	return retval;
 }
 
-void
+int
 cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
 {
+	int retval = 0;
+
 	if (type == SERVER_ID_ON_NAME) {
 		*input = &(base->server->name);
 		*output = &(base->server->server_id);
@@ -405,9 +406,9 @@ cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **out
 		*fields = strlen(base->vmhost->name);
 		*args = sizeof(base->vmhost->id);
 	} else {
-		fprintf(stderr, "Unknown query %d\n", type);
-		exit (NO_QUERY);
+		retval = UNKNOWN_QUERY;
 	}
+	return retval;
 }
 
 void
@@ -537,7 +538,8 @@ Will need to check if we have char or int here. Hard coded char for search,
 and int for result, which is OK when searching on name and returning id
 */	
 	query = sql_search[type];
-	cmdb_get_search(type, &arg_len, &res_len, &input, &output, base);
+	if ((retval = cmdb_get_search(type, &arg_len, &res_len, &input, &output, base)) != 0)
+		report_error(UNKNOWN_QUERY, "run_search_mysql");
 	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
 	my_bind[0].buffer = input;
 	my_bind[0].buffer_length = arg_len;
@@ -711,7 +713,7 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 }
 
 int
-run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_STMT *cmdb_stmt;
@@ -1302,18 +1304,27 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 int
 cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = sql_search[type], *file = ccs->file;
+	const char *query = '\0', *file = '\0';
 	int retval = NONE, i;
-	dbdata_s *list = data;
+	dbdata_s *list = '\0';
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
+	query = sql_search[type];
+	if (ccs)
+		file = ccs->file;
+	else
+		report_error(NO_DATA, "ccs in cmdb_run_search_sqlite");
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_search_sqlite");
 	}
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cmdb_run_search_sqlite");
 	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
 		if ((retval = set_cmdb_search_sqlite(state, list, type, i)) < 0)
 			break;
@@ -1421,7 +1432,7 @@ state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
 }
 
 int
-run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1436,7 +1447,7 @@ run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_insert_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_insert_sqlite");
 	}
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);

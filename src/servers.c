@@ -75,7 +75,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		cmdb->server->cust_id = cmdb->customer->cust_id;
 	if (cmdb->vmhost)
 		cmdb->server->vm_server_id = cmdb->vmhost->id;
-		retval = run_insert(config, cmdb, SERVERS);
+		retval = cmdb_run_insert(config, cmdb, SERVERS);
 	free(input);
 	return retval;
 }
@@ -141,7 +141,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		snprintf(cmdb->hardtype->hclass, MAC_S, "%s", data->fields.text);
 	}
 	printf("Adding to DB....\n");
-	retval = run_insert(config, cmdb, HARDWARES);
+	retval = cmdb_run_insert(config, cmdb, HARDWARES);
 	return retval;
 }
 
@@ -526,7 +526,7 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
 	snprintf(base->vmhost->type, MAC_S, "%s", base->server->model);
 	base->vmhost->server_id = data->fields.number;
-	if ((retval = run_insert(cmc, base, VM_HOSTS)) != 0)
+	if ((retval = cmdb_run_insert(cmc, base, VM_HOSTS)) != 0)
 		printf("Error adding to database\n");
 	else
 		printf("VM host %s added to database\n", cm->name);
