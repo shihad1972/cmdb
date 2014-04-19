@@ -1108,7 +1108,7 @@ dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbd
 		mybind->buffer_type = MYSQL_TYPE_SHORT;
 		mybind->is_unsigned = 0;
 		buffer = &(list->args.small);
-		mybind->buffer_length = sizeof(small int);
+		mybind->buffer_length = sizeof(short int);
 	} else {
 		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_args");
 	}
@@ -1178,7 +1178,7 @@ dnsa_setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsign
 	else if (type == GLUES)
 		dnsa_setup_insert_mysql_bind_buff_glue(input, base, i);
 	else
-		retval = WRONG_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "dnsa_run_insert_mysql");
 	
 	return retval;
 }
@@ -1325,6 +1325,7 @@ dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_query_sqlite");
 	}
@@ -1657,6 +1658,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
@@ -1666,6 +1668,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 */
 	dnsa_get_search(type, &fields, &args, &input, &output, base);
 	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
@@ -1700,6 +1703,7 @@ dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
@@ -1734,6 +1738,7 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
@@ -1772,6 +1777,7 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
@@ -1827,6 +1833,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n",  sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_delete_sqlite");
 	}
@@ -1875,7 +1882,7 @@ dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 	else if (type == GLUES)
 		retval = dnsa_setup_bind_sqlite_glue(state, base->glue);
 	else
-		retval = WRONG_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "dnsa_run_insert_sqlite");
 	return retval;
 }
 

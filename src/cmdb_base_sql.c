@@ -798,7 +798,7 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_s *base, unsigned i
 	else if (type == VM_HOSTS)
 		setup_insert_mysql_bind_buff_vmhost(buffer, base, i);
 	else
-		retval = NO_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cmdb_run_insert_mysql");
 	return retval;
 }
 
@@ -1502,7 +1502,7 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 	} else if (type == VM_HOSTS) {
 		retval = setup_bind_sqlite_vmhost(state, cmdb->vmhost);
 	} else {
-		report_error(DB_TYPE_INVALID, "in setup_insert_sqlite_bind");
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cmdb_run_insert_mysql");
 	}
 	return retval;
 }
