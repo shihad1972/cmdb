@@ -346,6 +346,40 @@ const unsigned int cbc_search_fields[] = {
 	2, 6, 1, 2
 };
 
+const int cbc_inserts[][24] = {
+	{ DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
+	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
+	  DBTEXT, DBSHORT, DBTEXT, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0 }
+};
+
 const unsigned int cbc_update_types[][5] = {
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
@@ -492,25 +526,19 @@ int
 cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cbc_run_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = cbc_run_query_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cbc_run_query_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
@@ -518,24 +546,18 @@ cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cbc_run_multiple_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = cbc_run_multiple_query_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cbc_run_multiple_query_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
 	return retval;
 }
 
@@ -543,25 +565,76 @@ int
 cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
 {
 	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cbc_run_insert");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = cbc_run_insert_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cbc_run_insert_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
+}
 
-	return NONE;
+int
+cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
+{
+	int retval;
+	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cbc_run_delete");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(ccs->dbtype, "mysql", RANGE_S) == 0))
+		retval = cbc_run_delete_mysql(ccs, base, type);
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(ccs->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cbc_run_delete_sqlite(ccs, base, type);
+#endif /* HAVE_SQLITE3 */
+	else
+		report_error(DB_TYPE_INVALID, ccs->dbtype);
+	return retval;
+}
+
+int
+cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
+{
+	int retval;
+	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cbc_run_search");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(ccs->dbtype, "mysql", RANGE_S) == 0))
+		retval = cbc_run_search_mysql(ccs, base, type);
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(ccs->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cbc_run_search_sqlite(ccs, base, type);
+#endif /* HAVE_SQLITE3 */
+	else
+		report_error(DB_TYPE_INVALID, ccs->dbtype);
+	return retval;
+}
+
+int
+cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
+{
+	int retval;
+	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
+		report_error(NO_DB_TYPE, "cbc_run_update");
+#ifdef HAVE_MYSQL
+	else if (strncmp(ccs->dbtype, "mysql", COMM_S) == 0)
+		retval = cbc_run_update_mysql(ccs, base, type);
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	else if (strncmp(ccs->dbtype, "sqlite", COMM_S) == 0)
+		retval = cbc_run_update_sqlite(ccs, base, type);
+#endif /* HAVE_SQLITE3 */
+	else
+		report_error(DB_TYPE_INVALID, ccs->dbtype);
+	return retval;
 }
 
 int
@@ -616,7 +689,6 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 		*query = cbc_sql_select[VMHOSTS];
 		*fields = cbc_select_fields[VMHOSTS];
 	} else {
-		fprintf(stderr, "Unknown query type %d\n", type);
 		retval = UNKNOWN_QUERY;
 	}
 	return retval;
@@ -669,80 +741,6 @@ cbc_init_update_dbdata(dbdata_s **list, unsigned int type)
 		}
 	}
 }
-
-int
-cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
-{
-	int retval;
-	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(ccs->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = cbc_run_delete_mysql(ccs, base, type);
-		return retval;
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(ccs->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = cbc_run_delete_sqlite(ccs, base, type);
-		return retval;
-#endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", ccs->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
-}
-
-int
-cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
-{
-	int retval;
-	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
-#ifdef HAVE_MYSQL
-	} else if ((strncmp(ccs->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = cbc_run_search_mysql(ccs, base, type);
-		return retval;
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if ((strncmp(ccs->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = cbc_run_search_sqlite(ccs, base, type);
-		return retval;
-#endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", ccs->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
-}
-
-int
-cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
-{
-	int retval;
-	if (strncmp(ccs->dbtype, "none", COMM_S) == 0) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
-#ifdef HAVE_MYSQL
-	} else if (strncmp(ccs->dbtype, "mysql", COMM_S) == 0) {
-		retval = cbc_run_update_mysql(ccs, base, type);
-		return retval;
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	} else if (strncmp(ccs->dbtype, "sqlite", COMM_S) == 0) {
-		retval = cbc_run_update_sqlite(ccs, base, type);
-		return retval;
-#endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", ccs->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	return NONE;
-}
 #ifdef HAVE_MYSQL
 
 void
@@ -768,18 +766,15 @@ cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 	MYSQL_ROW cbc_row;
 	my_ulonglong cbc_rows;
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int fields;
 
-	retval = 0;
 	cbc_mysql_init(config, &cbc);
 	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+		report_error(retval, "cbc_run_query_mysql");
 	}
 	if ((retval = cmdb_mysql_query_with_checks(&cbc, query)) != 0) {
-		fprintf(stderr, "Query failed with error code %d\n", retval);
-		return retval;
+		report_error(MY_QUERY_FAIL, mysql_error(&cbc));
 	}
 	if (!(cbc_res = mysql_store_result(&cbc))) {
 		cmdb_mysql_cleanup(&cbc);
@@ -803,15 +798,14 @@ cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 	MYSQL_STMT *cbc_stmt;
 	MYSQL_BIND my_bind[cbc_insert_fields[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i;
 
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	query = cbc_sql_insert[type];
 	for (i = 0; i < cbc_insert_fields[type]; i++)
 		if ((retval = cbc_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
-			report_error(DB_WRONG_TYPE, query);
+			report_error(retval, query);
 	cbc_mysql_init(config, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
@@ -893,33 +887,27 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 
 	memset(mybind, 0, sizeof(mybind));
 	for (i = 0; i < cbc_delete_args[type]; i++) {
+		mybind[i].is_null = 0;
+		mybind[i].length = 0;
 		if (cbc_delete_types[type][i] == DBINT) {
 			mybind[i].buffer_type = MYSQL_TYPE_LONG;
-			mybind[i].is_null = 0;
-			mybind[i].length = 0;
 			mybind[i].is_unsigned = 1;
 			mybind[i].buffer = &(list->args.number);
 			mybind[i].buffer_length = sizeof(unsigned long int);
-			list = list->next;
 		} else if (cbc_delete_types[type][i] == DBTEXT) {
 			mybind[i].buffer_type = MYSQL_TYPE_STRING;
-			mybind[i].is_null = 0;
-			mybind[i].length = 0;
 			mybind[i].is_unsigned = 0;
 			mybind[i].buffer = &(list->args.text);
 			mybind[i].buffer_length = strlen(list->args.text);
-			list = list->next;
 		} else if (cbc_delete_types[type][i] == DBSHORT) {
 			mybind[i].buffer_type = MYSQL_TYPE_SHORT;
-			mybind[i].is_null = 0;
-			mybind[i].length = 0;
 			mybind[i].is_unsigned = 0;
 			mybind[i].buffer = &(list->args.small);
 			mybind[i].buffer_length = sizeof(short int);
-			list = list->next;
 		} else {
 			report_error(DB_WRONG_TYPE, query);
 		}
+		list = list->next;
 	}
 	cbc_mysql_init(ccs, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
@@ -1043,7 +1031,7 @@ cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		retval = WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in cbc_set_search_args_mysql");
 	}
 	mybind->buffer = buffer;
 	return retval;
@@ -1099,7 +1087,7 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 		buffer = &(list->fields.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in cbc_set_search_fields_mysql");
 	}
 	mybind->buffer = buffer;
 	m++;
@@ -1135,7 +1123,7 @@ cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in cbc_set_update_args_mysql");
 	}
 	mybind->buffer = buffer;
 	return retval;
@@ -1221,7 +1209,7 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_vmhost_mysql(row, base);
 	} else {
-		cbc_query_mismatch(NONE, NONE, NONE);
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_mysql");
 	}
 }
 
@@ -1231,28 +1219,31 @@ cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s 
 	int retval = NONE;
 	void *buffer;
 
-	mybind->buffer_type = cbc_mysql_inserts[type][i];
-	if (mybind->buffer_type == MYSQL_TYPE_LONG)
-		mybind->is_unsigned = 1;
-	else
-		mybind->is_unsigned = 0;
 	mybind->is_null = 0;
 	mybind->length = 0;
-	if ((retval = cbc_setup_insert_mysql_buffer(type, &buffer, base, i)) != 0)
-		return retval;
+	cbc_setup_insert_mysql_buffer(type, &buffer, base, i);
 	mybind->buffer = buffer;
-	if (mybind->buffer_type == MYSQL_TYPE_LONG)
+	if (cbc_inserts[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
 		mybind->buffer_length = sizeof(unsigned long int);
-	else if (mybind->buffer_type == MYSQL_TYPE_STRING)
+	} else if (cbc_inserts[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
 		mybind->buffer_length = strlen(buffer);
+	} else if (cbc_inserts[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		mybind->buffer_length = sizeof(short int);
+	} else {
+		return DB_WRONG_TYPE;
+	}
 	return retval;
 }
 
-int
+void
 cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i)
 {
-	int retval = NONE;
-
 	if (type == BUILD_DOMAINS)
 		cbc_setup_bind_mysql_build_domain(buffer, base, i);
 	else if (type == BUILD_OSS)
@@ -1272,8 +1263,7 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 	else if (type == DISK_DEVS)
 		cbc_setup_bind_mysql_build_disk(buffer, base, i);
 	else
-		retval = INSERT_NOT_CONFIGURED;
-	return retval;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
 }
 
 void
@@ -1853,13 +1843,13 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	retval = 0;
 	file = config->file;
 	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+		report_error(retval, "cbc_run_query_sqlite");
 	}
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_query_sqlite");
 	}
@@ -1891,6 +1881,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_insert_sqlite");
 	}
@@ -1985,6 +1976,7 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_delete_sqlite");
 	}
@@ -2037,6 +2029,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
 	}
@@ -2068,6 +2061,7 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
 	}
@@ -2259,7 +2253,7 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_vmhost_sqlite(state, base);
 	} else {
-		cbc_query_mismatch(NONE, NONE, NONE);
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_sqlite");
 	}
 }
 
@@ -2287,7 +2281,7 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 	else if (type == DISK_DEVS)
 		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
 	else
-		retval = INSERT_NOT_CONFIGURED;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
 }
 
