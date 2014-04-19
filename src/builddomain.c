@@ -105,7 +105,7 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	copy_build_domain_values(cdl, bdom);
 	snprintf(data->args.text, RBUFF_S, "%s", bdom->domain);
 	retval = cbc_run_search(cbc, data, BUILD_DOMAIN_COUNT);
-	if (retval > 0)
+	if (data->fields.number > 0)
 		report_error(BUILD_DOMAIN_EXISTS, bdom->domain);
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
