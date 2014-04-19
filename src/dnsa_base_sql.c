@@ -1104,6 +1104,11 @@ dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbd
 		mybind->is_unsigned = 0;
 		buffer = &(list->args.text);
 		mybind->buffer_length = strlen(buffer);
+	} else if (dnsa_ext_search_arg_type[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		buffer = &(list->args.small);
+		mybind->buffer_length = sizeof(small int);
 	} else {
 		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_args");
 	}
@@ -1314,8 +1319,7 @@ dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	retval = 0;
 	file = config->file;
 	if ((retval = dnsa_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+		report_error(retval, "dnsa_run_query_sqlite");
 	}
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
@@ -1411,7 +1415,7 @@ dnsa_store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned i
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_glue_sqlite(state, base);
 	} else {
-		dnsa_query_mismatch(NONE, NONE, NONE);
+		fprintf(stderr, "Unknown type %d. Cannot store\n", type);
 	}
 }
 
@@ -1654,7 +1658,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 /*
    As in the MySQL function we assume that we are sending text and recieving
@@ -1663,7 +1667,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	dnsa_get_search(type, &fields, &args, &input, &output, base);
 	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		result = (unsigned long int)sqlite3_column_int64(state, 0);
@@ -1697,7 +1701,7 @@ dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	for (i = 0; (unsigned long)i < dnsa_extended_search_args[type]; i++) {
 		dnsa_setup_bind_extended_sqlite(state, list, type, i);
@@ -1731,7 +1735,7 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	if ((retval = dnsa_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
@@ -1769,7 +1773,7 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	for (i = 1; i <= dnsa_update_args[type]; i++) {
 		if (!list)
@@ -1824,7 +1828,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_delete_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_delete_sqlite");
 	}
 	for (i = 1; i <= dnsa_delete_args[type]; i++) {
 		if (!list)
