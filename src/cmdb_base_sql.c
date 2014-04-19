@@ -704,33 +704,27 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_delete_args[type]; i++) {
+		my_bind[i].is_null = 0;
+		my_bind[i].length = 0;
 		if (cmdb_delete_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 1;
 			my_bind[i].buffer = &(list->args.number);
 			my_bind[i].buffer_length = sizeof(unsigned long int);
-			list = list->next;
 		} else if (cmdb_delete_arg_type[type][i] == DBTEXT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 0;
 			my_bind[i].buffer = &(list->args.text);
 			my_bind[i].buffer_length = strlen(list->args.text);
-			list = list->next;
 		} else if (cmdb_delete_arg_type[type][i] == DBSHORT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 0;
 			my_bind[i].buffer = &(list->args.small);
 			my_bind[i].buffer_length = sizeof(short int);
-			list = list->next;
 		} else {
 			report_error(DB_TYPE_INVALID, " in cmdb_run_delete_mysql");
 		}
+		list = list->next;
 	}
 	query = cmdb_sql_delete[type];
 	cmdb_mysql_init(config, &cmdb);

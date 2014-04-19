@@ -969,7 +969,6 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	for (i = 0; i < dnsa_update_args[type]; i++) {
 		my_bind[i].is_null = 0;
 		my_bind[i].length = 0;
-		list = list->next;
 		if (dnsa_update_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
 			my_bind[i].is_unsigned = 1;
@@ -986,6 +985,7 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 			my_bind[i].buffer = &(list->args.small);
 			my_bind[i].buffer_length = sizeof(short int);
 		}
+		list = list->next;
 	}
 	query = dnsa_sql_update[type];
 	dnsa_mysql_init(config, &dnsa);
@@ -1020,7 +1020,6 @@ dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	for (i = 0; i < dnsa_delete_args[type]; i++) {
 		my_bind[i].is_null = 0;
 		my_bind[i].length = 0;
-		list = list->next;
 		if (dnsa_delete_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
 			my_bind[i].is_unsigned = 1;
@@ -1037,6 +1036,7 @@ dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 			my_bind[i].buffer = &(list->args.small);
 			my_bind[i].buffer_length = sizeof(short int);
 		}
+		list = list->next;
 	}
 	query = dnsa_sql_delete[type];
 	dnsa_mysql_init(config, &dnsa);
@@ -1062,19 +1062,21 @@ dnsa_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_
 
 	retval = 0;
 	void *buffer;
-	mybind->buffer_type = mysql_inserts[type][i];
 	mybind->is_null = 0;
 	mybind->length = 0;
 	if ((retval = dnsa_setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
 		return retval;
 	mybind->buffer = buffer;
-	if (mybind->buffer_type == MYSQL_TYPE_STRING) {
+	if (dnsa_inserts[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
 		mybind->is_unsigned = 0;
 		mybind->buffer_length = strlen(buffer);
-	} else if (mybind->buffer_type == MYSQL_TYPE_LONG) {
+	} else if (dnsa_inserts[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
 		mybind->is_unsigned = 1;
 		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (mybind->buffer_type == MYSQL_TYPE_SHORT) {
+	} else if (dnsa_inserts[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
 		mybind->is_unsigned = 0;
 		mybind->buffer_length = sizeof(short int);
 	} else {
