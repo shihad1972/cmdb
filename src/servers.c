@@ -39,36 +39,44 @@ int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb, int cl)
 {
 	char *input;
-	int retval;
+	int retval = 0;
 	cmdb_vm_host_s *vmhost;
+	dbdata_s *data;
 	
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in add_server_to_database");
 
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
-	retval = 0;
+	cmdb_init_initial_dbdata(&data, VM_ID_ON_NAME);
 	if (cl != 0)
 		complete_server_values(cmdb, cl);
+	snprintf(data->args.text, RANGE_S, "%s", cm->coid);
 	if (cmdb->customer) {
-		if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
-			fprintf(stderr, "Unable to retrieve cust_id for COID %s\n",
+		retval = cmdb_run_search(config, data, CUST_ID_ON_COID);
+		if (data->fields.number == 0) {
+			fprintf(stderr, "Unable to find COID %s\n",
 			 cmdb->customer->coid);
 			free(input);
-			return retval;
+			clean_dbdata_struct(data);
+			return NO_COID;
 		}
+		memset(data, 0, sizeof *data);
 	}
 /* Check for vmhost. if so this server is a virtual machine */
 	if (cm->vmhost) {
-		printf("VM host: %s\n", cm->vmhost);
-		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
-		if ((retval = run_search(config, cmdb, VM_ID_ON_NAME)) != 0) {
-			fprintf(stderr, "Unable to retrieve vmhost %s id\n",
+		snprintf(data->args.text, RBUFF_S, "%s", cm->vmhost);
+		retval = cmdb_run_search(config, data, VM_ID_ON_NAME);
+		if (data->fields.number == 0) {
+			fprintf(stderr, "Unable to find vmhost %s\n",
 			 cm->vmhost);
 			free(input);
-			return retval;
+			clean_dbdata_struct(data);
+			return NO_VM_HOSTS;
 		}
 	}
 	if (cmdb->customer)
@@ -76,6 +84,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	if (cmdb->vmhost)
 		cmdb->server->vm_server_id = cmdb->vmhost->id;
 		retval = cmdb_run_insert(config, cmdb, SERVERS);
+	clean_dbdata_struct(data);
 	free(input);
 	return retval;
 }
@@ -114,13 +123,17 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	int retval = NONE;
 	dbdata_s *data;
 
-	cmdb_init_initial_dbdata(&data, HCLASS_ON_HARD_TYPE_ID);
-	if ((retval = run_search(config, cmdb, SERVER_ID_ON_NAME)) != 0) {
+	cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
+	snprintf(data->args.text, RBUFF_S, "%s", cmdb->server->name);
+	retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME);
+	if (data->fields.number == 0) {
 		printf("Unable to retrieve server_id for server %s\n",
 		 cmdb->server->name);
-		return retval;
+		clean_dbdata_struct(data);
+		return SERVER_NOT_FOUND;
 	} else
-		cmdb->hardware->server_id = cmdb->server->server_id;
+		cmdb->hardware->server_id = data->fields.number;
+	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
 	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
 		fprintf(stderr, "Cannot find hardware class\n");

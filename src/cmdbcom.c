@@ -914,7 +914,7 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			if (validate_user_input(cm->detail, MAC_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "hardware detail");
 		} else {
-			if (validate_user_input(cm->detail, CUSTOMER_REGEX) < 0)
+			if (validate_user_input(cm->detail, ADDRESS_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "hardware detail");
 		}
 #endif /* HAVE_LIBPCRE */

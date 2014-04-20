@@ -605,7 +605,7 @@ cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		report_error(DB_TYPE_INVALID, " in cmdb_set_search_args_mysql ");
+		report_error(DB_TYPE_INVALID, "in cmdb_set_search_args_mysql ");
 	}
 	mybind->buffer = buffer;
 }
@@ -614,12 +614,12 @@ void
 cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
 	int j;
-	static int m = 0, stype = 0;
+	static int m = 0, stype = -1;
 	void *buffer;
 	dbdata_s *list, *new;
 	list = base;
 
-	if (stype == 0)
+	if (stype == -1)
 		stype = type;
 	else if (stype != type) {
 		stype = type;
@@ -655,7 +655,7 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 		buffer = &(list->fields.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		report_error(DB_TYPE_INVALID, " in cmdb_set_search_fields_mysql");
+		report_error(DB_TYPE_INVALID, "in cmdb_set_search_fields_mysql");
 	}
 	mybind->buffer = buffer;
 	m++;

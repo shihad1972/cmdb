@@ -34,6 +34,7 @@ Adding a server with the wrong virtual machine host name crashes out
 but does not tell us why. We get a 15 code error message from mysql
 (most likely when we try to prepare the insert and there is no
 vm_server_id)
+Fixed 20/04/2014
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
