@@ -64,6 +64,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Incorrect domain type specified\n");
 	} else if (error == USER_INPUT_INVALID) {
 		fprintf(stderr, "Input %s not valid.\n", errstr);
+	} else if (error == BUFFER_TOO_SMALL) {
+		fprintf(stderr, "Buffer %s too small\n", errstr);
 	} else if (error == DOMAIN_LIST_FAIL) {
 		fprintf(stderr, "No domains were found to list from the database\n");
 	} else if (error == MY_INIT_FAIL) {
