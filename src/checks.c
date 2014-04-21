@@ -17,8 +17,7 @@
 # include <string.h>
 # include <pcre.h>
 # include "cmdb.h"
-
-# define OVECCOUNT 18    /* should be a multiple of 3 */
+# include "checks.h"
 
 const char *regexps[19] = {
 	"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
@@ -41,6 +40,7 @@ const char *regexps[19] = {
 	"^[a-zA-Z0-9]+[a-zA-Z0-9\\.\\_\\-]*@[a-zA-Z0-9]+[a-zA-Z0-9\\.\\-]+[a-zA-Z]*$",
 	"^[a-zA-Z0-9][a-zA-Z0-9\\ \\,\\.\\-\\_\\:]*[a-zA-Z0-9]$"
 };
+
 int
 validate_user_input(char *input, int regex_test)
 {
@@ -78,6 +78,53 @@ validate_user_input(char *input, int regex_test)
 		return valid;
 	}
 	
+	if (valid == 0) {
+		valid = OVECCOUNT / 3;
+		printf("ovector only has room for %d captured substrings\n", valid - 1);
+		pcre_free(regexp);
+		return -1;
+	}
+	pcre_free(regexp);
+	return 1;
+}
+
+int
+validate_ext_user_input(const char *input, const char *regex_test)
+{
+	pcre *regexp;
+	const char *error;
+	int input_length, erroffset, valid;
+	int ovector[OVECCOUNT];
+
+	input_length = (int)strlen(input);
+
+	regexp = pcre_compile(
+		regex_test,
+		0,
+		&error,
+		&erroffset,
+		NULL);
+
+	if (!regexp) {
+		printf("PCRE compilation failed!\n");
+		return -1;
+	}
+
+	valid = pcre_exec (
+		regexp,
+		NULL,
+		input,
+		input_length,
+		0,
+		0,
+		ovector,
+		OVECCOUNT);
+
+	if (valid < 0) {
+		pcre_free(regexp);
+		return valid;
+	}
+
 	if (valid == 0) {
 		valid = OVECCOUNT / 3;
 		printf("ovector only has room for %d captured substrings\n", valid - 1);

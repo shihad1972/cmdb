@@ -28,7 +28,9 @@
  * 
  */
 #ifndef __CHECKS_H__
-#define __CHECKS_H__
+# define __CHECKS_H__
+
+# define OVECCOUNT 33    /* should be a multiple of 3 */
 
 enum {			/* regex search codes */
 	UUID_REGEX = 0,
@@ -52,7 +54,12 @@ enum {			/* regex search codes */
 	TXTRR_REGEX
 };
 
+extern const char *regexps[];
+
 int
 validate_user_input(char *input, int test);
+
+int
+validate_ext_user_input(const char *input, const char *regex_test);
 
 #endif
