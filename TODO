@@ -1,3 +1,9 @@
+21/04/2014
+With the checks.[c|h] should add a glib test as well so we do not have to
+use libpcre. Can have the option of one or the other. ./configure should
+bomb out if neither are present but give the user the option to pass
+paramemter --with-usr-input-checks=disabled
+
 17/04/2014
 The applications in build domain should be associated with a "system" group
 of packages, separate from the "application" packages currently in the
