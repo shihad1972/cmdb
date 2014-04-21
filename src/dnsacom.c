@@ -108,8 +108,17 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->action = CVERSION;
 		}
 	}
-	if (strncmp(comp->rtype, "SRV", COMM_S) == 0)
+	if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
+		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
+			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
+			snprintf(comp->protocol, COMM_S, "tcp");
+		}
+		if (comp->prefix == 0) {
+			fprintf(stderr, "No priority provided with -p. Setting to 100!\n");
+			comp->prefix = 100;
+		}
+	}
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
@@ -120,20 +129,20 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) && 
-		comp->action != DELETE_RECORD && 
-		comp->action != MULTIPLE_A && comp->action != DELETE_PREFERRED)
+		(comp->action != DELETE_RECORD) && 
+		(comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED))
 		retval = NO_DOMAIN_NAME;
-	else if (comp->action == MULTIPLE_A && 
-		strncmp(comp->domain, "NULL", COMM_S) == 0 &&
-		strncmp(comp->dest, "NULL", COMM_S) == 0)
+	else if ((comp->action == MULTIPLE_A) && 
+		(strncmp(comp->domain, "NULL", COMM_S) == 0) &&
+		(strncmp(comp->dest, "NULL", COMM_S) == 0))
 		retval = NO_DOMAIN_NAME;
-	else if (comp->action == MULTIPLE_A &&
-		strncmp(comp->domain, "NULL", COMM_S != 0) &&
-		strncmp(comp->dest, "NULL", COMM_S != 0))
+	else if ((comp->action == MULTIPLE_A) &&
+		(strncmp(comp->domain, "NULL", COMM_S != 0)) &&
+		(strncmp(comp->dest, "NULL", COMM_S != 0)))
 		retval = DOMAIN_AND_IP_GIVEN;
-	else if ((comp->action == ADD_HOST && strncmp(comp->dest, "NULL", RANGE_S) == 0))
+	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if ((comp->action == ADD_HOST || comp->action == DELETE_RECORD)
+	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD))
 	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
@@ -162,6 +171,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
 		retval = NONE;
 	}
+	if (retval == 0)
+		retval = validate_comm_line(comp);
 	return retval;
 }
 
@@ -322,18 +333,56 @@ parse_dnsa_config_error(int error)
 int
 validate_comm_line(dnsa_comm_line_s *comm)
 {
-	int retval;
+	int retval = 0;
 	
-	retval = 0;
-	
-	retval = validate_user_input(comm->host, NAME_REGEX);
+	if ((comm->action == LIST_ZONES) || (comm->action == COMMIT_ZONES))
+		return retval;
+	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE))
+		validate_fwd_comm_line(comm);
+	else if (comm->type == REVERSE_ZONE)
+		validate_rev_comm_line(comm);
+	else 
+		report_error(UNKNOWN_ZONE_TYPE, "validate_comm_line");
+/*	retval = validate_user_input(comm->host, NAME_REGEX);
 	if (retval < 0)
 		return retval;
 	retval = validate_user_input(comm->dest, IP_REGEX);
 	if (retval < 0)
-		return retval;
+		return retval; */
 	return retval;
 }
+
+void
+validate_fwd_comm_line(dnsa_comm_line_s *comm)
+{
+	if (strncmp(comm->domain, "all", COMM_S) != 0)
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+	if ((strncmp(comm->host, "NULL", COMM_S) != 0) && 
+	    (strncmp(comm->host, "@", COMM_S) != 0))
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "host");
+	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP-address");
+	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
+		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
+		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "server host name");
+	}
+	if (strncmp(comm->service, "NULL", COMM_S) != 0)
+		if (validate_user_input(comm->service, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "service");
+}
+
+void
+validate_rev_comm_line(dnsa_comm_line_s *comm)
+{
+	if (strncmp(comm->domain, "all", COMM_S) != 0)
+		if (validate_user_input(comm->domain, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+}
+
 #endif /* HAVE_LIBPCRE */
 
 void

@@ -95,6 +95,7 @@ enum {			/* dnsa error codes */
 	NOT_PRI_OR_SEC_NS = 43,
 	NO_GLUE_ZONE = 44,
 	NO_PREFIX = 45,
+	UNKNOWN_ZONE_TYPE = 46,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52,

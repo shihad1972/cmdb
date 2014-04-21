@@ -212,9 +212,14 @@ void
 dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl);
 void
 parse_dnsa_config_error(int error);
-/* Validate command line input */
+# ifdef HAVE_LIBPCRE
 int
 validate_comm_line(dnsa_comm_line_s *comm);
+void
+validate_fwd_comm_line(dnsa_comm_line_s *comm);
+void
+validate_rev_comm_line(dnsa_comm_line_s *comm);
+# endif /* HAVE_LIBPCRE */
 /* Struct initialisation and clean functions */
 void
 init_dnsa_struct(dnsa_s *dnsa);

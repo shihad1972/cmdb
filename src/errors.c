@@ -150,6 +150,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
 	} else if (error == ID_INVALID) {
 		fprintf(stderr, "ID Invalid\n");
+	} else if (error == UNKNOWN_ZONE_TYPE) {
+		fprintf(stderr, "Unknown zone type in %s\n", errstr);
 	} else if (error == NAME_INVALID) {
 		fprintf(stderr, "Name %s invalid\n", errstr);
 	} else if (error == NO_LOCALE_FOR_OS) {
