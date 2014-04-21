@@ -48,7 +48,8 @@ enum {			/* regex search codes */
 	POSTCODE_REGEX,
 	URL_REGEX,
 	PHONE_REGEX,
-	EMAIL_REGEX
+	EMAIL_REGEX,
+	TXTRR_REGEX
 };
 
 int
