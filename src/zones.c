@@ -333,8 +333,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 	i = j = 0;
 	while (zone) {
 		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
-			printf("%s\t%s\t%lu\n",
-zone->net_range, zone->pri_dns, zone->serial);
+			printf("@\t%s\t%lu\n",zone->pri_dns, zone->serial);
 			j++;
 			break;
 		} else {
