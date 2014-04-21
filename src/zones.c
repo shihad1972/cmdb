@@ -227,10 +227,12 @@ print_record(record_row_s *rec, char *zname)
 	if ((strncmp(rec->type, "SRV", COMM_S)) == 0) {
 		char *srv = rec->service, *proto = rec->protocol;
 		if ((retval = get_port_number(rec, zname, &port)) == 0)
-			printf("\t\t\tIN\tSRV\t%lu 0 %u _%s._%s.%s.\n",
-rec->pri, port, srv, proto, zname);
+			printf("_%s._%s.%s.\tIN\tSRV\t%lu 0 %u %s\n",
+srv, proto, zname, rec->pri, port, rec->dest);
 	} else if ((strncmp(rec->type, "MX", COMM_S)) == 0) {
-		printf("\t\t\tIN\tMX\t%lu %s\n", rec->pri, rec->host);
+		printf("\t\t\tIN\tMX\t%lu %s\n", rec->pri, rec->dest);
+	} else if ((strncmp(rec->type, "NS", COMM_S)) == 0) {
+		printf("\t\t\tIN\tNS\t%s\n", rec->dest);
 	} else {
 		if (strlen(rec->host) < 8)
 			printf("%s\t\t\tIN\t%s\t%s\n", rec->host, rec->type, rec->dest);
@@ -248,12 +250,17 @@ get_port_number(record_row_s *rec, char *name, unsigned short int *port)
 {
 	char *host;
 	int retval = NONE;
+	size_t len;
 	struct addrinfo hints, *srvinfo;
 	struct sockaddr_in *ipv4;
 
 	if (!(host = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "host in add_srv_record");
-	snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
+		report_error(MALLOC_FAIL, "host in get_port_number");
+	len = strlen(rec->dest);
+	if (rec->dest[len - 1] == '.')
+		snprintf(host, RBUFF_S, "%s", rec->dest);
+	else
+		snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
