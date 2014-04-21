@@ -401,6 +401,48 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
 		if (validate_user_input(comm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service");
+	if (comm->type == GLUE_ZONE)
+		validate_glue_comm_line(comm);
+}
+
+void
+validate_glue_comm_line(dnsa_comm_line_s *comm)
+{
+	char *regex;
+	size_t dlen, ilen;
+
+	dlen = strlen(regexps[DOMAIN_REGEX]);
+	ilen = strlen(regexps[IP_REGEX]);
+	if ((ilen + dlen + 4) > RBUFF_S)
+		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
+	if (!(regex = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "regex in validate_glue_comm_line");
+	if (strchr(comm->glue_ip, ',')) {
+		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
+			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
+			strncat(regex, "\\,", 3);
+			strncat(regex, regexps[IP_REGEX] + 1, ilen);
+			if (validate_ext_user_input(comm->glue_ip, regex) < 0)
+				report_error(USER_INPUT_INVALID, "glue IP");
+		}
+	} else {
+		if (validate_user_input(comm->glue_ip, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "glue IP");
+	}
+	memset(regex, 0, RBUFF_S);
+	if (strchr(comm->glue_ns, ',')) {
+		if (strncmp(comm->glue_ns, "NULL", COMM_S) != 0) {
+			snprintf(regex, dlen, "%s", regexps[DOMAIN_REGEX]);
+			strncat(regex, "\\,", 3);
+			strncat(regex, regexps[DOMAIN_REGEX] + 1, dlen);
+			if (validate_ext_user_input(comm->glue_ns, regex) < 0)
+				report_error(USER_INPUT_INVALID, "glue NS");
+		}
+	} else {
+		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "glue NS");
+	}
+	free(regex);
 }
 
 void

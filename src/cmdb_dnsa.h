@@ -218,6 +218,8 @@ validate_comm_line(dnsa_comm_line_s *comm);
 void
 validate_fwd_comm_line(dnsa_comm_line_s *comm);
 void
+validate_glue_comm_line(dnsa_comm_line_s *comm);
+void
 validate_rev_comm_line(dnsa_comm_line_s *comm);
 # endif /* HAVE_LIBPCRE */
 /* Struct initialisation and clean functions */
