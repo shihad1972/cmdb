@@ -109,11 +109,17 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		}
 	}
 	if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
+/* Check if user has specified destination with -h and act accordingly */
+		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
+		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
+			snprintf(comp->dest, RANGE_S, "%s", comp->host);
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
 		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
 			snprintf(comp->protocol, COMM_S, "tcp");
-		}
+		} else if (!((strncmp(comp->protocol, "tcp", COMM_S) == 0) ||
+			     (strncmp(comp->protocol, "udp", COMM_S) == 0)))
+			report_error(USER_INPUT_INVALID, "protocol");
 		if (comp->prefix == 0) {
 			fprintf(stderr, "No priority provided with -p. Setting to 100!\n");
 			comp->prefix = 100;
@@ -341,34 +347,56 @@ validate_comm_line(dnsa_comm_line_s *comm)
 		validate_fwd_comm_line(comm);
 	else if (comm->type == REVERSE_ZONE)
 		validate_rev_comm_line(comm);
-	else 
+	else
 		report_error(UNKNOWN_ZONE_TYPE, "validate_comm_line");
-/*	retval = validate_user_input(comm->host, NAME_REGEX);
-	if (retval < 0)
-		return retval;
-	retval = validate_user_input(comm->dest, IP_REGEX);
-	if (retval < 0)
-		return retval; */
 	return retval;
 }
 
 void
 validate_fwd_comm_line(dnsa_comm_line_s *comm)
 {
+	char *host;
+
+	if (comm)
+		host = comm->host;
+	else
+		report_error(NO_DATA, "comm in validate_fwd_comm_line");
+	if (strlen(comm->rtype) != 0)
+		if (validate_user_input(comm->rtype, FS_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "record type");
 	if (strncmp(comm->domain, "all", COMM_S) != 0)
 		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
-	if ((strncmp(comm->host, "NULL", COMM_S) != 0) && 
-	    (strncmp(comm->host, "@", COMM_S) != 0))
-		if (validate_user_input(comm->host, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "host");
+/* Test values for different RR's. Still need to add check for AAAA */
 	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
 		if (validate_user_input(comm->dest, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "IP-address");
+			report_error(USER_INPUT_INVALID, "IP address");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "host");
 	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
 		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "server host name");
+		if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
+		    (strncmp(comm->host, "@", COMM_S) != 0))
+			if (validate_user_input(comm->host, NAME_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "host");
+
+	} else {
+		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "Extended RR value");
+		if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+			if (host[0] == '_') {
+				if (validate_user_input(host + 1, NAME_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "hostname");
+			} else {
+				if (validate_user_input(host, NAME_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "hostname");
+			}
+		} else {
+			if (validate_user_input(host, NAME_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "hostname");
+		}
 	}
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
 		if (validate_user_input(comm->service, NAME_REGEX) < 0)
@@ -378,9 +406,23 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 void
 validate_rev_comm_line(dnsa_comm_line_s *comm)
 {
-	if (strncmp(comm->domain, "all", COMM_S) != 0)
+	if ((strncmp(comm->domain, "all", COMM_S) != 0) &&
+	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
+	   ((comm->action != ADD_PREFER_A) ||
+	    (comm->action != DELETE_PREFERRED))))
 		if (validate_user_input(comm->domain, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
+	if (comm->action == ADD_PREFER_A) {
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP address");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "hostname");
+	}
+	if (comm->action == DELETE_PREFERRED)
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP address");
 }
 
 #endif /* HAVE_LIBPCRE */
