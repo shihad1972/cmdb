@@ -464,7 +464,7 @@ display_cbcpack_usage(void)
 void
 display_dnsa_usage(void)
 {
-	printf("dnsa: Domain Name System Administratiom\n\n");
+/*	printf("dnsa: Domain Name System Administratiom\n\n"); */
 	printf("Version: %s\n", VERSION);
 	printf("Action options (and needed options)\n");
 	printf("-a: add host record\n\t-t -h -i -n (-p) (-o -s)\n");
@@ -479,21 +479,21 @@ display_dnsa_usage(void)
 	printf("-w: commit valid zones on nameserver\n\t[-F|-R]\n");
 	printf("-x: remove zone\n\t[-F|-R] -n\n");
 	printf("-z: add zone\n\t[-F|-R|-G] (-S -M) (-N -I) -n (-p prefix)\n\n");
-	printf("Zone type:\n");
-	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n");
+/*	printf("Zone type:\n");
+	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n"); */
 	printf("Zone details:\n");
 	printf("-M: master IP address\n-N: name server(s) (comma separated)\n");
 	printf("-I: IP('s) (comma separated)\n");
 	printf("Reverse: -p\tSlave: -M -h\tGlue -N -I\n\n");
-	printf("Name options:\n");
+/*	printf("Name options:\n");
 	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");
 	printf("Zone options for use with adding a reverse zone:\n");
-	printf("-p: prefix\n\n");
-	printf("Host options for use with adding a host record:\n");
+	printf("-p: prefix\n\n"); */
+	printf("Options for use with adding a host record or zone:\n");
 	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host");
-	printf("\n-p: priority (for MX and SRV records)\n");
-	printf("-o: protocol -s: service (for SRV records)\n\n");
+	printf("\n-p: priority (for MX and SRV records), prefix for reverse zone\n");
+	printf("-o: protocol\n-s: service (for SRV records)\n\n");
 }
 
 void
