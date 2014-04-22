@@ -89,6 +89,7 @@ main(int argc, char *argv[])
 void
 init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 {
+	memset(cdcl, 0, sizeof (cbcdomain_comm_line_s));
 	snprintf(cdcl->domain, COMM_S, "NULL");
 	snprintf(cdcl->basedn, COMM_S, "NULL");
 	snprintf(cdcl->binddn, COMM_S, "NULL");
@@ -98,10 +99,6 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 	snprintf(cdcl->ntpserver, COMM_S, "NULL");
 	snprintf(cdcl->smtpserver, COMM_S, "NULL");
 	snprintf(cdcl->xymonserver, COMM_S, "NULL");
-	cdcl->action = cdcl->confldap = cdcl->ldapssl = cdcl->conflog = 0;
-	cdcl->confsmtp = cdcl->confxymon = cdcl->confntp = cdcl->ldapssl = 0;
-	cdcl->start_ip = cdcl->end_ip = cdcl->netmask = cdcl->gateway = 0;
-	cdcl->ns = 0;
 }
 
 void
