@@ -125,7 +125,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			retval = NO_BUILD_PARTITION;
 	}
 	return retval;
-	
+	validate_cbc_comm_line(cb);
 }
 
 void
