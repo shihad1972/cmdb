@@ -159,6 +159,46 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "\n");
 }
 
+#ifdef HAVE_LIBPCRE
+
+void
+validate_cbc_comm_line(cbc_comm_line_s *cml)
+{
+	if (strncmp(cml->uuid, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->uuid, UUID_REGEX) < 0)
+			if (validate_user_input(cml->uuid, FS_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "uuid");
+	if (strncmp(cml->name, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->name, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "name");
+	if (strncmp(cml->os, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->os, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "os");
+	if (strncmp(cml->os_version, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->os_version, OS_VER_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "os version");
+	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->partition, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "partition scheme");
+	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->varient, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "varient");
+	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->build_domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "build domain");
+	if (strncmp(cml->arch, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->arch, CUSTOMER_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "architecture");
+	if (strncmp(cml->netcard, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->netcard, DEV_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "network device");
+	if (strncmp(cml->config, "NULL", COMM_S) != 0)
+		if (validate_user_input(cml->config, PATH_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "config file path");
+}
+
+#endif /* HAVE_LIBPCRE */
+
 int
 parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 {
@@ -298,7 +338,7 @@ init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt)
 {
-	memset(cbt, 0, sizeof *cbt);
+	memset(cbt, 0, sizeof(cbc_comm_line_s));
 	snprintf(cbt->name, CONF_S, "NULL");
 	snprintf(cbt->uuid, CONF_S, "NULL");
 	snprintf(cbt->action_type, MAC_S, "NULL");
@@ -315,6 +355,7 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 void
 init_cbc_config_values(cbc_config_s *cbc)
 {
+	memset(cbc, 0, sizeof(cbc_config_s));
 	sprintf(cbc->db, "cmdb");
 	sprintf(cbc->dbtype, "none");
 	sprintf(cbc->user, "root");

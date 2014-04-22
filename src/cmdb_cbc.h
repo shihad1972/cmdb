@@ -86,6 +86,11 @@ print_cbc_command_line_values(cbc_comm_line_s *command_line);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
 
+# ifdef HAVE_LIBPCRE
+void
+validate_cbc_comm_line(cbc_comm_line_s *cml);
+# endif /* HAVE_LIBPCRE */
+
 int
 parse_cbc_config_file(cbc_config_s *dc, const char *config);
 
