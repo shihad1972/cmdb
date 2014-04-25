@@ -525,7 +525,7 @@ const unsigned int cbc_search_field_types[][11] = {
 int
 cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "cbc_run_query");
 #ifdef HAVE_MYSQL
@@ -544,8 +544,7 @@ cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 {
-	int retval;
-	retval = NONE;
+	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "cbc_run_multiple_query");
 #ifdef HAVE_MYSQL
@@ -564,7 +563,7 @@ cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "cbc_run_insert");
 #ifdef HAVE_MYSQL
@@ -583,7 +582,7 @@ cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "cbc_run_delete");
 #ifdef HAVE_MYSQL
@@ -602,7 +601,7 @@ cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
 int
 cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "cbc_run_search");
 #ifdef HAVE_MYSQL
@@ -621,7 +620,7 @@ cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
 int
 cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
 		report_error(NO_DB_TYPE, "cbc_run_update");
 #ifdef HAVE_MYSQL
@@ -640,9 +639,8 @@ cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 int
 cbc_get_query(int type, const char **query, unsigned int *fields)
 {
-	int retval;
+	int retval = 0;
 
-	retval = NONE;
 	if (type == BOOT_LINE) {
 		*query = cbc_sql_select[BOOT_LINES];
 		*fields = cbc_select_fields[BOOT_LINES];
@@ -1042,7 +1040,7 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 {
 	int retval = 0, j;
 	static int m = 0, stype = 0;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 
@@ -1100,7 +1098,7 @@ cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 {
 	int retval = 0;
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 
 	mybind->is_null = 0;

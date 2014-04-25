@@ -615,7 +615,7 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 {
 	int j;
 	static int m = 0, stype = -1;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 
@@ -1482,7 +1482,7 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 {
-	int retval;
+	int retval = 0;
 	if (type == SERVERS) {
 		retval = setup_bind_sqlite_server(state, cmdb->server);
 	} else if (type == CUSTOMERS) {

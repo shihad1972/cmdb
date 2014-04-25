@@ -1063,7 +1063,7 @@ void
 dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 	
 	mybind->is_null = 0;
@@ -1096,7 +1096,7 @@ dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int 
 {
 	int j;
 	static int m = 0;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 	
@@ -1844,7 +1844,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 int
 dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if (type == RECORDS)
 		retval = dnsa_setup_bind_sqlite_records(state, base->records);
 	else if (type == ZONES)
