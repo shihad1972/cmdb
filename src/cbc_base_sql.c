@@ -1864,7 +1864,7 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
-	const char *query, *file;
+	const char *query, *file = '\0';
 	int retval;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;

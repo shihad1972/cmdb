@@ -355,7 +355,7 @@ validate_comm_line(dnsa_comm_line_s *comm)
 void
 validate_fwd_comm_line(dnsa_comm_line_s *comm)
 {
-	char *host;
+	char *host = '\0';
 
 	if (comm)
 		host = comm->host;
