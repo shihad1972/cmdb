@@ -108,6 +108,33 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 	init_cbcdomain_comm_line(cdcl);
 }
 
+void
+validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
+{
+	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->smtpserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "smtp server");
+	if (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->nfsdomain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "nfs domain");
+	if (strncmp(cdl->logserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->logserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "log server");
+	if (strncmp(cdl->ldapserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->ldapserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "ldap server");
+	if (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->xymonserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "xymon server");
+	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "ntp server");
+	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+	
+}
+
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
@@ -217,12 +244,12 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 		} else {
 			return USER_INPUT_INVALID;
 		}
-		if (inet_pton(AF_INET, ip, &ip_addr)) {
+		if (validate_user_input(ip, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "network");
+		else if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
-		} else {
-			retval = USER_INPUT_INVALID;
-			break;
-		}
+		else
+			report_error(USER_INPUT_INVALID, "network");
 		network = ip = tmp;
 	}
 	cdl->start_ip = ips[0];
