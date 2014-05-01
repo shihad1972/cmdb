@@ -132,7 +132,12 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
-	
+	if (strncmp(cdl->basedn, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->basedn, DC_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "basedn");
+	if (strncmp(cdl->binddn, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->binddn, CN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "binddn");
 }
 
 int
@@ -188,6 +193,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			return DISPLAY_USAGE;
 		}
 	}
+	validate_cbcdomain_comm_line(cdl);
 	if (argc == 1)
 		return DISPLAY_USAGE;
 	if (cdl->action == CVERSION)
@@ -246,7 +252,7 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 		}
 		if (validate_user_input(ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network");
-		else if (inet_pton(AF_INET, ip, &ip_addr))
+		if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		else
 			report_error(USER_INPUT_INVALID, "network");

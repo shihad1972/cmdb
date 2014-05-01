@@ -51,7 +51,9 @@ enum {			/* regex search codes */
 	URL_REGEX,
 	PHONE_REGEX,
 	EMAIL_REGEX,
-	TXTRR_REGEX
+	TXTRR_REGEX,
+	CN_REGEX,
+	DC_REGEX
 };
 
 extern const char *regexps[];
