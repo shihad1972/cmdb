@@ -929,7 +929,8 @@ commit_rev_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->rev_zones;
 	while (zone) {
-		create_and_write_rev_zone(dnsa, dc, zone);
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0)
+			create_and_write_rev_zone(dnsa, dc, zone);
 		if ((retval = create_rev_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Error creating reverse config\n");
 			free(buffer);
