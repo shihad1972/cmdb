@@ -854,6 +854,18 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	free(classless);
 }
 
+int
+set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
+{
+	int retval = 0;
+
+	if ((retval = get_ip_from_hostname(data)) != 0)
+		return retval;
+	snprintf(dc->secns, RBUFF_S, "%s", data->fields.text);
+	snprintf(dc->prins, RBUFF_S, "%s", cm->host);
+	return retval;
+}
+
 void 
 print_rev_zone_info(rev_zone_info_s *rzi)
 {

@@ -456,6 +456,8 @@ void
 init_initial_string_l(string_l **string, int count);
 void
 resize_string_buff(string_len_s *build);
+int
+get_ip_from_hostname(dbdata_s *data);
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *
