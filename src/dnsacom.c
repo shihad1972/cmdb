@@ -472,13 +472,7 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 void
 init_dnsa_struct(dnsa_s *dnsa)
 {
-	dnsa->zones = '\0';
-	dnsa->rev_zones = '\0';
-	dnsa->records = '\0';
-	dnsa->rev_records = '\0';
-	dnsa->prefer = '\0';
-	dnsa->file = '\0';
-	dnsa->glue = '\0';
+	memset(dnsa, 0, sizeof(dnsa_s));
 }
 
 void
@@ -491,8 +485,7 @@ dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 void
 dnsa_init_config_values(dnsa_config_s *dc)
 {
-	char *buff;
-	buff = dc->socket;
+	memset(dc, 0, sizeof(dnsa_config_s));
 	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
 	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
@@ -506,15 +499,12 @@ dnsa_init_config_values(dnsa_config_s *dc)
 	sprintf(dc->rndc, "/usr/sbin/rndc");
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
-	sprintf(buff, "%s", "");
 }
 
 void
 dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 {
-	dcl->action = NONE;
-	dcl->type = NONE;
-	dcl->prefix = NONE;
+	memset(dcl, 0, sizeof(dnsa_comm_line_s));
 	strncpy(dcl->domain, "NULL", COMM_S);
 	strncpy(dcl->dest, "NULL", COMM_S);
 	strncpy(dcl->rtype, "NULL", COMM_S);
@@ -531,9 +521,7 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 void
 init_zone_struct(zone_info_s *zone)
 {
-	zone->id = zone->owner = 0;
-	zone->serial = zone->expire = zone->retry = 0;
-	zone->refresh = zone->ttl = 0;
+	memset(zone, 0, sizeof(zone_info_s));
 	snprintf(zone->name, COMM_S, "NULL");
 	snprintf(zone->pri_dns, COMM_S, "NULL");
 	snprintf(zone->sec_dns, COMM_S, "NULL");
@@ -544,15 +532,12 @@ init_zone_struct(zone_info_s *zone)
 	snprintf(zone->mail_ip, COMM_S, "NULL");
 	snprintf(zone->type, COMM_S, "NULL");
 	snprintf(zone->master, COMM_S, "NULL");
-	zone->next = '\0';
 }
 
 void
 init_rev_zone_struct(rev_zone_info_s *rev)
 {
-	rev->rev_zone_id = rev->owner = 0;
-	rev->prefix = rev->serial = rev->refresh = rev->retry = rev->ttl = 0;
-	rev->start_ip = rev->end_ip = rev->expire = 0;
+	memset(rev, 0, sizeof(rev_zone_info_s));
 	snprintf(rev->net_range, COMM_S, "NULL");
 	snprintf(rev->net_start, COMM_S, "NULL");
 	snprintf(rev->net_finish, COMM_S, "NULL");
@@ -563,52 +548,44 @@ init_rev_zone_struct(rev_zone_info_s *rev)
 	snprintf(rev->hostmaster, COMM_S, "NULL");
 	snprintf(rev->type, COMM_S, "NULL");
 	snprintf(rev->master, COMM_S, "NULL");
-	rev->next = '\0';
 }
 
 void
 init_glue_zone_struct(glue_zone_info_s *glu)
 {
-	glu->id = glu->zone_id = 0;
+	memset(glu, 0, sizeof(glue_zone_info_s));
 	snprintf(glu->name, COMM_S, "NULL");
 	snprintf(glu->pri_ns, COMM_S, "NULL");
 	snprintf(glu->sec_ns, COMM_S, "none");
 	snprintf(glu->pri_dns, COMM_S, "NULL");
 	snprintf(glu->sec_dns, COMM_S, "none");
-	glu->next = '\0';
 }
 
 void
 init_record_struct(record_row_s *record)
 {
 	memset(record, 0, sizeof(record_row_s));
-	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
 	snprintf(record->host, COMM_S, "NULL");
 	snprintf(record->type, COMM_S, "NULL");
 	snprintf(record->valid, COMM_S, "NULL");
-	record->next = '\0';
 }
 
 void
 init_rev_record_struct(rev_record_row_s *rev)
 {
-	rev->record_id = rev->rev_zone = rev->ip_addr = 0;
+	memset(rev, 0, sizeof(rev_record_row_s));
 	snprintf(rev->host, COMM_S, "NULL");
 	snprintf(rev->dest, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");
-	rev->next = '\0';
 }
 
 void
 init_preferred_a_struct(preferred_a_s *prefer)
 {
-	prefer->prefa_id = 0;
-	prefer->ip_addr = 0;
-	prefer->record_id = 0;
+	memset(prefer, 0, sizeof(preferred_a_s));
 	snprintf(prefer->ip, COMM_S, "NULL");
 	snprintf(prefer->fqdn, COMM_S, "NULL");
-	prefer->next = '\0';
 }
 
 void
@@ -899,3 +876,4 @@ print_rev_zone_info(rev_zone_info_s *rzi)
 	printf("updated: %s\n", rzi->updated);
 	printf("hostmaster: %s\n", rzi->hostmaster);
 }
+
