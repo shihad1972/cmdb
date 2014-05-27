@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 		} else if (cm->action == DISPLAY_ZONE) {
 			display_zone(domain, dc);
 		} else if (cm->action == COMMIT_ZONES) {
-			retval = commit_fwd_zones(dc);
+			retval = commit_fwd_zones(dc, domain);
 		} else if (cm->action == ADD_HOST) {
 			retval = add_host(dc, cm);
 		} else if (cm->action == ADD_ZONE) {

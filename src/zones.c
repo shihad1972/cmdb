@@ -376,7 +376,7 @@ check_zone(char *domain, dnsa_config_s *dc)
 }
 
 int
-commit_fwd_zones(dnsa_config_s *dc)
+commit_fwd_zones(dnsa_config_s *dc, char *name)
 {
 	char *buffer, *filename;
 	int retval;
@@ -402,11 +402,13 @@ commit_fwd_zones(dnsa_config_s *dc)
 	zone = dnsa->zones;
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			check_for_updated_fwd_zone(dc, zone);
-			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-				free(buffer);
-				dnsa_clean_list(dnsa);
-				return retval;
+			if ((strlen(name) > 0) && (strncmp(name, zone->name, RBUFF_S) == 0)) {
+				check_for_updated_fwd_zone(dc, zone);
+				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+					free(buffer);
+					dnsa_clean_list(dnsa);
+					return retval;
+				}
 			}
 		}
 		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
