@@ -33,6 +33,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+/* For freeBSD ?? */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+/* End freeBSD */
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
@@ -823,12 +831,48 @@ write_file(char *filename, char *output)
 	return retval;
 }
 
+int
+get_ip_from_hostname(dbdata_s *data)
+{
+	int retval = 0;
+	struct addrinfo hints, *srvinfo;
+	void *addr;
+	dbdata_s *list;
+
+	if (!(data))
+		return NO_DATA;
+	list = data;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	if (strlen(list->fields.text) == 0) {
+		if ((retval = gethostname(list->fields.text, RBUFF_S)) != 0) {
+			fprintf(stderr, "%s", strerror(errno));
+			return NO_NAME;
+		}
+	}
+	if ((retval = getaddrinfo(list->fields.text, "http", &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(retval));
+		return NO_IP_ADDRESS;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		struct sockaddr_in *ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+	} else {
+		fprintf(stderr, "ai_family %d not supported\n", srvinfo->ai_family);
+		freeaddrinfo(srvinfo);
+		return NO_NAME;
+	}
+	inet_ntop(srvinfo->ai_family, addr, list->args.text, RBUFF_S);
+	freeaddrinfo(srvinfo);
+	return retval;
+}
+
 void
 init_dbdata_struct(dbdata_s *data)
 {
-	data->fields.number = 0;
-	data->args.number = 0;
-	data->next = '\0';
+	memset(data, 0, sizeof(dbdata_s));
 }
 
 void

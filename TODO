@@ -24,30 +24,13 @@ raw text. libxml anyone?
 When adding anything to the database, need to check if the name
 already exists.
 
-17/02/2014
-The regex checks have not been added in. This bit me when I added a
-network card with the device and detail the wrong way round. Need
-to get the regex checks working.
-Fixed (for cmdb) Version: 0.2.16.11.8 02/03/2014
-
-cmdb is directly adding the input into the server / customer structs.
-This is probably not the best way to do this, and is not what cbc or
-dnsa do. I should probably update this. 
-Fixed Version: 0.2.16.11.8 02/03/2014
-
-14/02/2014
-Adding a server with the wrong virtual machine host name crashes out
-but does not tell us why. We get a 15 code error message from mysql
-(most likely when we try to prepare the insert and there is no
-vm_server_id)
-Fixed 20/04/2014
-
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
 file resulting in incorrect primary and secondary name severs in the
 database. Although this does not affect the functionality of the slave
 zone it looks untidy in the database. Forward zones seem to handle this
 better.
+Fixed 05/05/2014 Version 0.2.17.4
 
 Also, we do not need the name to be provided when adding slave zones.
 We should be able to do an DNS lookup on either the IP address or the
@@ -70,11 +53,6 @@ about the result returned. We could also use this to add enable /
 disable instead of delete in the database.
 
 19/09/2013
-Cut down the amount of crap you have to add with a server; especially
-the vendor stuff. Only need the ethernet and hard disk and server
-name for a build.
-FIXED: Version 0.2.16.11.8, 02/03/2014
-
 Only need one initial customer; techies. Need to think more about
 internal customers; again most of the crap should be able to be added
 later
@@ -92,9 +70,6 @@ server.
 
 Need to add Root-CA field into the build_domain table of database.
 
-**When building a non-existant reverse network block in dnsa we get a
-  segmentation fault
-**Reverse slaves do not work
 **Need to add default locale when we add a build OS.
 **Debian build want's configuration for libnss-ldap and libpam-ldap if
   we do not automatically configure them.

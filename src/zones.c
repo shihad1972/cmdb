@@ -931,7 +931,8 @@ commit_rev_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->rev_zones;
 	while (zone) {
-		create_and_write_rev_zone(dnsa, dc, zone);
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0)
+			create_and_write_rev_zone(dnsa, dc, zone);
 		if ((retval = create_rev_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Error creating reverse config\n");
 			free(buffer);
@@ -1596,9 +1597,18 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	retval = 0;
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(zone);
-	fill_rev_zone_info(zone, cm, dc);
+	init_dbdata_struct(&data);
 	dnsa->rev_zones = zone;
-	print_rev_zone_info(zone);
+	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0) {
+		snprintf(data.fields.text, RBUFF_S, "%s", dc->prins);
+		if ((retval = set_slave_name_servers(dc, cm, &data)) != 0) {
+			free(zone);
+			free(dnsa);
+			return retval;
+		}
+	}
+	fill_rev_zone_info(zone, cm, dc);
+//	print_rev_zone_info(zone);
 	if ((retval = check_for_zone_in_db(dc, dnsa, REVERSE_ZONE)) != 0) {
 		printf("Zone %s already exists in database\n", zone->net_range);
 		dnsa_clean_list(dnsa);

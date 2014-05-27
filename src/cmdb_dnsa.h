@@ -404,6 +404,8 @@ int
 validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
 int
 create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa);
+int
+set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data);
 /* 04/03/2013 functions add */
 void
 trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);
