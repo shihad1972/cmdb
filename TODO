@@ -43,6 +43,7 @@ one and trying to write the build file results in an error. Perhaps
 should look at doing this as a transaction (sort of).
 
 Also i want to be able to use -n <domain> in dnsa -w [ -F | -R ]
+***Fixed 27/05/2014***
 
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build

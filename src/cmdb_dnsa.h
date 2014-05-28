@@ -261,7 +261,7 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
 commit_fwd_zones(dnsa_config_s *dc, char *zone);
 int
-commit_rev_zones(dnsa_config_s *dc);
+commit_rev_zones(dnsa_config_s *dc, char *name);
 int
 add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int

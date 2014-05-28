@@ -409,6 +409,13 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 					dnsa_clean_list(dnsa);
 					return retval;
 				}
+			} else if (strncmp(name, "none", COMM_S) == 0) {
+				check_for_updated_fwd_zone(dc, zone);
+				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+					free(buffer);
+					dnsa_clean_list(dnsa);
+					return retval;
+				}
 			}
 		}
 		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
@@ -907,7 +914,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 }
 
 int
-commit_rev_zones(dnsa_config_s *dc)
+commit_rev_zones(dnsa_config_s *dc, char *name)
 {
 	char *buffer, *filename;
 	int retval;
@@ -931,8 +938,12 @@ commit_rev_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->rev_zones;
 	while (zone) {
-		if ((strncmp(zone->type, "slave", COMM_S)) != 0)
-			create_and_write_rev_zone(dnsa, dc, zone);
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+			if ((strlen(name) > 0) && (strncmp(zone->net_range, name, RANGE_S) == 0))
+				create_and_write_rev_zone(dnsa, dc, zone);
+			else if (strncmp(name, "none", COMM_S) == 0)
+				create_and_write_rev_zone(dnsa, dc, zone);
+		}
 		if ((retval = create_rev_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Error creating reverse config\n");
 			free(buffer);
