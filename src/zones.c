@@ -2693,7 +2693,7 @@ unsigned long int
 get_net_range(unsigned long int prefix)
 {
 	unsigned long int range;
-	range = (256ul * 256ul * 256ul * 256ul) - 1;
+	range = 4294967295UL;
 	range = (range >> prefix) + 1;
 	return range;
 }
