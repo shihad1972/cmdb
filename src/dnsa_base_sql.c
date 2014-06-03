@@ -53,7 +53,7 @@
  * The stucts within dnsa will be malloc'ed by the database store function so
  * only dnsa_s needs to be malloc'ed and initialised.
  * These searches return multiple members.
- * Helper functions need to be created for earch search to populate the member
+ * Helper functions need to be created for each search to populate the member
  * of dnsa_s used.
  */
 const char *dnsa_sql_select[] = { "\
