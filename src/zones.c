@@ -162,11 +162,10 @@ void
 print_zone(dnsa_s *dnsa, char *domain)
 {
 	char *dot, name[HOST_S];
-	unsigned int i, j;
+	unsigned int i = 0, j = 0;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
-	i = j = 0;
 	while (zone) {
 		if (strncmp(zone->name, domain, RBUFF_S) == 0) {
 			printf("%s.\t%s\thostmaster.%s\t%lu\n",
@@ -1376,7 +1375,7 @@ delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 int
 add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	record_row_s *record;
@@ -1397,7 +1396,6 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	/* Should only do this for FQDN. User must specify this.
 	if (strncmp(cm->rtype, "CNAME", COMM_S) == 0)
 		add_trailing_dot(cm->dest); */
-	retval = 0;
 	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
