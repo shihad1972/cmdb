@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
  *  servers.c: Contains non-database functions for manipulating servers
  *  in the cmdb
  *
- *  (C) Iain M Conochie 2013
  */
 
 #include "../config.h"
@@ -53,6 +52,16 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
 	cmdb_init_initial_dbdata(&data, VM_ID_ON_NAME);
+/* Check is a server with this name already in the DB */
+	snprintf(data->args.text, HOST_S, "%s", cmdb->server->name);
+	if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) != 0) {
+		clean_dbdata_struct(data);
+		free(input);
+		fprintf(stderr, "Server %s exists in database\n", cmdb->server->name);
+		return SERVER_EXISTS;
+	} else {
+		memset(data, 0, sizeof(dbdata_s));
+	}
 	if (cl != 0)
 		complete_server_values(cmdb, cl);
 	snprintf(data->args.text, RANGE_S, "%s", cm->coid);
@@ -65,7 +74,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 			clean_dbdata_struct(data);
 			return NO_COID;
 		}
-		memset(data, 0, sizeof *data);
+		memset(data, 0, sizeof(dbdata_s));
 	}
 /* Check for vmhost. if so this server is a virtual machine */
 	if (cm->vmhost) {
