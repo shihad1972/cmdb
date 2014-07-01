@@ -149,8 +149,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		clean_dbdata_struct(data);
 		return NONE;
 	} else if (retval > 1) {
-		fprintf(stderr, "Multiple hardware classes\n");
-		fprintf(stderr, "Using %s\n", data->fields.text);
+		fprintf(stderr, "Multiple hardware classes\nUsing %s\n", data->fields.text );
 		snprintf(cmdb->hardtype->hclass, MAC_S, "%s", data->fields.text);
 	} else {
 		if (!(cmdb->hardtype)) {

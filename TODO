@@ -23,6 +23,7 @@ raw text. libxml anyone?
 28/03/2014
 When adding anything to the database, need to check if the name
 already exists.
+*** Server name, Customer name and COID for cmdb ***
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
