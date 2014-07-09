@@ -90,6 +90,7 @@ void
 init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 {
 	memset(cdcl, 0, sizeof (cbcdomain_comm_line_s));
+	get_config_file_location(cdcl->config);
 	snprintf(cdcl->domain, COMM_S, "NULL");
 	snprintf(cdcl->basedn, COMM_S, "NULL");
 	snprintf(cdcl->binddn, COMM_S, "NULL");

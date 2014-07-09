@@ -121,12 +121,8 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
 	
 	init_dnsa_struct(dnsa);
-/*
- * This really needs to get put into the config struct 
- */
-	char configfile[CONF_S] = "/etc/dnsa/dnsa.conf";
-	if ((retval = parse_dnsa_config_file(dc, configfile)) != 0) {
-		fprintf(stderr, "Error in config file %s\n", configfile);
+	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
+		fprintf(stderr, "Error in config file %s\n", cdl->config);
 		free(dc);
 		free(dnsa);
 		free(zone);
