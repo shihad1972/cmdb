@@ -64,6 +64,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 			free(input);
 			clean_dbdata_struct(data);
 			return NO_COID;
+		} else {
+			cmdb->customer->cust_id = data->fields.number;
 		}
 		memset(data, 0, sizeof *data);
 	}
