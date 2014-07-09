@@ -119,7 +119,19 @@ int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = 0;
+	dbdata_s data;
 
+	memset(&data, 0, sizeof(dbdata_s));
+	snprintf(data.args.text, HOST_S, "%s", cmdb->customer->name);
+	if ((retval = cmdb_run_search(config, &data, CUST_ID_ON_NAME)) != 0) {
+		fprintf(stderr, "Customer name %s exists in database\n", cmdb->customer->name);
+		return CUSTOMER_EXISTS;
+	}
+	snprintf(data.args.text, RANGE_S, "%s", cmdb->customer->coid);
+	if ((retval = cmdb_run_search(config, &data, CUST_ID_ON_COID)) != 0) {
+		fprintf(stderr, "Customer COID %s exists in database\n", cmdb->customer->coid);
+		return COID_EXISTS;
+	}
 	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }

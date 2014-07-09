@@ -2,6 +2,9 @@
 Adding new OS is not complete. There is no locale for the new OS so we
 cannot use it. This is error 190
 
+02/06/2014
+Need to add support for internal / external views.
+
 21/04/2014
 With the checks.[c|h] should add a glib test as well so we do not have to
 use libpcre. Can have the option of one or the other. ./configure should
@@ -27,6 +30,7 @@ raw text. libxml anyone?
 28/03/2014
 When adding anything to the database, need to check if the name
 already exists.
+*** Server name, Customer name and COID for cmdb ***
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
@@ -47,6 +51,7 @@ one and trying to write the build file results in an error. Perhaps
 should look at doing this as a transaction (sort of).
 
 Also i want to be able to use -n <domain> in dnsa -w [ -F | -R ]
+***Fixed 27/05/2014***
 
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build

@@ -162,11 +162,10 @@ void
 print_zone(dnsa_s *dnsa, char *domain)
 {
 	char *dot, name[HOST_S];
-	unsigned int i, j;
+	unsigned int i = 0, j = 0;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
-	i = j = 0;
 	while (zone) {
 		if (strncmp(zone->name, domain, RBUFF_S) == 0) {
 			printf("%s.\t%s\thostmaster.%s\t%lu\n",
@@ -376,7 +375,7 @@ check_zone(char *domain, dnsa_config_s *dc)
 }
 
 int
-commit_fwd_zones(dnsa_config_s *dc)
+commit_fwd_zones(dnsa_config_s *dc, char *name)
 {
 	char *buffer, *filename;
 	int retval;
@@ -402,11 +401,20 @@ commit_fwd_zones(dnsa_config_s *dc)
 	zone = dnsa->zones;
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			check_for_updated_fwd_zone(dc, zone);
-			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-				free(buffer);
-				dnsa_clean_list(dnsa);
-				return retval;
+			if ((strlen(name) > 0) && (strncmp(name, zone->name, RBUFF_S) == 0)) {
+				check_for_updated_fwd_zone(dc, zone);
+				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+					free(buffer);
+					dnsa_clean_list(dnsa);
+					return retval;
+				}
+			} else if (strncmp(name, "none", COMM_S) == 0) {
+				check_for_updated_fwd_zone(dc, zone);
+				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+					free(buffer);
+					dnsa_clean_list(dnsa);
+					return retval;
+				}
 			}
 		}
 		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
@@ -905,7 +913,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 }
 
 int
-commit_rev_zones(dnsa_config_s *dc)
+commit_rev_zones(dnsa_config_s *dc, char *name)
 {
 	char *buffer, *filename;
 	int retval;
@@ -929,8 +937,12 @@ commit_rev_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->rev_zones;
 	while (zone) {
-		if ((strncmp(zone->type, "slave", COMM_S)) != 0)
-			create_and_write_rev_zone(dnsa, dc, zone);
+		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
+			if ((strlen(name) > 0) && (strncmp(zone->net_range, name, RANGE_S) == 0))
+				create_and_write_rev_zone(dnsa, dc, zone);
+			else if (strncmp(name, "none", COMM_S) == 0)
+				create_and_write_rev_zone(dnsa, dc, zone);
+		}
 		if ((retval = create_rev_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Error creating reverse config\n");
 			free(buffer);
@@ -1363,7 +1375,7 @@ delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 int
 add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	record_row_s *record;
@@ -1384,7 +1396,6 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	/* Should only do this for FQDN. User must specify this.
 	if (strncmp(cm->rtype, "CNAME", COMM_S) == 0)
 		add_trailing_dot(cm->dest); */
-	retval = 0;
 	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
@@ -2680,7 +2691,7 @@ unsigned long int
 get_net_range(unsigned long int prefix)
 {
 	unsigned long int range;
-	range = (256ul * 256ul * 256ul * 256ul) - 1;
+	range = 4294967295UL;
 	range = (range >> prefix) + 1;
 	return range;
 }

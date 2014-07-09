@@ -223,7 +223,9 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_LOG_CONFIG = 208,
 	MULTI_SERVICES = 209,
 	NO_SERVICE_DATA = 210,
-	NO_SERVICES = 211
+	NO_SERVICES = 211,
+	CUSTOMER_EXISTS = 212,
+	COID_EXISTS = 213
 };
 
 enum {			/* command line error codes */
