@@ -240,7 +240,7 @@ print_build_config(cbc_s *details)
 	}
 }
 
-int
+void
 list_build_servers(cbc_config_s *cmc)
 {
 	int retval = NONE;
@@ -249,8 +249,6 @@ list_build_servers(cbc_config_s *cmc)
 	cbc_init_initial_dbdata(&data, SERVERS_WITH_BUILD);
 	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
 		printf("No servers have build configurations\n");
-		clean_dbdata_struct(data);
-		return NONE;
 	} else {
 		printf("We have %d servers with build configurations\n", retval);
 		list = data;
@@ -258,10 +256,8 @@ list_build_servers(cbc_config_s *cmc)
 			printf("%s\n", list->fields.text);
 			list = list->next;
 		}
-		retval = NONE;
 	}
 	clean_dbdata_struct(data);
-	return retval;
 }
 
 int

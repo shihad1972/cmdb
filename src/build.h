@@ -74,7 +74,7 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details);
 void
 cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server);
 
-int
+void
 list_build_servers(cbc_config_s *cbt);
 
 int
