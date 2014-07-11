@@ -198,6 +198,8 @@ report_error(int error, const char *errstr)
 "Something other than pri or sec ns passed to %s\n", errstr);
 	} else if (error == NO_GLUE_ZONE) {
 		fprintf(stderr, "No glue zone passed to %s\n", errstr);
+	} else if (error == LOCALE_NOT_FOUND) {
+		fprintf(stderr, "No locale for the OS and version. Did you just add it?\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
