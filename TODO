@@ -1,6 +1,7 @@
 09/07/2014
 Adding new OS is not complete. There is no locale for the new OS so we
 cannot use it. This is error 190
+*** Added report_error for this ***
 
 02/06/2014
 Need to add support for internal / external views.

@@ -49,6 +49,9 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
 int
 get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base);
 
+int
+get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom);
+
 void
 copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 

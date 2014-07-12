@@ -274,26 +274,39 @@ int
 list_cbc_build_domain(cbc_config_s *cbc)
 {
 	int retval = NONE;
+	cbc_build_domain_s *bdom, *list;
+
+	if ((retval = get_all_build_domains(cbc, &bdom)) == 0) {
+		list = bdom;
+		while (bdom) {
+			printf("%s\n", bdom->domain);
+			bdom = bdom->next;
+		}
+	}
+	clean_build_domain(list);
+	return retval;
+}
+
+int
+get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom)
+{
 	cbc_s *base;
-	cbc_build_domain_s *bdom;
+	int retval = NONE;
 
 	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
+		report_error(MALLOC_FAIL, "base in get_all_build_domains");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		if (retval == NO_RECORDS) {
 			fprintf(stderr, "No build domains in DB\n");
 			retval = NO_BUILD_DOMAIN;
 		} else
-			fprintf(stderr, "build query failed\n");
+			fprintf(stderr, "Builddomain query failed\n");
 		free(base);
 		return retval;
 	}
-	bdom = base->bdom;
-	while (bdom) {
-		printf("%s\n", bdom->domain);
-		bdom = bdom->next;
-	}
+	*bdom = base->bdom;
+	base->bdom = '\0';
 	clean_cbc_struct(base);
 	return retval;
 }
