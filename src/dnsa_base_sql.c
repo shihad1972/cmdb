@@ -53,7 +53,7 @@
  * The stucts within dnsa will be malloc'ed by the database store function so
  * only dnsa_s needs to be malloc'ed and initialised.
  * These searches return multiple members.
- * Helper functions need to be created for earch search to populate the member
+ * Helper functions need to be created for each search to populate the member
  * of dnsa_s used.
  */
 const char *dnsa_sql_select[] = { "\
@@ -142,32 +142,6 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-#ifdef HAVE_MYSQL
-
-const int mysql_inserts[][15] = {
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, 
-    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0} ,
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 
-    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-    MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-    MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING} ,
-{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-    MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-    0, 0, 0, 0, 0, 0, 0, 0} , 
-{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0} ,
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} ,
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-    MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
-
-#endif /* HAVE_MYSQL */
-
 const unsigned int dnsa_select_fields[] = { 14, 19, 9, 5, 5, 2, 5, 4, 7 };
 
 const unsigned int dnsa_insert_fields[] = { 10, 15, 7, 3, 0, 0, 4, 0, 6 };
@@ -183,6 +157,21 @@ const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2, 1 };
 const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
 const unsigned int dnsa_extended_search_args[] = { 1, 1, 2/* , 1 */ };
+
+const unsigned int dnsa_inserts[][15] = {
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT,
+	  DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT,
+	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT },
+	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
+	  0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0 }
+};
 
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
@@ -224,179 +213,136 @@ const unsigned int dnsa_delete_arg_type[][1] = {
 int
 dnsa_run_query(dnsa_config_s *config, dnsa_s *base, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_query_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_query_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 dnsa_run_multiple_query(dnsa_config_s *config, dnsa_s *base, int type)
 {
-	int retval;
-	retval = NONE;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error (NO_DB_TYPE, "dnsa_run_multiple_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_multiple_query_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_multiple_query_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
 	return retval;
 }
 
 int
 dnsa_run_search(dnsa_config_s *config, dnsa_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 
-	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_search");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_search_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_search_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 dnsa_run_extended_search(dnsa_config_s *config, dbdata_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 
-	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_extended_search");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_extended_search_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_extended_search_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 dnsa_run_insert(dnsa_config_s *config, dnsa_s *base, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_insert");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_insert_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_insert_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 dnsa_run_update(dnsa_config_s *config, dbdata_s *data, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_update");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_update_mysql(config, data, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_update_sqlite(config, data, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 dnsa_run_delete(dnsa_config_s *config, dbdata_s *data, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "dnsa_run_delete");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = dnsa_run_delete_mysql(config, data, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = dnsa_run_delete_sqlite(config, data, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
@@ -430,8 +376,7 @@ dnsa_get_query(int type, const char **query, unsigned int *fields)
 		*query = dnsa_sql_select[GLUES];
 		*fields = dnsa_select_fields[GLUES];
 	} else {
-		fprintf(stderr, "Unknown query type %d\n", type);
-		retval = 1;
+		retval = UNKNOWN_QUERY;
 	}
 	return retval;
 }
@@ -455,8 +400,7 @@ dnsa_get_search(int type, size_t *fields, size_t *args, void **input, void **out
 		*fields = strlen(base->rev_zones->net_range);
 		*args = sizeof(base->rev_zones->prefix);
 	} else {
-		fprintf(stderr, "Unknown query %d\n", type);
-		exit (NO_QUERY);
+		report_error(UNKNOWN_QUERY, "in dnsa_get_search");
 	}
 }
 
@@ -523,14 +467,10 @@ dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 
 	retval = 0;
 	dnsa_mysql_init(config, &dnsa);
-	if ((retval = dnsa_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
-	}
-	if ((retval = cmdb_mysql_query_with_checks(&dnsa, query)) != 0) {
-		fprintf(stderr, "Query failed with error code %d\n", retval);
-		return retval;
-	}
+	if ((retval = dnsa_get_query(type, &query, &fields)) != 0)
+		report_error(retval, "dnsa_run_query_mysql");
+	if ((retval = cmdb_mysql_query_with_checks(&dnsa, query)) != 0)
+		report_error(MY_QUERY_FAIL, mysql_error(&dnsa));
 	if (!(dnsa_res = mysql_store_result(&dnsa))) {
 		cmdb_mysql_cleanup(&dnsa);
 		report_error(MY_STORE_FAIL, mysql_error(&dnsa));
@@ -621,7 +561,7 @@ dnsa_store_result_mysql(MYSQL_ROW row, dnsa_s *base, int type, unsigned int fiel
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_glue_mysql(row, base);
 	} else {
-		dnsa_query_mismatch(NONE, NONE, NONE);
+		fprintf(stderr, "Unknown type %d. Cannot store\n", type);
 	}
 }
 
@@ -880,7 +820,7 @@ and int for result, which is OK when searching on name and returning id
 	my_bind[1].length = 0;
 	
 	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
 	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
@@ -919,15 +859,13 @@ dnsa_run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type)
 	memset(args_bind, 0, sizeof(args_bind));
 	memset(fields_bind, 0, sizeof(fields_bind));
 	for (i = 0; i < dnsa_extended_search_args[type]; i++) 
-		if ((retval = dnsa_setup_bind_ext_mysql_args(&args_bind[i], i, type, base)) != 0)
-			return retval;
+		dnsa_setup_bind_ext_mysql_args(&args_bind[i], i, type, base);
 	for (i = 0; i < dnsa_extended_search_fields[type]; i++)
-		if ((retval = dnsa_setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base)) != 0)
-			return retval;
+		dnsa_setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base);
 	query = dnsa_sql_extended_search[type];
 	dnsa_mysql_init(config, &dnsa);
 	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
 	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &args_bind[0])) != 0)
@@ -941,8 +879,7 @@ dnsa_run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type)
 	while ((retval = mysql_stmt_fetch(dnsa_stmt)) == 0) {
 		j++;
 		for (i = 0; i < dnsa_extended_search_fields[type]; i++)
-			if ((retval = dnsa_setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base)) != 0)
-				return retval;
+			dnsa_setup_bind_ext_mysql_fields(&fields_bind[i], i, j, type, base);
 		if ((retval = mysql_stmt_bind_result(dnsa_stmt, &fields_bind[0])) != 0)
 			report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
 	}
@@ -971,11 +908,11 @@ dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_insert_fields[type]; i++)
 		if ((retval = dnsa_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
-			return retval;
+			report_error(DB_TYPE_INVALID, "in dnsa_run_insert_mysql");
 	query = dnsa_sql_insert[type];
 	dnsa_mysql_init(config, &dnsa);
 	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
 	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
@@ -1004,28 +941,30 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_update_args[type]; i++) {
+		my_bind[i].is_null = 0;
+		my_bind[i].length = 0;
 		if (dnsa_update_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 1;
 			my_bind[i].buffer = &(list->args.number);
 			my_bind[i].buffer_length = sizeof(unsigned long int);
-			list = list->next;
 		} else if (dnsa_update_arg_type[type][i] == DBTEXT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 0;
 			my_bind[i].buffer = &(list->args.text);
 			my_bind[i].buffer_length = strlen(list->args.text);
-			list = list->next;
+		} else if (dnsa_update_arg_type[type][i] == DBSHORT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.small);
+			my_bind[i].buffer_length = sizeof(short int);
 		}
+		list = list->next;
 	}
 	query = dnsa_sql_update[type];
 	dnsa_mysql_init(config, &dnsa);
 	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
 	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
@@ -1053,28 +992,30 @@ dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_delete_args[type]; i++) {
+		my_bind[i].is_null = 0;
+		my_bind[i].length = 0;
 		if (dnsa_delete_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 1;
 			my_bind[i].buffer = &(list->args.number);
 			my_bind[i].buffer_length = sizeof(unsigned long int);
-			list = list->next;
 		} else if (dnsa_delete_arg_type[type][i] == DBTEXT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 0;
 			my_bind[i].buffer = &(list->args.text);
 			my_bind[i].buffer_length = strlen(list->args.text);
-			list = list->next;
+		} else if (dnsa_delete_arg_type[type][i] == DBSHORT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.small);
+			my_bind[i].buffer_length = sizeof(short int);
 		}
+		list = list->next;
 	}
 	query = dnsa_sql_delete[type];
 	dnsa_mysql_init(config, &dnsa);
 	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
 	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
 	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
@@ -1095,33 +1036,36 @@ dnsa_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, dnsa_
 
 	retval = 0;
 	void *buffer;
-	mybind->buffer_type = mysql_inserts[type][i];
 	mybind->is_null = 0;
 	mybind->length = 0;
 	if ((retval = dnsa_setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
 		return retval;
 	mybind->buffer = buffer;
-	if (mybind->buffer_type == MYSQL_TYPE_STRING) {
+	if (dnsa_inserts[type][i] == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
 		mybind->is_unsigned = 0;
 		mybind->buffer_length = strlen(buffer);
-	} else if (mybind->buffer_type == MYSQL_TYPE_LONG) {
+	} else if (dnsa_inserts[type][i] == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
 		mybind->is_unsigned = 1;
 		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (dnsa_inserts[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		mybind->buffer_length = sizeof(short int);
 	} else {
-		retval = WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in dnsa_setup_insert_mysql_bind");
 	}
 	return retval;
 }
 
-int
+void
 dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
-	int retval;
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 	
-	retval = 0;
 	mybind->is_null = 0;
 	mybind->length = 0;
 	for (j = 0; j < i; j++)
@@ -1136,23 +1080,26 @@ dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbd
 		mybind->is_unsigned = 0;
 		buffer = &(list->args.text);
 		mybind->buffer_length = strlen(buffer);
+	} else if (dnsa_ext_search_arg_type[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		buffer = &(list->args.small);
+		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_args");
 	}
 	mybind->buffer = buffer;
-	return retval;
 }
 
-int
+void
 dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
-	int retval, j;
+	int j;
 	static int m = 0;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 	
-	retval = 0;
 	mybind->is_null = 0;
 	mybind->length = 0;
 	if (k > 0) {
@@ -1177,13 +1124,16 @@ dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int 
 		mybind->is_unsigned = 0;
 		buffer = &(list->fields.text);
 		mybind->buffer_length = RBUFF_S;
+	} else if (dnsa_ext_search_field_type[type][i] == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		buffer = &(list->fields.small);
+		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_fields");
 	}
 	mybind->buffer = buffer;
 	m++;
-
-	return retval;
 }
 
 int
@@ -1204,7 +1154,7 @@ dnsa_setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsign
 	else if (type == GLUES)
 		dnsa_setup_insert_mysql_bind_buff_glue(input, base, i);
 	else
-		retval = WRONG_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "dnsa_run_insert_mysql");
 	
 	return retval;
 }
@@ -1345,13 +1295,13 @@ dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	retval = 0;
 	file = config->file;
 	if ((retval = dnsa_get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+		report_error(retval, "dnsa_run_query_sqlite");
 	}
 	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
 		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_query_sqlite");
 	}
@@ -1442,7 +1392,7 @@ dnsa_store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned i
 			dnsa_query_mismatch(fields, required, type);
 		dnsa_store_glue_sqlite(state, base);
 	} else {
-		dnsa_query_mismatch(NONE, NONE, NONE);
+		fprintf(stderr, "Unknown type %d. Cannot store\n", type);
 	}
 }
 
@@ -1684,8 +1634,9 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 /*
    As in the MySQL function we assume that we are sending text and recieving
@@ -1693,8 +1644,9 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 */
 	dnsa_get_search(type, &fields, &args, &input, &output, base);
 	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
 		result = (unsigned long int)sqlite3_column_int64(state, 0);
@@ -1727,8 +1679,9 @@ dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	for (i = 0; (unsigned long)i < dnsa_extended_search_args[type]; i++) {
 		dnsa_setup_bind_extended_sqlite(state, list, type, i);
@@ -1761,8 +1714,9 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	if ((retval = dnsa_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
@@ -1799,8 +1753,9 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
 	}
 	for (i = 1; i <= dnsa_update_args[type]; i++) {
 		if (!list)
@@ -1854,8 +1809,9 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
+		fprintf(stderr, "%s\n",  sqlite3_errmsg(dnsa));
 		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_delete_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_delete_sqlite");
 	}
 	for (i = 1; i <= dnsa_delete_args[type]; i++) {
 		if (!list)
@@ -1888,7 +1844,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 int
 dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 	if (type == RECORDS)
 		retval = dnsa_setup_bind_sqlite_records(state, base->records);
 	else if (type == ZONES)
@@ -1902,7 +1858,7 @@ dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type)
 	else if (type == GLUES)
 		retval = dnsa_setup_bind_sqlite_glue(state, base->glue);
 	else
-		retval = WRONG_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "dnsa_run_insert_sqlite");
 	return retval;
 }
 

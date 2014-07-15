@@ -21,7 +21,10 @@
  */
 
 #ifndef __CMDB_H__
-#define __CMDB_H__
+# define __CMDB_H__
+# ifdef HAVE_SQLITE3
+#  include <sqlite3.h>
+# endif /* HAVE_SQLITE3 */
 enum {			/* Buffer Sizes */
 	CH_S = 2,
 	COMM_S = 8,
@@ -38,17 +41,11 @@ enum {			/* Buffer Sizes */
 	BUILD_S = 65536
 };
 
-enum {			/* Database Type errors */
-	NO_DB_TYPE = 1,
-	DB_TYPE_INVALID = 2,
-	NO_MYSQL = 3,
-	NO_SQLITE = 4
-};
-
 enum {			/* Database colum types */
 	DBTEXT = 1,
 	DBINT = 2,
-	DBSHORT = 3
+	DBSHORT = 3,
+	FLYBY
 };
 
 enum {			/* dnsa error codes */
@@ -98,12 +95,22 @@ enum {			/* dnsa error codes */
 	NOT_PRI_OR_SEC_NS = 43,
 	NO_GLUE_ZONE = 44,
 	NO_PREFIX = 45,
+	UNKNOWN_ZONE_TYPE = 46,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52,
 	CANNOT_CONVERT = 53,
+	UNKNOWN_STRUCT_DB_TABLE = 54,
+	BUFFER_TOO_SMALL = 55,
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61
+};
+
+enum {			/* Database Type errors */
+	NO_DB_TYPE = 91,
+	DB_TYPE_INVALID = 92,
+	NO_MYSQL = 93,
+	NO_SQLITE = 94
 };
 
 enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
@@ -163,6 +170,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	SQLITE_INSERT_FAILED = 153,
 	DB_INSERT_FAILED = 154,
 	DB_UPDATE_FAILED = 155,
+	DB_WRONG_TYPE = 156,
+	NO_DATA = 157,
 	BUILD_DOMAIN_EXISTS = 160,
 	BUILD_OS_EXISTS = 161,
 	OS_ALIAS_NEEDED = 162,
@@ -214,8 +223,9 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_LOG_CONFIG = 208,
 	MULTI_SERVICES = 209,
 	NO_SERVICE_DATA = 210,
-	NO_SERVICES = 211
-	
+	NO_SERVICES = 211,
+	CUSTOMER_EXISTS = 212,
+	COID_EXISTS = 213
 };
 
 enum {			/* command line error codes */
@@ -258,43 +268,39 @@ enum {			/* command line error codes */
 	NO_BUILD_PARTITION = -33
 };
 
-enum {			/* cmdb config file error codes */
-	CONF_ERR = 1,
-	PORT_ERR = 2,
-};
-
-enum {			/* dnsa config file error codes */
-	DIR_ERR = 3,
-	BIND_ERR = 4,
-	HOSTM_ERR = 5,
-	PRINS_ERR = 6,
-	SECNS_ERR = 7
-};
-
-enum {			/* cbc config file error codes */
-	TMP_ERR = 3,
-	TFTP_ERR = 4,
-	PXE_ERR = 5,
-	OS_ERR = 6,
-	PRESEED_ERR = 7,
-	KICKSTART_ERR = 8,
-	NO_TMP_ERR = 9,
-	NO_TFTP_ERR = 10,
-	NO_PXE_ERR = 11,
-	NO_OS_ERR = 12,
-	NO_PRESEED_ERR = 13,
-	NO_KICKSTART_ERR = 14,
-	MULTI_TMP_ERR = 15,
-	MULTI_TFTP_ERR = 16,
-	MULTI_PXE_ERR = 17,
-	MULTI_OS_ERR = 18,
-	MULTI_PRESEED_ERR = 19,
-	MULTI_KICKSTART_ERR = 20,
-	NO_ERR = 21,
-	MULTI_ERR = 22,
-	DHCP_ERR = 23,
-	NO_DHCP_ERR = 24,
-	MULTI_DHCP_ERR = 25
+enum {			/* config file error codes */
+	CONF_ERR = 301,
+	PORT_ERR = 302,
+	DIR_ERR = 303,
+	BIND_ERR = 304,
+	HOSTM_ERR = 305,
+	PRINS_ERR = 306,
+	SECNS_ERR = 307,
+	TMP_ERR = 308,
+	TFTP_ERR = 309,
+	PXE_ERR = 310,
+	OS_ERR = 311,
+	PRESEED_ERR = 312,
+	KICKSTART_ERR = 313,
+	NO_TMP_ERR = 314,
+	NO_TFTP_ERR = 415,
+	NO_PXE_ERR = 316,
+	NO_OS_ERR = 317,
+	NO_PRESEED_ERR = 318,
+	NO_KICKSTART_ERR = 319,
+	MULTI_TMP_ERR = 320,
+	MULTI_TFTP_ERR = 321,
+	MULTI_PXE_ERR = 322,
+	MULTI_OS_ERR = 323,
+	MULTI_PRESEED_ERR = 324,
+	MULTI_KICKSTART_ERR = 325,
+	NO_ERR = 326,
+	MULTI_ERR = 327,
+	DHCP_ERR = 328,
+	NO_DHCP_ERR = 329,
+	MULTI_DHCP_ERR = 330,
+	UCONF_ERR = 331,
+	UPORT_ERR = 332
 };
 
 enum {			/* cmdb Action codes */
@@ -452,4 +458,12 @@ void
 init_initial_string_l(string_l **string, int count);
 void
 resize_string_buff(string_len_s *build);
+int
+get_ip_from_hostname(dbdata_s *data);
+# ifdef HAVE_SQLITE3
+#  ifndef HAVE_SQLITE3_ERRSTR
+const char *
+sqlite3_errstr(int error);
+#  endif /* HAVE_SQLITE3_ERRSTR */
+# endif /* HAVE_SQLITE3 */
 #endif

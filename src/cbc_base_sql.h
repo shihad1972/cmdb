@@ -211,7 +211,7 @@ cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s
 int
 cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base);
 
-int
+void
 cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int i);
 
 void

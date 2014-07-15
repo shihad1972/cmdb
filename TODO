@@ -1,3 +1,27 @@
+09/07/2014
+Adding new OS is not complete. There is no locale for the new OS so we
+cannot use it. This is error 190
+*** Added report_error for this ***
+
+02/06/2014
+Need to add support for internal / external views.
+
+21/04/2014
+With the checks.[c|h] should add a glib test as well so we do not have to
+use libpcre. Can have the option of one or the other. ./configure should
+bomb out if neither are present but give the user the option to pass
+paramemter --with-usr-input-checks=disabled
+
+17/04/2014
+The applications in build domain should be associated with a "system" group
+of packages, separate from the "application" packages currently in the
+packages table. In preseed this would allow me to create a table that can
+have entries added to them by the user; the package names and the debconf
+configurations for those packages, as this is what the build domain
+applications currently do. For kickstart, there would be a configuration
+script associated with them. Can also have a config script associated
+with preseed.
+
 29/03/2014
 If I change the id field in the database to a uuid then I can have
 a local file storage, i.e. not use a database. If I am to do this
@@ -7,23 +31,7 @@ raw text. libxml anyone?
 28/03/2014
 When adding anything to the database, need to check if the name
 already exists.
-
-17/02/2014
-The regex checks have not been added in. This bit me when I added a
-network card with the device and detail the wrong way round. Need
-to get the regex checks working.
-Fixed (for cmdb) Version: 0.2.16.11.8 02/03/2014
-
-cmdb is directly adding the input into the server / customer structs.
-This is probably not the best way to do this, and is not what cbc or
-dnsa do. I should probably update this. 
-Fixed Version: 0.2.16.11.8 02/03/2014
-
-14/02/2014
-Adding a server with the wrong virtual machine host name crashes out
-but does not tell us why. We et a 15 code error message from mysql
-(most likely when we try to prepare the insert and there is no
-vm_server_id)
+*** Server name, Customer name and COID for cmdb ***
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
@@ -31,6 +39,7 @@ file resulting in incorrect primary and secondary name severs in the
 database. Although this does not affect the functionality of the slave
 zone it looks untidy in the database. Forward zones seem to handle this
 better.
+Fixed 05/05/2014 Version 0.2.17.4
 
 Also, we do not need the name to be provided when adding slave zones.
 We should be able to do an DNS lookup on either the IP address or the
@@ -43,6 +52,7 @@ one and trying to write the build file results in an error. Perhaps
 should look at doing this as a transaction (sort of).
 
 Also i want to be able to use -n <domain> in dnsa -w [ -F | -R ]
+***Fixed 27/05/2014***
 
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build
@@ -53,11 +63,6 @@ about the result returned. We could also use this to add enable /
 disable instead of delete in the database.
 
 19/09/2013
-Cut down the amount of crap you have to add with a server; especially
-the vendor stuff. Only need the ethernet and hard disk and server
-name for a build.
-FIXED: Version 0.2.16.11.8, 02/03/2014
-
 Only need one initial customer; techies. Need to think more about
 internal customers; again most of the crap should be able to be added
 later
@@ -75,9 +80,6 @@ server.
 
 Need to add Root-CA field into the build_domain table of database.
 
-**When building a non-existant reverse network block in dnsa we get a
-  segmentation fault
-**Reverse slaves do not work
 **Need to add default locale when we add a build OS.
 **Debian build want's configuration for libnss-ldap and libpam-ldap if
   we do not automatically configure them.
@@ -100,11 +102,6 @@ the tftp host is also the DNS host.
 
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
-
-28/07/2013
-Need to remove ldap_url from build_domain database and in all the data
-structures for cbc_build_domain and SQL quries
-Done: 30/07/2013
 
 30/06/2013
 Have a generic config struct (config_s) that all the others (e.g.

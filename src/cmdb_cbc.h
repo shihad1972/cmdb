@@ -1,7 +1,7 @@
 /*
  *
  *  cbc: Create build config
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,10 +21,7 @@
  *
  *  Main header file for the cbc program
  *
- *
- *  Part of the CMDB program
- *
- *  (C) Iain M Conochie 2012 - 2013 */
+ */
 
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
@@ -49,8 +46,56 @@ typedef struct cbc_config_s {		/* Hold CMDB configuration values */
 	unsigned long int cliflag;
 } cbc_config_s;
 
+typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
+	char config[CONF_S];
+	char name[CONF_S];
+	char uuid[CONF_S];
+	char partition[CONF_S];
+	char varient[CONF_S];
+	char os[CONF_S];
+	char os_version[MAC_S];
+	char build_domain[RBUFF_S];
+	char action_type[MAC_S];
+	char arch[MAC_S];
+	char netcard[HOST_S];
+	short int action;
+	short int server;
+	short int removeip;
+	unsigned long int server_id;
+	unsigned long int os_id;
+	unsigned long int locale;
+} cbc_comm_line_s;
+
+typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
+	char file[CONF_S];
+	char name[CONF_S];
+	char eth[MAC_S];
+	char ip[MAC_S];
+	char domain[RBUFF_S];
+} cbc_dhcp_config_s;
+
+void
+init_cbc_comm_values(cbc_comm_line_s *cbt);
+
+void
+init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt/*, cbc_build_s *cbt*/);
+
+void
+print_cbc_command_line_values(cbc_comm_line_s *command_line);
+
+int
+parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
+
+# ifdef HAVE_LIBPCRE
+void
+validate_cbc_comm_line(cbc_comm_line_s *cml);
+# endif /* HAVE_LIBPCRE */
+
 int
 parse_cbc_config_file(cbc_config_s *dc, const char *config);
+
+int
+read_cbc_config_values(cbc_config_s *dc, FILE *cnf);
 
 void
 init_cbc_config_values(cbc_config_s *dc);

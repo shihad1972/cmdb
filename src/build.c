@@ -46,151 +46,6 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 
-
-int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
-{
-	int retval, opt;
-
-	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:gi:k:lmn:o:p:qrs:t:u:vwx:")) != -1) {
-		if (opt == 'n') {
-			snprintf(cb->name, CONF_S, "%s", optarg);
-			cb->server = NAME;
-		} else if (opt == 'i') {
-			cb->server_id = strtoul(optarg, NULL, 10);
-			cb->server = ID;
-		} else if (opt == 'u') {
-			snprintf(cb->uuid, CONF_S, "%s", optarg);
-			cb->server = UUID;
-		} else if (opt == 'a') {
-			cb->action = ADD_CONFIG;
-		} else if (opt == 'd') {
-			cb->action = DISPLAY_CONFIG;
-		} else if (opt == 'g') {
-			cb->removeip = TRUE;
-		} else if (opt == 'l') {
-			cb->action = LIST_CONFIG;
-		} else if (opt == 'm') {
-			cb->action = MOD_CONFIG;
-		} else if (opt == 'q') {
-			cb->action = QUERY_CONFIG;
-		} else if (opt == 'r') {
-			cb->action = RM_CONFIG;
-		} else if (opt == 'w') {
-			cb->action = WRITE_CONFIG;
-		} else if (opt == 'b') {
-			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
-		} else if (opt == 'e') {
-			cb->locale = strtoul(optarg, NULL, 10);
-		} else if (opt == 'k') {
-			snprintf(cb->netcard, HOST_S, "%s", optarg);
-		} else if (opt == 'o') {
-			snprintf(cb->os, MAC_S, "%s", optarg);
-		} else if (opt == 'p') {
-			snprintf(cb->partition, CONF_S, "%s", optarg);
-		} else if (opt == 't') {
-			snprintf(cb->arch, RANGE_S, "%s", optarg);
-		} else if (opt == 's') {
-			snprintf(cb->os_version, MAC_S, "%s", optarg);
-		} else if (opt == 'x') {
-			snprintf(cb->varient, CONF_S, "%s", optarg);
-		} else if (opt == 'v') {
-			cb->action = CVERSION;
-		} else {
-			printf("Unknown option: %c\n", opt);
-			retval = DISPLAY_USAGE;
-		}
-	}
-	if ((cb->action == NONE) && 
-	 (cb->server == NONE) &&
-	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
-		return DISPLAY_USAGE;
-	else if (cb->action == CVERSION)
-		return CVERSION;
-	else if (cb->action == QUERY_CONFIG)
-		return NONE;
-	else if (cb->action == NONE)
-		return NO_ACTION;
-	else if ((cb->action != LIST_CONFIG) &&
-		 (cb->server == 0))
-		return NO_NAME_OR_ID;
-	if (cb->action == ADD_CONFIG) {
-		if ((strncmp(cb->os, "NULL", COMM_S) == 0) &&
-		    (strncmp(cb->arch, "NULL", COMM_S) == 0) &&
-		    (strncmp(cb->os_version, "NULL", COMM_S) == 0))
-			retval = NO_OS_SPECIFIED;
-		else if (strncmp(cb->build_domain, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_DOMAIN;
-		else if (strncmp(cb->varient, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_VARIENT;
-		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_PARTITION;
-	}
-	return retval;
-	
-}
-
-void
-print_cbc_command_line_values(cbc_comm_line_s *cml)
-{
-	fprintf(stderr, "########\nCommand line Values\n");
-	if (cml->action == WRITE_CONFIG)
-		fprintf(stderr, "Action: Write configuration file\n");
-	else if (cml->action == DISPLAY_CONFIG)
-		fprintf(stderr, "Action: Display configuration\n");
-	else if (cml->action == ADD_CONFIG)
-		fprintf(stderr, "Action: Add configuration for build\n");
-	else if (cml->action == CREATE_CONFIG)
-		fprintf(stderr, "Action: Create build configuration\n");
-	else
-		fprintf(stderr, "Action: Unknown!!\n");
-	fprintf(stderr, "Config: %s\n", cml->config);
-	fprintf(stderr, "Name: %s\n", cml->name);
-	fprintf(stderr, "UUID: %s\n", cml->uuid);
-	fprintf(stderr, "Server ID: %ld\n", cml->server_id);
-	fprintf(stderr, "OS ID: %lu\n", cml->os_id);
-	fprintf(stderr, "OS: %s\n", cml->os);
-	fprintf(stderr, "OS Version: %s\n", cml->os_version);
-	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale ID: %lu\n", cml->locale);
-	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
-	fprintf(stderr, "Action Type: %s\n", cml->action_type);
-	fprintf(stderr, "Partition: %s\n", cml->partition);
-	fprintf(stderr, "Varient: %s\n", cml->varient);
-	
-	fprintf(stderr, "\n");
-}
-
-void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
-{
-	init_cbc_config_values(cct);
-	init_cbc_comm_values(cclt);
-}
-
-void
-init_cbc_comm_values(cbc_comm_line_s *cbt)
-{
-	cbt->action = NONE;
-	cbt->server_id = NONE;
-	cbt->server = NONE;
-	cbt->locale = 0;
-	cbt->os_id = 0;
-	cbt->removeip = 0;
-	snprintf(cbt->name, CONF_S, "NULL");
-	snprintf(cbt->uuid, CONF_S, "NULL");
-	snprintf(cbt->action_type, MAC_S, "NULL");
-	snprintf(cbt->os, CONF_S, "NULL");
-	snprintf(cbt->os_version, MAC_S, "NULL");
-	snprintf(cbt->partition, CONF_S, "NULL");
-	snprintf(cbt->varient, CONF_S, "NULL");
-	snprintf(cbt->build_domain, RBUFF_S, "NULL");
-	snprintf(cbt->arch, MAC_S, "NULL");
-	snprintf(cbt->netcard, COMM_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
-}
-
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
@@ -385,7 +240,7 @@ print_build_config(cbc_s *details)
 	}
 }
 
-int
+void
 list_build_servers(cbc_config_s *cmc)
 {
 	int retval = NONE;
@@ -394,8 +249,6 @@ list_build_servers(cbc_config_s *cmc)
 	cbc_init_initial_dbdata(&data, SERVERS_WITH_BUILD);
 	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
 		printf("No servers have build configurations\n");
-		clean_dbdata_struct(data);
-		return NONE;
 	} else {
 		printf("We have %d servers with build configurations\n", retval);
 		list = data;
@@ -403,10 +256,8 @@ list_build_servers(cbc_config_s *cmc)
 			printf("%s\n", list->fields.text);
 			list = list->next;
 		}
-		retval = NONE;
 	}
 	clean_dbdata_struct(data);
-	return retval;
 }
 
 int

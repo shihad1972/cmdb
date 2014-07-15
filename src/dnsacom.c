@@ -1,7 +1,7 @@
 /*
  * 
  *  dnsa: DNS Administration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_WORDEXP_H
+# include <wordexp.h>
+#endif /* HAVE_WORDEXP_H */
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #ifdef HAVE_LIBPCRE
@@ -105,8 +108,23 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->action = CVERSION;
 		}
 	}
-	if (strncmp(comp->rtype, "SRV", COMM_S) == 0)
+	if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
+/* Check if user has specified destination with -h and act accordingly */
+		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
+		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
+			snprintf(comp->dest, RANGE_S, "%s", comp->host);
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
+		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
+			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
+			snprintf(comp->protocol, COMM_S, "tcp");
+		} else if (!((strncmp(comp->protocol, "tcp", COMM_S) == 0) ||
+			     (strncmp(comp->protocol, "udp", COMM_S) == 0)))
+			report_error(USER_INPUT_INVALID, "protocol");
+		if (comp->prefix == 0) {
+			fprintf(stderr, "No priority provided with -p. Setting to 100!\n");
+			comp->prefix = 100;
+		}
+	}
 	if ((comp->action == NONE) && (comp->type == NONE) &&
 	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
 		retval = DISPLAY_USAGE;
@@ -117,20 +135,20 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
 	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) && 
-		comp->action != DELETE_RECORD && 
-		comp->action != MULTIPLE_A && comp->action != DELETE_PREFERRED)
+		(comp->action != DELETE_RECORD) && 
+		(comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED))
 		retval = NO_DOMAIN_NAME;
-	else if (comp->action == MULTIPLE_A && 
-		strncmp(comp->domain, "NULL", COMM_S) == 0 &&
-		strncmp(comp->dest, "NULL", COMM_S) == 0)
+	else if ((comp->action == MULTIPLE_A) && 
+		(strncmp(comp->domain, "NULL", COMM_S) == 0) &&
+		(strncmp(comp->dest, "NULL", COMM_S) == 0))
 		retval = NO_DOMAIN_NAME;
-	else if (comp->action == MULTIPLE_A &&
-		strncmp(comp->domain, "NULL", COMM_S != 0) &&
-		strncmp(comp->dest, "NULL", COMM_S != 0))
+	else if ((comp->action == MULTIPLE_A) &&
+		(strncmp(comp->domain, "NULL", COMM_S != 0)) &&
+		(strncmp(comp->dest, "NULL", COMM_S != 0)))
 		retval = DOMAIN_AND_IP_GIVEN;
-	else if ((comp->action == ADD_HOST && strncmp(comp->dest, "NULL", RANGE_S) == 0))
+	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if ((comp->action == ADD_HOST || comp->action == DELETE_RECORD)
+	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD))
 	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
@@ -159,11 +177,52 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
 		retval = NONE;
 	}
+	if (retval == 0)
+		retval = validate_comm_line(comp);
 	return retval;
 }
 
 int
 parse_dnsa_config_file(dnsa_config_s *dc, char *config)
+{
+	int retval = 0;
+	FILE *cnf;
+#ifdef HAVE_WORDEXP_H
+	char **uconf;
+	wordexp_t p;
+#endif /* HAVE_WORDEXP_H */
+
+	dc->port = 3306;
+	dc->cliflag = 0;
+
+	if (!(cnf = fopen(config, "r"))) {
+		fprintf(stderr, "Cannot open config file %s\n", config);
+		retval = CONF_ERR;
+	} else {
+		read_dnsa_config_values(dc, cnf);
+		fclose(cnf);
+	}
+#ifdef HAVE_WORDEXP
+	if ((retval = wordexp("~/.dnsa.conf", &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if ((cnf = fopen(*uconf, "r"))) {
+			read_dnsa_config_values(dc, cnf);
+			fclose(cnf);
+		}
+		wordfree(&p);
+	}
+#endif /* HAVE_WORDEXP */
+	if ((retval = add_trailing_slash(dc->dir)) != 0)
+		return DIR_ERR;
+	if ((retval = add_trailing_slash(dc->bind)) != 0)
+		return BIND_ERR;
+	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
+		return HOSTM_ERR;
+	return retval;
+}
+
+int
+read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf)
 {
 	char buff[RBUFF_S] = "";
 	char port[RANGE_S] = "";
@@ -172,97 +231,83 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 	char expire[MAC_S] = "";
 	char ttl[MAC_S] = "";
 	char *hostmaster;
-	int retval;
+	int retval = 0;
 	unsigned long int portno;
-	FILE *cnf;	/* File handle for config file */
-
-	dc->port = 3306;
-	dc->cliflag = 0;
-
-	if (!(cnf = fopen(config, "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", config);
-		fprintf(stderr, "Using default values\n");
-		retval = CONF_ERR;
-	} else {
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DBTYPE=%s", dc->dbtype);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PASS=%s", dc->pass);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "FILE=%s", dc->file);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "HOST=%s", dc->host);	
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "USER=%s", dc->user);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DB=%s", dc->db);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "SOCKET=%s", dc->socket);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "PORT=%s", port);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DIR=%s", dc->dir);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "BIND=%s", dc->bind);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "REV=%s", dc->rev);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "DNSA=%s", dc->dnsa);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "RNDC=%s", dc->rndc);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKZ=%s", dc->chkz);
-		rewind(cnf);
-		while ((fgets(buff, CONF_S, cnf)))
-			sscanf(buff, "CHKC=%s", dc->chkc);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "REFRESH=%s", refresh);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "RETRY=%s", retry);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "EXPIRE=%s", expire);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "TTL=%s", ttl);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "PRIDNS=%s", dc->pridns);
-		rewind(cnf);
-		while ((fgets(buff, MAC_S, cnf)))
-			sscanf(buff, "SECDNS=%s", dc->secdns);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "PRINS=%s", dc->prins);
-		rewind(cnf);
-		while ((fgets(buff, RBUFF_S - 1, cnf)))
-			sscanf(buff, "SECNS=%s", dc->secns);
-		rewind(cnf);
-		retval = NONE;
-		fclose(cnf);
-	}
 	
-	/* We need to check the value of portnop before we convert to int.
-	 * Obviously we cannot have a port > 65535
-	 */
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DBTYPE=%s", dc->dbtype);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PASS=%s", dc->pass);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "FILE=%s", dc->file);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "HOST=%s", dc->host);	
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "USER=%s", dc->user);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DB=%s", dc->db);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "SOCKET=%s", dc->socket);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "PORT=%s", port);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DIR=%s", dc->dir);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "BIND=%s", dc->bind);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "REV=%s", dc->rev);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "DNSA=%s", dc->dnsa);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "RNDC=%s", dc->rndc);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "CHKZ=%s", dc->chkz);
+	rewind(cnf);
+	while ((fgets(buff, CONF_S, cnf)))
+		sscanf(buff, "CHKC=%s", dc->chkc);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "REFRESH=%s", refresh);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "RETRY=%s", retry);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "EXPIRE=%s", expire);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "TTL=%s", ttl);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "PRIDNS=%s", dc->pridns);
+	rewind(cnf);
+	while ((fgets(buff, MAC_S, cnf)))
+		sscanf(buff, "SECDNS=%s", dc->secdns);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "PRINS=%s", dc->prins);
+	rewind(cnf);
+	while ((fgets(buff, RBUFF_S - 1, cnf)))
+		sscanf(buff, "SECNS=%s", dc->secns);
+	rewind(cnf);
+	retval = NONE;
+
 	portno = strtoul(port, NULL, 10);
 	if (portno > 65535) {
 		retval = PORT_ERR;
@@ -276,20 +321,6 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 	hostmaster = strchr(dc->hostmaster, '@');
 	if (hostmaster)
 		*hostmaster = '.';
-	/* The next 3 values need to be checked for a trailing /
-	 * If there is not one then add it
-	 */
-	
-	if ((retval = add_trailing_slash(dc->dir)) != 0)
-		retval = DIR_ERR;
-	if ((retval = add_trailing_slash(dc->bind)) != 0)
-		retval = BIND_ERR;
-	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
-		retval = HOSTM_ERR; /*
-	if ((retval = add_trailing_dot(dc->prins)) != 0)
-		retval = PRINS_ERR;
-	if ((retval = add_trailing_dot(dc->secns)) != 0)
-		retval = SECNS_ERR; */
 	return retval;
 }
 
@@ -308,30 +339,140 @@ parse_dnsa_config_error(int error)
 int
 validate_comm_line(dnsa_comm_line_s *comm)
 {
-	int retval;
+	int retval = 0;
 	
-	retval = 0;
-	
-	retval = validate_user_input(comm->host, NAME_REGEX);
-	if (retval < 0)
+	if ((comm->action == LIST_ZONES) || (comm->action == COMMIT_ZONES))
 		return retval;
-	retval = validate_user_input(comm->dest, IP_REGEX);
-	if (retval < 0)
-		return retval;
+	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE))
+		validate_fwd_comm_line(comm);
+	else if (comm->type == REVERSE_ZONE)
+		validate_rev_comm_line(comm);
+	else
+		report_error(UNKNOWN_ZONE_TYPE, "validate_comm_line");
 	return retval;
 }
+
+void
+validate_fwd_comm_line(dnsa_comm_line_s *comm)
+{
+	char *host = '\0';
+
+	if (comm)
+		host = comm->host;
+	else
+		report_error(NO_DATA, "comm in validate_fwd_comm_line");
+	if (strlen(comm->rtype) != 0)
+		if (validate_user_input(comm->rtype, FS_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "record type");
+	if (strncmp(comm->domain, "all", COMM_S) != 0)
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+/* Test values for different RR's. Still need to add check for AAAA */
+	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP address");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "host");
+	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
+		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
+		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "server host name");
+		if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
+		    (strncmp(comm->host, "@", COMM_S) != 0))
+			if (validate_user_input(comm->host, NAME_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "host");
+
+	} else {
+		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "Extended RR value");
+		if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+			if (host[0] == '_') {
+				if (validate_user_input(host + 1, NAME_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "hostname");
+			} else {
+				if (validate_user_input(host, NAME_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "hostname");
+			}
+		} else {
+			if (validate_user_input(host, NAME_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "hostname");
+		}
+	}
+	if (strncmp(comm->service, "NULL", COMM_S) != 0)
+		if (validate_user_input(comm->service, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "service");
+	if (comm->type == GLUE_ZONE)
+		validate_glue_comm_line(comm);
+}
+
+void
+validate_glue_comm_line(dnsa_comm_line_s *comm)
+{
+	char *regex;
+	size_t dlen, ilen;
+
+	dlen = strlen(regexps[DOMAIN_REGEX]);
+	ilen = strlen(regexps[IP_REGEX]);
+	if ((ilen + dlen + 4) > RBUFF_S)
+		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
+	if (!(regex = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "regex in validate_glue_comm_line");
+	if (strchr(comm->glue_ip, ',')) {
+		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
+			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
+			strncat(regex, "\\,", 3);
+			strncat(regex, regexps[IP_REGEX] + 1, ilen);
+			if (validate_ext_user_input(comm->glue_ip, regex) < 0)
+				report_error(USER_INPUT_INVALID, "glue IP");
+		}
+	} else {
+		if (validate_user_input(comm->glue_ip, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "glue IP");
+	}
+	memset(regex, 0, RBUFF_S);
+	if (strchr(comm->glue_ns, ',')) {
+		if (strncmp(comm->glue_ns, "NULL", COMM_S) != 0) {
+			snprintf(regex, dlen, "%s", regexps[DOMAIN_REGEX]);
+			strncat(regex, "\\,", 3);
+			strncat(regex, regexps[DOMAIN_REGEX] + 1, dlen);
+			if (validate_ext_user_input(comm->glue_ns, regex) < 0)
+				report_error(USER_INPUT_INVALID, "glue NS");
+		}
+	} else {
+		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "glue NS");
+	}
+	free(regex);
+}
+
+void
+validate_rev_comm_line(dnsa_comm_line_s *comm)
+{
+	if ((strncmp(comm->domain, "all", COMM_S) != 0) &&
+	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
+	   ((comm->action != ADD_PREFER_A) ||
+	    (comm->action != DELETE_PREFERRED))))
+		if (validate_user_input(comm->domain, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+	if (comm->action == ADD_PREFER_A) {
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP address");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "hostname");
+	}
+	if (comm->action == DELETE_PREFERRED)
+		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "IP address");
+}
+
 #endif /* HAVE_LIBPCRE */
 
 void
 init_dnsa_struct(dnsa_s *dnsa)
 {
-	dnsa->zones = '\0';
-	dnsa->rev_zones = '\0';
-	dnsa->records = '\0';
-	dnsa->rev_records = '\0';
-	dnsa->prefer = '\0';
-	dnsa->file = '\0';
-	dnsa->glue = '\0';
+	memset(dnsa, 0, sizeof(dnsa_s));
 }
 
 void
@@ -344,8 +485,7 @@ dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 void
 dnsa_init_config_values(dnsa_config_s *dc)
 {
-	char *buff;
-	buff = dc->socket;
+	memset(dc, 0, sizeof(dnsa_config_s));
 	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
 	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
@@ -359,15 +499,12 @@ dnsa_init_config_values(dnsa_config_s *dc)
 	sprintf(dc->rndc, "/usr/sbin/rndc");
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
-	sprintf(buff, "%s", "");
 }
 
 void
 dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 {
-	dcl->action = NONE;
-	dcl->type = NONE;
-	dcl->prefix = NONE;
+	memset(dcl, 0, sizeof(dnsa_comm_line_s));
 	strncpy(dcl->domain, "NULL", COMM_S);
 	strncpy(dcl->dest, "NULL", COMM_S);
 	strncpy(dcl->rtype, "NULL", COMM_S);
@@ -384,9 +521,7 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 void
 init_zone_struct(zone_info_s *zone)
 {
-	zone->id = zone->owner = 0;
-	zone->serial = zone->expire = zone->retry = 0;
-	zone->refresh = zone->ttl = 0;
+	memset(zone, 0, sizeof(zone_info_s));
 	snprintf(zone->name, COMM_S, "NULL");
 	snprintf(zone->pri_dns, COMM_S, "NULL");
 	snprintf(zone->sec_dns, COMM_S, "NULL");
@@ -397,15 +532,12 @@ init_zone_struct(zone_info_s *zone)
 	snprintf(zone->mail_ip, COMM_S, "NULL");
 	snprintf(zone->type, COMM_S, "NULL");
 	snprintf(zone->master, COMM_S, "NULL");
-	zone->next = '\0';
 }
 
 void
 init_rev_zone_struct(rev_zone_info_s *rev)
 {
-	rev->rev_zone_id = rev->owner = 0;
-	rev->prefix = rev->serial = rev->refresh = rev->retry = rev->ttl = 0;
-	rev->start_ip = rev->end_ip = rev->expire = 0;
+	memset(rev, 0, sizeof(rev_zone_info_s));
 	snprintf(rev->net_range, COMM_S, "NULL");
 	snprintf(rev->net_start, COMM_S, "NULL");
 	snprintf(rev->net_finish, COMM_S, "NULL");
@@ -416,52 +548,44 @@ init_rev_zone_struct(rev_zone_info_s *rev)
 	snprintf(rev->hostmaster, COMM_S, "NULL");
 	snprintf(rev->type, COMM_S, "NULL");
 	snprintf(rev->master, COMM_S, "NULL");
-	rev->next = '\0';
 }
 
 void
 init_glue_zone_struct(glue_zone_info_s *glu)
 {
-	glu->id = glu->zone_id = 0;
+	memset(glu, 0, sizeof(glue_zone_info_s));
 	snprintf(glu->name, COMM_S, "NULL");
 	snprintf(glu->pri_ns, COMM_S, "NULL");
 	snprintf(glu->sec_ns, COMM_S, "none");
 	snprintf(glu->pri_dns, COMM_S, "NULL");
 	snprintf(glu->sec_dns, COMM_S, "none");
-	glu->next = '\0';
 }
 
 void
 init_record_struct(record_row_s *record)
 {
 	memset(record, 0, sizeof(record_row_s));
-	record->id = record->pri = record->zone = record->ip_addr = 0;
 	snprintf(record->dest, COMM_S, "NULL");
 	snprintf(record->host, COMM_S, "NULL");
 	snprintf(record->type, COMM_S, "NULL");
 	snprintf(record->valid, COMM_S, "NULL");
-	record->next = '\0';
 }
 
 void
 init_rev_record_struct(rev_record_row_s *rev)
 {
-	rev->record_id = rev->rev_zone = rev->ip_addr = 0;
+	memset(rev, 0, sizeof(rev_record_row_s));
 	snprintf(rev->host, COMM_S, "NULL");
 	snprintf(rev->dest, COMM_S, "NULL");
 	snprintf(rev->valid, COMM_S, "NULL");
-	rev->next = '\0';
 }
 
 void
 init_preferred_a_struct(preferred_a_s *prefer)
 {
-	prefer->prefa_id = 0;
-	prefer->ip_addr = 0;
-	prefer->record_id = 0;
+	memset(prefer, 0, sizeof(preferred_a_s));
 	snprintf(prefer->ip, COMM_S, "NULL");
 	snprintf(prefer->fqdn, COMM_S, "NULL");
-	prefer->next = '\0';
 }
 
 void
@@ -730,6 +854,18 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	free(classless);
 }
 
+int
+set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
+{
+	int retval = 0;
+
+	if ((retval = get_ip_from_hostname(data)) != 0)
+		return retval;
+	snprintf(dc->secns, RBUFF_S, "%s", data->fields.text);
+	snprintf(dc->prins, RBUFF_S, "%s", cm->host);
+	return retval;
+}
+
 void 
 print_rev_zone_info(rev_zone_info_s *rzi)
 {
@@ -752,3 +888,4 @@ print_rev_zone_info(rev_zone_info_s *rzi)
 	printf("updated: %s\n", rzi->updated);
 	printf("hostmaster: %s\n", rzi->hostmaster);
 }
+

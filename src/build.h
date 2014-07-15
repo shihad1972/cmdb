@@ -27,34 +27,7 @@
 
 #ifndef __CBC_BUILD_H__
 # define __CBC_BUILD_H__
-
-typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
-	char config[CONF_S];
-	char name[CONF_S];
-	char uuid[CONF_S];
-	char partition[CONF_S];
-	char varient[CONF_S];
-	char os[CONF_S];
-	char os_version[MAC_S];
-	char build_domain[RBUFF_S];
-	char action_type[MAC_S];
-	char arch[MAC_S];
-	char netcard[HOST_S];
-	short int action;
-	short int server;
-	short int removeip;
-	unsigned long int server_id;
-	unsigned long int os_id;
-	unsigned long int locale;
-} cbc_comm_line_s;
-
-typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
-	char file[CONF_S];
-	char name[CONF_S];
-	char eth[MAC_S];
-	char ip[MAC_S];
-	char domain[RBUFF_S];
-} cbc_dhcp_config_s;
+# include "cmdb_cbc.h"
 
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
@@ -101,7 +74,7 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details);
 void
 cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server);
 
-int
+void
 list_build_servers(cbc_config_s *cbt);
 
 int
@@ -232,18 +205,6 @@ fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 void
 fill_smtp_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
-
-void
-init_cbc_comm_values(cbc_comm_line_s *cbt);
-
-void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt/*, cbc_build_s *cbt*/);
-
-void
-print_cbc_command_line_values(cbc_comm_line_s *command_line);
-
-int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
 
 int
 modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);

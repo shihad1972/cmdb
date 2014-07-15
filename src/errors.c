@@ -33,7 +33,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wordexp.h>
+#include <errno.h>
+/* For freeBSD ?? */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+/* End freeBSD */
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
@@ -45,6 +52,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
 		fprintf(stderr, "Argv is invalid\n");
+	} else if (error == CONF_ERR) {
+		fprintf(stderr, "Config file error\n");
+	} else if (error == PORT_ERR) {
+		fprintf(stderr, "MySQL port number invalid in config file\n");
 	} else if (error == NO_DOMAIN) {
 		fprintf(stderr, "No domain %s was found\n", errstr);
 	} else if (error == MULTI_DOMAIN) {
@@ -61,6 +72,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Incorrect domain type specified\n");
 	} else if (error == USER_INPUT_INVALID) {
 		fprintf(stderr, "Input %s not valid.\n", errstr);
+	} else if (error == BUFFER_TOO_SMALL) {
+		fprintf(stderr, "Buffer %s too small\n", errstr);
 	} else if (error == DOMAIN_LIST_FAIL) {
 		fprintf(stderr, "No domains were found to list from the database\n");
 	} else if (error == MY_INIT_FAIL) {
@@ -77,6 +90,20 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB statment failed with %s\n", errstr);
 	} else if (error == MY_BIND_FAIL) {
 		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
+	} else if (error == SQLITE_BIND_FAILED) {
+		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
+	} else if (error == DB_WRONG_TYPE) {
+		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
+	} else if (error == UNKNOWN_QUERY) {
+		fprintf(stderr, "Unknown query for type %s\n", errstr);
+	} else if (error == NO_DB_TYPE) {
+		fprintf(stderr, "No DB type configured\n");
+	} else if (error == DB_TYPE_INVALID) {
+		fprintf(stderr, "DB type %s invalid\n", errstr);
+	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
+		fprintf(stderr, "Function %s tring to use an unknown struct / db table\n", errstr);
+	} else if (error == NO_DATA) {
+		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
 	} else if (error == CHKZONE_FAIL) {
@@ -127,10 +154,14 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No Hardware types were found\n");
 	} else if (error == BUILD_DOMAIN_NOT_FOUND) {
 		fprintf(stderr, "No build domains found\n");
+	} else if (error == BUILD_DOMAIN_EXISTS) {
+		fprintf(stderr, "Build domain %s exists\n", errstr);
 	} else if (error == CREATE_BUILD_FAILED) {
 		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
 	} else if (error == ID_INVALID) {
 		fprintf(stderr, "ID Invalid\n");
+	} else if (error == UNKNOWN_ZONE_TYPE) {
+		fprintf(stderr, "Unknown zone type in %s\n", errstr);
 	} else if (error == NAME_INVALID) {
 		fprintf(stderr, "Name %s invalid\n", errstr);
 	} else if (error == NO_LOCALE_FOR_OS) {
@@ -167,6 +198,8 @@ report_error(int error, const char *errstr)
 "Something other than pri or sec ns passed to %s\n", errstr);
 	} else if (error == NO_GLUE_ZONE) {
 		fprintf(stderr, "No glue zone passed to %s\n", errstr);
+	} else if (error == LOCALE_NOT_FOUND) {
+		fprintf(stderr, "No locale for the OS and version. Did you just add it?\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -443,36 +476,36 @@ display_cbcpack_usage(void)
 void
 display_dnsa_usage(void)
 {
-	printf("dnsa: Domain Name System Administratiom\n\n");
+/*	printf("dnsa: Domain Name System Administratiom\n\n"); */
 	printf("Version: %s\n", VERSION);
 	printf("Action options (and needed options)\n");
 	printf("-a: add host record\n\t-t -h -i -n (-p) (-o -s)\n");
 	printf("-b: build reverse zone\n\t-n\n");
-	printf("-d: display zone\n\t[-F|-R|-G] -n\n");
+	printf("-d: display zone\n\t[ -F | -R | -G ] -n\n");
 	printf("-e: add preferred A record for reverse DNS");
 	printf("\n\t-h -n -i\n");
 	printf("-g: remove preferred A record\n\t -i\n");
-	printf("-l: list zones\n\t[-F|-R]\n");
+	printf("-l: list zones\n\t[ -F | -R ]\n");
 	printf("-r: remove record\n\t-h -n\n");
 	printf("-u: display IP's with multiple A records\n\t-n\n");
-	printf("-w: commit valid zones on nameserver\n\t[-F|-R]\n");
+	printf("-w: commit valid zones on nameserver\n\t[ -F | -R ]\n");
 	printf("-x: remove zone\n\t[-F|-R] -n\n");
-	printf("-z: add zone\n\t[-F|-R|-G] (-S -M) (-N -I) -n (-p prefix)\n\n");
-	printf("Zone type:\n");
-	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n");
+	printf("-z: add zone\n\t[-F | -R (-p) | -G (-N -I) ] (-S -M) -n\n\n");
+/*	printf("Zone type:\n");
+	printf("-F: forward zone\n-R: reverse zone\n-S: slave zone\n-G: glue zone\n\n"); */
 	printf("Zone details:\n");
 	printf("-M: master IP address\n-N: name server(s) (comma separated)\n");
-	printf("-I: IP('s) (comma separated)\n");
+	printf("-I: IP('s) (comma separated)\n\n");
 	printf("Reverse: -p\tSlave: -M -h\tGlue -N -I\n\n");
-	printf("Name options:\n");
+/*	printf("Name options:\n");
 	printf("-n: zone-name / network range\n");
 	printf("-i: IP Address\n\n");
 	printf("Zone options for use with adding a reverse zone:\n");
-	printf("-p: prefix\n\n");
-	printf("Host options for use with adding a host record:\n");
+	printf("-p: prefix\n\n"); */
+	printf("Options for use with adding a host record or zone:\n");
 	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host");
-	printf("\n-p: priority (for MX and SRV records)\n");
-	printf("-o: protocol -s: service (for SRV records)\n\n");
+	printf("\n-p: priority (for MX and SRV records), prefix for reverse zone\n");
+	printf("-o: protocol\n-s: service (for SRV records)\n\n");
 }
 
 void
@@ -732,55 +765,17 @@ void
 get_config_file_location(char *config)
 {
 	FILE *cnf;
-	wordexp_t *word;
 	const char *conf = config;
-	char **w;
-	int retval;
 
-	if (!(word = calloc(sizeof(wordexp_t), 1)))
-		report_error(MALLOC_FAIL, "word in get_config_file_location");
-	snprintf(config, CONF_S, "~/.cmdb.conf");
-	if ((retval = wordexp(conf, word, WRDE_APPEND)) != 0) {
-		fprintf(stderr, "Call to wordexp failed!\n");
-		return;
-	} else {
-		w = word->we_wordv;
-		conf = *w;
-	}
-	if (!(cnf = fopen(conf, "r"))) {
-		snprintf(config, CONF_S, "~/.dnsa.conf");
-		conf = config;
-	} else {
+	snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
+	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
-		snprintf(config, CONF_S, "%s", conf);
-		wordfree(word);
-		free(word);
-		return;
-	}
-	if ((retval = wordexp(conf, word, WRDE_REUSE)) != 0) {
-		fprintf(stderr, "Call to wordexp failed\n");
-		return;
-	} else {
-		w = word->we_wordv;
-		conf = *w;
-	}
-	if (!(cnf = fopen(conf, "r"))) {
-		snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
-		conf = config;
-	} else {
-		fclose(cnf);
-		snprintf(config, CONF_S, "%s", conf);
-		wordfree(word);
-		free(word);
-		return;
-	}
-	wordfree(word);
-	free(word);
-	if (!(cnf = fopen(conf, "r"))) {
+	} else	{
 		snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
-	} else {
-		fclose(cnf);
-		return;
+		if ((cnf = fopen(conf, "r")))
+			fclose(cnf);
+		else
+			report_error(CONF_ERR, "no config file");
 	}
 }
 
@@ -838,12 +833,48 @@ write_file(char *filename, char *output)
 	return retval;
 }
 
+int
+get_ip_from_hostname(dbdata_s *data)
+{
+	int retval = 0;
+	struct addrinfo hints, *srvinfo;
+	void *addr;
+	dbdata_s *list;
+
+	if (!(data))
+		return NO_DATA;
+	list = data;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	if (strlen(list->fields.text) == 0) {
+		if ((retval = gethostname(list->fields.text, RBUFF_S)) != 0) {
+			fprintf(stderr, "%s", strerror(errno));
+			return NO_NAME;
+		}
+	}
+	if ((retval = getaddrinfo(list->fields.text, "http", &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(retval));
+		return NO_IP_ADDRESS;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		struct sockaddr_in *ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+	} else {
+		fprintf(stderr, "ai_family %d not supported\n", srvinfo->ai_family);
+		freeaddrinfo(srvinfo);
+		return NO_NAME;
+	}
+	inet_ntop(srvinfo->ai_family, addr, list->args.text, RBUFF_S);
+	freeaddrinfo(srvinfo);
+	return retval;
+}
+
 void
 init_dbdata_struct(dbdata_s *data)
 {
-	data->fields.number = 0;
-	data->args.number = 0;
-	data->next = '\0';
+	memset(data, 0, sizeof(dbdata_s));
 }
 
 void
@@ -947,3 +978,75 @@ resize_string_buff(string_len_s *build)
 	else
 		build->string = tmp;
 }
+
+#ifdef HAVE_SQLITE3
+# ifndef HAVE_SQLITE3_ERRSTR
+const char *
+sqlite3_errstr(int error)
+{
+	if (error == SQLITE_ERROR)
+		return "SQL error or missing database";
+	else if (error == SQLITE_INTERNAL)
+		return "Internal logic error in SQLite";
+	else if (error == SQLITE_PERM)
+		return "Access permission denied";
+	else if (error == SQLITE_ABORT)
+		return "Callback routine requested an abort";
+	else if (error == SQLITE_BUSY)
+		return "The database file is locked";
+	else if (error == SQLITE_NOMEM)
+		return "A malloc() failed";
+	else if (error == SQLITE_READONLY)
+		return "Attempt to write a readonly database";
+	else if (error == SQLITE_INTERRUPT)
+		return "Operation terminated by sqlite3_interrupt()";
+	else if (error == SQLITE_IOERR)
+		return "Some kind of disk I/O error occurred";
+	else if (error == SQLITE_CORRUPT)
+		return "The database disk image is malformed";
+	else if (error == SQLITE_NOTFOUND)
+		return "Unknown opcode in sqlite3_file_control()";
+	else if (error == SQLITE_FULL)
+		return "Insertion failed because database is full";
+	else if (error == SQLITE_CANTOPEN)
+		return "Unable to open the database file";
+	else if (error == SQLITE_PROTOCOL)
+		return "Database lock protocol error";
+	else if (error == SQLITE_EMPTY)
+		return "Database is empty";
+	else if (error == SQLITE_SCHEMA)
+		return "The database schema changed";
+	else if (error == SQLITE_TOOBIG)
+		return "String or BLOB exceeds size limit";
+	else if (error == SQLITE_CONSTRAINT)
+		return "Abort due to constraint violation";
+	else if (error == SQLITE_MISMATCH)
+		return "Data type mismatch";
+	else if (error == SQLITE_MISUSE)
+		return "Library used incorrectly";
+	else if (error == SQLITE_NOLFS)
+		return "Uses OS features not supported on host";
+	else if (error == SQLITE_AUTH)
+		return "Authorization denied";
+	else if (error == SQLITE_FORMAT)
+		return "Auxiliary database format error";
+	else if (error == SQLITE_RANGE)
+		return "2nd parameter to sqlite3_bind out of range";
+	else if (error == SQLITE_NOTADB)
+		return "File opened that is not a database file";
+#  ifdef SQLITE_NOTICE
+	else if (error == SQLITE_NOTICE)
+		return "Notifications from sqlite3_log()";
+#  endif /* SQLITE_NOTICE */
+#  ifdef SQLITE_WARNING
+	else if (error == SQLITE_WARNING)
+		return "Warnings from sqlite3_log()";
+#  endif /* SQLITE_WARNING */
+	else if (error == SQLITE_ROW)
+		return "sqlite3_step() has another row ready";
+	else if (error == SQLITE_DONE)
+		return "sqlite3_step() has finished executing";
+	return "Unknown error code";
+}
+# endif /* HAVE_SQLITE3_ERRSTR */
+#endif /* HAVE_SQLITE3 */

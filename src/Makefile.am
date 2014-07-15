@@ -1,53 +1,55 @@
 bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
-cmdb_SOURCES =	cmdb.c cmdbcom.c errors.c customers.c checks.c servers.c\
+combo_SOURCES = errors.c checks.c
+
+cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
 		cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h\
 		base_sql.h
 if HAVE_DNSA
 bin_PROGRAMS += dnsa
 
-dnsa_SOURCES =	dnsa.c dnsacom.c errors.c checks.c base_sql.c dnsa_base_sql.c\
+dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
 		zones.c\
 		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
 		base_sql.h
-cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
+cbc_SOURCES =	cbc.c cbccom.c $(combo_SOURCES) base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c cbc_dnsa.c dnsa_base_sql.c\
 		dnsacom.c zones.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
-		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
+		cbcdomain.c $(combo_SOURCES) base_sql.c cbc_data.c\
 		cbc_base_sql.c builddomain.c cbccom.c zones.c cbc_dnsa.c\
 		dnsa_base_sql.c dnsacom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
 		base_sql.h cbcdomain.h cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 else
-cbc_SOURCES =	cbc.c cbccom.c errors.c checks.c base_sql.c cbc_base_sql.c\
+cbc_SOURCES =	cbc.c cbccom.c $(combo_SOURCES) base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
-		cbcdomain.c errors.c checks.c base_sql.c cbc_data.c\
+		cbcdomain.c $(combo_SOURCES) base_sql.c cbc_data.c\
 		cbc_base_sql.c builddomain.c cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
 		base_sql.h cbcdomain.h
 endif
 cbcos_SOURCES = \
-		cbcos.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
+		cbcos.c $(combo_SOURCES) base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcos.h
 cbcvarient_SOURCES = \
-		cbcvarient.c errors.c checks.c base_sql.c cbc_data.c\
+		cbcvarient.c $(combo_SOURCES) base_sql.c cbc_data.c\
 		cbc_base_sql.c cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h\
 		cbcvarient.h
 cbcpack_SOURCES = \
-		cbcpack.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
+		cbcpack.c $(combo_SOURCES) base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpack.h
 cbcpart_SOURCES = \
-		cbcpart.c errors.c checks.c base_sql.c cbc_data.c cbc_base_sql.c\
+		cbcpart.c $(combo_SOURCES) base_sql.c cbc_data.c cbc_base_sql.c\
 		cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
 

@@ -42,10 +42,9 @@ main(int argc, char *argv[])
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
 	char sretval[MAC_S], conf[CONF_S];
-	const char *config;
-	int retval;
+	const char *config = '\0';
+	int retval = NONE;
 	
-	retval = 0;
 	get_config_file_location(conf);
 	config = conf;
 	if (!(cmc = malloc(sizeof(cbc_config_s))))
@@ -54,14 +53,12 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cml in cbc.c");
 
 	init_all_config(cmc, cml);
-	retval = parse_cbc_command_line(argc, argv, cml);
-	if (retval != 0) {
+	if ((retval = parse_cbc_command_line(argc, argv, cml)) != 0) {
 		free(cmc);
 		free(cml);
 		display_command_line_error(retval, argv[0]);
 	}
-	retval = parse_cbc_config_file(cmc, config);
-	if (retval > 1) {
+	if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
 		parse_cbc_config_error(retval);
 		free(cml);
 		free(cmc);
@@ -70,7 +67,7 @@ main(int argc, char *argv[])
 	if (cml->action == DISPLAY_CONFIG)
 		retval = display_build_config(cmc, cml);
 	else if (cml->action == LIST_CONFIG)
-		retval = list_build_servers(cmc);
+		list_build_servers(cmc);
 	else if (cml->action == WRITE_CONFIG)
 		retval = write_build_config(cmc, cml);
 	else if (cml->action == ADD_CONFIG)

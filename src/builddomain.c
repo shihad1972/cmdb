@@ -100,16 +100,13 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
 	init_cbc_struct(base);
 	init_build_domain(bdom);
+	init_dbdata_struct(data);
 	base->bdom = bdom;
 	copy_build_domain_values(cdl, bdom);
 	snprintf(data->args.text, RBUFF_S, "%s", bdom->domain);
 	retval = cbc_run_search(cbc, data, BUILD_DOMAIN_COUNT);
-	if (data->fields.number > 0) {
-		printf("Domain %s already in database\n", bdom->domain);
-		free(data);
-		clean_cbc_struct(base);
-		return BUILD_DOMAIN_EXISTS;
-	}
+	if (data->fields.number > 0)
+		report_error(BUILD_DOMAIN_EXISTS, bdom->domain);
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
 
@@ -124,12 +121,8 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
 	
 	init_dnsa_struct(dnsa);
-/*
- * This really needs to get put into the config struct 
- */
-	char configfile[CONF_S] = "/etc/dnsa/dnsa.conf";
-	if ((retval = parse_dnsa_config_file(dc, configfile)) != 0) {
-		fprintf(stderr, "Error in config file %s\n", configfile);
+	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
+		fprintf(stderr, "Error in config file %s\n", cdl->config);
 		free(dc);
 		free(dnsa);
 		free(zone);
@@ -281,26 +274,39 @@ int
 list_cbc_build_domain(cbc_config_s *cbc)
 {
 	int retval = NONE;
+	cbc_build_domain_s *bdom, *list;
+
+	if ((retval = get_all_build_domains(cbc, &bdom)) == 0) {
+		list = bdom;
+		while (bdom) {
+			printf("%s\n", bdom->domain);
+			bdom = bdom->next;
+		}
+	}
+	clean_build_domain(list);
+	return retval;
+}
+
+int
+get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom)
+{
 	cbc_s *base;
-	cbc_build_domain_s *bdom;
+	int retval = NONE;
 
 	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_domain");
+		report_error(MALLOC_FAIL, "base in get_all_build_domains");
 	init_cbc_struct(base);
 	if ((retval = cbc_run_query(cbc, base, BUILD_DOMAIN)) != 0) {
 		if (retval == NO_RECORDS) {
 			fprintf(stderr, "No build domains in DB\n");
 			retval = NO_BUILD_DOMAIN;
 		} else
-			fprintf(stderr, "build query failed\n");
+			fprintf(stderr, "Builddomain query failed\n");
 		free(base);
 		return retval;
 	}
-	bdom = base->bdom;
-	while (bdom) {
-		printf("%s\n", bdom->domain);
-		bdom = bdom->next;
-	}
+	*bdom = base->bdom;
+	base->bdom = '\0';
 	clean_cbc_struct(base);
 	return retval;
 }

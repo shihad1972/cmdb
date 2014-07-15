@@ -51,6 +51,7 @@ typedef struct cbcdomain_comm_line_s {
 	char ntpserver[HOST_S];
 	char smtpserver[HOST_S];
 	char xymonserver[HOST_S];
+	char config[RBUFF_S];
 	short int action;
 	short int confldap;
 	short int ldapssl;
@@ -76,6 +77,9 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl);
 
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);
+
+void
+validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl);
 
 int
 split_network_args(cbcdomain_comm_line_s *cdl, char *optarg);

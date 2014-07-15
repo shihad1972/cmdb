@@ -1,4 +1,24 @@
-/* cmdb_dnsa.h: DNSA header file */
+/*
+ *
+ *  cmdb: Configuration Management Database
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  cmdb_dnsa.h: DNSA header file 
+ */
 
 #ifndef __CMDB_DNSA_H__
 # define __CMDB_DNSA_H__
@@ -181,6 +201,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
 /* Grab config values from file */
 int
 parse_dnsa_config_file(dnsa_config_s *dc, char *config);
+int
+read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf);
 /*initialise configuration and command line structs */
 void
 dnsa_init_config_values(dnsa_config_s *dc);
@@ -190,9 +212,16 @@ void
 dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl);
 void
 parse_dnsa_config_error(int error);
-/* Validate command line input */
+# ifdef HAVE_LIBPCRE
 int
 validate_comm_line(dnsa_comm_line_s *comm);
+void
+validate_fwd_comm_line(dnsa_comm_line_s *comm);
+void
+validate_glue_comm_line(dnsa_comm_line_s *comm);
+void
+validate_rev_comm_line(dnsa_comm_line_s *comm);
+# endif /* HAVE_LIBPCRE */
 /* Struct initialisation and clean functions */
 void
 init_dnsa_struct(dnsa_s *dnsa);
@@ -230,9 +259,9 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
 add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
-commit_fwd_zones(dnsa_config_s *dc);
+commit_fwd_zones(dnsa_config_s *dc, char *zone);
 int
-commit_rev_zones(dnsa_config_s *dc);
+commit_rev_zones(dnsa_config_s *dc, char *name);
 int
 add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 int
@@ -375,6 +404,8 @@ int
 validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
 int
 create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa);
+int
+set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data);
 /* 04/03/2013 functions add */
 void
 trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);

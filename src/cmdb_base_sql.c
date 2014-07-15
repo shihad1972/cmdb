@@ -90,21 +90,6 @@ DELETE FROM hard_type WHERE hard_type_id = ?","\
 DELETE FROM vm_server_hosts WHERE vm_server_hosts = ?"
 };
 
-#ifdef HAVE_MYSQL
-
-const int mysql_inserts[8][7] = {
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG},
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0},
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , 0 , 0 , 0} ,
-{MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG , MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG , MYSQL_TYPE_LONG, 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , 0 , 0 , 0 , 0 , 0} ,
-{MYSQL_TYPE_STRING , MYSQL_TYPE_STRING , MYSQL_TYPE_LONG, 0 , 0 , 0 , 0}
-};
-
-#endif /* HAVE_MYSQL */
-
 const char *sql_search[] = { "\
 SELECT server_id FROM server WHERE name = ?","\
 SELECT cust_id FROM customer WHERE coid = ?","\
@@ -142,6 +127,17 @@ const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
+
+const int cmdb_inserts[][7] = {
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0 }
+};
 
 const unsigned int cmdb_search_arg_types[][2] = {
 	{ DBTEXT, NONE },
@@ -189,162 +185,128 @@ const unsigned int cmdb_delete_arg_type[][1] = {
 };
 	
 int
-run_query(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cmdb_run_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_query_mysql(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
+		retval = cmdb_run_query_mysql(config, base, type);
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_query_sqlite(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cmdb_run_query_sqlite(config, base, type);
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
-run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cmdb_run_multiple_query");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_multiple_query_mysql(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
+		retval = cmdb_run_multiple_query_mysql(config, base, type);
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_multiple_query_sqlite(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cmdb_run_multiple_query_sqlite(config, base, type);
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-	
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 run_search(cmdb_config_s *config, cmdb_s *base, int type)
 {
-	int retval;
+	int retval = 0;
 
-	if ((strncmp(config->dbtype, "none", RANGE_S) ==0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) ==0))
+		report_error(NO_DB_TYPE, "run search");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = run_search_mysql(config, base, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = run_search_sqlite(config, base, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type)
 {
-	int retval = NONE;
+	int retval = 0;
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) ==0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cmdb_run_search");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
 		retval = cmdb_run_search_mysql(cmdb, data, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cmdb_run_search_sqlite(cmdb, data, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", cmdb->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, cmdb->dbtype);
+	return retval;
 }
 
 int
-run_insert(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert(cmdb_config_s *config, cmdb_s *base, int type)
 {
-	int retval;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	int retval = 0;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cmdb_run_insert");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
-		retval = run_insert_mysql(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
+		retval = cmdb_run_insert_mysql(config, base, type);
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
-		retval = run_insert_sqlite(config, base, type);
-		return retval;
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
+		retval = cmdb_run_insert_sqlite(config, base, type);
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
-
-	return NONE;
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
 }
 
 int
 cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type)
 {
 	int retval = NONE;
-	if ((strncmp(config->dbtype, "none", RANGE_S) == 0)) {
-		fprintf(stderr, "No database type configured\n");
-		return NO_DB_TYPE;
+	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
+		report_error(NO_DB_TYPE, "cmdb_run_delete");
 #ifdef HAVE_MYSQL
-	} else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
 		retval = cmdb_run_delete_mysql(config, data, type);
-		return retval;
 #endif /* HAVE_MYSQL */
 #ifdef HAVE_SQLITE3
-	} else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0)) {
+	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cmdb_run_delete_sqlite(config, data, type);
-		return retval;
 #endif /* HAVE_SQLITE3 */
-	} else {
-		fprintf(stderr, "Unknown database type %s\n", config->dbtype);
-		return DB_TYPE_INVALID;
-	}
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
 	return retval;
 }
 
 int
-get_query(int type, const char **query, unsigned int *fields)
+cmdb_get_query(int type, const char **query, unsigned int *fields)
 {
-	int retval;
-	
-	retval = NONE;
+	int retval = 0;
+
 	if (type == SERVER) {
 		*query = sql_select[SERVERS];
 		*fields = select_fields[SERVERS];
@@ -370,15 +332,16 @@ get_query(int type, const char **query, unsigned int *fields)
 		*query = sql_select[VM_HOSTS];
 		*fields = select_fields[VM_HOSTS];
 	} else {
-		fprintf(stderr, "Unknown query type %d\n", type);
-		retval = 1;
+		retval = UNKNOWN_QUERY;
 	}
 	return retval;
 }
 
-void
-get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
+int
+cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
 {
+	int retval = 0;
+
 	if (type == SERVER_ID_ON_NAME) {
 		*input = &(base->server->name);
 		*output = &(base->server->server_id);
@@ -405,9 +368,9 @@ get_search(int type, size_t *fields, size_t *args, void **input, void **output, 
 		*fields = strlen(base->vmhost->name);
 		*args = sizeof(base->vmhost->id);
 	} else {
-		fprintf(stderr, "Unknown query %d\n", type);
-		exit (NO_QUERY);
+		retval = UNKNOWN_QUERY;
 	}
+	return retval;
 }
 
 void
@@ -454,25 +417,21 @@ cmdb_mysql_init(cmdb_config_s *dc, MYSQL *cmdb_mysql)
 }
 
 int
-run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
 	MYSQL_ROW cmdb_row;
 	my_ulonglong cmdb_rows;
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int fields;
-	
-	retval = 0;
+
 	cmdb_mysql_init(config, &cmdb);
-	if ((retval = get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
-	}
+	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) 
+		report_error(retval, "cmdb_run_query_mysql");
 	if ((retval = cmdb_mysql_query_with_checks(&cmdb, query)) != 0) {
-		fprintf(stderr, "Query failed with error code %d\n", retval);
-		return retval;
+		report_error(MY_QUERY_FAIL, mysql_error(&cmdb));
 	}
 	if (!(cmdb_res = mysql_store_result(&cmdb))) {
 		cmdb_mysql_cleanup(&cmdb);
@@ -485,38 +444,38 @@ run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
-	return 0;
+	return retval;
 }
 
 int
-run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
-		if ((retval = run_query_mysql(config, base, SERVER)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVER)) != 0)
 			return retval;
 	if ((type & CUSTOMER) == CUSTOMER)
-		if ((retval = run_query_mysql(config, base, CUSTOMER)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, CUSTOMER)) != 0)
 			return retval;
 	if ((type & CONTACT) == CONTACT)
-		if ((retval = run_query_mysql(config, base, CONTACT)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, CONTACT)) != 0)
 			return retval;
 	if ((type & SERVICE) == SERVICE) {
-		if ((retval = run_query_mysql(config, base, SERVICE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_mysql(config, base, SERVICE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, SERVICE)) != 0)
 			return retval;
 	}
 	if ((type & HARDWARE) == HARDWARE) {
-		if ((retval = run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_mysql(config, base, HARDWARE)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, HARDWARE)) != 0)
 			return retval;
 	}
 	if ((type & VM_HOST) == VM_HOST)
-		if ((retval = run_query_mysql(config, base, VM_HOST)) != 0)
+		if ((retval = cmdb_run_query_mysql(config, base, VM_HOST)) != 0)
 			return retval;
-	return 0;
+	return retval;
 }
 
 int
@@ -537,7 +496,8 @@ Will need to check if we have char or int here. Hard coded char for search,
 and int for result, which is OK when searching on name and returning id
 */	
 	query = sql_search[type];
-	get_search(type, &arg_len, &res_len, &input, &output, base);
+	if ((retval = cmdb_get_search(type, &arg_len, &res_len, &input, &output, base)) != 0)
+		report_error(UNKNOWN_QUERY, "run_search_mysql");
 	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
 	my_bind[0].buffer = input;
 	my_bind[0].buffer_length = arg_len;
@@ -553,7 +513,7 @@ and int for result, which is OK when searching on name and returning id
 	
 	
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -587,14 +547,12 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
 	for (i = 0; i < cmdb_search_args[type]; i++)
-		if ((retval = cmdb_set_search_args_mysql(&args[i], i, type, data)) != 0)
-			return retval;
+		cmdb_set_search_args_mysql(&args[i], i, type, data);
 	for (i = 0; i < cmdb_search_fields[type]; i++)
-		if ((retval = cmdb_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
-			return retval;
+		cmdb_set_search_fields_mysql(&fields[i], i, j, type, data);
 	cmdb_mysql_init(ccs, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &args[0])) != 0)
@@ -608,27 +566,23 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	while ((retval = mysql_stmt_fetch(cmdb_stmt)) == 0) {
 		j++;
 		for (i = 0; i < cmdb_search_fields[type]; i++)
-			if ((retval = cmdb_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
-				return retval;
+			cmdb_set_search_fields_mysql(&fields[i], i, j, type, data);
 		if ((retval = mysql_stmt_bind_result(cmdb_stmt, &fields[0])) != 0)
 			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	}
 	if (retval != MYSQL_NO_DATA)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	else
-		retval = NONE;
 	mysql_stmt_free_result(cmdb_stmt);
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
 	return j;
 }
 
-int
+void
 cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
-	int retval = 0;
 	unsigned int j;
-	void *buffer;
+	void *buffer = '\0';
 	dbdata_s *list = base;
 
 	mybind->is_null = 0;
@@ -651,22 +605,21 @@ cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_
 		buffer = &(list->args.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in cmdb_set_search_args_mysql ");
 	}
 	mybind->buffer = buffer;
-	return retval;
 }
 
-int
+void
 cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
-	int retval = 0, j;
-	static int m = 0, stype = 0;
-	void *buffer;
+	int j;
+	static int m = 0, stype = -1;
+	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 
-	if (stype == 0)
+	if (stype == -1)
 		stype = type;
 	else if (stype != type) {
 		stype = type;
@@ -702,16 +655,14 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 		buffer = &(list->fields.small);
 		mybind->buffer_length = sizeof(short int);
 	} else {
-		return WRONG_TYPE;
+		report_error(DB_TYPE_INVALID, "in cmdb_set_search_fields_mysql");
 	}
 	mybind->buffer = buffer;
 	m++;
-
-	return retval;
 }
 
 int
-run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
 	MYSQL_STMT *cmdb_stmt;
@@ -723,11 +674,11 @@ run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i=0; i<insert_fields[type]; i++) 
 		if ((retval = setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
-			return retval;
+			report_error(DB_TYPE_INVALID, " in cmdb_run_insert_mysql");
 	query = sql_insert[type];
 	cmdb_mysql_init(config, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -753,28 +704,32 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_delete_args[type]; i++) {
+		my_bind[i].is_null = 0;
+		my_bind[i].length = 0;
 		if (cmdb_delete_arg_type[type][i] == DBINT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 1;
 			my_bind[i].buffer = &(list->args.number);
 			my_bind[i].buffer_length = sizeof(unsigned long int);
-			list = list->next;
-		} else if (cmdb_delete_arg_type[type][i] == MYSQL_TYPE_STRING) {
+		} else if (cmdb_delete_arg_type[type][i] == DBTEXT) {
 			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
-			my_bind[i].is_null = 0;
-			my_bind[i].length = 0;
 			my_bind[i].is_unsigned = 0;
 			my_bind[i].buffer = &(list->args.text);
 			my_bind[i].buffer_length = strlen(list->args.text);
-			list = list->next;
+		} else if (cmdb_delete_arg_type[type][i] == DBSHORT) {
+			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
+			my_bind[i].is_unsigned = 0;
+			my_bind[i].buffer = &(list->args.small);
+			my_bind[i].buffer_length = sizeof(short int);
+		} else {
+			report_error(DB_TYPE_INVALID, " in cmdb_run_delete_mysql");
 		}
+		list = list->next;
 	}
 	query = cmdb_sql_delete[type];
 	cmdb_mysql_init(config, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		return MY_STATEMENT_FAIL;
+		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
 	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
@@ -794,19 +749,26 @@ setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base
 
 	retval = 0;
 	void *buffer;
-	bind->buffer_type = mysql_inserts[type][i];
-	if (bind->buffer_type == MYSQL_TYPE_LONG)
+	if (cmdb_inserts[type][i] == DBINT) {
 		bind->is_unsigned = 1;
-	else
+		bind->buffer_type = MYSQL_TYPE_LONG;
+		bind->buffer_length = sizeof(unsigned long int);
+	} else if (cmdb_inserts[type][i] == DBTEXT) {
 		bind->is_unsigned = 0;
+		bind->buffer_type = MYSQL_TYPE_STRING;
+	} else if (cmdb_inserts[type][i] == DBSHORT) {
+		bind->is_unsigned = 1;
+		bind->buffer_type = MYSQL_TYPE_SHORT;
+		bind->buffer_length = sizeof(short int);
+	} else {
+		return DB_TYPE_INVALID;
+	}
 	bind->is_null = 0;
 	bind->length = 0;
 	if ((retval = setup_insert_mysql_bind_buffer(type, &buffer, base, i)) != 0)
 		return retval;
 	bind->buffer = buffer;
-	if (bind->buffer_type == MYSQL_TYPE_LONG)
-		bind->buffer_length = sizeof(unsigned long int);
-	else if (bind->buffer_type == MYSQL_TYPE_STRING)
+	if (bind->buffer_type == MYSQL_TYPE_STRING)
 		bind->buffer_length = strlen(buffer);
 	return retval;
 }
@@ -830,7 +792,7 @@ setup_insert_mysql_bind_buffer(int type, void **buffer, cmdb_s *base, unsigned i
 	else if (type == VM_HOSTS)
 		setup_insert_mysql_bind_buff_vmhost(buffer, base, i);
 	else
-		retval = NO_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cmdb_run_insert_mysql");
 	return retval;
 }
 
@@ -967,7 +929,7 @@ store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 			cmdb_query_mismatch(fields, required, type);
 		store_vm_hosts_mysql(row, base);
 	} else {
-		fprintf(stderr, "Unknown type %d\n",  type);
+		fprintf(stderr, "Unknown type %d. Cannot store.\n",  type);
 	}
 }
 
@@ -1192,7 +1154,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 #ifdef HAVE_SQLITE3
 
 int
-run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1202,16 +1164,15 @@ run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	
 	retval = 0;
 	file = config->file;
-	if ((retval = get_query(type, &query, &fields)) != 0) {
-		fprintf(stderr, "Unable to get query. Error code %d\n", retval);
-		return retval;
+	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) {
+		report_error(retval, "cmdb_run_query_sqlite");
 	}
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		report_error(FILE_O_FAIL, file);
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_query_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_query_sqlite");
 	}
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
@@ -1224,32 +1185,32 @@ run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	int retval;
 	if ((type & SERVER) == SERVER)
-		if ((retval = run_query_sqlite(config, base, SERVER)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVER)) != 0)
 			return retval;
 	if ((type & CUSTOMER) == CUSTOMER)
-		if ((retval = run_query_sqlite(config, base, CUSTOMER)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, CUSTOMER)) != 0)
 			return retval;
 	if ((type & CONTACT) == CONTACT)
-		if ((retval = run_query_sqlite(config, base, CONTACT)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, CONTACT)) != 0)
 			return retval;
 	if ((type & SERVICE) == SERVICE) {
-		if ((retval = run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVICE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_sqlite(config, base, SERVICE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, SERVICE)) != 0)
 			return retval;
 	}
 	if ((type & HARDWARE) == HARDWARE) {
-		if ((retval = run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, HARDWARE_TYPE)) != 0)
 			return retval;
-		if ((retval = run_query_sqlite(config, base, HARDWARE)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, HARDWARE)) != 0)
 			return retval;
 	}
 	if ((type & VM_HOST) == VM_HOST)
-		if ((retval = run_query_sqlite(config, base, VM_HOST)) != 0)
+		if ((retval = cmdb_run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
 	return 0;
 }
@@ -1270,13 +1231,13 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in run_search_sqlite");
 	}
 /*
    As in the MySQL function we assume that we are sending text and recieving
    numerical data. Searching on name for ID is ok for this
 */
-	get_search(type, &fields, &args, &input, &output, base);
+	cmdb_get_search(type, &fields, &args, &input, &output, base);
 	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
 		retval = sqlite3_close(cmdb);
 		report_error(SQLITE_BIND_FAILED, "run_search_sqlite");
@@ -1302,28 +1263,37 @@ run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 int
 cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = sql_search[type], *file = ccs->file;
+	const char *query = '\0', *file = '\0';
 	int retval = NONE, i;
-	dbdata_s *list = data;
+	dbdata_s *list = '\0';
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
+	query = sql_search[type];
+	if (ccs)
+		file = ccs->file;
+	else
+		report_error(NO_DATA, "ccs in cmdb_run_search_sqlite");
 	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");
 	}
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cmdb_run_search_sqlite");
 	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
 		if ((retval = set_cmdb_search_sqlite(state, list, type, i)) < 0)
 			break;
 		if (list->next) 
 			list = list->next;
 	}
-	if (retval == WRONG_TYPE) {
+	if (retval == DB_WRONG_TYPE) {
 		sqlite3_finalize(state);
 		sqlite3_close(cmdb);
-		return retval;
+		report_error(retval, query);
 	}
 	list = data;
 	i = NONE;
@@ -1333,11 +1303,11 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 			break;
 		i++;
 	}
-	if (retval != WRONG_TYPE)
-		retval = i;
 	sqlite3_finalize(state);
 	sqlite3_close(cmdb);
-	return retval;
+	if (retval == DB_WRONG_TYPE)
+		report_error(retval, query);
+	return i;
 }
 
 int
@@ -1368,7 +1338,7 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				data->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				return DB_WRONG_TYPE;
 			list->next = data;
 		}
 	} else {
@@ -1383,7 +1353,7 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				list->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
-				return WRONG_TYPE;
+				return DB_WRONG_TYPE;
 		}
 	}
 	return retval;
@@ -1397,31 +1367,31 @@ set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 	if (cmdb_search_arg_types[type][i] == DBTEXT) {
 		if ((retval = sqlite3_bind_text(
 state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-			fprintf(stderr, "Cannot bind search arg %s\n",
-				list->args.text);
+			fprintf(stderr, "Cannot bind search arg %s: %s\n",
+				list->args.text, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else if (cmdb_search_arg_types[type][i] == DBINT) {
 		if ((retval = sqlite3_bind_int64(
 state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
-			fprintf(stderr, "Cannot bind search number arg %lu\n",
-				list->args.number);
+			fprintf(stderr, "Cannot bind search number arg %lu: %s\n",
+				list->args.number, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else if (cmdb_search_arg_types[type][i] == DBSHORT) {
 		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
-			fprintf(stderr, "Cannot bind search small arg %d\n",
-				list->args.small);
+			fprintf(stderr, "Cannot bind search small arg %d: %s\n",
+				list->args.small, sqlite3_errstr(retval));
 			return retval;
 		}
 	} else {
-		retval = WRONG_TYPE;
+		retval = DB_WRONG_TYPE;
 	}
 	return retval;
 }
 
 int
-run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
+cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1436,18 +1406,21 @@ run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "run_insert_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_insert_sqlite");
 	}
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
-		printf("Error binding result! %d\n", retval);
+		if (retval == DB_TYPE_INVALID)
+			fprintf(stderr, "Unknown data type %d in cmdb_run_insert_sqlite", type);
+		else
+			fprintf(stderr, "Error binding result! %s\n", sqlite3_errmsg(cmdb));
 		sqlite3_close(cmdb);
+		return SQLITE_INSERT_FAILED;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
 		retval = sqlite3_finalize(state);
 		retval = sqlite3_close(cmdb);
-		retval = SQLITE_INSERT_FAILED;
-		return retval;
+		return SQLITE_INSERT_FAILED;
 	}
 	retval = sqlite3_finalize(state);
 	retval = sqlite3_close(cmdb);
@@ -1468,20 +1441,28 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
 		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "cmdb_run_delete");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_delete");
 	}
 	for (i = 1; i <= cmdb_delete_args[type]; i++) {
 		if (!list)
 			break;
 		if (cmdb_delete_arg_type[type][i - 1] == DBTEXT) {
 			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-				fprintf(stderr, "Cannot bind arg %s\n", list->args.text);
+				fprintf(stderr, "Cannot bind arg %s: %s\n",
+				 list->args.text, sqlite3_errstr(retval));
 				return retval;
 			}
 		} else if (cmdb_delete_arg_type[type][i - 1] == DBINT) {
 			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
-				fprintf(stderr, "Cannot bind arg %lu\n", list->args.number);
+				fprintf(stderr, "Cannot bind arg %lu: %s\n",
+				 list->args.number, sqlite3_errstr(retval));
 				return retval;
+			}
+		} else if (cmdb_delete_arg_type[type][i - 1] == DBSHORT) {
+			if ((retval = sqlite3_bind_int(state, (int)i , list->args.small)) > 0) {
+				fprintf(stderr, "Cannot bind search small arg %d: %s\n",
+				 list->args.small, sqlite3_errstr(retval));
+			return retval;
 			}
 		}
 		list = list->next;
@@ -1501,7 +1482,7 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 int
 setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 {
-	int retval;
+	int retval = 0;
 	if (type == SERVERS) {
 		retval = setup_bind_sqlite_server(state, cmdb->server);
 	} else if (type == CUSTOMERS) {
@@ -1515,7 +1496,7 @@ setup_insert_sqlite_bind(sqlite3_stmt *state, cmdb_s *cmdb, int type)
 	} else if (type == VM_HOSTS) {
 		retval = setup_bind_sqlite_vmhost(state, cmdb->vmhost);
 	} else {
-		retval = NO_TYPE;
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cmdb_run_insert_mysql");
 	}
 	return retval;
 }
@@ -1565,7 +1546,7 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_s *base, int type, unsigned int fi
 			cmdb_query_mismatch(fields, required, type);
 		store_vm_hosts_sqlite(state, base);
 	} else {
-		fprintf(stderr, "Unknown type %d\n",  type);
+		fprintf(stderr, "Unknown type %d. Cannot store.\n",  type);
 	}
 }
 

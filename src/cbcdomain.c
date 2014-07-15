@@ -89,6 +89,8 @@ main(int argc, char *argv[])
 void
 init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 {
+	memset(cdcl, 0, sizeof (cbcdomain_comm_line_s));
+	get_config_file_location(cdcl->config);
 	snprintf(cdcl->domain, COMM_S, "NULL");
 	snprintf(cdcl->basedn, COMM_S, "NULL");
 	snprintf(cdcl->binddn, COMM_S, "NULL");
@@ -98,10 +100,6 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 	snprintf(cdcl->ntpserver, COMM_S, "NULL");
 	snprintf(cdcl->smtpserver, COMM_S, "NULL");
 	snprintf(cdcl->xymonserver, COMM_S, "NULL");
-	cdcl->action = cdcl->confldap = cdcl->ldapssl = cdcl->conflog = 0;
-	cdcl->confsmtp = cdcl->confxymon = cdcl->confntp = cdcl->ldapssl = 0;
-	cdcl->start_ip = cdcl->end_ip = cdcl->netmask = cdcl->gateway = 0;
-	cdcl->ns = 0;
 }
 
 void
@@ -109,6 +107,38 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 {
 	init_cbc_config_values(cmc);
 	init_cbcdomain_comm_line(cdcl);
+}
+
+void
+validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
+{
+	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->smtpserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "smtp server");
+	if (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->nfsdomain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "nfs domain");
+	if (strncmp(cdl->logserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->logserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "log server");
+	if (strncmp(cdl->ldapserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->ldapserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "ldap server");
+	if (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->xymonserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "xymon server");
+	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "ntp server");
+	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+	if (strncmp(cdl->basedn, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->basedn, DC_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "basedn");
+	if (strncmp(cdl->binddn, "NULL", COMM_S) != 0)
+		if (validate_user_input(cdl->binddn, CN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "binddn");
 }
 
 int
@@ -164,6 +194,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			return DISPLAY_USAGE;
 		}
 	}
+	validate_cbcdomain_comm_line(cdl);
 	if (argc == 1)
 		return DISPLAY_USAGE;
 	if (cdl->action == CVERSION)
@@ -220,12 +251,12 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 		} else {
 			return USER_INPUT_INVALID;
 		}
-		if (inet_pton(AF_INET, ip, &ip_addr)) {
+		if (validate_user_input(ip, IP_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "network");
+		if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
-		} else {
-			retval = USER_INPUT_INVALID;
-			break;
-		}
+		else
+			report_error(USER_INPUT_INVALID, "network");
 		network = ip = tmp;
 	}
 	cdl->start_ip = ips[0];

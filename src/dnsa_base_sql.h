@@ -90,9 +90,9 @@ int
 dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type);
 int
 dnsa_setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_s *base);
-int
+void
 dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
-int
+void
 dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int j, int type, dbdata_s *base);
 int
 dnsa_setup_insert_mysql_bind_buffer(int type, void **input, dnsa_s *base, unsigned int i);

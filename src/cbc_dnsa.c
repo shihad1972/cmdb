@@ -274,7 +274,7 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 
 	buff = config;
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
+		report_error(MALLOC_FAIL, "dnsa in write_zone_and_reload_nameserver");
 	if (!(dc = malloc(sizeof(dnsa_config_s))))
 		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
 	init_dnsa_struct(dnsa);
