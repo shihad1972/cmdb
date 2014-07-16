@@ -21,7 +21,7 @@
  * 
  *  Functions to get configuration values and also parse command line arguments
  * 
- *  part of the cbc program
+ *  part of the cbcdomain program
  * 
  */
 #include <unistd.h>

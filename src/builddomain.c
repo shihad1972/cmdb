@@ -274,7 +274,7 @@ int
 list_cbc_build_domain(cbc_config_s *cbc)
 {
 	int retval = NONE;
-	cbc_build_domain_s *bdom, *list;
+	cbc_build_domain_s *bdom = '\0', *list='\0';
 
 	if ((retval = get_all_build_domains(cbc, &bdom)) == 0) {
 		list = bdom;
