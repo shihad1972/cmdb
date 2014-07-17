@@ -76,6 +76,8 @@ main(int argc, char *argv[])
 		retval = remove_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == MOD_CONFIG)
 		retval = modify_cbc_build_domain(cmc, cdcl);
+	else if (cdcl->action == WRITE_CONFIG)
+		retval = write_dhcp_net_config(cmc);
 	else
 		printf("Unknown Action type\n");
 
@@ -147,7 +149,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:f:g:i:jk:lmn:prs:t:vx:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:f:g:i:jk:lmn:prs:t:vwx:")) != -1) {
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'b') {
@@ -162,6 +164,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = RM_CONFIG;
 		} else if (opt == 'j') {
 			cdl->action = LIST_SERVERS;
+		} else if (opt == 'w') {
+			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'e') {
 			snprintf(cdl->smtpserver, HOST_S, "%s", optarg);
 			cdl->confsmtp = 1;
@@ -201,7 +205,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		return CVERSION;
 	if (cdl->action == NONE)
 		return NO_ACTION;
-	if (cdl->action != LIST_CONFIG && strncmp(cdl->domain, "NULL", COMM_S) == 0)
+	if (cdl->action != LIST_CONFIG && cdl->action != WRITE_CONFIG &&
+	     strncmp(cdl->domain, "NULL", COMM_S) == 0)
 		return NO_DOMAIN_NAME;
 	if ((cdl->action == MOD_CONFIG) && ((cdl->start_ip != 0) ||
 		                            (cdl->end_ip != 0) ||

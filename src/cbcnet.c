@@ -50,6 +50,7 @@ get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 		return 1;
 	get_iface_info(&info);
 	retval = get_dhcp_server_info(bd, dh, info);
+	clean_cbc_iface(info);
 	return retval;
 }
 
@@ -80,6 +81,7 @@ get_iface_info(cbc_iface_s **info)
 			report_error(IFACE_FILL, "fill_iface_info");
 		list = *info;
 	}
+	freeifaddrs(iface);
 }
 
 int

@@ -206,6 +206,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Cannot get interface info in %s\n", errstr);
 	} else if (error == NO_IFACE) {
 		fprintf(stderr, "Interface list empty\n");
+	} else if (error == NULL_POINTER_PASSED) {
+		fprintf(stderr, "Null pointer passed\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -921,8 +923,11 @@ init_string_len(string_len_s *string)
 void
 clean_string_len(string_len_s *string)
 {
-	free(string->string);
-	free(string);
+	if (string) {
+		if (string->string)
+			free(string->string);
+		free(string);
+	}
 }
 
 void

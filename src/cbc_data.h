@@ -29,6 +29,7 @@
 #ifndef __CBC_DATA_H__
 # define __CBC_DATA_H__
 # include "cmdb.h"
+# include "netinet/in.h"
 
 typedef struct cbc_boot_line_s {
 	char os[MAC_S];
@@ -219,6 +220,15 @@ typedef struct cbc_dhcp_s { // Info for a dhcp network
         struct string_l *dom_search;
         struct cbc_dhcp_s *next;
 } cbc_dhcp_s;
+
+typedef struct cbc_dhcp_string_s {
+	char domain[RBUFF_S];
+	char ns[INET6_ADDRSTRLEN];
+	char gw[INET6_ADDRSTRLEN];
+	char sn[INET6_ADDRSTRLEN];
+	char nm[INET6_ADDRSTRLEN];
+	struct cbc_dhcp_string_s *next;
+} cbc_dhcp_string_s;
 
 typedef struct cbc_iface_s { // Info about interface
         char *name;

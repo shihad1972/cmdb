@@ -228,7 +228,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	COID_EXISTS = 213,
 	IFACE_LIST_FAILED = 214,
 	IFACE_FILL = 215,
-	NO_IFACE = 216
+	NO_IFACE = 216,
+	NULL_POINTER_PASSED = 217
 };
 
 enum {			/* command line error codes */

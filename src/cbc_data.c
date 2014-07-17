@@ -596,6 +596,8 @@ clean_cbc_dhcp(cbc_dhcp_s *dh)
 	while (list) {
 		free(list->iname);
 		free(list->dname);
+		if (list->dom_search)
+			clean_string_l(list->dom_search);
 		free(list);
 		list = next;
 		if (next)

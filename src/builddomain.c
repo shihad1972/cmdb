@@ -46,6 +46,7 @@
 #include "checks.h"
 #include "cbcdomain.h"
 #include "builddomain.h"
+#include "cbcnet.h"
 
 #ifdef HAVE_DNSA
 
@@ -287,6 +288,31 @@ list_cbc_build_domain(cbc_config_s *cbc)
 	return retval;
 }
 
+int
+write_dhcp_net_config(cbc_config_s *cbc)
+{
+	int retval = 0;
+	cbc_build_domain_s *bdom = '\0';
+	cbc_dhcp_s *dh = '\0';
+	string_len_s *conf = '\0';
+
+	if (!cbc)
+		return 1;
+	if (!(conf = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "conf in write_dhcp_net_config");
+	init_string_len(conf);
+	if ((retval = get_all_build_domains(cbc, &bdom)) != 0)
+		return retval;
+	if ((retval = get_net_list_for_dhcp(bdom, &dh)) != 0)
+		return retval;
+	if ((retval = fill_dhcp_net_config(conf, dh)) != 0)
+		return retval;
+	retval = write_file("/etc/dhcp/dhcpd.networks", conf->string);
+	clean_string_len(conf);
+	clean_build_domain(bdom);
+	clean_cbc_dhcp(dh);
+	return retval;
+}
 int
 get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom)
 {
@@ -679,6 +705,57 @@ print_build_dom_servers(dbdata_s *data, char *name)
 	free(ip);
 }
 
-#ifdef HAVE_DNSA
+int
+fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
+{
+	char *buff, *pos;
+	int retval = 0;
+	size_t len;
+	cbc_dhcp_s *list;
+	cbc_dhcp_string_s val;
 
-#endif
+	if (!(conf) || !(dh))
+		return NULL_POINTER_PASSED;
+	if (!(buff = malloc(BUFF_S * 2)))
+		report_error(MALLOC_FAIL, "buff in fill_dhcp_net_config");
+	list = dh;
+	while(list) {
+		fill_dhcp_val(list, &val);
+		snprintf(buff, (BUFF_S * 2), "\
+  shared-network %s {\n\
+        option domain-name-servers %s;\n\
+        option domain-search \"%s\";\n\
+        option routers %s;\n\
+        subnet %s netmask %s {\n\
+                authoratative;\n\
+                next-server %s;\n\
+                filename \"pxelinux.0\";\n\
+        }\n\
+}\n\n", list->dname, val.ns, list->dom_search->string, val.gw, val.sn,
+        val.nm, val.gw);
+		len = strlen(buff);
+		if ((len + conf->size) > conf->len)
+			resize_string_buff(conf);
+		pos = conf->string + conf->size;
+		snprintf(pos, len + 1, "%s", buff);
+		conf->size += len;
+		list = list->next;
+	}
+	return retval;
+}
+
+void
+fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
+{
+	uint32_t ip_addr;
+
+	ip_addr = htonl((uint32_t)src->ns);
+	inet_ntop(AF_INET, &ip_addr, dst->ns, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->gw);
+	inet_ntop(AF_INET, &ip_addr, dst->gw, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->nw);
+	inet_ntop(AF_INET, &ip_addr, dst->sn, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->nm);
+	inet_ntop(AF_INET, &ip_addr, dst->nm, INET6_ADDRSTRLEN);
+}
+

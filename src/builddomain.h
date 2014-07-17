@@ -47,6 +47,9 @@ int
 modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl);
 
 int
+write_dhcp_net_config(cbc_config_s *cbc);
+
+int
 get_build_domain(cbcdomain_comm_line_s *cdl, cbc_s *base);
 
 int
@@ -76,8 +79,10 @@ list_build_dom_servers(cbc_config_s *cbc, unsigned long int id, char *name);
 void
 print_build_dom_servers(dbdata_s *data, char *name);
 
-# ifdef HAVE_DNSA
+int
+fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
 
-# endif /* HAVE_DNSA */
+void
+fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
 
 #endif /* __CBC_BUILD_DOMAIN_H__ */
