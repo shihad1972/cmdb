@@ -29,6 +29,9 @@
 int
 get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh);
 
+void
+get_iface_info(cbc_iface_s **info);
+
 int
 fill_iface_info(struct ifaddrs *list, cbc_iface_s *info);
 

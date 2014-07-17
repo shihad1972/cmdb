@@ -44,11 +44,20 @@ int
 get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 {
 	int retval = 0;
-	struct ifaddrs *iface, *ilist;
-	struct cbc_iface_s *info = '\0', *list = '\0', *temp;
+	struct cbc_iface_s *info = '\0';
 
 	if (!bd)
 		return 1;
+	get_iface_info(&info);
+	return retval;
+}
+
+void
+get_iface_info(cbc_iface_s **info)
+{
+	struct ifaddrs *iface, *ilist;
+	cbc_iface_s *list = '\0', *temp;
+
 	if (getifaddrs(&iface) == -1) 
 		report_error(IFACE_LIST_FAILED, "get_net_list_for_dhcp");
 	for (ilist = iface; ilist != NULL; ilist = ilist->ifa_next) {
@@ -60,7 +69,7 @@ get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 			report_error(MALLOC_FAIL, "list in get_net_list_for_dhcp");
 		init_cbc_iface(temp);
 		if (!(list))
-			info = list = temp;
+			*info = list = temp;
 		else {
 			while (list->next)
 				list = list->next;
@@ -68,9 +77,8 @@ get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 		}
 		if (fill_iface_info(ilist, temp) != 0)
 			report_error(IFACE_FILL, "fill_iface_info");
-		list = info;
+		list = *info;
 	}
-	return retval;
 }
 
 int
