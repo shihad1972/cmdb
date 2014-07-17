@@ -672,7 +672,7 @@ PXE=pxelinux.cfg
 TOPLEVELOS=/usr/local/zips
 PRESEED=preseed/
 KICKSTART=ks/
-DHCPCONF=/etc/dhcp/dhcpd.hosts
+DHCPCONF=/etc/dhcp
 
 FINISH
   else

@@ -345,9 +345,9 @@ option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
 data->next->next->fields.text);
 		retval = 0;
 	}
-	strncpy(dhconf->file, cmc->dhcpconf, CONF_S);
+	snprintf(dhconf->file, CONF_S, "%s/dhcpd.hosts", cmc->dhcpconf);
 	fill_dhcp_hosts(line, dhcp, dhconf);
-	retval = write_file(cmc->dhcpconf, dhcp->string);
+	retval = write_file(dhconf->file, dhcp->string);
 	/* Could use a free_strings macro here - check out 21st century C */
 	free(ip);
 	free(dhcp->string);

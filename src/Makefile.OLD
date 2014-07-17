@@ -10,11 +10,11 @@ CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual
 CPPFLAGS = -I/usr/include/mysql
 LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LIBS = -lmysqlclient -lpcre -lsqlite3
-SOBJECTS = errors.o checks.o cbcnet.c
+SOBJECTS = errors.o checks.o
 DOBJECTS = dnsa.o dnsacom.o $(SOBJECTS) base_sql.o dnsa_base_sql.o zones.o
 COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o cmdb_base_sql.o base_sql.o
 BOBJECTS = cbc.o cbccom.o $(SOBJECTS) base_sql.o cbc_base_sql.o cbc_data.o build.o createbuild.o cbc_dnsa.o dnsa_base_sql.o dnsacom.o zones.o
-CDOBJECTS = cbcdomain.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o builddomain.o cbccom.o zones.o dnsacom.o dnsa_base_sql.o cbc_dnsa.o
+CDOBJECTS = cbcdomain.o $(SOBJECTS) cbcnet.o base_sql.o cbc_data.o cbc_base_sql.o builddomain.o cbccom.o zones.o dnsacom.o dnsa_base_sql.o cbc_dnsa.o
 COOBJECTS = cbcos.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CVOBJECTS = cbcvarient.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CPOBJECTS = cbcpack.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o

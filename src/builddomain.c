@@ -291,6 +291,7 @@ list_cbc_build_domain(cbc_config_s *cbc)
 int
 write_dhcp_net_config(cbc_config_s *cbc)
 {
+	char filename[CONF_S];
 	int retval = 0;
 	cbc_build_domain_s *bdom = '\0';
 	cbc_dhcp_s *dh = '\0';
@@ -301,13 +302,14 @@ write_dhcp_net_config(cbc_config_s *cbc)
 	if (!(conf = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "conf in write_dhcp_net_config");
 	init_string_len(conf);
+	snprintf(filename, CONF_S, "%s/dhcpd.networks", cbc->dhcpconf);
 	if ((retval = get_all_build_domains(cbc, &bdom)) != 0)
 		return retval;
 	if ((retval = get_net_list_for_dhcp(bdom, &dh)) != 0)
 		return retval;
 	if ((retval = fill_dhcp_net_config(conf, dh)) != 0)
 		return retval;
-	retval = write_file("/etc/dhcp/dhcpd.networks", conf->string);
+	retval = write_file(filename, conf->string);
 	clean_string_len(conf);
 	clean_build_domain(bdom);
 	clean_cbc_dhcp(dh);
