@@ -49,6 +49,7 @@ get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 	if (!bd)
 		return 1;
 	get_iface_info(&info);
+	retval = get_dhcp_server_info(bd, dh, info);
 	return retval;
 }
 
@@ -93,7 +94,76 @@ fill_iface_info(struct ifaddrs *list, cbc_iface_s *info)
 	info->nm = ntohl(nm_ip->sin_addr.s_addr);
 	info->nw = info->ip & info->nm;
 	info->bc = info->nw | (~info->nm);
+	info->sip = info->nw + 1;
+	info->fip = info->bc - 1;
 	snprintf(info->name, RBUFF_S, "%s", list->ifa_name);
 	return retval;
+}
+
+int
+get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
+{
+	int retval = 0;
+	cbc_build_domain_s *bdl;
+	cbc_dhcp_s *list = '\0', *temp;
+
+	if (!(bd))
+		return NO_BUILD_DOMAIN;
+	if (!(i))
+		return NO_IFACE;
+	bdl = bd;
+	while (bdl) {
+		insert_into_dhcp_list(&list, &temp);
+		fill_dhcp_server(bdl, i, temp);
+		bdl = bdl->next;
+	}
+	*dh = list;
+	return retval;
+}
+
+void
+insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
+{
+	cbc_dhcp_s *i, *l;
+
+	if (!(i = malloc(sizeof(cbc_dhcp_s))))
+		report_error(MALLOC_FAIL, "i in insert_into_dhcp_list");
+	init_cbc_dhcp(i);
+	*item = i;
+	if (!(*list))
+		*list = i;
+	else {
+		l = *list;
+		while (l->next)
+			l = l->next;
+		l->next = i;
+	}
+}
+
+void
+fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
+{
+	cbc_iface_s *cif = i;
+	unsigned long int sip, fip;
+	
+	if (!(cif) || !(dh))
+		return;
+	if (!(dh->dom_search = malloc(sizeof(string_l))))
+		report_error(MALLOC_FAIL, "dh->dom_search in fill_dhcp_server");
+	init_string_l(dh->dom_search);
+	while (cif) {
+		sip = (unsigned long int)cif->sip;
+		fip = (unsigned long int)cif->fip;
+		if ((bd->start_ip >= sip) && (bd->end_ip <= fip)) {
+			snprintf(dh->iname, RBUFF_S, "%s", cif->name);
+			snprintf(dh->dname, RBUFF_S, "%s", bd->domain);
+			dh->gw = bd->gateway;
+			dh->ns = bd->ns;
+			dh->nm = bd->netmask;
+			dh->nw = (unsigned long int)cif->nw;
+			snprintf(dh->dom_search->string, RBUFF_S, "%s", bd->domain);
+		}
+		cif = cif->next;
+	}
 }
 

@@ -204,6 +204,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Interface list failed in %s\n", errstr);
 	} else if (error == IFACE_FILL) {
 		fprintf(stderr, "Cannot get interface info in %s\n", errstr);
+	} else if (error == NO_IFACE) {
+		fprintf(stderr, "Interface list empty\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -926,8 +928,9 @@ clean_string_len(string_len_s *string)
 void
 init_string_l(string_l *string)
 {
-	string->string = '\0';
-	string->next = '\0';
+	memset(string, 0, sizeof(string_l));
+	if (!(string->string = malloc(RBUFF_S)))
+		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
 }
 
 void
@@ -941,6 +944,7 @@ clean_string_l(string_l *list)
 		return;
 	next = data->next;
 	while (data) {
+		free(data->string);
 		free(data);
 		if (next)
 			data = next;

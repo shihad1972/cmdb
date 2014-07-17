@@ -35,5 +35,14 @@ get_iface_info(cbc_iface_s **info);
 int
 fill_iface_info(struct ifaddrs *list, cbc_iface_s *info);
 
+int
+get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i);
+
+void
+insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item);
+
+void
+fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh);
+
 #endif /* __CBC_NET_H */
 

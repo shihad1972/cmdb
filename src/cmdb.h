@@ -227,7 +227,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	CUSTOMER_EXISTS = 212,
 	COID_EXISTS = 213,
 	IFACE_LIST_FAILED = 214,
-	IFACE_FILL = 215
+	IFACE_FILL = 215,
+	NO_IFACE = 216
 };
 
 enum {			/* command line error codes */
