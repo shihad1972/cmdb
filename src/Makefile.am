@@ -1,6 +1,6 @@
 bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
 
-combo_SOURCES = errors.c checks.c
+combo_SOURCES = errors.c checks.c cbcnet.c cbcnet.h
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\

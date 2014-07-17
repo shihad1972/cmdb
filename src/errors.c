@@ -200,6 +200,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No glue zone passed to %s\n", errstr);
 	} else if (error == LOCALE_NOT_FOUND) {
 		fprintf(stderr, "No locale for the OS and version. Did you just add it?\n");
+	} else if (error == IFACE_LIST_FAILED) {
+		fprintf(stderr, "Interface list failed in %s\n", errstr);
+	} else if (error == IFACE_FILL) {
+		fprintf(stderr, "Cannot get interface info in %s\n", errstr);
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}

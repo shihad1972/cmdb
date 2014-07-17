@@ -38,21 +38,7 @@
 void
 init_cbc_struct (cbc_s *cbc)
 {
-	cbc->bootl = '\0';
-	cbc->build = '\0';
-	cbc->bdom = '\0';
-	cbc->bip = '\0';
-	cbc->bos = '\0';
-	cbc->btype = '\0';
-	cbc->diskd = '\0';
-	cbc->locale = '\0';
-	cbc->package = '\0';
-	cbc->dpart = '\0';
-	cbc->spart = '\0';
-	cbc->sscheme = '\0';
-	cbc->server = '\0';
-	cbc->varient = '\0';
-	cbc->vmhost = '\0';
+	memset(cbc, 0, sizeof(cbc_s));
 }
 
 void
@@ -94,12 +80,10 @@ clean_cbc_struct (cbc_s *cbc)
 void
 init_boot_line(cbc_boot_line_s *boot)
 {
-	boot->boot_id = NONE;
-	boot->bt_id = NONE;
+	memset(boot, 0, sizeof(cbc_boot_line_s));
 	snprintf(boot->os, COMM_S, "NULL");
 	snprintf(boot->os_ver, COMM_S, "NULL");
 	snprintf(boot->boot_line, COMM_S, "NULL");
-	boot->next = '\0';
 }
 
 void
@@ -125,16 +109,9 @@ clean_boot_line(cbc_boot_line_s *boot)
 void
 init_build_struct(cbc_build_s *build)
 {
+	memset(build, 0, sizeof(cbc_build_s));
 	snprintf(build->mac_addr, COMM_S, "NULL");
 	snprintf(build->net_int, COMM_S, "NULL");
-	build->build_id = NONE;
-	build->varient_id = NONE;
-	build->server_id = NONE;
-	build->os_id = NONE;
-	build->ip_id = NONE;
-	build->locale_id = NONE;
-	build->def_scheme_id = NONE;
-	build->next = '\0';
 }
 
 void
@@ -160,6 +137,7 @@ clean_build_struct(cbc_build_s *build)
 void
 init_build_domain(cbc_build_domain_s *dom)
 {
+	memset(dom, 0, sizeof(cbc_build_domain_s));
 	snprintf(dom->domain, COMM_S, "NULL");
 	snprintf(dom->ntp_server, COMM_S, "NULL");
 	snprintf(dom->ldap_dn, COMM_S, "NULL");
@@ -170,19 +148,6 @@ init_build_domain(cbc_build_domain_s *dom)
 	snprintf(dom->nfs_domain, COMM_S, "NULL");
 	snprintf(dom->smtp_server, COMM_S, "NULL");
 	snprintf(dom->xymon_server, COMM_S, "NULL");
-	dom->config_ntp = NONE;
-	dom->ldap_ssl = NONE;
-	dom->config_ldap = NONE;
-	dom->config_log = NONE;
-	dom->config_email = NONE;
-	dom->config_xymon = NONE;
-	dom->bd_id = NONE;
-	dom->start_ip = NONE;
-	dom->end_ip = NONE;
-	dom->netmask = NONE;
-	dom->gateway = NONE;
-	dom->ns = NONE;
-	dom->next = '\0';
 }
 
 void
@@ -597,6 +562,70 @@ clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 		return;
 	next = list->next;
 	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+init_cbc_dhcp(cbc_dhcp_s *dh)
+{
+	memset(dh, 0, sizeof(cbc_dhcp_s));
+	if (!(dh->iname = malloc(RBUFF_S)))
+		report_error(MALLOC_FAIL, "dh->iname");
+	if (!(dh->dname = malloc(RBUFF_S)))
+		report_error(MALLOC_FAIL, "dh->dname");
+	memset(dh->iname, 0, RBUFF_S);
+	memset(dh->dname, 0, RBUFF_S);
+}
+
+void
+clean_cbc_dhcp(cbc_dhcp_s *dh)
+{
+	cbc_dhcp_s *list, *next;
+
+	if (dh)
+		list = dh;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list->iname);
+		free(list->dname);
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+init_cbc_iface(cbc_iface_s *ifa)
+{
+	memset(ifa, 0, sizeof(cbc_iface_s));
+	if (!(ifa->name = malloc(RBUFF_S)))
+		report_error(MALLOC_FAIL, "ifa->name");
+	memset(ifa->name, 0, RBUFF_S);
+}
+
+void
+clean_cbc_iface(cbc_iface_s *ifa)
+{
+	cbc_iface_s *list, *next;
+
+	if (ifa)
+		list = ifa;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list->name);
 		free(list);
 		list = next;
 		if (next)

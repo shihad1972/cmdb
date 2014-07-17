@@ -212,6 +212,20 @@ typedef struct cbc_s {
 	struct cbc_vm_server_hosts_s *vmhost;
 } cbc_s;
 
+typedef struct cbc_dhcp_s { // Info for a dhcp network
+        char *iname;    // Interface Name
+        char *dname;    // Domain Name
+        unsigned long int gw, nw, nm, ns; // 
+        struct string_l *dom_search;
+        struct cbc_dhcp_s *next;
+} cbc_dhcp_s;
+
+typedef struct cbc_iface_s { // Info about interface
+        char *name;
+        uint32_t ip, sip, fip, nm, bc, nw;
+        struct cbc_iface_s *next;
+} cbc_iface_s;
+
 void
 init_cbc_struct (cbc_s *cbc);
 
@@ -346,5 +360,17 @@ clean_vm_hosts(cbc_vm_server_hosts_s *vm);
 
 void
 display_vm_hosts(cbc_s *base);
+
+void
+init_cbc_dhcp(cbc_dhcp_s *dh);
+
+void
+clean_cbc_dhcp(cbc_dhcp_s *dh);
+
+void
+init_cbc_iface(cbc_iface_s *ifa);
+
+void
+clean_cbc_iface(cbc_iface_s *ifa);
 
 #endif /* __CBC_DATA_H__ */
