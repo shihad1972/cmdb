@@ -207,25 +207,6 @@ CREATE TABLE `disk_dev` (
 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `seed_part` (
-  `part_id` int(7) NOT NULL AUTO_INCREMENT,
-  `minimum` int(7) NOT NULL,
-  `maximum` int(7) NOT NULL,
-  `priority` int(7) NOT NULL DEFAULT '0',
-  `mount_point` varchar(63) NOT NULL,
-  `filesystem` varchar(15) NOT NULL,
-  `server_id` int(7) NOT NULL,
-  `logical_volume` varchar(31) NOT NULL,
-  PRIMARY KEY (`part_id`),
-
-  INDEX (`server_id`),
-
-  FOREIGN KEY(`server_id`)
-    REFERENCES server(`server_id`)
-    ON UPDATE CASCADE ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
 CREATE TABLE `default_part` (
   `def_part_id` int(7) NOT NULL AUTO_INCREMENT,
   `minimum` int(7) NOT NULL,

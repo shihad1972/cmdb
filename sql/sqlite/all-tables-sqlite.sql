@@ -175,22 +175,6 @@ CREATE TABLE `disk_dev` (
 
 );
 
-CREATE TABLE `seed_part` (
-  `part_id` INTEGER PRIMARY KEY,
-  `minimum` int(7) NOT NULL,
-  `maximum` int(7) NOT NULL,
-  `priority` int(7) NOT NULL DEFAULT '0',
-  `mount_point` varchar(63) NOT NULL,
-  `filesystem` varchar(15) NOT NULL,
-  `server_id` int(7) NOT NULL,
-  `logical_volume` varchar(31) NOT NULL,
-
-  FOREIGN KEY(`server_id`)
-    REFERENCES server(`server_id`)
-    ON UPDATE CASCADE ON DELETE CASCADE
-
-);
-
 CREATE TABLE `default_part` (
   `def_part_id` INTEGER PRIMARY KEY,
   `minimum` int(7) NOT NULL,
