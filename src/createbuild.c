@@ -59,7 +59,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	int retval = NONE, query = NONE;
 	cbc_s *cbc, *details;
 	cbc_build_s *build, *list;
-	cbc_build_ip_s *bip '\0';
+	cbc_build_ip_s *bip = '\0';
 	
 	if (!(cbc = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "cbc in create_build_config");
