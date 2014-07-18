@@ -116,22 +116,27 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
 	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->smtpserver, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "smtp server");
+			if (validate_user_input(cdl->smtpserver, IP_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "smtp server");
 	if (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->nfsdomain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "nfs domain");
 	if (strncmp(cdl->logserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->logserver, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "log server");
+			if (validate_user_input(cdl->logserver, IP_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "log server");
 	if (strncmp(cdl->ldapserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->ldapserver, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "ldap server");
+			if (validate_user_input(cdl->ldapserver, IP_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "ldap server");
 	if (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->xymonserver, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "xymon server");
+			if (validate_user_input(cdl->xymonserver, IP_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "xymon server");
 	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "ntp server");
+			if (validate_user_input(cdl->ntpserver, IP_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "ntp server");
 	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");

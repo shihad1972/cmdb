@@ -116,8 +116,13 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 	bdl = bd;
 	while (bdl) {
 		insert_into_dhcp_list(&list, &temp);
-		fill_dhcp_server(bdl, i, temp);
+		if ((retval = fill_dhcp_server(bdl, i, temp)) != 0) {
+			remove_from_dhcp_list(&list);
+			fprintf(stderr, "\
+Skipping domain %s: No interface\n", bdl->domain);
+		}
 		bdl = bdl->next;
+		retval = 0;
 	}
 	*dh = list;
 	return retval;
@@ -143,13 +148,31 @@ insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
 }
 
 void
+remove_from_dhcp_list(cbc_dhcp_s **list)
+{
+	cbc_dhcp_s *l, *p;
+
+	if (*list)
+		l = p = *list;
+	else
+		return;
+	while (l->next) {
+		p = l;
+		l = l->next;
+	}
+	p->next = '\0';
+	clean_cbc_dhcp(l);
+}
+
+int
 fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
 {
+	int retval = 0;
 	cbc_iface_s *cif = i;
 	unsigned long int sip, fip;
 	
 	if (!(cif) || !(dh))
-		return;
+		return NULL_POINTER_PASSED;
 	if (!(dh->dom_search = malloc(sizeof(string_l))))
 		report_error(MALLOC_FAIL, "dh->dom_search in fill_dhcp_server");
 	init_string_l(dh->dom_search);
@@ -167,5 +190,8 @@ fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
 		}
 		cif = cif->next;
 	}
+	if ((dh->gw == 0) || (dh->ns == 0) || (dh->nm == 0) || (dh->nw == 0))
+		retval = 1;
+	return retval;
 }
 
