@@ -1,4 +1,4 @@
-.TH DNSA 8 "Version 0.2: 29 March 2014" "CMDB suite manuals"
+.TH DNSA 8 "Version 0.2: 18 July 2014" "CMDB suite manuals"
 .SH NAME
 dnsa \- Domain Name System Administration
 .SH SYNOPSIS
@@ -83,12 +83,12 @@ Classless prefixes between /8 -> /16 and /16 -> /24 will NOT be accepted.
 .PP
 .B Slave Zones
 
-When adding slave zones, it is useful to add the Fully Qualified Domain Name
-of the master DNS server that is used in the SOA of the zone.
-You can add this using the\fB -h\fP option as described below.
-.PP
-Also, the secondary NS server will be taken from the pri_dns configuration option
+The secondary NS server will be taken from the pri_dns configuration option
 in config file, which is usually the server you are working on.
+.PP
+.B Name options for adding slave zones.
+.IP "-M master nameserver IP"
+This is the ip address of the master name server. 
 .PP
 .B Delegate zones (a.k.a. glue zones)
 
@@ -104,13 +104,6 @@ Otherwise, these records will be added to the parent zone.
 \fBNote:\fP You must have the zone already setup on the delegated name servers.
 This includes the A records for the name servers.
 If you do not then you may get errors from bind about "out of zone" records.
-.PP
-.B Name options for adding slave zones.
-.IP "-M master nameserver IP"
-This is the ip address of the master name server. 
-.PP
-.IP "-h master nameserver"
-This is the FQDN of the dns master dns server.
 .PP
 .B Options for adding a delegated zone and glue records
 .IP "-I pri_ns_ip,sec_ns_ip"

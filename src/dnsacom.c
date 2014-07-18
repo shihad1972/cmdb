@@ -158,9 +158,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
 		 (strncmp(comp->master, "NULL", COMM_S) == 0))
 		retval = NO_MASTER;
-	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
+/*	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
 		 (strncmp(comp->host, "NULL", COMM_S) == 0))
-		retval = NO_MASTER_NAME;
+		retval = NO_MASTER_NAME; */
 	else if ((comp->type == GLUE_ZONE) &&
 		 (strncmp(comp->glue_ip, "NULL", COMM_S) == 0) &&
 		 (comp->action == ADD_ZONE))

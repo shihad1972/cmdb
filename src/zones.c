@@ -40,6 +40,7 @@
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
 #include "dnsa_base_sql.h"
+#include "dnsa_net.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
@@ -2634,16 +2635,17 @@ check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type)
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 {
+	int retval;
 	memset(zone, 0, sizeof(zone_info_s));
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
-		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-	else
-		snprintf(zone->pri_dns, RBUFF_S, "%s", cm->host);
-	if ((strncmp(cm->host, "NULL", COMM_S)) == 0)
-		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
-	else
+	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0) {
+		if ((retval = do_rev_lookup(cm->master, zone->pri_dns, RBUFF_S)) != 0)
+			snprintf(zone->pri_dns, RBUFF_S, "%s", cm->master);
 		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->prins);
+	} else {
+		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
+		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
+	}
 	snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
 	zone->serial = get_zone_serial();
@@ -2685,15 +2687,6 @@ fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *d
 		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	else
 		snprintf(zone->type, COMM_S, "master");
-}
-
-unsigned long int
-get_net_range(unsigned long int prefix)
-{
-	unsigned long int range;
-	range = 4294967295UL;
-	range = (range >> prefix) + 1;
-	return range;
 }
 
 int

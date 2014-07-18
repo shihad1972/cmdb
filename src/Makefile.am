@@ -10,9 +10,9 @@ if HAVE_DNSA
 bin_PROGRAMS += dnsa
 
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
-		zones.c\
+		zones.c dnsa_net.c\
 		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
-		base_sql.h
+		base_sql.h dnsa_net.h
 cbc_SOURCES =	cbc.c cbccom.c $(combo_SOURCES) base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c cbc_dnsa.c dnsa_base_sql.c\
 		dnsacom.c zones.c\
