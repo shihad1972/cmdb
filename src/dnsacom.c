@@ -395,7 +395,8 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			}
 		} else {
 			if (validate_user_input(host, NAME_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "hostname");
+				if (validate_user_input(host, DOMAIN_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "hostname");
 		}
 	}
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
