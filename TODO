@@ -32,6 +32,11 @@ raw text. libxml anyone?
 When adding anything to the database, need to check if the name
 already exists.
 *** Server name, Customer name and COID for cmdb ***
+cbcdomain checks
+cbcpart checks
+cbcpack checks
+cbcvarient checks
+
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
