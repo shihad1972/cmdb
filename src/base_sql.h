@@ -37,11 +37,10 @@ enum {			/* SELECT statements */
 	LOCALE = 128,
 	BPACKAGE = 256,
 	DPART = 512,
-	SPART = 1024,
-	SSCHEME = 2048,
-	CSERVER = 4096,
-	VARIENT = 8192,
-	VMHOST = 16384
+	SSCHEME = 1024,
+	CSERVER = 2048,
+	VARIENT = 4096,
+	VMHOST = 8192,
 };
 
 enum {			/* SELECT and INSERT Indices */
@@ -55,7 +54,6 @@ enum {			/* SELECT and INSERT Indices */
 	LOCALES,
 	BPACKAGES,
 	DPARTS,
-	SPARTS,
 	SSCHEMES,
 	CSERVERS,
 	VARIENTS,

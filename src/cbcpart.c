@@ -349,20 +349,33 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	int retval = NONE;
 	cbc_seed_scheme_s *scheme;
 	cbc_s *base;
+	dbdata_s *data;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_new_scheme");
 	if (!(scheme = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "scheme in add_new_scheme");
-
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in add_new_scheme");
+	init_dbdata_struct(data);
 	init_cbc_struct(base);
+	init_seed_scheme(scheme);
 	base->sscheme = scheme;
+	snprintf(data->args.text, RBUFF_S, "%s", cpl->scheme);
+	retval = cbc_run_search(cbc, data, DEF_SCHEME_ID_ON_SCH_NAME);
+	if (retval > 0) {
+		fprintf(stderr, "Scheme %s already in database\n", cpl->scheme);
+		clean_dbdata_struct(data);
+		clean_cbc_struct(base);
+		return SCHEME_EXISTS;
+	}
 	scheme->lvm = cpl->lvm;
 	strncpy(scheme->name, cpl->scheme, CONF_S);
 	if ((retval = cbc_run_insert(cbc, base, SSCHEMES)) != 0) 
 		printf("Unable to add seed scheme to the database\n");
 	else
 		printf("Added seed scheme %s to database\n", scheme->name);
+	clean_dbdata_struct(data);
 	clean_cbc_struct(base);
 	return retval;
 }

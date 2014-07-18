@@ -77,8 +77,6 @@ SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
 SELECT pack_id, package, varient_id, os_id FROM packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
  def_scheme_id, logical_volume FROM default_part","\
-SELECT part_id, minimum, maximum, priority, mount_point, filesystem,\
- server_id, logical_volume FROM seed_part","\
 SELECT def_scheme_id, scheme_name, lvm FROM seed_schemes","\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name\
  FROM server","\
@@ -110,8 +108,6 @@ INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?)\
 INSERT INTO default_part (minimum, maximum, priority,\
 mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?,\
  ?, ?)","\
-INSERT INTO seed_part (minimum, maximum, priority, mount_point,\
- filesystem, server_id, logical_volume) VALUES (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id,\
  vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -304,9 +300,6 @@ const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
   MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
@@ -321,11 +314,11 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 21, 6, 7, 7, 4, 8, 4, 8, 8, 3, 8, 3, 4
+	5, 9, 21, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 8, 20, 5, 6, 6, 3, 7, 3, 7, 7, 2, 7, 2, 3
+	4, 8, 20, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -366,8 +359,6 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -671,9 +662,6 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == DPART) {
 		*query = cbc_sql_select[DPARTS];
 		*fields = cbc_select_fields[DPARTS];
-	} else if (type == SPART) {
-		*query = cbc_sql_select[SPARTS];
-		*fields = cbc_select_fields[SPARTS];
 	} else if (type == SSCHEME) {
 		*query = cbc_sql_select[SSCHEMES];
 		*fields = cbc_select_fields[SSCHEMES];
@@ -853,9 +841,6 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & DPART)
 		if ((retval = cbc_run_query_mysql(config, base, DPART)) != 0)
-			return retval;
-	if (type & SPART)
-		if ((retval = cbc_run_query_mysql(config, base, SPART)) != 0)
 			return retval;
 	if (type & SSCHEME)
 		if ((retval = cbc_run_query_mysql(config, base, SSCHEME)) != 0)
@@ -1181,11 +1166,6 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_dpart_mysql(row, base);
-	} else if (type == SPART) {
-		required = cbc_select_fields[SPARTS];
-		if (fields != required)
-			cbc_query_mismatch(fields, required, type);
-		cbc_store_spart_mysql(row, base);
 	} else if (type == SSCHEME) {
 		required = cbc_select_fields[SSCHEMES];
 		if (fields != required)
@@ -1935,9 +1915,6 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	if (type & DPART)
 		if ((retval = cbc_run_query_sqlite(config, base, DPART)) != 0)
 			return retval;
-	if (type & SPART)
-		if ((retval = cbc_run_query_sqlite(config, base, SPART)) != 0)
-			return retval;
 	if (type & SSCHEME)
 		if ((retval = cbc_run_query_sqlite(config, base, SSCHEME)) != 0)
 			return retval;
@@ -2225,11 +2202,6 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_dpart_sqlite(state, base);
-	} else if (type == SPART) {
-		required = cbc_select_fields[SPARTS];
-		if (fields != required)
-			cbc_query_mismatch(fields, required, type);
-		cbc_store_spart_sqlite(state, base);
 	} else if (type == SSCHEME) {
 		required = cbc_select_fields[SSCHEMES];
 		if (fields != required)

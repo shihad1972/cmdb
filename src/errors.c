@@ -626,9 +626,6 @@ cbc_query_mismatch(unsigned int fields, unsigned int required, int query)
 	else if (query == DPART)
 		snprintf(err, HOST_S, "\
 default partition query: required %d, got %d\n", required, fields);
-	else if (query == SPART)
-		snprintf(err, HOST_S, "\
-preseed partition query: required %d, got %d\n", required, fields);
 	else if (query == SSCHEME)
 		snprintf(err, HOST_S, "\
 preseed scheme partition query: required %d, got %d\n", required, fields);
