@@ -1,4 +1,4 @@
-.TH cbcdomain 8 "Version 0.2: 29 March 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcdomain 8 "Version 0.2: 18 July 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcdomain \- Create Build Config Domain
 .SH SYNOPSIS
@@ -17,7 +17,7 @@ cbcdomain \- Create Build Config Domain
 
 .B cbcdomain
 [
-.B -adjlmrv
+.B -adjlmrvw
 ] [
 .B -n name
 ] [
@@ -39,7 +39,7 @@ cbcdomain \- Create Build Config Domain
 You can add, remove, display, modify and list build domains.
 Build domains contain network and network application information for a build,
 such as an IP range, smtp server, nfs domain, and LDAP directory for
-authenticationinformation, ntp server and a xymon monitoring server.
+authentication information, ntp server and a xymon monitoring server.
 This information will be included in the build to automatically configure your
 server when built.
 The build domain contains a range of IP address which will be automatically
@@ -72,9 +72,11 @@ Use this to display servers build in a build domain, using -n to specify
 .IP -l
 Use this to list the build domains. 
 .IP -m
-Use this to remove a build domain, using -n to specify
+Use this to modify a build domain, using -n to specify
 .IP -r
 Use this to remove a build domain, using -n to specify
+.IP -w
+Use this to write out the dhcpd.networks configuration file
 .IP -v
 Display version information
 .PP
