@@ -87,9 +87,9 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if ((retval = cbc_get_server(cml, cbc, details)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(SERVER_NOT_FOUND);
 	}
-	list = cbc->build;
 	query = BUILD;
 	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
+		list = cbc->build;
 		while (list) {
 			if (list->server_id == details->server->server_id) {
 				printf("Server %s already has a build in the database\n",
@@ -126,9 +126,9 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("Unable to find a disk device for the server\n");
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
-	bip = cbc->bip;
 	query = BUILD_IP;
 	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
+		bip = cbc->bip;
 		while (bip) {
 			if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
 			    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {

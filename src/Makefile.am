@@ -15,9 +15,9 @@ dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
 		base_sql.h dnsa_net.h
 cbc_SOURCES =	cbc.c cbccom.c $(combo_SOURCES) base_sql.c cbc_base_sql.c\
 		cbc_data.c build.c createbuild.c cbc_dnsa.c dnsa_base_sql.c\
-		dnsacom.c zones.c\
+		dnsacom.c zones.c dnsa_net.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h \
-		cbc_data.h build.h base_sql.h
+		cbc_data.h build.h base_sql.h dnsa_net.h
 cbcdomain_SOURCES = \
 		cbcdomain.c $(combo_SOURCES) base_sql.c cbc_data.c\
 		cbc_base_sql.c builddomain.c cbccom.c zones.c cbc_dnsa.c\

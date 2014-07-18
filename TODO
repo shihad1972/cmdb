@@ -36,7 +36,9 @@ cbcdomain checks
 cbcpart checks
 cbcpack checks
 cbcvarient checks
-
+cbcos checks
+cbc checks updated
+Fixed 18/07/2014 Version 0.2.18.5
 
 02/02/2014
 When adding a reverse slave zone, the insert takes it from the config
