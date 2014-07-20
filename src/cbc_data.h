@@ -216,7 +216,7 @@ typedef struct cbc_s {
 typedef struct cbc_dhcp_s { // Info for a dhcp network
         char *iname;    // Interface Name
         char *dname;    // Domain Name
-        unsigned long int gw, nw, nm, ns; // 
+        unsigned long int gw, nw, nm, ns, ip; // 
         struct string_l *dom_search;
         struct cbc_dhcp_s *next;
 } cbc_dhcp_s;
@@ -227,6 +227,7 @@ typedef struct cbc_dhcp_string_s {
 	char gw[INET6_ADDRSTRLEN];
 	char sn[INET6_ADDRSTRLEN];
 	char nm[INET6_ADDRSTRLEN];
+	char ip[INET6_ADDRSTRLEN];
 	struct cbc_dhcp_string_s *next;
 } cbc_dhcp_string_s;
 

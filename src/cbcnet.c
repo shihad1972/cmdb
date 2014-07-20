@@ -186,6 +186,7 @@ fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
 			dh->ns = bd->ns;
 			dh->nm = bd->netmask;
 			dh->nw = (unsigned long int)cif->nw;
+			dh->ip = (unsigned long int)cif->ip;
 			snprintf(dh->dom_search->string, RBUFF_S, "%s", bd->domain);
 		}
 		cif = cif->next;

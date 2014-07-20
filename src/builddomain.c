@@ -764,5 +764,7 @@ fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
 	inet_ntop(AF_INET, &ip_addr, dst->sn, INET6_ADDRSTRLEN);
 	ip_addr = htonl((uint32_t)src->nm);
 	inet_ntop(AF_INET, &ip_addr, dst->nm, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->ip);
+	inet_ntop(AF_INET, &ip_addr, dst->ip, INET6_ADDRSTRLEN);
 }
 
