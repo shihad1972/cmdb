@@ -167,6 +167,8 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 
 	clean_cbc_struct(base);
 	free(data);
+	if ((retval = write_dhcp_net_config(cbc)) != 0) 
+		fprintf(stderr, "Unable to write dhcpd.networks file\n");
 	return retval;
 }
 
@@ -194,6 +196,8 @@ remove_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	}
 
 	free(data);
+	if ((retval = write_dhcp_net_config(cbc)) != 0) 
+		fprintf(stderr, "Unable to write dhcpd.networks file\n");
 	return retval;
 }
 
@@ -309,7 +313,8 @@ write_dhcp_net_config(cbc_config_s *cbc)
 		return retval;
 	if ((retval = fill_dhcp_net_config(conf, dh)) != 0)
 		return retval;
-	retval = write_file(filename, conf->string);
+	if ((retval = write_file(filename, conf->string)) != 0)
+		report_error(retval, filename);
 	clean_string_len(conf);
 	clean_build_domain(bdom);
 	clean_cbc_dhcp(dh);

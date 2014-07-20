@@ -97,6 +97,7 @@ Need to check for overlaps in build_domains when adding a new one.
 Also if we want to add a dhcpd.network entry will probably need to check
 if one exists already, and also configuration of the IP on that network.
 We could always assume /24, but this will not always be the case.
+
 ***Version 0.2.18.3*** 18/07/2017
 We get a list of the local interfaces and use this for building the
 dhcpd.networks file also checking the build domains.
@@ -108,7 +109,11 @@ Add checks against all strtoul from DB as if given NULL it will segfault.
 08/08/2013
 When adding or deleting a build domain then re-write the dhcpd.networks
 configuration file with all valid build domains. Will need to assume that
-the tftp host is also the DNS host.
+the tftp host is also the gw host.
+Fixed. ***Version 0.2.18.6*** 20/07/2014
+	20/07/2014 Update
+	Perhaps could get the IP address of the interface of that network
+	to use for the TFTP address. Should not be too hard...
 
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
