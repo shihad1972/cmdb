@@ -748,6 +748,7 @@ fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
 		conf->size += len;
 		list = list->next;
 	}
+	free(buff);
 	return retval;
 }
 
