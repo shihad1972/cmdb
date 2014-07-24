@@ -108,6 +108,8 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 	retval = cbc_run_search(cbc, data, BUILD_DOMAIN_COUNT);
 	if (data->fields.number > 0)
 		report_error(BUILD_DOMAIN_EXISTS, bdom->domain);
+	else
+		check_bdom_overlap(cbc, bdom);
 	display_build_domain(bdom);
 #ifdef HAVE_DNSA
 
@@ -341,6 +343,35 @@ get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom)
 	*bdom = base->bdom;
 	base->bdom = '\0';
 	clean_cbc_struct(base);
+	return retval;
+}
+
+void
+check_bdom_overlap(cbc_config_s *cbc, cbc_build_domain_s *bdom)
+{
+	int retval;
+	cbc_build_domain_s *data = '\0', *list = '\0';
+
+	if ((retval = get_all_build_domains(cbc, &data)) != 0)
+		return;
+	list = data;
+	while (list) {
+		if ((retval = build_dom_overlap(list, bdom)) != 0) {
+			clean_build_domain(data);
+			report_error(retval, bdom->domain);
+		} else
+			list = list->next;
+	}
+}
+
+int
+build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *new)
+{
+	int retval = 0;
+
+	if (((new->start_ip >= list->start_ip) && (new->start_ip <= list->end_ip)) ||
+	   ((new->end_ip >= list->start_ip) && (new->end_ip <= list->end_ip )))
+		retval = BDOM_OVERLAP;
 	return retval;
 }
 

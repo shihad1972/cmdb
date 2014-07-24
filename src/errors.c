@@ -191,6 +191,8 @@ report_error(int error, const char *errstr)
 "Cowardly refusal to delete build os %s\n", errstr);
 	} else if (error == DID_NOT_MOD_BUILD_DOMAIN) {
 		fprintf(stderr, "cbcdomain modified nothing??\n");
+	} else if (error == BDOM_OVERLAP) {
+		fprintf(stderr, "build domain %s overlaps with another in the database\n", errstr);
 	} else if (error == NO_CONTACT_DATA) {
 		fprintf(stderr, "Contact query to database failed\n");
 	} else if (error == NOT_PRI_OR_SEC_NS) {

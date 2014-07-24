@@ -56,6 +56,12 @@ int
 get_all_build_domains(cbc_config_s *cbc, cbc_build_domain_s **bdom);
 
 void
+check_bdom_overlap(cbc_config_s *cbc, cbc_build_domain_s *bdom);
+
+int
+build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *newb);
+
+void
 copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom);
 
 int
