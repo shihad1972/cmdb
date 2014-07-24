@@ -118,8 +118,12 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 		insert_into_dhcp_list(&list, &temp);
 		if ((retval = fill_dhcp_server(bdl, i, temp)) != 0) {
 			remove_from_dhcp_list(&list);
-			fprintf(stderr, "\
+			if (retval == 1)
+				fprintf(stderr, "\
 Skipping domain %s: No interface\n", bdl->domain);
+			else if (retval == 2)
+				fprintf(stderr, "\
+Netmask does not correlate for domain %s\n", bdl->domain);
 		}
 		bdl = bdl->next;
 		retval = 0;
@@ -187,6 +191,10 @@ fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
 			dh->nm = bd->netmask;
 			dh->nw = (unsigned long int)cif->nw;
 			dh->ip = (unsigned long int)cif->ip;
+			if (dh->nm != (unsigned long int)cif->nm) {
+				retval = 2;
+				break;
+			}
 			snprintf(dh->dom_search->string, RBUFF_S, "%s", bd->domain);
 		}
 		cif = cif->next;

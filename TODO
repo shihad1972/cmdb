@@ -77,8 +77,10 @@ later
 
 The base.sh install script for debian could download a config script
 for that host using the hostname.
+Fixed
 
 Start using proper error(s) from the functions I call
+** Sort of fixed. Most now pass errors back or error out if important
 
 15/09/2013
 When addding a server, it's bullshit that we have to add the network
@@ -89,8 +91,10 @@ server.
 Need to add Root-CA field into the build_domain table of database.
 
 **Need to add default locale when we add a build OS.
+
 **Debian build want's configuration for libnss-ldap and libpam-ldap if
   we do not automatically configure them.
+Fixed
 
 01/09/2013
 Need to check for overlaps in build_domains when adding a new one.
@@ -99,6 +103,8 @@ Fixed Version 0.2.18.7 24/07/2014
 Also if we want to add a dhcpd.network entry will probably need to check
 if one exists already, and also configuration of the IP on that network.
 We could always assume /24, but this will not always be the case.
+** This has been done now. We check the interfaces and assign dhcpd.network
+entries based on them. Netmask is also being checked.
 
 ***Version 0.2.18.3*** 18/07/2017
 We get a list of the local interfaces and use this for building the
