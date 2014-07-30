@@ -7,6 +7,10 @@ CREATE TABLE `build_type` (
   `url` varchar(79) NOT NULL DEFAULT 'none',
   `mirror` varchar(255) NOT NULL DEFAULT 'none',
   `boot_line` varchar(127) NOT NULL DEFAULT 'none',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`bt_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -32,6 +36,10 @@ CREATE TABLE `customer` (
   `county` varchar(30) NOT NULL DEFAULT 'none',
   `postcode` varchar(10) NOT NULL DEFAULT 'none',
   `coid` varchar(8) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`cust_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -39,6 +47,10 @@ CREATE TABLE `varient` (
   `varient_id` int(7) NOT NULL AUTO_INCREMENT,
   `varient` varchar(50) NOT NULL,
   `valias` varchar(20) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`varient_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -46,6 +58,10 @@ CREATE TABLE `seed_schemes` (
   `def_scheme_id` int(7) NOT NULL AUTO_INCREMENT,
   `scheme_name` varchar(79) NOT NULL,
   `lvm` smallint(4) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`def_scheme_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -71,6 +87,10 @@ CREATE TABLE `build_domain` (
   `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
   `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`bd_id`),
 
   INDEX (`config_ntp`, `config_ldap`, `config_log`),
@@ -84,6 +104,10 @@ CREATE TABLE `contacts` (
   `phone` varchar(20) NOT NULL,
   `email` varchar(50) NOT NULL,
   `cust_id` int(7) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`cont_id`),
 
   INDEX(`cust_id`),
@@ -103,6 +127,10 @@ CREATE TABLE `server` (
   `cust_id` int(7) NOT NULL,
   `vm_server_id` int(7) NOT NULL DEFAULT 0,
   `name` varchar(63) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`server_id`),
 
   INDEX(`cust_id`, `vm_server_id`),
@@ -120,6 +148,10 @@ CREATE TABLE `services` (
   `service_type_id` int(7) NOT NULL,
   `detail` varchar(63) NOT NULL DEFAULT 'none',
   `url` varchar(63) NOT NULL DEFAULT 'none',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`service_id`),
 
   INDEX(`server_id`, `cust_id`, `service_type_id`),
@@ -143,6 +175,10 @@ CREATE TABLE `vm_server_hosts` (
   `vm_server` varchar(255) NOT NULL,
   `type` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`vm_server_id`),
 
   INDEX (`server_id`),
@@ -160,6 +196,10 @@ CREATE TABLE `build_ip` (
   `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
   `server_id` int(7) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`ip_id`),
 
   INDEX (`bd_id`, `server_id`),
@@ -182,6 +222,10 @@ CREATE TABLE `build_os` (
   `ver_alias` varchar(15) NOT NULL DEFAULT 'none',
   `arch` varchar(15) DEFAULT NULL,
   `bt_id` int(7) DEFAULT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`os_id`),
 
   INDEX (`bt_id`),
@@ -197,6 +241,10 @@ CREATE TABLE `disk_dev` (
   `server_id` int(7) NOT NULL,
   `device` varchar(63) NOT NULL,
   `lvm` smallint(4) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`disk_id`),
 
   INDEX (`server_id`),
@@ -216,6 +264,10 @@ CREATE TABLE `default_part` (
   `filesystem` varchar(15) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   `logical_volume` varchar(31) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`def_part_id`),
 
   INDEX (`def_scheme_id`),
@@ -232,6 +284,10 @@ CREATE TABLE `hardware` (
   `device` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
   `hard_type_id` int(7) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`hard_id`),
 
   INDEX (`server_id`, `hard_type_id`),
@@ -255,6 +311,10 @@ CREATE TABLE `locale` (
   `os_id` int(7) NOT NULL,
   `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`locale_id`),
 
   INDEX (`os_id`, `bt_id`),
@@ -274,6 +334,10 @@ CREATE TABLE `packages` (
   `package` varchar(63) NOT NULL DEFAULT 'none',
   `varient_id` int(7) NOT NULL DEFAULT '0',
   `os_id` int(7) NOT NULL DEFAULT '0',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`pack_id`),
 
   INDEX (`os_id`, `varient_id`),
@@ -298,6 +362,10 @@ CREATE TABLE `build` (
   `ip_id` int(7) NOT NULL,
   `locale_id` int(7) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`build_id`),
 
   INDEX (`varient_id`, `os_id`, `ip_id`),
@@ -337,20 +405,24 @@ CREATE TABLE `options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `zones` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(7) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `pri_dns` varchar(255) DEFAULT NULL,
   `sec_dns` varchar(255) DEFAULT NULL,
-  `serial` int(11) NOT NULL DEFAULT '0',
-  `refresh` int(11) NOT NULL DEFAULT '604800',
-  `retry` int(11) NOT NULL DEFAULT '86400',
-  `expire` int(11) NOT NULL DEFAULT '2419200',
-  `ttl` int(11) NOT NULL DEFAULT '604800',
+  `serial` int(7) NOT NULL DEFAULT '0',
+  `refresh` int(7) NOT NULL DEFAULT '604800',
+  `retry` int(7) NOT NULL DEFAULT '86400',
+  `expire` int(7) NOT NULL DEFAULT '2419200',
+  `ttl` int(7) NOT NULL DEFAULT '604800',
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
-  `owner` int(11) NOT NULL DEFAULT '1',
+  `owner` int(7) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'yes',
   `type` varchar(15) NOT NULL DEFAULT 'master',
   `master` varchar(255),
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -374,6 +446,10 @@ CREATE TABLE `rev_zones` (
   `updated` varchar(15) NOT NULL DEFAULT 'unknown',
   `type` varchar(15) NOT NULL DEFAULT 'master',
   `master` varchar(255),
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`rev_zone_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -387,6 +463,10 @@ CREATE TABLE `records` (
   `pri` int(7) NOT NULL DEFAULT '0',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`),
 
   INDEX (`zone`),
@@ -400,9 +480,13 @@ CREATE TABLE `records` (
 CREATE TABLE `rev_records` (
   `rev_record_id` int(7) NOT NULL AUTO_INCREMENT,
   `rev_zone` int(7) NOT NULL DEFAULT '0',
-  `host` varchar(11) NOT NULL DEFAULT 'NULL',
+  `host` varchar(7) NOT NULL DEFAULT 'NULL',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`rev_record_id`),
 
   INDEX (`rev_zone`),
@@ -421,6 +505,10 @@ CREATE TABLE `glue_zones` (
   `sec_ns` varchar(255) NOT NULL DEFAULT 'none',
   `pri_dns` varchar(15) NOT NULL,
   `sec_dns` varchar(15) NOT NULL DEFAULT 'none',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`),
 
   INDEX (`name`, `zone_id`),
@@ -437,6 +525,10 @@ CREATE TABLE `preferred_a` (
   `ip_addr` int(4) unsigned NOT NULL DEFAULT '0',
   `record_id` int(7) NOT NULL,
   `fqdn` varchar(255) NOT NULL DEFAULT 'none',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`prefa_id`),
 
   INDEX (`record_id`),
@@ -453,6 +545,10 @@ CREATE TABLE `users` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `admin` varchar(255) NOT NULL DEFAULT 'no',
+  `cuser` int(7) NOT NULL DEFAULT '0',
+  `muser` int(7) NOT NULL DEFAULT '0',
+  `ctime` TIMESTAMP DEFAULT 0 NOT NULL,
+  `mtime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
