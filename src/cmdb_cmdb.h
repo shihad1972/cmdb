@@ -72,6 +72,10 @@ typedef struct cmdb_server_s {
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_server_s *next;
 } cmdb_server_s;
 

@@ -50,8 +50,8 @@ const struct cmdb_hard_type_s hardtypes;
 const struct cmdb_vm_host_s vmhosts;
 
 const char *sql_select[] = { "\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
-FROM server ORDER BY cust_id","\
+SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
+cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
 SELECT cust_id, name, address, city, county, postcode, coid FROM customer \
 ORDER BY coid","\
 SELECT cont_id, name, phone, email, cust_id FROM contacts","\
@@ -65,8 +65,8 @@ SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
 
 const char *sql_insert[] = { "\
-INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
-(?,?,?,?,?,?,?)","\
+INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id \
+cuser, muser) VALUES (?,?,?,?,?,?,?,?,?)","\
 INSERT INTO customer (name, address, city, county, postcode, coid) VALUES \
 (?,?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
@@ -114,7 +114,7 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
+const unsigned int select_fields[] = { 12,7,5,6,3,5,3,4 };
 
 const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
 
@@ -128,15 +128,15 @@ const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
-const int cmdb_inserts[][7] = {
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0 }
+const int cmdb_inserts[][11] = {
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cmdb_search_arg_types[][2] = {
@@ -813,6 +813,14 @@ setup_insert_mysql_bind_buff_server(void **buffer, cmdb_s *base, unsigned int i)
 		*buffer = &(base->server->cust_id);
 	else if (i == 6)
 		*buffer = &(base->server->vm_server_id);
+	else if (i == 7)
+		*buffer = &(base->server->cuser);
+	else if (i == 8)
+		*buffer = &(base->server->muser);
+	else if (i == 9)
+		*buffer = &(base->server->ctime);
+	else if (i == 10)
+		*buffer = &(base->server->mtime);
 }
 
 void
@@ -948,6 +956,10 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
 	snprintf(server->name, HOST_S, "%s", row[7]);
+	server->cuser = strtoul(row[8], NULL, 10);
+	server->muser = strtoul(row[9], NULL, 10);
+	server->ctime = strtoul(row[10], NULL, 10);
+	server->mtime = strtoul(row[11], NULL, 10);
 	server->next = '\0';
 	list = base->server;
 	if (list) {

@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <time.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -335,6 +338,10 @@ void
 print_server_details(cmdb_server_s *server, cmdb_s *base)
 {
 	int retval;
+	char *uname, *crtime;
+	uid_t uid;
+	time_t cmtime;
+	struct passwd *user;
 	cmdb_customer_s *customer = base->customer;
 	cmdb_vm_host_s *vmhost = base->vmhost;
 	cmdb_hardware_s *hard = base->hardware;
@@ -346,6 +353,18 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 	printf("Vendor:\t\t%s\n", server->vendor);
 	printf("Make:\t\t%s\n", server->make);
 	printf("Model:\t\t%s\n", server->model);
+	uid = (uid_t)server->cuser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)server->ctime;
+	crtime = ctime(&cmtime);
+	printf("Created user:\t%s at %s", uname, crtime);
+	uid = (uid_t)server->muser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)server->mtime;
+	crtime = ctime(&cmtime);
+	printf("Modified by:\t%s at %s", uname, crtime);
 	if (server->cust_id > 0) {
 		while (server->cust_id != customer->cust_id)
 			customer = customer->next;
