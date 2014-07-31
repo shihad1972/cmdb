@@ -1261,9 +1261,8 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 			resize_string_buff(build);
 		next = build->string + build->size;
 		len = strlen(line);
-		snprintf(next, HOST_S + 1, "%s", line);
-		build->size += HOST_S;
-		next += len;
+		snprintf(next, len + 1, "%s", line);
+		build->size += len;
 		if ((strncmp(fs, "swap", COMM_S) != 0) &&
 		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
 			snprintf(line, RBUFF_S, "\
@@ -1278,9 +1277,11 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 		len = strlen(line);
 		if ((build->size + len) >= build->len)
 			resize_string_buff(build);
+		next = build->string + build->size;
 		snprintf(next, len + 1, "%s", line);
 		build->size += len;
-		list = list->next->next->next->next->next->next;
+		if (list->next->next->next->next->next->next)
+			list = list->next->next->next->next->next->next;
 	}
 	build->size -= 2;
 }

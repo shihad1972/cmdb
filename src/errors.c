@@ -883,7 +883,7 @@ init_dbdata_struct(dbdata_s *data)
 void
 clean_dbdata_struct(dbdata_s *list)
 {
-	dbdata_s *data, *next;
+	dbdata_s *data = '\0', *next = '\0';
 
 	if (list)
 		data = list;
