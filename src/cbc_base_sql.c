@@ -210,7 +210,8 @@ SELECT mirror, bo.ver_alias, bo.alias, l.country, bd.config_ntp, bd.ntp_server\
   LEFT JOIN locale l ON l.locale_id = b.locale_id \
   LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
   LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE b.server_id = ?","\
-SELECT device, lvm FROM disk_dev WHERE server_id = ?","\
+SELECT d.device, ss.lvm FROM disk_dev d LEFT JOIN build b on b.server_id = d.server_id \
+  LEFT JOIN seed_schemes ss ON ss.def_scheme_id = b.def_scheme_id WHERE d.server_id = ?","\
 SELECT priority, minimum, maximum, filesystem, logical_volume, mount_point \
   FROM default_part dp LEFT JOIN build b ON b.def_scheme_id=dp.def_scheme_id \
   WHERE b.server_id = ?","\
