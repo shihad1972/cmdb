@@ -1,4 +1,5 @@
 /* 
+
  *
  *  cmdb: Configuration Management Database
  *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
@@ -544,10 +545,10 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	int retval = NONE;
 	dbdata_s *data;
 
-	if (!(base->server->model))
+	if (!(base->vmhost->type))
 		return NO_MODEL;
-	else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
-		return NO_MODEL;
+	else if (strncmp(base->vmhost->type, "NULL", COMM_S) == 0)
+		return NO_MODEL; 
 	if (strncmp(cm->name, "NULL", COMM_S) == 0)
 		return NO_NAME;
 	else
@@ -568,8 +569,8 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 			report_error(MALLOC_FAIL, "base->vhost in add_vm_host_to_db");
 	}
 	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
-	snprintf(base->vmhost->type, MAC_S, "%s", base->server->model);
 	base->vmhost->server_id = data->fields.number;
+	base->vmhost->cuser = base->vmhost->muser = (unsigned long int)getuid();
 	if ((retval = cmdb_run_insert(cmc, base, VM_HOSTS)) != 0)
 		printf("Error adding to database\n");
 	else

@@ -128,6 +128,8 @@ report_error(int error, const char *errstr)
 	} else if (error == MULTIPLE_SERVER_IDS) {
 		fprintf(stderr, "Multiple servers with id %s in database\n\
 		THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
+	} else if (error == NO_MODEL) {
+		fprintf(stderr, "Server does not have a model!\n");
 	} else if (error == SERVER_UUID_NOT_FOUND) {
 		fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
 	} else if (error == MULTIPLE_SERVER_UUIDS) {

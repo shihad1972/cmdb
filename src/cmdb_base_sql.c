@@ -61,7 +61,8 @@ SELECT service_type_id, service, detail FROM service_type","\
 SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
 ORDER BY device DESC, hard_type_id","\
 SELECT hard_type_id, type, class FROM hard_type","\
-SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
+SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
+FROM vm_server_hosts"
 };
 
 const char *sql_insert[] = { "\
@@ -76,7 +77,7 @@ INSERT INTO service_type (service, detail) VALUES (?,?)","\
 INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
 (?,?,?,?)","\
 INSERT INTO hard_type (type, class) VALUES (?,?)","\
-INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
+INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES (?,?,?,?,?)"
 };
 
 const char *cmdb_sql_delete[] = { "\
@@ -114,9 +115,9 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 12,11,5,6,3,5,3,4 };
+const unsigned int select_fields[] = { 12,11,5,6,3,5,3,8 };
 
-const unsigned int insert_fields[] = { 9,8,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 9,8,4,5,2,4,2,5 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -136,7 +137,7 @@ const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0 }
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cmdb_search_arg_types[][2] = {
@@ -894,6 +895,10 @@ setup_insert_mysql_bind_buff_vmhost(void **buffer, cmdb_s *base, unsigned int i)
 		*buffer = &(base->vmhost->type);
 	else if (i == 2)
 		*buffer = &(base->vmhost->server_id);
+	else if (i == 3)
+		*buffer = &(base->vmhost->cuser);
+	else if (i == 4)
+		*buffer = &(base->vmhost->muser);
 }
 
 void
@@ -1153,6 +1158,7 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_vm_host_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
@@ -1161,6 +1167,12 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(vmhost->name, RBUFF_S, "%s", row[1]);
 	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[3], NULL, 10);
+	vmhost->cuser = strtoul(row[4], NULL, 10);
+	vmhost->muser = strtoul(row[5], NULL, 10);
+	timestamp = row[6];
+	convert_time(timestamp, &(vmhost->ctime));
+	timestamp = row[7];
+	convert_time(timestamp, &(vmhost->mtime));
 	vmhost->next = '\0';
 	list = base->vmhost;
 	if (list) {
