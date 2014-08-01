@@ -136,6 +136,7 @@ add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		fprintf(stderr, "Customer COID %s exists in database\n", cmdb->customer->coid);
 		return COID_EXISTS;
 	}
+	cmdb->customer->cuser = cmdb->customer->muser = (unsigned long int)getuid();
 	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }

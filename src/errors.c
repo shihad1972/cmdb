@@ -853,7 +853,7 @@ convert_time(char *timestamp, unsigned long int *store)
 	if (timval.tm_year > 1900)
 		timval.tm_year -= 1900;
 	tmp = strtok(NULL, "-");
-	timval.tm_mon = (int)strtol(tmp, NULL, 10);
+	timval.tm_mon = (int)strtol(tmp, NULL, 10) - 1;
 	tmp = strtok(NULL, " ");
 	timval.tm_mday = (int)strtol(tmp, NULL, 10);
 	tmp = strtok(NULL, ":");
