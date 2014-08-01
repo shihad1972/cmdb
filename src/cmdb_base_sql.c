@@ -1691,10 +1691,10 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(contact->phone, MAC_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(contact->email, HOST_S, "%s", sqlite3_column_text(state, 3));
 	contact->cust_id = (unsigned long int) sqlite3_column_int(state, 4);
-	contact->cuser = (uli_t) sqlite3_colume_int(state, 5);
-	contact->muser = (uli_t) sqlite3_colume_int(state, 6);
-	contact->ctime = (uli_t) sqlite3_colume_int(state, 7);
-	contact->mtime = (uli_t) sqlite3_colume_int(state, 8);
+	contact->cuser = (uli_t) sqlite3_column_int(state, 5);
+	contact->muser = (uli_t) sqlite3_column_int(state, 6);
+	contact->ctime = (uli_t) sqlite3_column_int(state, 7);
+	contact->mtime = (uli_t) sqlite3_column_int(state, 8);
 	contact->next = '\0';
 	list = base->contact;
 	if (list) {
@@ -1783,10 +1783,10 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(hard->device, MAC_S, "%s", sqlite3_column_text(state, 2));
 	hard->server_id = (unsigned long int) sqlite3_column_int(state, 3);
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 4);
-	hard->cuser = (uli_t) sqlite3_colume_int(state, 5);
-	hard->muser = (uli_t) sqlite3_colume_int(state, 6);
-	hard->ctime = (uli_t) sqlite3_colume_int(state, 7);
-	hard->mtime = (uli_t) sqlite3_colume_int(state, 8);
+	hard->cuser = (uli_t) sqlite3_column_int(state, 5);
+	hard->muser = (uli_t) sqlite3_column_int(state, 6);
+	hard->ctime = (uli_t) sqlite3_column_int(state, 7);
+	hard->mtime = (uli_t) sqlite3_column_int(state, 8);
 	hard->next = '\0';
 	type = base->hardtype;
 	if (type) {
