@@ -52,8 +52,8 @@ const struct cmdb_vm_host_s vmhosts;
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
 cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
-SELECT cust_id, name, address, city, county, postcode, coid FROM customer \
-ORDER BY coid","\
+SELECT cust_id, name, address, city, county, postcode, coid, cuser, muser, \
+ctime, mtime FROM customer ORDER BY coid","\
 SELECT cont_id, name, phone, email, cust_id FROM contacts","\
 SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
 services ORDER BY service_type_id","\
@@ -67,8 +67,8 @@ SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 const char *sql_insert[] = { "\
 INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id, \
 cuser, muser) VALUES (?,?,?,?,?,?,?,?,?)","\
-INSERT INTO customer (name, address, city, county, postcode, coid) VALUES \
-(?,?,?,?,?,?)","\
+INSERT INTO customer (name, address, city, county, postcode, coid, cuser, \
+muser) VALUES (?,?,?,?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
 INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
 VALUES (?,?,?,?,?)","\
@@ -114,9 +114,9 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 12,7,5,6,3,5,3,4 };
+const unsigned int select_fields[] = { 12,11,5,6,3,5,3,4 };
 
-const unsigned int insert_fields[] = { 9,6,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 9,8,4,5,2,4,2,3 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -130,7 +130,7 @@ const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
 const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -838,6 +838,10 @@ setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_s *base, unsigned int 
 		*buffer = &(base->customer->postcode);
 	else if (i == 5)
 		*buffer = &(base->customer->coid);
+	else if (i == 6)
+		*buffer = &(base->customer->cuser);
+	else if (i == 7)
+		*buffer = &(base->customer->muser);
 }
 
 void
@@ -978,6 +982,7 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_customer_s *customer, *list;
 
 	if (!(customer = malloc(sizeof(cmdb_customer_s))))
@@ -989,6 +994,12 @@ store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(customer->county, MAC_S, "%s", row[4]);
 	snprintf(customer->postcode, RANGE_S, "%s", row[5]);
 	snprintf(customer->coid, RANGE_S, "%s", row[6]);
+	customer->cuser = strtoul(row[7], NULL, 10);
+	customer->muser = strtoul(row[8], NULL, 10);
+	timestamp = row[9];
+	convert_time(timestamp, &(customer->ctime));
+	timestamp = row[10];
+	convert_time(timestamp, &(customer->mtime));
 	customer->next = '\0';
 	list = base->customer;
 	if (list) {

@@ -87,6 +87,10 @@ typedef struct cmdb_customer_s {
 	char postcode[RANGE_S];
 	char coid[RANGE_S];
 	unsigned long int cust_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_customer_s *next;
 } cmdb_customer_s;
 
@@ -96,6 +100,10 @@ typedef struct cmdb_contact_s {
 	char email[HOST_S];
 	unsigned long int cont_id;
 	unsigned long int cust_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_contact_s *next;
 } cmdb_contact_s;
 
@@ -106,6 +114,10 @@ typedef struct cmdb_service_s {
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int service_type_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_service_s *next;
 	struct cmdb_service_type_s *servicetype;
 } cmdb_service_s;
@@ -123,6 +135,10 @@ typedef struct cmdb_hardware_s {
 	unsigned long int hard_id;
 	unsigned long int server_id;
 	unsigned long int ht_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_hardware_s *next;
 	struct cmdb_hard_type_s *hardtype;
 } cmdb_hardware_s;
@@ -139,6 +155,10 @@ typedef struct cmdb_vm_host_s {
 	char type[MAC_S];
 	unsigned long int id;
 	unsigned long int server_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cmdb_vm_host_s *next;
 } cmdb_vm_host_s;
 

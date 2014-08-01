@@ -25,9 +25,13 @@
  * 
  */
 #include "../config.h"
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -454,7 +458,12 @@ display_customer_contacts(cmdb_config_s *config, char *coid)
 void
 print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 {
+	char *uname, *crtime;
 	int city = NONE, addr = NONE, post = NONE;
+	struct passwd *user;
+	time_t cmtime;
+	uid_t uid;
+
 	addr = strncmp(cust->address, "NULL", COMM_S);
 	city = strncmp(cust->city, "NULL", COMM_S);
 	post = strncmp(cust->postcode, "NULL", COMM_S);
@@ -474,6 +483,18 @@ print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 	} else {
 		printf("No address details for customer\n");
 	}
+	uid = (uid_t)cust->cuser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+        cmtime = (time_t)cust->ctime;
+        crtime = ctime(&cmtime);
+	printf("Create by user %s at %s", uname, crtime);
+	uid = (uid_t)cust->muser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)cust->mtime;
+	crtime = ctime(&cmtime);
+	printf("Modified by user %s at %s", uname, crtime);
 	if ((print_customer_contacts(cmdb->contact, cust->cust_id)) == 0)
 		printf("\nCustomer has no associated contacts\n");
 	if ((print_customer_servers(cmdb->server, cust->cust_id)) == 0)
