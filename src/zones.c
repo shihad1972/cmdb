@@ -52,6 +52,7 @@ list_zones(dnsa_config_s *dc)
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	size_t len;
+	time_t create;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
@@ -64,26 +65,48 @@ list_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\tSerial\t\tID\tType\tMaster\n");
+	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\t\tUser\tDate\n");
 	while (zone) {
+		create = (time_t)zone->ctime;
 		len = strlen(zone->name);
 		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
 			snprintf(zone->master, RANGE_S, "N/A");
 		if (len < 8)
-			printf("%s\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n", 
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t\t\t", zone->name);
 		else if (len < 16)
-			printf("%s\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t\t", zone->name);
 		else if (len < 24)
-			printf("%s\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t", zone->name);
 		else if (len < 32)
-			printf("%s\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t", zone->name);
 		else
-			printf("%s\n\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\n\t\t\t\t", zone->name);
+		printf("%s\t%lu\t%s\t", zone->valid, zone->serial, zone->type);
+		if (strlen(zone->master) < 8)
+			printf("%s\t\t", zone->master);
+		else
+			printf("%s\t", zone->master);
+		printf("%s\t%s", get_uname(zone->cuser), ctime(&create));
+/*		if (len < 8)
+			printf("%s\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s", 
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 16)
+			printf("%s\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 24)
+			printf("%s\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 32)
+			printf("%s\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else
+			printf("%s\n\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create)); */
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -164,6 +187,7 @@ print_zone(dnsa_s *dnsa, char *domain)
 {
 	char *dot, name[HOST_S];
 	unsigned int i = 0, j = 0;
+	time_t create;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
@@ -177,6 +201,7 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 			zone = zone->next;
 		}
 	}
+	create = (time_t)zone->ctime;
 	if (j == 0) {
 		printf("No zone %s found\n", domain);
 		return;
@@ -214,6 +239,7 @@ name, glue->pri_ns);
 		printf("\n%u record\n", i);
 	else
 		printf("\n%u records\n", i);
+	printf("Created by %s on %s", get_uname(zone->cuser), ctime(&create)); 
 }
 
 void

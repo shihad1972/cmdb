@@ -127,6 +127,10 @@ typedef struct zone_info_s { /* Hold DNS zone */
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct zone_info_s *next;
 } zone_info_s;
 

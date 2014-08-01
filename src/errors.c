@@ -29,14 +29,15 @@
  * 
  */
 #include "../config.h"
-#include <unistd.h>
+#include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <time.h>
-/* For freeBSD ?? */
 #include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+/* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
@@ -872,6 +873,16 @@ convert_time(char *timestamp, unsigned long int *store)
 		*store = (unsigned long int)epoch;
 	free(line);
 }
+
+char *
+get_uname(unsigned long int uid)
+{
+	struct passwd *user;
+
+	user = getpwuid((uid_t)uid);
+	return user->pw_name;
+}
+
 
 int
 get_ip_from_hostname(dbdata_s *data)

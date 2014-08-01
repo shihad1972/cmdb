@@ -452,6 +452,8 @@ int
 write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
+char *
+get_uname(unsigned long int uid);
 void
 init_dbdata_struct(dbdata_s *data);
 void

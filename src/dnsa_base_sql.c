@@ -23,16 +23,18 @@
  *  supplied. Will also contian conditional code base on database type.
  */
 #include "../config.h"
+#include <arpa/inet.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
-#include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
@@ -58,15 +60,18 @@
  */
 const char *dnsa_sql_select[] = { "\
 SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, \
-valid, owner, updated, type, master FROM zones ORDER BY name","\
+valid, owner, updated, type, master, cuser, muser, ctime, mtime FROM \
+zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
 owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
-SELECT id, zone, host, type, protocol, service, pri, destination, valid FROM records ORDER \
-BY zone, type, host","\
+SELECT id, zone, host, type, protocol, service, pri, destination, valid \
+FROM records ORDER BY zone, type, host","\
 SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
-SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
-SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
+SELECT name, host, destination, r.id, zone FROM records r, zones z \
+WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
+SELECT destination, COUNT(*) c FROM records \
+WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
 SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_zones"
@@ -88,7 +93,8 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
  * number and type of fields and arguments in the query. The data is sent
  * and returned in a list of dbdata_s structs. The inital list must be created
  * to hold at least the greater of dnsa_extended_search_fields OR 
- * dnsa_extended_search_args. The helper function init_initial_dbdata will do this.
+ * dnsa_extended_search_args. The helper function init_initial_dbdata will do
+ * this.
  * To ascertain the argument, fields and types thereof, we use the following 
  * arrays and matrices:
  *   dnsa_extended_search_fields[]
@@ -97,15 +103,17 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
  *   dnsa_ext_search_arg_type[][]
  */
 const char *dnsa_sql_extended_search[] = { "\
-SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
+SELECT r.host, z.name, r.id FROM records r, zones z \
+WHERE r.destination = ? AND r.zone = z.id","\
 SELECT id, host, type, pri, destination FROM records WHERE zone = ?","\
-SELECT DISTINCT destination from records WHERE destination > ? AND destination < ?" /*,"\
+SELECT DISTINCT destination from records \
+WHERE destination > ? AND destination < ?" /*,"\
 SELECT fqdn FROM preferred_a WHERE ip = ?" */
 };
 
 const char *dnsa_sql_insert[] = {"\
 INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
-ttl, type, master) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master) \
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -116,7 +124,8 @@ INSERT","\
 INSERT","\
 INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
 INSERT","\
-INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) VALUES (?, ?, ?, ?, ?, ?)"
+INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) \
+VALUES (?, ?, ?, ?, ?, ?)"
 };
 
 const char *dnsa_sql_update[] = {"\
@@ -142,9 +151,9 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-const unsigned int dnsa_select_fields[] = { 14, 19, 9, 5, 5, 2, 5, 4, 7 };
+const unsigned int dnsa_select_fields[] = { 18, 19, 9, 5, 5, 2, 5, 4, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 10, 15, 7, 3, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 12, 15, 7, 3, 0, 0, 4, 0, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -593,6 +602,10 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(zone->updated, RANGE_S, "%s", row[11]);
 	snprintf(zone->type, RANGE_S, "%s", row[12]);
 	snprintf(zone->master, RBUFF_S, "%s", row[13]);
+	zone->cuser = strtoul(row[14], NULL, 10);
+	zone->muser = strtoul(row[15], NULL, 10);
+	convert_time(row[16], &(zone->ctime));
+	convert_time(row[17], &(zone->mtime));
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -1201,6 +1214,10 @@ dnsa_setup_insert_mysql_bind_buff_zone(void **input, dnsa_s *base, unsigned int 
 		*input = &(base->zones->type);
 	else if (i == 9)
 		*input = &(base->zones->master);
+	else if (i == 10)
+		*input = &(base->zones->cuser);
+	else if (i == 11)
+		*input = &(base->zones->muser);
 }
 
 void
