@@ -152,6 +152,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		cmdb->hardware->server_id = data->fields.number;
 	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
+	cmdb->hardware->cuser = cmdb->hardware->muser = (uli_t)getuid();
 	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
 		fprintf(stderr, "Cannot find hardware class\n");
 		clean_dbdata_struct(data);
@@ -163,7 +164,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		if (!(cmdb->hardtype)) {
 			cmdb_hard_type_s *hardt;
 			if (!(hardt = malloc(sizeof(cmdb_hard_type_s))))
-				report_error(MALLOC_FAIL, "hardt in fill_hardware_values");
+				report_error(MALLOC_FAIL, "hardt in add_hardware_to_database");
 			cmdb_init_hardtype_t(hardt);
 			cmdb->hardtype = hardt;
 		}
@@ -481,19 +482,28 @@ print_vm_hosts(cmdb_vm_host_s *vmhost)
 int
 print_hardware(cmdb_hardware_s *hard, unsigned long int id)
 {
+	char *uname, *crtime;
 	int i = 0;
+	struct passwd *user;
+	time_t cmtime;
+	uid_t uid;
 
 	while (hard) {
 		if (hard->server_id == id) {
 			i++;
+			uid = (uid_t)hard->cuser;
+			user = getpwuid(uid);
+			uname = user->pw_name;
+			cmtime = (time_t)hard->ctime;
+			crtime = ctime(&cmtime);
 			if (i == 1)
 				printf("\nHardware details:\n");
 			if (strlen(hard->hardtype->hclass) < 8)
-				printf("%s\t\t%s\t%s\n",
-hard->hardtype->hclass, hard->device, hard->detail);
+				printf("%s\t\t%s\t%s: Added by %s on %s",
+hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
 			else
-				printf("%s\t%s\t%s\n",
-hard->hardtype->hclass, hard->device, hard->detail);
+				printf("%s\t%s\t%s: Added by %s on %s",
+hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
 		}
 		hard = hard->next;
 	}

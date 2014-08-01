@@ -864,6 +864,7 @@ convert_time(char *timestamp, unsigned long int *store)
 	timval.tm_min = (int)strtol(tmp, NULL, 10);
 	tmp = strtok(NULL, ":");
 	timval.tm_sec = (int)strtol(tmp, NULL, 10);
+	timval.tm_isdst = -1;
 	epoch = mktime(&timval);
 	if (epoch < 0)
 		*store = 0;

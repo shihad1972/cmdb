@@ -59,8 +59,8 @@ FROM contacts","\
 SELECT service_id, server_id, cust_id, service_type_id, detail, url, cuser, \
 muser, ctime, mtime FROM services ORDER BY service_type_id","\
 SELECT service_type_id, service, detail FROM service_type","\
-SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
-ORDER BY device DESC, hard_type_id","\
+SELECT hard_id, detail, device, server_id, hard_type_id, cuser, muser, ctime, \
+mtime FROM hardware ORDER BY device DESC, hard_type_id","\
 SELECT hard_type_id, type, class FROM hard_type","\
 SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
 FROM vm_server_hosts"
@@ -76,8 +76,8 @@ INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES \
 INSERT INTO services (server_id, cust_id, service_type_id, detail, url, \
 cuser, muser) VALUES (?,?,?,?,?,?,?)","\
 INSERT INTO service_type (service, detail) VALUES (?,?)","\
-INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
-(?,?,?,?)","\
+INSERT INTO hardware (detail, device, server_id, hard_type_id, cuser, muser) \
+VALUES (?,?,?,?,?,?)","\
 INSERT INTO hard_type (type, class) VALUES (?,?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES (?,?,?,?,?)"
 };
@@ -117,9 +117,9 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 12,11,9,10,3,5,3,8 };
+const unsigned int select_fields[] = { 12,11,9,10,3,9,3,8 };
 
-const unsigned int insert_fields[] = { 9,8,6,7,2,4,2,5 };
+const unsigned int insert_fields[] = { 9,8,6,7,2,6,2,5 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -137,7 +137,7 @@ const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0 }
 };
@@ -894,6 +894,10 @@ setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_s *base, unsigned int 
 		*buffer = &(base->hardware->server_id);
 	else if (i == 3)
 		*buffer = &(base->hardware->ht_id);
+	else if (i == 4)
+		*buffer = &(base->hardware->cuser);
+	else if (i == 5)
+		*buffer = &(base->hardware->muser);
 }
 
 void
@@ -1133,6 +1137,10 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(hard->device, MAC_S, "%s", row[2]);
 	hard->server_id = strtoul(row[3], NULL, 10);
 	hard->ht_id = strtoul(row[4], NULL, 10);
+	hard->cuser = strtoul(row[5], NULL, 10);
+	hard->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(hard->ctime));
+	convert_time(row[8], &(hard->mtime));
 	hard->next = '\0';
 	type = base->hardtype;
 	if (type) {
