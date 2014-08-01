@@ -849,7 +849,9 @@ convert_time(char *timestamp, unsigned long int *store)
 	len = strlen(timestamp) + 1;
 	line = strndup(timestamp, len - 1);
 	tmp = strtok(line, "-");
-	timval.tm_year = (int)strtol(tmp, NULL, 10) - 1900;
+	timval.tm_year = (int)strtol(tmp, NULL, 10);
+	if (timval.tm_year > 1900)
+		timval.tm_year -= 1900;
 	tmp = strtok(NULL, "-");
 	timval.tm_mon = (int)strtol(tmp, NULL, 10);
 	tmp = strtok(NULL, " ");
@@ -861,7 +863,10 @@ convert_time(char *timestamp, unsigned long int *store)
 	tmp = strtok(NULL, ":");
 	timval.tm_sec = (int)strtol(tmp, NULL, 10);
 	epoch = mktime(&timval);
-	*store = (unsigned long int)epoch;
+	if (epoch < 0)
+		*store = 0;
+	else
+		*store = (unsigned long int)epoch;
 	free(line);
 }
 
