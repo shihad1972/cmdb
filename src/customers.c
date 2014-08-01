@@ -318,6 +318,7 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		return retval;
 	}
 	cont->cust_id = cmdb->customer->cust_id;
+	cont->cuser = cont->muser = (unsigned long int)getuid();
 	retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
