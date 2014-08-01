@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -834,6 +835,34 @@ write_file(char *filename, char *output)
 		retval = NONE;
 	}
 	return retval;
+}
+
+void
+convert_time(char *timestamp, unsigned long int *store)
+{
+	char *tmp, *line;
+	struct tm timval;
+	size_t len;
+	time_t epoch;
+
+	memset(&timval, 0, sizeof timval);
+	len = strlen(timestamp) + 1;
+	line = strndup(timestamp, len - 1);
+	tmp = strtok(line, "-");
+	timval.tm_year = (int)strtol(tmp, NULL, 10) - 1900;
+	tmp = strtok(NULL, "-");
+	timval.tm_mon = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, " ");
+	timval.tm_mday = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_hour = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_min = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_sec = (int)strtol(tmp, NULL, 10);
+	epoch = mktime(&timval);
+	*store = (unsigned long int)epoch;
+	free(line);
 }
 
 int

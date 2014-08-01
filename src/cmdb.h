@@ -451,6 +451,8 @@ add_trailing_dot(char *member);
 int
 write_file(char *filename, char *output);
 void
+convert_time(char *timestamp, unsigned long int *store);
+void
 init_dbdata_struct(dbdata_s *data);
 void
 clean_dbdata_struct(dbdata_s *data);

@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -97,7 +98,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		cmdb->server->cust_id = cmdb->customer->cust_id;
 	if (cmdb->vmhost)
 		cmdb->server->vm_server_id = cmdb->vmhost->id;
-		retval = cmdb_run_insert(config, cmdb, SERVERS);
+	cmdb->server->cuser = cmdb->server->muser = (unsigned long int)getuid();
+	retval = cmdb_run_insert(config, cmdb, SERVERS);
 	clean_dbdata_struct(data);
 	free(input);
 	return retval;

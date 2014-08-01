@@ -65,7 +65,7 @@ SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
 };
 
 const char *sql_insert[] = { "\
-INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id \
+INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id, \
 cuser, muser) VALUES (?,?,?,?,?,?,?,?,?)","\
 INSERT INTO customer (name, address, city, county, postcode, coid) VALUES \
 (?,?,?,?,?,?)","\
@@ -116,7 +116,7 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 /* Number of returned fields for the above SELECT queries */
 const unsigned int select_fields[] = { 12,7,5,6,3,5,3,4 };
 
-const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 9,6,4,5,2,4,2,3 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -422,7 +422,7 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
 	MYSQL_ROW cmdb_row;
-	my_ulonglong cmdb_rows;
+//	my_ulonglong cmdb_rows;
 	const char *query;
 	int retval = 0;
 	unsigned int fields;
@@ -438,9 +438,9 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
 	}
 	fields = mysql_num_fields(cmdb_res);
-	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
+/*	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
 		show_no_results(type);
-	}
+	} */
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
@@ -944,6 +944,7 @@ store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 void
 store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cmdb_server_s))))
@@ -958,8 +959,10 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(server->name, HOST_S, "%s", row[7]);
 	server->cuser = strtoul(row[8], NULL, 10);
 	server->muser = strtoul(row[9], NULL, 10);
-	server->ctime = strtoul(row[10], NULL, 10);
-	server->mtime = strtoul(row[11], NULL, 10);
+	timestamp = row[10];
+	convert_time(timestamp, &(server->ctime));
+	timestamp = row[11];
+	convert_time(timestamp, &(server->mtime));
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -1987,6 +1990,12 @@ show_no_results(int type)
 		fprintf(stderr, "No contacts to list\n");
 	else if (type == SERVICE_TYPE)
 		;
+	else if (type == HARDWARE_TYPE)
+		;
+	else if (type == HARDWARE)
+		fprintf(stderr, "No hardware to list\n");
+	else if (type == VM_HOST)
+		fprintf(stderr, "No vm hosts to list\n");
 	else
 		fprintf(stderr, "No unknown listing %d\n", type);
 }
