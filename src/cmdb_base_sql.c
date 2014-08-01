@@ -1632,6 +1632,10 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	server->cust_id = (unsigned long int) sqlite3_column_int(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int(state, 6);
 	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
+	server->cuser = (uli_t) sqlite3_column_int(state, 8);
+	server->muser = (uli_t) sqlite3_column_int(state, 9);
+	server->ctime = (uli_t) sqlite3_column_int(state, 10);
+	server->mtime = (uli_t) sqlite3_column_int(state, 11);
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -1658,6 +1662,10 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(cust->county, MAC_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(cust->postcode, RANGE_S, "%s", sqlite3_column_text(state, 5));
 	snprintf(cust->coid, RANGE_S, "%s", sqlite3_column_text(state, 6));
+	cust->cuser = (uli_t) sqlite3_column_int(state, 7);
+	cust->muser = (uli_t) sqlite3_column_int(state, 8);
+	cust->ctime = (uli_t) sqlite3_column_int(state, 9);
+	cust->mtime = (uli_t) sqlite3_column_int(state, 10);
 	cust->next = '\0';
 	list = base->customer;
 	if (list) {
@@ -1683,6 +1691,10 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(contact->phone, MAC_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(contact->email, HOST_S, "%s", sqlite3_column_text(state, 3));
 	contact->cust_id = (unsigned long int) sqlite3_column_int(state, 4);
+	contact->cuser = (uli_t) sqlite3_colume_int(state, 5);
+	contact->muser = (uli_t) sqlite3_colume_int(state, 6);
+	contact->ctime = (uli_t) sqlite3_colume_int(state, 7);
+	contact->mtime = (uli_t) sqlite3_colume_int(state, 8);
 	contact->next = '\0';
 	list = base->contact;
 	if (list) {
@@ -1710,6 +1722,10 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	service->service_type_id = (unsigned long int) sqlite3_column_int(state, 3);
 	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(service->url, HOST_S, "%s", sqlite3_column_text(state, 5));
+	service->cuser = (uli_t) sqlite3_column_int(state, 6);
+	service->muser = (uli_t) sqlite3_column_int(state, 7);
+	service->ctime = (uli_t) sqlite3_column_int(state, 8);
+	service->mtime = (uli_t) sqlite3_column_int(state, 9);
 	type = base->servicetype;
 	if (type) {
 		while (service->service_type_id != type->service_id)
@@ -1767,6 +1783,10 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(hard->device, MAC_S, "%s", sqlite3_column_text(state, 2));
 	hard->server_id = (unsigned long int) sqlite3_column_int(state, 3);
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 4);
+	hard->cuser = (uli_t) sqlite3_colume_int(state, 5);
+	hard->muser = (uli_t) sqlite3_colume_int(state, 6);
+	hard->ctime = (uli_t) sqlite3_colume_int(state, 7);
+	hard->mtime = (uli_t) sqlite3_colume_int(state, 8);
 	hard->next = '\0';
 	type = base->hardtype;
 	if (type) {
@@ -1821,6 +1841,10 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(vmhost->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int(state, 3);
+	vmhost->cuser = (uli_t) sqlite3_column_int(state, 4);
+	vmhost->muser = (uli_t) sqlite3_column_int(state, 5);
+	vmhost->ctime = (uli_t) sqlite3_column_int(state, 6);
+	vmhost->mtime = (uli_t) sqlite3_column_int(state, 7);
 	vmhost->next = '\0';
 	list = base->vmhost;
 	if (list) {
@@ -1872,7 +1896,16 @@ state, 6, (int)server->cust_id)) > 0) {
 state, 7, (int)server->vm_server_id)) > 0) {
 		printf("Cannot bind %lu\n", server->vm_server_id);
 		return retval;
-		
+	}
+	if ((retval = sqlite3_bind_int(
+state, 8, (int)server->cuser)) > 0) {
+		printf("Cannot bind %lu\n", server->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 9, (int)server->muser)) > 0) {
+		printf("Cannot bind %lu\n", server->muser);
+		return retval;
 	}
 	return retval;
 }
@@ -1912,6 +1945,16 @@ state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind customer coid %s\n", cust->coid);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 7, (int)cust->cuser)) > 0) {
+		printf("Cannot bind %lu\n", cust->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 8, (int)cust->muser)) > 0) {
+		printf("Cannot bind %lu\n", cust->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1938,6 +1981,16 @@ state, 3, cont->email, (int)strlen(cont->email), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_int(
 state, 4, (int)cont->cust_id)) > 0) {
 		printf("Cannot bind cust_id %lu\n", cont->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)cont->cuser)) > 0) {
+		printf("Cannot bind %lu\n", cont->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)cont->muser)) > 0) {
+		printf("Cannot bind %lu\n", cont->muser);
 		return retval;
 	}
 	return retval;
@@ -1973,6 +2026,16 @@ state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind service url %s\n", service->url);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)service->cuser)) > 0) {
+		printf("Cannot bind %lu\n", service->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 7, (int)service->muser)) > 0) {
+		printf("Cannot bind %lu\n", service->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2001,6 +2064,16 @@ state, 4, (int)hard->ht_id)) > 0) {
 		printf("Cannot bind hardware ht_id %lu\n", hard->ht_id);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)hard->cuser)) > 0) {
+		printf("Cannot bind %lu\n", hard->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)hard->muser)) > 0) {
+		printf("Cannot bind %lu\n", hard->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2022,6 +2095,16 @@ state, 2, vmhost->type, (int)strlen(vmhost->type), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 3, (sqlite3_int64)vmhost->server_id)) > 0) {
 		printf("Cannot bind vmhost server_id %lu\n", vmhost->server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 4, (int)vmhost->cuser)) > 0) {
+		printf("Cannot bind %lu\n", vmhost->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)vmhost->muser)) > 0) {
+		printf("Cannot bind %lu\n", vmhost->muser);
 		return retval;
 	}
 	return retval;
