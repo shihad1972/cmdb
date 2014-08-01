@@ -56,8 +56,8 @@ SELECT cust_id, name, address, city, county, postcode, coid, cuser, muser, \
 ctime, mtime FROM customer ORDER BY coid","\
 SELECT cont_id, name, phone, email, cust_id, cuser, muser, ctime, mtime \
 FROM contacts","\
-SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
-services ORDER BY service_type_id","\
+SELECT service_id, server_id, cust_id, service_type_id, detail, url, cuser, \
+muser, ctime, mtime FROM services ORDER BY service_type_id","\
 SELECT service_type_id, service, detail FROM service_type","\
 SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
 ORDER BY device DESC, hard_type_id","\
@@ -73,8 +73,8 @@ INSERT INTO customer (name, address, city, county, postcode, coid, cuser, \
 muser) VALUES (?,?,?,?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES \
 (?,?,?,?,?,?)","\
-INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
-VALUES (?,?,?,?,?)","\
+INSERT INTO services (server_id, cust_id, service_type_id, detail, url, \
+cuser, muser) VALUES (?,?,?,?,?,?,?)","\
 INSERT INTO service_type (service, detail) VALUES (?,?)","\
 INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
 (?,?,?,?)","\
@@ -117,9 +117,9 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 12,11,9,6,3,5,3,8 };
+const unsigned int select_fields[] = { 12,11,9,10,3,5,3,8 };
 
-const unsigned int insert_fields[] = { 9,8,6,5,2,4,2,5 };
+const unsigned int insert_fields[] = { 9,8,6,7,2,4,2,5 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -135,7 +135,7 @@ const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -877,6 +877,10 @@ setup_insert_mysql_bind_buff_service(void **buffer, cmdb_s *base, unsigned int i
 		*buffer = &(base->service->detail);
 	else if (i == 4)
 		*buffer = &(base->service->url);
+	else if (i == 5)
+		*buffer = &(base->service->cuser);
+	else if (i == 6)
+		*buffer = &(base->service->muser);
 }
 
 void
@@ -1068,6 +1072,10 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 	service->service_type_id = strtoul(row[3], NULL, 10);
 	snprintf(service->detail, HOST_S, "%s", row[4]);
 	snprintf(service->url, HOST_S, "%s", row[5]);
+	service->cuser = strtoul(row[6], NULL, 10);
+	service->muser = strtoul(row[7], NULL, 10);
+	convert_time(row[8], &(service->ctime));
+	convert_time(row[9], &(service->mtime));
 	service->next = '\0';
 	type = base->servicetype;
 	if (type) {
