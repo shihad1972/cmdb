@@ -64,10 +64,12 @@ valid, owner, updated, type, master, cuser, muser, ctime, mtime FROM \
 zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
-owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
-SELECT id, zone, host, type, protocol, service, pri, destination, valid \
-FROM records ORDER BY zone, type, host","\
-SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
+owner, updated, type, master, cuser, muser, ctime, mtime FROM rev_zones \
+ORDER BY start_ip","\
+SELECT id, zone, host, type, protocol, service, pri, destination, valid, \
+cuser, muser, ctime, mtime FROM records ORDER BY zone, type, host","\
+SELECT rev_record_id, rev_zone, host, destination, valid, cuser, muser, \
+ctime, mtime FROM rev_records","\
 SELECT name, host, destination, r.id, zone FROM records r, zones z \
 WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records \
@@ -115,10 +117,10 @@ const char *dnsa_sql_insert[] = {"\
 INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
 ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
-finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master) \
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO records (zone, host, type, protocol, service, pri, destination) VALUES \
-(?, ?, ?, ?, ?, ?, ?)","\
+finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, \
+master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO records (zone, host, type, protocol, service, pri, destination) \
+VALUES  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
 INSERT","\
 INSERT","\
@@ -151,9 +153,9 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-const unsigned int dnsa_select_fields[] = { 18, 19, 9, 5, 5, 2, 5, 4, 7 };
+const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 5, 4, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 12, 15, 7, 3, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 12, 17, 7, 3, 0, 0, 4, 0, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -167,19 +169,19 @@ const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
 const unsigned int dnsa_extended_search_args[] = { 1, 1, 2/* , 1 */ };
 
-const unsigned int dnsa_inserts[][15] = {
+const unsigned int dnsa_inserts[][17] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT,
-	  DBTEXT, 0, 0, 0, 0, 0 },
+	  DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT,
-	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT },
+	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT },
 	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0 },
-	{ DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	  0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0 }
+	  0, 0, 0, 0 }
 };
 
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
@@ -633,6 +635,10 @@ dnsa_store_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	rec->pri = strtoul(row[6], NULL, 10);
 	snprintf(rec->dest, RBUFF_S, "%s", row[7]);
 	snprintf(rec->valid, RANGE_S, "%s", row[8]);
+	rec->cuser = strtoul(row[9], NULL, 10);
+	rec->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(rec->ctime));
+	convert_time(row[12], &(rec->mtime));
 	list = base->records;
 	if (list) {
 		while(list->next)
@@ -676,6 +682,10 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(rev->updated, RANGE_S, "%s", row[16]);
 	snprintf(rev->type, RANGE_S, "%s", row[17]);
 	snprintf(rev->master, RBUFF_S, "%s", row[18]);
+	rev->cuser = strtoul(row[19], NULL, 10);
+	rev->muser = strtoul(row[20], NULL, 10);
+	convert_time(row[21], &(rev->ctime));
+	convert_time(row[22], &(rev->mtime));
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -699,6 +709,10 @@ dnsa_store_rev_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(rev->host, RBUFF_S, "%s", row[2]);
 	snprintf(rev->dest, RBUFF_S, "%s", row[3]);
 	snprintf(rev->valid, RANGE_S, "%s", row[4]);
+	rev->cuser = strtoul(row[5], NULL, 10);
+	rev->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(rev->ctime));
+	convert_time(row[8], &(rev->mtime));
 	list = base->rev_records;
 	if (list) {
 		while (list->next)

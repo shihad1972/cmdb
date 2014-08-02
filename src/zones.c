@@ -119,6 +119,7 @@ void
 list_rev_zones(dnsa_config_s *dc)
 {
 	int retval;
+	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 
@@ -135,10 +136,18 @@ list_rev_zones(dnsa_config_s *dc)
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
+		create = (time_t)rev->ctime;
 		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
 			snprintf(rev->master, RANGE_S, "N/A");
-		printf("%s\t/%lu\t%s\t%s\t%s\n",
-rev->net_range, rev->prefix, rev->valid, rev->type, rev->master);
+		printf("%s\t/%lu\t%s\t%s\t",
+rev->net_range, rev->prefix, rev->valid, rev->type);
+		if (strlen(rev->master) > 7)
+			printf("%s\t%s\t%s",
+rev->master, get_uname(rev->cuser), ctime(&create));
+		else
+			printf("%s\t\t%s\t%s",
+rev->master, get_uname(rev->cuser), ctime(&create));
+		
 		if (rev->next)
 			rev = rev->next;
 		else
@@ -318,6 +327,7 @@ void
 display_rev_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
+	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 	
@@ -337,10 +347,13 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 			rev = rev->next;
 	}
 	if (rev) {
+		create = (time_t)rev->ctime;
 		if ((strncmp(rev->type, "master", RANGE_S)) == 0)
 			print_rev_zone(dnsa, domain);
-		else
+		else {
 			printf("This is a slave reverse zone. No records to display\n");
+			printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
+		}
 	} else {
 		fprintf(stderr, "Reverse zone %s not found\n", domain);
 	}
@@ -351,6 +364,7 @@ void
 print_rev_zone(dnsa_s *dnsa, char *domain)
 {
 	char *in_addr;
+	time_t create;
 	unsigned int i, j;
 	rev_record_row_s *records = dnsa->rev_records;
 	rev_zone_info_s *zone = dnsa->rev_zones;
@@ -371,6 +385,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 		return;
 	}
 	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
+	create = (time_t)zone->ctime;
 	while (records) {
 		if (records->rev_zone == zone->rev_zone_id) {
 			printf("%s.%s\t%s\n", records->host, in_addr, records->dest);
@@ -380,6 +395,8 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 			records = records->next;
 		}
 	}
+	printf("\n%u records\n", i);
+	printf("Created by %s on %s", get_uname(zone->cuser), ctime(&create));
 	if (i == 0)
 		printf("No reverse records for range %s\n", zone->net_range);
 }
