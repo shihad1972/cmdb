@@ -879,8 +879,10 @@ get_uname(unsigned long int uid)
 {
 	struct passwd *user;
 
-	user = getpwuid((uid_t)uid);
-	return user->pw_name;
+	if ((user = getpwuid((uid_t)uid)))
+		return user->pw_name;
+	else
+		return NULL;
 }
 
 

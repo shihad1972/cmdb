@@ -402,7 +402,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
 		if (validate_user_input(comm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service");
-	if (comm->type == GLUE_ZONE)
+	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
 		validate_glue_comm_line(comm);
 }
 

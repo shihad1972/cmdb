@@ -76,7 +76,8 @@ SELECT destination, COUNT(*) c FROM records \
 WHERE type = 'A' GROUP BY destination HAVING c > 1","\
 SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
-SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_zones"
+SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, cuser, muser, \
+ctime, mtime FROM glue_zones"
 };
 /**
  * These SQL searches require the struct within dnsa_s to be initialised, as
@@ -127,17 +128,18 @@ INSERT","\
 INSERT","\
 INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
 INSERT","\
-INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) \
-VALUES (?, ?, ?, ?, ?, ?)"
+INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, \
+cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 };
 
 const char *dnsa_sql_update[] = {"\
-UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
-UPDATE zones SET updated = 'yes', valid = 'unknown' WHERE id = ?","\
+UPDATE zones SET valid = 'yes', updated = 'no', muser = ? WHERE id = ?","\
+UPDATE zones SET updated = 'yes', valid = 'unknown', muser = ? WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
-UPDATE zones SET serial = ? WHERE id = ?","\
-UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?","\
-UPDATE rev_zones SET serial = ? WHERE rev_zone_id = ?","\
+UPDATE zones SET serial = ?, muser = ? WHERE id = ?","\
+UPDATE rev_zones SET valid = 'yes', muser = ?, updated = 'no' WHERE \
+rev_zone_id = ?","\
+UPDATE rev_zones SET serial = ?, muser = ? WHERE rev_zone_id = ?","\
 UPDATE zones SET valid = 'no' WHERE id = ?"
 };
 
@@ -154,9 +156,9 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 5, 4, 7 };
+const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 5, 4, 11 };
 
-const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 4, 0, 8 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -164,7 +166,7 @@ const unsigned int dnsa_search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1, 1, 1, 1 };
 
-const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2, 1 };
+const unsigned int dnsa_update_args[] = { 2, 2, 1, 3, 2, 3, 1 };
 
 const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
@@ -182,8 +184,9 @@ const unsigned int dnsa_inserts[][17] = {
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0 }
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
@@ -200,14 +203,14 @@ const unsigned int dnsa_ext_search_arg_type[][2] = { /* What we are searching on
 	{ DBTEXT } */
 };
 
-const unsigned int dnsa_update_arg_type[][2] = {
-	{ DBINT, NONE } ,
-	{ DBINT, NONE } ,
-	{ DBINT, NONE } ,
-	{ DBINT, DBINT } ,
-	{ DBINT, NONE } ,
-	{ DBINT, DBINT } ,
-	{ DBINT, NONE }
+const unsigned int dnsa_update_arg_type[][3] = {
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, 0, 0 } ,
+	{ DBINT, DBINT, DBINT } ,
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, DBINT, DBINT } ,
+	{ DBINT, 0, 0 }
 };
 
 const unsigned int dnsa_delete_arg_type[][1] = {
@@ -805,6 +808,10 @@ dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(glue->sec_dns, RANGE_S, "%s", row[4]);
 	snprintf(glue->pri_ns, RBUFF_S, "%s", row[5]);
 	snprintf(glue->sec_ns, RBUFF_S, "%s", row[6]);
+	glue->cuser = strtoul(row[7], NULL, 10);
+	glue->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(glue->ctime));
+	convert_time(row[10], &(glue->mtime));
 	list = base->glue;
 	if (list) {
 		while (list->next)
@@ -1322,6 +1329,10 @@ dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int 
 		*input = &(base->glue->pri_ns);
 	else if (i == 5)
 		*input = &(base->glue->sec_ns);
+	else if (i == 6)
+		*input = &(base->glue->cuser);
+	else if (i == 7)
+		*input = &(base->glue->muser);
 }
 
 #endif /* HAVE_MYSQL */

@@ -40,7 +40,7 @@ extern const unsigned int dnsa_extended_search_args[];
 extern const unsigned int dnsa_ext_search_field_type[][5];
 extern const unsigned int dnsa_ext_search_arg_type[][2];
 extern const unsigned int dnsa_update_args[];
-extern const unsigned int dnsa_update_arg_type[][2];
+extern const unsigned int dnsa_update_arg_type[][3];
 extern const unsigned int dnsa_delete_args[];
 extern const unsigned int dnsa_delete_arg_type[][1];
 
