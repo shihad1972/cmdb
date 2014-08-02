@@ -119,9 +119,10 @@ ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, \
 master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO records (zone, host, type, protocol, service, pri, destination) \
-VALUES  (?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
+INSERT INTO records (zone, host, type, protocol, service, pri, destination, \
+cuser, muser)  VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES \
+(?, ?, ?, ?, ?)","\
 INSERT","\
 INSERT","\
 INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
@@ -132,7 +133,7 @@ VALUES (?, ?, ?, ?, ?, ?)"
 
 const char *dnsa_sql_update[] = {"\
 UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
-UPDATE zones SET updated = 'yes' WHERE id = ?","\
+UPDATE zones SET updated = 'yes', valid = 'unknown' WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
 UPDATE zones SET serial = ? WHERE id = ?","\
 UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?","\
@@ -155,7 +156,7 @@ DELETE FROM records WHERE zone = ?"
 
 const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 5, 4, 7 };
 
-const unsigned int dnsa_insert_fields[] = { 12, 17, 7, 3, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 4, 0, 6 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -174,9 +175,10 @@ const unsigned int dnsa_inserts[][17] = {
 	  DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT,
 	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT },
-	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0 },
-	{ DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -1203,6 +1205,10 @@ dnsa_setup_insert_mysql_bind_buff_record(void **input, dnsa_s *base, unsigned in
 		*input = &(base->records->pri);
 	else if (i == 6)
 		*input = &(base->records->dest);
+	else if (i == 7)
+		*input = &(base->records->cuser);
+	else if (i == 8)
+		*input = &(base->records->muser);
 }
 
 void
@@ -1267,6 +1273,10 @@ dnsa_setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_s *base, unsigned 
 		*input = &(base->rev_zones->type);
 	else if (i == 14)
 		*input = &(base->rev_zones->master);
+	else if (i == 15)
+		*input = &(base->rev_zones->cuser);
+	else if (i == 16)
+		*input = &(base->rev_zones->muser);
 }
 
 void
@@ -1278,6 +1288,10 @@ dnsa_setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_s *base, unsign
 		*input = &(base->rev_records->host);
 	else if (i == 2)
 		*input = &(base->rev_records->dest);
+	else if (i == 3)
+		*input = &(base->rev_records->cuser);
+	else if (i == 4)
+		*input = &(base->rev_records->muser);
 }
 
 void

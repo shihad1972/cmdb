@@ -448,16 +448,26 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 			if ((strlen(name) > 0) && (strncmp(name, zone->name, RBUFF_S) == 0)) {
 				check_for_updated_fwd_zone(dc, zone);
 				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					free(buffer);
-					dnsa_clean_list(dnsa);
-					return retval;
+					if (retval == CHKZONE_FAIL) {
+						printf("Zone %s invalid\n", zone->name);
+						retval = NONE;
+					} else {
+						free(buffer);
+						dnsa_clean_list(dnsa);
+						return retval;
+					}
 				}
 			} else if (strncmp(name, "none", COMM_S) == 0) {
 				check_for_updated_fwd_zone(dc, zone);
 				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					free(buffer);
-					dnsa_clean_list(dnsa);
-					return retval;
+					if (retval == CHKZONE_FAIL) {
+						printf("Zone %s invalid\n", zone->name);
+						retval = NONE;
+					} else {
+						free(buffer);
+						dnsa_clean_list(dnsa);
+						return retval;
+					}
 				}
 			}
 		}
@@ -1451,6 +1461,7 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
+	record->cuser = record->muser = (unsigned long int)getuid();
 	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
 		fprintf(stderr, "Cannot insert record\n");
 	else
@@ -1813,7 +1824,6 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in validate_fwd_zone");
 	retval = 0;
-	snprintf(zone->valid, COMM_S, "yes");
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
@@ -1834,13 +1844,16 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
 			fprintf(stderr, "Set zone not valid in DB failed\n");
 		free(data);
-		return retval;
+		return CHKZONE_FAIL;
 	} else {
 		data->args.number = zone->id;
-		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {
-			free(data);
-			fprintf(stderr, "Set zone valid in DB failed\n");
-			return retval;
+		if (strncmp(zone->valid, "yes", COMM_S) != 0) {
+			if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {
+				free(data);
+				fprintf(stderr, "Set zone valid in DB failed\n");
+				return retval;
+			}
+		snprintf(zone->valid, COMM_S, "yes");
 		}
 		free(data);
 	}
@@ -2696,6 +2709,7 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
+	zone->cuser = zone->muser = (unsigned long int)getuid();
 }
 
 void
@@ -2726,6 +2740,7 @@ fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *d
 	snprintf(zone->net_finish, RANGE_S, "%s", addr);
 	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
+	zone->cuser = zone->muser = (unsigned long int)getuid();
 	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0)
 		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	else
