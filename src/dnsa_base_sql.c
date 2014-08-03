@@ -1486,10 +1486,14 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	zone->expire = (unsigned long int) sqlite3_column_int64(state, 7);
 	zone->ttl = (unsigned long int) sqlite3_column_int64(state, 8);
 	snprintf(zone->valid, RANGE_S, "%s", sqlite3_column_text(state, 9));
-	zone->owner = (unsigned long int) sqlite3_column_int(state, 10);
+	zone->owner = (unsigned long int) sqlite3_column_int64(state, 10);
 	snprintf(zone->updated, RANGE_S, "%s", sqlite3_column_text(state, 11));
 	snprintf(zone->type, RANGE_S, "%s", sqlite3_column_text(state, 12));
 	snprintf(zone->master, RBUFF_S, "%s", sqlite3_column_text(state, 13));
+	zone->cuser = (unsigned long int) sqlite3_column_int64(state, 14);
+	zone->muser = (unsigned long int) sqlite3_column_int64(state, 15);
+	zone->ctime = (unsigned long int) sqlite3_column_int64(state, 16);
+	zone->mtime = (unsigned long int) sqlite3_column_int64(state, 17);
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -1533,6 +1537,10 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->updated, RANGE_S, "%s", sqlite3_column_text(state, 16));
 	snprintf(rev->type, RANGE_S, "%s", sqlite3_column_text(state, 17));
 	snprintf(rev->master, RBUFF_S, "%s", sqlite3_column_text(state, 18));
+	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 19);
+	rev->muser = (unsigned long int) sqlite3_column_int64(state, 20);
+	rev->ctime = (unsigned long int) sqlite3_column_int64(state, 21);
+	rev->mtime = (unsigned long int) sqlite3_column_int64(state, 22);
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -1559,6 +1567,10 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	rec->pri = (unsigned long int) sqlite3_column_int(state, 6);
 	snprintf(rec->dest, RBUFF_S, "%s", sqlite3_column_text(state, 7));
 	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 8));
+	rec->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	rec->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	rec->ctime = (unsigned long int) sqlite3_column_int64(state, 11);
+	rec->mtime = (unsigned long int) sqlite3_column_int64(state, 12);
 	list = base->records;
 	if (list) {
 		while (list->next)
@@ -1582,6 +1594,10 @@ dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(rev->dest, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
+	rev->muser = (unsigned long int) sqlite3_column_int64(state, 6);
+	rev->ctime = (unsigned long int) sqlite3_column_int64(state, 7);
+	rev->mtime = (unsigned long int) sqlite3_column_int64(state, 8);
 	list = base->rev_records;
 	if (list) {
 		while (list->next)
@@ -1627,6 +1643,10 @@ dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	prefer->ip_addr = (unsigned long int) sqlite3_column_int64(state, 2);
 	prefer->record_id = (unsigned long int) sqlite3_column_int64(state, 3);
 	snprintf(prefer->fqdn, RBUFF_S, "%s", sqlite3_column_text(state, 4));
+	prefer->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
+	prefer->muser = (unsigned long int) sqlite3_column_int64(state, 6);
+	prefer->ctime = (unsigned long int) sqlite3_column_int64(state, 7);
+	prefer->mtime = (unsigned long int) sqlite3_column_int64(state, 8);
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1672,6 +1692,10 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(glue->sec_dns, RANGE_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(glue->pri_ns, RBUFF_S, "%s", sqlite3_column_text(state, 5));
 	snprintf(glue->sec_ns, RBUFF_S, "%s", sqlite3_column_text(state, 6));
+	glue->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	glue->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	glue->ctime = (unsigned long int) sqlite3_column_int64(state, 9);
+	glue->mtime = (unsigned long int) sqlite3_column_int64(state, 10);
 	list = base->glue;
 	if (list) {
 		while (list->next)
@@ -2031,6 +2055,14 @@ state, 7, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind destination %s\n", record->dest);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)record->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", record->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 9, (sqlite3_int64)record->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", record->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2082,6 +2114,14 @@ state, 9, zone->type, (int)strlen(zone->type), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 10, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind master %s\n", zone->master);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 11, (sqlite3_int64)zone->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", zone->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 12, (sqlite3_int64)zone->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", zone->muser);
 		return retval;
 	}
 	return retval;
@@ -2159,6 +2199,14 @@ state, 15, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind master %s\n", zone->master);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 16, (sqlite3_int64)zone->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", zone->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 17, (sqlite3_int64)zone->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", zone->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2179,6 +2227,14 @@ state, 2, rev->host, (int)strlen(rev->host), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 3, rev->dest, (int)strlen(rev->dest), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind dest %s\n", rev->dest);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 4, (sqlite3_int64)rev->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", rev->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)rev->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", rev->muser);
 		return retval;
 	}
 	return retval;
@@ -2205,6 +2261,14 @@ state, 1, prefer->ip, (int)strlen(prefer->ip), SQLITE_STATIC)) > 0) {
 	if ((retval - sqlite3_bind_text(
 state, 4, prefer->fqdn, (int)strlen(prefer->fqdn), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind fqdn %s\n", prefer->fqdn);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)prefer->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", prefer->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)prefer->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", prefer->muser);
 		return retval;
 	}
 	return retval;
@@ -2242,6 +2306,14 @@ state, 5, glue->pri_ns, (int)strlen(glue->pri_ns), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 6, glue->sec_ns, (int)strlen(glue->sec_ns), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind sec_ns %s\n", glue->sec_ns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 7, (sqlite3_int64)glue->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", glue->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)glue->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", glue->muser);
 		return retval;
 	}
 	return retval;
