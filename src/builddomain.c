@@ -115,15 +115,21 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 
 	dnsa_config_s *dc;
 	dnsa_s *dnsa;
+	dbdata_s *user;
 	zone_info_s *zone;
+
 	if (!(dc = malloc(sizeof(dnsa_config_s))))
 		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
 	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
-	
+		report_error(MALLOC_FAIL, "zone in add_cbc_build_domain");
+	if (!(user = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "user in add_cbc_build_domain");
+	dnsa_init_config_values(dc);
 	init_dnsa_struct(dnsa);
+	init_dbdata_struct(user);
+	init_zone_struct(zone);
 	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
 		fprintf(stderr, "Error in config file %s\n", cdl->config);
 		free(dc);
@@ -154,11 +160,14 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		return retval;
 	}
 	data->args.number = zone->id;
-	if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0)
+	user->args.number = (unsigned long int)getuid();
+	user->next = data;
+	if ((retval = dnsa_run_update(dc, user, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
 	else
 		printf("Zone marked as valid in the database\n");
-
+	user->next = '\0';
+	clean_dbdata_struct(user);
 #endif
 	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
 		printf("\
@@ -435,6 +444,7 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 	bdom->ns = cdl->ns;
 	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
 	snprintf(bdom->nfs_domain, CONF_S, "%s", cdl->nfsdomain);
+	bdom->cuser = bdom->muser = (unsigned long int)getuid();
 }
 
 int

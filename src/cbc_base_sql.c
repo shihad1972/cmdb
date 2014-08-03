@@ -91,10 +91,10 @@ INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
- domain, ntp_server, config_ntp, ldap_server,\
- ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
- smtp_server, config_email, xymon_server, config_xymon, nfs_domain) VALUES (\
- ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ domain, ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
+ config_ldap, log_server, config_log, smtp_server, config_email, \
+ xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
+ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES (?, ?, ?,\
  ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
@@ -320,7 +320,7 @@ const unsigned int cbc_select_fields[] = {
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 20, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
+	4, 10, 22, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -348,7 +348,7 @@ const int cbc_inserts[][24] = {
 	  DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
 	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
-	  DBTEXT, DBSHORT, DBTEXT, 0, 0, 0, 0 },
+	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0,
@@ -1701,6 +1701,10 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bdom->config_xymon);
 	else if (i == 19)
 		*buffer = &(base->bdom->nfs_domain);
+	else if (i == 20)
+		*buffer = &(base->bdom->cuser);
+	else if (i == 21)
+		*buffer = &(base->bdom->muser);
 }
 
 void

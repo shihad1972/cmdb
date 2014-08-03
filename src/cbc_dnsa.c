@@ -27,12 +27,12 @@
  * 
  */
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-/* For freeBSD ?? */
 #include <sys/types.h>
+#include <unistd.h>
+/* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
@@ -68,6 +68,7 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
+	zone->cuser = zone->muser = (unsigned long int)getuid();
 }
 
 void
