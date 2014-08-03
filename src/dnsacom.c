@@ -314,10 +314,14 @@ read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf)
 	} else {
 		dc->port = (unsigned int) portno;
 	}
-	dc->refresh = strtoul(refresh, NULL, 10);
-	dc->retry = strtoul(retry, NULL, 10);
-	dc->expire = strtoul(expire, NULL, 10);
-	dc->ttl = strtoul(ttl, NULL, 10);
+	if (strlen(refresh) > 0)
+		dc->refresh = strtoul(refresh, NULL, 10);
+	if (strlen(retry) > 0)
+		dc->retry = strtoul(retry, NULL, 10);
+	if (strlen(expire) > 0)
+		dc->expire = strtoul(expire, NULL, 10);
+	if (strlen(ttl) > 0)
+		dc->ttl = strtoul(ttl, NULL, 10);
 	hostmaster = strchr(dc->hostmaster, '@');
 	if (hostmaster)
 		*hostmaster = '.';
