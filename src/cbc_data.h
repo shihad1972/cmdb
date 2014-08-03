@@ -176,6 +176,10 @@ typedef struct cbc_pre_part_s {
 	unsigned long int min;
 	unsigned long int max;
 	unsigned long int pri;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	union part_id_u id;
 	union scheme_id_u link_id;
 	struct cbc_pre_part_s *next;
@@ -185,6 +189,10 @@ typedef struct cbc_seed_scheme_s {
 	char name[CONF_S];
 	short int lvm;
 	unsigned long int def_scheme_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_seed_scheme_s *next;
 } cbc_seed_scheme_s;
 

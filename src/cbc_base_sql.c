@@ -74,14 +74,17 @@ SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
 SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
  FROM locale","\
-SELECT pack_id, package, varient_id, os_id FROM packages","\
+SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
+ packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
- def_scheme_id, logical_volume FROM default_part","\
-SELECT def_scheme_id, scheme_name, lvm FROM seed_schemes","\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name\
- FROM server","\
-SELECT varient_id, varient, valias FROM varient","\
-SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
+ def_scheme_id, logical_volume, cuser, muser, ctime, mtime FROM default_part","\
+SELECT def_scheme_id, scheme_name, lvm, cuser, muser, ctime, mtime FROM \
+ seed_schemes","\
+SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
+ cuser, muser, ctime, mtimeFROM server","\
+SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient","\
+SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
+ FROM vm_server_hosts"
 };
 
 const char *cbc_sql_insert[] = { "\
@@ -95,26 +98,26 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  config_ldap, log_server, config_log, smtp_server, config_email, \
  xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES (?, ?, ?,\
- ?, ?)","\
+INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES \
+ (?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
-(?, ?, ?, ?, ?, ?, ?)","\
+ (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
  bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?)\
-","\
-INSERT INTO default_part (minimum, maximum, priority,\
-mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?,\
- ?, ?)","\
-INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?)","\
-INSERT INTO server (vendor, make, model, uuid, cust_id,\
- vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO varient (varient, valias) VALUES (?, ?)","\
-INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES\
- (?, ?, ?, ?)"
+INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
+ (?, ?, ?, ?, ?)","\
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
+ def_scheme_id, logical_volume, cuser, muser) \
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
+INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
+cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
+INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
+ (?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -330,11 +333,11 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
+	5, 13, 25, 6, 7, 7, 4, 8, 8, 12, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
+	4, 10, 22, 5, 6, 6, 3, 7, 5, 9, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -373,18 +376,18 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0 }
+	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, DBINT, DBINT, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBSHORT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cbc_update_types[][6] = {
@@ -1520,6 +1523,10 @@ cbc_store_package_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(pack->package, HOST_S, "%s", row[1]);
 	pack->vari_id = strtoul(row[2], NULL, 10);
 	pack->os_id = strtoul(row[3], NULL, 10);
+	pack->cuser = strtoul(row[4], NULL, 10);
+	pack->muser = strtoul(row[5], NULL, 10);
+	convert_time(row[6], &(pack->ctime));
+	convert_time(row[7], &(pack->mtime));
 	list = base->package;
 	if (list) {
 		while (list->next)
@@ -1546,6 +1553,10 @@ cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.def_scheme_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	part->cuser = strtoul(row[8], NULL, 10);
+	part->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(part->ctime));
+	convert_time(row[11], &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
@@ -1572,6 +1583,10 @@ cbc_store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.server_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	part->cuser = strtoul(row[8], NULL, 10);
+	part->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(part->ctime));
+	convert_time(row[11], &(part->mtime));
 	list = base->spart;
 	if (list) {
 		while (list->next)
@@ -1596,6 +1611,10 @@ cbc_store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
 		seed->lvm = 0;
 	else
 		seed->lvm = 1;
+	seed->cuser = strtoul(row[3], NULL, 10);
+	seed->muser = strtoul(row[4], NULL, 10);
+	convert_time(row[5], &(seed->ctime));
+	convert_time(row[6], &(seed->mtime));
 	list = base->sscheme;
 	if (list) {
 		while (list->next)
@@ -1622,6 +1641,10 @@ cbc_store_server_mysql(MYSQL_ROW row, cbc_s *base)
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
 	snprintf(server->name, HOST_S, "%s", row[7]);
+	server->cuser = strtoul(row[8], NULL, 10);
+	server->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(server->ctime));
+	convert_time(row[11], &(server->mtime));
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -1643,6 +1666,10 @@ cbc_store_varient_mysql(MYSQL_ROW row, cbc_s *base)
 	vari->varient_id = strtoul(row[0], NULL, 10);
 	snprintf(vari->varient, HOST_S, "%s", row[1]);
 	snprintf(vari->valias, MAC_S, "%s", row[2]);
+	vari->cuser = strtoul(row[3], NULL, 10);
+	vari->muser = strtoul(row[4], NULL, 10);
+	convert_time(row[5], &(vari->ctime));
+	convert_time(row[6], &(vari->mtime));
 	list = base->varient;
 	if (list) {
 		while (list->next)
@@ -1665,6 +1692,10 @@ cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", row[1]);
 	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[4], NULL, 10);
+	vmhost->cuser = strtoul(row[5], NULL, 10);
+	vmhost->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(vmhost->ctime));
+	convert_time(row[8], &(vmhost->mtime));
 	list = base->vmhost;
 	if (list) {
 		while (list->next)
@@ -1748,6 +1779,10 @@ cbc_setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->varient->varient);
 	else if (i == 1)
 		*buffer = &(base->varient->valias);
+	else if (i == 2)
+		*buffer = &(base->varient->cuser);
+	else if (i == 3)
+		*buffer = &(base->varient->muser);
 }
 
 void
@@ -1757,6 +1792,10 @@ cbc_setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int 
 		*buffer = &(base->sscheme->name);
 	else if (i == 1)
 		*buffer = &(base->sscheme->lvm);
+	else if (i == 2)
+		*buffer = &(base->sscheme->cuser);
+	else if (i == 3)
+		*buffer = &(base->sscheme->muser);
 }
 
 void
@@ -1776,6 +1815,10 @@ cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->dpart->link_id.def_scheme_id);
 	else if (i == 6)
 		*buffer = &(base->dpart->log_vol);
+	else if (i == 7)
+		*buffer = &(base->dpart->cuser);
+	else if (i == 8)
+		*buffer = &(base->dpart->muser);
 }
 
 void
@@ -1787,6 +1830,10 @@ cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->package->vari_id);
 	else if (i == 2)
 		*buffer = &(base->package->os_id);
+	else if (i == 3)
+		*buffer = &(base->package->cuser);
+	else if (i == 4)
+		*buffer = &(base->package->muser);
 }
 
 void

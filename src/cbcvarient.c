@@ -26,11 +26,12 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
-#include <unistd.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -180,6 +181,7 @@ list_cbc_build_varient(cbc_config_s *cmc)
 	int retval = NONE;
 	cbc_s *base = '\0';
 	cbc_varient_s *list = '\0';
+	time_t create;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in list_cbc_build_varient");
@@ -198,14 +200,28 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		return VARIENT_NOT_FOUND;
 	}
 	printf("Build Varients\n");
-	printf("Alias\t\t\tName\n");
+	printf("Name\t\tAlias\t\tUser\t\tTime\n");
 	while (list) {
-		if (strlen(list->valias) < 8)
-			printf("%s\t\t\t%s\n", list->valias, list->varient);
-		else if (strlen(list->valias) < 16)
-			printf("%s\t\t%s\n", list->valias, list->varient);
+		create = (time_t)list->ctime;
+		if (strlen(list->varient) < 8)
+			printf("%s\t\t", list->varient);
+		else if (strlen(list->varient) < 16)
+			printf("%s\t", list->varient);
 		else
-			printf("%s\t%s\n", list->valias, list->varient);
+			printf("%s\n\t\t", list->varient);
+		if (strlen(list->valias) < 8)
+			printf("%s\t\t", list->valias);
+		else if (strlen(list->valias) < 16)
+			printf("%s\t", list->valias);
+		else
+			printf("%s\n\t\t\t\t", list->valias);
+		if (strlen(get_uname(list->cuser)) < 8)
+			printf("%s\t\t", get_uname(list->cuser));
+		else if (strlen(get_uname(list->cuser)) < 16)
+			printf("%s\t", get_uname(list->cuser));
+		else
+			printf("%s\n\t\t\t\t\t\t", get_uname(list->cuser));
+		printf("%s", ctime(&create));
 		list = list->next;
 	}
 	clean_cbc_struct(base);
