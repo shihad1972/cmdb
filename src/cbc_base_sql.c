@@ -128,16 +128,26 @@ UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
   = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_ssl = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE \
+  bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
   ldap_server = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
@@ -328,7 +338,7 @@ const unsigned int cbc_insert_fields[] = {
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4,
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
 	4, 5, 3, 3, 3, 3, 3
 };
 const unsigned int cbc_delete_args[] = {
@@ -387,10 +397,10 @@ const unsigned int cbc_update_types[][5] = {
 	{ DBINT, DBINT, DBINT, NONE, NONE } ,
 	{ DBINT, DBINT, DBINT, NONE, NONE } ,
 	{ DBINT, DBINT, DBINT, DBINT, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBSHORT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBSHORT, DBINT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
 	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,

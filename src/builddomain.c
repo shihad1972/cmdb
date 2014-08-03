@@ -574,22 +574,30 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDN) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSERV) {
 		if (data)
 			snprintf(data->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSSL) {
 		if (data)
 			data->args.small = 1;
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEBINDDN) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
