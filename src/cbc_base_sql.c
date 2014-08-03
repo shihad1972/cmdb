@@ -136,28 +136,28 @@ UPDATE build_domain SET config_ldap = 1, ldap_server = ?, muser = ? WHERE \
   bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_ssl = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, muser = ? \
+  WHERE bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
-  ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_ssl = ? WHERE bd_id = ?","\
+  muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ?, muser = ? \
+  WHERE  bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
-  ldap_ssl = ? WHERE bd_id = ?","\
+  muser = ? WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ?, \
+  muser = ? WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ?, \
+  muser = ? WHERE  bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
+  ldap_server = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_server = ?, ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
 UPDATE build_domain SET nfs_domain = ?, muser = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_ntp = 1, ntp_server = ?, muser = ? WHERE \
   bd_id = ?","\
@@ -338,8 +338,8 @@ const unsigned int cbc_insert_fields[] = {
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-	4, 5, 3, 3, 3, 3, 3
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
+	5, 6, 3, 3, 3, 3, 3
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1
@@ -387,36 +387,36 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0 }
 };
 
-const unsigned int cbc_update_types[][5] = {
-	{ DBTEXT, DBTEXT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, DBINT, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBSHORT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT} ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT, NONE, NONE }
+const unsigned int cbc_update_types[][6] = {
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBSHORT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
@@ -999,6 +999,9 @@ cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	if ((retval = mysql_stmt_execute(cbc_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	j = (int)mysql_stmt_affected_rows(cbc_stmt);
+	mysql_stmt_free_result(cbc_stmt);
+	mysql_stmt_close(cbc_stmt);
+	cmdb_mysql_cleanup(&cbc);
 	return j;
 }
 

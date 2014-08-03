@@ -42,7 +42,7 @@ extern const unsigned int cbc_update_fields[];
 extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_delete_fields[];
 
-extern const unsigned int cbc_update_types[][5];
+extern const unsigned int cbc_update_types[][6];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][11];
