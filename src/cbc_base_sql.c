@@ -61,7 +61,7 @@
 const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
- ip_id, locale_id, def_scheme_id FROM build","\
+ ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
  ntp_server, config_ntp, ldap_server, ldap_ssl,\
  ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
@@ -88,7 +88,8 @@ const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
  ?, ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
- os_id, ip_id, locale_id, def_scheme_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+ os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  domain, ntp_server, config_ntp, ldap_server,\
  ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
@@ -268,7 +269,7 @@ SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
 };
 
 #ifdef HAVE_MYSQL
-
+/*
 const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -311,15 +312,15 @@ const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
-
+ */
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 21, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
+	5, 13, 21, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 8, 20, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
+	4, 10, 20, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
 };
 
 const unsigned int cbc_update_args[] = {
@@ -343,8 +344,8 @@ const unsigned int cbc_search_fields[] = {
 const int cbc_inserts[][24] = {
 	{ DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
+	  DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
 	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
 	  DBTEXT, DBSHORT, DBTEXT, 0, 0, 0, 0 },
@@ -1285,6 +1286,10 @@ cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	build->ip_id = strtoul(row[6], NULL, 10);
 	build->locale_id = strtoul(row[7], NULL, 10);
 	build->def_scheme_id = strtoul(row[8], NULL, 10);
+	build->cuser = strtoul(row[9], NULL, 10);
+	build->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(build->ctime));
+	convert_time(row[12], &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1793,6 +1798,10 @@ cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->build->locale_id);
 	else if (i == 7)
 		*buffer = &(base->build->def_scheme_id);
+	else if (i == 8)
+		*buffer = &(base->build->cuser);
+	else if (i == 9)
+		*buffer = &(base->build->muser);
 }
 
 void

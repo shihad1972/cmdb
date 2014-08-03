@@ -344,6 +344,7 @@ cbc_get_build_config(cbc_s *cbc, cbc_s *details, cbc_build_s *build)
 	build->os_id = details->bos->os_id;
 	build->locale_id = details->locale->locale_id;
 	build->def_scheme_id = details->sscheme->def_scheme_id;
+	build->cuser = build->muser = (unsigned long int)getuid();
 
 	return retval;
 }
