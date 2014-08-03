@@ -74,7 +74,8 @@ SELECT name, host, destination, r.id, zone FROM records r, zones z \
 WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records \
 WHERE type = 'A' GROUP BY destination HAVING c > 1","\
-SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
+SELECT prefa_id, ip, ip_addr, record_id, fqdn, cuser, muser, ctime, mtime \
+FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
 SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, cuser, muser, \
 ctime, mtime FROM glue_zones"
@@ -126,7 +127,8 @@ INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES \
 (?, ?, ?, ?, ?)","\
 INSERT","\
 INSERT","\
-INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
+INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn, cuser, muser) VALUES \
+(?, ?, ?, ?, ?, ?)","\
 INSERT","\
 INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, \
 cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -156,9 +158,9 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 5, 4, 11 };
+const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 9, 4, 11 };
 
-const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 4, 0, 8 };
+const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 6, 0, 8 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -183,7 +185,7 @@ const unsigned int dnsa_inserts[][17] = {
 	  0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0 }
@@ -763,6 +765,10 @@ dnsa_store_preferred_a_mysql(MYSQL_ROW row, dnsa_s *base)
 	prefer->ip_addr = strtoul(row[2], NULL, 10);
 	prefer->record_id = strtoul(row[3], NULL, 10);
 	snprintf(prefer->fqdn, RBUFF_S, "%s", row[4]);
+	prefer->cuser = strtoul(row[5], NULL, 10);
+	prefer->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(prefer->ctime));
+	convert_time(row[8], &(prefer->mtime));
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1312,6 +1318,10 @@ dnsa_setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned in
 		*input = &(base->prefer->record_id);
 	else if (i == 3)
 		*input = &(base->prefer->fqdn);
+	else if (i == 4)
+		*input = &(base->prefer->cuser);
+	else if (i == 5)
+		*input = &(base->prefer->muser);
 }
 
 void

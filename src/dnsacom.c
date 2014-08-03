@@ -451,8 +451,8 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 {
 	if ((strncmp(comm->domain, "all", COMM_S) != 0) &&
 	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
-	   ((comm->action != ADD_PREFER_A) ||
-	    (comm->action != DELETE_PREFERRED))))
+	   (comm->action != ADD_PREFER_A) &&
+	    (comm->action != DELETE_PREFERRED)))
 		if (validate_user_input(comm->domain, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
 	if (comm->action == ADD_PREFER_A) {

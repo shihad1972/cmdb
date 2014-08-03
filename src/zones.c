@@ -1267,9 +1267,10 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 {
 	int i, j, k;
 	char name[RBUFF_S], *fqdn;
+	time_t create;
 	dbdata_s *dlist;
 	record_row_s *records = dnsa->records;
-	preferred_a_s *prefer = dnsa->prefer;
+	preferred_a_s *prefer = dnsa->prefer, *mark = '\0';
 	fqdn = &name[0];
 	while (records) {
 		dlist = start;
@@ -1284,6 +1285,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 			k = 0;
 			while (prefer) {
 				if (strncmp(fqdn, prefer->fqdn, RBUFF_S) == 0) {
+					mark = prefer;
 					printf("     *  %s\n", fqdn);
 					k++;
 				}
@@ -1299,6 +1301,11 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 		clean_dbdata_struct(dlist);
 		dlist = start->next->next;
 		dlist->next = '\0';
+	}
+	if (mark) {
+		create = (time_t)mark->ctime;
+		printf("Preferred A record created by %s on %s",
+get_uname(mark->cuser), ctime(&create));
 	}
 }
 
@@ -1352,6 +1359,7 @@ mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	printf("IP: %s\tIP Addr: %lu\tRecord ID: %lu\n",
 	       dnsa->prefer->ip, dnsa->prefer->ip_addr, dnsa->prefer->record_id);
+	dnsa->prefer->cuser = dnsa->prefer->muser = (unsigned long int)getuid();
 	if ((retval = dnsa_run_insert(dc, dnsa, PREFERRED_AS)) != 0)
 		fprintf(stderr, "Cannot insert preferred A record\n");
 	else
