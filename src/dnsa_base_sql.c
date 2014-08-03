@@ -1465,11 +1465,14 @@ dnsa_store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned i
 void
 dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	int retval;
 	zone_info_s *zone, *list;
 	
 	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stme in dnsa_store_zone_sqlite");
 	init_zone_struct(zone);
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -1492,8 +1495,12 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(zone->master, RBUFF_S, "%s", sqlite3_column_text(state, 13));
 	zone->cuser = (unsigned long int) sqlite3_column_int64(state, 14);
 	zone->muser = (unsigned long int) sqlite3_column_int64(state, 15);
-	zone->ctime = (unsigned long int) sqlite3_column_int64(state, 16);
-	zone->mtime = (unsigned long int) sqlite3_column_int64(state, 17);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 16));
+	convert_time(stime, &(zone->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 17));
+	convert_time(stime, &(zone->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -1502,16 +1509,20 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->zones = zone;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	int retval;
 	rev_zone_info_s *rev, *list;
 	
 	if (!(rev = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_sqlite");
+	if (!(stime = malloc(sizeof(rev_zone_info_s))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));
@@ -1539,8 +1550,12 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->master, RBUFF_S, "%s", sqlite3_column_text(state, 18));
 	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 19);
 	rev->muser = (unsigned long int) sqlite3_column_int64(state, 20);
-	rev->ctime = (unsigned long int) sqlite3_column_int64(state, 21);
-	rev->mtime = (unsigned long int) sqlite3_column_int64(state, 22);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 21));
+	convert_time(stime, &(rev->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 22));
+	convert_time(stime, &(rev->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -1549,14 +1564,19 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->rev_zones = rev;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	record_row_s *rec, *list;
+
 	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in dnsa_store_record_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_record_sqlite");
 	init_record_struct(rec);
 	rec->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	rec->zone = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -1569,8 +1589,12 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 8));
 	rec->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
 	rec->muser = (unsigned long int) sqlite3_column_int64(state, 10);
-	rec->ctime = (unsigned long int) sqlite3_column_int64(state, 11);
-	rec->mtime = (unsigned long int) sqlite3_column_int64(state, 12);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(rec->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(rec->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->records;
 	if (list) {
 		while (list->next)
@@ -1579,15 +1603,19 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->records = rec;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	rev_record_row_s *rev, *list;
 
 	if (!(rev = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_record_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_record_sqlite");
 	init_rev_record_struct(rev);
 	rev->record_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	rev->rev_zone = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -1596,8 +1624,12 @@ dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 4));
 	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
 	rev->muser = (unsigned long int) sqlite3_column_int64(state, 6);
-	rev->ctime = (unsigned long int) sqlite3_column_int64(state, 7);
-	rev->mtime = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(rev->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(rev->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->rev_records;
 	if (list) {
 		while (list->next)
@@ -1606,6 +1638,7 @@ dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->rev_records = rev;
 	}
+	free(stime);
 }
 
 void
@@ -1633,10 +1666,13 @@ dnsa_store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_s *base)
 void
 dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	preferred_a_s *prefer, *list;
 	
 	if (!(prefer = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "prefer in dnsa_store_preferred_a_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_preferred_a_sqlite");
 	init_preferred_a_struct(prefer);
 	prefer->prefa_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(prefer->ip, RANGE_S, "%s", sqlite3_column_text(state, 1));
@@ -1645,8 +1681,12 @@ dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(prefer->fqdn, RBUFF_S, "%s", sqlite3_column_text(state, 4));
 	prefer->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
 	prefer->muser = (unsigned long int) sqlite3_column_int64(state, 6);
-	prefer->ctime = (unsigned long int) sqlite3_column_int64(state, 7);
-	prefer->mtime = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(prefer->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(prefer->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1655,6 +1695,7 @@ dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->prefer = prefer;
 	}
+	free(stime);
 }
 
 void
@@ -1680,10 +1721,13 @@ dnsa_store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 void
 dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	glue_zone_info_s *glue, *list;
 
 	if (!(glue = malloc(sizeof(glue_zone_info_s))))
 		report_error(MALLOC_FAIL, "glue in dnsa_store_glue_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_glue_sqlite");
 	init_glue_zone_struct(glue);
 	glue->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(glue->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -1694,8 +1738,12 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(glue->sec_ns, RBUFF_S, "%s", sqlite3_column_text(state, 6));
 	glue->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
 	glue->muser = (unsigned long int) sqlite3_column_int64(state, 8);
-	glue->ctime = (unsigned long int) sqlite3_column_int64(state, 9);
-	glue->mtime = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(glue->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(glue->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->glue;
 	if (list) {
 		while (list->next)
@@ -1704,6 +1752,7 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->glue = glue;
 	}
+	free(stime);
 }
 
 int

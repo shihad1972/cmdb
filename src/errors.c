@@ -848,6 +848,10 @@ convert_time(char *timestamp, unsigned long int *store)
 	size_t len;
 	time_t epoch;
 
+	if (strncmp(timestamp, "0", COMM_S) == 0) {
+		*store = 0;
+		return;
+	}
 	memset(&timval, 0, sizeof timval);
 	len = strlen(timestamp) + 1;
 	line = strndup(timestamp, len - 1);
