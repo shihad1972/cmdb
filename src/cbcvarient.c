@@ -315,6 +315,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	snprintf(vari->varient, HOST_S, "%s", cvl->varient);
 	snprintf(vari->valias, MAC_S, "%s", cvl->valias);
 	base->varient = vari;
+	vari->cuser = vari->muser = (unsigned long int)getuid();
 	if ((retval = cbc_run_insert(cmc, base, VARIENTS)) != 0) {
 		printf("Unable to add varient %s to database\n", cvl->varient);
 	} else {

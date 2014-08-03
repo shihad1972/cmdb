@@ -77,11 +77,11 @@ SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
- def_scheme_id, logical_volume, cuser, muser, ctime, mtime FROM default_part","\
+ def_scheme_id, logical_volume FROM default_part","\
 SELECT def_scheme_id, scheme_name, lvm, cuser, muser, ctime, mtime FROM \
  seed_schemes","\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
- cuser, muser, ctime, mtimeFROM server","\
+ cuser, muser, ctime, mtime FROM server","\
 SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient","\
 SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
  FROM vm_server_hosts"
@@ -110,7 +110,7 @@ INSERT INTO locale (locale, country, language, keymap, os_id,\
 INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
  (?, ?, ?, ?, ?)","\
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
- def_scheme_id, logical_volume, cuser, muser) \
+ def_scheme_id, logical_volume) \
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
@@ -333,11 +333,11 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 6, 7, 7, 4, 8, 8, 12, 7, 12, 7, 8
+	5, 13, 25, 6, 7, 7, 4, 8, 8, 8, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 5, 6, 6, 3, 7, 5, 9, 4, 9, 4, 5
+	4, 10, 22, 5, 6, 6, 3, 7, 5, 7, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -1553,10 +1553,6 @@ cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.def_scheme_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
-	part->cuser = strtoul(row[8], NULL, 10);
-	part->muser = strtoul(row[9], NULL, 10);
-	convert_time(row[10], &(part->ctime));
-	convert_time(row[11], &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
