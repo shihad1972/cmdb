@@ -690,27 +690,37 @@ cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->nfsdomain);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_NTP) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->ntpserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_SMTP) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->smtpserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LOG) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->logserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_XYMON) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->xymonserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	}
 }
 

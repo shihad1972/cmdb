@@ -138,21 +138,25 @@ UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE bd_id =
 UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
 UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ? WHERE\
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, ldap_ssl = ? WHERE\
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_ssl = ? WHERE\
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ?,\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_server = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
   ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET nfs_domain = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ntp = 1, ntp_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_email = 1, smtp_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_log = 1, log_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_xymon = 1, xymon_server = ? WHERE bd_id = ?"
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
+  ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
+UPDATE build_domain SET nfs_domain = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ntp = 1, ntp_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_email = 1, smtp_server = ?, muser = ? \
+  WHERE bd_id = ?","\
+UPDATE build_domain SET config_log = 1, log_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
+  bd_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -325,7 +329,7 @@ const unsigned int cbc_insert_fields[] = {
 
 const unsigned int cbc_update_args[] = {
 	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-	4, 5, 2, 2, 2, 2, 2
+	4, 5, 3, 3, 3, 3, 3
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1
@@ -398,11 +402,11 @@ const unsigned int cbc_update_types[][5] = {
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT} ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE }
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
