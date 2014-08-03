@@ -63,9 +63,9 @@ SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
  ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
- ntp_server, config_ntp, ldap_server, ldap_ssl,\
- ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
- config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
+ ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
+config_ldap, log_server, config_log, smtp_server, config_email, xymon_server, \
+config_xymon, nfs_domain, cuser, muser, ctime, mtime FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id, server_id FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id FROM\
  build_os ORDER BY alias, os_version","\
@@ -316,7 +316,7 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 21, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
+	5, 13, 25, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -1352,6 +1352,10 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		dom->config_xymon = 1;
 	}
 	snprintf(dom->nfs_domain, CONF_S, "%s", row[20]);
+	dom->cuser = strtoul(row[21], NULL, 10);
+	dom->muser = strtoul(row[22], NULL, 10);
+	convert_time(row[23], &(dom->ctime));
+	convert_time(row[24], &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
