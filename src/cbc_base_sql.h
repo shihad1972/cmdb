@@ -139,7 +139,8 @@ enum {			/* cbc update SQL statements */
 	UP_DOM_NTP = 25,
 	UP_DOM_SMTP = 26,
 	UP_DOM_LOG = 27,
-	UP_DOM_XYMON = 28
+	UP_DOM_XYMON = 28,
+	UP_VARIENT = 29
 };
 
 # ifdef HAVE_MYSQL

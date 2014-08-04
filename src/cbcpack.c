@@ -172,7 +172,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	size_t len;
 	cbc_s *base;
 	cbc_package_s *pack, *links;
-	dbdata_s *data;
+	dbdata_s *data, *update;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add package");
@@ -227,6 +227,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	}
 	build_package_list(osid, osnum, variid, varinum, cpl->package, base);
 	pack = links = base->package;
+	*variid = pack->vari_id;
 	while (pack) {
 		base->package = pack;
 		printf("OS ID: %lu\tVarient ID: %lu\n", pack->os_id, pack->vari_id);
@@ -241,10 +242,16 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		}
 		pack = pack->next;
 	}
+	cbc_init_initial_dbdata(&update, UP_VARIENT);
+	update->args.number = (unsigned long int)getuid();
+	update->next->args.number = *variid;
+	if ((retval = cbc_run_update(cmc, update, UP_VARIENT)) == 0)
+		printf("Cannot set varient updated\n");
 	base->package = links;
 	free(osid);
 	free(variid);
 	clean_dbdata_struct(data);
+	clean_dbdata_struct(update);
 	clean_cbc_struct(base);
 	return retval;
 }
