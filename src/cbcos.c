@@ -319,6 +319,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	snprintf(os->version, MAC_S, "%s", col->version);
 	snprintf(os->ver_alias, MAC_S, "%s", col->ver_alias);
 	snprintf(os->arch, RANGE_S, "%s", col->arch);
+	os->cuser = os->muser = (unsigned long int)getuid();
 	if ((retval = cbc_run_insert(cmc, cbc, BUILD_OSS)) != 0)
 		printf("Unable to add build os to database\n");
 	else

@@ -101,7 +101,7 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES \
  (?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
- bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
+ bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
@@ -339,7 +339,7 @@ const unsigned int cbc_select_fields[] = {
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 5, 6, 6, 3, 9, 5, 9, 4, 9, 4, 5
+	4, 10, 22, 5, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -370,7 +370,7 @@ const int cbc_inserts[][24] = {
 	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -1774,6 +1774,10 @@ cbc_setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bos->arch);
 	else if (i == 5)
 		*buffer = &(base->bos->bt_id);
+	else if (i == 6)
+		*buffer = &(base->bos->cuser);
+	else if (i == 7)
+		*buffer = &(base->bos->muser);
 }
 
 void
