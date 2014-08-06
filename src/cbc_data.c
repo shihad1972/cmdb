@@ -424,15 +424,10 @@ clean_package(cbc_package_s *pack)
 void
 init_pre_part(cbc_pre_part_s *prep)
 {
+	memset(prep, 0, sizeof(cbc_pre_part_s));
 	snprintf(prep->mount, COMM_S, "NULL");
 	snprintf(prep->fs, COMM_S, "NULL");
 	snprintf(prep->log_vol, COMM_S, "NULL");
-	prep->min = NONE;
-	prep->max = NONE;
-	prep->pri = NONE;
-	prep->id.part_id = NONE;
-	prep->link_id.server_id = NONE;
-	prep->next = '\0';
 }
 
 void

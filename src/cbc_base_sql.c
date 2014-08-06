@@ -77,7 +77,7 @@ SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
- def_scheme_id, logical_volume FROM default_part","\
+ def_scheme_id, logical_volume, cuser, muser, ctime, mtime FROM default_part","\
 SELECT def_scheme_id, scheme_name, lvm, cuser, muser, ctime, mtime FROM \
  seed_schemes","\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
@@ -106,11 +106,11 @@ INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
- bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+ bt_id, timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
  (?, ?, ?, ?, ?)","\
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
- def_scheme_id, logical_volume) \
+ def_scheme_id, logical_volume, cuser, muser) \
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
@@ -170,7 +170,8 @@ UPDATE build_domain SET config_log = 1, log_server = ?, muser = ? WHERE \
   bd_id = ?","\
 UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE varient SET muser = ? WHERE varient_id = ?"
+UPDATE varient SET muser = ? WHERE varient_id = ?","\
+UPDATE seed_schemes SET muser = ? WHERE def_scheme_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -334,16 +335,16 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 6, 7, 7, 4, 8, 8, 8, 7, 12, 7, 8
+	5, 13, 25, 6, 7, 7, 4, 8, 8, 12, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 5, 6, 6, 3, 7, 5, 7, 4, 9, 4, 5
+	4, 10, 22, 5, 6, 6, 3, 9, 5, 9, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
 	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
-	5, 6, 3, 3, 3, 3, 3, 2
+	5, 6, 3, 3, 3, 3, 3, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1
@@ -421,6 +422,7 @@ const unsigned int cbc_update_types[][6] = {
 	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
@@ -1555,6 +1557,10 @@ cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.def_scheme_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	part->cuser = strtoul(row[8], NULL, 10);
+	part->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(part->ctime));
+	convert_time(row[11], &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
