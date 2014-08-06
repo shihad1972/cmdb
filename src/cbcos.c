@@ -27,11 +27,12 @@
  * 
  */
 #include "../config.h"
-#include <unistd.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -204,6 +205,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os;
 	int retval = 0, i = 0;
+	time_t create;
 	cbc_s *base;
 	cbc_build_os_s *os;
 
@@ -221,21 +223,26 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	}
 	os = base->bos;
 	printf("Operating System %s\n", name);
-	printf("Version\tVersion alias\tArchitecture\n");
+	printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 	while (os) {
 		if (strncmp(os->os, name, MAC_S) == 0) {
 			i++;
+			create = (time_t)os->ctime;
 			if (strncmp(os->ver_alias, "none", COMM_S) == 0) {
-				printf("%s\tnone\t\t%s\n",
+				printf("%s\tnone\t\t%s\t\t",
 				     os->version, os->arch);
 			} else {
 				if (strlen(os->ver_alias) < 8)
-					printf("%s\t%s\t\t%s\n",
+					printf("%s\t%s\t\t%s\t\t",
 					     os->version, os->ver_alias, os->arch);
 				else
-					printf("%s\t%s\t%s\n",
+					printf("%s\t%s\t%s\t\t",
 					     os->version, os->ver_alias, os->arch);
 			}
+			if (strlen(get_uname(os->cuser < 8)))
+				printf("%s\t\t%s", get_uname(os->cuser), ctime(&create));
+			else
+				printf("%s\t%s", get_uname(os->cuser), ctime(&create));
 		}
 		os = os->next;
 	}
