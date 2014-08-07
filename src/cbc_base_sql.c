@@ -2371,10 +2371,13 @@ cbc_store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_s *build, *list;
 
 	if (!(build = malloc(sizeof(cbc_build_s))))
 		report_error(MALLOC_FAIL, "build in cbc_store_build_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_sqlite");
 	init_build_struct(build);
 	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(build->mac_addr, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2385,6 +2388,12 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
 	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 8);
+	build->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	build->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(build->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -2393,15 +2402,19 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->build = build;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_domain_s *dom, *list;
 
 	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "dom in cbc_store_build_domain_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_domain_sqlite");
 	init_build_domain(dom);
 	dom->bd_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	dom->start_ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2433,6 +2446,12 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 			 sqlite3_column_text(state, 18));
 	snprintf(dom->nfs_domain, CONF_S, "%s",
 		 sqlite3_column_text(state, 20));
+	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 21);
+	dom->muser = (unsigned long int) sqlite3_column_int64(state, 22);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 23));
+	convert_time(stime, &(dom->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 24));
+	convert_time(stime, &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -2441,15 +2460,19 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bdom = dom;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_ip_s *ip, *list;
 
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in cbc_store_build_ip_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_ip_sqlite");
 	init_build_ip(ip);
 	ip->ip_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	ip->ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2457,6 +2480,12 @@ cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(ip->domain, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	ip->bd_id = (unsigned long int) sqlite3_column_int64(state, 4);
 	ip->server_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	ip->cuser = (unsigned long int) sqlite3_column_int64(state, 6);
+	ip->muser = (unsigned long int) sqlite3_column_int64(state, 7);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(ip->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(ip->mtime));
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -2465,15 +2494,19 @@ cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bip = ip;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_os_s *os, *list;
 
 	if (!(os = malloc(sizeof(cbc_build_os_s))))
 		report_error(MALLOC_FAIL, "os in cbc_store_build_os_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_os_sqlite");
 	init_build_os(os);
 	os->os_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(os->os, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2482,6 +2515,12 @@ cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(os->ver_alias, MAC_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(os->arch, RANGE_S, "%s", sqlite3_column_text(state, 5));
 	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	os->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	os->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(os->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(os->mtime));
 	list = base->bos;
 	if (list) {
 		while (list->next)
@@ -2490,6 +2529,7 @@ cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bos = os;
 	}
+	free(stime);
 }
 
 void
