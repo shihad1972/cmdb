@@ -66,14 +66,15 @@ SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
  ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
 config_ldap, log_server, config_log, smtp_server, config_email, xymon_server, \
 config_xymon, nfs_domain, cuser, muser, ctime, mtime FROM build_domain","\
-SELECT ip_id, ip, hostname, domainname, bd_id, server_id FROM build_ip","\
+SELECT ip_id, ip, hostname, domainname, bd_id, server_id, cuser, muser, \
+ ctime, mtime FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
  ctime, mtime FROM build_os ORDER BY alias, os_version","\
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
- FROM locale","\
+SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone, \
+ cuser, muser, ctime, mtime FROM locale","\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
@@ -335,7 +336,7 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 6, 11, 7, 4, 8, 8, 12, 7, 12, 7, 8
+	5, 13, 25, 4, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -1404,6 +1405,10 @@ cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
 	ip->bd_id = strtoul(row[4], NULL, 10);
 	ip->server_id = strtoul(row[5], NULL, 10);
+	ip->cuser = strtoul(row[6], NULL, 10);
+	ip->muser = strtoul(row[7], NULL, 10);
+	convert_time(row[8], &(ip->ctime));
+	convert_time(row[9], &(ip->mtime));
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -1509,6 +1514,10 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	loc->os_id = strtoul(row[5], NULL, 10);
 	loc->bt_id = strtoul(row[6], NULL, 10);
 	snprintf(loc->timezone, HOST_S, "%s", row[7]);
+	loc->cuser = strtoul(row[8], NULL, 10);
+	loc->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(loc->ctime));
+	convert_time(row[11], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -2586,10 +2595,13 @@ cbc_store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_locale_s *loc, *list;
 
 	if (!(loc = malloc(sizeof(cbc_locale_s))))
 		report_error(MALLOC_FAIL, "loc in cbc_store_locale_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_locale_sqlite");
 	init_locale(loc);
 	loc->locale_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(loc->locale, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2599,6 +2611,12 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	loc->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	loc->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 7));
+	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	loc->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(loc->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -2607,20 +2625,30 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->locale = loc;
 	}
+	free(stime);
 }
 
 void
 cbc_store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_package_s *pack, *list;
 
 	if (!(pack = malloc(sizeof(cbc_package_s))))
 		report_error(MALLOC_FAIL, "pack in cbc_store_package_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_package_sqlite");
 	init_package(pack);
 	pack->pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(pack->package, HOST_S, "%s", sqlite3_column_text(state, 1));
 	pack->vari_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	pack->os_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	pack->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	pack->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(pack->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(pack->mtime));
 	list = base->package;
 	if (list) {
 		while (list->next)
@@ -2629,15 +2657,19 @@ cbc_store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->package = pack;
 	}
+	free(stime);
 }
 
 void
 cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.def_part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2652,6 +2684,12 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		(unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(part->log_vol, MAC_S, "%s", 
 		 sqlite3_column_text(state, 7));
+	part->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	part->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(part->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
@@ -2660,15 +2698,19 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->dpart = part;
 	}
+	free(stime);
 }
 
 void
 cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
+		report_error(MALLOC_FAIL, "part in cbc_store_spart_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_spart_sqlite");
 	init_pre_part(part);
 	part->id.part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2683,6 +2725,12 @@ cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		(unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(part->log_vol, MAC_S, "%s", 
 		 sqlite3_column_text(state, 7));
+	part->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	part->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(part->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(part->mtime));
 	list = base->spart;
 	if (list) {
 		while (list->next)
@@ -2691,21 +2739,31 @@ cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->spart = part;
 	}
+	free(stime);
 }
 
 void
 cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_seed_scheme_s *seed, *list;
 
 	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "seed in cbc_store_seed_scheme_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_seed_scheme_sqlite");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = 
 	   (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(seed->name, CONF_S, "%s",
 		 sqlite3_column_text(state, 1));
 	seed->lvm = (short int) sqlite3_column_int(state, 2);
+	seed->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	seed->muser = (unsigned long int) sqlite3_column_int64(state, 4);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(seed->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(seed->mtime));
 	list = base->sscheme;
 	if (list) {
 		while (list->next)
@@ -2714,15 +2772,19 @@ cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->sscheme = seed;
 	}
+	free(stime);
 }
 
 void
 cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cbc_server_s))))
 		report_error(MALLOC_FAIL, "server in cbc_store_server_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_server_sqlite");
 	init_cbc_server(server);
 	server->server_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
@@ -2732,6 +2794,12 @@ cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 	server->cust_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
+	server->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	server->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(server->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(server->mtime));
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -2740,19 +2808,29 @@ cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->server = server;
 	}
+	free(stime);
 }
 
 void
 cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_varient_s *vari, *list;
 
 	if (!(vari = malloc(sizeof(cbc_varient_s))))
 		report_error(MALLOC_FAIL, "vari in cbc_store_varient_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_varient_sqlite");
 	init_varient(vari);
 	vari->varient_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vari->varient, HOST_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vari->valias, MAC_S, "%s", sqlite3_column_text(state, 2));
+	vari->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	vari->muser = (unsigned long int) sqlite3_column_int64(state, 4);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(vari->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(vari->mtime));
 	list = base->varient;
 	if (list) {
 		while (list->next)
@@ -2766,15 +2844,24 @@ cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_vm_server_hosts_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
 		report_error(MALLOC_FAIL, "vmhost in cbc_store_vmhost_mysql");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	vmhost->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	vmhost->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(vmhost->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(vmhost->mtime));
 	list = base->vmhost;
 	if (list) {
 		while (list->next)
@@ -2783,6 +2870,7 @@ cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->vmhost = vmhost;
 	}
+	free(stime);
 }
 
 int

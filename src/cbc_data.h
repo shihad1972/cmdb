@@ -144,6 +144,10 @@ typedef struct cbc_locale_s {
 	unsigned long int locale_id;
 	unsigned long int os_id;
 	unsigned long int bt_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_locale_s *next;
 } cbc_locale_s;
 
