@@ -2918,6 +2918,16 @@ state, 8, (sqlite3_int64)build->def_scheme_id)) > 0) {
 		fprintf(stderr, "Cannot bind def_scheme_id\n");
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)build->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 10, (sqlite3_int64)build->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser\n");
+		return retval;
+	}
 	return retval;
 }
 
@@ -3026,6 +3036,16 @@ state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0)
 "Cannot bind nfs domain %s\n", bdom->nfs_domain);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 21, (sqlite3_int64)bdom->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 22, (sqlite3_int64)bdom->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser");
+		return retval;
+	}
 	return retval;
 }
 
@@ -3057,6 +3077,16 @@ state, 4, (sqlite3_int64)bip->bd_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 5, (sqlite3_int64)bip->server_id)) > 0) {
 		fprintf(stderr, "Cannot bind server_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)bip->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)bip->muser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
 		return retval;
 	}
 	return retval;
@@ -3096,6 +3126,14 @@ state, 5, bos->arch, (int)strlen(bos->arch), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind build type id %lu\n", bos->bt_id);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 7, (sqlite3_int64)bos->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", bos->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)bos->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", bos->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -3114,6 +3152,16 @@ state, 2, vari->valias, (int)strlen(vari->valias), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind valias %s\n", vari->valias);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)vari->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", vari->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)vari->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", vari->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -3129,6 +3177,16 @@ state, 1, seed->name, (int)strlen(seed->name), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int(state, 2, seed->lvm)) > 0) {
 		fprintf(stderr, "Cannot bind LVM value %d\n", seed->lvm);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)seed->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", seed->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)seed->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", seed->muser);
 		return retval;
 	}
 	return retval;
@@ -3174,6 +3232,16 @@ state, 7, part->log_vol, (int)strlen(part->log_vol), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind logical volume %s\n", part->log_vol);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite3_int64)part->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind scheme cuser %lu\n", part->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)part->muser)) > 0) {
+		fprintf(stderr, "Cannot bind scheme cuser %lu\n", part->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -3195,6 +3263,16 @@ state, 2, (sqlite3_int64)pack->vari_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 3, (sqlite3_int64)pack->os_id)) > 0) {
 		fprintf(stderr, "Cannot bind OS ID %lu\n", pack->os_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)pack->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", pack->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)pack->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", pack->muser);
 		return retval;
 	}
 	return retval;
