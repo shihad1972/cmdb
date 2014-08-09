@@ -99,8 +99,8 @@ INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  config_ldap, log_server, config_log, smtp_server, config_email, \
  xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES \
- (?, ?, ?, ?, ?)","\
+INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
+ muser) VALUES  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
@@ -336,7 +336,7 @@ const int cbc_mysql_inserts[][24] = {
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 4, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
+	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -1870,6 +1870,10 @@ cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bip->bd_id);
 	else if (i == 4)
 		*buffer = &(base->bip->server_id);
+	else if (i == 5)
+		*buffer = &(base->bip->cuser);
+	else if (i == 6)
+		*buffer = &(base->bip->muser);
 }
 
 void
@@ -2684,11 +2688,11 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		(unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(part->log_vol, MAC_S, "%s", 
 		 sqlite3_column_text(state, 7));
-	part->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
-	part->muser = (unsigned long int) sqlite3_column_int64(state, 10);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	part->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	part->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
 	convert_time(stime, &(part->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
 	convert_time(stime, &(part->mtime));
 	list = base->dpart;
 	if (list) {
