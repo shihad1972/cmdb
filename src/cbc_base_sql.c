@@ -281,7 +281,7 @@ SELECT bd.config_ntp, bd.ntp_server FROM build_domain bd \
 SELECT bd.config_log, bd.log_server FROM build_domain bd \
   LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
 SELECT config_ntp, config_ldap, ldap_ssl, config_log, config_xymon, config_email \
-  FROM build_domain bd NATURAL JOIN build_ip bi WHERE bi.server_id = ?","\
+  FROM build_domain bd LEFT JOIN build_ip bi ON bi.bd_id = bd.bd_id WHERE bi.server_id = ?","\
 SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
   bi.server_id = ?","\
 SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
