@@ -358,7 +358,7 @@ part->log_vol, cpl->scheme);
 		cbc_init_update_dbdata(&user, UP_SEEDSCHEME);
 		user->args.number = (unsigned long int)getuid();
 		user->next->args.number = scheme_id;
-		if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME) == 1)) {
+		if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
 			printf("Scheme %s marked as updated\n", cpl->scheme);
 			retval = 0;
 		} else if (retval == 0)
