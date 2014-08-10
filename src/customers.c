@@ -25,9 +25,13 @@
  * 
  */
 #include "../config.h"
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -132,6 +136,7 @@ add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		fprintf(stderr, "Customer COID %s exists in database\n", cmdb->customer->coid);
 		return COID_EXISTS;
 	}
+	cmdb->customer->cuser = cmdb->customer->muser = (unsigned long int)getuid();
 	retval = cmdb_run_insert(config, cmdb, CUSTOMERS);
 	return retval;
 }
@@ -313,6 +318,7 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		return retval;
 	}
 	cont->cust_id = cmdb->customer->cust_id;
+	cont->cuser = cont->muser = (unsigned long int)getuid();
 	retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
@@ -344,6 +350,7 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
+	cmdb->service->cuser = cmdb->service->muser = (unsigned long int)getuid();
 	retval = cmdb_run_insert(config, cmdb, SERVICES);
 	return retval;
 }
@@ -454,7 +461,12 @@ display_customer_contacts(cmdb_config_s *config, char *coid)
 void
 print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 {
+	char *uname, *crtime;
 	int city = NONE, addr = NONE, post = NONE;
+	struct passwd *user;
+	time_t cmtime;
+	uid_t uid;
+
 	addr = strncmp(cust->address, "NULL", COMM_S);
 	city = strncmp(cust->city, "NULL", COMM_S);
 	post = strncmp(cust->postcode, "NULL", COMM_S);
@@ -474,6 +486,18 @@ print_customer_details(cmdb_customer_s *cust, cmdb_s *cmdb)
 	} else {
 		printf("No address details for customer\n");
 	}
+	uid = (uid_t)cust->cuser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+        cmtime = (time_t)cust->ctime;
+        crtime = ctime(&cmtime);
+	printf("Create by user %s at %s", uname, crtime);
+	uid = (uid_t)cust->muser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)cust->mtime;
+	crtime = ctime(&cmtime);
+	printf("Modified by user %s at %s", uname, crtime);
 	if ((print_customer_contacts(cmdb->contact, cust->cust_id)) == 0)
 		printf("\nCustomer has no associated contacts\n");
 	if ((print_customer_servers(cmdb->server, cust->cust_id)) == 0)

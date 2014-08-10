@@ -1,4 +1,5 @@
 /* 
+
  *
  *  cmdb: Configuration Management Database
  *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
@@ -26,6 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
@@ -94,7 +99,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		cmdb->server->cust_id = cmdb->customer->cust_id;
 	if (cmdb->vmhost)
 		cmdb->server->vm_server_id = cmdb->vmhost->id;
-		retval = cmdb_run_insert(config, cmdb, SERVERS);
+	cmdb->server->cuser = cmdb->server->muser = (unsigned long int)getuid();
+	retval = cmdb_run_insert(config, cmdb, SERVERS);
 	clean_dbdata_struct(data);
 	free(input);
 	return retval;
@@ -146,6 +152,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		cmdb->hardware->server_id = data->fields.number;
 	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
+	cmdb->hardware->cuser = cmdb->hardware->muser = (uli_t)getuid();
 	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
 		fprintf(stderr, "Cannot find hardware class\n");
 		clean_dbdata_struct(data);
@@ -157,7 +164,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		if (!(cmdb->hardtype)) {
 			cmdb_hard_type_s *hardt;
 			if (!(hardt = malloc(sizeof(cmdb_hard_type_s))))
-				report_error(MALLOC_FAIL, "hardt in fill_hardware_values");
+				report_error(MALLOC_FAIL, "hardt in add_hardware_to_database");
 			cmdb_init_hardtype_t(hardt);
 			cmdb->hardtype = hardt;
 		}
@@ -335,6 +342,10 @@ void
 print_server_details(cmdb_server_s *server, cmdb_s *base)
 {
 	int retval;
+	char *uname, *crtime;
+	uid_t uid;
+	time_t cmtime;
+	struct passwd *user;
 	cmdb_customer_s *customer = base->customer;
 	cmdb_vm_host_s *vmhost = base->vmhost;
 	cmdb_hardware_s *hard = base->hardware;
@@ -346,6 +357,18 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 	printf("Vendor:\t\t%s\n", server->vendor);
 	printf("Make:\t\t%s\n", server->make);
 	printf("Model:\t\t%s\n", server->model);
+	uid = (uid_t)server->cuser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)server->ctime;
+	crtime = ctime(&cmtime);
+	printf("Created user:\t%s at %s", uname, crtime);
+	uid = (uid_t)server->muser;
+	user = getpwuid(uid);
+	uname = user->pw_name;
+	cmtime = (time_t)server->mtime;
+	crtime = ctime(&cmtime);
+	printf("Modified by:\t%s at %s", uname, crtime);
 	if (server->cust_id > 0) {
 		while (server->cust_id != customer->cust_id)
 			customer = customer->next;
@@ -459,19 +482,28 @@ print_vm_hosts(cmdb_vm_host_s *vmhost)
 int
 print_hardware(cmdb_hardware_s *hard, unsigned long int id)
 {
+	char *uname, *crtime;
 	int i = 0;
+	struct passwd *user;
+	time_t cmtime;
+	uid_t uid;
 
 	while (hard) {
 		if (hard->server_id == id) {
 			i++;
+			uid = (uid_t)hard->cuser;
+			user = getpwuid(uid);
+			uname = user->pw_name;
+			cmtime = (time_t)hard->ctime;
+			crtime = ctime(&cmtime);
 			if (i == 1)
 				printf("\nHardware details:\n");
 			if (strlen(hard->hardtype->hclass) < 8)
-				printf("%s\t\t%s\t%s\n",
-hard->hardtype->hclass, hard->device, hard->detail);
+				printf("%s\t\t%s\t%s: Added by %s on %s",
+hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
 			else
-				printf("%s\t%s\t%s\n",
-hard->hardtype->hclass, hard->device, hard->detail);
+				printf("%s\t%s\t%s: Added by %s on %s",
+hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
 		}
 		hard = hard->next;
 	}
@@ -481,20 +513,29 @@ hard->hardtype->hclass, hard->device, hard->detail);
 int
 print_services(cmdb_service_s *service, unsigned long int id, int type)
 {
+	char *uname, *crtime;
 	int i = 0;
+	struct passwd *user;
+	time_t cmtime;
+	uid_t uid;
 
 	if (type == SERVER) {
 		while (service) {
 			if (service->server_id == id) {
 				i++;
+				uid = (uid_t)service->cuser;
+				user = getpwuid(uid);
+				uname = user->pw_name;
+				cmtime = (time_t)service->ctime;
+				crtime = ctime(&cmtime);
 				if (i == 1)
 					printf("\nService Details:\n");
 				if ((strlen(service->servicetype->service)) < 8)
-					printf("%s\t\t%s\n",
-service->servicetype->service, service->url);
+					printf("%s\t\t%s: Added by %s on %s",
+service->servicetype->service, service->url, uname, crtime);
 				else
-					printf("%s\t%s\n",
-service->servicetype->service, service->url);
+					printf("%s\t%s: Added by %s on %s",
+service->servicetype->service, service->url, uname, crtime);
 			}
 			service = service->next;
 		}
@@ -502,14 +543,19 @@ service->servicetype->service, service->url);
 		while (service) {
 			if (service->cust_id == id) {
 				i++;
+				uid = (uid_t)service->cuser;
+				user = getpwuid(uid);
+				uname = user->pw_name;
+				cmtime = (time_t)service->ctime;
+				crtime = ctime(&cmtime);
 				if (i == 1)
 					printf("\nService Details:\n");
 				if ((strlen(service->servicetype->service)) < 8)
-					printf("%s\t\t%s\n",
-service->servicetype->service, service->url);
+					printf("%s\t\t%s: Added by %s on %s",
+service->servicetype->service, service->url, uname, crtime);
 				else
-					printf("%s\t%s\n",
-service->servicetype->service, service->url);
+					printf("%s\t%s: Added by %s on %s",
+service->servicetype->service, service->url, uname, crtime);
 			}
 			service = service->next;
 		}
@@ -523,10 +569,10 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	int retval = NONE;
 	dbdata_s *data;
 
-	if (!(base->server->model))
+	if (!(base->vmhost->type))
 		return NO_MODEL;
-	else if (strncmp(base->server->model, "NULL", COMM_S) == 0)
-		return NO_MODEL;
+	else if (strncmp(base->vmhost->type, "NULL", COMM_S) == 0)
+		return NO_MODEL; 
 	if (strncmp(cm->name, "NULL", COMM_S) == 0)
 		return NO_NAME;
 	else
@@ -547,8 +593,8 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 			report_error(MALLOC_FAIL, "base->vhost in add_vm_host_to_db");
 	}
 	snprintf(base->vmhost->name, NAME_S, "%s", cm->name);
-	snprintf(base->vmhost->type, MAC_S, "%s", base->server->model);
 	base->vmhost->server_id = data->fields.number;
+	base->vmhost->cuser = base->vmhost->muser = (unsigned long int)getuid();
 	if ((retval = cmdb_run_insert(cmc, base, VM_HOSTS)) != 0)
 		printf("Error adding to database\n");
 	else

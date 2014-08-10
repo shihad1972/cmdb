@@ -96,6 +96,10 @@ typedef struct record_row_s { /* Hold dns record */
 	unsigned long int pri;
 	unsigned long int zone;
 	unsigned long int ip_addr;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct record_row_s *next;
 } record_row_s;
 
@@ -106,6 +110,10 @@ typedef struct rev_record_row_s { /* Hold dns record */
 	unsigned long int record_id;
 	unsigned long int rev_zone;
 	unsigned long int ip_addr;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct rev_record_row_s *next;
 } rev_record_row_s;
 
@@ -127,6 +135,10 @@ typedef struct zone_info_s { /* Hold DNS zone */
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct zone_info_s *next;
 } zone_info_s;
 
@@ -151,6 +163,10 @@ typedef struct rev_zone_info_s { /* Hold DNS zone */
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct rev_zone_info_s *next;
 } rev_zone_info_s;
 
@@ -162,6 +178,10 @@ typedef struct glue_zone_info_s {
 	char sec_dns[RANGE_S];
 	unsigned long int id;
 	unsigned long int zone_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct glue_zone_info_s *next;
 } glue_zone_info_s;
 
@@ -169,6 +189,10 @@ typedef struct preferred_a_s { /* Hold the preferred A records for reverse */
 	unsigned long int prefa_id;
 	unsigned long int ip_addr;
 	unsigned long int record_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	char ip[RANGE_S];
 	char fqdn[RBUFF_S];
 	struct preferred_a_s *next;

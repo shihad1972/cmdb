@@ -28,31 +28,19 @@ CREATE TABLE `customer` (
   `city` varchar(31) NOT NULL DEFAULT 'none',
   `county` varchar(30) NOT NULL DEFAULT 'none',
   `postcode` varchar(10) NOT NULL DEFAULT 'none',
-  `coid` varchar(8) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `coid` varchar(8) NOT NULL
 );
 
 CREATE TABLE `varient` (
   `varient_id` INTEGER PRIMARY KEY,
   `varient` varchar(50) NOT NULL,
-  `valias` varchar(20) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `valias` varchar(20) NOT NULL
 );
 
 CREATE TABLE `seed_schemes` (
   `def_scheme_id` INTEGER PRIMARY KEY,
   `scheme_name` varchar(79) NOT NULL,
-  `lvm` smallint(4) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `lvm` smallint(4) NOT NULL
 );
 
 CREATE TABLE `build_domain` (
@@ -76,11 +64,7 @@ CREATE TABLE `build_domain` (
   `config_email` smallint(4) NOT NULL DEFAULT 0,
   `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none'
 );
 
 CREATE TABLE `contacts` (
@@ -89,10 +73,6 @@ CREATE TABLE `contacts` (
   `phone` varchar(20) NOT NULL,
   `email` varchar(50) NOT NULL,
   `cust_id` int(7) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
@@ -109,10 +89,6 @@ CREATE TABLE `server` (
   `cust_id` int(7) NOT NULL,
   `vm_server_id` int(7) NOT NULL DEFAULT 0,
   `name` varchar(63) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`cust_id`)
     REFERENCES `customer` (`cust_id`)
@@ -127,10 +103,6 @@ CREATE TABLE `services` (
   `service_type_id` int(7) NOT NULL,
   `detail` varchar(63) NOT NULL DEFAULT 'none',
   `url` varchar(63) NOT NULL DEFAULT 'none',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -151,10 +123,6 @@ CREATE TABLE `vm_server_hosts` (
   `vm_server` varchar(255) NOT NULL,
   `type` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -169,10 +137,6 @@ CREATE TABLE `build_ip` (
   `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
   `server_id` int(7) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY(`bd_id`) 
     REFERENCES `build_domain`(`bd_id`)
@@ -192,10 +156,6 @@ CREATE TABLE `build_os` (
   `ver_alias` varchar(15) NOT NULL DEFAULT 'none',
   `arch` varchar(15) DEFAULT NULL,
   `bt_id` int(7) DEFAULT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY(`bt_id`)
     REFERENCES `build_type`(`bt_id`)
@@ -208,10 +168,6 @@ CREATE TABLE `disk_dev` (
   `server_id` int(7) NOT NULL,
   `device` varchar(63) NOT NULL,
   `lvm` smallint(4) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
@@ -228,10 +184,6 @@ CREATE TABLE `default_part` (
   `filesystem` varchar(15) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   `logical_volume` varchar(31) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`def_scheme_id`)
     REFERENCES `seed_schemes`(`def_scheme_id`)
@@ -245,10 +197,6 @@ CREATE TABLE `hardware` (
   `device` varchar(31) NOT NULL,
   `server_id` int(7) NOT NULL,
   `hard_type_id` int(7) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY(`server_id`)
     REFERENCES `server`(`server_id`)
@@ -269,10 +217,6 @@ CREATE TABLE `locale` (
   `os_id` int(7) NOT NULL,
   `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -289,10 +233,6 @@ CREATE TABLE `packages` (
   `package` varchar(63) NOT NULL DEFAULT 'none',
   `varient_id` int(7) NOT NULL DEFAULT '0',
   `os_id` int(7) NOT NULL DEFAULT '0',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -314,10 +254,6 @@ CREATE TABLE `build` (
   `ip_id` int(7) NOT NULL,
   `locale_id` int(7) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY(`varient_id`)
     REFERENCES `varient`(`varient_id`)
@@ -365,11 +301,7 @@ CREATE TABLE `zones` (
   `owner` int(11) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'yes',
   `type` varchar(15) NOT NULL DEFAULT 'master',
-  `master` varchar(255),
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `master` varchar(255)
 );
 
 CREATE TABLE `rev_zones` (
@@ -391,11 +323,7 @@ CREATE TABLE `rev_zones` (
   `owner` int(7) NOT NULL DEFAULT '1',
   `updated` varchar(15) NOT NULL DEFAULT 'unknown',
   `type` varchar(15) NOT NULL DEFAULT 'master',
-  `master` varchar(255),
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
+  `master` varchar(255)
 );
 
 CREATE TABLE `records` (
@@ -408,10 +336,6 @@ CREATE TABLE `records` (
   `pri` int(7) NOT NULL DEFAULT '0',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`zone`)
     REFERENCES `zones`(`id`)
@@ -425,10 +349,6 @@ CREATE TABLE `rev_records` (
   `host` varchar(11) NOT NULL DEFAULT 'NULL',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`rev_zone`)
     REFERENCES `rev_zones`(`rev_zone_id`)
@@ -444,10 +364,6 @@ CREATE TABLE `glue_zones` (
   `sec_ns` varchar(255) NOT NULL DEFAULT 'none',
   `pri_dns` varchar(15) NOT NULL,
   `sec_dns` varchar(15) NOT NULL DEFAULT 'none',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`zone_id`)
     REFERENCES `zones`(`id`)
@@ -461,10 +377,6 @@ CREATE TABLE `preferred_a` (
   `ip_addr` UNSIGNED INTEGER NOT NULL DEFAULT '0',
   `record_id` int(7) NOT NULL,
   `fqdn` varchar(255) NOT NULL DEFAULT 'none',
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`record_id`)
     REFERENCES `records`(`id`)
@@ -478,10 +390,6 @@ CREATE TABLE `users` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `admin` varchar(255) NOT NULL DEFAULT 'no'
-  `cuser` int(7) NOT NULL DEFAULT 0,
-  `muser` int(7) NOT NULL DEFAULT 0,
-  `ctime` timestamp NOT NULL DEFAULT 0,
-  `mtime` timestamp NOT NULL DEFAULT 0
 );
 
 

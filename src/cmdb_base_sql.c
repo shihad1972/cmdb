@@ -50,33 +50,36 @@ const struct cmdb_hard_type_s hardtypes;
 const struct cmdb_vm_host_s vmhosts;
 
 const char *sql_select[] = { "\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name \
-FROM server ORDER BY cust_id","\
-SELECT cust_id, name, address, city, county, postcode, coid FROM customer \
-ORDER BY coid","\
-SELECT cont_id, name, phone, email, cust_id FROM contacts","\
-SELECT service_id, server_id, cust_id, service_type_id, detail, url FROM \
-services ORDER BY service_type_id","\
+SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
+cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
+SELECT cust_id, name, address, city, county, postcode, coid, cuser, muser, \
+ctime, mtime FROM customer ORDER BY coid","\
+SELECT cont_id, name, phone, email, cust_id, cuser, muser, ctime, mtime \
+FROM contacts","\
+SELECT service_id, server_id, cust_id, service_type_id, detail, url, cuser, \
+muser, ctime, mtime FROM services ORDER BY service_type_id","\
 SELECT service_type_id, service, detail FROM service_type","\
-SELECT hard_id, detail, device, server_id, hard_type_id FROM hardware \
-ORDER BY device DESC, hard_type_id","\
+SELECT hard_id, detail, device, server_id, hard_type_id, cuser, muser, ctime, \
+mtime FROM hardware ORDER BY device DESC, hard_type_id","\
 SELECT hard_type_id, type, class FROM hard_type","\
-SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
+SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
+FROM vm_server_hosts"
 };
 
 const char *sql_insert[] = { "\
-INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id) VALUES \
-(?,?,?,?,?,?,?)","\
-INSERT INTO customer (name, address, city, county, postcode, coid) VALUES \
+INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id, \
+cuser, muser) VALUES (?,?,?,?,?,?,?,?,?)","\
+INSERT INTO customer (name, address, city, county, postcode, coid, cuser, \
+muser) VALUES (?,?,?,?,?,?,?,?)","\
+INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES \
 (?,?,?,?,?,?)","\
-INSERT INTO contacts (name, phone, email, cust_id) VALUES (?,?,?,?)","\
-INSERT INTO services (server_id, cust_id, service_type_id, detail, url) \
-VALUES (?,?,?,?,?)","\
+INSERT INTO services (server_id, cust_id, service_type_id, detail, url, \
+cuser, muser) VALUES (?,?,?,?,?,?,?)","\
 INSERT INTO service_type (service, detail) VALUES (?,?)","\
-INSERT INTO hardware (detail, device, server_id, hard_type_id) VALUES \
-(?,?,?,?)","\
+INSERT INTO hardware (detail, device, server_id, hard_type_id, cuser, muser) \
+VALUES (?,?,?,?,?,?)","\
 INSERT INTO hard_type (type, class) VALUES (?,?)","\
-INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES (?,?,?)"
+INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES (?,?,?,?,?)"
 };
 
 const char *cmdb_sql_delete[] = { "\
@@ -114,9 +117,9 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 };
 
 /* Number of returned fields for the above SELECT queries */
-const unsigned int select_fields[] = { 8,7,5,6,3,5,3,4 };
+const unsigned int select_fields[] = { 12,11,9,10,3,9,3,8 };
 
-const unsigned int insert_fields[] = { 7,6,4,5,2,4,2,3 };
+const unsigned int insert_fields[] = { 9,8,6,7,2,6,2,5 };
 
 const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -128,15 +131,15 @@ const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
-const int cmdb_inserts[][7] = {
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBINT, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0 }
+const int cmdb_inserts[][11] = {
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cmdb_search_arg_types[][2] = {
@@ -422,7 +425,7 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
 	MYSQL_ROW cmdb_row;
-	my_ulonglong cmdb_rows;
+//	my_ulonglong cmdb_rows;
 	const char *query;
 	int retval = 0;
 	unsigned int fields;
@@ -438,9 +441,9 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
 	}
 	fields = mysql_num_fields(cmdb_res);
-	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
+/*	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
 		show_no_results(type);
-	}
+	} */
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
@@ -813,6 +816,14 @@ setup_insert_mysql_bind_buff_server(void **buffer, cmdb_s *base, unsigned int i)
 		*buffer = &(base->server->cust_id);
 	else if (i == 6)
 		*buffer = &(base->server->vm_server_id);
+	else if (i == 7)
+		*buffer = &(base->server->cuser);
+	else if (i == 8)
+		*buffer = &(base->server->muser);
+	else if (i == 9)
+		*buffer = &(base->server->ctime);
+	else if (i == 10)
+		*buffer = &(base->server->mtime);
 }
 
 void
@@ -830,6 +841,10 @@ setup_insert_mysql_bind_buff_customer(void **buffer, cmdb_s *base, unsigned int 
 		*buffer = &(base->customer->postcode);
 	else if (i == 5)
 		*buffer = &(base->customer->coid);
+	else if (i == 6)
+		*buffer = &(base->customer->cuser);
+	else if (i == 7)
+		*buffer = &(base->customer->muser);
 }
 
 void
@@ -843,6 +858,10 @@ setup_insert_mysql_bind_buff_contact(void **buffer, cmdb_s *base, unsigned int i
 		*buffer = &(base->contact->email);
 	else if (i == 3)
 		*buffer = &(base->contact->cust_id);
+	else if (i == 4)
+		*buffer = &(base->contact->cuser);
+	else if (i == 5)
+		*buffer = &(base->contact->muser);
 }
 
 void
@@ -858,6 +877,10 @@ setup_insert_mysql_bind_buff_service(void **buffer, cmdb_s *base, unsigned int i
 		*buffer = &(base->service->detail);
 	else if (i == 4)
 		*buffer = &(base->service->url);
+	else if (i == 5)
+		*buffer = &(base->service->cuser);
+	else if (i == 6)
+		*buffer = &(base->service->muser);
 }
 
 void
@@ -871,6 +894,10 @@ setup_insert_mysql_bind_buff_hardware(void **buffer, cmdb_s *base, unsigned int 
 		*buffer = &(base->hardware->server_id);
 	else if (i == 3)
 		*buffer = &(base->hardware->ht_id);
+	else if (i == 4)
+		*buffer = &(base->hardware->cuser);
+	else if (i == 5)
+		*buffer = &(base->hardware->muser);
 }
 
 void
@@ -882,6 +909,10 @@ setup_insert_mysql_bind_buff_vmhost(void **buffer, cmdb_s *base, unsigned int i)
 		*buffer = &(base->vmhost->type);
 	else if (i == 2)
 		*buffer = &(base->vmhost->server_id);
+	else if (i == 3)
+		*buffer = &(base->vmhost->cuser);
+	else if (i == 4)
+		*buffer = &(base->vmhost->muser);
 }
 
 void
@@ -936,6 +967,7 @@ store_result_mysql(MYSQL_ROW row, cmdb_s *base, int type, unsigned int fields)
 void
 store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cmdb_server_s))))
@@ -948,6 +980,12 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
 	snprintf(server->name, HOST_S, "%s", row[7]);
+	server->cuser = strtoul(row[8], NULL, 10);
+	server->muser = strtoul(row[9], NULL, 10);
+	timestamp = row[10];
+	convert_time(timestamp, &(server->ctime));
+	timestamp = row[11];
+	convert_time(timestamp, &(server->mtime));
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -963,6 +1001,7 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_customer_s *customer, *list;
 
 	if (!(customer = malloc(sizeof(cmdb_customer_s))))
@@ -974,6 +1013,12 @@ store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(customer->county, MAC_S, "%s", row[4]);
 	snprintf(customer->postcode, RANGE_S, "%s", row[5]);
 	snprintf(customer->coid, RANGE_S, "%s", row[6]);
+	customer->cuser = strtoul(row[7], NULL, 10);
+	customer->muser = strtoul(row[8], NULL, 10);
+	timestamp = row[9];
+	convert_time(timestamp, &(customer->ctime));
+	timestamp = row[10];
+	convert_time(timestamp, &(customer->mtime));
 	customer->next = '\0';
 	list = base->customer;
 	if (list) {
@@ -989,6 +1034,7 @@ store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_contact_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_contact_s *contact, *list;
 
 	if (!(contact = malloc(sizeof(cmdb_contact_s))))
@@ -998,6 +1044,12 @@ store_contact_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(contact->phone, MAC_S, "%s", row[2]);
 	snprintf(contact->email, HOST_S, "%s", row[3]);
 	contact->cust_id = strtoul(row[4], NULL, 10);
+	contact->cuser = strtoul(row[5], NULL, 10);
+	contact->muser = strtoul(row[6], NULL, 10);
+	timestamp = row[7];
+	convert_time(timestamp, &(contact->ctime));
+	timestamp = row[8];
+	convert_time(timestamp, &(contact->mtime));
 	contact->next = '\0';
 	list = base->contact;
 	if (list) {
@@ -1017,13 +1069,17 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 	cmdb_service_type_s *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_s))))
-		report_error(MALLOC_FAIL, "service in store_service_sqlite");
+		report_error(MALLOC_FAIL, "service in store_service_mysql");
 	service->service_id = strtoul(row[0], NULL, 10);
 	service->server_id = strtoul(row[1], NULL, 10);
 	service->cust_id = strtoul(row[2], NULL, 10);
 	service->service_type_id = strtoul(row[3], NULL, 10);
 	snprintf(service->detail, HOST_S, "%s", row[4]);
 	snprintf(service->url, HOST_S, "%s", row[5]);
+	service->cuser = strtoul(row[6], NULL, 10);
+	service->muser = strtoul(row[7], NULL, 10);
+	convert_time(row[8], &(service->ctime));
+	convert_time(row[9], &(service->mtime));
 	service->next = '\0';
 	type = base->servicetype;
 	if (type) {
@@ -1050,7 +1106,7 @@ store_service_type_mysql(MYSQL_ROW row, cmdb_s *base)
 	cmdb_service_type_s *service, *list;
 
 	if (!(service = malloc(sizeof(cmdb_service_type_s))))
-		report_error(MALLOC_FAIL, "service in store_service_type_sqlite");
+		report_error(MALLOC_FAIL, "service in store_service_type_mysql");
 
 	service->service_id = strtoul(row[0], NULL, 10);
 	snprintf(service->service, RANGE_S, "%s", row[1]);
@@ -1081,6 +1137,10 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(hard->device, MAC_S, "%s", row[2]);
 	hard->server_id = strtoul(row[3], NULL, 10);
 	hard->ht_id = strtoul(row[4], NULL, 10);
+	hard->cuser = strtoul(row[5], NULL, 10);
+	hard->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(hard->ctime));
+	convert_time(row[8], &(hard->mtime));
 	hard->next = '\0';
 	type = base->hardtype;
 	if (type) {
@@ -1127,6 +1187,7 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 void
 store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 {
+	char *timestamp;
 	cmdb_vm_host_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
@@ -1135,6 +1196,12 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 	snprintf(vmhost->name, RBUFF_S, "%s", row[1]);
 	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[3], NULL, 10);
+	vmhost->cuser = strtoul(row[4], NULL, 10);
+	vmhost->muser = strtoul(row[5], NULL, 10);
+	timestamp = row[6];
+	convert_time(timestamp, &(vmhost->ctime));
+	timestamp = row[7];
+	convert_time(timestamp, &(vmhost->mtime));
 	vmhost->next = '\0';
 	list = base->vmhost;
 	if (list) {
@@ -1553,10 +1620,13 @@ store_result_sqlite(sqlite3_stmt *state, cmdb_s *base, int type, unsigned int fi
 void
 store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cmdb_server_s))))
 		report_error(MALLOC_FAIL, "server in store_server_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "ctime in store_server_sqlite");
 	server->server_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(server->make, CONF_S, "%s", sqlite3_column_text(state, 2));
@@ -1565,6 +1635,14 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	server->cust_id = (unsigned long int) sqlite3_column_int(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int(state, 6);
 	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
+	server->cuser = (uli_t) sqlite3_column_int(state, 8);
+	server->muser = (uli_t) sqlite3_column_int(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(server->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(server->mtime));
+	memset(stime, 0, MAC_S);
 	server->next = '\0';
 	list = base->server;
 	if (list) {
@@ -1575,15 +1653,19 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->server = server;
 	}
+	free(stime);
 }
 
 void
 store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_customer_s *cust, *list;
 
 	if (!(cust = malloc(sizeof(cmdb_customer_s))))
 		report_error(MALLOC_FAIL, "cust in store_customer_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in store_customer_sqlite");
 	cust->cust_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(cust->name, HOST_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(cust->address, NAME_S, "%s", sqlite3_column_text(state, 2));
@@ -1591,6 +1673,14 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(cust->county, MAC_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(cust->postcode, RANGE_S, "%s", sqlite3_column_text(state, 5));
 	snprintf(cust->coid, RANGE_S, "%s", sqlite3_column_text(state, 6));
+	cust->cuser = (uli_t) sqlite3_column_int(state, 7);
+	cust->muser = (uli_t) sqlite3_column_int(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(cust->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(cust->mtime));
+	memset(stime, 0, MAC_S);
 	cust->next = '\0';
 	list = base->customer;
 	if (list) {
@@ -1601,21 +1691,32 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->customer = cust;
 	}
+	free(stime);
 }
 
 void
 store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_contact_s *contact, *list;
 
 	if (!(contact = malloc(sizeof(cmdb_contact_s))))
 		report_error(MALLOC_FAIL, "contact in store_contact_sqlite");
-
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in store_contact_sqlite");
 	contact->cont_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(contact->name, HOST_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(contact->phone, MAC_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(contact->email, HOST_S, "%s", sqlite3_column_text(state, 3));
 	contact->cust_id = (unsigned long int) sqlite3_column_int(state, 4);
+	contact->cuser = (uli_t) sqlite3_column_int(state, 5);
+	contact->muser = (uli_t) sqlite3_column_int(state, 6);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(contact->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(contact->mtime));
+	memset(stime, 0, MAC_S);
 	contact->next = '\0';
 	list = base->contact;
 	if (list) {
@@ -1626,23 +1727,34 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->contact = contact;
 	}
+	free(stime);
 }
 
 void
 store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_service_s *service, *list;
 	cmdb_service_type_s *type;
 
 	if (!(service = malloc(sizeof(cmdb_service_s))))
 		report_error(MALLOC_FAIL, "service in store_service_sqlite");
-
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in store_service_sqlite");
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
 	service->server_id = (unsigned long int) sqlite3_column_int(state, 1);
 	service->cust_id = (unsigned long int) sqlite3_column_int(state, 2);
 	service->service_type_id = (unsigned long int) sqlite3_column_int(state, 3);
 	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(service->url, HOST_S, "%s", sqlite3_column_text(state, 5));
+	service->cuser = (uli_t) sqlite3_column_int(state, 6);
+	service->muser = (uli_t) sqlite3_column_int(state, 7);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(service->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(service->mtime));
+	memset(stime, 0, MAC_S);
 	type = base->servicetype;
 	if (type) {
 		while (service->service_type_id != type->service_id)
@@ -1661,6 +1773,7 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->service = service;
 	}
+	free(stime);
 }
 
 void
@@ -1689,17 +1802,27 @@ store_service_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 void
 store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_hardware_s *hard, *list;
 	cmdb_hard_type_s *type;
 
 	if (!(hard = malloc(sizeof(cmdb_hardware_s))))
 		report_error(MALLOC_FAIL, "hard in store_hardware_sqlite");
-
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in store_hardware_sqlite");
 	hard->hard_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(hard->detail, HOST_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(hard->device, MAC_S, "%s", sqlite3_column_text(state, 2));
 	hard->server_id = (unsigned long int) sqlite3_column_int(state, 3);
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 4);
+	hard->cuser = (uli_t) sqlite3_column_int(state, 5);
+	hard->muser = (uli_t) sqlite3_column_int(state, 6);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(hard->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(hard->mtime));
+	memset(stime, 0, MAC_S);
 	hard->next = '\0';
 	type = base->hardtype;
 	if (type) {
@@ -1718,6 +1841,7 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->hardware = hard;
 	}
+	free(stime);
 }
 
 void
@@ -1746,14 +1870,25 @@ store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 void
 store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 {
+	char *stime;
 	cmdb_vm_host_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in store_vm_hosts_sqlite");
 	vmhost->id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(vmhost->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int(state, 3);
+	vmhost->cuser = (uli_t) sqlite3_column_int(state, 4);
+	vmhost->muser = (uli_t) sqlite3_column_int(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(vmhost->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(vmhost->mtime));
+	memset(stime, 0, MAC_S);
 	vmhost->next = '\0';
 	list = base->vmhost;
 	if (list) {
@@ -1764,6 +1899,7 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	} else {
 		base->vmhost = vmhost;
 	}
+	free(stime);
 }
 
 int
@@ -1805,7 +1941,16 @@ state, 6, (int)server->cust_id)) > 0) {
 state, 7, (int)server->vm_server_id)) > 0) {
 		printf("Cannot bind %lu\n", server->vm_server_id);
 		return retval;
-		
+	}
+	if ((retval = sqlite3_bind_int(
+state, 8, (int)server->cuser)) > 0) {
+		printf("Cannot bind %lu\n", server->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 9, (int)server->muser)) > 0) {
+		printf("Cannot bind %lu\n", server->muser);
+		return retval;
 	}
 	return retval;
 }
@@ -1845,6 +1990,16 @@ state, 6, cust->coid, (int)strlen(cust->coid), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind customer coid %s\n", cust->coid);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 7, (int)cust->cuser)) > 0) {
+		printf("Cannot bind %lu\n", cust->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 8, (int)cust->muser)) > 0) {
+		printf("Cannot bind %lu\n", cust->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1871,6 +2026,16 @@ state, 3, cont->email, (int)strlen(cont->email), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_int(
 state, 4, (int)cont->cust_id)) > 0) {
 		printf("Cannot bind cust_id %lu\n", cont->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)cont->cuser)) > 0) {
+		printf("Cannot bind %lu\n", cont->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)cont->muser)) > 0) {
+		printf("Cannot bind %lu\n", cont->muser);
 		return retval;
 	}
 	return retval;
@@ -1906,6 +2071,16 @@ state, 5, service->url, (int)strlen(service->url), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind service url %s\n", service->url);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)service->cuser)) > 0) {
+		printf("Cannot bind %lu\n", service->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 7, (int)service->muser)) > 0) {
+		printf("Cannot bind %lu\n", service->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1934,6 +2109,16 @@ state, 4, (int)hard->ht_id)) > 0) {
 		printf("Cannot bind hardware ht_id %lu\n", hard->ht_id);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)hard->cuser)) > 0) {
+		printf("Cannot bind %lu\n", hard->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 6, (int)hard->muser)) > 0) {
+		printf("Cannot bind %lu\n", hard->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1957,6 +2142,16 @@ state, 3, (sqlite3_int64)vmhost->server_id)) > 0) {
 		printf("Cannot bind vmhost server_id %lu\n", vmhost->server_id);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int(
+state, 4, (int)vmhost->cuser)) > 0) {
+		printf("Cannot bind %lu\n", vmhost->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int(
+state, 5, (int)vmhost->muser)) > 0) {
+		printf("Cannot bind %lu\n", vmhost->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -1975,6 +2170,12 @@ show_no_results(int type)
 		fprintf(stderr, "No contacts to list\n");
 	else if (type == SERVICE_TYPE)
 		;
+	else if (type == HARDWARE_TYPE)
+		;
+	else if (type == HARDWARE)
+		fprintf(stderr, "No hardware to list\n");
+	else if (type == VM_HOST)
+		fprintf(stderr, "No vm hosts to list\n");
 	else
 		fprintf(stderr, "No unknown listing %d\n", type);
 }

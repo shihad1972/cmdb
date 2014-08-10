@@ -26,11 +26,12 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
-#include <unistd.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <time.h>
+#include <unistd.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -185,11 +186,12 @@ list_seed_schemes(cbc_config_s *cbc)
 int
 display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = NONE;
+	int retval = NONE, i = 0;
 	unsigned long int def_id = 0;
 	cbc_s *base;
 	cbc_seed_scheme_s *seed;
 	cbc_pre_part_s *part;
+	time_t create;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_full_seed_scheme\n");
@@ -203,12 +205,22 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	while (seed) {
 		part = base->dpart;
 		if (strncmp(seed->name, cpl->scheme, CONF_S) == 0) {
+			i++;
 			def_id = seed->def_scheme_id;
-			printf("%s partitions ", cpl->scheme);
+			printf("Scheme %s partitions; ", cpl->scheme);
 			if (seed->lvm > 0)
-				printf("with LVM\n\tMount\tFS\tMin\tMax\tLogvol\n");
+				printf("with LVM\n");
 			else
-				printf("No LVM\n\tMount\tFS\tMin\tMax\n");
+				printf("No LVM\n");
+			create = (time_t)seed->ctime;
+			printf("Created by %s on %s", get_uname(seed->cuser), ctime(&create));
+			create = (time_t)seed->mtime;
+			printf("Modified by %s on %s", get_uname(seed->muser), ctime(&create));
+			printf("\tMount\tFS\tMin\tMax");
+			if (seed->lvm > 0)
+				printf("\tVolume\n");
+			else
+				printf("\n");
 		} else {
 			seed = seed->next;
 			continue;
@@ -225,6 +237,10 @@ part->mount, part->fs, part->min, part->max);
 			part = part->next;
 		}
 		seed = seed->next;
+	}
+	if (i == 0) {
+		retval = SCHEME_NOT_FOUND;
+		printf("No scheme with name %s found\n", cpl->scheme);
 	}
 	clean_cbc_struct(base);
 	return retval;
@@ -337,6 +353,18 @@ part->log_vol, cpl->scheme);
 		printf("Unable to add partition to DB\n");
 	else
 		printf("Partition added to DB\n");
+	if (retval == 0) {
+		dbdata_s *user;
+		cbc_init_update_dbdata(&user, UP_SEEDSCHEME);
+		user->args.number = (unsigned long int)getuid();
+		user->next->args.number = scheme_id;
+		if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
+			printf("Scheme %s marked as updated\n", cpl->scheme);
+			retval = 0;
+		} else if (retval == 0)
+			printf("Scheme %s not updated\n", cpl->scheme);
+		clean_dbdata_struct(user);
+	}
 	part->next = '\0';
 	clean_cbc_struct(base);
 
@@ -370,6 +398,7 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		return SCHEME_EXISTS;
 	}
 	scheme->lvm = cpl->lvm;
+	scheme->cuser = scheme->muser = (unsigned long int)getuid();
 	strncpy(scheme->name, cpl->scheme, CONF_S);
 	if ((retval = cbc_run_insert(cbc, base, SSCHEMES)) != 0) 
 		printf("Unable to add seed scheme to the database\n");
@@ -435,5 +464,6 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 	snprintf(part->mount, HOST_S, "%s", sbuck);
 	sbuck = pbuck;
 	snprintf(part->fs, RANGE_S, "%s", sbuck);
+	part->cuser = part->muser = (unsigned long int)getuid();
 	return retval;
 }

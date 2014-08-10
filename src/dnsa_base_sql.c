@@ -23,16 +23,18 @@
  *  supplied. Will also contian conditional code base on database type.
  */
 #include "../config.h"
+#include <arpa/inet.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
-#include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
@@ -58,18 +60,25 @@
  */
 const char *dnsa_sql_select[] = { "\
 SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, \
-valid, owner, updated, type, master FROM zones ORDER BY name","\
+valid, owner, updated, type, master, cuser, muser, ctime, mtime FROM \
+zones ORDER BY name","\
 SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid, \
-owner, updated, type, master FROM rev_zones ORDER BY start_ip","\
-SELECT id, zone, host, type, protocol, service, pri, destination, valid FROM records ORDER \
-BY zone, type, host","\
-SELECT rev_record_id, rev_zone, host, destination, valid FROM rev_records","\
-SELECT name, host, destination, r.id, zone FROM records r, zones z WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
-SELECT destination, COUNT(*) c FROM records WHERE type = 'A' GROUP BY destination HAVING c > 1","\
-SELECT prefa_id, ip, ip_addr, record_id, fqdn FROM preferred_a","\
+owner, updated, type, master, cuser, muser, ctime, mtime FROM rev_zones \
+ORDER BY start_ip","\
+SELECT id, zone, host, type, protocol, service, pri, destination, valid, \
+cuser, muser, ctime, mtime FROM records ORDER BY zone, type, host","\
+SELECT rev_record_id, rev_zone, host, destination, valid, cuser, muser, \
+ctime, mtime FROM rev_records","\
+SELECT name, host, destination, r.id, zone FROM records r, zones z \
+WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
+SELECT destination, COUNT(*) c FROM records \
+WHERE type = 'A' GROUP BY destination HAVING c > 1","\
+SELECT prefa_id, ip, ip_addr, record_id, fqdn, cuser, muser, ctime, mtime \
+FROM preferred_a","\
 SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'","\
-SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns FROM glue_zones"
+SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, cuser, muser, \
+ctime, mtime FROM glue_zones"
 };
 /**
  * These SQL searches require the struct within dnsa_s to be initialised, as
@@ -88,7 +97,8 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
  * number and type of fields and arguments in the query. The data is sent
  * and returned in a list of dbdata_s structs. The inital list must be created
  * to hold at least the greater of dnsa_extended_search_fields OR 
- * dnsa_extended_search_args. The helper function init_initial_dbdata will do this.
+ * dnsa_extended_search_args. The helper function init_initial_dbdata will do
+ * this.
  * To ascertain the argument, fields and types thereof, we use the following 
  * arrays and matrices:
  *   dnsa_extended_search_fields[]
@@ -97,35 +107,41 @@ SELECT prefix FROM rev_zones WHERE net_range = ?"
  *   dnsa_ext_search_arg_type[][]
  */
 const char *dnsa_sql_extended_search[] = { "\
-SELECT r.host, z.name, r.id FROM records r, zones z WHERE r.destination = ? AND r.zone = z.id","\
+SELECT r.host, z.name, r.id FROM records r, zones z \
+WHERE r.destination = ? AND r.zone = z.id","\
 SELECT id, host, type, pri, destination FROM records WHERE zone = ?","\
-SELECT DISTINCT destination from records WHERE destination > ? AND destination < ?" /*,"\
+SELECT DISTINCT destination from records \
+WHERE destination > ? AND destination < ?" /*,"\
 SELECT fqdn FROM preferred_a WHERE ip = ?" */
 };
 
 const char *dnsa_sql_insert[] = {"\
 INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
-ttl, type, master) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
-finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master) \
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO records (zone, host, type, protocol, service, pri, destination) VALUES \
-(?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO rev_records (rev_zone, host, destination) VALUES (?, ?, ?)","\
+finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, \
+master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO records (zone, host, type, protocol, service, pri, destination, \
+cuser, muser)  VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES \
+(?, ?, ?, ?, ?)","\
 INSERT","\
 INSERT","\
-INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn) VALUES (?, ?, ?, ?)","\
+INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn, cuser, muser) VALUES \
+(?, ?, ?, ?, ?, ?)","\
 INSERT","\
-INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns) VALUES (?, ?, ?, ?, ?, ?)"
+INSERT INTO glue_zones(name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, \
+cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 };
 
 const char *dnsa_sql_update[] = {"\
-UPDATE zones SET valid = 'yes', updated = 'no' WHERE id = ?","\
-UPDATE zones SET updated = 'yes' WHERE id = ?","\
+UPDATE zones SET valid = 'yes', updated = 'no', muser = ? WHERE id = ?","\
+UPDATE zones SET updated = 'yes', valid = 'unknown', muser = ? WHERE id = ?","\
 UPDATE zones SET updated = 'no' WHERE id = ?","\
-UPDATE zones SET serial = ? WHERE id = ?","\
-UPDATE rev_zones SET valid = 'yes', updated = 'no' WHERE rev_zone_id = ?","\
-UPDATE rev_zones SET serial = ? WHERE rev_zone_id = ?","\
+UPDATE zones SET serial = ?, muser = ? WHERE id = ?","\
+UPDATE rev_zones SET valid = 'yes', muser = ?, updated = 'no' WHERE \
+rev_zone_id = ?","\
+UPDATE rev_zones SET serial = ?, muser = ? WHERE rev_zone_id = ?","\
 UPDATE zones SET valid = 'no' WHERE id = ?"
 };
 
@@ -142,9 +158,9 @@ DELETE FROM glue_zones WHERE name = ?","\
 DELETE FROM records WHERE zone = ?"
 };
 
-const unsigned int dnsa_select_fields[] = { 14, 19, 9, 5, 5, 2, 5, 4, 7 };
+const unsigned int dnsa_select_fields[] = { 18, 23, 13, 9, 5, 2, 9, 4, 11 };
 
-const unsigned int dnsa_insert_fields[] = { 10, 15, 7, 3, 0, 0, 4, 0, 6 };
+const unsigned int dnsa_insert_fields[] = { 12, 17, 9, 5, 0, 0, 6, 0, 8 };
 
 const unsigned int dnsa_search_fields[] = { 1, 1, 1 };
 
@@ -152,25 +168,27 @@ const unsigned int dnsa_search_args[] = { 1, 1, 1, 1 };
 
 const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1, 1, 1, 1 };
 
-const unsigned int dnsa_update_args[] = { 1, 1, 1, 2, 1, 2, 1 };
+const unsigned int dnsa_update_args[] = { 2, 2, 1, 3, 2, 3, 1 };
 
 const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
 
 const unsigned int dnsa_extended_search_args[] = { 1, 1, 2/* , 1 */ };
 
-const unsigned int dnsa_inserts[][15] = {
+const unsigned int dnsa_inserts[][17] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT,
-	  DBTEXT, 0, 0, 0, 0, 0 },
+	  DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT,
-	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT },
-	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0 },
-	{ DBINT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0 }
+	  DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBINT },
+	{ DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBTEXT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
@@ -187,14 +205,14 @@ const unsigned int dnsa_ext_search_arg_type[][2] = { /* What we are searching on
 	{ DBTEXT } */
 };
 
-const unsigned int dnsa_update_arg_type[][2] = {
-	{ DBINT, NONE } ,
-	{ DBINT, NONE } ,
-	{ DBINT, NONE } ,
-	{ DBINT, DBINT } ,
-	{ DBINT, NONE } ,
-	{ DBINT, DBINT } ,
-	{ DBINT, NONE }
+const unsigned int dnsa_update_arg_type[][3] = {
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, 0, 0 } ,
+	{ DBINT, DBINT, DBINT } ,
+	{ DBINT, DBINT, 0 } ,
+	{ DBINT, DBINT, DBINT } ,
+	{ DBINT, 0, 0 }
 };
 
 const unsigned int dnsa_delete_arg_type[][1] = {
@@ -593,6 +611,10 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(zone->updated, RANGE_S, "%s", row[11]);
 	snprintf(zone->type, RANGE_S, "%s", row[12]);
 	snprintf(zone->master, RBUFF_S, "%s", row[13]);
+	zone->cuser = strtoul(row[14], NULL, 10);
+	zone->muser = strtoul(row[15], NULL, 10);
+	convert_time(row[16], &(zone->ctime));
+	convert_time(row[17], &(zone->mtime));
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -620,6 +642,10 @@ dnsa_store_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	rec->pri = strtoul(row[6], NULL, 10);
 	snprintf(rec->dest, RBUFF_S, "%s", row[7]);
 	snprintf(rec->valid, RANGE_S, "%s", row[8]);
+	rec->cuser = strtoul(row[9], NULL, 10);
+	rec->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(rec->ctime));
+	convert_time(row[12], &(rec->mtime));
 	list = base->records;
 	if (list) {
 		while(list->next)
@@ -663,6 +689,10 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(rev->updated, RANGE_S, "%s", row[16]);
 	snprintf(rev->type, RANGE_S, "%s", row[17]);
 	snprintf(rev->master, RBUFF_S, "%s", row[18]);
+	rev->cuser = strtoul(row[19], NULL, 10);
+	rev->muser = strtoul(row[20], NULL, 10);
+	convert_time(row[21], &(rev->ctime));
+	convert_time(row[22], &(rev->mtime));
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -686,6 +716,10 @@ dnsa_store_rev_record_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(rev->host, RBUFF_S, "%s", row[2]);
 	snprintf(rev->dest, RBUFF_S, "%s", row[3]);
 	snprintf(rev->valid, RANGE_S, "%s", row[4]);
+	rev->cuser = strtoul(row[5], NULL, 10);
+	rev->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(rev->ctime));
+	convert_time(row[8], &(rev->mtime));
 	list = base->rev_records;
 	if (list) {
 		while (list->next)
@@ -731,6 +765,10 @@ dnsa_store_preferred_a_mysql(MYSQL_ROW row, dnsa_s *base)
 	prefer->ip_addr = strtoul(row[2], NULL, 10);
 	prefer->record_id = strtoul(row[3], NULL, 10);
 	snprintf(prefer->fqdn, RBUFF_S, "%s", row[4]);
+	prefer->cuser = strtoul(row[5], NULL, 10);
+	prefer->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(prefer->ctime));
+	convert_time(row[8], &(prefer->mtime));
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -776,6 +814,10 @@ dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *base)
 	snprintf(glue->sec_dns, RANGE_S, "%s", row[4]);
 	snprintf(glue->pri_ns, RBUFF_S, "%s", row[5]);
 	snprintf(glue->sec_ns, RBUFF_S, "%s", row[6]);
+	glue->cuser = strtoul(row[7], NULL, 10);
+	glue->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(glue->ctime));
+	convert_time(row[10], &(glue->mtime));
 	list = base->glue;
 	if (list) {
 		while (list->next)
@@ -1176,6 +1218,10 @@ dnsa_setup_insert_mysql_bind_buff_record(void **input, dnsa_s *base, unsigned in
 		*input = &(base->records->pri);
 	else if (i == 6)
 		*input = &(base->records->dest);
+	else if (i == 7)
+		*input = &(base->records->cuser);
+	else if (i == 8)
+		*input = &(base->records->muser);
 }
 
 void
@@ -1201,6 +1247,10 @@ dnsa_setup_insert_mysql_bind_buff_zone(void **input, dnsa_s *base, unsigned int 
 		*input = &(base->zones->type);
 	else if (i == 9)
 		*input = &(base->zones->master);
+	else if (i == 10)
+		*input = &(base->zones->cuser);
+	else if (i == 11)
+		*input = &(base->zones->muser);
 }
 
 void
@@ -1236,6 +1286,10 @@ dnsa_setup_insert_mysql_bind_buff_rev_zone(void **input, dnsa_s *base, unsigned 
 		*input = &(base->rev_zones->type);
 	else if (i == 14)
 		*input = &(base->rev_zones->master);
+	else if (i == 15)
+		*input = &(base->rev_zones->cuser);
+	else if (i == 16)
+		*input = &(base->rev_zones->muser);
 }
 
 void
@@ -1247,6 +1301,10 @@ dnsa_setup_insert_mysql_bind_buff_rev_records(void **input, dnsa_s *base, unsign
 		*input = &(base->rev_records->host);
 	else if (i == 2)
 		*input = &(base->rev_records->dest);
+	else if (i == 3)
+		*input = &(base->rev_records->cuser);
+	else if (i == 4)
+		*input = &(base->rev_records->muser);
 }
 
 void
@@ -1260,6 +1318,10 @@ dnsa_setup_insert_mysql_bind_buff_pref_a(void **input, dnsa_s *base, unsigned in
 		*input = &(base->prefer->record_id);
 	else if (i == 3)
 		*input = &(base->prefer->fqdn);
+	else if (i == 4)
+		*input = &(base->prefer->cuser);
+	else if (i == 5)
+		*input = &(base->prefer->muser);
 }
 
 void
@@ -1277,6 +1339,10 @@ dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int 
 		*input = &(base->glue->pri_ns);
 	else if (i == 5)
 		*input = &(base->glue->sec_ns);
+	else if (i == 6)
+		*input = &(base->glue->cuser);
+	else if (i == 7)
+		*input = &(base->glue->muser);
 }
 
 #endif /* HAVE_MYSQL */
@@ -1399,11 +1465,14 @@ dnsa_store_result_sqlite(sqlite3_stmt *state, dnsa_s *base, int type, unsigned i
 void
 dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	int retval;
 	zone_info_s *zone, *list;
 	
 	if (!(zone = malloc(sizeof(zone_info_s))))
 		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stme in dnsa_store_zone_sqlite");
 	init_zone_struct(zone);
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -1420,10 +1489,18 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	zone->expire = (unsigned long int) sqlite3_column_int64(state, 7);
 	zone->ttl = (unsigned long int) sqlite3_column_int64(state, 8);
 	snprintf(zone->valid, RANGE_S, "%s", sqlite3_column_text(state, 9));
-	zone->owner = (unsigned long int) sqlite3_column_int(state, 10);
+	zone->owner = (unsigned long int) sqlite3_column_int64(state, 10);
 	snprintf(zone->updated, RANGE_S, "%s", sqlite3_column_text(state, 11));
 	snprintf(zone->type, RANGE_S, "%s", sqlite3_column_text(state, 12));
 	snprintf(zone->master, RBUFF_S, "%s", sqlite3_column_text(state, 13));
+	zone->cuser = (unsigned long int) sqlite3_column_int64(state, 14);
+	zone->muser = (unsigned long int) sqlite3_column_int64(state, 15);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 16));
+	convert_time(stime, &(zone->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 17));
+	convert_time(stime, &(zone->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->zones;
 	if (list) {
 		while (list->next)
@@ -1432,16 +1509,20 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->zones = zone;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	int retval;
 	rev_zone_info_s *rev, *list;
 	
 	if (!(rev = malloc(sizeof(rev_zone_info_s))))
 		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_sqlite");
+	if (!(stime = malloc(sizeof(rev_zone_info_s))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));
@@ -1467,6 +1548,14 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(rev->updated, RANGE_S, "%s", sqlite3_column_text(state, 16));
 	snprintf(rev->type, RANGE_S, "%s", sqlite3_column_text(state, 17));
 	snprintf(rev->master, RBUFF_S, "%s", sqlite3_column_text(state, 18));
+	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 19);
+	rev->muser = (unsigned long int) sqlite3_column_int64(state, 20);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 21));
+	convert_time(stime, &(rev->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 22));
+	convert_time(stime, &(rev->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->rev_zones;
 	if (list) {
 		while (list->next)
@@ -1475,14 +1564,19 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->rev_zones = rev;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	record_row_s *rec, *list;
+
 	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in dnsa_store_record_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_record_sqlite");
 	init_record_struct(rec);
 	rec->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	rec->zone = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -1493,6 +1587,14 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	rec->pri = (unsigned long int) sqlite3_column_int(state, 6);
 	snprintf(rec->dest, RBUFF_S, "%s", sqlite3_column_text(state, 7));
 	snprintf(rec->valid, RANGE_S, "%s", sqlite3_column_text(state, 8));
+	rec->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	rec->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(rec->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(rec->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->records;
 	if (list) {
 		while (list->next)
@@ -1501,21 +1603,33 @@ dnsa_store_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->records = rec;
 	}
+	free(stime);
 }
 
 void
 dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	rev_record_row_s *rev, *list;
 
 	if (!(rev = malloc(sizeof(rev_record_row_s))))
 		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_record_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_record_sqlite");
 	init_rev_record_struct(rev);
 	rev->record_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	rev->rev_zone = (unsigned long int) sqlite3_column_int64(state, 1);
 	snprintf(rev->host, RBUFF_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(rev->dest, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(rev->valid, RANGE_S, "%s", sqlite3_column_text(state, 4));
+	rev->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
+	rev->muser = (unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(rev->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(rev->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->rev_records;
 	if (list) {
 		while (list->next)
@@ -1524,6 +1638,7 @@ dnsa_store_rev_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->rev_records = rev;
 	}
+	free(stime);
 }
 
 void
@@ -1551,16 +1666,27 @@ dnsa_store_all_a_records_sqlite(sqlite3_stmt *state, dnsa_s *base)
 void
 dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	preferred_a_s *prefer, *list;
 	
 	if (!(prefer = malloc(sizeof(preferred_a_s))))
 		report_error(MALLOC_FAIL, "prefer in dnsa_store_preferred_a_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_preferred_a_sqlite");
 	init_preferred_a_struct(prefer);
 	prefer->prefa_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(prefer->ip, RANGE_S, "%s", sqlite3_column_text(state, 1));
 	prefer->ip_addr = (unsigned long int) sqlite3_column_int64(state, 2);
 	prefer->record_id = (unsigned long int) sqlite3_column_int64(state, 3);
 	snprintf(prefer->fqdn, RBUFF_S, "%s", sqlite3_column_text(state, 4));
+	prefer->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
+	prefer->muser = (unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(prefer->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(prefer->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->prefer;
 	if (list) {
 		while (list->next)
@@ -1569,6 +1695,7 @@ dnsa_store_preferred_a_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->prefer = prefer;
 	}
+	free(stime);
 }
 
 void
@@ -1594,10 +1721,13 @@ dnsa_store_duplicate_a_record_sqlite(sqlite3_stmt *state, dnsa_s *base)
 void
 dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 {
+	char *stime;
 	glue_zone_info_s *glue, *list;
 
 	if (!(glue = malloc(sizeof(glue_zone_info_s))))
 		report_error(MALLOC_FAIL, "glue in dnsa_store_glue_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in dnsa_store_glue_sqlite");
 	init_glue_zone_struct(glue);
 	glue->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(glue->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
@@ -1606,6 +1736,14 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	snprintf(glue->sec_dns, RANGE_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(glue->pri_ns, RBUFF_S, "%s", sqlite3_column_text(state, 5));
 	snprintf(glue->sec_ns, RBUFF_S, "%s", sqlite3_column_text(state, 6));
+	glue->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	glue->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(glue->ctime));
+	memset(stime, 0, MAC_S);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(glue->mtime));
+	memset(stime, 0, MAC_S);
 	list = base->glue;
 	if (list) {
 		while (list->next)
@@ -1614,6 +1752,7 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	} else {
 		base->glue = glue;
 	}
+	free(stime);
 }
 
 int
@@ -1965,6 +2104,14 @@ state, 7, record->dest, (int)strlen(record->dest), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind destination %s\n", record->dest);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)record->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", record->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 9, (sqlite3_int64)record->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", record->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2016,6 +2163,14 @@ state, 9, zone->type, (int)strlen(zone->type), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 10, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind master %s\n", zone->master);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 11, (sqlite3_int64)zone->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", zone->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 12, (sqlite3_int64)zone->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", zone->muser);
 		return retval;
 	}
 	return retval;
@@ -2093,6 +2248,14 @@ state, 15, zone->master, (int)strlen(zone->master), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind master %s\n", zone->master);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 16, (sqlite3_int64)zone->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", zone->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 17, (sqlite3_int64)zone->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", zone->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2113,6 +2276,14 @@ state, 2, rev->host, (int)strlen(rev->host), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 3, rev->dest, (int)strlen(rev->dest), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind dest %s\n", rev->dest);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 4, (sqlite3_int64)rev->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", rev->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)rev->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", rev->muser);
 		return retval;
 	}
 	return retval;
@@ -2139,6 +2310,14 @@ state, 1, prefer->ip, (int)strlen(prefer->ip), SQLITE_STATIC)) > 0) {
 	if ((retval - sqlite3_bind_text(
 state, 4, prefer->fqdn, (int)strlen(prefer->fqdn), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind fqdn %s\n", prefer->fqdn);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 5, (sqlite3_int64)prefer->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", prefer->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 6, (sqlite3_int64)prefer->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", prefer->muser);
 		return retval;
 	}
 	return retval;
@@ -2176,6 +2355,14 @@ state, 5, glue->pri_ns, (int)strlen(glue->pri_ns), SQLITE_STATIC)) > 0) {
 	if ((retval = sqlite3_bind_text(
 state, 6, glue->sec_ns, (int)strlen(glue->sec_ns), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind sec_ns %s\n", glue->sec_ns);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 7, (sqlite3_int64)glue->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", glue->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)glue->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", glue->muser);
 		return retval;
 	}
 	return retval;

@@ -42,7 +42,7 @@ extern const unsigned int cbc_update_fields[];
 extern const unsigned int cbc_delete_args[];
 extern const unsigned int cbc_delete_fields[];
 
-extern const unsigned int cbc_update_types[][5];
+extern const unsigned int cbc_update_types[][6];
 extern const unsigned int cbc_delete_types[][2];
 extern const unsigned int cbc_search_arg_types[][3];
 extern const unsigned int cbc_search_field_types[][11];
@@ -139,7 +139,9 @@ enum {			/* cbc update SQL statements */
 	UP_DOM_NTP = 25,
 	UP_DOM_SMTP = 26,
 	UP_DOM_LOG = 27,
-	UP_DOM_XYMON = 28
+	UP_DOM_XYMON = 28,
+	UP_VARIENT = 29,
+	UP_SEEDSCHEME = 30
 };
 
 # ifdef HAVE_MYSQL

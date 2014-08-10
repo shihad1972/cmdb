@@ -973,7 +973,7 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	}
 	if (cm->model) {
 #ifdef HAVE_LIBPCRE
-		if (validate_user_input(cm->model, NAME_REGEX) < 0)
+		if (validate_user_input(cm->model, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost type");
 #endif /* HAVE_LIBPCRE */
 		snprintf(vmhost->type, MAC_S, "%s", cm->model);

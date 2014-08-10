@@ -1,0 +1,10 @@
+CREATE TRIGGER insert_locale AFTER INSERT ON locale
+BEGIN
+UPDATE locale SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+
+CREATE TRIGGER update_locale AFTER UPDATE ON locale
+BEGIN
+UPDATE locale SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+

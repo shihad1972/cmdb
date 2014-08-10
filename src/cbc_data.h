@@ -50,6 +50,10 @@ typedef struct cbc_build_s {
 	unsigned long int ip_id;
 	unsigned long int locale_id;
 	unsigned long int def_scheme_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_build_s *next;
 } cbc_build_s;
 
@@ -76,6 +80,10 @@ typedef struct cbc_build_domain_s {
 	unsigned long int netmask;
 	unsigned long int gateway;
 	unsigned long int ns;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_build_domain_s *next;
 } cbc_build_domain_s;
 
@@ -86,6 +94,10 @@ typedef struct cbc_build_ip_s {
 	unsigned long int ip_id;
 	unsigned long int bd_id;
 	unsigned long int server_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_build_ip_s *next;
 } cbc_build_ip_s;
 
@@ -97,6 +109,10 @@ typedef struct cbc_build_os_s {
 	char arch[RANGE_S];
 	unsigned long int os_id;
 	unsigned long int bt_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_build_os_s *next;
 } cbc_build_os_s;
 
@@ -128,6 +144,10 @@ typedef struct cbc_locale_s {
 	unsigned long int locale_id;
 	unsigned long int os_id;
 	unsigned long int bt_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_locale_s *next;
 } cbc_locale_s;
 
@@ -136,6 +156,10 @@ typedef struct cbc_package_s {
 	unsigned long int pack_id;
 	unsigned long int vari_id;
 	unsigned long int os_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_package_s *next;
 } cbc_package_s;
 
@@ -156,6 +180,10 @@ typedef struct cbc_pre_part_s {
 	unsigned long int min;
 	unsigned long int max;
 	unsigned long int pri;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	union part_id_u id;
 	union scheme_id_u link_id;
 	struct cbc_pre_part_s *next;
@@ -165,6 +193,10 @@ typedef struct cbc_seed_scheme_s {
 	char name[CONF_S];
 	short int lvm;
 	unsigned long int def_scheme_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_seed_scheme_s *next;
 } cbc_seed_scheme_s;
 
@@ -177,6 +209,10 @@ typedef struct cbc_server_s {
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_server_s *next;
 } cbc_server_s;
 
@@ -184,6 +220,10 @@ typedef struct cbc_varient_s {
 	char varient[HOST_S];
 	char valias[MAC_S];
 	unsigned long int varient_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_varient_s *next;
 } cbc_varient_s;
 
@@ -192,6 +232,10 @@ typedef struct cbc_vm_server_hosts_s {
 	char type[HOST_S];
 	unsigned long int vm_s_id;
 	unsigned long int server_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
 	struct cbc_vm_server_hosts_s *next;
 } cbc_vm_server_hosts_s;
 

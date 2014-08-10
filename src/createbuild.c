@@ -159,6 +159,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		}
 	}
 	bip = cbc->bip;
+/* And why not check for build_ip in DNS and use that one? */
 	while (bip) {
 		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
 		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
@@ -251,6 +252,7 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 	}
 	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr, details->server);
 	details->bip = ip;
+	ip->cuser = ip->muser = (unsigned long int)getuid();
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -344,6 +346,7 @@ cbc_get_build_config(cbc_s *cbc, cbc_s *details, cbc_build_s *build)
 	build->os_id = details->bos->os_id;
 	build->locale_id = details->locale->locale_id;
 	build->def_scheme_id = details->sscheme->def_scheme_id;
+	build->cuser = build->muser = (unsigned long int)getuid();
 
 	return retval;
 }
@@ -447,6 +450,7 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 	details->diskd = disk;
 	cbc_init_initial_dbdata(&data, HARD_DISK_DEV);
 	data->args.number = disk->server_id = details->server->server_id;
+/* Should run a search here to see if the disk_dev is already in the table */
 	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {
 		free(data);
 		printf("You need to add a hard disk to build %s\n",

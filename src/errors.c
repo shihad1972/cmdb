@@ -29,13 +29,15 @@
  * 
  */
 #include "../config.h"
-#include <unistd.h>
+#include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-/* For freeBSD ?? */
 #include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+/* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
@@ -127,6 +129,8 @@ report_error(int error, const char *errstr)
 	} else if (error == MULTIPLE_SERVER_IDS) {
 		fprintf(stderr, "Multiple servers with id %s in database\n\
 		THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
+	} else if (error == NO_MODEL) {
+		fprintf(stderr, "Server does not have a model!\n");
 	} else if (error == SERVER_UUID_NOT_FOUND) {
 		fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
 	} else if (error == MULTIPLE_SERVER_UUIDS) {
@@ -835,6 +839,56 @@ write_file(char *filename, char *output)
 	}
 	return retval;
 }
+
+void
+convert_time(char *timestamp, unsigned long int *store)
+{
+	char *tmp, *line;
+	struct tm timval;
+	size_t len;
+	time_t epoch;
+
+	if (strncmp(timestamp, "0", COMM_S) == 0) {
+		*store = 0;
+		return;
+	}
+	memset(&timval, 0, sizeof timval);
+	len = strlen(timestamp) + 1;
+	line = strndup(timestamp, len - 1);
+	tmp = strtok(line, "-");
+	timval.tm_year = (int)strtol(tmp, NULL, 10);
+	if (timval.tm_year > 1900)
+		timval.tm_year -= 1900;
+	tmp = strtok(NULL, "-");
+	timval.tm_mon = (int)strtol(tmp, NULL, 10) - 1;
+	tmp = strtok(NULL, " ");
+	timval.tm_mday = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_hour = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_min = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_sec = (int)strtol(tmp, NULL, 10);
+	timval.tm_isdst = -1;
+	epoch = mktime(&timval);
+	if (epoch < 0)
+		*store = 0;
+	else
+		*store = (unsigned long int)epoch;
+	free(line);
+}
+
+char *
+get_uname(unsigned long int uid)
+{
+	struct passwd *user;
+
+	if ((user = getpwuid((uid_t)uid)))
+		return user->pw_name;
+	else
+		return NULL;
+}
+
 
 int
 get_ip_from_hostname(dbdata_s *data)

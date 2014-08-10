@@ -61,59 +61,64 @@
 const char *cbc_sql_select[] = { "\
 SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
- ip_id, locale_id, def_scheme_id FROM build","\
+ ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
- ntp_server, config_ntp, ldap_server, ldap_ssl,\
- ldap_dn, ldap_bind, config_ldap, log_server, config_log, smtp_server,\
- config_email, xymon_server, config_xymon, nfs_domain FROM build_domain","\
-SELECT ip_id, ip, hostname, domainname, bd_id, server_id FROM build_ip","\
-SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id FROM\
- build_os ORDER BY alias, os_version","\
+ ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
+config_ldap, log_server, config_log, smtp_server, config_email, xymon_server, \
+config_xymon, nfs_domain, cuser, muser, ctime, mtime FROM build_domain","\
+SELECT ip_id, ip, hostname, domainname, bd_id, server_id, cuser, muser, \
+ ctime, mtime FROM build_ip","\
+SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
+ ctime, mtime FROM build_os ORDER BY alias, os_version","\
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone\
- FROM locale","\
-SELECT pack_id, package, varient_id, os_id FROM packages","\
+SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone, \
+ cuser, muser, ctime, mtime FROM locale","\
+SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
+ packages","\
 SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
- def_scheme_id, logical_volume FROM default_part","\
-SELECT def_scheme_id, scheme_name, lvm FROM seed_schemes","\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name\
- FROM server","\
-SELECT varient_id, varient, valias FROM varient","\
-SELECT vm_server_id, vm_server, type, server_id FROM vm_server_hosts"
+ def_scheme_id, logical_volume, cuser, muser, ctime, mtime FROM default_part","\
+SELECT def_scheme_id, scheme_name, lvm, cuser, muser, ctime, mtime FROM \
+ seed_schemes","\
+SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
+ cuser, muser, ctime, mtime FROM server","\
+SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient","\
+SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
+ FROM vm_server_hosts"
 };
 
 const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
  ?, ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
- os_id, ip_id, locale_id, def_scheme_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
+ os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
- domain, ntp_server, config_ntp, ldap_server,\
- ldap_ssl, ldap_dn, ldap_bind, config_ldap, log_server, config_log,\
- smtp_server, config_email, xymon_server, config_xymon, nfs_domain) VALUES (\
- ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id) VALUES (?, ?, ?,\
- ?, ?)","\
+ domain, ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
+ config_ldap, log_server, config_log, smtp_server, config_email, \
+ xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
+ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
+ muser) VALUES  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
- bt_id) VALUES (?, ?, ?, ?, ?, ?)","\
+ bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
-(?, ?, ?, ?, ?, ?, ?)","\
+ (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
 INSERT INTO locale (locale, country, language, keymap, os_id,\
- bt_id, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO packages (package, varient_id, os_id) VALUES (?, ?, ?)\
-","\
-INSERT INTO default_part (minimum, maximum, priority,\
-mount_point, filesystem, def_scheme_id, logical_volume) VALUES (?, ?, ?, ?, ?,\
- ?, ?)","\
-INSERT INTO seed_schemes (scheme_name, lvm) VALUES (?, ?)","\
-INSERT INTO server (vendor, make, model, uuid, cust_id,\
- vm_server_id, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
-INSERT INTO varient (varient, valias) VALUES (?, ?)","\
-INSERT INTO vm_server_hosts (vm_server, type, server_id) VALUES\
- (?, ?, ?, ?)"
+ bt_id, timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
+ (?, ?, ?, ?, ?)","\
+INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
+ def_scheme_id, logical_volume, cuser, muser) \
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
+INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
+cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
+INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
+ (?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -127,31 +132,47 @@ UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
 UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
   = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, ldap_ssl = ? WHERE\
+UPDATE build_domain SET config_ldap = 1, ldap_ssl = ?, muser = ? WHERE \
   bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, ldap_server = ?,\
-  ldap_ssl = ? WHERE bd_id = ?","\
-UPDATE build_domain SET nfs_domain = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ntp = 1, ntp_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_email = 1, smtp_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_log = 1, log_server = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_xymon = 1, xymon_server = ? WHERE bd_id = ?"
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, muser = ? \
+  WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
+  muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ?, muser = ? \
+  WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
+  muser = ? WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ?, \
+  muser = ? WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ?, \
+  muser = ? WHERE  bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_server = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
+  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
+  ldap_server = ?, ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET nfs_domain = ?, muser = ? WHERE bd_id = ?","\
+UPDATE build_domain SET config_ntp = 1, ntp_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_email = 1, smtp_server = ?, muser = ? \
+  WHERE bd_id = ?","\
+UPDATE build_domain SET config_log = 1, log_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
+  bd_id = ?","\
+UPDATE varient SET muser = ? WHERE varient_id = ?","\
+UPDATE seed_schemes SET muser = ? WHERE def_scheme_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -260,7 +281,7 @@ SELECT bd.config_ntp, bd.ntp_server FROM build_domain bd \
 SELECT bd.config_log, bd.log_server FROM build_domain bd \
   LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
 SELECT config_ntp, config_ldap, ldap_ssl, config_log, config_xymon, config_email \
-  FROM build_domain bd NATURAL JOIN build_ip bi WHERE bi.server_id = ?","\
+  FROM build_domain bd LEFT JOIN build_ip bi ON bi.bd_id = bd.bd_id WHERE bi.server_id = ?","\
 SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
   bi.server_id = ?","\
 SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
@@ -268,7 +289,7 @@ SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
 };
 
 #ifdef HAVE_MYSQL
-
+/*
 const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -311,20 +332,20 @@ const int cbc_mysql_inserts[][24] = {
 {MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
-
+ */
 #endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
-	5, 9, 21, 6, 7, 7, 4, 8, 4, 8, 3, 8, 3, 4
+	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 8, 20, 5, 6, 6, 3, 7, 3, 7, 2, 7, 2, 3
+	4, 10, 22, 5, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
-	2, 2, 2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-	4, 5, 2, 2, 2, 2, 2
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
+	5, 6, 3, 3, 3, 3, 3, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1
@@ -343,14 +364,14 @@ const unsigned int cbc_search_fields[] = {
 const int cbc_inserts[][24] = {
 	{ DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
+	  DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
 	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
-	  DBTEXT, DBSHORT, DBTEXT, 0, 0, 0, 0 },
+	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -358,50 +379,52 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0 }
+	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, DBINT, DBINT, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBSHORT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
-const unsigned int cbc_update_types[][5] = {
-	{ DBTEXT, DBTEXT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT, DBINT, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBSHORT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBSHORT, DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBSHORT, DBINT, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT} ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE }
+const unsigned int cbc_update_types[][6] = {
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBSHORT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBSHORT, DBINT, DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBSHORT, DBINT, DBINT } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
@@ -984,6 +1007,9 @@ cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	if ((retval = mysql_stmt_execute(cbc_stmt)) != 0)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
 	j = (int)mysql_stmt_affected_rows(cbc_stmt);
+	mysql_stmt_free_result(cbc_stmt);
+	mysql_stmt_close(cbc_stmt);
+	cmdb_mysql_cleanup(&cbc);
 	return j;
 }
 
@@ -1285,6 +1311,10 @@ cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	build->ip_id = strtoul(row[6], NULL, 10);
 	build->locale_id = strtoul(row[7], NULL, 10);
 	build->def_scheme_id = strtoul(row[8], NULL, 10);
+	build->cuser = strtoul(row[9], NULL, 10);
+	build->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(build->ctime));
+	convert_time(row[12], &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1347,6 +1377,10 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		dom->config_xymon = 1;
 	}
 	snprintf(dom->nfs_domain, CONF_S, "%s", row[20]);
+	dom->cuser = strtoul(row[21], NULL, 10);
+	dom->muser = strtoul(row[22], NULL, 10);
+	convert_time(row[23], &(dom->ctime));
+	convert_time(row[24], &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -1371,6 +1405,10 @@ cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
 	ip->bd_id = strtoul(row[4], NULL, 10);
 	ip->server_id = strtoul(row[5], NULL, 10);
+	ip->cuser = strtoul(row[6], NULL, 10);
+	ip->muser = strtoul(row[7], NULL, 10);
+	convert_time(row[8], &(ip->ctime));
+	convert_time(row[9], &(ip->mtime));
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -1396,6 +1434,10 @@ cbc_store_build_os_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(os->ver_alias, MAC_S, "%s", row[4]);
 	snprintf(os->arch, RANGE_S, "%s", row[5]);
 	os->bt_id = strtoul(row[6], NULL, 10);
+	os->cuser = strtoul(row[7], NULL, 10);
+	os->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(os->ctime));
+	convert_time(row[10], &(os->mtime));
 	list = base->bos;
 	if (list) {
 		while (list->next)
@@ -1472,6 +1514,10 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	loc->os_id = strtoul(row[5], NULL, 10);
 	loc->bt_id = strtoul(row[6], NULL, 10);
 	snprintf(loc->timezone, HOST_S, "%s", row[7]);
+	loc->cuser = strtoul(row[8], NULL, 10);
+	loc->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(loc->ctime));
+	convert_time(row[11], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -1494,6 +1540,10 @@ cbc_store_package_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(pack->package, HOST_S, "%s", row[1]);
 	pack->vari_id = strtoul(row[2], NULL, 10);
 	pack->os_id = strtoul(row[3], NULL, 10);
+	pack->cuser = strtoul(row[4], NULL, 10);
+	pack->muser = strtoul(row[5], NULL, 10);
+	convert_time(row[6], &(pack->ctime));
+	convert_time(row[7], &(pack->mtime));
 	list = base->package;
 	if (list) {
 		while (list->next)
@@ -1520,6 +1570,10 @@ cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.def_scheme_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	part->cuser = strtoul(row[8], NULL, 10);
+	part->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(part->ctime));
+	convert_time(row[11], &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
@@ -1546,6 +1600,10 @@ cbc_store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(part->fs, RANGE_S, "%s", row[5]);
 	part->link_id.server_id = strtoul(row[6], NULL, 10);
 	snprintf(part->log_vol, MAC_S, "%s", row[7]);
+	part->cuser = strtoul(row[8], NULL, 10);
+	part->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(part->ctime));
+	convert_time(row[11], &(part->mtime));
 	list = base->spart;
 	if (list) {
 		while (list->next)
@@ -1570,6 +1628,10 @@ cbc_store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
 		seed->lvm = 0;
 	else
 		seed->lvm = 1;
+	seed->cuser = strtoul(row[3], NULL, 10);
+	seed->muser = strtoul(row[4], NULL, 10);
+	convert_time(row[5], &(seed->ctime));
+	convert_time(row[6], &(seed->mtime));
 	list = base->sscheme;
 	if (list) {
 		while (list->next)
@@ -1596,6 +1658,10 @@ cbc_store_server_mysql(MYSQL_ROW row, cbc_s *base)
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
 	snprintf(server->name, HOST_S, "%s", row[7]);
+	server->cuser = strtoul(row[8], NULL, 10);
+	server->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(server->ctime));
+	convert_time(row[11], &(server->mtime));
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -1617,6 +1683,10 @@ cbc_store_varient_mysql(MYSQL_ROW row, cbc_s *base)
 	vari->varient_id = strtoul(row[0], NULL, 10);
 	snprintf(vari->varient, HOST_S, "%s", row[1]);
 	snprintf(vari->valias, MAC_S, "%s", row[2]);
+	vari->cuser = strtoul(row[3], NULL, 10);
+	vari->muser = strtoul(row[4], NULL, 10);
+	convert_time(row[5], &(vari->ctime));
+	convert_time(row[6], &(vari->mtime));
 	list = base->varient;
 	if (list) {
 		while (list->next)
@@ -1639,6 +1709,10 @@ cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", row[1]);
 	snprintf(vmhost->type, MAC_S, "%s", row[2]);
 	vmhost->server_id = strtoul(row[4], NULL, 10);
+	vmhost->cuser = strtoul(row[5], NULL, 10);
+	vmhost->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(vmhost->ctime));
+	convert_time(row[8], &(vmhost->mtime));
 	list = base->vmhost;
 	if (list) {
 		while (list->next)
@@ -1692,6 +1766,10 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bdom->config_xymon);
 	else if (i == 19)
 		*buffer = &(base->bdom->nfs_domain);
+	else if (i == 20)
+		*buffer = &(base->bdom->cuser);
+	else if (i == 21)
+		*buffer = &(base->bdom->muser);
 }
 
 void
@@ -1709,6 +1787,10 @@ cbc_setup_bind_mysql_build_os(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bos->arch);
 	else if (i == 5)
 		*buffer = &(base->bos->bt_id);
+	else if (i == 6)
+		*buffer = &(base->bos->cuser);
+	else if (i == 7)
+		*buffer = &(base->bos->muser);
 }
 
 void
@@ -1718,6 +1800,10 @@ cbc_setup_bind_mysql_build_varient(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->varient->varient);
 	else if (i == 1)
 		*buffer = &(base->varient->valias);
+	else if (i == 2)
+		*buffer = &(base->varient->cuser);
+	else if (i == 3)
+		*buffer = &(base->varient->muser);
 }
 
 void
@@ -1727,6 +1813,10 @@ cbc_setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int 
 		*buffer = &(base->sscheme->name);
 	else if (i == 1)
 		*buffer = &(base->sscheme->lvm);
+	else if (i == 2)
+		*buffer = &(base->sscheme->cuser);
+	else if (i == 3)
+		*buffer = &(base->sscheme->muser);
 }
 
 void
@@ -1746,6 +1836,10 @@ cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->dpart->link_id.def_scheme_id);
 	else if (i == 6)
 		*buffer = &(base->dpart->log_vol);
+	else if (i == 7)
+		*buffer = &(base->dpart->cuser);
+	else if (i == 8)
+		*buffer = &(base->dpart->muser);
 }
 
 void
@@ -1757,6 +1851,10 @@ cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->package->vari_id);
 	else if (i == 2)
 		*buffer = &(base->package->os_id);
+	else if (i == 3)
+		*buffer = &(base->package->cuser);
+	else if (i == 4)
+		*buffer = &(base->package->muser);
 }
 
 void
@@ -1772,6 +1870,10 @@ cbc_setup_bind_mysql_build_ip(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bip->bd_id);
 	else if (i == 4)
 		*buffer = &(base->bip->server_id);
+	else if (i == 5)
+		*buffer = &(base->bip->cuser);
+	else if (i == 6)
+		*buffer = &(base->bip->muser);
 }
 
 void
@@ -1793,6 +1895,10 @@ cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->build->locale_id);
 	else if (i == 7)
 		*buffer = &(base->build->def_scheme_id);
+	else if (i == 8)
+		*buffer = &(base->build->cuser);
+	else if (i == 9)
+		*buffer = &(base->build->muser);
 }
 
 void
@@ -2282,10 +2388,13 @@ cbc_store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_s *build, *list;
 
 	if (!(build = malloc(sizeof(cbc_build_s))))
 		report_error(MALLOC_FAIL, "build in cbc_store_build_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_sqlite");
 	init_build_struct(build);
 	build->build_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(build->mac_addr, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2296,6 +2405,12 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
 	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 8);
+	build->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	build->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(build->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -2304,15 +2419,19 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->build = build;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_domain_s *dom, *list;
 
 	if (!(dom = malloc(sizeof(cbc_build_domain_s))))
 		report_error(MALLOC_FAIL, "dom in cbc_store_build_domain_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_domain_sqlite");
 	init_build_domain(dom);
 	dom->bd_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	dom->start_ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2344,6 +2463,12 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 			 sqlite3_column_text(state, 18));
 	snprintf(dom->nfs_domain, CONF_S, "%s",
 		 sqlite3_column_text(state, 20));
+	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 21);
+	dom->muser = (unsigned long int) sqlite3_column_int64(state, 22);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 23));
+	convert_time(stime, &(dom->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 24));
+	convert_time(stime, &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -2352,15 +2477,19 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bdom = dom;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_ip_s *ip, *list;
 
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in cbc_store_build_ip_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_ip_sqlite");
 	init_build_ip(ip);
 	ip->ip_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	ip->ip = (unsigned long int) sqlite3_column_int64(state, 1);
@@ -2368,6 +2497,12 @@ cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(ip->domain, RBUFF_S, "%s", sqlite3_column_text(state, 3));
 	ip->bd_id = (unsigned long int) sqlite3_column_int64(state, 4);
 	ip->server_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	ip->cuser = (unsigned long int) sqlite3_column_int64(state, 6);
+	ip->muser = (unsigned long int) sqlite3_column_int64(state, 7);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(ip->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(ip->mtime));
 	list = base->bip;
 	if (list) {
 		while (list->next)
@@ -2376,15 +2511,19 @@ cbc_store_build_ip_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bip = ip;
 	}
+	free(stime);
 }
 
 void
 cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_build_os_s *os, *list;
 
 	if (!(os = malloc(sizeof(cbc_build_os_s))))
 		report_error(MALLOC_FAIL, "os in cbc_store_build_os_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_build_os_sqlite");
 	init_build_os(os);
 	os->os_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(os->os, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2393,6 +2532,12 @@ cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(os->ver_alias, MAC_S, "%s", sqlite3_column_text(state, 4));
 	snprintf(os->arch, RANGE_S, "%s", sqlite3_column_text(state, 5));
 	os->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	os->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	os->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(os->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(os->mtime));
 	list = base->bos;
 	if (list) {
 		while (list->next)
@@ -2401,6 +2546,7 @@ cbc_store_build_os_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bos = os;
 	}
+	free(stime);
 }
 
 void
@@ -2453,10 +2599,13 @@ cbc_store_disk_dev_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_locale_s *loc, *list;
 
 	if (!(loc = malloc(sizeof(cbc_locale_s))))
 		report_error(MALLOC_FAIL, "loc in cbc_store_locale_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_locale_sqlite");
 	init_locale(loc);
 	loc->locale_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(loc->locale, MAC_S, "%s", sqlite3_column_text(state, 1));
@@ -2466,6 +2615,12 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	loc->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	loc->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 7));
+	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	loc->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(loc->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -2474,20 +2629,30 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->locale = loc;
 	}
+	free(stime);
 }
 
 void
 cbc_store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_package_s *pack, *list;
 
 	if (!(pack = malloc(sizeof(cbc_package_s))))
 		report_error(MALLOC_FAIL, "pack in cbc_store_package_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_package_sqlite");
 	init_package(pack);
 	pack->pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(pack->package, HOST_S, "%s", sqlite3_column_text(state, 1));
 	pack->vari_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	pack->os_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	pack->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	pack->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(pack->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(pack->mtime));
 	list = base->package;
 	if (list) {
 		while (list->next)
@@ -2496,15 +2661,19 @@ cbc_store_package_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->package = pack;
 	}
+	free(stime);
 }
 
 void
 cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_dpart_sqlite");
 	init_pre_part(part);
 	part->id.def_part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2519,6 +2688,12 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		(unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(part->log_vol, MAC_S, "%s", 
 		 sqlite3_column_text(state, 7));
+	part->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	part->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(part->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(part->mtime));
 	list = base->dpart;
 	if (list) {
 		while (list->next)
@@ -2527,15 +2702,19 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->dpart = part;
 	}
+	free(stime);
 }
 
 void
 cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_pre_part_s *part, *list;
 
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in cbc_store_dpart_sqlite");
+		report_error(MALLOC_FAIL, "part in cbc_store_spart_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_spart_sqlite");
 	init_pre_part(part);
 	part->id.part_id = 
 		(unsigned long int) sqlite3_column_int64(state, 0);
@@ -2550,6 +2729,12 @@ cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		(unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(part->log_vol, MAC_S, "%s", 
 		 sqlite3_column_text(state, 7));
+	part->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	part->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(part->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	convert_time(stime, &(part->mtime));
 	list = base->spart;
 	if (list) {
 		while (list->next)
@@ -2558,21 +2743,31 @@ cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->spart = part;
 	}
+	free(stime);
 }
 
 void
 cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_seed_scheme_s *seed, *list;
 
 	if (!(seed = malloc(sizeof(cbc_seed_scheme_s))))
 		report_error(MALLOC_FAIL, "seed in cbc_store_seed_scheme_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_seed_scheme_sqlite");
 	init_seed_scheme(seed);
 	seed->def_scheme_id = 
 	   (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(seed->name, CONF_S, "%s",
 		 sqlite3_column_text(state, 1));
 	seed->lvm = (short int) sqlite3_column_int(state, 2);
+	seed->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	seed->muser = (unsigned long int) sqlite3_column_int64(state, 4);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(seed->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(seed->mtime));
 	list = base->sscheme;
 	if (list) {
 		while (list->next)
@@ -2581,15 +2776,19 @@ cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->sscheme = seed;
 	}
+	free(stime);
 }
 
 void
 cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_server_s *server, *list;
 
 	if (!(server = malloc(sizeof(cbc_server_s))))
 		report_error(MALLOC_FAIL, "server in cbc_store_server_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_server_sqlite");
 	init_cbc_server(server);
 	server->server_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
@@ -2599,6 +2798,12 @@ cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 	server->cust_id = (unsigned long int) sqlite3_column_int64(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
+	server->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
+	server->muser = (unsigned long int) sqlite3_column_int64(state, 9);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	convert_time(stime, &(server->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(server->mtime));
 	list = base->server;
 	if (list) {
 		while (list->next)
@@ -2607,19 +2812,29 @@ cbc_store_server_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->server = server;
 	}
+	free(stime);
 }
 
 void
 cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_varient_s *vari, *list;
 
 	if (!(vari = malloc(sizeof(cbc_varient_s))))
 		report_error(MALLOC_FAIL, "vari in cbc_store_varient_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_varient_sqlite");
 	init_varient(vari);
 	vari->varient_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vari->varient, HOST_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vari->valias, MAC_S, "%s", sqlite3_column_text(state, 2));
+	vari->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	vari->muser = (unsigned long int) sqlite3_column_int64(state, 4);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(vari->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(vari->mtime));
 	list = base->varient;
 	if (list) {
 		while (list->next)
@@ -2633,15 +2848,24 @@ cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
 	cbc_vm_server_hosts_s *vmhost, *list;
 
 	if (!(vmhost = malloc(sizeof(cbc_vm_server_hosts_s))))
 		report_error(MALLOC_FAIL, "vmhost in cbc_store_vmhost_mysql");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_vmhost_mysql");
 	init_vm_hosts(vmhost);
 	vmhost->vm_s_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(vmhost->vm_server, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(vmhost->type, MAC_S, "%s", sqlite3_column_text(state, 2));
 	vmhost->server_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	vmhost->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	vmhost->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(vmhost->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(vmhost->mtime));
 	list = base->vmhost;
 	if (list) {
 		while (list->next)
@@ -2650,6 +2874,7 @@ cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->vmhost = vmhost;
 	}
+	free(stime);
 }
 
 int
@@ -2695,6 +2920,16 @@ state, 7, (sqlite3_int64)build->locale_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 8, (sqlite3_int64)build->def_scheme_id)) > 0) {
 		fprintf(stderr, "Cannot bind def_scheme_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)build->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 10, (sqlite3_int64)build->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser\n");
 		return retval;
 	}
 	return retval;
@@ -2805,6 +3040,16 @@ state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0)
 "Cannot bind nfs domain %s\n", bdom->nfs_domain);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 21, (sqlite3_int64)bdom->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 22, (sqlite3_int64)bdom->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser");
+		return retval;
+	}
 	return retval;
 }
 
@@ -2836,6 +3081,16 @@ state, 4, (sqlite3_int64)bip->bd_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 5, (sqlite3_int64)bip->server_id)) > 0) {
 		fprintf(stderr, "Cannot bind server_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)bip->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)bip->muser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser\n");
 		return retval;
 	}
 	return retval;
@@ -2875,6 +3130,14 @@ state, 5, bos->arch, (int)strlen(bos->arch), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind build type id %lu\n", bos->bt_id);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(state, 7, (sqlite3_int64)bos->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", bos->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(state, 8, (sqlite3_int64)bos->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", bos->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2893,6 +3156,16 @@ state, 2, vari->valias, (int)strlen(vari->valias), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind valias %s\n", vari->valias);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)vari->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", vari->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)vari->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", vari->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2908,6 +3181,16 @@ state, 1, seed->name, (int)strlen(seed->name), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int(state, 2, seed->lvm)) > 0) {
 		fprintf(stderr, "Cannot bind LVM value %d\n", seed->lvm);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)seed->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", seed->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)seed->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", seed->muser);
 		return retval;
 	}
 	return retval;
@@ -2953,6 +3236,16 @@ state, 7, part->log_vol, (int)strlen(part->log_vol), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind logical volume %s\n", part->log_vol);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite3_int64)part->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind scheme cuser %lu\n", part->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)part->muser)) > 0) {
+		fprintf(stderr, "Cannot bind scheme cuser %lu\n", part->muser);
+		return retval;
+	}
 	return retval;
 }
 
@@ -2974,6 +3267,16 @@ state, 2, (sqlite3_int64)pack->vari_id)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 3, (sqlite3_int64)pack->os_id)) > 0) {
 		fprintf(stderr, "Cannot bind OS ID %lu\n", pack->os_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)pack->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", pack->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)pack->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", pack->muser);
 		return retval;
 	}
 	return retval;

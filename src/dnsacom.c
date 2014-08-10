@@ -314,10 +314,14 @@ read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf)
 	} else {
 		dc->port = (unsigned int) portno;
 	}
-	dc->refresh = strtoul(refresh, NULL, 10);
-	dc->retry = strtoul(retry, NULL, 10);
-	dc->expire = strtoul(expire, NULL, 10);
-	dc->ttl = strtoul(ttl, NULL, 10);
+	if (strlen(refresh) > 0)
+		dc->refresh = strtoul(refresh, NULL, 10);
+	if (strlen(retry) > 0)
+		dc->retry = strtoul(retry, NULL, 10);
+	if (strlen(expire) > 0)
+		dc->expire = strtoul(expire, NULL, 10);
+	if (strlen(ttl) > 0)
+		dc->ttl = strtoul(ttl, NULL, 10);
 	hostmaster = strchr(dc->hostmaster, '@');
 	if (hostmaster)
 		*hostmaster = '.';
@@ -402,7 +406,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
 		if (validate_user_input(comm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service");
-	if (comm->type == GLUE_ZONE)
+	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
 		validate_glue_comm_line(comm);
 }
 
@@ -451,8 +455,8 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 {
 	if ((strncmp(comm->domain, "all", COMM_S) != 0) &&
 	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
-	   ((comm->action != ADD_PREFER_A) ||
-	    (comm->action != DELETE_PREFERRED))))
+	   (comm->action != ADD_PREFER_A) &&
+	    (comm->action != DELETE_PREFERRED)))
 		if (validate_user_input(comm->domain, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
 	if (comm->action == ADD_PREFER_A) {

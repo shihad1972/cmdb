@@ -24,14 +24,15 @@
  * 
  */
 #include "../config.h"
-#include <unistd.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/stat.h>
-/* For freeBSD ?? */
 #include <sys/types.h>
+/* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
@@ -196,9 +197,9 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 void
 print_build_config(cbc_s *details)
 {
-	char *name = details->server->name;
+	char *name = details->server->name, ip[RANGE_S], *addr;
+	time_t create;
 	unsigned long int sid = details->build->def_scheme_id;
-	char ip[RANGE_S], *addr;
 	uint32_t ip_addr;
 	cbc_pre_part_s *part = details->dpart;
 
@@ -227,6 +228,10 @@ print_build_config(cbc_s *details)
 		printf("IP address:\t%s\n", addr);
 	else
 		printf("No build IP associated with server %s\n", name);
+	create = (time_t)details->build->ctime;
+	printf("Build created by %s at %s", get_uname(details->build->cuser), ctime(&create));
+	create = (time_t)details->build->mtime;
+	printf("Build updated by %s at %s", get_uname(details->build->muser), ctime(&create));
 	if (part) {
 		printf("Partition information:\n");
 		if (details->sscheme)

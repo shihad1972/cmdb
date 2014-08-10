@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
@@ -174,6 +175,7 @@ void
 display_build_domain(cbc_build_domain_s *bdom)
 {
 	char *ip;
+	time_t create;
 	uint32_t ip_addr;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
@@ -221,6 +223,10 @@ display_build_domain(cbc_build_domain_s *bdom)
 		printf("Xymon monitoring server: %s\n", bdom->xymon_server);
 	else
 		printf("No xymon monitoring configuration\n");
+	create = (time_t)bdom->ctime;
+	printf("Build domain created by %s on %s", get_uname(bdom->cuser), ctime(&create));
+	create = (time_t)bdom->mtime;
+	printf("Build domain updated by %s at %s", get_uname(bdom->muser), ctime(&create));
 	free(ip);
 }
 
@@ -418,15 +424,10 @@ clean_package(cbc_package_s *pack)
 void
 init_pre_part(cbc_pre_part_s *prep)
 {
+	memset(prep, 0, sizeof(cbc_pre_part_s));
 	snprintf(prep->mount, COMM_S, "NULL");
 	snprintf(prep->fs, COMM_S, "NULL");
 	snprintf(prep->log_vol, COMM_S, "NULL");
-	prep->min = NONE;
-	prep->max = NONE;
-	prep->pri = NONE;
-	prep->id.part_id = NONE;
-	prep->link_id.server_id = NONE;
-	prep->next = '\0';
 }
 
 void

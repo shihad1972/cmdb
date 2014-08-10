@@ -23,11 +23,12 @@
  */
 
 #include "../config.h"
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -52,6 +53,7 @@ list_zones(dnsa_config_s *dc)
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	size_t len;
+	time_t create;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
@@ -64,26 +66,51 @@ list_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\tSerial\t\tID\tType\tMaster\n");
+	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\t\tUser\tDate\n");
 	while (zone) {
+		create = (time_t)zone->ctime;
 		len = strlen(zone->name);
 		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
 			snprintf(zone->master, RANGE_S, "N/A");
 		if (len < 8)
-			printf("%s\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n", 
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t\t\t", zone->name);
 		else if (len < 16)
-			printf("%s\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t\t", zone->name);
 		else if (len < 24)
-			printf("%s\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t\t", zone->name);
 		else if (len < 32)
-			printf("%s\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\t", zone->name);
 		else
-			printf("%s\n\t\t\t\t%s\t%lu\t%lu\t%s\t%s\n",
-zone->name, zone->valid, zone->serial, zone->id, zone->type, zone->master);
+			printf("%s\n\t\t\t\t", zone->name);
+		printf("%s\t%lu\t%s\t", zone->valid, zone->serial, zone->type);
+		if (strlen(zone->master) < 8)
+			printf("%s\t\t", zone->master);
+		else
+			printf("%s\t", zone->master);
+		if (get_uname(zone->cuser))
+			printf("%s\t%s", get_uname(zone->cuser), ctime(&create));
+		else
+			printf("(unkown)\t%s", ctime(&create));
+/*		if (len < 8)
+			printf("%s\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s", 
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 16)
+			printf("%s\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 24)
+			printf("%s\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else if (len < 32)
+			printf("%s\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create));
+		else
+			printf("%s\n\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
+zone->name, zone->valid, zone->serial, zone->type, zone->master,
+get_uname(zone->cuser), ctime(&create)); */
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -96,6 +123,7 @@ void
 list_rev_zones(dnsa_config_s *dc)
 {
 	int retval;
+	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 
@@ -112,10 +140,26 @@ list_rev_zones(dnsa_config_s *dc)
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
+		create = (time_t)rev->ctime;
 		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
 			snprintf(rev->master, RANGE_S, "N/A");
-		printf("%s\t/%lu\t%s\t%s\t%s\n",
-rev->net_range, rev->prefix, rev->valid, rev->type, rev->master);
+		printf("%s\t/%lu\t%s\t%s\t",
+rev->net_range, rev->prefix, rev->valid, rev->type);
+		if (strlen(rev->master) > 7)
+			if (get_uname(rev->cuser))
+				printf("%s\t%s\t%s",
+rev->master, get_uname(rev->cuser), ctime(&create));
+			else
+				printf("%s\tunkown\t%s",
+rev->master, ctime(&create));
+		else
+			if (get_uname(rev->cuser))
+				printf("%s\t\t%s\t%s",
+rev->master, get_uname(rev->cuser), ctime(&create));
+			else
+				printf("%s\t\tunknown\t%s",
+rev->master, ctime(&create));
+		
 		if (rev->next)
 			rev = rev->next;
 		else
@@ -164,6 +208,7 @@ print_zone(dnsa_s *dnsa, char *domain)
 {
 	char *dot, name[HOST_S];
 	unsigned int i = 0, j = 0;
+	time_t create, modify;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
@@ -177,6 +222,8 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 			zone = zone->next;
 		}
 	}
+	create = (time_t)zone->ctime;
+	modify = (time_t)zone->mtime;
 	if (j == 0) {
 		printf("No zone %s found\n", domain);
 		return;
@@ -214,6 +261,14 @@ name, glue->pri_ns);
 		printf("\n%u record\n", i);
 	else
 		printf("\n%u records\n", i);
+	if (get_uname(zone->cuser))
+		printf("Created by %s on %s", get_uname(zone->cuser), ctime(&create)); 
+	else
+		printf("Created by (unknown) on %s", ctime(&create));
+	if (get_uname(zone->muser))
+		printf("Last updated by %s at %s", get_uname(zone->muser), ctime(&modify));
+	else
+		printf("Last updated by (unknown) at %s", ctime(&modify));
 }
 
 void
@@ -292,6 +347,7 @@ void
 display_rev_zone(char *domain, dnsa_config_s *dc)
 {
 	int retval;
+	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 	
@@ -311,10 +367,16 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 			rev = rev->next;
 	}
 	if (rev) {
+		create = (time_t)rev->ctime;
 		if ((strncmp(rev->type, "master", RANGE_S)) == 0)
 			print_rev_zone(dnsa, domain);
-		else
+		else {
 			printf("This is a slave reverse zone. No records to display\n");
+			if (get_uname(rev->cuser))
+				printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
+			else
+				printf("Created by (unknown) on %s", ctime(&create));
+		}
 	} else {
 		fprintf(stderr, "Reverse zone %s not found\n", domain);
 	}
@@ -325,6 +387,7 @@ void
 print_rev_zone(dnsa_s *dnsa, char *domain)
 {
 	char *in_addr;
+	time_t create, modify;
 	unsigned int i, j;
 	rev_record_row_s *records = dnsa->rev_records;
 	rev_zone_info_s *zone = dnsa->rev_zones;
@@ -345,6 +408,8 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 		return;
 	}
 	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
+	create = (time_t)zone->ctime;
+	modify = (time_t)zone->mtime;
 	while (records) {
 		if (records->rev_zone == zone->rev_zone_id) {
 			printf("%s.%s\t%s\n", records->host, in_addr, records->dest);
@@ -354,6 +419,15 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 			records = records->next;
 		}
 	}
+	printf("\n%u records\n", i);
+	if (get_uname(zone->cuser))
+		printf("Created by %s on %s", get_uname(zone->cuser), ctime(&create));
+	else
+		printf("Created by (unknown) on %s", ctime(&create));
+	if (get_uname(zone->muser))
+		printf("Last updated by %s at %s", get_uname(zone->muser), ctime(&modify));
+	else
+		printf("Last updated by (unknown) at %s", ctime(&modify));
 	if (i == 0)
 		printf("No reverse records for range %s\n", zone->net_range);
 }
@@ -405,16 +479,26 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 			if ((strlen(name) > 0) && (strncmp(name, zone->name, RBUFF_S) == 0)) {
 				check_for_updated_fwd_zone(dc, zone);
 				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					free(buffer);
-					dnsa_clean_list(dnsa);
-					return retval;
+					if (retval == CHKZONE_FAIL) {
+						printf("Zone %s invalid\n", zone->name);
+						retval = NONE;
+					} else {
+						free(buffer);
+						dnsa_clean_list(dnsa);
+						return retval;
+					}
 				}
 			} else if (strncmp(name, "none", COMM_S) == 0) {
 				check_for_updated_fwd_zone(dc, zone);
 				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					free(buffer);
-					dnsa_clean_list(dnsa);
-					return retval;
+					if (retval == CHKZONE_FAIL) {
+						printf("Zone %s invalid\n", zone->name);
+						retval = NONE;
+					} else {
+						free(buffer);
+						dnsa_clean_list(dnsa);
+						return retval;
+					}
 				}
 			}
 		}
@@ -827,7 +911,7 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 {
 	int retval;
 	unsigned long int serial;
-	dbdata_s serial_data, id_data;
+	dbdata_s serial_data, id_data, user_data;
 
 	retval = 0;
 	if (strncmp("yes", zone->updated, COMM_S) == 0) {
@@ -838,9 +922,12 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 			zone->serial++;
 		init_dbdata_struct(&serial_data);
 		init_dbdata_struct(&id_data);
+		init_dbdata_struct(&user_data);
 		serial_data.args.number = zone->serial;
 		id_data.args.number = zone->id;
-		serial_data.next = &id_data;
+		user_data.args.number = (unsigned long int)getuid();
+		serial_data.next = &user_data;
+		user_data.next = &id_data;
 		if ((retval = dnsa_run_update(dc, &serial_data, ZONE_SERIAL)) != 0)
 			fprintf(stderr, "Cannot update zone serial in database!\n");
 		else
@@ -1181,9 +1268,10 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 {
 	int i, j, k;
 	char name[RBUFF_S], *fqdn;
+	time_t create;
 	dbdata_s *dlist;
 	record_row_s *records = dnsa->records;
-	preferred_a_s *prefer = dnsa->prefer;
+	preferred_a_s *prefer = dnsa->prefer, *mark = '\0';
 	fqdn = &name[0];
 	while (records) {
 		dlist = start;
@@ -1198,6 +1286,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 			k = 0;
 			while (prefer) {
 				if (strncmp(fqdn, prefer->fqdn, RBUFF_S) == 0) {
+					mark = prefer;
 					printf("     *  %s\n", fqdn);
 					k++;
 				}
@@ -1213,6 +1302,11 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 		clean_dbdata_struct(dlist);
 		dlist = start->next->next;
 		dlist->next = '\0';
+	}
+	if (mark) {
+		create = (time_t)mark->ctime;
+		printf("Preferred A record created by %s on %s",
+get_uname(mark->cuser), ctime(&create));
 	}
 }
 
@@ -1266,6 +1360,7 @@ mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	printf("IP: %s\tIP Addr: %lu\tRecord ID: %lu\n",
 	       dnsa->prefer->ip, dnsa->prefer->ip_addr, dnsa->prefer->record_id);
+	dnsa->prefer->cuser = dnsa->prefer->muser = (unsigned long int)getuid();
 	if ((retval = dnsa_run_insert(dc, dnsa, PREFERRED_AS)) != 0)
 		fprintf(stderr, "Cannot insert preferred A record\n");
 	else
@@ -1380,7 +1475,7 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	record_row_s *record;
-	dbdata_s data;
+	dbdata_s data, user;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_host");
@@ -1391,6 +1486,8 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(&data);
+	init_dbdata_struct(&user);
+	user.next = &data;
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
@@ -1408,10 +1505,11 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	record->zone = data.args.number = zone->id;
 	record->pri = cm->prefix;
+	record->cuser = user.args.number = record->muser = (unsigned long int)getuid();
 	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
 		fprintf(stderr, "Cannot insert record\n");
 	else
-		if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
+		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
 			fprintf(stderr, "Cannot set zone as update\n");
 	dnsa_clean_list(dnsa);
 	return retval;
@@ -1423,13 +1521,16 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	char fqdn[RBUFF_S], *name;
 	int retval = 0;
 	dnsa_s *dnsa;
-	dbdata_s data;
+	dbdata_s data, user;
 	zone_info_s *zone;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in delete_record");
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(&data);
+	init_dbdata_struct(&user);
+	user.next = &data;
+	user.args.number = (unsigned long int)getuid();
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
 		printf("DB search failed with %d\n", retval);
 		dnsa_clean_list(dnsa);
@@ -1457,7 +1558,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return CANNOT_FIND_RECORD_ID;
 	}
 	printf("%d record(s) deleted\n", retval);
-	retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES);
+	retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES);
 	dnsa_clean_list(dnsa);
 	return NONE;
 }
@@ -1468,7 +1569,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	int retval;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
-	dbdata_s data;
+	dbdata_s data, user;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
@@ -1505,8 +1606,11 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		}
 	}
 	init_dbdata_struct(&data);
+	init_dbdata_struct(&user);
 	data.args.number = zone->id;
-	if ((retval = dnsa_run_update(dc, &data, ZONE_VALID_YES)) != 0)
+	user.args.number = (unsigned long int)getuid();
+	data.next = &user;
+	if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
 	else
 		printf("Zone marked as valid in the database\n");
@@ -1598,7 +1702,7 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	int retval;
 	dnsa_s *dnsa;
 	rev_zone_info_s *zone;
-	dbdata_s data;
+	dbdata_s data, user;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
@@ -1643,8 +1747,11 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		}
 	}
 	init_dbdata_struct(&data);
+	init_dbdata_struct(&user);
 	data.args.number = zone->rev_zone_id;
-	if ((retval = dnsa_run_update(dc, &data, REV_ZONE_VALID_YES)) != 0)
+	user.args.number = (unsigned long int)getuid();
+	user.next = &data;
+	if ((retval = dnsa_run_update(dc, &user, REV_ZONE_VALID_YES)) != 0)
 		printf("Unable to mark rev_zone %s as valid\n", zone->net_range);
 	else
 		printf("Rev zone %s marked as valid\n", zone->net_range);
@@ -1765,12 +1872,14 @@ int
 validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 {
 	int retval;
-	dbdata_s *data;
+	dbdata_s *data, user;
 
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in validate_fwd_zone");
+	init_dbdata_struct(data);
+	init_dbdata_struct(&user);
+	user.next = data;
 	retval = 0;
-	snprintf(zone->valid, COMM_S, "yes");
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
@@ -1791,13 +1900,17 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
 			fprintf(stderr, "Set zone not valid in DB failed\n");
 		free(data);
-		return retval;
+		return CHKZONE_FAIL;
 	} else {
 		data->args.number = zone->id;
-		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0) {
-			free(data);
-			fprintf(stderr, "Set zone valid in DB failed\n");
-			return retval;
+		user.args.number = (unsigned long int)getuid();
+		if (strncmp(zone->valid, "yes", COMM_S) != 0) {
+			if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0) {
+				free(data);
+				fprintf(stderr, "Set zone valid in DB failed\n");
+				return retval;
+			}
+		snprintf(zone->valid, COMM_S, "yes");
 		}
 		free(data);
 	}
@@ -1870,7 +1983,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	int retval, a_rec;
 	unsigned long int serial;
 	dnsa_s *dnsa;
-	dbdata_s serial_d, zone_info_d, *data;
+	dbdata_s serial_d, zone_info_d, user_d, *data;
 	record_row_s *rec;
 	rev_record_row_s *add, *delete, *list;
 
@@ -1939,9 +2052,12 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 			dnsa->rev_zones->serial++;
 		init_dbdata_struct(&serial_d);
 		init_dbdata_struct(&zone_info_d);
+		init_dbdata_struct(&user_d);
 		serial_d.args.number = dnsa->rev_zones->serial;
 		zone_info_d.args.number = dnsa->rev_zones->rev_zone_id;
-		serial_d.next = &zone_info_d;
+		user_d.args.number = (unsigned long int)getuid();
+		serial_d.next = &user_d;
+		user_d.next = &zone_info_d;
 		if ((retval = dnsa_run_update(dc, &serial_d, REV_ZONE_SERIAL)) != 0)
 			fprintf(stderr, "Cannot update rev zone serial!\n");
 		else
@@ -2653,6 +2769,7 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc)
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
+	zone->cuser = zone->muser = (unsigned long int)getuid();
 }
 
 void
@@ -2683,6 +2800,7 @@ fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *d
 	snprintf(zone->net_finish, RANGE_S, "%s", addr);
 	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
+	zone->cuser = zone->muser = (unsigned long int)getuid();
 	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0)
 		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	else
@@ -2836,7 +2954,7 @@ int
 add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE;
-	dbdata_s data;
+	dbdata_s data, user;
 	dnsa_s *dnsa;
 	glue_zone_info_s *glue;
 	zone_info_s *zone;
@@ -2847,6 +2965,9 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "zone in add_glue_zone");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_glue_zone");
+
+	init_dbdata_struct(&data);
+	init_dbdata_struct(&user);
 	setup_glue_struct(dnsa, zone, glue);
 	if (strchr(cm->glue_ns, ','))
 		split_glue_ns(cm->glue_ns, glue);
@@ -2871,6 +2992,7 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		printf("Zone %s has no parent!\n", cm->domain);
 		return retval;
 	}
+	glue->cuser = glue->muser = (unsigned long int)getuid();
 	if ((retval = dnsa_run_insert(dc, dnsa, GLUES)) != 0) {
 		dnsa_clean_list(dnsa);
 		fprintf(stderr, "Cannot insert glue zone %s into database\n",
@@ -2878,7 +3000,9 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	}
 	data.args.number = glue->zone_id;
-	if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
+	user.args.number = (unsigned long int)getuid();
+	user.next = &data;
+	if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
 		fprintf(stderr, "Cannot set zone as update\n");
 	printf("Glue records for zone %s added\n", cm->domain);
 	dnsa_clean_list(dnsa);

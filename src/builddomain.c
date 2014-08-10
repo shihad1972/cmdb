@@ -115,15 +115,21 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 
 	dnsa_config_s *dc;
 	dnsa_s *dnsa;
+	dbdata_s *user;
 	zone_info_s *zone;
+
 	if (!(dc = malloc(sizeof(dnsa_config_s))))
 		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
 	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
-	
+		report_error(MALLOC_FAIL, "zone in add_cbc_build_domain");
+	if (!(user = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "user in add_cbc_build_domain");
+	dnsa_init_config_values(dc);
 	init_dnsa_struct(dnsa);
+	init_dbdata_struct(user);
+	init_zone_struct(zone);
 	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
 		fprintf(stderr, "Error in config file %s\n", cdl->config);
 		free(dc);
@@ -154,11 +160,14 @@ add_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 		return retval;
 	}
 	data->args.number = zone->id;
-	if ((retval = dnsa_run_update(dc, data, ZONE_VALID_YES)) != 0)
+	user->args.number = (unsigned long int)getuid();
+	user->next = data;
+	if ((retval = dnsa_run_update(dc, user, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
 	else
 		printf("Zone marked as valid in the database\n");
-
+	user->next = '\0';
+	clean_dbdata_struct(user);
 #endif
 	if ((retval = cbc_run_insert(cbc, base, BUILD_DOMAINS)) != 0)
 		printf("\
@@ -435,6 +444,7 @@ copy_build_domain_values(cbcdomain_comm_line_s *cdl, cbc_build_domain_s *bdom)
 	bdom->ns = cdl->ns;
 	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
 	snprintf(bdom->nfs_domain, CONF_S, "%s", cdl->nfsdomain);
+	bdom->cuser = bdom->muser = (unsigned long int)getuid();
 }
 
 int
@@ -564,64 +574,84 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDN) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSERV) {
 		if (data)
 			snprintf(data->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSSL) {
 		if (data)
 			data->args.small = 1;
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEBINDDN) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
 		if (data->next)
 			snprintf(data->next->args.text, NAME_S, "%s", cdl->binddn);
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEDNSERV) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
 		if (data->next)
 			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEDNSSL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
 		if (data->next)
 			data->next->args.small = 1;
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDNSERV) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
 		if (data->next)
 			snprintf(data->next->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDNSSL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
 		if (data->next)
 			data->next->args.small = 1;
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPSERVSSL) {
 		if (data)
 			snprintf(data->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next)
 			data->next->args.small = 1;
 		if (data->next->next)
-			data->next->next->args.number = bd_id;
+			data->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next)
+			data->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEBINDDNSERV) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
@@ -630,7 +660,9 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next->next)
 			snprintf(data->next->next->args.text, HOST_S, "%s", cdl->ldapserver);
 		if (data->next->next->next)
-			data->next->next->next->args.number = bd_id;
+			data->next->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next->next)
+			data->next->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEDNSERVSSL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
@@ -639,7 +671,9 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next->next)
 			data->next->next->args.small = 1;
 		if (data->next->next->next)
-			data->next->next->next->args.number = bd_id;
+			data->next->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next->next)
+			data->next->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BASEBINDDNSSL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
@@ -648,7 +682,9 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next->next)
 			data->next->next->args.small = 1;
 		if (data->next->next->next)
-			data->next->next->next->args.number = bd_id;
+			data->next->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next->next)
+			data->next->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_BINDDNSERVSSL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->binddn);
@@ -657,7 +693,9 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next->next)
 			data->next->next->args.small = 1;
 		if (data->next->next->next)
-			data->next->next->next->args.number = bd_id;
+			data->next->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next->next)
+			data->next->next->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LDAPALL) {
 		if (data)
 			snprintf(data->args.text, NAME_S, "%s", cdl->basedn);
@@ -668,7 +706,9 @@ cbc_fill_ldap_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data->next->next->next)
 			data->next->next->next->args.small = 1;
 		if (data->next->next->next->next)
-			data->next->next->next->next->args.number = bd_id;
+			data->next->next->next->next->args.number = (unsigned long int)getuid();
+		if (data->next->next->next->next->next)
+			data->next->next->next->next->next->args.number = bd_id;
 	}
 }
 
@@ -680,27 +720,37 @@ cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->nfsdomain);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_NTP) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->ntpserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_SMTP) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->smtpserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_LOG) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->logserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	} else if (query == UP_DOM_XYMON) {
 		if (data)
 			snprintf(data->args.text, CONF_S, "%s", cdl->xymonserver);
 		if (data->next)
-			data->next->args.number = bd_id;
+			data->next->args.number = (unsigned long int)getuid();
+		if (data->next->next)
+			data->next->next->args.number = bd_id;
 	}
 }
 
