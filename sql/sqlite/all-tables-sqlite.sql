@@ -208,6 +208,10 @@ CREATE TABLE `disk_dev` (
   `server_id` int(7) NOT NULL,
   `device` varchar(63) NOT NULL,
   `lvm` smallint(4) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT 0,
+  `muser` int(7) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`server_id`)
     REFERENCES server(`server_id`)
@@ -224,6 +228,10 @@ CREATE TABLE `default_part` (
   `filesystem` varchar(15) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
   `logical_volume` varchar(31) NOT NULL,
+  `cuser` int(7) NOT NULL DEFAULT 0,
+  `muser` int(7) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`def_scheme_id`)
     REFERENCES `seed_schemes`(`def_scheme_id`)
@@ -261,6 +269,10 @@ CREATE TABLE `locale` (
   `os_id` int(7) NOT NULL,
   `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
+  `cuser` int(7) NOT NULL DEFAULT 0,
+  `muser` int(7) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0
 
   FOREIGN KEY(`os_id`)
     REFERENCES `build_os`(`os_id`)
@@ -466,6 +478,10 @@ CREATE TABLE `users` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `admin` varchar(255) NOT NULL DEFAULT 'no'
+  `cuser` int(7) NOT NULL DEFAULT 0,
+  `muser` int(7) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0
 );
 
 
