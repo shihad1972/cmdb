@@ -1,3 +1,32 @@
+10/08/2014
+Might be good to have a version of cbc that can work without cmdb. I will need
+to distill it down to the esentials of the build. May still want some
+automation with regards to IP address assignment
+
+		 base + varient
+		/
+varient / package 
+		\
+		 what base? how to choose..
+
+	 size of the disk
+	/
+partition
+	\
+	 specific partitions?
+
+		 Do I have to specify supported OS's?
+		/ 
+operating system
+
+
+	 Mostly IP's, mostly + DNS
+	/
+domain
+
+cpc	create preseed config
+ckc	create kickstart config
+
 09/08/2014
 Need to be able to update / modify in cmdb. I will need to the add the
 updates to the database.
