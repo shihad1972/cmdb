@@ -542,6 +542,7 @@ build_package_list(unsigned long int *os, int osnum, unsigned long int *vari, in
 			snprintf(tmp->package, HOST_S, "%s", package);
 			tmp->vari_id = *vid;
 			tmp->os_id = *oid;
+			tmp->cuser = tmp->muser = (unsigned long int) getuid();
 			if (list) {
 				pack = list;
 				while (pack->next) {
