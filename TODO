@@ -1,10 +1,14 @@
+10/08/2014 - Part III
+Would be good to be able to lock down the preseed file and host script to only 
+that IP address. As this is HTTP this will have to be in the apache config.
+
 10/08/2014 - Part II
 I should split out the generic arguments into double dashes -- , but also be
 able to read them from a config file; one per line
 Will need to work out priority for system config and user config
 
 10/08/2014
-Might be good to have a version of cbc that can work without cmdb. I will need
+Might be good to have a version of cbc that can work without cmdb. I will need 
 to distill it down to the esentials of the build. Will need to investigate
 -- arguments to command line for the partitions
 
