@@ -1,7 +1,12 @@
+10/08/2014 - Part II
+I should split out the generic arguments into double dashes -- , but also be
+able to read them from a config file; one per line
+Will need to work out priority for system config and user config
+
 10/08/2014
 Might be good to have a version of cbc that can work without cmdb. I will need
-to distill it down to the esentials of the build. May still want some
-automation with regards to IP address assignment
+to distill it down to the esentials of the build. Will need to investigate
+-- arguments to command line for the partitions
 
 		 base + varient
 		/
@@ -11,8 +16,8 @@ varient / package
 
 	 size of the disk
 	/
-partition
-	\
+partition		     specific part's, but can still choose
+	\		    /
 	 specific partitions?
 
 		 Do I have to specify supported OS's?
