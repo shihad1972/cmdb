@@ -1547,7 +1547,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	if (zone)
 		data.args.number = zone->id;
-	if ((retval = check_for_fwd_record_use(dnsa, name)) != 0) {
+	if ((retval = check_for_fwd_record_use(dnsa, name, cm)) != 0) {
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
@@ -1662,7 +1662,7 @@ delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		list = fwd;
 		while (list) {
 			snprintf(name, RBUFF_S, "%s.%s.", list->host, cm->domain);
-			if ((retval = check_for_fwd_record_use(dnsa, name)) != 0)
+			if ((retval = check_for_fwd_record_use(dnsa, name, cm)) != 0)
 				i++;
 			list = list->next;
 		}
@@ -1950,14 +1950,15 @@ validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 }
 
 int
-check_for_fwd_record_use(dnsa_s *dnsa, char *name)
+check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
 {
 	int retval;
 /**
  * If the record we want to delete is marked as an NS record for any zone
  * then refuse to delete.
+ * However, if we are trying to delete the zone it belongs to this is ok.
  */
-	if ((retval = compare_fwd_ns_records_with_host(dnsa, name)) != 0) {
+	if ((retval = compare_fwd_ns_records_with_host(dnsa, name, cm)) != 0) {
 		return retval;
 	}
 /**
@@ -2546,7 +2547,7 @@ add_int_ip_to_rev_records(dnsa_s *dnsa)
 }
 
 int
-compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name)
+compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
 {
 	int retval = NONE;
 	zone_info_s *list;
@@ -2556,6 +2557,11 @@ compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name)
 	else
 		return DOMAIN_LIST_FAIL;
 	while (list) {
+		if ((cm->action == DELETE_ZONE) && 
+		    (strncmp(cm->domain, list->name, RBUFF_S) == 0)) {
+			list = list->next;
+			continue;
+		}
 		if (strncmp(name, list->pri_dns, RBUFF_S) == 0) {
 			printf("\
 Zone %s has primary NS server of %s You want to delete %s\n",
