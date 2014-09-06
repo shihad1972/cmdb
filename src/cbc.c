@@ -58,7 +58,9 @@ main(int argc, char *argv[])
 		free(cml);
 		display_command_line_error(retval, argv[0]);
 	}
-	if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
+	if (cml->action == QUERY_CONFIG)
+		retval = query_config();
+	else if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
 		parse_cbc_config_error(retval);
 		free(cml);
 		free(cmc);
@@ -76,8 +78,6 @@ main(int argc, char *argv[])
 		retval = modify_build_config(cmc, cml);
 	else if (cml->action == RM_CONFIG)
 		retval = remove_build_config(cmc, cml);
-	else if (cml->action == QUERY_CONFIG)
-		retval = query_config();
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 	free(cmc);
