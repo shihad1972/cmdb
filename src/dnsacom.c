@@ -375,8 +375,9 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
 		if (validate_user_input(comm->dest, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "IP address");
-		if (validate_user_input(comm->host, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "host");
+		if (strncmp(comm->host, "@", COMM_S) != 0)
+			if (validate_user_input(comm->host, NAME_REGEX) < 0)
+				report_error(USER_INPUT_INVALID, "host");
 	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
 		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
