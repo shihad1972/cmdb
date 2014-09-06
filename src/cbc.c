@@ -45,8 +45,6 @@ main(int argc, char *argv[])
 	const char *config = '\0';
 	int retval = NONE;
 	
-	get_config_file_location(conf);
-	config = conf;
 	if (!(cmc = malloc(sizeof(cbc_config_s))))
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_s))))
@@ -60,11 +58,15 @@ main(int argc, char *argv[])
 	}
 	if (cml->action == QUERY_CONFIG)
 		retval = query_config();
-	else if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
-		parse_cbc_config_error(retval);
-		free(cml);
-		free(cmc);
-		exit(retval);
+	else {
+		get_config_file_location(conf);
+		config = conf;
+		if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
+			parse_cbc_config_error(retval);
+			free(cml);
+			free(cmc);
+			exit(retval);
+		}
 	}
 	if (cml->action == DISPLAY_CONFIG)
 		retval = display_build_config(cmc, cml);
