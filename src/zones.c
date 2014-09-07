@@ -1609,7 +1609,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	init_dbdata_struct(&user);
 	data.args.number = zone->id;
 	user.args.number = (unsigned long int)getuid();
-	data.next = &user;
+	user.next = &data;
 	if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0)
 		printf("Unable to mark zone as valid in database\n");
 	else
