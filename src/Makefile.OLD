@@ -9,7 +9,10 @@ RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
 CPPFLAGS = -I/usr/include/mysql
 LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
-LIBS = -lmysqlclient -lpcre -lsqlite3
+PCLIBS = -lpcre
+LIBS = -lmysqlclient $(PCLIBS) -lsqlite3
+bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart cpc
+
 SOBJECTS = errors.o checks.o
 DOBJECTS = dnsa.o dnsacom.o $(SOBJECTS) dnsa_net.o base_sql.o dnsa_base_sql.o zones.o
 COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o cmdb_base_sql.o base_sql.o
@@ -19,6 +22,7 @@ COOBJECTS = cbcos.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CVOBJECTS = cbcvarient.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CPOBJECTS = cbcpack.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
 CKOBJECTS = cbcpart.o $(SOBJECTS) base_sql.o cbc_data.o cbc_base_sql.o cbccom.o
+POBJECTS = cpc.c $(SOBJECTS)
 
 DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
 CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h
@@ -28,8 +32,9 @@ COHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcos.h
 CVHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcvarient.h
 CPHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpack.h
 CKHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpart.h
+PHEADERS = cmdb.h cmdb_cpc.h
 
-all:	dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+all:	$(bin_programs)
 
 dnsa:	$(DOBJECTS) $(DHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
@@ -55,7 +60,10 @@ cbcpack:	$(CPOBJECTS) $(CPHEADERS)
 cbcpart:	$(CKOBJECTS) $(CKHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LIBS)
 
+cpc:	$(POBJECTS) $(PHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
+
 .PHONY :	clean
 clean :
-	$(RM) *.o dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+	$(RM) *.o $(bin_programs)
 

@@ -27,9 +27,32 @@
 # define __CMDB_CPC_H__
 # include "../config.h"
 
-typedef struct cpc_comm_line_s {		/* Hold CMDB configuration values */
+typedef struct cpc_comm_line_s {		/* Hold cpc command line */
+	char *file;
 	char *name;
 } cpc_comm_line_s;
+
+typedef struct cpc_config_s {
+	char *name;
+} cpc_config_s;
+
+int
+parse_cpc_comm_line(int argc, char *argv[], cpc_comm_line_s *cl);
+
+void
+init_cpc_config(cpc_config_s *cpc);
+
+void
+clean_cpc_config(cpc_config_s *cpc);
+
+void
+init_cpc_comm_line(cpc_comm_line_s *cl);
+
+void
+clean_cpc_comm_line(cpc_comm_line_s *cl);
+
+void
+output_preseed(cpc_comm_line_s *cl, cpc_config_s *cpc);
 
 #endif /* __CMDB_CPC_H__ */
 

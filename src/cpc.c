@@ -21,9 +21,8 @@
  * 
  *  Main source file for cpc
  * 
- *  Part of the cbcpart program
+ *  Part of the cpc program
  * 
- *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
 #include <ctype.h>
@@ -33,18 +32,104 @@
 #include <time.h>
 #include <unistd.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
+#include "cmdb_cpc.h"
 #include "cbc_data.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 #include "checks.h"
 
 int
 main (int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval = NONE;
-	cbc_config_s *cmc;
+	cpc_config_s *cpc = '\0';
+	cpc_comm_line_s *cl = '\0';
 
+	if (!(cpc = malloc(sizeof(cpc_config_s))))
+		report_error(MALLOC_FAIL, "cpc in main");
+	if (!(cl = malloc(sizeof(cpc_comm_line_s))))
+		report_error(MALLOC_FAIL, "cl in main");
+	init_cpc_config(cpc);
+	init_cpc_comm_line(cl);
+	if ((retval = parse_cpc_comm_line(argc, argv, cl)) != 0) {
+		clean_cpc_comm_line(cl);
+		report_error(retval, "cpc command line");
+	}
+	output_preseed(cl, cpc);
+	clean_cpc_comm_line(cl);
+	clean_cpc_config(cpc);
 	return retval;
 }
+
+int
+parse_cpc_comm_line(int argc, char *argv[], cpc_comm_line_s *cl)
+{
+	int opt, retval = NONE;
+
+	while ((opt = getopt(argc, argv, "f:n:")) != -1) {
+		if (opt == 'f') {
+			snprintf(cl->file, RBUFF_S, "%s", optarg);
+		} else if (opt == 'n') {
+			snprintf(cl->name, RBUFF_S, "%s", optarg);
+		} else {
+			fprintf(stderr, "Unknown option %c\n", opt);
+			retval = DISPLAY_USAGE;
+		}
+	}
+	return retval;
+}
+
+void
+init_cpc_config(cpc_config_s *cpc)
+{
+	memset(cpc, 0, sizeof(cpc_config_s));
+	if (!(cpc->name = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->name init");
+}
+
+void
+clean_cpc_config(cpc_config_s *cpc)
+{
+	if (cpc) {
+		if (cpc->name)
+			free(cpc->name);
+	} else {
+		return;
+	}
+	free(cpc);
+}
+
+void
+init_cpc_comm_line(cpc_comm_line_s *cl)
+{
+	memset(cl, 0, sizeof(cpc_comm_line_s));
+	if (!(cl->file = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cl->file init");
+	if (!(cl->name = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cl->name init");
+}
+
+void
+clean_cpc_comm_line(cpc_comm_line_s *cl)
+{
+	if (cl) {
+		if (cl->file)
+			free(cl->file);
+		if (cl->name)
+			free(cl->name);
+	} else {
+		return;
+	}
+	free(cl);
+}
+
+void
+output_preseed(cpc_comm_line_s *cl, cpc_config_s *cpc)
+{
+	string_len_s *output;
+	FILE *outfile;
+
+	if (!(output = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "output in output_preseed");
+	init_string_len(output);
+	clean_string_len(output);
+}
+
