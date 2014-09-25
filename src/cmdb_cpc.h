@@ -28,16 +28,35 @@
 # include "../config.h"
 
 typedef struct cpc_comm_line_s {		/* Hold cpc command line */
+	char *domain;
 	char *file;
 	char *name;
 } cpc_comm_line_s;
 
 typedef struct cpc_config_s {
+	char *domain;
+	char *interface;
+	char *file;
 	char *name;
 } cpc_config_s;
 
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_comm_line_s *cl);
+
+void
+cp_cl_to_conf(cpc_comm_line_s *cl, cpc_config_s *cpc);
+
+void
+add_header(string_len_s *preseed);
+
+void
+add_locale(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_network(string_len_s *pre, cpc_config_s *cpc);
+
+void
+build_preseed(cpc_config_s *cpc);
 
 void
 init_cpc_config(cpc_config_s *cpc);
@@ -50,9 +69,6 @@ init_cpc_comm_line(cpc_comm_line_s *cl);
 
 void
 clean_cpc_comm_line(cpc_comm_line_s *cl);
-
-void
-output_preseed(cpc_comm_line_s *cl, cpc_config_s *cpc);
 
 #endif /* __CMDB_CPC_H__ */
 
