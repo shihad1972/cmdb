@@ -27,24 +27,34 @@
 # define __CMDB_CPC_H__
 # include "../config.h"
 
-typedef struct cpc_comm_line_s {		/* Hold cpc command line */
-	char *domain;
-	char *file;
-	char *name;
-} cpc_comm_line_s;
-
 typedef struct cpc_config_s {
 	char *domain;
 	char *interface;
 	char *file;
+	char *kbd;
+	char *locale;
+	char *mirror;
 	char *name;
+	char *rpass;
+	char *proxy;
+	char *suite;
+	char *ugroups;
+	char *uid;
+	char *uname;
+	char *upass;
+	char *url;
+	char *user;
+	short int add_root;
+	short int add_user;
+	short int encrypt_rpass;
+	short int encrypt_upass;
 } cpc_config_s;
 
 int
-parse_cpc_comm_line(int argc, char *argv[], cpc_comm_line_s *cl);
+parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl);
 
 void
-cp_cl_to_conf(cpc_comm_line_s *cl, cpc_config_s *cpc);
+fill_default_cpc_config_values(cpc_config_s *cpc);
 
 void
 add_header(string_len_s *preseed);
@@ -56,19 +66,31 @@ void
 add_network(string_len_s *pre, cpc_config_s *cpc);
 
 void
+add_mirror(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_account(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_root_account(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_no_root_account(string_len_s *pre);
+
+void
+add_user_account(string_len_s *pre, cpc_config_s *cpc);
+
+void
 build_preseed(cpc_config_s *cpc);
 
 void
 init_cpc_config(cpc_config_s *cpc);
 
 void
+fill_default_cpc_config_values(cpc_config_s *cpc);
+
+void
 clean_cpc_config(cpc_config_s *cpc);
-
-void
-init_cpc_comm_line(cpc_comm_line_s *cl);
-
-void
-clean_cpc_comm_line(cpc_comm_line_s *cl);
 
 #endif /* __CMDB_CPC_H__ */
 
