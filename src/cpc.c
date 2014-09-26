@@ -94,7 +94,6 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	}
 	snprintf(cpc->uname, RBUFF_S, "%s", user->pw_name);
 	snprintf(cpc->user, RBUFF_S, "%s", user->pw_gecos);
-	snprintf(cpc->upass, RBUFF_S, "%s", user->pw_passwd);
 	snprintf(cpc->uid, RBUFF_S, "%d", uid);
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
@@ -105,6 +104,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->url, "/debian");
 	sprintf(cpc->suite, "stable");
 	sprintf(cpc->rpass, "hackmebabay1moretime");
+	sprintf(cpc->upass, "r00tm3@ga1n");
 	cpc->add_root = cpc->add_user = 1;
 }
 
@@ -176,24 +176,37 @@ d-i hw-detect/load_firmware boolean true\n\
 void
 add_mirror(string_len_s *pre, cpc_config_s *cpc)
 {
-	char *buffer;
-	size_t size;
+	char *buffer, *proxy = '\0';
+	size_t size, psize = 0, tsize;
 
 	if ((asprintf(&buffer, "\
 ### Mirror configuration\n\
 d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string %s\n\
-d-i mirror/http/proxy string %s\n\
 d-i mirror/suite string %s\n\
-\n", cpc->mirror, cpc->url, cpc->proxy, cpc->suite)) == -1) 
+\n", cpc->mirror, cpc->url, cpc->suite)) == -1) 
 		report_error(MALLOC_FAIL, "buffer in add_mirror");
 	size = strlen(buffer);
-	if ((pre->size + size) >= pre->len)
+	if (strlen(cpc->proxy) > 0) {
+		if ((asprintf(&proxy, "\
+d-i mirror/http/proxy string %s\n\
+", cpc->proxy)) == -1)
+			report_error(MALLOC_FAIL, "proxy in add_mirror");
+		psize = strlen(proxy);
+	}
+	tsize = pre->size + size + psize;
+	if ((tsize) >= pre->len)
 		resize_string_buff(pre);
-	snprintf(pre->string + pre->size, size + 1, "%s", buffer);
-	pre->size += size;
+	tsize = size + psize;
+	if (proxy)
+		snprintf(pre->string + pre->size, tsize + 1, "%s%s", buffer, proxy);
+	else
+		snprintf(pre->string + pre->size, tsize + 1, "%s", buffer);
+	pre->size += tsize;
 	free(buffer);
+	if (proxy)
+		free(proxy);
 }
 
 void
@@ -237,6 +250,7 @@ d-i passwd/root-password-again password %s\n\
 	if ((pre->size + size) > pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s", buffer);
+	pre->size += size;
 	free(buffer);
 }
 
