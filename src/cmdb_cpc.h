@@ -28,6 +28,7 @@
 # include "../config.h"
 
 typedef struct cpc_config_s {
+	char *disk;
 	char *domain;
 	char *interface;
 	char *file;
@@ -86,6 +87,9 @@ add_user_account(string_len_s *pre, cpc_config_s *cpc);
 
 void
 add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_partitions(string_len_s *pre, cpc_config_s *cpc);
 
 void
 build_preseed(cpc_config_s *cpc);

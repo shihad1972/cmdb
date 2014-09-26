@@ -95,6 +95,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	snprintf(cpc->uname, RBUFF_S, "%s", user->pw_name);
 	snprintf(cpc->user, RBUFF_S, "%s", user->pw_gecos);
 	snprintf(cpc->uid, RBUFF_S, "%d", uid);
+	sprintf(cpc->disk, "/dev/sda");
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
 	sprintf(cpc->interface, "auto");
@@ -124,6 +125,7 @@ build_preseed(cpc_config_s *cpc)
 	add_mirror(output, cpc);
 	add_account(output, cpc);
 	add_clock_and_ntp(output, cpc);
+	add_partitions(output, cpc);
 	printf("%s\n", output->string);
 	clean_string_len(output);
 }
@@ -389,9 +391,43 @@ d-i clock-setup/ntp boolean false\n\
 }
 
 void
+add_partitions(string_len_s *pre, cpc_config_s *cpc)
+{
+/* Starting with the most simeple partition structure we can get away with
+   Later we can add configuration file options for separate partions
+   and even LVM / crypto. But for now, all in one big one :) */
+
+	char *part;
+	size_t psize;
+
+	if ((asprintf(&part, "\
+### Partition setup\n\
+d-i partman-auto/disk string %s\n\
+d-i partman-auto/method string regular\n\
+d-i partman-lvm/device_remove_lvm boolean true\n\
+d-i partman-md/device_remove_md boolean true\n\
+d-i partman-auto/choose_recipe select atomic\n\
+d-i partman-partitioning/confirm_write_new_label boolean true\n\
+d-i partman/choose_partition select finish\n\
+d-i partman/confirm boolean true\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman/mount_style select uuid\n\
+\n", cpc->disk)) == -1)
+		report_error(MALLOC_FAIL, "part in add_partitions");
+	psize = strlen(part);
+	if ((pre->size + psize) > pre->len)
+		resize_string_buff(pre);
+	snprintf(pre->string + pre->size, psize + 1, "%s", part);
+	pre->size += psize;
+	free(part);
+}
+
+void
 init_cpc_config(cpc_config_s *cpc)
 {
 	memset(cpc, 0, sizeof(cpc_config_s));
+	if (!(cpc->disk = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->disk init");
 	if (!(cpc->domain = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->domain init");
 	if (!(cpc->interface = calloc(RBUFF_S, sizeof(char))))
@@ -434,6 +470,8 @@ void
 clean_cpc_config(cpc_config_s *cpc)
 {
 	if (cpc) {
+		if (cpc->disk)
+			free(cpc->disk);
 		if (cpc->domain)
 			free(cpc->domain);
 		if (cpc->interface)
