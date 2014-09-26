@@ -37,8 +37,10 @@ typedef struct cpc_config_s {
 	char *mirror;
 	char *name;
 	char *ntp_server;
-	char *rpass;
+	char *packages;
+	char *pinstall;
 	char *proxy;
+	char *rpass;
 	char *suite;
 	char *tzone;
 	char *ugroups;
@@ -51,7 +53,9 @@ typedef struct cpc_config_s {
 	short int add_user;
 	short int encrypt_rpass;
 	short int encrypt_upass;
+	short int post;
 	short int ntp;
+	short int recommends;
 	short int utc;
 } cpc_config_s;
 
@@ -90,6 +94,15 @@ add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
 
 void
 add_partitions(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_no_recommends(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_apt(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_final(string_len_s *pre, cpc_config_s *cpc);
 
 void
 build_preseed(cpc_config_s *cpc);

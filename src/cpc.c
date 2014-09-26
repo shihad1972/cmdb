@@ -108,6 +108,8 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->suite, "stable");
 	sprintf(cpc->tzone, "UTC");
 	sprintf(cpc->upass, "r00tm3@ga1n");
+/* This should really be in the config NOT HERE! */
+	sprintf(cpc->packages, "openssh-server less locate");
 	cpc->add_root = cpc->add_user = cpc->utc = cpc->ntp = 1;
 }
 
@@ -126,6 +128,8 @@ build_preseed(cpc_config_s *cpc)
 	add_account(output, cpc);
 	add_clock_and_ntp(output, cpc);
 	add_partitions(output, cpc);
+	add_apt(output, cpc);
+	add_final(output, cpc);
 	printf("%s\n", output->string);
 	clean_string_len(output);
 }
@@ -171,7 +175,7 @@ d-i hw-detect/load_firmware boolean true\n\
 \n", cpc->interface, cpc->name, cpc->domain)) == -1)
 		report_error(MALLOC_FAIL, "buffer in add_network");
 	size = strlen(buffer);
-	if (size + pre->size >= pre->len)
+	if ((pre->size + size) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s", buffer);
 	pre->size += size;
@@ -252,7 +256,7 @@ d-i passwd/root-password-again password %s\n\
 			report_error(MALLOC_FAIL, "buffer in add_root_account");
 	}
 	size = strlen(buffer);
-	if ((pre->size + size) > pre->len)
+	if ((pre->size + size) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s", buffer);
 	pre->size += size;
@@ -271,7 +275,7 @@ d-i passwd/root-login boolean false\n\
 \n")) == -1)
 		report_error(MALLOC_FAIL, "buffer in add_no_root_account");
 	size = strlen(buffer);
-	if ((size + pre->size) >= pre->len)
+	if ((pre->size + size) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s", buffer);
 	pre->size += size;
@@ -315,20 +319,20 @@ d-i passwd/user-default-groups string %s\n\
 	}
 	size = strlen(buffer);
 	size += strlen(pass);
-	if ((pre->size + size) > pre->len)
+	if ((pre->size + size) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s%s", buffer, pass);
 	pre->size += size;
 	if (uid) {
 		size = strlen(uid);
-		if ((pre->size + size) > pre->len)
+		if ((pre->size + size) >= pre->len)
 			resize_string_buff(pre);
 		snprintf(pre->string + pre->size, size + 1, "%s", uid);
 		pre->size += size;
 	}
 	if (groups) {
 		size = strlen(groups);
-		if ((pre->size + size) > pre->len)
+		if ((pre->size + size) >= pre->len)
 			resize_string_buff(pre);
 		snprintf(pre->string + pre->size, size + 1, "%s", groups);
 		pre->size += size;
@@ -381,7 +385,7 @@ d-i clock-setup/ntp boolean false\n\
 	}
 	nsize = strlen(ntp);
 	size = nsize + tsize + usize;
-	if ((pre->size + size) > pre->len)
+	if ((pre->size + size) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, size + 1, "%s%s%s", utc, tzone, ntp);
 	pre->size += size;
@@ -415,11 +419,101 @@ d-i partman/mount_style select uuid\n\
 \n", cpc->disk)) == -1)
 		report_error(MALLOC_FAIL, "part in add_partitions");
 	psize = strlen(part);
-	if ((pre->size + psize) > pre->len)
+	if ((pre->size + psize) >= pre->len)
 		resize_string_buff(pre);
 	snprintf(pre->string + pre->size, psize + 1, "%s", part);
 	pre->size += psize;
 	free(part);
+}
+
+void
+add_no_recommends(string_len_s *pre, cpc_config_s *cpc)
+{
+	char *rec;
+	size_t rsize;
+	if (cpc->recommends == 0)
+		return;
+	if ((asprintf(&rec, "\
+d-i base-installer/install-recommends boolean false\n\
+\n")) == -1)
+		report_error(MALLOC_FAIL, "rec in add_no_recommends");
+	rsize = strlen(rec);
+	if ((pre->size + rsize) >= pre->len)
+		resize_string_buff(pre);
+	snprintf(pre->string + pre->size, rsize + 1, "%s", rec);
+	pre->size += rsize;
+	free(rec);
+}
+
+void
+add_apt(string_len_s *pre, cpc_config_s *cpc)
+{
+	char *apt, *pack;
+	size_t asize = 0, psize = 0;
+
+	if ((asprintf(&apt, "\
+### Apt setup\n\
+# You can choose to install non-free and contrib software.\n\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n\
+d-i apt-setup/services-select multiselect security, updates\n\
+d-i apt-setup/security_host string security.debian.org\n\
+\n\
+### Package selection\n\
+tasksel tasksel/first multiselect standard\n\
+")) == -1)
+		report_error(MALLOC_FAIL, "apt in add_apt");
+	asize = strlen(apt);
+	if (strlen(cpc->packages) > 0) {
+		if ((asprintf(&pack, "\
+d-i pkgsel/include string %s\n\
+\n", cpc->packages)) == -1)
+			report_error(MALLOC_FAIL, "pack in add_apt");
+		psize = strlen(pack);
+	}
+	if ((pre->size + asize) >= pre->len)
+		resize_string_buff(pre);
+	snprintf(pre->string + pre->size, asize + 1, "%s", apt);
+	pre->size += asize;
+	free(apt);
+	if (psize > 0) {
+		if ((pre->size + psize) >= pre->len)
+			resize_string_buff(pre);
+		snprintf(pre->string + pre->size, psize + 1, "%s", pack);
+		pre->size += psize;
+		free(pack);
+	}
+}
+
+void
+add_final(string_len_s *pre, cpc_config_s *cpc)
+{
+	char *final, *post;
+	size_t fsize, psize;
+
+	if ((asprintf(&final, "\
+### Finish off the install\n\
+d-i finish-install/reboot_in_progress note\n\
+")) == -1)
+		report_error(MALLOC_FAIL, "final in add_final");
+	fsize = strlen(final);
+	if ((pre->size + fsize) >= pre->len)
+		resize_string_buff(pre);
+	snprintf(pre->string + pre->size, fsize + 1, "%s", final);
+	pre->size += fsize;
+	free(final);
+	if (cpc->post > 0) {
+		if ((asprintf(&post, "\
+d-i preseed/late_command string %s\n\
+\n", cpc->pinstall)) == -1) 
+			report_error(MALLOC_FAIL, "post in add_final");
+		psize = strlen(post);
+		if ((pre->size + psize) >= pre->len)
+			resize_string_buff(pre);
+		snprintf(pre->string + pre->size, psize + 1, "%s", post);
+		pre->size += psize;
+		free(post);
+	}
 }
 
 void
@@ -444,10 +538,14 @@ init_cpc_config(cpc_config_s *cpc)
 		report_error(MALLOC_FAIL, "cpc->name init");
 	if (!(cpc->ntp_server = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->ntp_server init");
-	if (!(cpc->rpass = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "cpc->rpass init");
+	if (!(cpc->packages = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->packages init");
+	if (!(cpc->pinstall = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->pinstall init");
 	if (!(cpc->proxy = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->proxy init");
+	if (!(cpc->rpass = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->rpass init");
 	if (!(cpc->suite = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->suite init");
 	if (!(cpc->tzone = calloc(RBUFF_S, sizeof(char))))
@@ -488,10 +586,14 @@ clean_cpc_config(cpc_config_s *cpc)
 			free(cpc->name);
 		if (cpc->ntp_server)
 			free(cpc->ntp_server);
-		if (cpc->rpass)
-			free(cpc->rpass);
+		if (cpc->packages)
+			free(cpc->packages);
+		if (cpc->pinstall)
+			free(cpc->pinstall);
 		if (cpc->proxy)
 			free(cpc->proxy);
+		if (cpc->rpass)
+			free(cpc->rpass);
 		if (cpc->suite)
 			free(cpc->suite);
 		if (cpc->tzone)
