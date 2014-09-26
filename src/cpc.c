@@ -101,11 +101,13 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->kbd, "uk");
 	sprintf(cpc->locale, "en_GB");
 	sprintf(cpc->mirror, "mirror.ox.ac.uk");
+	sprintf(cpc->ntp_server, "0.uk.pool.ntp.org");
 	sprintf(cpc->url, "/debian");
-	sprintf(cpc->suite, "stable");
 	sprintf(cpc->rpass, "hackmebabay1moretime");
+	sprintf(cpc->suite, "stable");
+	sprintf(cpc->tzone, "UTC");
 	sprintf(cpc->upass, "r00tm3@ga1n");
-	cpc->add_root = cpc->add_user = 1;
+	cpc->add_root = cpc->add_user = cpc->utc = cpc->ntp = 1;
 }
 
 void
@@ -121,6 +123,7 @@ build_preseed(cpc_config_s *cpc)
 	add_network(output, cpc);
 	add_mirror(output, cpc);
 	add_account(output, cpc);
+	add_clock_and_ntp(output, cpc);
 	printf("%s\n", output->string);
 	clean_string_len(output);
 }
@@ -328,10 +331,61 @@ d-i passwd/user-default-groups string %s\n\
 		snprintf(pre->string + pre->size, size + 1, "%s", groups);
 		pre->size += size;
 	}
-	free(groups);
-	free(uid);
+	if (groups)
+		free(groups);
+	if(uid)
+		free(uid);
 	free(pass);
 	free(buffer);
+}
+
+void
+add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc)
+{
+	char *ntp = '\0', *tzone, *utc;
+	size_t nsize, tsize, usize, size;
+
+	nsize = tsize = usize = 0;
+	if (cpc->utc > 0) {
+		if ((asprintf(&utc, "\n\
+### Clock, timezone and optionally ntp setup\n\
+d-i clock-setup/utc boolean true\n\
+")) == -1)
+			report_error(MALLOC_FAIL, "utc in add_clock_and_ntp");
+	} else {
+		if ((asprintf(&utc, "\n\
+### Clock, timezone and optionally ntp setup\n\
+d-i clock-setup/utc boolean false\n\
+")) == -1)
+			report_error(MALLOC_FAIL, "utc in add_clock_and_ntp");
+	}
+	usize = strlen(utc);
+	if ((asprintf(&tzone, "\
+d-i time/zone string %s\n\
+", cpc->tzone)) == -1)
+		report_error(MALLOC_FAIL, "tzone in add_clock_and_ntp");
+	tsize = strlen(tzone);
+	if (cpc->ntp > 0) {
+		if ((asprintf(&ntp, "\
+d-i clock-setup/ntp boolean true\n\
+d-i clock-setup/ntp-server string %s\n\
+\n", cpc->ntp_server)) == -1)
+			report_error(MALLOC_FAIL, "ntp in add_clock_and_ntp");
+	} else {
+		if ((asprintf(&ntp, "\
+d-i clock-setup/ntp boolean false\n\
+\n")) == -1)
+			report_error(MALLOC_FAIL, "ntp in add_clock_and_ntp");
+	}
+	nsize = strlen(ntp);
+	size = nsize + tsize + usize;
+	if ((pre->size + size) > pre->len)
+		resize_string_buff(pre);
+	snprintf(pre->string + pre->size, size + 1, "%s%s%s", utc, tzone, ntp);
+	pre->size += size;
+	free(ntp);
+	free(tzone);
+	free(utc);
 }
 
 void
@@ -352,12 +406,16 @@ init_cpc_config(cpc_config_s *cpc)
 		report_error(MALLOC_FAIL, "cpc->mirror init");
 	if (!(cpc->name = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->name init");
+	if (!(cpc->ntp_server = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->ntp_server init");
 	if (!(cpc->rpass = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->rpass init");
 	if (!(cpc->proxy = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->proxy init");
 	if (!(cpc->suite = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->suite init");
+	if (!(cpc->tzone = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "cpc->tzone init");
 	if (!(cpc->ugroups = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "cpc->ugroups init");
 	if (!(cpc->uid = calloc(RBUFF_S, sizeof(char))))
@@ -390,12 +448,16 @@ clean_cpc_config(cpc_config_s *cpc)
 			free(cpc->mirror);
 		if (cpc->name)
 			free(cpc->name);
+		if (cpc->ntp_server)
+			free(cpc->ntp_server);
 		if (cpc->rpass)
 			free(cpc->rpass);
 		if (cpc->proxy)
 			free(cpc->proxy);
 		if (cpc->suite)
 			free(cpc->suite);
+		if (cpc->tzone)
+			free(cpc->tzone);
 		if (cpc->ugroups)
 			free(cpc->ugroups);
 		if (cpc->uid)

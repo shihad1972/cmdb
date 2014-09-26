@@ -35,9 +35,11 @@ typedef struct cpc_config_s {
 	char *locale;
 	char *mirror;
 	char *name;
+	char *ntp_server;
 	char *rpass;
 	char *proxy;
 	char *suite;
+	char *tzone;
 	char *ugroups;
 	char *uid;
 	char *uname;
@@ -48,6 +50,8 @@ typedef struct cpc_config_s {
 	short int add_user;
 	short int encrypt_rpass;
 	short int encrypt_upass;
+	short int ntp;
+	short int utc;
 } cpc_config_s;
 
 int
@@ -79,6 +83,9 @@ add_no_root_account(string_len_s *pre);
 
 void
 add_user_account(string_len_s *pre, cpc_config_s *cpc);
+
+void
+add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
 
 void
 build_preseed(cpc_config_s *cpc);
