@@ -95,7 +95,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	snprintf(cpc->uname, RBUFF_S, "%s", user->pw_name);
 	snprintf(cpc->user, RBUFF_S, "%s", user->pw_gecos);
 	snprintf(cpc->uid, RBUFF_S, "%d", uid);
-	sprintf(cpc->disk, "/dev/sda");
+	sprintf(cpc->disk, "/dev/vda");
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
 	sprintf(cpc->interface, "auto");
@@ -104,10 +104,10 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->mirror, "mirror.ox.ac.uk");
 	sprintf(cpc->ntp_server, "0.uk.pool.ntp.org");
 	sprintf(cpc->url, "/debian");
-	sprintf(cpc->rpass, "hackmebabay1moretime");
+	sprintf(cpc->rpass, "hackmebaby");
 	sprintf(cpc->suite, "stable");
 	sprintf(cpc->tzone, "UTC");
-	sprintf(cpc->upass, "r00tm3@ga1n");
+	sprintf(cpc->upass, "r00tm3");
 /* This should really be in the config NOT HERE! */
 	sprintf(cpc->packages, "openssh-server less locate");
 	cpc->add_root = cpc->add_user = cpc->utc = cpc->ntp = 1;
@@ -203,19 +203,21 @@ d-i mirror/http/proxy string %s\n\
 ", cpc->proxy)) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
+	} else {
+		if ((asprintf(&proxy, "\
+d-i mirror/http/proxy string\n\
+")) == -1)
+			report_error(MALLOC_FAIL, "proxy in add_mirror");
+		psize = strlen(proxy);
 	}
 	tsize = pre->size + size + psize;
 	if ((tsize) >= pre->len)
 		resize_string_buff(pre);
 	tsize = size + psize;
-	if (proxy)
-		snprintf(pre->string + pre->size, tsize + 1, "%s%s", buffer, proxy);
-	else
-		snprintf(pre->string + pre->size, tsize + 1, "%s", buffer);
+	snprintf(pre->string + pre->size, tsize + 1, "%s%s", buffer, proxy);
 	pre->size += tsize;
 	free(buffer);
-	if (proxy)
-		free(proxy);
+	free(proxy);
 }
 
 void
@@ -461,6 +463,7 @@ d-i apt-setup/security_host string security.debian.org\n\
 \n\
 ### Package selection\n\
 tasksel tasksel/first multiselect standard\n\
+popularity-contest popularity-contest/participate boolean false\n\
 ")) == -1)
 		report_error(MALLOC_FAIL, "apt in add_apt");
 	asize = strlen(apt);
