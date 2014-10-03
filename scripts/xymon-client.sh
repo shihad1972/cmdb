@@ -193,7 +193,7 @@ export MACHINE MACHINEDOTS SERVEROSTYPE XYMONOSSCRIPT XYMONLAUNCHOPTS XYMONCLIEN
 # Values used in the remainder of the initscript
 envfile="/opt/xymon/client/etc/xymonclient.cfg"
 configfile="/opt/xymon/client/etc/clientlaunch.cfg"
-logfile="/var/log/xymon/xymonlaunch.log"
+logfile="/opt/xymon/client/log/xymonlaunch.log"
 pidfile="/var/run/xymon/xymonlaunch.pid"
 
 
@@ -238,7 +238,7 @@ start() {
             SUCMD=su
             [ -x /sbin/runuser ] && SUCMD=/sbin/runuser
 
-            \$SUCMD -m -s /bin/dash "\$user" -c \\
+            \$SUCMD "\$user" -c \\
                 "\$DAEMON \$XYMONLAUNCHOPTS --env=\$envfile --config=\$configfile --log=\$logfile --pidfile=\$pidfile" >/dev/null 2>&1
             RETVAL=\$?
             [ "\$RETVAL" -eq 0 ] && success && touch /var/lock/subsys/\$prog || failure
