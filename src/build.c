@@ -1807,6 +1807,11 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 	tmp = build->string + build->size;
 	snprintf(tmp, CH_S, "\n");
 	build->size++;
+	tmp++;
+	if ((build->size + 6) >= build->len)
+		resize_string_buff(build);
+	snprintf(tmp, COMM_S, "%%end\n\n");
+	build->size += 6;
 }
 
 void
@@ -1987,6 +1992,11 @@ chmod 755 kick-final.sh\n\
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
 	build->size += len;
+	tmp += len;
+	if ((build->size + 6) >= build->len)
+		resize_string_buff(build);
+	snprintf(tmp, COMM_S, "%%end\n\n");
+	build->size += 6;
 }
 
 void
