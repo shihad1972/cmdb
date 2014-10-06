@@ -1,0 +1,35 @@
+.TH cpc 8 "Version 0.2: 06 October 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+cpc \- Create Preseed Config
+.SH SYNOPSIS
+.B cpc
+.B ( -d -e -f -i -k -l -m -n -p -s -t -u -v )
+
+.SH DESCRIPTION
+\fBcpc\fP will create a preseed configuratioin file to allow you to automate the
+installation of a debian based server. By default, this outputs to stdout, but
+you can use the \fB-f\fP option to output to a file.
+
+.SH OPTIONS
+.IP "-d domain"
+Specifies the DNS domain of the server to be built.
+.IP "-e ntp-server"
+Specifies the NTP server used to synchronise the time.
+.IP "-f filename"
+Output the preseed configuration to the named file.
+.IP "-k country"
+Specify the country keybourd layout.
+.IP "-l locale"
+Specify the locale to configure in preseed.
+.IP "-m mirror"
+Specify the name of the mirror server to use for installation.
+.IP "-n name"
+Specify the hostname of the server.
+.IP "-s suite"
+Specify the suite to use e.g. stable, testing etc.
+.IP "-t timezone"
+Specify the timezone to be configured in preseed.
+.IP "-u url"
+Specify the url to add at the end of the mirror e.g. /debian.
+.IP "-v hard disk drive"
+Specify the hard disk to install onto e.g. sda, hda. Do NOT use a preceeding /dev/

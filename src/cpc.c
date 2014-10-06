@@ -51,6 +51,8 @@ main (int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cpc in main");
 	init_cpc_config(cpc);
 	fill_default_cpc_config_values(cpc);
+	if ((retval = parse_cpc_config_file(cpc)) != 0)
+		fprintf(stderr, "Problem parsing config file. Continuing\n");
 	if ((retval = parse_cpc_comm_line(argc, argv, cpc)) != 0) {
 		clean_cpc_config(cpc);
 		display_cpc_usage();
@@ -101,6 +103,34 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			retval = DISPLAY_USAGE;
 		}
 	}
+	return retval;
+}
+
+int
+parse_cpc_config_file(cpc_config_s *cpc)
+{
+	char *file, *home, buff[CONF_S];
+	int retval = 0;
+	FILE *config;
+#ifndef CPC_GET_CONFIG_FILE
+# define CPC_GET_CONFIG_FILE(CONFIG, conf) { \
+  while (fgets(buff, CONF_S, config)) \
+    sscanf(buff, CONFIG, cpc->conf); \
+  rewind(config); \
+ }
+#endif
+
+	home = getenv("HOME");
+	asprintf(&file, "%s/.cpc.conf", home);
+	if (!(config = fopen(file, "r"))) 
+		return retval;
+	CPC_GET_CONFIG_FILE("CPC_DISK=%s", disk);
+	CPC_GET_CONFIG_FILE("CPC_INTERFACE=%s", interface);
+	CPC_GET_CONFIG_FILE("CPC_KBD=%s", kbd);
+	CPC_GET_CONFIG_FILE("CPC_LOCALE=%s", locale);
+	CPC_GET_CONFIG_FILE("CPC_MIRROR=%s", mirror);
+	fclose(config);
+	free(file);
 	return retval;
 }
 

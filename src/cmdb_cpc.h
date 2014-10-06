@@ -62,6 +62,9 @@ typedef struct cpc_config_s {
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl);
 
+int
+parse_cpc_config_file(cpc_config_s *cpc);
+
 void
 fill_default_cpc_config_values(cpc_config_s *cpc);
 
