@@ -334,6 +334,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcpack_usage();
 		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
 			display_cbcpart_usage();
+		else if ((strncmp(program, "cpc", CONF_S) == 0))
+			display_cpc_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -516,6 +518,26 @@ display_dnsa_usage(void)
 	printf("-i: IP Address\n-t: record type (A, MX etc)\n-h: host");
 	printf("\n-p: priority (for MX and SRV records), prefix for reverse zone\n");
 	printf("-o: protocol\n-s: service (for SRV records)\n\n");
+}
+
+void
+display_cpc_usage(void)
+{
+	printf("cpc: create preseed config %s\n", VERSION);
+	printf("Usage\n");
+	printf("-d <domain>\tDNS domain name\n");
+	printf("-e <ntp-server>\n");
+	printf("-f <filename>\tOutput to the named file\n");
+	printf("-k <keyboard county layout>\n");
+	printf("-l <locale>\n");
+	printf("-i <interface>\n");
+	printf("-n <hostname>\tHost name\n");
+	printf("-m <mirror>\n");
+	printf("-p <pack1,pack2,...,packn>\n");
+	printf("-s <suite>\n");
+	printf("-t <timezone>\n");
+	printf("-u <url>\n");
+	printf("-v <disk drive id>\n");
 }
 
 void

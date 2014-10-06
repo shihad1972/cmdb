@@ -53,7 +53,8 @@ main (int argc, char *argv[])
 	fill_default_cpc_config_values(cpc);
 	if ((retval = parse_cpc_comm_line(argc, argv, cpc)) != 0) {
 		clean_cpc_config(cpc);
-		report_error(retval, "cpc command line");
+		display_cpc_usage();
+		exit(1);
 	}
 	build_preseed(cpc);
 	clean_cpc_config(cpc);
@@ -63,15 +64,38 @@ main (int argc, char *argv[])
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
+	char *s;
 	int opt, retval = NONE;
 
-	while ((opt = getopt(argc, argv, "d:f:n:")) != -1) {
+	while ((opt = getopt(argc, argv, "d:e:f:i:k:l:m:n:p:t:u:v:")) != -1) {
 		if (opt == 'd') {
 			snprintf(cl->domain, RBUFF_S, "%s", optarg);
+		} else if (opt == 'e') {
+			snprintf(cl->ntp_server, RBUFF_S, "%s", optarg);
 		} else if (opt == 'f') {
 			snprintf(cl->file, RBUFF_S, "%s", optarg);
+		} else if (opt == 'i') {
+			snprintf(cl->interface, RBUFF_S, "%s", optarg);
+		} else if (opt == 'k') {
+			snprintf(cl->kbd, RBUFF_S, "%s", optarg);
+		} else if (opt == 'l') {
+			snprintf(cl->locale, RBUFF_S, "%s", optarg);
+		} else if (opt == 'm') {
+			snprintf(cl->mirror, RBUFF_S, "%s", optarg);
 		} else if (opt == 'n') {
 			snprintf(cl->name, RBUFF_S, "%s", optarg);
+		} else if (opt == 'p') {
+			snprintf(cl->packages, RBUFF_S, "%s", optarg);
+			while ((s = strchr(cl->packages, ',')) != NULL)
+				*s = ' ';
+		} else if (opt == 's') {
+			snprintf(cl->suite, RBUFF_S, "%s", optarg);
+		} else if (opt == 't') {
+			snprintf(cl->tzone, RBUFF_S, "%s", optarg);
+		} else if (opt == 'u') {
+			snprintf(cl->url, RBUFF_S, "%s", optarg);
+		} else if (opt == 'v') {
+			snprintf(cl->disk, RBUFF_S, "/dev/%s\n", optarg);
 		} else {
 			fprintf(stderr, "Unknown option %c\n", opt);
 			retval = DISPLAY_USAGE;
