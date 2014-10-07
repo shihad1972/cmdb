@@ -53,6 +53,8 @@ main (int argc, char *argv[])
 	fill_default_cpc_config_values(cpc);
 	if ((retval = parse_cpc_config_file(cpc)) != 0)
 		fprintf(stderr, "Problem parsing config file. Continuing\n");
+	if ((retval = parse_cpc_environment(cpc)) != 0)
+		fprintf(stderr, "Problem getting environment variables. Continuing\n");
 	if ((retval = parse_cpc_comm_line(argc, argv, cpc)) != 0) {
 		clean_cpc_config(cpc);
 		display_cpc_usage();
@@ -141,6 +143,38 @@ parse_cpc_config_file(cpc_config_s *cpc)
 	fclose(config);
 	free(file);
 	return retval;
+#undef CPC_GET_CONFIG_FILE
+}
+
+int
+parse_cpc_environment(cpc_config_s *cpc)
+{
+	char *envar;
+	int retval = 0;
+
+#ifndef CPC_GET_ENVIRON
+# define CPC_GET_ENVIRON(environ, vari) { \
+	if ((envar = getenv(environ)) != NULL) \
+		snprintf(cpc->vari, RBUFF_S, "%s", envar); \
+} 
+#endif
+	CPC_GET_ENVIRON("CPC_DISK", disk)
+	CPC_GET_ENVIRON("CPC_DOMAIN", domain)
+	CPC_GET_ENVIRON("CPC_INTERFACE", interface)
+	CPC_GET_ENVIRON("CPC_KBD", kbd)
+	CPC_GET_ENVIRON("CPC_LOCALE", locale)
+	CPC_GET_ENVIRON("CPC_MIRROR", mirror)
+	CPC_GET_ENVIRON("CPC_NAME", name)
+	CPC_GET_ENVIRON("CPC_NTPSERVER", ntp_server)
+	CPC_GET_ENVIRON("CPC_PACKAGES", packages)
+	replace_space(cpc->packages);
+	CPC_GET_ENVIRON("CPC_SUITE", suite)
+	CPC_GET_ENVIRON("CPC_TZONE", tzone)
+/* Probablay even worse than having them in a config file :( */
+	CPC_GET_ENVIRON("CPC_RPASS", rpass)
+	CPC_GET_ENVIRON("CPC_UPASS", upass)
+	return retval;
+#undef CPC_GET_ENVIRON
 }
 
 void
