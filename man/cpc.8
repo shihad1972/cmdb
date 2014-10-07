@@ -4,12 +4,14 @@ cpc \- Create Preseed Config
 .SH SYNOPSIS
 .B cpc
 .B ( -d -e -f -i -k -l -m -n -p -s -t -u -v )
-
+.PP
 .SH DESCRIPTION
 \fBcpc\fP will create a preseed configuratioin file to allow you to automate the
 installation of a debian based server. By default, this outputs to stdout, but
-you can use the \fB-f\fP option to output to a file.
-
+you can use the \fB-f\fP option to output to a file. Be default, it will also get
+the build to create a user based on the username of the user running the program
+getting username, uid and gecos fields.
+.PP
 .SH OPTIONS
 .IP "-d domain"
 Specifies the DNS domain of the server to be built.
@@ -33,3 +35,42 @@ Specify the timezone to be configured in preseed.
 Specify the url to add at the end of the mirror e.g. /debian.
 .IP "-v hard disk drive"
 Specify the hard disk to install onto e.g. sda, hda. Do NOT use a preceeding /dev/
+.PP
+.SH FILES
+.I ~/.cpc.conf
+.RS
+The configuration file can be used to customise the answers and not have to use
+the command line options all the time.
+.RE
+.SH ENVIRONMENT
+You can use the following envronment variables to customise your build.
+.IP CPC_DISK
+Define the disk to use in the build.
+.IP CPC_DOMAIN
+Define the DNS domain of the server to be build.
+.IP CPC_INTERFACE
+The network interface to use for the build. The default for this is auto.
+.IP CPC_KBD
+Define the keyboard layout of the build.
+.IP CPC_LOCALE
+Define the locale used for the build.
+.IP CPC_MIRROR
+The FQDN of the mirror server which the installation will use.
+.IP CPC_NAME
+The hostname of the server youa re building.
+.IP CPC_NTPSERVER
+Define the ntp server to use for time synchronisation.
+.IP CPC_PACKAGES
+A comma separated list of packages to install.
+.IP CPC_SUITE
+The suite to install. Default here is stable.
+.IP CPC_TZONE
+The timezone the server will be in. The default here is UTC.
+.IP CPC_RPASS
+The root password for the build. DANGEROUS!!
+.IP CPC_UPASS
+The user password for the build. DANGEROUS!!
+.PP
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-DOT-co-DOT-uk>
+
