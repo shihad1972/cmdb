@@ -218,6 +218,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "There was a DNS lookup failure\n");
 	} else if (error == NET_FUNC_FAILED) {
 		fprintf(stderr, "A network function failed\n");
+	} else if (error == BUILD_TYPE_NOT_FOUND) {
+		fprintf(stderr, "No build type for that OS\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
