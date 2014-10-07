@@ -119,5 +119,8 @@ fill_default_cpc_config_values(cpc_config_s *cpc);
 void
 clean_cpc_config(cpc_config_s *cpc);
 
+void
+replace_space(char *packages);
+
 #endif /* __CMDB_CPC_H__ */
 

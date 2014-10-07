@@ -66,7 +66,6 @@ main (int argc, char *argv[])
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
-	char *s;
 	int opt, retval = NONE;
 
 	while ((opt = getopt(argc, argv, "d:e:f:i:k:l:m:n:p:t:u:v:")) != -1) {
@@ -88,8 +87,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			snprintf(cl->name, RBUFF_S, "%s", optarg);
 		} else if (opt == 'p') {
 			snprintf(cl->packages, RBUFF_S, "%s", optarg);
-			while ((s = strchr(cl->packages, ',')) != NULL)
-				*s = ' ';
+			replace_space(cl->packages);
 		} else if (opt == 's') {
 			snprintf(cl->suite, RBUFF_S, "%s", optarg);
 		} else if (opt == 't') {
@@ -125,10 +123,21 @@ parse_cpc_config_file(cpc_config_s *cpc)
 	if (!(config = fopen(file, "r"))) 
 		return retval;
 	CPC_GET_CONFIG_FILE("CPC_DISK=%s", disk);
+	CPC_GET_CONFIG_FILE("CPC_DOMAIN=%s", domain);
 	CPC_GET_CONFIG_FILE("CPC_INTERFACE=%s", interface);
 	CPC_GET_CONFIG_FILE("CPC_KBD=%s", kbd);
 	CPC_GET_CONFIG_FILE("CPC_LOCALE=%s", locale);
 	CPC_GET_CONFIG_FILE("CPC_MIRROR=%s", mirror);
+	CPC_GET_CONFIG_FILE("CPC_NAME=%s", name);
+	CPC_GET_CONFIG_FILE("CPC_NTPSERVER=%s", ntp_server);
+	CPC_GET_CONFIG_FILE("CPC_PACKAGES=%s", packages);
+	replace_space(cpc->packages);
+	CPC_GET_CONFIG_FILE("CPC_SUITE=%s", suite);
+	CPC_GET_CONFIG_FILE("CPC_TZONE=%s", tzone);
+	CPC_GET_CONFIG_FILE("CPC_URL=%s", url);
+/* Cannot account for idiocy = should NOT put passwords in clear text */
+	CPC_GET_CONFIG_FILE("CPC_RPASS=%s", rpass);
+	CPC_GET_CONFIG_FILE("CPC_UPASS=%s", upass);
 	fclose(config);
 	free(file);
 	return retval;
@@ -142,13 +151,15 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 
 	uid = getuid();
 	if (!(user = getpwuid(uid))) {
-		clean_cpc_config(cpc);
 		error(0, errno, "getpwuid: ");
-		return;
+		snprintf(cpc->uname, RBUFF_S, "debian");
+		snprintf(cpc->user, RBUFF_S, "Debian User");
+		snprintf(cpc->uid, RBUFF_S, "1000");
+	} else {
+		snprintf(cpc->uname, RBUFF_S, "%s", user->pw_name);
+		snprintf(cpc->user, RBUFF_S, "%s", user->pw_gecos);
+		snprintf(cpc->uid, RBUFF_S, "%d", uid);
 	}
-	snprintf(cpc->uname, RBUFF_S, "%s", user->pw_name);
-	snprintf(cpc->user, RBUFF_S, "%s", user->pw_gecos);
-	snprintf(cpc->uid, RBUFF_S, "%d", uid);
 	sprintf(cpc->disk, "/dev/vda");
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
@@ -673,3 +684,11 @@ clean_cpc_config(cpc_config_s *cpc)
 	free(cpc);
 }
 
+void
+replace_space(char *packages)
+{
+	char *s = '\0';
+
+	while ((s = strchr(packages, ',')) != NULL)
+		*s = ' ';
+}
