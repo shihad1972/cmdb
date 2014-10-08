@@ -148,6 +148,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 	else if (comp->action == ADD_TO_DB) {
 		if (comp->type == SERVER) {
 			retval = fill_server_values(comp, base);
+			complete_server_values(base, retval);
 		} else if (comp->type == CUSTOMER) {
 			retval = fill_customer_values(comp, base);
 		} else if (comp->type == SERVICE) {

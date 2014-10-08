@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		} else if (cm->action == LIST_OBJ) {
 			display_all_servers(cmc);
 		} else if (cm->action == ADD_TO_DB) {
-			retval = add_server_to_database(cmc, cm, base, cl);
+			retval = add_server_to_database(cmc, cm, base);
 			if (retval > 0) {
 				cmdb_main_free(cm, cmc, cmdb_config);
 				cmdb_clean_list(base);

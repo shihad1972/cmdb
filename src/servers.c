@@ -40,7 +40,7 @@
 #endif /* HAVE_LIBPCRE */
 
 int
-add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb, int cl)
+add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
 	char *input;
 	int retval = 0;
@@ -67,8 +67,6 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	} else {
 		memset(data, 0, sizeof(dbdata_s));
 	}
-	if (cl != 0)
-		complete_server_values(cmdb, cl);
 	snprintf(data->args.text, RANGE_S, "%s", cm->coid);
 	if (cmdb->customer) {
 		retval = cmdb_run_search(config, data, CUST_ID_ON_COID);

@@ -257,7 +257,7 @@ complete_server_values(cmdb_s *cmdb, int cl);
 
 /* New user input functions */
 int
-add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb, int cl);
+add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
 int
