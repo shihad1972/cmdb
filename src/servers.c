@@ -149,11 +149,11 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		clean_dbdata_struct(data);
 		return SERVER_NOT_FOUND;
 	} else
-		cmdb->hardware->server_id = data->fields.number;
+		cmdb->hardware->server_id = cmdb->server->server_id = data->fields.number;
 	clean_dbdata_struct(data->next);
 	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
-	cmdb->hardware->cuser = cmdb->hardware->muser = (uli_t)getuid();
+	cmdb->hardware->cuser = cmdb->hardware->muser = cmdb->server->muser = (uli_t)getuid();
 	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
 		fprintf(stderr, "Cannot find hardware class\n");
 		clean_dbdata_struct(data);
@@ -173,6 +173,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	printf("Adding to DB....\n");
 	retval = cmdb_run_insert(config, cmdb, HARDWARES);
+	set_server_updated(config, cmdb);
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -581,3 +582,22 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	clean_dbdata_struct(data);
 	return retval;
 }
+
+void
+set_server_updated(cmdb_config_s *config, cmdb_s *cmdb)
+{
+	int retval;
+	dbdata_s *data = '\0';
+
+	init_multi_dbdata_struct(&data, cmdb_update_args[UP_SERVER_MUSER]);
+	data->args.number = cmdb->server->muser;
+	data->next->args.number = cmdb->server->server_id;
+	if ((retval = cmdb_run_update(config, data, UP_SERVER_MUSER)) < 1) 
+		fprintf(stderr, "Unable to set server %s updated\n", cmdb->server->name);
+	else if (retval > 1)
+		fprintf(stderr, "More that 1 server updated??\n");
+	else
+		printf("Server %s updated\n", cmdb->server->name);
+	clean_dbdata_struct(data);
+}
+
