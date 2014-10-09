@@ -310,16 +310,24 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
 	cmdb_contact_s *cont;
+	dbdata_s *data = '\0';
 
 	cont = cmdb->contact;
-	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
-		printf("Unable to retrieve cust_id for COID %s\n",
+	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
+	snprintf(data->args.text, RBUFF_S, "%s", cmdb->customer->coid);
+	if ((retval = cmdb_run_search(config, data, CUST_ID_ON_COID)) < 1) {
+		fprintf(stderr, "Unable to retrieve cust_id for COID %s\n",
 		 cmdb->customer->coid);
-		return retval;
+		retval = 1;
+	} else if (retval > 1) {
+		fprintf(stderr, "More than one cust_id returned for %s",
+		 data->args.text);
+		retval = 1;
+	} else {
+		cont->cust_id = data->fields.number;
+		cont->cuser = cont->muser = (unsigned long int)getuid();
+		retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	}
-	cont->cust_id = cmdb->customer->cust_id;
-	cont->cuser = cont->muser = (unsigned long int)getuid();
-	retval = cmdb_run_insert(config, cmdb, CONTACTS);
 	return retval;
 }
 
