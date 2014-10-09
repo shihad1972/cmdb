@@ -459,6 +459,8 @@ get_uname(unsigned long int uid);
 void
 init_dbdata_struct(dbdata_s *data);
 void
+init_multi_dbdata_struct(dbdata_s **data, unsigned int i);
+void
 clean_dbdata_struct(dbdata_s *data);
 void
 init_string_len(string_len_s *string);

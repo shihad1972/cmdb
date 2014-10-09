@@ -959,6 +959,26 @@ init_dbdata_struct(dbdata_s *data)
 }
 
 void
+init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
+{
+	unsigned int max;
+	dbdata_s *data = '\0', *dlist = '\0';
+
+	for (max = 0; max < i; max++) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "data in init_multi_dbdata_struct");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
+}
+
+void
 clean_dbdata_struct(dbdata_s *list)
 {
 	dbdata_s *data = '\0', *next = '\0';
