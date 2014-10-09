@@ -484,28 +484,19 @@ print_vm_hosts(cmdb_vm_host_s *vmhost)
 int
 print_hardware(cmdb_hardware_s *hard, unsigned long int id)
 {
-	char *uname, *crtime;
 	int i = 0;
-	struct passwd *user;
-	time_t cmtime;
-	uid_t uid;
 
 	while (hard) {
 		if (hard->server_id == id) {
 			i++;
-			uid = (uid_t)hard->cuser;
-			user = getpwuid(uid);
-			uname = user->pw_name;
-			cmtime = (time_t)hard->ctime;
-			crtime = ctime(&cmtime);
 			if (i == 1)
 				printf("\nHardware details:\n");
 			if (strlen(hard->hardtype->hclass) < 8)
-				printf("%s\t\t%s\t%s: Added by %s on %s",
-hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
+				printf("%s\t\t%s\t%s\n",
+hard->hardtype->hclass, hard->device, hard->detail);
 			else
-				printf("%s\t%s\t%s: Added by %s on %s",
-hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
+				printf("%s\t%s\t%s\n",
+hard->hardtype->hclass, hard->device, hard->detail);
 		}
 		hard = hard->next;
 	}
@@ -515,29 +506,20 @@ hard->hardtype->hclass, hard->device, hard->detail, uname, crtime);
 int
 print_services(cmdb_service_s *service, unsigned long int id, int type)
 {
-	char *uname, *crtime;
 	int i = 0;
-	struct passwd *user;
-	time_t cmtime;
-	uid_t uid;
 
 	if (type == SERVER) {
 		while (service) {
 			if (service->server_id == id) {
 				i++;
-				uid = (uid_t)service->cuser;
-				user = getpwuid(uid);
-				uname = user->pw_name;
-				cmtime = (time_t)service->ctime;
-				crtime = ctime(&cmtime);
 				if (i == 1)
 					printf("\nService Details:\n");
 				if ((strlen(service->servicetype->service)) < 8)
-					printf("%s\t\t%s: Added by %s on %s",
-service->servicetype->service, service->url, uname, crtime);
+					printf("%s\t\t%s\n",
+service->servicetype->service, service->url);
 				else
-					printf("%s\t%s: Added by %s on %s",
-service->servicetype->service, service->url, uname, crtime);
+					printf("%s\t%s\n",
+service->servicetype->service, service->url);
 			}
 			service = service->next;
 		}
@@ -545,19 +527,14 @@ service->servicetype->service, service->url, uname, crtime);
 		while (service) {
 			if (service->cust_id == id) {
 				i++;
-				uid = (uid_t)service->cuser;
-				user = getpwuid(uid);
-				uname = user->pw_name;
-				cmtime = (time_t)service->ctime;
-				crtime = ctime(&cmtime);
 				if (i == 1)
 					printf("\nService Details:\n");
 				if ((strlen(service->servicetype->service)) < 8)
-					printf("%s\t\t%s: Added by %s on %s",
-service->servicetype->service, service->url, uname, crtime);
+					printf("%s\t\t%s\n",
+service->servicetype->service, service->url);
 				else
-					printf("%s\t%s: Added by %s on %s",
-service->servicetype->service, service->url, uname, crtime);
+					printf("%s\t%s\n",
+service->servicetype->service, service->url);
 			}
 			service = service->next;
 		}
