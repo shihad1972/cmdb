@@ -119,7 +119,7 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 
 const char *cmdb_sql_update[] = { "\
 UPDATE server SET uuid = ? WHERE server_id = ?","\
-UPADTE server SET muser = ? WHERE server_id = ?"
+UPDATE server SET muser = ? WHERE server_id = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -769,8 +769,41 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 int
 cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 {
+	MYSQL cmdb;
+	MYSQL_BIND my_bind[cmdb_update_args[type]];
+	const char *query;
 	int retval = NONE;
+	unsigned int i;
+	dbdata_s *list = data;
 
+	memset(my_bind, 0, sizeof(my_bind));
+	for (i = 0; i < cmdb_update_args[type]; i++) {
+		cmdb_set_args_mysql(&my_bind[i], cmdb_update_arg_type[type][i], list);
+		list = list->next;
+	}
+	query = cmdb_sql_update[type];
+	cmdb_mysql_init(config, &cmdb);
+	retval = cmdb_run_mysql_stmt(&cmdb, my_bind, query);
+	cmdb_mysql_cleanup(&cmdb);
+	return retval;
+}
+
+int
+cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
+{
+	int retval = NONE;
+	MYSQL_STMT *stmt;
+
+	if (!(stmt = mysql_stmt_init(cmdb)))
+		report_error(MY_STATEMENT_FAIL, mysql_error(cmdb));
+	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
+	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(stmt));
+	if ((retval = mysql_stmt_execute(stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
+	retval = (int)mysql_stmt_affected_rows(stmt);
+	mysql_stmt_close(stmt);
 	return retval;
 }
 

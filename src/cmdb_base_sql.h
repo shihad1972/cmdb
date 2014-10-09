@@ -49,6 +49,7 @@ extern const int mysql_inserts[8][7];
 
 enum {		/* cmdb update SQL statements */
 	UP_SERVER_UUID = 0,
+	UP_SERVER_MUSER = 1
 };
 
 int
@@ -93,6 +94,12 @@ int
 cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type);
 int
 cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type);
+void
+cmdb_set_args_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
+void
+cmdb_set_fields_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
+int
+cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
 void
 cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
 void
