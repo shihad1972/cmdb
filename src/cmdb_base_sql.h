@@ -29,6 +29,7 @@ extern const char *sql_select[];
 extern const char *sql_insert[];
 extern const char *sql_search[];
 extern const char *cmdb_sql_delete[];
+extern const char *cmdb_sql_update[];
 extern const unsigned int select_fields[];
 extern const unsigned int insert_fields[];
 extern const unsigned int search_fields[];
@@ -39,10 +40,16 @@ extern const unsigned int cmdb_search_arg_types[][2];
 extern const unsigned int cmdb_search_field_types[][1];
 extern const unsigned int cmdb_delete_args[];
 extern const unsigned int cmdb_delete_arg_type[][1];
+extern const unsigned int cmdb_update_args[];
+extern const unsigned int cmdb_update_args_type[][5];
 
 # ifdef HAVE_MYSQL
 extern const int mysql_inserts[8][7];
 # endif /* HAVE_MYSQL */
+
+enum {		/* cmdb update SQL statements */
+	UP_SERVER_UUID = 0,
+};
 
 int
 cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type);
@@ -60,6 +67,8 @@ int
 cmdb_run_insert(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type);
+int
+cmdb_run_update(cmdb_config_s *config, dbdata_s *data, int type);
 void
 cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type);
 void
@@ -80,6 +89,8 @@ int
 run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type);
+int
+cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type);
 int
 cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type);
 void
@@ -136,6 +147,8 @@ int
 run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type);
 int
 cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type);
+int
+cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type);
 int
 cmdb_run_search_sqlite(cmdb_config_s *cmdb, dbdata_s *data, int type);
 int

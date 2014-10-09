@@ -40,6 +40,7 @@
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
 #endif /* HAVE_SQLITE3 */
+/*
 const struct cmdb_server_s servers;
 const struct cmdb_customer_s customers;
 const struct cmdb_contact_s contacts;
@@ -48,7 +49,7 @@ const struct cmdb_service_type_s servtypes;
 const struct cmdb_hardware_s hardwares;
 const struct cmdb_hard_type_s hardtypes;
 const struct cmdb_vm_host_s vmhosts;
-
+*/
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
 cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
@@ -116,6 +117,10 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
   s.service_type_id = st.service_type_id WHERE s.cust_id = ? AND st.service = ?"
 };
 
+const char *cmdb_sql_update[] = { "\
+UPDATE server SET uuid = ? WHERE server_id = ?"
+};
+
 /* Number of returned fields for the above SELECT queries */
 const unsigned int select_fields[] = { 12,11,9,10,3,9,3,8 };
 
@@ -130,6 +135,8 @@ const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
+
+const unsigned int cmdb_update_args[] = { 2 };
 
 const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
@@ -185,6 +192,10 @@ const unsigned int cmdb_delete_arg_type[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBINT }
+};
+
+const unsigned int cmdb_update_arg_type[][5] = {
+	{ DBTEXT, DBINT, NONE, NONE, NONE }
 };
 	
 int
@@ -299,6 +310,25 @@ cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type)
 #ifdef HAVE_SQLITE3
 	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
 		retval = cmdb_run_delete_sqlite(config, data, type);
+#endif /* HAVE_SQLITE3 */
+	else
+		report_error(DB_TYPE_INVALID, config->dbtype);
+	return retval;
+}
+
+int
+cmdb_run_update(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	int retval = NONE;
+	if (strncmp(config->dbtype, "none", RANGE_S) == 0)
+		report_error(NO_DB_TYPE, "cmdb_run_update");
+#ifdef HAVE_MYSQL
+	else if (strncmp(config->dbtype, "mysql", RANGE_S) == 0)
+		retval = cmdb_run_update_mysql(config, data, type);
+#endif /* HAVE_MYSQL */
+#ifdef HAVE_SQLITE3
+	else if (strncmp(config->dbtype, "sqlite", RANGE_S) == 0)
+		retval = cmdb_run_update_sqlite(config, data, type);
 #endif /* HAVE_SQLITE3 */
 	else
 		report_error(DB_TYPE_INVALID, config->dbtype);
@@ -742,6 +772,14 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 	retval = (int)mysql_stmt_affected_rows(cmdb_stmt);
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
+	return retval;
+}
+
+int
+cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	int retval = NONE;
+
 	return retval;
 }
 
@@ -1543,6 +1581,14 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 	retval = sqlite3_changes(cmdb);
 	sqlite3_finalize(state);
 	sqlite3_close(cmdb);
+	return retval;
+}
+
+int
+cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	int retval = NONE;
+
 	return retval;
 }
 
