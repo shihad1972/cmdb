@@ -148,6 +148,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		return SERVER_NOT_FOUND;
 	} else
 		cmdb->hardware->server_id = data->fields.number;
+	clean_dbdata_struct(data->next);
 	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
 	cmdb->hardware->cuser = cmdb->hardware->muser = (uli_t)getuid();
@@ -170,6 +171,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	printf("Adding to DB....\n");
 	retval = cmdb_run_insert(config, cmdb, HARDWARES);
+	clean_dbdata_struct(data);
 	return retval;
 }
 
