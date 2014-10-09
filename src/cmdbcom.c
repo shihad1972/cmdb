@@ -216,7 +216,8 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 	} else if (cm->type == CONTACT) {
 		if (cl & NO_COID)
 			retval = NO_COID;
-	}
+	} else if (cl == NO_TYPE)
+		retval = cl;
 	return retval;
 }
 
