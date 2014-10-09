@@ -109,6 +109,7 @@ remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
 	int retval = NONE;
 	dbdata_s data;
+	memset(&data, 0, sizeof(data));
 	if (strncmp(cm->name, "NULL", COMM_S) != 0)
 		snprintf(data.args.text, CONF_S, "%s", cm->name);
 	else
@@ -129,6 +130,7 @@ remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 		return MULTIPLE_SERVERS;
 	} else 
 		printf("Server %s deleted from database\n", cm->name);
+	clean_dbdata_struct(data.next);
 	return NONE;
 }
 
