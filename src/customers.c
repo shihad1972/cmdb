@@ -179,7 +179,7 @@ remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 	int retval = NONE;
 	dbdata_s *data;
 
-	if ((strncmp(cm->name, "NULL", COMM_S) == 0) || (strncmp(cm->id, "NULL", COMM_S) == 0))
+	if (!(cm->name) || !(cm->id))
 		return NO_CONTACT_INFO;
 	cmdb_init_initial_dbdata(&data, CONTACT_ID_ON_COID_NAME);
 	if (data)
