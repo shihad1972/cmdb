@@ -241,26 +241,6 @@ cmdb_run_multiple_query(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_search(cmdb_config_s *config, cmdb_s *base, int type)
-{
-	int retval = 0;
-
-	if ((strncmp(config->dbtype, "none", RANGE_S) ==0))
-		report_error(NO_DB_TYPE, "run search");
-#ifdef HAVE_MYSQL
-	else if ((strncmp(config->dbtype, "mysql", RANGE_S) == 0))
-		retval = run_search_mysql(config, base, type);
-#endif /* HAVE_MYSQL */
-#ifdef HAVE_SQLITE3
-	else if ((strncmp(config->dbtype, "sqlite", RANGE_S) == 0))
-		retval = run_search_sqlite(config, base, type);
-#endif /* HAVE_SQLITE3 */
-	else
-		report_error(DB_TYPE_INVALID, config->dbtype);
-	return retval;
-}
-
-int
 cmdb_run_search(cmdb_config_s *cmdb, dbdata_s *data, int type)
 {
 	int retval = 0;
@@ -457,7 +437,6 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 	MYSQL cmdb;
 	MYSQL_RES *cmdb_res;
 	MYSQL_ROW cmdb_row;
-//	my_ulonglong cmdb_rows;
 	const char *query;
 	int retval = 0;
 	unsigned int fields;
@@ -473,9 +452,6 @@ cmdb_run_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 		report_error(MY_STORE_FAIL, mysql_error(&cmdb));
 	}
 	fields = mysql_num_fields(cmdb_res);
-/*	if (((cmdb_rows = mysql_num_rows(cmdb_res)) == 0)) {
-		show_no_results(type);
-	} */
 	while ((cmdb_row = mysql_fetch_row(cmdb_res)))
 		store_result_mysql(cmdb_row, base, type, fields);
 	cmdb_mysql_cleanup_full(&cmdb, cmdb_res);
@@ -514,61 +490,6 @@ cmdb_run_multiple_query_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 }
 
 int
-run_search_mysql(cmdb_config_s *config, cmdb_s *base, int type)
-{
-	MYSQL cmdb;
-	MYSQL_STMT *cmdb_stmt;
-	MYSQL_BIND my_bind[2];
-	const char *query;
-	int retval;
-	size_t arg_len, res_len;
-	void *input, *output;
-	
-	cmdb_mysql_init(config, &cmdb);
-	memset(my_bind, 0, sizeof(my_bind));
-/* 
-Will need to check if we have char or int here. Hard coded char for search,
-and int for result, which is OK when searching on name and returning id
-*/	
-	query = sql_search[type];
-	if ((retval = cmdb_get_search(type, &arg_len, &res_len, &input, &output, base)) != 0)
-		report_error(UNKNOWN_QUERY, "run_search_mysql");
-	my_bind[0].buffer_type = MYSQL_TYPE_STRING;
-	my_bind[0].buffer = input;
-	my_bind[0].buffer_length = arg_len;
-	my_bind[0].is_unsigned = 0;
-	my_bind[0].is_null = 0;
-	my_bind[0].length = 0;
-	my_bind[1].buffer_type = MYSQL_TYPE_LONG;
-	my_bind[1].buffer = output;
-	my_bind[1].buffer_length = res_len;
-	my_bind[1].is_unsigned = 1;
-	my_bind[1].is_null = 0;
-	my_bind[1].length = 0;
-	
-	
-	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
-	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_bind_result(cmdb_stmt, &my_bind[1])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_store_result(cmdb_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_fetch(cmdb_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-
-	mysql_stmt_free_result(cmdb_stmt);
-	mysql_stmt_close(cmdb_stmt);
-	cmdb_mysql_cleanup(&cmdb);
-	return 0;
-}
-
-int
 cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cmdb;
@@ -582,8 +503,6 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
-/*	for (i = 0; i < cmdb_search_args[type]; i++)
-		cmdb_set_search_args_mysql(&args[i], i, type, data); */
 	for (i = 0; i < cmdb_search_args[type]; i++) {
 		cmdb_set_args_mysql(&args[i], cmdb_search_arg_types[type][i], list);
 		list = list->next;
@@ -1342,51 +1261,6 @@ cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 		if ((retval = cmdb_run_query_sqlite(config, base, VM_HOST)) != 0)
 			return retval;
 	return 0;
-}
-
-int
-run_search_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
-{
-	const char *query = sql_search[type], *file = config->file;
-	int retval = NONE;
-	unsigned long int result;
-	void *input, *output;
-	size_t fields, args;
-	sqlite3 *cmdb;
-	sqlite3_stmt *state;
-
-	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in run_search_sqlite");
-	}
-/*
-   As in the MySQL function we assume that we are sending text and recieving
-   numerical data. Searching on name for ID is ok for this
-*/
-	cmdb_get_search(type, &fields, &args, &input, &output, base);
-	if ((retval = sqlite3_bind_text(state, 1, input, (int)strlen(input), SQLITE_STATIC)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_BIND_FAILED, "run_search_sqlite");
-	}
-	if ((retval = sqlite3_step(state)) == SQLITE_ROW) {
-		result = (unsigned long int)sqlite3_column_int(state, 0);
-		if (type == SERVER_ID_ON_NAME)
-			base->server->server_id = result;
-		else if (type == CUST_ID_ON_COID)
-			base->customer->cust_id = result;
-		else if (type == SERV_TYPE_ID_ON_SERVICE)
-			base->servicetype->service_id = result;
-		else if (type == HARD_TYPE_ID_ON_HCLASS)
-			base->hardtype->ht_id = result;
-		else if (type == VM_ID_ON_NAME)
-			base->vmhost->id = result;
-	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cmdb);
-	return retval;
 }
 
 int
