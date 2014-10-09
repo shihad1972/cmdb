@@ -334,28 +334,58 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 int
 add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
-	int retval;
+	int retval = NONE;
+	dbdata_s *data = '\0';
 
-	retval = 0;
-	if ((retval = run_search(config, cmdb, CUST_ID_ON_COID)) != 0) {
-		printf("Unable to retrieve cust_id for COID %s\n",
+	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
+	snprintf(data->args.text, RBUFF_S, "%s", cmdb->customer->coid);
+	if ((retval = cmdb_run_search(config, data, CUST_ID_ON_COID)) < 1) {
+		fprintf(stderr, "Unable to retrieve cust_id for COID %s\n",
 		 cmdb->customer->coid);
-		return retval;
+		return 1;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple cust_id's returned for %s\n",
+		 cmdb->customer->coid);
+		return 1;
+	} else  {
+		cmdb->customer->cust_id = data->fields.number;
+/* FIXME: We should not have to clean here - this is the db search routine */
+		clean_dbdata_struct(data->next);
 	}
-	if ((retval = run_search(config, cmdb, SERVER_ID_ON_NAME)) != 0) {
-		printf("Unable to retrieve server_id for server %s\n",
+	init_dbdata_struct(data);
+	snprintf(data->args.text, RBUFF_S, "%s", cmdb->server->name);
+	if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) < 1) {
+		fprintf(stderr, "Unable to retrieve server_id for server %s\n",
 		 cmdb->server->name);
-		return retval;
+		return 1;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple server_id's returned for %s\n",
+		 cmdb->server->name);
+		return 1;
+	} else {
+		cmdb->server->server_id = data->fields.number;
+/* FIXME: We should not have to clean here - this is the db search routine */
+		clean_dbdata_struct(data->next);
 	}
+	init_dbdata_struct(data);
 	if ((retval = strncmp(cmdb->servicetype->service, "NULL", COMM_S)) != 0) {
-		if ((retval = run_search(config, cmdb, SERV_TYPE_ID_ON_SERVICE)) != 0) {
-			printf("Unable to retrieve service_type_id for %s\n",
+		snprintf(data->args.text, RBUFF_S, "%s", cmdb->servicetype->service);
+		if ((retval = cmdb_run_search(config, data, SERV_TYPE_ID_ON_SERVICE)) < 1) {
+			fprintf(stderr, "Unable to retrieve service_type_id for %s\n",
 			 cmdb->servicetype->service);
-			return retval;
+			return 1;
+		} else if (retval > 1) {
+			fprintf(stderr, "Multiple service_type_id's returned for %s\n",
+			cmdb->servicetype->service);
+			return 1;
 		} else {
-			cmdb->service->service_type_id = cmdb->servicetype->service_id;
+			cmdb->service->service_type_id = data->fields.number;
 		}
+	} else {
+		fprintf(stderr, "No service provided??\n");
+		return 1;
 	}
+	clean_dbdata_struct(data);
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
 	cmdb->service->cuser = cmdb->service->muser = (unsigned long int)getuid();
