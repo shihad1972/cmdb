@@ -284,6 +284,8 @@ void
 print_vm_hosts(cmdb_vm_host_s *vmhost);
 void
 set_server_updated(cmdb_config_s *config, cmdb_s *cmdb);
+void
+set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb);
 /* New clean functions for linked list */
 
 void

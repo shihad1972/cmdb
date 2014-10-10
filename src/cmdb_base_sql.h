@@ -49,7 +49,8 @@ extern const int mysql_inserts[8][7];
 
 enum {		/* cmdb update SQL statements */
 	UP_SERVER_UUID = 0,
-	UP_SERVER_MUSER = 1
+	UP_SERVER_MUSER = 1,
+	UP_CUST_MUSER = 2
 };
 
 int

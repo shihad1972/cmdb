@@ -326,8 +326,12 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	} else {
 		cont->cust_id = data->fields.number;
 		cont->cuser = cont->muser = (unsigned long int)getuid();
+		cmdb->customer->muser = cont->muser;
+		cmdb->customer->cust_id = cont->cust_id;
 		retval = cmdb_run_insert(config, cmdb, CONTACTS);
+		set_customer_updated(config, cmdb);
 	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -389,7 +393,10 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	cmdb->service->server_id = cmdb->server->server_id;
 	cmdb->service->cust_id = cmdb->customer->cust_id;
 	cmdb->service->cuser = cmdb->service->muser = (unsigned long int)getuid();
+	cmdb->customer->muser = cmdb->server->muser = cmdb->service->muser;
 	retval = cmdb_run_insert(config, cmdb, SERVICES);
+	set_server_updated(config, cmdb);
+	set_customer_updated(config, cmdb);
 	return retval;
 }
 void
@@ -614,5 +621,23 @@ get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid)
 	}
 	cmdb->customer->next = '\0';
 	return 0;
+}
+
+void
+set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb)
+{
+	int retval = NONE;
+	dbdata_s *data = '\0';
+
+	init_multi_dbdata_struct(&data, UP_CUST_MUSER);
+	data->args.number = cmdb->customer->muser;
+	data->next->args.number = cmdb->customer->cust_id;
+	if ((retval = cmdb_run_update(config, data, UP_CUST_MUSER)) < 1) 
+		fprintf(stderr, "Unable to set customer updated\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple customers updated???\n");
+	else
+		printf("Customer set to updated\n");
+	clean_dbdata_struct(data);
 }
 

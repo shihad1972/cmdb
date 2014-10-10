@@ -40,16 +40,7 @@
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
 #endif /* HAVE_SQLITE3 */
-/*
-const struct cmdb_server_s servers;
-const struct cmdb_customer_s customers;
-const struct cmdb_contact_s contacts;
-const struct cmdb_service_s services;
-const struct cmdb_service_type_s servtypes;
-const struct cmdb_hardware_s hardwares;
-const struct cmdb_hard_type_s hardtypes;
-const struct cmdb_vm_host_s vmhosts;
-*/
+
 const char *sql_select[] = { "\
 SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
 cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
@@ -119,7 +110,8 @@ SELECT service_id FROM services s LEFT JOIN service_type st ON\
 
 const char *cmdb_sql_update[] = { "\
 UPDATE server SET uuid = ? WHERE server_id = ?","\
-UPDATE server SET muser = ? WHERE server_id = ?"
+UPDATE server SET muser = ? WHERE server_id = ?","\
+UPDATE customer SET muser = ? WHERE cust_id = ?"
 };
 
 /* Number of returned fields for the above SELECT queries */
@@ -137,7 +129,7 @@ const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
-const unsigned int cmdb_update_args[] = { 2,2 };
+const unsigned int cmdb_update_args[] = { 2,2,2 };
 
 const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT },
@@ -197,6 +189,7 @@ const unsigned int cmdb_delete_arg_type[][1] = {
 
 const unsigned int cmdb_update_arg_type[][5] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE },
+	{ DBINT, DBINT, NONE, NONE, NONE },
 	{ DBINT, DBINT, NONE, NONE, NONE }
 };
 	
