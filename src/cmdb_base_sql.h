@@ -36,10 +36,10 @@ extern const unsigned int search_fields[];
 extern const unsigned int search_args[];
 extern const unsigned int cmdb_search_fields[];
 extern const unsigned int cmdb_search_args[];
-extern const unsigned int cmdb_search_arg_types[][2];
+extern const unsigned int cmdb_search_args_type[][2];
 extern const unsigned int cmdb_search_field_types[][1];
 extern const unsigned int cmdb_delete_args[];
-extern const unsigned int cmdb_delete_arg_type[][1];
+extern const unsigned int cmdb_delete_args_type[][1];
 extern const unsigned int cmdb_update_args[];
 extern const unsigned int cmdb_update_args_type[][5];
 
@@ -161,6 +161,8 @@ int
 cmdb_run_search_sqlite(cmdb_config_s *cmdb, dbdata_s *data, int type);
 int
 set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
+int
+set_cmdb_args_sqlite(sqlite3_stmt *state, dbdata_s *list, unsigned int type, int i);
 int
 get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);
 int

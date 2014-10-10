@@ -179,4 +179,19 @@ void
 cmdb_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 
 # endif /* HAVE_MYSQL */
+
+# ifdef HAVE_SQLITE3
+#  include <sqlite3.h>
+
+void
+cmdb_setup_ro_sqlite(const char *query, const char *file , sqlite3 **cmdb, sqlite3_stmt **stmt);
+
+void
+cmdb_setup_rw_sqlite(const char *query, const char *file , sqlite3 **cmdb, sqlite3_stmt **stmt);
+
+void
+cmdb_sqlite_cleanup(sqlite3 *cmdb, sqlite3_stmt *stmt);
+
+# endif /* HAVE_SQLITE3 */
 #endif /* __BASE_SQL_H */
+

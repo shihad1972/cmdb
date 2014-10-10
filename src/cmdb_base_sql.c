@@ -142,7 +142,7 @@ const int cmdb_inserts[][11] = {
 	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0 }
 };
 
-const unsigned int cmdb_search_arg_types[][2] = {
+const unsigned int cmdb_search_args_type[][2] = {
 	{ DBTEXT, NONE },
 	{ DBTEXT, NONE },
 	{ DBTEXT, NONE },
@@ -178,7 +178,7 @@ const unsigned int cmdb_search_field_types[][1] = {
 	{ DBINT }
 };
 
-const unsigned int cmdb_delete_arg_type[][1] = {
+const unsigned int cmdb_delete_args_type[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },
@@ -187,7 +187,7 @@ const unsigned int cmdb_delete_arg_type[][1] = {
 	{ DBINT }
 };
 
-const unsigned int cmdb_update_arg_type[][5] = {
+const unsigned int cmdb_update_args_type[][5] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE },
 	{ DBINT, DBINT, NONE, NONE, NONE },
 	{ DBINT, DBINT, NONE, NONE, NONE }
@@ -497,7 +497,7 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
 	for (i = 0; i < cmdb_search_args[type]; i++) {
-		cmdb_set_args_mysql(&args[i], cmdb_search_arg_types[type][i], list);
+		cmdb_set_args_mysql(&args[i], cmdb_search_args_type[type][i], list);
 		list = list->next;
 	}
 	list = data;
@@ -659,7 +659,7 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_delete_args[type]; i++) {
-		cmdb_set_args_mysql(&my_bind[i], cmdb_delete_arg_type[type][i], list);
+		cmdb_set_args_mysql(&my_bind[i], cmdb_delete_args_type[type][i], list);
 		list = list->next;
 	}
 	query = cmdb_sql_delete[type];
@@ -690,7 +690,7 @@ cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_update_args[type]; i++) {
-		cmdb_set_args_mysql(&my_bind[i], cmdb_update_arg_type[type][i], list);
+		cmdb_set_args_mysql(&my_bind[i], cmdb_update_args_type[type][i], list);
 		list = list->next;
 	}
 	query = cmdb_sql_update[type];
@@ -1281,14 +1281,13 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 	else
 		report_error(NO_DATA, "data in cmdb_run_search_sqlite");
 	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
-		if ((retval = set_cmdb_search_sqlite(state, list, type, i)) < 0)
+		if ((retval = set_cmdb_args_sqlite(state, list, cmdb_search_args_type[type][i], i)) < 0)
 			break;
 		if (list->next) 
 			list = list->next;
 	}
 	if (retval == DB_WRONG_TYPE) {
-		sqlite3_finalize(state);
-		sqlite3_close(cmdb);
+		cmdb_sqlite_cleanup(cmdb, state);
 		report_error(retval, query);
 	}
 	list = data;
@@ -1299,11 +1298,51 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 			break;
 		i++;
 	}
-	sqlite3_finalize(state);
-	sqlite3_close(cmdb);
+	cmdb_sqlite_cleanup(cmdb, state);
 	if (retval == DB_WRONG_TYPE)
 		report_error(retval, query);
 	return i;
+}
+
+int
+cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
+{
+	const char *query = '\0', *file = '\0';
+	int retval = NONE, i;
+	dbdata_s *list = '\0';
+	sqlite3 *cmdb;
+	sqlite3_stmt *state;
+
+	if (config)
+		file = config->file;
+	else
+		report_error(NO_DATA, "config in cmdb_run_update_sqlite");
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cmdb_run_update_sqlite");
+	query = cmdb_sql_update[type];
+	cmdb_setup_rw_sqlite(query, file, &cmdb, &state);
+	for (i = 0; (unsigned)i < cmdb_update_args[type]; i++) {
+		if ((retval = set_cmdb_args_sqlite(state, list, cmdb_update_args_type[type][i], i)) < 0)
+			break;
+		if (list->next)
+			list = list->next;
+	}
+	if (retval == DB_WRONG_TYPE) {
+		cmdb_sqlite_cleanup(cmdb, state);
+		report_error(retval, query);
+	}
+	list = data;
+	i = NONE;
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
+		cmdb_sqlite_cleanup(cmdb, state);
+		return SQLITE_INSERT_FAILED;
+	}
+	retval = sqlite3_changes(cmdb);
+	cmdb_sqlite_cleanup(cmdb, state);
+	return retval;
 }
 
 int
@@ -1356,25 +1395,25 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 }
 
 int
-set_cmdb_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
+set_cmdb_args_sqlite(sqlite3_stmt *state, dbdata_s *list, unsigned int type, int i)
 {
 	int retval = NONE;
 
-	if (cmdb_search_arg_types[type][i] == DBTEXT) {
+	if (type == DBTEXT) {
 		if ((retval = sqlite3_bind_text(
 state, i + 1, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
 			fprintf(stderr, "Cannot bind search arg %s: %s\n",
 				list->args.text, sqlite3_errstr(retval));
 			return retval;
 		}
-	} else if (cmdb_search_arg_types[type][i] == DBINT) {
+	} else if (type == DBINT) {
 		if ((retval = sqlite3_bind_int64(
 state, i + 1, (sqlite3_int64)list->args.number)) > 0) {
 			fprintf(stderr, "Cannot bind search number arg %lu: %s\n",
 				list->args.number, sqlite3_errstr(retval));
 			return retval;
 		}
-	} else if (cmdb_search_arg_types[type][i] == DBSHORT) {
+	} else if (type == DBSHORT) {
 		if ((retval = sqlite3_bind_int(state, i + 1, list->args.small)) > 0) {
 			fprintf(stderr, "Cannot bind search small arg %d: %s\n",
 				list->args.small, sqlite3_errstr(retval));
@@ -1414,13 +1453,11 @@ cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cmdb));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(cmdb);
+		cmdb_sqlite_cleanup(cmdb, state);
 		return SQLITE_INSERT_FAILED;
 	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cmdb);
-	return retval;
+	cmdb_sqlite_cleanup(cmdb, state);
+	return NONE;
 }
 
 int
@@ -1433,53 +1470,23 @@ cmdb_run_delete_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
-	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0)
-		report_error(FILE_O_FAIL, file);
-	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_delete");
-	}
-	for (i = 1; i <= cmdb_delete_args[type]; i++) {
+	cmdb_setup_rw_sqlite(query, file, &cmdb, &state);
+	for (i = 0; i < cmdb_delete_args[type]; i++) {
 		if (!list)
 			break;
-		if (cmdb_delete_arg_type[type][i - 1] == DBTEXT) {
-			if ((sqlite3_bind_text(state, (int)i, list->args.text, (int)strlen(list->args.text), SQLITE_STATIC)) > 0) {
-				fprintf(stderr, "Cannot bind arg %s: %s\n",
-				 list->args.text, sqlite3_errstr(retval));
-				return retval;
-			}
-		} else if (cmdb_delete_arg_type[type][i - 1] == DBINT) {
-			if ((sqlite3_bind_int64(state, (int)i, (sqlite3_int64)list->args.number)) > 0) {
-				fprintf(stderr, "Cannot bind arg %lu: %s\n",
-				 list->args.number, sqlite3_errstr(retval));
-				return retval;
-			}
-		} else if (cmdb_delete_arg_type[type][i - 1] == DBSHORT) {
-			if ((retval = sqlite3_bind_int(state, (int)i , list->args.small)) > 0) {
-				fprintf(stderr, "Cannot bind search small arg %d: %s\n",
-				 list->args.small, sqlite3_errstr(retval));
+		if ((retval = set_cmdb_args_sqlite(state, list, cmdb_delete_args_type[type][i], (int)i)) != 0) {
+			cmdb_sqlite_cleanup(cmdb, state);
 			return retval;
-			}
 		}
 		list = list->next;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Received error: %s\n", sqlite3_errmsg(cmdb));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(cmdb);
+		cmdb_sqlite_cleanup(cmdb, state);
 		return NONE;
 	}
 	retval = sqlite3_changes(cmdb);
-	sqlite3_finalize(state);
-	sqlite3_close(cmdb);
-	return retval;
-}
-
-int
-cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
-{
-	int retval = NONE;
-
+	cmdb_sqlite_cleanup(cmdb, state);
 	return retval;
 }
 
