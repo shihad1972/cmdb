@@ -51,9 +51,6 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		report_error(MALLOC_FAIL, "input in add_server_to_database");
 	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
 		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in add_server_to_database");
-
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
 	cmdb_init_initial_dbdata(&data, VM_ID_ON_NAME);
@@ -65,6 +62,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		fprintf(stderr, "Server %s exists in database\n", cmdb->server->name);
 		return SERVER_EXISTS;
 	} else {
+/* FIXME: We should not have to clean here - this is the db search routine */
+		clean_dbdata_struct(data->next);
 		memset(data, 0, sizeof(dbdata_s));
 	}
 	snprintf(data->args.text, RANGE_S, "%s", cm->coid);
@@ -79,6 +78,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		} else {
 			cmdb->customer->cust_id = data->fields.number;
 		}
+/* FIXME: We should not have to clean here - this is the db search routine */
+		clean_dbdata_struct(data->next);
 		memset(data, 0, sizeof(dbdata_s));
 	}
 /* Check for vmhost. if so this server is a virtual machine */
