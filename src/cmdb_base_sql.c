@@ -559,11 +559,11 @@ cmdb_set_args_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base)
 	}
 	mybind->buffer = buffer;
 }
-
+/*
 void
 cmdb_set_fields_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base)
 {
-}
+} */
 
 void
 cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
@@ -620,7 +620,6 @@ int
 cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 {
 	MYSQL cmdb;
-	MYSQL_STMT *cmdb_stmt;
 	MYSQL_BIND my_bind[insert_fields[type]];
 	const char *query;
 	int retval;
@@ -632,16 +631,9 @@ cmdb_run_insert_mysql(cmdb_config_s *config, cmdb_s *base, int type)
 			report_error(DB_TYPE_INVALID, " in cmdb_run_insert_mysql");
 	query = sql_insert[type];
 	cmdb_mysql_init(config, &cmdb);
-	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
-	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	
-	mysql_stmt_close(cmdb_stmt);
+	retval = cmdb_run_mysql_stmt(&cmdb, my_bind, query);
+	if (retval == 1)
+		retval = 0;
 	cmdb_mysql_cleanup(&cmdb);
 	return retval;
 }
@@ -650,7 +642,6 @@ int
 cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 {
 	MYSQL cmdb;
-	MYSQL_STMT *cmdb_stmt;
 	MYSQL_BIND my_bind[cmdb_delete_args[type]];
 	const char *query;
 	int retval = NONE;
@@ -664,16 +655,7 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 	}
 	query = cmdb_sql_delete[type];
 	cmdb_mysql_init(config, &cmdb);
-	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
-	if ((retval = mysql_stmt_prepare(cmdb_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_bind_param(cmdb_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cmdb_stmt));
-	if ((retval = mysql_stmt_execute(cmdb_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
-	retval = (int)mysql_stmt_affected_rows(cmdb_stmt);
-	mysql_stmt_close(cmdb_stmt);
+	retval = cmdb_run_mysql_stmt(&cmdb, my_bind, query);
 	cmdb_mysql_cleanup(&cmdb);
 	return retval;
 }
@@ -722,10 +704,9 @@ cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
 int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base)
 {
-	int retval;
-
-	retval = 0;
+	int retval = NONE;
 	void *buffer;
+
 	if (cmdb_inserts[type][i] == DBINT) {
 		bind->is_unsigned = 1;
 		bind->buffer_type = MYSQL_TYPE_LONG;
