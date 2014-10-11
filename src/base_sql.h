@@ -178,6 +178,11 @@ cmdb_mysql_cleanup(MYSQL *cmdb);
 void
 cmdb_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 
+int
+cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
+
+void
+cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data);
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3

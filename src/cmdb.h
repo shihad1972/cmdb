@@ -377,7 +377,7 @@ enum {
 };
 
 typedef union dbdata_u {
-	char text[256];
+	char text[RBUFF_S];
 	unsigned long int number;
 	short int small;
 } dbdata_u;

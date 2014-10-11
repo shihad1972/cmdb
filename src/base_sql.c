@@ -91,6 +91,55 @@ cmdb_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res)
 	mysql_library_end();
 }
 
+int
+cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
+{
+	int retval = NONE;
+	MYSQL_STMT *stmt;
+
+	if (!(stmt = mysql_stmt_init(cmdb)))
+		report_error(MY_STATEMENT_FAIL, mysql_error(cmdb));
+	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
+	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0)
+		report_error(MY_BIND_FAIL, mysql_stmt_error(stmt));
+	if ((retval = mysql_stmt_execute(stmt)) != 0)
+		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
+	retval = (int)mysql_stmt_affected_rows(stmt);
+	mysql_stmt_close(stmt);
+	return retval;
+}
+
+void
+cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
+{
+	dbdata_u *list;
+
+	if (data)
+		list = data;
+	else
+		report_error(NO_DATA, "data in cmdb_set_bind_mysql");
+	if (i == DBINT) {
+		mybind->buffer_type = MYSQL_TYPE_LONG;
+		mybind->is_unsigned = 1;
+		mybind->buffer = &(list->number);
+		mybind->buffer_length = sizeof(unsigned long int);
+	} else if (i == DBTEXT) {
+		mybind->buffer_type = MYSQL_TYPE_STRING;
+		mybind->is_unsigned = 0;
+		mybind->buffer = list->text;
+		mybind->buffer_length = RBUFF_S;
+	} else if (i == DBSHORT) {
+		mybind->buffer_type = MYSQL_TYPE_SHORT;
+		mybind->is_unsigned = 0;
+		mybind->buffer = &(list->small);
+		mybind->buffer_length = sizeof(short int);
+	} else {
+		report_error(DB_TYPE_INVALID, "in cmdb_set_bind_mysql");
+	}
+	mybind->is_null = 0;
+}
+
 #endif /*HAVE_MYSQL*/
 #ifdef HAVE_SQLITE3
 

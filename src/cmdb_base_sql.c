@@ -683,25 +683,6 @@ cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 }
 
 int
-cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
-{
-	int retval = NONE;
-	MYSQL_STMT *stmt;
-
-	if (!(stmt = mysql_stmt_init(cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(cmdb));
-	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
-	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(stmt));
-	if ((retval = mysql_stmt_execute(stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
-	retval = (int)mysql_stmt_affected_rows(stmt);
-	mysql_stmt_close(stmt);
-	return retval;
-}
-
-int
 setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, cmdb_s *base)
 {
 	int retval = NONE;

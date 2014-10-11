@@ -99,8 +99,6 @@ void
 cmdb_set_args_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
 void
 cmdb_set_fields_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
-int
-cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
 void
 cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
 void
