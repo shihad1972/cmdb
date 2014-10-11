@@ -113,6 +113,7 @@ cmdb_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
 void
 cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
 {
+	size_t len;
 	dbdata_u *list;
 
 	if (data)
@@ -128,7 +129,10 @@ cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
 		mybind->buffer_type = MYSQL_TYPE_STRING;
 		mybind->is_unsigned = 0;
 		mybind->buffer = list->text;
-		mybind->buffer_length = RBUFF_S;
+		if ((len = strlen(list->text)) > 0)
+			mybind->buffer_length = len;
+		else
+			mybind->buffer_length = RBUFF_S;
 	} else if (i == DBSHORT) {
 		mybind->buffer_type = MYSQL_TYPE_SHORT;
 		mybind->is_unsigned = 0;

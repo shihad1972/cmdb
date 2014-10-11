@@ -96,8 +96,6 @@ cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type);
 int
 cmdb_run_search_mysql(cmdb_config_s *cmdb, dbdata_s *data, int type);
 void
-cmdb_set_args_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
-void
 cmdb_set_fields_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base);
 void
 cmdb_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);

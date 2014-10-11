@@ -491,18 +491,20 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	MYSQL_BIND fields[cmdb_search_fields[type]];
 	const char *query = sql_search[type];
 	int retval = NONE, j = NONE;
-	unsigned int i;
+	unsigned int i, k;
 	dbdata_s *list = data;
 
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
 	for (i = 0; i < cmdb_search_args[type]; i++) {
-		cmdb_set_args_mysql(&args[i], cmdb_search_args_type[type][i], list);
+		k = cmdb_search_args_type[type][i];
+		cmdb_set_bind_mysql(&args[i], k, &(list->args));
 		list = list->next;
 	}
 	list = data;
-	for (i = 0; i < cmdb_search_fields[type]; i++)
+	for (i = 0; i < cmdb_search_fields[type]; i++) {
 		cmdb_set_search_fields_mysql(&fields[i], i, j, type, data);
+	}
 	cmdb_mysql_init(ccs, &cmdb);
 	if (!(cmdb_stmt = mysql_stmt_init(&cmdb)))
 		report_error(MY_STATEMENT_FAIL, mysql_error(&cmdb));
@@ -518,8 +520,9 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	while ((retval = mysql_stmt_fetch(cmdb_stmt)) == 0) {
 		j++;
-		for (i = 0; i < cmdb_search_fields[type]; i++)
+		for (i = 0; i < cmdb_search_fields[type]; i++) {
 			cmdb_set_search_fields_mysql(&fields[i], i, j, type, data);
+		}
 		if ((retval = mysql_stmt_bind_result(cmdb_stmt, &fields[0])) != 0)
 			report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cmdb_stmt));
 	}
@@ -529,35 +532,6 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	mysql_stmt_close(cmdb_stmt);
 	cmdb_mysql_cleanup(&cmdb);
 	return j;
-}
-
-void
-cmdb_set_args_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base)
-{
-	void *buffer = '\0';
-	dbdata_s *list = base;
-
-	mybind->is_null = 0;
-	mybind->length = 0;
-	if (i == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->args.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (i == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.text);
-		mybind->buffer_length = strlen(buffer);
-	} else if (i == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in cmdb_set_args_mysql");
-	}
-	mybind->buffer = buffer;
 }
 /*
 void
@@ -570,7 +544,6 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 {
 	int j;
 	static int m = 0, stype = -1;
-	void *buffer = '\0';
 	dbdata_s *list, *new;
 	list = base;
 
@@ -594,25 +567,7 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 	}
 	for (j = 0; j < m; j++)
 		list = list->next;
-	if (cmdb_search_fields_type[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->fields.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (cmdb_search_fields_type[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.text);
-		mybind->buffer_length = RBUFF_S;
-	} else if (cmdb_search_fields_type[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in cmdb_set_search_fields_mysql");
-	}
-	mybind->buffer = buffer;
+	cmdb_set_bind_mysql(mybind, cmdb_search_fields_type[type][i], &(list->fields));
 	m++;
 }
 
@@ -645,12 +600,13 @@ cmdb_run_delete_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 	MYSQL_BIND my_bind[cmdb_delete_args[type]];
 	const char *query;
 	int retval = NONE;
-	unsigned int i;
+	unsigned int i, k;
 	dbdata_s *list = data;
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_delete_args[type]; i++) {
-		cmdb_set_args_mysql(&my_bind[i], cmdb_delete_args_type[type][i], list);
+		k = cmdb_delete_args_type[type][i];
+		cmdb_set_bind_mysql(&my_bind[i], k, &(list->args));
 		list = list->next;
 	}
 	query = cmdb_sql_delete[type];
@@ -667,12 +623,13 @@ cmdb_run_update_mysql(cmdb_config_s *config, dbdata_s *data, int type)
 	MYSQL_BIND my_bind[cmdb_update_args[type]];
 	const char *query;
 	int retval = NONE;
-	unsigned int i;
+	unsigned int i, k;
 	dbdata_s *list = data;
 
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < cmdb_update_args[type]; i++) {
-		cmdb_set_args_mysql(&my_bind[i], cmdb_update_args_type[type][i], list);
+		k = cmdb_update_args_type[type][i];
+		cmdb_set_bind_mysql(&my_bind[i], k, &(list->args));
 		list = list->next;
 	}
 	query = cmdb_sql_update[type];
