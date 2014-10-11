@@ -972,6 +972,8 @@ init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 {
 	unsigned int max;
 	dbdata_s *data = '\0', *dlist = '\0';
+	if (*list)
+		*list = '\0';
 
 	for (max = 0; max < i; max++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
