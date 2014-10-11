@@ -450,6 +450,8 @@ int
 add_trailing_slash(char *member);
 int
 add_trailing_dot(char *member);
+unsigned int
+cmdb_get_max(const unsigned int args, const unsigned int fields);
 int
 write_file(char *filename, char *output);
 void

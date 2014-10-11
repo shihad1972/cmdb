@@ -849,6 +849,15 @@ add_trailing_dot(char *member)
 	return retval;
 }
 
+unsigned int
+cmdb_get_max(const unsigned int args, const unsigned int fields)
+{
+	unsigned int max;
+
+	max = (fields >= args) ? fields :  args ;
+	return max;
+}
+
 int
 write_file(char *filename, char *output)
 {
