@@ -627,9 +627,10 @@ void
 set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
+	unsigned int num = cmdb_update_args[UP_CUST_MUSER];
 	dbdata_s *data = '\0';
 
-	init_multi_dbdata_struct(&data, UP_CUST_MUSER);
+	init_multi_dbdata_struct(&data, num);
 	data->args.number = cmdb->customer->muser;
 	data->next->args.number = cmdb->customer->cust_id;
 	if ((retval = cmdb_run_update(config, data, UP_CUST_MUSER)) < 1) 
