@@ -160,7 +160,7 @@ const unsigned int cmdb_search_args_type[][2] = {
 	{ DBINT, DBTEXT }
 };
 
-const unsigned int cmdb_search_field_types[][1] = {
+const unsigned int cmdb_search_fields_type[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },
@@ -594,17 +594,17 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 	}
 	for (j = 0; j < m; j++)
 		list = list->next;
-	if (cmdb_search_field_types[type][i] == DBINT) {
+	if (cmdb_search_fields_type[type][i] == DBINT) {
 		mybind->buffer_type = MYSQL_TYPE_LONG;
 		mybind->is_unsigned = 1;
 		buffer = &(list->fields.number);
 		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (cmdb_search_field_types[type][i] == DBTEXT) {
+	} else if (cmdb_search_fields_type[type][i] == DBTEXT) {
 		mybind->buffer_type = MYSQL_TYPE_STRING;
 		mybind->is_unsigned = 0;
 		buffer = &(list->fields.text);
 		mybind->buffer_length = RBUFF_S;
-	} else if (cmdb_search_field_types[type][i] == DBSHORT) {
+	} else if (cmdb_search_fields_type[type][i] == DBSHORT) {
 		mybind->buffer_type = MYSQL_TYPE_SHORT;
 		mybind->is_unsigned = 0;
 		buffer = &(list->fields.small);
@@ -1325,13 +1325,13 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				report_error(MALLOC_FAIL,
 				 "dbdata_s in get_cmdb_search_res_sqlite");
 			init_dbdata_struct(data);
-			if (cmdb_search_field_types[type][j] == DBTEXT)
+			if (cmdb_search_fields_type[type][j] == DBTEXT)
 				snprintf(data->fields.text, RBUFF_S, "%s",
 				 sqlite3_column_text(state, j));
-			else if (cmdb_search_field_types[type][j] == DBINT)
+			else if (cmdb_search_fields_type[type][j] == DBINT)
 				data->fields.number =
 				 (uli_t)sqlite3_column_int64(state, j);
-			else if (cmdb_search_field_types[type][j] == DBSHORT)
+			else if (cmdb_search_fields_type[type][j] == DBSHORT)
 				data->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
@@ -1340,13 +1340,13 @@ get_cmdb_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 		}
 	} else {
 		for (j = 0; (unsigned)j < cmdb_search_fields[type]; j++) {
-			if (cmdb_search_field_types[type][j] == DBTEXT)
+			if (cmdb_search_fields_type[type][j] == DBTEXT)
 				snprintf(list->fields.text, RBUFF_S, "%s",
 				 sqlite3_column_text(state, j));
-			else if (cmdb_search_field_types[type][j] == DBINT)
+			else if (cmdb_search_fields_type[type][j] == DBINT)
 				list->fields.number =
 				 (uli_t)sqlite3_column_int64(state, j);
-			else if (cmdb_search_field_types[type][j] == DBSHORT)
+			else if (cmdb_search_fields_type[type][j] == DBSHORT)
 				list->fields.small =
 				 (short int)sqlite3_column_int(state, j);
 			else
