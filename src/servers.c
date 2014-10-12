@@ -43,8 +43,12 @@ int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
 	char *input;
+	const unsigned int args = cmdb_search_args[VM_ID_ON_NAME];
+	const unsigned int fields = cmdb_search_fields[VM_ID_ON_NAME];
 	int retval = 0;
+	unsigned int max;
 	cmdb_vm_host_s *vmhost;
+//	dbdata_s *data = '\0';
 	dbdata_s *data;
 	
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
@@ -53,13 +57,15 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 		report_error(MALLOC_FAIL, "vmhost in add_server_to_database");
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
-	cmdb_init_initial_dbdata(&data, VM_ID_ON_NAME);
+	max = cmdb_get_max(args, fields);
+	init_multi_dbdata_struct(&data, max);
 /* Check is a server with this name already in the DB */
 	snprintf(data->args.text, HOST_S, "%s", cmdb->server->name);
 	if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) != 0) {
 		clean_dbdata_struct(data);
 		free(input);
-		fprintf(stderr, "Server %s exists in database\n", cmdb->server->name);
+		fprintf(stderr, "Server %s exists in database\n",
+cmdb->server->name);
 		return SERVER_EXISTS;
 	} else {
 /* FIXME: We should not have to clean here - this is the db search routine */
@@ -138,10 +144,13 @@ remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
+	const unsigned int args = cmdb_search_args[SERVER_ID_ON_NAME];
+	const unsigned int fields = cmdb_search_fields[SERVER_ID_ON_NAME];
 	int retval = NONE;
+	unsigned int max = cmdb_get_max(args, fields);
 	dbdata_s *data;
 
-	cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
+	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, RBUFF_S, "%s", cmdb->server->name);
 	retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME);
 	if (data->fields.number == 0) {
@@ -547,7 +556,10 @@ service->servicetype->service, service->url);
 int
 add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 {
+	const unsigned int args = cmdb_search_args[VM_ID_ON_NAME];
+	const unsigned int fields = cmdb_search_fields[VM_ID_ON_NAME];
 	int retval = NONE;
+	unsigned int max = cmdb_get_max(args, fields);
 	dbdata_s *data;
 
 	if (!(base->vmhost->type))
@@ -557,7 +569,7 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 	if (strncmp(cm->name, "NULL", COMM_S) == 0)
 		return NO_NAME;
 	else
-		cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
+		init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, NAME_S, "%s", cm->name);
 	if ((retval = cmdb_run_search(cmc, data, SERVER_ID_ON_NAME)) == 0) {
 		clean_dbdata_struct(data);
