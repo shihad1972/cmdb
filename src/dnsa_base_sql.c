@@ -1009,32 +1009,11 @@ void
 dnsa_setup_bind_ext_mysql_args(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
 {
 	unsigned int j;
-	void *buffer = '\0';
 	dbdata_s *list = base;
-	
-	mybind->is_null = 0;
-	mybind->length = 0;
+	unsigned int dbtype = dnsa_ext_search_arg_type[type][i];
 	for (j = 0; j < i; j++)
 		list = list->next;
-	if (dnsa_ext_search_arg_type[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->args.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (dnsa_ext_search_arg_type[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.text);
-		mybind->buffer_length = strlen(buffer);
-	} else if (dnsa_ext_search_arg_type[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_args");
-	}
-	mybind->buffer = buffer;
+	cmdb_set_bind_mysql(mybind, dbtype, &(list->args));
 }
 
 void
@@ -1042,12 +1021,10 @@ dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int 
 {
 	int j;
 	static int m = 0;
-	void *buffer = '\0';
+	unsigned int dbtype = dnsa_ext_search_field_type[type][i];
 	dbdata_s *list, *new;
 	list = base;
 	
-	mybind->is_null = 0;
-	mybind->length = 0;
 	if (k > 0) {
 		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in dnsa_setup_bind_ext_mysql_fields");
@@ -1060,25 +1037,7 @@ dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int 
 	}
 	for (j = 0; j < m; j++)
 		list = list->next;
-	if (dnsa_ext_search_field_type[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->fields.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (dnsa_ext_search_field_type[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.text);
-		mybind->buffer_length = RBUFF_S;
-	} else if (dnsa_ext_search_field_type[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in dnsa_setup_bind_ext_mysql_fields");
-	}
-	mybind->buffer = buffer;
+	cmdb_set_bind_mysql(mybind, dbtype, &(list->fields));
 	m++;
 }
 
