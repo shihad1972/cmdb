@@ -422,39 +422,6 @@ dnsa_get_search(int type, size_t *fields, size_t *args, void **input, void **out
 	}
 }
 
-void
-dnsa_init_initial_dbdata(dbdata_s **list, int type)
-{
-	unsigned int i = 0;
-	dbdata_s *data, *dlist;
-	dlist = *list = '\0';
-	for (i = 0; i < dnsa_extended_search_fields[type]; i++) {
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "data in dnsa_init_initial_dbdata");
-		init_dbdata_struct(data);
-		if (!(*list)) {
-			*list = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-	}
-	while (i < dnsa_extended_search_args[type]) {
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "data in dnsa_init_initial_dbdata");
-		init_dbdata_struct(data);
-		if (!(*list)) {
-			*list = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-		i++;
-	}
-}
-
 #ifdef HAVE_MYSQL
 void
 dnsa_mysql_init(dnsa_config_s *dc, MYSQL *dnsa_mysql)
@@ -940,7 +907,6 @@ int
 dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
-	MYSQL_STMT *dnsa_stmt;
 	MYSQL_BIND my_bind[dnsa_insert_fields[type]];
 	const char *query;
 	int retval;
@@ -953,16 +919,7 @@ dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 			report_error(DB_TYPE_INVALID, "in dnsa_run_insert_mysql");
 	query = dnsa_sql_insert[type];
 	dnsa_mysql_init(config, &dnsa);
-	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
-	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
-	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-
-	mysql_stmt_close(dnsa_stmt);
+	cmdb_run_mysql_stmt(&dnsa, my_bind, query);
 	cmdb_mysql_cleanup(&dnsa);
 
 	return retval;

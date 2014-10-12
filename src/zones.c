@@ -53,7 +53,7 @@ list_zones(dnsa_config_s *dc)
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	size_t len;
-	time_t create;
+//	time_t create;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
@@ -66,9 +66,10 @@ list_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\t\tUser\tDate\n");
+//	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\t\tUser\tDate\n");
+	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\n");
 	while (zone) {
-		create = (time_t)zone->ctime;
+//		create = (time_t)zone->ctime;
 		len = strlen(zone->name);
 		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
 			snprintf(zone->master, RANGE_S, "N/A");
@@ -87,30 +88,11 @@ list_zones(dnsa_config_s *dc)
 			printf("%s\t\t", zone->master);
 		else
 			printf("%s\t", zone->master);
-		if (get_uname(zone->cuser))
+/*		if (get_uname(zone->cuser))
 			printf("%s\t%s", get_uname(zone->cuser), ctime(&create));
 		else
-			printf("(unkown)\t%s", ctime(&create));
-/*		if (len < 8)
-			printf("%s\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s", 
-zone->name, zone->valid, zone->serial, zone->type, zone->master,
-get_uname(zone->cuser), ctime(&create));
-		else if (len < 16)
-			printf("%s\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
-zone->name, zone->valid, zone->serial, zone->type, zone->master,
-get_uname(zone->cuser), ctime(&create));
-		else if (len < 24)
-			printf("%s\t\t%s\t%lu\t%s\t%s\t%s\t%s",
-zone->name, zone->valid, zone->serial, zone->type, zone->master,
-get_uname(zone->cuser), ctime(&create));
-		else if (len < 32)
-			printf("%s\t%s\t%lu\t%s\t%s\t%s\t%s",
-zone->name, zone->valid, zone->serial, zone->type, zone->master,
-get_uname(zone->cuser), ctime(&create));
-		else
-			printf("%s\n\t\t\t\t%s\t%lu\t%s\t%s\t%s\t%s",
-zone->name, zone->valid, zone->serial, zone->type, zone->master,
-get_uname(zone->cuser), ctime(&create)); */
+			printf("(unkown)\t%s", ctime(&create)); */
+		printf("\n");
 		if (zone->next)
 			zone = zone->next;
 		else
@@ -1192,7 +1174,10 @@ zone \"%s\" {\n\
 int
 display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval, type = RECORDS_ON_DEST_AND_ID;
+	unsigned int f = dnsa_extended_search_fields[type];
+	unsigned int a = dnsa_extended_search_args[type];
+	unsigned int max = cmdb_get_max(a, f);
 	dnsa_s *dnsa;
 	dbdata_s *start;
 	rev_zone_info_s *rzone;
@@ -1212,7 +1197,8 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+//	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	init_multi_dbdata_struct(&start, max);
 	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
 		select_specific_ip(dnsa, cm);
 		if (!(dnsa->records))
@@ -1374,8 +1360,11 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 {
 	char *name = cm->dest;
 	char fqdn[RBUFF_S], cl_fqdn[RBUFF_S], *cl_name;
-	int i = 0;
+	int i = 0, type = RECORDS_ON_DEST_AND_ID;
 	uint32_t ip_addr;
+	unsigned int f = dnsa_extended_search_fields[type];
+	unsigned int a = dnsa_extended_search_args[type];
+	unsigned int max = cmdb_get_max(a, f);
 	dbdata_s *start, *list;
 	preferred_a_s *prefer;
 	record_row_s *rec = dnsa->records;
@@ -1384,7 +1373,8 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
 	init_preferred_a_struct(prefer);
 	dnsa->prefer = prefer;
-	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+//	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
+	init_multi_dbdata_struct(&start, max);
 	while (rec) {
 		if (strncmp(name, rec->dest, RBUFF_S) == 0) {
 			snprintf(prefer->ip, RANGE_S, "%s", cm->dest);
@@ -1422,6 +1412,7 @@ If you it associated with this IP address, please add it as an A record\n\
 Curently you cannot add FQDN's not authoritative on this DNS server\n");
 		return CANNOT_ADD_A_RECORD;
 	}
+	clean_dbdata_struct(start);
 	return NONE;
 }
 

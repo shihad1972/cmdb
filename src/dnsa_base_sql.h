@@ -66,8 +66,6 @@ int
 dnsa_run_update(dnsa_config_s *config, dbdata_s *data, int type);
 int
 dnsa_run_delete(dnsa_config_s *config, dbdata_s *data, int type);
-void
-dnsa_init_initial_dbdata(dbdata_s **list, int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
