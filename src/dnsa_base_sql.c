@@ -929,49 +929,23 @@ int
 dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 {
 	MYSQL dnsa;
-	MYSQL_STMT *dnsa_stmt;
 	MYSQL_BIND my_bind[dnsa_update_args[type]];
 	const char *query;
 	int retval;
-	unsigned int i;
+	unsigned int i, dbtype;
 	dbdata_s *list;
 
 	list = data;
 	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_update_args[type]; i++) {
-		my_bind[i].is_null = 0;
-		my_bind[i].length = 0;
-		if (dnsa_update_arg_type[type][i] == DBINT) {
-			my_bind[i].buffer_type = MYSQL_TYPE_LONG;
-			my_bind[i].is_unsigned = 1;
-			my_bind[i].buffer = &(list->args.number);
-			my_bind[i].buffer_length = sizeof(unsigned long int);
-		} else if (dnsa_update_arg_type[type][i] == DBTEXT) {
-			my_bind[i].buffer_type = MYSQL_TYPE_STRING;
-			my_bind[i].is_unsigned = 0;
-			my_bind[i].buffer = &(list->args.text);
-			my_bind[i].buffer_length = strlen(list->args.text);
-		} else if (dnsa_update_arg_type[type][i] == DBSHORT) {
-			my_bind[i].buffer_type = MYSQL_TYPE_SHORT;
-			my_bind[i].is_unsigned = 0;
-			my_bind[i].buffer = &(list->args.small);
-			my_bind[i].buffer_length = sizeof(short int);
-		}
+		dbtype = dnsa_update_arg_type[type][i];
+		cmdb_set_bind_mysql(&(my_bind[i]), dbtype, &(list->args));
 		list = list->next;
 	}
 	query = dnsa_sql_update[type];
 	dnsa_mysql_init(config, &dnsa);
-	if (!(dnsa_stmt = mysql_stmt_init(&dnsa)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(&dnsa));
-	if ((retval = mysql_stmt_prepare(dnsa_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-	if ((retval = mysql_stmt_bind_param(dnsa_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(dnsa_stmt));
-	if ((retval = mysql_stmt_execute(dnsa_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(dnsa_stmt));
-	
-	mysql_stmt_close(dnsa_stmt);
+	cmdb_run_mysql_stmt(&dnsa, my_bind, query);
 	cmdb_mysql_cleanup(&dnsa);
 	return retval;
 }
