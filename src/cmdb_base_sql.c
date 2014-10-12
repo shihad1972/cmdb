@@ -1068,20 +1068,11 @@ cmdb_run_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	if ((retval = cmdb_get_query(type, &query, &fields)) != 0) {
 		report_error(retval, "cmdb_run_query_sqlite");
 	}
-	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_query_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &cmdb, &state);
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		store_result_sqlite(state, base, type, fields);
-	
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cmdb);
-	
+	cmdb_sqlite_cleanup(cmdb, state);
 	return 0;
 }
 
@@ -1130,12 +1121,7 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 		file = ccs->file;
 	else
 		report_error(NO_DATA, "ccs in cmdb_run_search_sqlite");
-	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READONLY, NULL)) > 0)
-		report_error(FILE_O_FAIL, file);
-	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &cmdb, &state);
 	if (data)
 		list = data;
 	else
@@ -1296,13 +1282,7 @@ cmdb_run_insert_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 	retval = 0;
 	query = sql_insert[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(cmdb, query, BUFF_S, &state, NULL)) > 0) {
-		retval = sqlite3_close(cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_insert_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &cmdb, &state);
 	if ((retval = setup_insert_sqlite_bind(state, base, type)) != 0) {
 		if (retval == DB_TYPE_INVALID)
 			fprintf(stderr, "Unknown data type %d in cmdb_run_insert_sqlite", type);
