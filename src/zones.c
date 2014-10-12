@@ -1476,15 +1476,15 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "record in add_host");
 
 	init_dnsa_struct(dnsa);
+	init_record_struct(record);
+	init_zone_struct(zone);
+// **FIXME: Should probably just muti init here
 	init_dbdata_struct(&data);
 	init_dbdata_struct(&user);
 	user.next = &data;
 	dnsa->zones = zone;
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	/* Should only do this for FQDN. User must specify this.
-	if (strncmp(cm->rtype, "CNAME", COMM_S) == 0)
-		add_trailing_dot(cm->dest); */
 	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
