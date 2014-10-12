@@ -381,29 +381,6 @@ cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **out
 	return retval;
 }
 
-void
-cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type)
-{
-	unsigned int i = 0, max = 0;
-	dbdata_s *data, *dlist;
-	dlist = *list = '\0';
-	max = (cmdb_search_fields[type] >= cmdb_search_args[type]) ?
-		cmdb_search_fields[type] :
-		cmdb_search_args[type];
-	for (i = 0; i < max; i++) {
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
-		init_dbdata_struct(data);
-		if (!(*list)) {
-			*list = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-	}
-}
-
 /* MySQL functions */
 #ifdef HAVE_MYSQL
 

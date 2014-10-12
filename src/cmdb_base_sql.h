@@ -72,8 +72,6 @@ cmdb_run_delete(cmdb_config_s *config, dbdata_s *data, int type);
 int
 cmdb_run_update(cmdb_config_s *config, dbdata_s *data, int type);
 void
-cmdb_init_initial_dbdata(dbdata_s **list, unsigned int type);
-void
 show_no_results(int type);
 
 # ifdef HAVE_MYSQL

@@ -176,20 +176,17 @@ remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 int
 remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
+	const unsigned int a = cmdb_search_args[CONTACT_ID_ON_COID_NAME];
+	const unsigned int f = cmdb_search_fields[CONTACT_ID_ON_COID_NAME];
 	int retval = NONE;
+	unsigned int max = cmdb_get_max(a, f);
 	dbdata_s *data;
 
 	if (!(cm->name) || !(cm->id))
 		return NO_CONTACT_INFO;
-	cmdb_init_initial_dbdata(&data, CONTACT_ID_ON_COID_NAME);
-	if (data)
-		snprintf(data->args.text, CONF_S, "%s", cm->name);
-	else
-		return NO_CONTACT_DATA;
-	if (data->next)
-		snprintf(data->next->args.text, CONF_S, "%s", cm->id);
-	else
-		return NO_CONTACT_DATA;
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, CONF_S, "%s", cm->name);
+	snprintf(data->next->args.text, CONF_S, "%s", cm->id);
 	if ((retval  = cmdb_run_search(config, data, CONTACT_ID_ON_COID_NAME)) == 0) {
 		fprintf(stderr, "No contact found\n");
 		return NO_CONTACT;
@@ -212,12 +209,15 @@ remove_contact_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 int
 remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
+	const unsigned int a = cmdb_search_args[SERVER_ID_ON_NAME];
+	const unsigned int f = cmdb_search_fields[SERVER_ID_ON_NAME];
 	int retval = NONE, type = NONE;
+	unsigned int max = cmdb_get_max(a, f);
 	unsigned long int id = NONE;
 	dbdata_s *data, *list;
 
+	init_multi_dbdata_struct(&data, max);
 	if (cm->name) {
-		cmdb_init_initial_dbdata(&data, SERVER_ID_ON_NAME);
 		snprintf(data->args.text, HOST_S, "%s", cm->name);
 		if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) == 0) {
 			clean_dbdata_struct(data);
@@ -230,7 +230,6 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 			type = SERVER;
 		}
 	} else if ((cm->coid) || (cm->id)) {
-		cmdb_init_initial_dbdata(&data, CUST_ID_ON_COID);
 		if (cm->coid)
 			snprintf(data->args.text, RANGE_S, "%s", cm->coid);
 		else if (cm->id)
@@ -251,14 +250,13 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 		return NO_NAME_COID;
 	}
 	clean_dbdata_struct(data);
+	init_multi_dbdata_struct(&data, max);
 	if (cm->url) {
 		if (cm->service) {
-			cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_URL_SERVICE);
 			snprintf(data->args.text, HOST_S, "%s", cm->url);
 			snprintf(data->next->args.text, RANGE_S, "%s", cm->service);
 			retval = cmdb_run_search(config, data, SERVICE_ID_ON_URL_SERVICE);
 		} else {
-			cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_URL);
 			snprintf(data->args.text, HOST_S, "%s", cm->url);
 			retval = cmdb_run_search(config, data, SERVICE_ID_ON_URL);
 		}
@@ -280,11 +278,9 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 			return MULTI_SERVICES;
 		} else {
 			printf("Service deleted\n");
-			clean_dbdata_struct(data);
 			retval = NONE;
 		}
 	} else if (cm->service) {
-		cmdb_init_initial_dbdata(&data, SERVICE_ID_ON_SERVER_ID_SERVICE);
 		data->args.number = id;
 		snprintf(data->next->args.text, RANGE_S, "%s", cm->service);
 		if (type == SERVER)
@@ -301,7 +297,7 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 		retval = NONE;
 	} else
 		retval = NO_SERVICE_URL;
-		
+	clean_dbdata_struct(data);
 	return retval;
 }
 
