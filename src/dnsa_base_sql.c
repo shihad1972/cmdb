@@ -1226,21 +1226,11 @@ dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	if ((retval = dnsa_get_query(type, &query, &fields)) != 0) {
 		report_error(retval, "dnsa_run_query_sqlite");
 	}
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "dnsa_run_query_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &dnsa, &state);
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		dnsa_store_result_sqlite(state, base, type, fields);
-	
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(dnsa);
-	
+	cmdb_sqlite_cleanup(dnsa, state);
 	return 0;
 }
 
@@ -1632,14 +1622,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	retval = 0;
 	query = dnsa_sql_search[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &dnsa, &state);
 /*
    As in the MySQL function we assume that we are sending text and recieving
    numerical data. Searching on name for ID is ok for this
@@ -1659,32 +1642,23 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 		else if (type == REV_ZONE_PREFIX)
 			base->rev_zones->prefix = result;
 	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(dnsa);
-	return retval;
+	cmdb_sqlite_cleanup(dnsa, state);
+	return 0;
 }
 
 int
 dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 {
 	const char *query, *file;
-	int retval, i;
+	int i;
 	dbdata_s *list;
 	sqlite3 *dnsa;
 	sqlite3_stmt *state;
 
-	retval = 0;
 	list = base;
 	query = dnsa_sql_extended_search[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &dnsa, &state);
 	for (i = 0; (unsigned long)i < dnsa_extended_search_args[type]; i++) {
 		dnsa_setup_bind_extended_sqlite(state, list, type, i);
 		list = list->next;
@@ -1695,9 +1669,7 @@ dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 		dnsa_get_extended_results_sqlite(state, list, type, i);
 		i++;
 	}
-
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(dnsa);
+	cmdb_sqlite_cleanup(dnsa, state);
 	return i;
 }
 
@@ -1712,14 +1684,7 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	retval = 0;
 	query = dnsa_sql_insert[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &dnsa, &state);
 	if ((retval = dnsa_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error binding result! %d\n", retval);
 		sqlite3_close(dnsa);
@@ -1727,14 +1692,11 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(dnsa);
-		retval = SQLITE_INSERT_FAILED;
-		return retval;
+		cmdb_sqlite_cleanup(dnsa, state);
+		return SQLITE_INSERT_FAILED;
 	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(dnsa);
-	return retval;
+	cmdb_sqlite_cleanup(dnsa, state);
+	return 0;
 }
 
 int
@@ -1751,14 +1713,7 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	list = data;
 	query = dnsa_sql_update[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_search_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &dnsa, &state);
 	for (i = 1; i <= dnsa_update_args[type]; i++) {
 		if (!list)
 			break;
@@ -1777,18 +1732,14 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(dnsa);
-		retval = SQLITE_INSERT_FAILED;
-		return retval;
+		cmdb_sqlite_cleanup(dnsa, state);
+		return SQLITE_INSERT_FAILED;
 	}
 	if (retval == SQLITE_DONE) {
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(dnsa);
+		cmdb_sqlite_cleanup(dnsa, state);
 		return NONE;
 	} else {
-		sqlite3_finalize(state);
-		sqlite3_close(dnsa);
+		cmdb_sqlite_cleanup(dnsa, state);
 		return retval;
 	}
 }
@@ -1807,14 +1758,7 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	list = data;
 	query = dnsa_sql_delete[type];
 	file = config->file;
-	if ((retval = sqlite3_open_v2(file, &dnsa, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(dnsa, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n",  sqlite3_errmsg(dnsa));
-		retval = sqlite3_close(dnsa);
-		report_error(SQLITE_STATEMENT_FAILED, "error in dnsa_run_delete_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &dnsa, &state);
 	for (i = 1; i <= dnsa_delete_args[type]; i++) {
 		if (!list)
 			break;
@@ -1833,13 +1777,11 @@ dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Received error: %s\n", sqlite3_errmsg(dnsa));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(dnsa);
+		cmdb_sqlite_cleanup(dnsa, state);
 		return NONE;
 	}
 	retval = sqlite3_changes(dnsa);
-	sqlite3_finalize(state);
-	sqlite3_close(dnsa);
+	cmdb_sqlite_cleanup(dnsa, state);
 	return retval;
 }
 
