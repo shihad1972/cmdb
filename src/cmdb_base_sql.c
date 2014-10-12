@@ -345,42 +345,6 @@ cmdb_get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
-int
-cmdb_get_search(int type, size_t *fields, size_t *args, void **input, void **output, cmdb_s *base)
-{
-	int retval = 0;
-
-	if (type == SERVER_ID_ON_NAME) {
-		*input = &(base->server->name);
-		*output = &(base->server->server_id);
-		*fields = strlen(base->server->name);
-		*args = sizeof(base->server->server_id);
-	} else if (type == CUST_ID_ON_COID) {
-		*input = &(base->customer->coid);
-		*output = &(base->customer->cust_id);
-		*fields = strlen(base->customer->coid);
-		*args = sizeof(base->customer->cust_id);
-	} else if (type == SERV_TYPE_ID_ON_SERVICE) {
-		*input = &(base->servicetype->service);
-		*output = &(base->servicetype->service_id);
-		*fields = strlen(base->servicetype->service);
-		*args = sizeof(base->servicetype->service_id);
-	} else if (type == HARD_TYPE_ID_ON_HCLASS) {
-		*input = &(base->hardtype->hclass);
-		*output = &(base->hardtype->ht_id);
-		*fields = strlen(base->hardtype->hclass);
-		*args = sizeof(base->hardtype->ht_id);
-	} else if (type == VM_ID_ON_NAME) {
-		*input = &(base->vmhost->name);
-		*output = &(base->vmhost->id);
-		*fields = strlen(base->vmhost->name);
-		*args = sizeof(base->vmhost->id);
-	} else {
-		retval = UNKNOWN_QUERY;
-	}
-	return retval;
-}
-
 /* MySQL functions */
 #ifdef HAVE_MYSQL
 
