@@ -163,9 +163,6 @@ cbc_get_query(int type, const char **query, unsigned int *fields);
 void
 cbc_init_initial_dbdata(dbdata_s **list, unsigned int type);
 
-void
-cbc_init_update_dbdata(dbdata_s **list, unsigned int type);
-
 int
 cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
 

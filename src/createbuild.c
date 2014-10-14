@@ -505,7 +505,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("No modifiers?\n");
 		return NO_MODIFIERS;
 	}
-	cbc_init_update_dbdata(&data, (unsigned)type);
+	init_multi_dbdata_struct(&data, cbc_update_args[type]);
 	cbc_prep_update_dbdata(data, type, ids);
 	if ((retval = cbc_run_update(cbt, data, type)) == 1) {
 		printf("Build updated\n");
@@ -518,6 +518,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("Multiple builds??\n");
 		retval = MULTIPLE_SERVER_BUILDS;
 	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 

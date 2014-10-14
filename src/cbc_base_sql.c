@@ -686,24 +686,6 @@ cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
 	}
 }
 
-void
-cbc_init_update_dbdata(dbdata_s **list, unsigned int type)
-{
-	unsigned int i = NONE;
-	dbdata_s *data = '\0', *dlist = '\0';
-	for (i = 0; i < cbc_update_args[type]; i++) {
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "Data in init_update_dbdata");
-		init_dbdata_struct(data);
-		if (!(dlist)) {
-			*list = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-	}
-}
 #ifdef HAVE_MYSQL
 
 void

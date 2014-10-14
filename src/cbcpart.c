@@ -355,7 +355,7 @@ part->log_vol, cpl->scheme);
 		printf("Partition added to DB\n");
 	if (retval == 0) {
 		dbdata_s *user;
-		cbc_init_update_dbdata(&user, UP_SEEDSCHEME);
+		init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
 		user->args.number = (unsigned long int)getuid();
 		user->next->args.number = scheme_id;
 		if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {

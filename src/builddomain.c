@@ -230,7 +230,7 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 			free (data);
 			return retval;
 		}
-		cbc_init_update_dbdata(&data, (unsigned) type);
+		init_multi_dbdata_struct(&data, cbc_update_args[type]);
 		if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
 			fprintf(stderr, "No build domain for %s\n", data->args.text);
 			clean_dbdata_struct(data);
@@ -261,7 +261,7 @@ modify_cbc_build_domain(cbc_config_s *cbc, cbcdomain_comm_line_s *cdl)
 			free(data);
 			return retval;
 		}
-		cbc_init_update_dbdata(&data, (unsigned) type);
+		init_multi_dbdata_struct(&data, cbc_update_args[type]);
 		if ((retval = cbc_get_build_dom_id(cbc, cdl, data)) == 0) {
 			fprintf(stderr, "No build domain for %s\n", data->args.text);
 			clean_dbdata_struct(data);
