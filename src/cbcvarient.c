@@ -231,8 +231,9 @@ list_cbc_build_varient(cbc_config_s *cmc)
 int
 display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE;
+	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
 	char varient[HOST_S];
+	unsigned int max;
 	unsigned long int id;
 	cbc_s *base;
 	dbdata_s *data = '\0';
@@ -240,7 +241,8 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_cbc_build_varient");
 	init_cbc_struct(base);
-	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VALIAS);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
 		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
 		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);
@@ -311,7 +313,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		}
 		dbvari = dbvari->next;
 	}
-	clean_varient(dbvari);
+	clean_varient(base->varient);
 	snprintf(vari->varient, HOST_S, "%s", cvl->varient);
 	snprintf(vari->valias, MAC_S, "%s", cvl->valias);
 	base->varient = vari;
@@ -330,11 +332,13 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 int
 remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE;
 	char varient[HOST_S];
+	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
+	unsigned int max;
 	dbdata_s *data = '\0';
 
-	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VALIAS);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
 		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
 		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);

@@ -757,12 +757,14 @@ cbc_fill_app_update_data(cbcdomain_comm_line_s *cdl, dbdata_s *data, int query)
 void
 list_build_dom_servers(cbc_config_s *cbc, unsigned long int id, char *name)
 {
-	int retval;
+	int retval, type = BUILD_DOM_SERVERS;
 	dbdata_s *data = '\0';
+	unsigned int max;
 
-	cbc_init_initial_dbdata(&data, BUILD_DOM_SERVERS);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = id;
-	if ((retval = cbc_run_search(cbc, data, BUILD_DOM_SERVERS)) == 0)
+	if ((retval = cbc_run_search(cbc, data, type)) == 0)
 		printf("No severs built in domain %s\n", name);
 	else
 		print_build_dom_servers(data, name);

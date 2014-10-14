@@ -168,6 +168,8 @@ int
 add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 {
 	int retval = NONE, osnum = NONE, varinum = NONE, packnum = NONE;
+	int type = OS_VARIENT_ID_ON_PACKAGE;
+	unsigned int max;
 	unsigned long int *osid, *variid;
 	size_t len;
 	cbc_s *base;
@@ -177,7 +179,8 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add package");
 	init_cbc_struct(base);
-	cbc_init_initial_dbdata(&data, OS_VARIENT_ID_ON_PACKAGE);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | VARIENT)) != 0) {
 		printf("Unable to run os and varient query\n");
 		free(base);
@@ -209,7 +212,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		return retval;
 	}
 	snprintf(data->args.text, RBUFF_S, "%s", cpl->package);
-	if ((packnum = cbc_run_search(cmc, data, OS_VARIENT_ID_ON_PACKAGE)) > 0) {
+	if ((packnum = cbc_run_search(cmc, data, type)) > 0) {
 		retval = check_for_package(osid, osnum, variid, varinum, data);
 		if (retval > 0) {
 			if (strncmp(cpl->os, "NULL", COMM_S) == 0) 
@@ -242,7 +245,9 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		}
 		pack = pack->next;
 	}
-	cbc_init_initial_dbdata(&update, UP_VARIENT);
+	type = UP_VARIENT;
+	max = get_max(cbc_update_args[type], cbc_update_fields[type]);
+	init_multi_dbdata_struct(&update, max);
 	update->args.number = (unsigned long int)getuid();
 	update->next->args.number = *variid;
 	if ((retval = cbc_run_update(cmc, update, UP_VARIENT)) == 0)
