@@ -232,15 +232,17 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 int
 cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 {
-	int retval = NONE;
+	int retval = NONE, type = IP_ON_BD_ID;
+	unsigned int max;
 	unsigned long int ip_addr = details->bdom->start_ip;
 	cbc_build_ip_s *ip = '\0';
 	dbdata_s *data = '\0', *list = '\0';
 
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
 		report_error(MALLOC_FAIL, "ip in cbc_get_build_ip");
 	init_build_ip(ip);
-	cbc_init_initial_dbdata(&data, IP_ON_BD_ID);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = details->bdom->bd_id;
 	retval = cbc_run_search(cbt, data, IP_ON_BD_ID);
 #ifdef HAVE_DNSA
@@ -390,10 +392,12 @@ cbc_get_build_partitons(cbc_s *cbc, cbc_s *details)
 int
 cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
-	int retval = NONE;
+	int retval = NONE, type = NETWORK_CARD;
+	unsigned int max;
 	dbdata_s *data, *list;
 
-	cbc_init_initial_dbdata(&data, NETWORK_CARD);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = build->server_id;
 	if ((retval = cbc_run_search(cbt, data, NETWORK_CARD)) == 0) {
 		clean_dbdata_struct(data);
@@ -440,7 +444,8 @@ cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *
 int
 check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 {
-	int retval = NONE;
+	int retval = NONE, type = HARD_DISK_DEV;
+	unsigned int max;
 	dbdata_s *data;
 	cbc_disk_dev_s *disk;
 
@@ -448,7 +453,8 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 		report_error(MALLOC_FAIL, "disk in check_for_disk_device");
 	init_disk_dev(disk);
 	details->diskd = disk;
-	cbc_init_initial_dbdata(&data, HARD_DISK_DEV);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = disk->server_id = details->server->server_id;
 /* Should run a search here to see if the disk_dev is already in the table */
 	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {

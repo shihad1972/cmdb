@@ -256,7 +256,8 @@ int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os;
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	cbc_s *cbc;
 	cbc_build_os_s *os;
 	dbdata_s *data = '\0';
@@ -268,18 +269,14 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	init_cbc_struct(cbc);
 	init_build_os(os);
 	cbc->bos = os;
-/* Why convert? Use proper name when adding an os */
-/*	if (*name >= 'a' && *name <= 'z') {
-		retval = toupper(*name);
-		*name = (char)retval;
-		retval = NONE;
-	} */
 /* If we have a build alias we need to check if this is a valid OS in the 
  * build_type table */
 	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
 	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
-		cbc_init_initial_dbdata(&data, OS_ALIAS_ON_OS);
+		type = OS_ALIAS_ON_OS;
+		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+		init_multi_dbdata_struct(&data, max);
 		snprintf(data->args.text, MAC_S, "%s", name);
 		if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
 			clean_dbdata_struct(data);
@@ -288,7 +285,9 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		snprintf(col->alias, MAC_S, "%s", data->fields.text);
 		clean_dbdata_struct(data);
 	}
-	cbc_init_initial_dbdata(&data, BUILD_TYPE_ID_ON_ALIAS);
+	type = BUILD_TYPE_ID_ON_ALIAS;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, MAC_S, "%s", col->alias);
 	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
 		clean_dbdata_struct(data);
@@ -299,7 +298,9 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	retval = NONE;
 /* Get all examples of this OS in the DB and check this particular one is
  * not already in the DB */
-	cbc_init_initial_dbdata(&data, BUILD_OS_ON_NAME);
+	type = BUILD_OS_ON_NAME;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, MAC_S, "%s", name);
 	retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME);
 	if (retval > 0) {
@@ -332,11 +333,13 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os, *alias = col->alias;
 	char *version = col->version, *arch = col->arch;
-	int retval = NONE, i;
+	int retval = NONE, i, type = OS_ID_ON_NAME;
+	unsigned int max;
 	unsigned long int id;
 	dbdata_s *data = '\0', *list;
 
-	cbc_init_initial_dbdata(&data, OS_ID_ON_NAME);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	if (strncmp(name, "NULL", MAC_S) != 0) {
 		snprintf(data->args.text, MAC_S, "%s", name);
 		snprintf(data->next->args.text, MAC_S, "%s", version);
@@ -359,11 +362,15 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	}
 	id = data->fields.number;
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, BUILD_ID_ON_OS_ID);
+	type = BUILD_ID_ON_OS_ID;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = id;
 	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_OS_ID)) != 0) {
 		clean_dbdata_struct(data);
-		cbc_init_initial_dbdata(&data, SERVERS_USING_BUILD_OS);
+		type = SERVERS_USING_BUILD_OS;
+		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+		init_multi_dbdata_struct(&data, max);
 		data->args.number = id;
 		retval = cbc_run_search(cmc, data, SERVERS_USING_BUILD_OS);
 		printf("Server(s) ");
