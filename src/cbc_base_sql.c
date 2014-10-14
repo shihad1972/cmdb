@@ -863,6 +863,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
+	list = data;
 	for (i = 0; i < cbc_search_args[type]; i++) {
 		dbtype = cbc_search_arg_types[type][i];
 		cmdb_set_bind_mysql(&args[i], dbtype, &(list->args));
@@ -870,7 +871,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	list = data;
 	for (i = 0; i < cbc_search_fields[type]; i++)
-		if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+		if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, list)) != 0)
 			report_error(DB_WRONG_TYPE, query);
 	cbc_mysql_init(ccs, &cbc);
 	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
@@ -890,7 +891,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 		j++;
 		if ((int)numrows > j) {
 			for (i = 0; i < cbc_search_fields[type]; i++)
-				if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
+				if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, list)) != 0)
 					report_error(DB_WRONG_TYPE, query);
 		}
 		if ((retval = mysql_stmt_bind_result(cbc_stmt, &fields[0])) != 0)
