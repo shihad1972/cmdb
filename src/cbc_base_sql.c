@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Config
- *  Copyright (C) 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2013 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -287,53 +287,6 @@ SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
 SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
   s.server_id = bi.server_id WHERE bi.bd_id = ? ORDER BY bi.ip"
 };
-
-#ifdef HAVE_MYSQL
-/*
-const int cbc_mysql_inserts[][24] = {
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  MYSQL_TYPE_STRING, 0, 0, 0, 0} ,
-{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_LONG, MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_SHORT, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_STRING,
-  MYSQL_TYPE_STRING, MYSQL_TYPE_LONG, MYSQL_TYPE_LONG, MYSQL_TYPE_STRING,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{MYSQL_TYPE_STRING, MYSQL_TYPE_STRING, MYSQL_TYPE_LONG,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
- */
-#endif /* HAVE_MYSQL */
 
 const unsigned int cbc_select_fields[] = {
 	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
@@ -805,7 +758,6 @@ int
 cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
-	MYSQL_STMT *cbc_stmt;
 	MYSQL_BIND my_bind[cbc_insert_fields[type]];
 	const char *query;
 	int retval = 0;
@@ -817,16 +769,7 @@ cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 		if ((retval = cbc_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
 			report_error(retval, query);
 	cbc_mysql_init(config, &cbc);
-	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_bind_param(cbc_stmt, &my_bind[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_execute(cbc_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-
-	mysql_stmt_close(cbc_stmt);
+	cmdb_run_mysql_stmt(&cbc, my_bind, query);
 	cmdb_mysql_cleanup(&cbc);
 	return retval;
 }
@@ -885,48 +828,20 @@ int
 cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
-	MYSQL_STMT *cbc_stmt;
 	MYSQL_BIND mybind[cbc_delete_args[type]];
 	const char *query = cbc_sql_delete[type];
 	int retval = 0;
-	unsigned int i;
+	unsigned int i, dbtype;
 	dbdata_s *list = data;
 
 	memset(mybind, 0, sizeof(mybind));
 	for (i = 0; i < cbc_delete_args[type]; i++) {
-		mybind[i].is_null = 0;
-		mybind[i].length = 0;
-		if (cbc_delete_types[type][i] == DBINT) {
-			mybind[i].buffer_type = MYSQL_TYPE_LONG;
-			mybind[i].is_unsigned = 1;
-			mybind[i].buffer = &(list->args.number);
-			mybind[i].buffer_length = sizeof(unsigned long int);
-		} else if (cbc_delete_types[type][i] == DBTEXT) {
-			mybind[i].buffer_type = MYSQL_TYPE_STRING;
-			mybind[i].is_unsigned = 0;
-			mybind[i].buffer = &(list->args.text);
-			mybind[i].buffer_length = strlen(list->args.text);
-		} else if (cbc_delete_types[type][i] == DBSHORT) {
-			mybind[i].buffer_type = MYSQL_TYPE_SHORT;
-			mybind[i].is_unsigned = 0;
-			mybind[i].buffer = &(list->args.small);
-			mybind[i].buffer_length = sizeof(short int);
-		} else {
-			report_error(DB_WRONG_TYPE, query);
-		}
+		dbtype = cbc_delete_types[type][i];
+		cmdb_set_bind_mysql(&(mybind[i]), dbtype, &(list->args));
 		list = list->next;
 	}
 	cbc_mysql_init(ccs, &cbc);
-	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_bind_param(cbc_stmt, &mybind[0])) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_execute(cbc_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	retval = (int)mysql_stmt_affected_rows(cbc_stmt);
-	mysql_stmt_close(cbc_stmt);
+	retval = cmdb_run_mysql_stmt(&cbc, mybind, query);
 	cmdb_mysql_cleanup(&cbc);
 	return retval;
 }
@@ -936,18 +851,24 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
 	MYSQL_STMT *cbc_stmt;
-	MYSQL_BIND args[cbc_search_args[type]];
-	MYSQL_BIND fields[cbc_search_fields[type]];
-	my_ulonglong numrows;
+	unsigned int i, dbtype;
 	const char *query = cbc_sql_search[type];
 	int retval = 0, j = 0;
-	unsigned int i;
+	dbdata_s *list;
+	unsigned int a = cbc_search_args[type];
+	unsigned int f = cbc_search_fields[type];
+	MYSQL_BIND args[a];
+	MYSQL_BIND fields[f];
+	my_ulonglong numrows;
 
 	memset(args, 0, sizeof(args));
 	memset(fields, 0, sizeof(fields));
-	for (i = 0; i < cbc_search_args[type]; i++)
-		if ((retval = cbc_set_search_args_mysql(&args[i], i, type, data)) != 0)
-			report_error(DB_WRONG_TYPE, query);
+	for (i = 0; i < cbc_search_args[type]; i++) {
+		dbtype = cbc_search_arg_types[type][i];
+		cmdb_set_bind_mysql(&args[i], dbtype, &(list->args));
+		list = list->next;
+	}
+	list = data;
 	for (i = 0; i < cbc_search_fields[type]; i++)
 		if ((retval = cbc_set_search_fields_mysql(&fields[i], i, j, type, data)) != 0)
 			report_error(DB_WRONG_TYPE, query);
@@ -987,63 +908,21 @@ int
 cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
-	MYSQL_STMT *cbc_stmt;
 	MYSQL_BIND args[cbc_update_args[type]];
 	const char *query = cbc_sql_update[type];
-	int retval = NONE, j = NONE;
-	unsigned int i;
+	int retval = NONE;
+	dbdata_s *list = data;
+	unsigned int i, dbtype;
 
 	memset(args, 0, sizeof(args));
-	for (i = 0; i < cbc_update_args[type]; i++)
-		if ((retval = cbc_set_update_args_mysql(&args[i], i, type, data)) != 0)
-			report_error(DB_WRONG_TYPE, query);
-	cbc_mysql_init(ccs, &cbc);
-	if (!(cbc_stmt = mysql_stmt_init(&cbc)))
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_prepare(cbc_stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_bind_param(cbc_stmt, &args[0])) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(cbc_stmt));
-	if ((retval = mysql_stmt_execute(cbc_stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(cbc_stmt));
-	j = (int)mysql_stmt_affected_rows(cbc_stmt);
-	mysql_stmt_free_result(cbc_stmt);
-	mysql_stmt_close(cbc_stmt);
-	cmdb_mysql_cleanup(&cbc);
-	return j;
-}
-
-int
-cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
-{
-	int retval = 0;
-	unsigned int j;
-	void *buffer = '\0';
-	dbdata_s *list = base;
-
-	mybind->is_null = 0;
-	mybind->length = 0;
-	for (j = 0; j < i; j++)
+	for (i = 0; i < cbc_update_args[type]; i++) {
+		dbtype = cbc_update_types[type][i];
+		cmdb_set_bind_mysql(&(args[i]), dbtype, &(list->args));
 		list = list->next;
-	if (cbc_search_arg_types[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->args.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (cbc_search_arg_types[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.text);
-		mybind->buffer_length = strlen(buffer);
-	} else if (cbc_search_arg_types[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in cbc_set_search_args_mysql");
 	}
-	mybind->buffer = buffer;
+	cbc_mysql_init(ccs, &cbc);
+	retval = cmdb_run_mysql_stmt(&cbc, args, query);
+	cmdb_mysql_cleanup(&cbc);
 	return retval;
 }
 
@@ -1102,40 +981,6 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 	mybind->buffer = buffer;
 	m++;
 
-	return retval;
-}
-
-int
-cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base)
-{
-	int retval = 0;
-	unsigned int j;
-	void *buffer = '\0';
-	dbdata_s *list = base;
-
-	mybind->is_null = 0;
-	mybind->length = 0;
-	for (j = 0; j < i; j++)
-		list = list->next;
-	if (cbc_update_types[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->args.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (cbc_update_types[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.text);
-		mybind->buffer_length = strlen(buffer);
-	} else if (cbc_update_types[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->args.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in cbc_set_update_args_mysql");
-	}
-	mybind->buffer = buffer;
 	return retval;
 }
 
@@ -1930,21 +1775,11 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
 		report_error(retval, "cbc_run_query_sqlite");
 	}
-	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_query_sqlite");
-	}
+	cmdb_setup_ro_sqlite(query, file, &cbc, &state);
 	fields = (unsigned int) sqlite3_column_count(state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		cbc_store_result_sqlite(state, base, type, fields);
-	
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cbc);
-	
+	cmdb_sqlite_cleanup(cbc, state);
 	return NONE;
 }
 
@@ -1962,14 +1797,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 		file = config->file;
 	else
 		report_error(NO_DATA, "config in cbc_run_insert_sqlite");
-	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0) {
-		report_error(FILE_O_FAIL, file);
-	}
-	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_insert_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
 	if ((retval = cbc_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error: %s\n", sqlite3_errmsg(cbc));
 		sqlite3_close(cbc);
@@ -1977,13 +1805,11 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(cbc);
+		cmdb_sqlite_cleanup(cbc, state);
 		retval = SQLITE_INSERT_FAILED;
 		return retval;
 	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cbc);
+	cmdb_sqlite_cleanup(cbc, state);
 	return retval;
 }
 
@@ -2055,13 +1881,7 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		list = data;
 	else
 		report_error(NO_DATA, "data in cbc_run_delete_sqlite");
-	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
-		report_error(FILE_O_FAIL, file);
-	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, "cbc_run_delete_sqlite");
-	}
+	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
 	for (i = 1; i <= cbc_delete_args[type]; i++) {
 		if (!list)
 			break;
@@ -2081,13 +1901,11 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(cbc);
+		cmdb_sqlite_cleanup(cbc, state);
 		return NONE;
 	}
 	retval = sqlite3_changes(cbc);
-	sqlite3_finalize(state);
-	sqlite3_close(cbc);
+	cmdb_sqlite_cleanup(cbc, state);
 	return retval;
 }
 
@@ -2108,13 +1926,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		file = ccs->file;
 	else
 		report_error(NO_DATA, "css in cbc_run_search_sqlite");
-	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READONLY, NULL)) > 0)
-		report_error(FILE_O_FAIL, file);
-	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
-	}
+	cmdb_setup_ro_sqlite(query, file, &cbc, &state);
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);
 		if (list->next)
@@ -2126,8 +1938,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		get_cbc_search_res_sqlite(state, list, type, i);
 		i++;
 	}
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cbc);
+	cmdb_sqlite_cleanup(cbc, state);
 	return i;
 }
 
@@ -2140,26 +1951,25 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
-	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
+	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
+/*	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
 		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
 		retval = sqlite3_close(cbc);
 		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
-	}
+	} */
 	for (i = 0; (unsigned long)i < cbc_update_args[type]; i++) {
 		set_cbc_update_sqlite(state, list, type, i);
 		list = list->next;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		printf("Recieved error: %s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_finalize(state);
-		retval = sqlite3_close(cbc);
+		cmdb_sqlite_cleanup(cbc, state);
 		return NONE;
 	}
 	i = sqlite3_total_changes(cbc);
-	retval = sqlite3_finalize(state);
-	retval = sqlite3_close(cbc);
+	cmdb_sqlite_cleanup(cbc, state);
 	return i;
 }
 

@@ -202,13 +202,7 @@ void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);
 
 int
-cbc_set_search_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
-
-int
 cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base);
-
-int
-cbc_set_update_args_mysql(MYSQL_BIND *mybind, unsigned int i, int type, dbdata_s *base);
 
 int
 cbc_setup_insert_mysql_bind(MYSQL_BIND *mybind, unsigned int i, int type, cbc_s *base);
