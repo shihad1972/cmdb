@@ -1889,13 +1889,6 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	sqlite3_stmt *state;
 
 	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
-/*	if ((retval = sqlite3_open_v2(file, &cbc, SQLITE_OPEN_READWRITE, NULL)) > 0)
-		report_error(FILE_O_FAIL, file);
-	if ((retval = sqlite3_prepare_v2(cbc, query, BUFF_S, &state, NULL)) > 0) {
-		fprintf(stderr, "%s\n", sqlite3_errmsg(cbc));
-		retval = sqlite3_close(cbc);
-		report_error(SQLITE_STATEMENT_FAILED, sqlite3_errmsg(cbc));
-	} */
 	for (i = 0; (unsigned long)i < cbc_update_args[type]; i++) {
 		set_cbc_update_sqlite(state, list, type, i);
 		list = list->next;
