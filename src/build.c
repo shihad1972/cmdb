@@ -332,7 +332,7 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "dhcp in write_dhcp_config");
 	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
 		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
-	dhcp->len = RBUFF_S;
+	init_string_len(dhcp);
 	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 		return retval;
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
@@ -381,27 +381,18 @@ fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf)
 void
 fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 {
-	char *buff, *cont, *tmp;
+	char *buff, *cont;
 	FILE *dhcp_hosts;
 	size_t len = 0, blen;
 
-	if (dhcp)
-		if (!(dhcp->string = calloc(dhcp->len, sizeof(char))))
-			report_error(MALLOC_FAIL, "dhcp->string in fill_dhcp_hosts");
 	if (!(buff = calloc(RBUFF_S,  sizeof(char))))
 		report_error(MALLOC_FAIL, "buff in fill_dhcp_hosts");
 	if (!(dhcp_hosts = fopen(dhconf->file, "r")))
 		report_error(FILE_O_FAIL, dhconf->file);
 	while (fgets(buff, RBUFF_S, dhcp_hosts)) {
 		blen = strlen(buff);
-		if (dhcp->len < (blen + len)) {
-			dhcp->len *= 2;
-			tmp = realloc(dhcp->string, dhcp->len);
-			if (!tmp)
-				report_error(MALLOC_FAIL, "string in fill_dhcp_hosts");
-			else
-				dhcp->string = tmp;
-		}
+		if (dhcp->len < (blen + len))
+			resize_string_buff(dhcp);
 		cont = dhcp->string;
 		if (!(strstr(buff, dhconf->name))) {
 			if (!(strstr(buff, dhconf->eth))) {
@@ -413,14 +404,8 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 		}
 	}
 	fclose(dhcp_hosts);
-	if (dhcp->len < (len + RBUFF_S)) {
-		dhcp->len *= 2;
-		tmp = realloc(dhcp->string, dhcp->len);
-		if (!tmp) 
-			report_error(MALLOC_FAIL, "string in fill_dhcp_hosts");
-		else
-			dhcp->string = tmp;
-	}
+	if (dhcp->len < (len + RBUFF_S))
+		resize_string_buff(dhcp);
 	cont = dhcp->string;
 	strncpy(cont + len, line, RBUFF_S);
 	free(buff);
@@ -477,14 +462,15 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	int retval = NONE, type;
 	unsigned int max;
 	dbdata_s *data;
-	string_len_s build = {.len = BUFF_S, .size = NONE };
+	string_len_s *build;
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
-	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
+	if (!(build = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
+	init_string_len(build);
 	PREP_DB_QUERY(data, NET_BUILD_DETAILS);
 	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
 		clean_dbdata_struct(data);
@@ -493,7 +479,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_NET_BUILD_ERR;
 	} else {
-		fill_net_output(cml, data, &build);
+		fill_net_output(cml, data, build);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
@@ -505,12 +491,12 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_BUILD_MIRR_ERR;
 	} else {
-		fill_mirror_output(cml, data, &build);
+		fill_mirror_output(cml, data, build);
 		retval = 0;
 	}
-	if ((retval = fill_partition(cmc, cml, &build)) != 0)
+	if ((retval = fill_partition(cmc, cml, build)) != 0)
 		return retval;
-	if ((retval = fill_kernel(cml, &build)) != 0)
+	if ((retval = fill_kernel(cml, build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
 	PREP_DB_QUERY(data, BUILD_PACKAGES);
@@ -518,16 +504,16 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
 	} else {
-		fill_packages(cml, data, &build, retval);
+		fill_packages(cml, data, build, retval);
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	if ((retval = fill_app_config(cmc, cml, &build)) != 0) {
+	if ((retval = fill_app_config(cmc, cml, build)) != 0) {
 		printf("Failed to get application configuration\n");
 		return retval;
 	}
-	retval = write_file(file, build.string);
-	free(build.string);
+	retval = write_file(file, build->string);
+	clean_string_len(build);
 	return retval;
 }
 
