@@ -325,6 +325,8 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Unable to add build os to database\n");
 	else
 		printf("Build os added to database\n");
+	clean_dbdata_struct(data);
+	clean_cbc_struct(cbc);
 	return retval;
 }
 
