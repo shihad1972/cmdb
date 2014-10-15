@@ -248,10 +248,12 @@ print_build_config(cbc_s *details)
 void
 list_build_servers(cbc_config_s *cmc)
 {
-	int retval = NONE;
+	int retval = NONE, type = SERVERS_WITH_BUILD;
+	unsigned int max;
 	dbdata_s *data, *list;
 
-	cbc_init_initial_dbdata(&data, SERVERS_WITH_BUILD);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
 		printf("No servers have build configurations\n");
 	} else {
@@ -315,7 +317,8 @@ int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *ip, line[RBUFF_S];
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	uint32_t ip_addr;
 	dbdata_s *data;
 	cbc_dhcp_config_s *dhconf;
@@ -333,7 +336,9 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
 			return retval;
-	cbc_init_initial_dbdata(&data, DHCP_DETAILS);
+	type = DHCP_DETAILS;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
 		clean_dbdata_struct(data);
@@ -421,7 +426,9 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 
 #ifndef PREP_DB_QUERY
 # define PREP_DB_QUERY(data, query) {          \
-	cbc_init_initial_dbdata(&data, query); \
+	type = query;			       \
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]); \
+	init_multi_dbdata_struct(&data, max);  \
 	data->args.number = cml->server_id;    \
 }
 #endif /* PREP_DB_QUERY */
@@ -430,7 +437,8 @@ int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 
 	if (cml->server_id == 0)
@@ -464,7 +472,8 @@ int
 write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 	string_len_s build = {.len = BUFF_S, .size = NONE };
 
@@ -524,7 +533,8 @@ int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S], url[CONF_S], *server = cml->name;
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
 	string_l name, surl;
@@ -681,7 +691,8 @@ int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *server, line[TBUFF_S], *pos;
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *list, *data, *tmp;
 	size_t len = NONE;
 	string_len_s *build;
@@ -1020,7 +1031,8 @@ int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char *next, disk[FILE_S];
-	int retval;
+	int retval = NONE, type;
+	unsigned int max;
 	short int lvm;
 	size_t len;
 	dbdata_s *data;
@@ -1363,10 +1375,12 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 int
 fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	int retval;
+	int retval, type = LDAP_CONFIG;
+	unsigned int max;
 	dbdata_s *data;
 
-	cbc_init_initial_dbdata(&data, LDAP_CONFIG);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
 		printf("No build domain associated with %s?\n", cml->name);
@@ -1384,7 +1398,9 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 			printf("LDAP authentication configuration skipped\n");
 	}
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, XYMON_CONFIG);
+	type = XYMON_CONFIG;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, XYMON_CONFIG)) == 0) {
 		printf("No build domain associated with %s?\n", cml->name);
@@ -1402,7 +1418,9 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 			printf("Xymon configuration skipped\n");
 	}
 	clean_dbdata_struct(data);
-	cbc_init_initial_dbdata(&data, SMTP_CONFIG);
+	type = SMTP_CONFIG;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, SMTP_CONFIG)) == 0) {
 		printf("No build domain associated with %s?\n", cml->name);
@@ -2051,10 +2069,12 @@ chmod 755 kick-postfix.sh\n\
 int
 get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
 {
-	int retval = NONE;
+	int retval = NONE, type = SERVER_NAME_ON_ID;
+	unsigned int max;
 	dbdata_s *data;
 
-	cbc_init_initial_dbdata(&data, SERVER_NAME_ON_ID);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = server_id;
 	if ((retval = cbc_run_search(cmc, data, SERVER_NAME_ON_ID)) == 0) {
 		printf("Cannot find server name based on id %lu\n", server_id);
@@ -2076,11 +2096,14 @@ get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int serve
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
 {
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 
 	if (cml->server == NAME) {
-		cbc_init_initial_dbdata(&data, SERVER_ID_ON_SNAME);
+		type = SERVER_ID_ON_SNAME;
+		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+		init_multi_dbdata_struct(&data, max);
 		snprintf(data->args.text, CONF_S, "%s", cml->name);
 		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
 			printf("Server %s does not exist\n", cml->name);
@@ -2095,7 +2118,9 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 			retval = 0;
 		}
 	} else if (cml->server == UUID) {
-		cbc_init_initial_dbdata(&data, SERVER_ID_ON_UUID);
+		type = SERVER_ID_ON_UUID;
+		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+		init_multi_dbdata_struct(&data, max);
 		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
 		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
 			printf("Server with uuid %s does not exist\n", cml->uuid);
@@ -2122,10 +2147,13 @@ int
 get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id)
 {
 	char *var = cml->varient;
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 	
-	cbc_init_initial_dbdata(&data, VARIENT_ID_ON_VARIENT);
+	type = VARIENT_ID_ON_VARIENT;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, CONF_S, "%s", var);
 	if ((retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT)) == 1) {
 		*varient_id = data->fields.number;
@@ -2155,7 +2183,8 @@ get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varie
 int
 get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 {
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 
 	if (strncmp(cml->arch, "NULL", COMM_S) == 0) {
@@ -2166,7 +2195,9 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 		fprintf(stderr, "No version or version alias provided\n");
 		return NO_OS_VERSION;
 	}
-	cbc_init_initial_dbdata(&data, OS_ID_ON_NAME);
+	type = OS_ID_ON_NAME;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	fill_dbdata_os_search(data, cml);
 	if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 1) {
 		*os_id = data->fields.number;
@@ -2198,7 +2229,8 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 					fprintf(stderr,
 					 "Multiple OS's found!\n");
 					retval = MULTIPLE_OS;
-				 } else {
+				 
+} else {
 					fprintf(stderr,
 					 "No OS found!\n");
 					retval = OS_NOT_FOUND;
@@ -2213,10 +2245,13 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 int
 get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id)
 {
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 
-	cbc_init_initial_dbdata(&data, DEF_SCHEME_ID_ON_SCH_NAME);
+	type = DEF_SCHEME_ID_ON_SCH_NAME;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, CONF_S, "%s", cml->partition);
 	if ((retval = cbc_run_search(cmc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 1) {
 		*def_scheme_id = data->fields.number;
@@ -2237,10 +2272,13 @@ get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *de
 int
 get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_id)
 {
-	int retval = NONE;
+	int retval = NONE, type;
+	unsigned int max;
 	dbdata_s *data;
 
-	cbc_init_initial_dbdata(&data, BUILD_ID_ON_SERVER_ID);
+	type = BUILD_ID_ON_SERVER_ID;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_SERVER_ID)) == 1) {
 		*build_id = data->fields.number;

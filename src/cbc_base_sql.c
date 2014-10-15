@@ -657,35 +657,6 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	return retval;
 }
 
-void
-cbc_init_initial_dbdata(dbdata_s **list, unsigned int type)
-{
-	unsigned int i = 0, max = 0;
-	dbdata_s *data, *dlist;
-	dlist = *list = '\0';
-	max = (cbc_search_fields[type] >= cbc_search_args[type]) ?
-		cbc_search_fields[type] :
-		cbc_search_args[type];
-	for (i = 0; i < max; i++) {
-		if (!(data = malloc(sizeof(dbdata_s))))
-			report_error(MALLOC_FAIL, "Data in init_initial_dbdata");
-		init_dbdata_struct(data);
-/* 
- * At this point we can add 1 argument of a type, say int, char[value]
- * unsigned long int, struct etc. That would have to be passed to the function
- * so we would have to pass the function a union containing all possible data
- * types.
- */
-		if (!(*list)) {
-			*list = dlist = data;
-		} else {
-			while (dlist->next)
-				dlist = dlist->next;
-			dlist->next = data;
-		}
-	}
-}
-
 #ifdef HAVE_MYSQL
 
 void
