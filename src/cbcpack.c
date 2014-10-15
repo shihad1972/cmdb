@@ -246,8 +246,7 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		pack = pack->next;
 	}
 	type = UP_VARIENT;
-	max = get_max(cbc_update_args[type], cbc_update_fields[type]);
-	init_multi_dbdata_struct(&update, max);
+	init_multi_dbdata_struct(&update, cbc_update_args[type]);
 	update->args.number = (unsigned long int)getuid();
 	update->next->args.number = *variid;
 	if ((retval = cbc_run_update(cmc, update, UP_VARIENT)) == 0)
