@@ -885,7 +885,7 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 {
 	int retval = 0, j;
 	static int m = 0, stype = 0;
-	void *buffer = '\0';
+	unsigned int dbtype;
 	dbdata_s *list, *new;
 	list = base;
 
@@ -914,25 +914,8 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 	 * list->next as this would not work for the first row */
 	for (j = 0; j < m; j++)
 		list = list->next;
-	if (cbc_search_field_types[type][i] == DBINT) {
-		mybind->buffer_type = MYSQL_TYPE_LONG;
-		mybind->is_unsigned = 1;
-		buffer = &(list->fields.number);
-		mybind->buffer_length = sizeof(unsigned long int);
-	} else if (cbc_search_field_types[type][i] == DBTEXT) {
-		mybind->buffer_type = MYSQL_TYPE_STRING;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.text);
-		mybind->buffer_length = RBUFF_S;
-	} else if (cbc_search_field_types[type][i] == DBSHORT) {
-		mybind->buffer_type = MYSQL_TYPE_SHORT;
-		mybind->is_unsigned = 0;
-		buffer = &(list->fields.small);
-		mybind->buffer_length = sizeof(short int);
-	} else {
-		report_error(DB_TYPE_INVALID, "in cbc_set_search_fields_mysql");
-	}
-	mybind->buffer = buffer;
+	dbtype = cbc_search_field_types[type][i];
+	cmdb_set_bind_mysql(mybind, dbtype, &(list->fields));
 	m++;
 
 	return retval;
