@@ -412,10 +412,9 @@ int
 check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
 {
 	char *version = col->version, *arch = col->arch;
-	unsigned int i, type = BUILD_OS_ON_NAME,
-		max = (cbc_search_fields[type] >= cbc_search_args[type]) ?
-		cbc_search_fields[type] :
-		cbc_search_args[type];
+	unsigned int i, type = BUILD_OS_ON_NAME, max;
+
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	dbdata_s *list = data->next->next;
 	while (list) {
 		if ((strncmp(version, list->fields.text, MAC_S) == 0) &&
