@@ -122,6 +122,8 @@ cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 	return NONE;
 }
 
+/* Bloody horrible function. What is calling this?
+   Ahh - display_build_config */
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 {
