@@ -48,7 +48,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 
 	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
 	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuv")) != -1) {
+	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvx")) != -1) {
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -71,6 +71,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = ADD_TO_DB;
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
+		} else if (opt == 'x') {
+			comp->action = MODIFY;
 		} else if (opt == 'f') {
 			comp->force = 1;
 		} else if (opt == 'n') {

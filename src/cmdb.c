@@ -69,17 +69,19 @@ int main(int argc, char *argv[])
 		} else if (cm->action == LIST_OBJ) {
 			display_all_servers(cmc);
 		} else if (cm->action == ADD_TO_DB) {
-			retval = add_server_to_database(cmc, cm, base);
-			if (retval > 0) {
+			if ((retval = add_server_to_database(cmc, cm, base)) != 0) {
 				cmdb_main_free(cm, cmc, cmdb_config);
 				cmdb_clean_list(base);
-				printf("Error adding server to database\n");
+				printf("Error %d adding server %s to database\n",
+				 retval, cm->name);
 				exit(DB_INSERT_FAILED);
 			} else {
 				printf("Added into database\n");
 			}
 		} else if (cm->action == RM_FROM_DB) {
 			retval = remove_server_from_database(cmc, cm);
+		} else if (cm->action == MODIFY) {
+			retval = update_server_in_database(cmc, cm);
 		} else {
 			display_action_error(cm->action);
 		}
@@ -183,6 +185,6 @@ Hardware for server %s added to database\n",base->server->name);
 	cmdb_main_free(cm, cmc, cmdb_config);
 	if (retval > 0)
 		report_error(retval, " from main ");
-	exit (retval);
+	exit(retval);
 }
 

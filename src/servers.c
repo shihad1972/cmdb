@@ -142,12 +142,35 @@ remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 }
 
 int
+update_server_in_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
+{
+	int retval = NONE;
+	unsigned long int ids[2];
+
+	if ((ids[1] = cmdb_get_server_id(config, cm->name)) == 0)
+		return SERVER_NOT_FOUND;
+	ids[0] = (unsigned long int)getuid();
+	if (cm->make)
+		retval = update_member_on_id(config, cm->make, ids[1], UP_SERVER_MAKE);
+	if (cm->model)
+		retval = update_member_on_id(config, cm->model, ids[1], UP_SERVER_MODEL);
+	if (cm->uuid)
+		retval = update_member_on_id(config, cm->uuid, ids[1], UP_SERVER_UUID);
+	if (cm->vendor)
+		retval = update_member_on_id(config, cm->vendor, ids[1], UP_SERVER_VENDOR);
+	if (retval == 0)
+		set_server_updated(config, ids);
+	return retval;
+}
+
+int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	const unsigned int args = cmdb_search_args[SERVER_ID_ON_NAME];
 	const unsigned int fields = cmdb_search_fields[SERVER_ID_ON_NAME];
 	int retval = NONE;
 	unsigned int max = cmdb_get_max(args, fields);
+	unsigned long int user[2];
 	dbdata_s *data;
 
 	init_multi_dbdata_struct(&data, max);
@@ -164,6 +187,8 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	memset(data, 0, sizeof *data);
 	data->args.number = (uli_t)cmdb->hardware->ht_id;
 	cmdb->hardware->cuser = cmdb->hardware->muser = cmdb->server->muser = (uli_t)getuid();
+	user[0] = cmdb->server->muser;
+	user[1] = cmdb->server->server_id;
 	if ((retval = cmdb_run_search(config, data, HCLASS_ON_HARD_TYPE_ID)) == 0) {
 		fprintf(stderr, "Cannot find hardware class\n");
 		clean_dbdata_struct(data);
@@ -183,7 +208,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	}
 	printf("Adding to DB....\n");
 	retval = cmdb_run_insert(config, cmdb, HARDWARES);
-	set_server_updated(config, cmdb);
+	set_server_updated(config, user);
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -597,20 +622,61 @@ add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base)
 }
 
 void
-set_server_updated(cmdb_config_s *config, cmdb_s *cmdb)
+set_server_updated(cmdb_config_s *config, unsigned long int *ids)
 {
 	int retval;
 	dbdata_s *data = '\0';
+	unsigned long int *user = ids;
 
 	init_multi_dbdata_struct(&data, cmdb_update_args[UP_SERVER_MUSER]);
-	data->args.number = cmdb->server->muser;
-	data->next->args.number = cmdb->server->server_id;
+	data->args.number = *user;
+	user++;
+	data->next->args.number = *user;
 	if ((retval = cmdb_run_update(config, data, UP_SERVER_MUSER)) < 1)
-		fprintf(stderr, "Unable to set server %s updated\n", cmdb->server->name);
+		fprintf(stderr, "Unable to set server updated\n");
 	else if (retval > 1)
 		fprintf(stderr, "More that 1 server updated??\n");
-	else
-		printf("Server %s updated\n", cmdb->server->name);
 	clean_dbdata_struct(data);
+}
+
+unsigned long int
+cmdb_get_server_id(cmdb_config_s *config, char *server)
+{
+	int retval;
+	unsigned long int server_id;
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, cmdb_search_args[SERVER_ID_ON_NAME]);
+	snprintf(data->args.text, RBUFF_S, "%s", server);
+	if ((retval = cmdb_run_search(config, data, SERVER_ID_ON_NAME)) == 0)
+		fprintf(stderr, "Server %s does not exist!", server);
+	else if (retval > 1)
+		fprintf(stderr, "Multiple servers for %s!", server);
+	server_id = data->fields.number;
+	clean_dbdata_struct(data);
+	return server_id;
+}
+
+int
+update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, int type)
+{
+	int retval = NONE;
+	dbdata_s *data = '\0';
+
+	init_multi_dbdata_struct(&data, cmdb_update_args[type]);
+	snprintf(data->args.text, RBUFF_S, "%s", member);
+	data->next->args.number = id;
+	if ((retval = cmdb_run_update(config, data, type)) < 1) {
+		fprintf(stderr, "Unable updated with %s\n", member);
+		retval = CANNOT_UPDATE;
+	} else if (retval > 1) {
+		fprintf(stderr, "More that 1 server updated??\n");
+		retval = MULTIPLE_SERVERS;
+	} else {
+		printf("Updated to %s\n", member);
+		retval = NONE;
+	}
+	clean_dbdata_struct(data);
+	return retval;
 }
 

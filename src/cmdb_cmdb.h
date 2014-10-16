@@ -261,6 +261,8 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 int
 remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
 int
+update_server_in_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
+int
 add_customer_to_database(cmdb_config_s *config, cmdb_s *cmdb);
 int
 remove_customer_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
@@ -283,9 +285,13 @@ get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid);
 void
 print_vm_hosts(cmdb_vm_host_s *vmhost);
 void
-set_server_updated(cmdb_config_s *config, cmdb_s *cmdb);
+set_server_updated(cmdb_config_s *config, unsigned long int *ids);
 void
 set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb);
+unsigned long int
+cmdb_get_server_id(cmdb_config_s *config, char *server);
+int
+update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, int type);
 /* New clean functions for linked list */
 
 void

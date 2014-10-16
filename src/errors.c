@@ -220,6 +220,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "A network function failed\n");
 	} else if (error == BUILD_TYPE_NOT_FOUND) {
 		fprintf(stderr, "No build type for that OS\n");
+	} else if (error == CANNOT_UPDATE) {
+		fprintf(stderr, "Database update not possible\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}

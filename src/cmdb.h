@@ -103,7 +103,8 @@ enum {			/* dnsa error codes */
 	UNKNOWN_STRUCT_DB_TABLE = 54,
 	BUFFER_TOO_SMALL = 55,
 	CREATE_FILE_FAIL = 60,
-	WRONG_PROTO = 61
+	WRONG_PROTO = 61,
+	CANNOT_UPDATE = 62
 };
 
 enum {			/* Database Type errors */
@@ -317,7 +318,8 @@ enum {			/* cmdb Action codes */
 	LIST_OBJ = 2,
 	ADD_TO_DB = 3,
 	RM_FROM_DB = 4,
-	CVERSION = 5
+	CVERSION = 5,
+	MODIFY = 6
 };
 
 enum {			/* cbc action codes */

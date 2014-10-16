@@ -335,6 +335,7 @@ int
 add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
+	unsigned long int ids[2];
 	dbdata_s *data = '\0';
 
 	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
@@ -390,8 +391,10 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	cmdb->service->cust_id = cmdb->customer->cust_id;
 	cmdb->service->cuser = cmdb->service->muser = (unsigned long int)getuid();
 	cmdb->customer->muser = cmdb->server->muser = cmdb->service->muser;
+	ids[0] = cmdb->server->muser;
+	ids[1] = cmdb->server->server_id;
 	retval = cmdb_run_insert(config, cmdb, SERVICES);
-	set_server_updated(config, cmdb);
+	set_server_updated(config, ids);
 	set_customer_updated(config, cmdb);
 	return retval;
 }
