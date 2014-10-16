@@ -605,7 +605,7 @@ set_server_updated(cmdb_config_s *config, cmdb_s *cmdb)
 	init_multi_dbdata_struct(&data, cmdb_update_args[UP_SERVER_MUSER]);
 	data->args.number = cmdb->server->muser;
 	data->next->args.number = cmdb->server->server_id;
-	if ((retval = cmdb_run_update(config, data, UP_SERVER_MUSER)) < 1) 
+	if ((retval = cmdb_run_update(config, data, UP_SERVER_MUSER)) < 1)
 		fprintf(stderr, "Unable to set server %s updated\n", cmdb->server->name);
 	else if (retval > 1)
 		fprintf(stderr, "More that 1 server updated??\n");
