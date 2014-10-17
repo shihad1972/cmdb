@@ -480,11 +480,6 @@ cmdb_run_search_mysql(cmdb_config_s *ccs, dbdata_s *data, int type)
 	cmdb_mysql_cleanup(&cmdb);
 	return j;
 }
-/*
-void
-cmdb_set_fields_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_s *base)
-{
-} */
 
 void
 cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
@@ -500,8 +495,6 @@ cmdb_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type
 		stype = type;
 		m = 0;
 	}
-	mybind->is_null = 0;
-	mybind->length = 0;
 	if (k > 0) {
 		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in cmdb_set_search_fields_mysql");
