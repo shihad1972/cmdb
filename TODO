@@ -1,3 +1,8 @@
+17/10/2014
+Need to break out the address for customer from the main customer table. This
+will be to allow multiple customer addresses / sites. Would we want to be able
+to assign a service to a site? What about hardware?
+
 10/08/2014 - Part III
 Would be good to be able to lock down the preseed file and host script to only 
 that IP address. As this is HTTP this will have to be in the apache config.
