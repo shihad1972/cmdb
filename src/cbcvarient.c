@@ -120,6 +120,7 @@ init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 	snprintf(cvl->version, MAC_S, "NULL");
 	snprintf(cvl->varient, HOST_S, "NULL");
 	snprintf(cvl->valias, MAC_S, "NULL");
+	snprintf(cvl->package, HOST_S, "NULL");
 }
 
 int

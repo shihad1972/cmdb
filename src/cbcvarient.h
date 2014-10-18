@@ -38,6 +38,7 @@ typedef struct cbcvari_comm_line_s {
 	char version[MAC_S];
 	char varient[HOST_S];
 	char valias[MAC_S];
+	char package[HOST_S];
 	short int action;
 } cbcvari_comm_line_s;
 
