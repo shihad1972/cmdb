@@ -108,9 +108,6 @@ int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id);
 
 int
-get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id);
-
-int
 get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id);
 
 int

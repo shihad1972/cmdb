@@ -392,3 +392,4 @@ print_cbc_config(cbc_config_s *cbc)
 	fprintf(stderr, "KICKSTART: %s\n", cbc->kickstart);
 	fprintf(stderr, "\n");
 }
+

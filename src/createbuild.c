@@ -40,6 +40,7 @@
 #include <arpa/inet.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
+#include "cbc_common.h"
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
@@ -494,7 +495,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if ((retval = get_build_id(cbt, cml, &bid)) != 0)
 		return retval;
 	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
-		if ((retval = get_varient_id(cbt, cml, &vid)) != 0)
+		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)
 			return retval;
 	if (strncmp(cml->os, "NULL", COMM_S) != 0)
 		if ((retval = get_os_id(cbt, cml, &osid)) != 0)

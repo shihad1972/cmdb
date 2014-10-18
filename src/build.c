@@ -2132,43 +2132,6 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 }
 
 int
-get_varient_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *varient_id)
-{
-	char *var = cml->varient;
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data;
-	
-	type = VARIENT_ID_ON_VARIENT;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, CONF_S, "%s", var);
-	if ((retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT)) == 1) {
-		*varient_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr,
-			"Multiple variants or aliases found for %s\n", var);
-		retval = MULTIPLE_VARIENTS;
-	} else {
-		if ((retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS)) == 0) {
-			fprintf(stderr,
-				"Sorry, but %s is not a valid varient or alias\n", var);
-			retval = VARIENT_NOT_FOUND;
-		} else if (retval > 1) {
-			fprintf(stderr,
-				"Multiple variants or aliases found for %s\n", var);
-			retval = MULTIPLE_VARIENTS;
-		} else {
-			*varient_id = data->fields.number;
-			retval = NONE;
-		}
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
 get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 {
 	int retval = NONE, type;

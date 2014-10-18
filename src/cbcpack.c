@@ -190,7 +190,6 @@ add_package(cbc_config_s *cmc, cbcpack_comm_line_s *cpl)
 		return OS_NOT_FOUND;
 	if ((varinum = get_vari_list_count(cpl, base)) == 0)
 		return NO_VARIENT;
-	
 	len = (size_t)osnum;
 	if (!(osid = malloc(len * sizeof(unsigned long int))))
 		report_error(MALLOC_FAIL, "osid in add_package");
