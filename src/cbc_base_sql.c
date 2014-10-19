@@ -900,8 +900,6 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 		stype = type;
 		m = 0;
 	}
-	mybind->is_null = 0;
-	mybind->length = 0;
 	/* Check if this is the first row returned. If not we need to create
 	 * a dbdata_s to hold the returned data */
 	if (k > 0) {
@@ -914,10 +912,18 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 		list->next = new;
 		list = base;
 	}
+	/* Attempt to not have the list drop off the end when moving along
+	 * the list below */
+	if ((k == 0) && ((unsigned)m > cbc_search_fields[type]))
+		m = 0;
 	/* M is the number of dbdata_s in the linked list. Cannot check
 	 * list->next as this would not work for the first row */
 	for (j = 0; j < m; j++)
 		list = list->next;
+	/* This function is not working if I call the same query on different data
+	 * I need to rewrite this. This is just an ugly hack :( */
+	if (!(list))
+		list = base;
 	dbtype = cbc_search_field_types[type][i];
 	cmdb_set_bind_mysql(mybind, dbtype, &(list->fields));
 	m++;
