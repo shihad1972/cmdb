@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@
  * 
  *  part of the cbcvarient program
  * 
- *  (C) Iain M. Conochie 2012 - 2013
- * 
  */
 #include <ctype.h>
 #include <stdio.h>
@@ -37,7 +35,10 @@
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#include "cbc_common.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif /* HAVE_LIBPCRE */
 #include "cbcvarient.h"
 
 int
@@ -73,8 +74,10 @@ main(int argc, char *argv[])
 		retval = list_cbc_build_varient(cmc);
 	else if (cvcl->action == DISPLAY_CONFIG)
 		retval = display_cbc_build_varient(cmc, cvcl);
-	else if (cvcl->action == ADD_CONFIG)
+	else if (cvcl->action == ADD_CONFIG && cvcl->type == CVARIENT)
 		retval = add_cbc_build_varient(cmc, cvcl);
+	else if (cvcl->action == ADD_CONFIG && cvcl->type == CPACKAGE)
+		retval = add_cbc_package(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG)
 		retval = remove_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
@@ -112,7 +115,7 @@ init_cbcvari_config(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 void
 init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 {
-	cvl->action = 0;
+	memset(cvl, 0, sizeof(cbcvari_comm_line_s));
 	snprintf(cvl->alias, MAC_S, "NULL");
 	snprintf(cvl->arch, RANGE_S, "NULL");
 	snprintf(cvl->os, MAC_S, "NULL");
@@ -128,17 +131,24 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "ade:k:lmn:o:rs:t:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "ade:gjk:lmn:o:p:rs:t:vx:")) != -1) {
 		if (opt == 'a')
 			cvl->action = ADD_CONFIG;
-		else if (opt == 'd')
+		else if (opt == 'd') {
 			cvl->action = DISPLAY_CONFIG;
-		else if (opt == 'l')
+			cvl->type = CVARIENT;
+		}else if (opt == 'l')
 			cvl->action = LIST_CONFIG;
 		else if (opt == 'r')
 			cvl->action = RM_CONFIG;
 		else if (opt == 'm')
 			cvl->action = MOD_CONFIG;
+		else if (opt == 'v')
+			cvl->action = CVERSION;
+		else if (opt == 'g')
+			cvl->type = CPACKAGE;
+		else if (opt == 'j')
+			cvl->type = CVARIENT;
 		else if (opt == 'e')
 			snprintf(cvl->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'k')
@@ -147,6 +157,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			snprintf(cvl->os, MAC_S, "%s", optarg);
 		else if (opt == 'o')
 			snprintf(cvl->version, MAC_S, "%s", optarg);
+		else if (opt == 'p')
+			snprintf(cvl->package, HOST_S, "%s", optarg);
 		else if (opt == 's')
 			snprintf(cvl->alias, MAC_S, "%s", optarg);
 		else if (opt == 't')
@@ -160,18 +172,33 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
+	if (cvl->action == CVERSION)
+		return CVERSION;
 	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
+	if (cvl->type == 0 && cvl->action != LIST_CONFIG)
+		return NO_TYPE;
 	if (cvl->action != LIST_CONFIG &&
 		(strncmp(cvl->varient, "NULL", COMM_S) == 0) &&
 		(strncmp(cvl->valias, "NULL", COMM_S) == 0))
 		return NO_VARIENT;
-	if (cvl->action == ADD_CONFIG &&
+	if (cvl->action == ADD_CONFIG && (cvl->type == CVARIENT) &&
 		((strncmp(cvl->varient, "NULL", COMM_S) == 0) ||
 		 (strncmp(cvl->valias, "NULL", COMM_S) == 0))) {
 		fprintf(stderr, "\
 You need to supply both a varient name and valias when adding\n");
 		return DISPLAY_USAGE;
+	}
+	if (cvl->type == CPACKAGE) {
+		if (strncmp(cvl->package, "NULL", COMM_S) == 0)
+			return NO_PACKAGE;
+		if ((cvl->action != ADD_CONFIG) && (cvl->action != RM_CONFIG)) {
+			fprintf(stderr, "Can only add or remove packages\n");
+			return WRONG_ACTION;
+		}
+		if ((strncmp(cvl->os, "NULL", MAC_S) == 0) &&
+		    (strncmp(cvl->alias, "NULL", MAC_S) == 0))
+			return NO_OS_COMM;
 	}
 	return NONE;
 }
@@ -494,4 +521,159 @@ get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 		bos = bos->next;
 	}
 	return NONE;
+}
+
+int
+add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
+{
+	int retval = 0, os, packs = 0;
+	unsigned long int *osid, vid;
+	cbc_s *base;
+	cbc_package_s *pack;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in add_cbc_package");
+	init_cbc_struct(base);
+	if ((retval = cbc_run_multiple_query(cbc, base, BUILD_OS | VARIENT)) != 0) {
+		fprintf(stderr, "Cannot run os and / or varient query\n");
+		clean_cbc_struct(base);
+		return retval;
+	}
+	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
+	if (vid == 0) {
+		clean_cbc_struct(base);
+		return VARIENT_NOT_FOUND;
+	}
+	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
+		clean_cbc_struct(base);
+		return OS_NOT_FOUND;
+	}
+	*(osid + (unsigned long int)os) = vid;
+	if (!(pack = build_package_list(cbc, osid, os, cvl->package))) {
+		fprintf(stderr, "No packages to add\n");
+		free(osid);
+		clean_cbc_struct(base);
+		return NONE;
+	}
+	base->package = pack;
+	while (base->package) {
+		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) == 0)
+			packs++;
+		base->package = base->package->next;
+	}
+	printf("Inserted %d packages\n", packs);
+	base->package = pack;
+	free(osid);
+	clean_cbc_struct(base);
+	return retval;
+}
+
+int
+cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id)
+{
+	int retval = NONE;
+	unsigned long int *os_id = '\0';
+
+	if ((retval = cbc_get_os_list(os, name, alias, arch, ver, os_id)) == 0)
+		return retval;
+	if (!(os_id = calloc((size_t)retval + 1, sizeof(unsigned long int))))
+		report_error(MALLOC_FAIL, "os_id = cbc_get_os");
+	retval = cbc_get_os_list(os, name, alias, arch, ver, os_id);
+	*id = os_id;
+	return retval;
+}
+
+int
+cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id)
+{
+	int retval = NONE;
+	cbc_build_os_s *list;
+	unsigned long int *os_id = id;
+
+	list = os;
+	while (list) {
+		if (strncmp(ver, "NULL", COMM_S) != 0) {
+			if (strncmp(arch, "NULL", COMM_S) != 0) {
+				if (((strncmp(alias, list->alias, MAC_S) == 0) ||
+                                     (strncmp(name, list->os, MAC_S) == 0)) &&
+				     (strncmp(arch, list->arch, RANGE_S) == 0) &&
+				     (strncmp(ver, list->version, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			} else {
+				if (((strncmp(alias, list->alias, MAC_S) == 0) ||
+				     (strncmp(name, list->os, MAC_S) == 0)) &&
+				     (strncmp(ver, list->version, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			}
+		} else if (strncmp(arch, "NULL", COMM_S) != 0) {
+			if (((strncmp(alias, list->alias, MAC_S) == 0) ||
+			     (strncmp(name, list->os, MAC_S) == 0)) &&
+			     (strncmp(arch, list->arch, RANGE_S) == 0)) {
+				retval++;
+				if (id) {
+					*os_id = list->os_id;
+					os_id++;
+				}
+			}
+		} else {
+			if ((strncmp(alias, list->alias, MAC_S) == 0) ||
+			    (strncmp(name, list->os, MAC_S) == 0)) {
+				retval++;
+				if (id) {
+					*os_id = list->os_id;
+					os_id++;
+				}
+			}
+		}
+		list = list->next;
+	}
+	return retval;
+}
+
+cbc_package_s *
+build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack)
+{
+	int i;
+	unsigned long int *osid, vid;
+	cbc_package_s *package, *list = '\0', *tmp;
+
+	if (!(os))
+		return list;
+	else
+		osid = os;
+	vid = *(osid + (unsigned long int)nos);
+	package = list;
+	for (i = 0; i < nos; i++) {
+		if (check_for_package(cbc, *osid, vid, pack) > 0) {
+			osid++;
+			continue;
+		}
+		if (!(tmp = malloc(sizeof(cbc_package_s))))
+			report_error(MALLOC_FAIL, "tmp in build_package_list");
+		init_package(tmp);
+		if (package) {
+			while (list->next)
+				list = list->next;
+			list->next = tmp;
+		} else {
+			package = list = tmp;
+		}
+		snprintf(tmp->package, HOST_S, "%s", pack);
+		tmp->vari_id = vid;
+		tmp->os_id = *osid;
+		tmp->cuser = tmp->muser = (unsigned long int)getuid();
+		osid++;
+		list = package;
+	}
+	return list;
 }

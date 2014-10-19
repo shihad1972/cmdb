@@ -30,6 +30,10 @@
 #ifndef __CBCVARI_H__
 # define __CBCVARI_H__
 
+enum {
+	CVARIENT = 1,
+	CPACKAGE = 2
+};
 typedef struct cbcvari_comm_line_s {
 	char alias[MAC_S];
 	char arch[RANGE_S];
@@ -40,6 +44,7 @@ typedef struct cbcvari_comm_line_s {
 	char valias[MAC_S];
 	char package[HOST_S];
 	short int action;
+	short int type;
 } cbcvari_comm_line_s;
 
 void
@@ -61,6 +66,9 @@ int
 add_cbc_build_varient(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
 
 int
+add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+
+int
 remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
 
 int
@@ -77,5 +85,14 @@ get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl);
 
 unsigned long int
 get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl);
+
+int
+cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id);
+
+int
+cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id);
+
+cbc_package_s *
+build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack);
 
 #endif /* __CBCVARI_H__ */
