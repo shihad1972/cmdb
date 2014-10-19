@@ -188,6 +188,8 @@ read_cmdb_config_values(cmdb_config_s *dc, FILE *cnf);
 void
 init_cmdb_comm_line_values(cmdb_comm_line_s *cm);
 void
+cmdb_setup_config(cmdb_config_s **cf, cmdb_comm_line_s **com, cmdb_s **cmdb);
+void
 init_cmdb_config_values(cmdb_config_s *dc);
 void
 cmdb_init_struct(cmdb_s *cmdb);

@@ -141,9 +141,13 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
 		retval = NO_ACTION;
-	else if ((comp->action == NONE) && (comp->type == NONE))
+	else if ((comp->action == NONE) && (comp->type == NONE)) {
 		retval = NO_ACTION;
-	else if ((!(comp->name)) && (!(comp->id)) &&
+	} else if (comp->action == LIST_OBJ) {
+		if (comp->type == CONTACT)
+			if ((!(comp->id)) && (!(comp->coid)))
+				retval = NO_COID;
+	} else if ((!(comp->name)) && (!(comp->id)) &&
 		(comp->type != NONE || comp->action != NONE) &&
 		(comp->type != CONTACT))
 		retval = NO_NAME_OR_ID;
@@ -169,10 +173,6 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		} else if (!comp->name) {
 			retval = NO_NAME;
 		}
-	} else if (comp->action == LIST_OBJ) {
-		if (comp->type == CONTACT)
-			if ((!(comp->id)) && (!(comp->coid)))
-				retval = NO_COID;
 	} else if (comp->action == RM_FROM_DB) {
 		if (comp->type == SERVICE) {
 			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))
@@ -321,6 +321,20 @@ init_cmdb_config_values(cmdb_config_s *dc)
 	snprintf(dc->pass, CONF_S, "%s", "");
 	snprintf(dc->socket, CONF_S, "%s", "");
 	dc->port = 3306;
+}
+
+void
+cmdb_setup_config(cmdb_config_s **cf, cmdb_comm_line_s **com, cmdb_s **cmdb)
+{
+	if (!(*cf = malloc(sizeof(cmdb_config_s))))
+		report_error(MALLOC_FAIL, "cf in cmdb_setup_config");
+	init_cmdb_config_values(*cf);
+	if (!(*com = malloc(sizeof(cmdb_comm_line_s))))
+		report_error(MALLOC_FAIL, "com in cmdb_setup_config");
+	init_cmdb_comm_line_values(*com);
+	if (!(*cmdb = malloc(sizeof(cmdb_s))))
+		report_error(MALLOC_FAIL, "cbc in cmdb_setup_config");
+	cmdb_init_struct(*cmdb);
 }
 
 void
