@@ -116,10 +116,9 @@ cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
 	size_t len;
 	dbdata_u *list;
 
-	if (data)
-		list = data;
-	else
+	if (!(data))
 		report_error(NO_DATA, "data in cmdb_set_bind_mysql");
+	list = data;
 	if (i == DBINT) {
 		mybind->buffer_type = MYSQL_TYPE_LONG;
 		mybind->is_unsigned = 1;
