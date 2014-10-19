@@ -124,3 +124,19 @@ search_for_vid(cbc_varient_s *vari, char *varient, char *valias)
 	return cbc_get_varient_id(vari, name);
 }
 
+int
+check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
+{
+	int retval;
+	unsigned int type = cbc_search_args[PACK_ID_ON_DETAILS];
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, type);
+	snprintf(data->args.text, RBUFF_S, "%s", pack);
+	data->next->args.number = vid;
+	data->next->next->args.number = osid;
+	retval = cbc_run_search(cbc, data, PACK_ID_ON_DETAILS);
+	clean_dbdata_struct(data);
+	return retval;
+}
+

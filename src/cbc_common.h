@@ -40,4 +40,7 @@ cbc_get_varient_id(cbc_varient_s *vari, char *name);
 unsigned long int
 search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 
+int
+check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack);
+
 #endif /* CBC_COMMON_H */
