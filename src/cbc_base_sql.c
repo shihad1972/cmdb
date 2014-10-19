@@ -1757,7 +1757,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 		return retval;
 	}
 	cmdb_sqlite_cleanup(cbc, state);
-	return retval;
+	return NONE;
 }
 
 int
@@ -2593,6 +2593,7 @@ cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->varient = vari;
 	}
+	free(stime);
 }
 
 void
