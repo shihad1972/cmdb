@@ -914,7 +914,7 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 	}
 	/* Attempt to not have the list drop off the end when moving along
 	 * the list below */
-	if ((k == 0) && ((unsigned)m > cbc_search_fields[type]))
+	if ((k == 0) && ((unsigned)m >= cbc_search_fields[type]))
 		m = 0;
 	/* M is the number of dbdata_s in the linked list. Cannot check
 	 * list->next as this would not work for the first row */
