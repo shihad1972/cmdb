@@ -38,6 +38,6 @@ unsigned long int
 cbc_get_varient_id(cbc_varient_s *vari, char *name);
 
 unsigned long int
-cbc_search_for_varient_id(cbc_varient_s *vari, char *varient, char *valias);
+search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 
 #endif /* CBC_COMMON_H */

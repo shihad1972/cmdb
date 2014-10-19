@@ -222,6 +222,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No build type for that OS\n");
 	} else if (error == CANNOT_UPDATE) {
 		fprintf(stderr, "Database update not possible\n");
+	} else if (error == CANNOT_BUILD_PACKAGE_LIST) {
+		fprintf(stderr, "Cannot build package list\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -243,6 +245,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No type specified on command line.\n");
 	else if (retval == NO_ACTION)
 		fprintf(stderr, "No action specified on command line.\n");
+	else if (retval == WRONG_ACTION)
+		fprintf(stderr, "Unable to complete this action.\n");
 	else if (retval == NO_NAME_OR_ID)
 		fprintf(stderr, "No name or ID specified on command line.\n");
 	else if (retval == GENERIC_ERROR)
@@ -444,15 +448,18 @@ display_cbcvarient_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add varient\n-d: display varient\n-l: list varients\n");
-	printf("-r: remove varient\n");
+	printf("-r: remove varient\n\n");
 	printf("-d and -r actions need -x <varient name> or -k <valias>\n");
 	printf("-a will need both -x <varient name> and -k <valias>\n\n");
+	printf("Definition Options:\n");
+	printf("-g: package\n-j: varient\n\n");
 	printf("Name Options:\n");
-	printf("-x: <varient>\n-k: <valias>\n\n");
+	printf("-x: <varient>\n-k: <valias>\n-p: <package>\n\n");
 	printf("Detail Options:\n");
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("cbcvarient [ -a | -d | -l | -r ]  [ -x | -k ] [ detail options ]\n\n");
+	printf("cbcvarient [ -a | -d | -l | -r ] \
+[ -g | -j ] [ -x | -k ] [ detail options ]\n\n");
 }
 
 void

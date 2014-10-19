@@ -234,7 +234,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	SCHEME_EXISTS = 218,
 	DNS_LOOKUP_FAILED = 219,
 	NET_FUNC_FAILED = 220,
-	BDOM_OVERLAP = 221
+	BDOM_OVERLAP = 221,
+	CANNOT_BUILD_PACKAGE_LIST = 222
 };
 
 enum {			/* command line error codes */

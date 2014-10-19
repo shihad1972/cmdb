@@ -285,7 +285,9 @@ SELECT config_ntp, config_ldap, ldap_ssl, config_log, config_xymon, config_email
 SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
   bi.server_id = ?","\
 SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
-  s.server_id = bi.server_id WHERE bi.bd_id = ? ORDER BY bi.ip"
+  s.server_id = bi.server_id WHERE bi.bd_id = ? ORDER BY bi.ip","\
+SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? \
+AND os_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -306,12 +308,12 @@ const unsigned int cbc_delete_args[] = {
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1
+	1, 1, 1, 1, 3
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2
+	2, 6, 1, 2, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -437,7 +439,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE }
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -487,7 +490,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBSHORT, DBSHORT, DBSHORT, DBSHORT, DBSHORT, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
