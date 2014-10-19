@@ -6,6 +6,8 @@ cbcvarient \- Create Build Config Varient.
 [
 .B action
 ] [
+.B type
+] [
 .B name
 ] [
 .B os definition
@@ -14,6 +16,8 @@ cbcvarient \- Create Build Config Varient.
 .B cbcvarient
 [
 .B -adlrv
+] [
+.B -g | -j
 ] [
 .B -k | -x
 ] [
@@ -31,8 +35,8 @@ being different between the various OS's.
 You will need to know the precise package names you wish to add the build
 varient, as these will be placed in the build file, and if the package name
 does not exist the build will fail.
-\fBcbcvarient\fP is used to create the template names for a build varient;
-use \fBcbcpack\fP to actually add packages to the build varient.
+When adding or removing, you will need to specify a type of varient (-j)
+or a package (-g)
 
 .SH OPTIONS
 .B actions
@@ -52,6 +56,12 @@ version (no other argument needed)
 Useful to have a short alias to the more formal varient name, e.g. web
 .IP "-x <varient">
 Use this for a long formal name of the varient, such as Web Server
+.PP
+.B type
+.IP "-g"
+package
+.IP "-j"
+varient
 .PP
 .B os definitions
 .IP "-e <version alias>"
@@ -92,5 +102,4 @@ Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
 .BR cbcdomain(8),
 .BR cbclocale(8),
 .BR cbcos(8),
-.BR cbcpack(8),
 .BR cbcpart(8)

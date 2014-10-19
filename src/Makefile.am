@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpack cbcpart
+bin_PROGRAMS = cmdb cbc cbcdomain cbcos cbcvarient cbcpart
 
 combo_SOURCES = errors.c checks.c
 
@@ -44,10 +44,6 @@ cbcvarient_SOURCES = \
 		cbcvarient.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES) cbccom.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h\
 		cbcvarient.h
-cbcpack_SOURCES = \
-		cbcpack.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
-		cbccom.c\
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbcpack.h
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cbccom.c\

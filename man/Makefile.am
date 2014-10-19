@@ -1,2 +1,2 @@
-man_MANS = cbc.8 cbcdomain.8 cbcos.8 cbcpack.8 cbcpart.8 cmdb.8 dnsa.8 dnsa.7 \
+man_MANS = cbc.8 cbcdomain.8 cbcos.8 cbcpart.8 cmdb.8 dnsa.8 dnsa.7 \
 	cbcvarient.8 cpc.8
