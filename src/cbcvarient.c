@@ -78,8 +78,10 @@ main(int argc, char *argv[])
 		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == ADD_CONFIG && cvcl->type == CPACKAGE)
 		retval = add_cbc_package(cmc, cvcl);
-	else if (cvcl->action == RM_CONFIG)
+	else if (cvcl->action == RM_CONFIG && cvcl->type == CVARIENT)
 		retval = remove_cbc_build_varient(cmc, cvcl);
+	else if (cvcl->action == RM_CONFIG && cvcl->type == CPACKAGE)
+		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
 		printf("Cowardly refusal to modify varients\n");
 	else
@@ -540,14 +542,10 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		return retval;
 	}
 	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
-	if (vid == 0) {
-		clean_cbc_struct(base);
+	if (vid == 0) 
 		return VARIENT_NOT_FOUND;
-	}
-	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
-		clean_cbc_struct(base);
+	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0)
 		return OS_NOT_FOUND;
-	}
 	*(osid + (unsigned long int)os) = vid;
 	if (!(pack = build_package_list(cbc, osid, os, cvl->package))) {
 		fprintf(stderr, "No packages to add\n");
@@ -566,6 +564,55 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	free(osid);
 	clean_cbc_struct(base);
 	return retval;
+}
+
+int
+remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
+{
+	int retval = 0, os, packs = 0;
+	unsigned long int *osid, vid, packid;
+	cbc_s *base;
+	dbdata_s *data, *list;
+
+	if (!(base = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "base in remove_cbc_package");
+	init_cbc_struct(base);
+	if ((retval = cbc_run_multiple_query(cbc, base, BUILD_OS | VARIENT)) != 0) {
+		fprintf(stderr, "Cannot run os and / or varient query\n");
+		clean_cbc_struct(base);
+		return retval;
+	}
+	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
+	if (vid == 0) {
+		clean_cbc_struct(base);
+		return VARIENT_NOT_FOUND;
+	}
+	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
+		clean_cbc_struct(base);
+		return OS_NOT_FOUND;
+	}
+	*(osid + (unsigned long int)os) = vid;
+	if (!(data = build_rem_pack_list(cbc, osid, os, cvl->package))) {
+		fprintf(stderr, "No packages to remove\n");
+		free(osid);
+		clean_cbc_struct(base);
+		return NONE;
+	}
+	list = data;
+	while (list) {
+		packid = list->args.number;
+		if ((retval = cbc_run_delete(cbc, list, PACK_DEL_PACK_ID)) > 1)
+			fprintf(stderr, "Multiple packages deleted on pack id %lu\n", packid);
+		else if (retval == 0)
+			fprintf(stderr, "Cannot delete package id %lu\n", packid);
+		packs += retval;
+		list = list->next;
+	}
+	printf("%d packages deleted\n", packs);
+	free(osid);
+	clean_cbc_struct(base);
+	clean_dbdata_struct(data);
+	return 0;
 }
 
 int
@@ -677,3 +724,41 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 	}
 	return list;
 }
+
+dbdata_s *
+build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack)
+{
+	int retval, i;
+	unsigned long int vid, *id_list;
+	dbdata_s *data, *elem, *list = '\0', *dlist;
+	if (!(ids))
+		return list;
+	if (!(pack))
+		return list;
+	id_list = ids;
+	vid = *(ids + (unsigned long)noids);
+	for (i = 0; i < noids; i++) {
+		init_multi_dbdata_struct(&data, cbc_search_args[PACK_ID_ON_DETAILS]);
+		snprintf(data->args.text, RBUFF_S, "%s", pack);
+		data->next->args.number = vid;
+		data->next->next->args.number = *id_list;
+		if ((retval = cbc_run_search(cbc, data, PACK_ID_ON_DETAILS)) == 1) {
+			if (!(elem = malloc(sizeof(dbdata_s))))
+				report_error(MALLOC_FAIL, "elem in build_rem_pack_list");
+			init_dbdata_struct(elem);
+			elem->args.number = data->fields.number;
+			if (!(list))
+				list = elem;
+			else {
+				dlist = list;
+				while (dlist->next)
+					dlist = dlist->next;
+				dlist->next = elem;
+			}
+		}
+		id_list++;
+		clean_dbdata_struct(data);
+	}
+	return list;
+}
+

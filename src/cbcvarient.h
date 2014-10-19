@@ -69,6 +69,9 @@ int
 add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
 
 int
+remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+
+int
 remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
 
 int
@@ -94,5 +97,8 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 
 cbc_package_s *
 build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack);
+
+dbdata_s *
+build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack);
 
 #endif /* __CBCVARI_H__ */
