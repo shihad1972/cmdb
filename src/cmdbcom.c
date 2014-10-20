@@ -394,7 +394,7 @@ cmdb_init_contact_t(cmdb_contact_s *cont)
 void
 cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 {
-	memset(type, 0, sizeof *type);
+	memset(type, 0, sizeof(cmdb_hard_type_s));
 	snprintf(type->type, COMM_S, "NULL");
 	snprintf(type->hclass, COMM_S, "NULL");
 }
@@ -402,7 +402,7 @@ cmdb_init_hardtype_t(cmdb_hard_type_s *type)
 void
 cmdb_init_servicetype_t(cmdb_service_type_s *type)
 {
-	memset(type, 0, sizeof *type);
+	memset(type, 0, sizeof(cmdb_service_type_s));
 	snprintf(type->service, COMM_S, "NULL");
 	snprintf(type->detail, COMM_S, "NULL");
 }
@@ -410,7 +410,7 @@ cmdb_init_servicetype_t(cmdb_service_type_s *type)
 void
 cmdb_init_vmhost_t(cmdb_vm_host_s *type)
 {
-	memset(type, 0, sizeof *type);
+	memset(type, 0, sizeof(cmdb_vm_host_s));
 	snprintf(type->name, COMM_S, "NULL");
 	snprintf(type->type, COMM_S, "NULL");
 }

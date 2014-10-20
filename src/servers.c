@@ -145,10 +145,14 @@ int
 update_server_in_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 {
 	int retval = NONE;
-	unsigned long int ids[2];
+	unsigned long int ids[3];
 
 	if ((ids[1] = cmdb_get_server_id(config, cm->name)) == 0)
 		return SERVER_NOT_FOUND;
+	if (cm->coid) {
+		if ((ids[2] = cmdb_get_customer_id(config, cm->coid)) == 0)
+			return NO_COID;
+	}
 	ids[0] = (unsigned long int)getuid();
 	if (cm->make)
 		retval = update_member_on_id(config, cm->make, ids[1], UP_SERVER_MAKE);
@@ -158,6 +162,8 @@ update_server_in_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 		retval = update_member_on_id(config, cm->uuid, ids[1], UP_SERVER_UUID);
 	if (cm->vendor)
 		retval = update_member_on_id(config, cm->vendor, ids[1], UP_SERVER_VENDOR);
+	if (cm->coid)
+		retval = update_member_id_on_id(config, ids, UP_SERVER_COID);
 	if (retval == 0)
 		set_server_updated(config, ids);
 	return retval;
@@ -678,5 +684,31 @@ update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, i
 	}
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+int
+update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type)
+{
+	int retval = 0;
+	unsigned long int *list;
+	dbdata_s *data = '\0';
+
+	if (!(id))
+		return NO_DATA;
+	else
+		list = id;
+	list++;
+	init_multi_dbdata_struct(&data, cmdb_update_args[type]);
+	data->next->args.number = *list;
+	list++;
+	data->args.number = *list;
+	if ((retval = cmdb_run_update(config, data, type)) < 1)
+		fprintf(stderr, "Cannot update\n");
+	else if (retval > 1)
+		fprintf(stderr, "More than 1 updated\n");
+	else
+		printf("Updated\n");
+	clean_dbdata_struct(data);
+	return 0;
 }
 

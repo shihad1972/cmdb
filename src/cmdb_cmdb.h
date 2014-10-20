@@ -291,9 +291,13 @@ set_server_updated(cmdb_config_s *config, unsigned long int *ids);
 void
 set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb);
 unsigned long int
+cmdb_get_customer_id(cmdb_config_s *config, char *coid);
+unsigned long int
 cmdb_get_server_id(cmdb_config_s *config, char *server);
 int
 update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, int type);
+int
+update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type);
 /* New clean functions for linked list */
 
 void

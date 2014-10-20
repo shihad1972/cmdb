@@ -622,6 +622,27 @@ get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid)
 	return 0;
 }
 
+unsigned long int
+cmdb_get_customer_id(cmdb_config_s *config, char *coid)
+{
+	int retval = 0;
+	unsigned long int cust_id = 0;
+	dbdata_s *data;
+
+	if (!coid)
+		return cust_id;
+	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
+	snprintf(data->args.text, RBUFF_S, "%s", coid);
+	if ((retval = cmdb_run_search(config, data, CUST_ID_ON_COID)) == 0)
+		fprintf(stderr, "Customer COID %s not found\n", coid);
+	else if (retval > 1)
+		fprintf(stderr, "Multiple results for COID %s\n", coid);
+	else
+		cust_id = data->fields.number;
+	clean_dbdata_struct(data);
+	return cust_id;
+}
+
 void
 set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb)
 {
