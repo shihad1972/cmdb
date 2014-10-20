@@ -53,7 +53,8 @@ enum {		/* cmdb update SQL statements */
 	UP_SERVER_UUID = 2,
 	UP_SERVER_MAKE = 3,
 	UP_SERVER_MODEL = 4,
-	UP_SERVER_VENDOR = 5
+	UP_SERVER_VENDOR = 5,
+	UP_SERVER_COID = 6
 };
 
 int
