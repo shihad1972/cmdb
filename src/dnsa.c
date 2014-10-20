@@ -65,16 +65,6 @@ int main(int argc, char *argv[])
 	retval = id = 0;
 	strncpy(domain, cm->domain, CONF_S);
 	if (cm->type == FORWARD_ZONE) {
-#ifdef HAVE_LIBPCRE
-		retval = validate_user_input(domain, DOMAIN_REGEX);
-		if (retval < 0) {
-			printf("User input not valid!\n");
-			free(domain);
-			free(dc);
-			free(cm);
-			exit (retval);
-		}
-#endif /* HAVE_LIBPCRE */
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
 			retval = 0;
