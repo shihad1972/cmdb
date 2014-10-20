@@ -31,6 +31,12 @@
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 
+int
+cmdb_server_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
+int
+cmdb_customer_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
 int main(int argc, char *argv[])
 {
 	cmdb_comm_line_s *cm;
@@ -56,47 +62,9 @@ int main(int argc, char *argv[])
 	}
 	/* Need to decide what to do if we have an error here */
 	if (cm->type == SERVER) {
-		if (cm->action == DISPLAY) {
-			display_server_info(cm->name, cm->id, cmc);
-		} else if (cm->action == LIST_OBJ) {
-			display_all_servers(cmc);
-		} else if (cm->action == ADD_TO_DB) {
-			if ((retval = add_server_to_database(cmc, cm, base)) != 0) {
-				cmdb_main_free(cm, cmc, cmdb_config);
-				cmdb_clean_list(base);
-				printf("Error %d adding server %s to database\n",
-				 retval, cm->name);
-				exit(DB_INSERT_FAILED);
-			} else {
-				printf("Added into database\n");
-			}
-		} else if (cm->action == RM_FROM_DB) {
-			retval = remove_server_from_database(cmc, cm);
-		} else if (cm->action == MODIFY) {
-			retval = update_server_in_database(cmc, cm);
-		} else {
-			display_action_error(cm->action);
-		}
+		retval = cmdb_server_action(cmc, cm, base);
 	} else if (cm->type == CUSTOMER) {
-		if (cm->action == DISPLAY) {
-			display_customer_info(cm->name, cm->id, cmc);
-		} else if (cm->action == LIST_OBJ) {
-			display_all_customers(cmc);
-		} else if (cm->action == ADD_TO_DB) {
-			retval = add_customer_to_database(cmc, base);
-			if (retval != 0) {
-				cmdb_main_free(cm, cmc, cmdb_config);
-				cmdb_clean_list(base);
-				printf("Error %d adding customer to DB\n", retval);
-				exit(DB_INSERT_FAILED);
-			} else {
-				printf("Added %s to database\n", base->customer->name);
-			}
-		} else if (cm->action == RM_FROM_DB) {
-			retval = remove_customer_from_database(cmc, cm);
-		} else {
-			display_action_error(cm->action);
-		}
+		retval = cmdb_customer_action(cmc, cm, base);
 	} else if (cm->type == CONTACT) {
 		if ((cm->action == DISPLAY) || (cm->action == LIST_OBJ)) {
 			if (strncmp(cm->id, "NULL", CONF_S) != 0) {
@@ -178,5 +146,55 @@ Hardware for server %s added to database\n",base->server->name);
 	if (retval > 0)
 		report_error(retval, " from main ");
 	exit(retval);
+}
+
+int
+cmdb_server_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if (cm->action == DISPLAY) {
+		display_server_info(cm->name, cm->id, ccs);
+	} else if (cm->action == LIST_OBJ) {
+		display_all_servers(ccs);
+	} else if (cm->action == ADD_TO_DB) {
+		if ((retval = add_server_to_database(ccs, cm, cmdb)) != 0) {
+			printf("Error %d adding server %s to database\n",
+			 retval, cm->name);
+			retval = DB_INSERT_FAILED;
+		} else {
+			printf("Added into database\n");
+		}
+	} else if (cm->action == RM_FROM_DB) {
+		retval = remove_server_from_database(ccs, cm);
+	} else if (cm->action == MODIFY) {
+		retval = update_server_in_database(ccs, cm);
+	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
+}
+
+int
+cmdb_customer_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if (cm->action == DISPLAY) {
+		display_customer_info(cm->name, cm->id, ccs);
+	} else if (cm->action == LIST_OBJ) {
+		display_all_customers(ccs);
+	} else if (cm->action == ADD_TO_DB) {
+		retval = add_customer_to_database(ccs, cmdb);
+		if (retval != 0) {
+			printf("Error %d adding customer to DB\n", retval);
+			retval = DB_INSERT_FAILED;
+		} else {
+			printf("Added %s to database\n", cmdb->customer->name);
+		}
+	} else if (cm->action == RM_FROM_DB) {
+		retval = remove_customer_from_database(ccs, cm);
+	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
 }
 
