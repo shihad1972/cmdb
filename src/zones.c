@@ -53,7 +53,6 @@ list_zones(dnsa_config_s *dc)
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	size_t len;
-//	time_t create;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
@@ -66,10 +65,8 @@ list_zones(dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
-//	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\t\tUser\tDate\n");
 	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\n");
 	while (zone) {
-//		create = (time_t)zone->ctime;
 		len = strlen(zone->name);
 		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
 			snprintf(zone->master, RANGE_S, "N/A");
@@ -88,10 +85,6 @@ list_zones(dnsa_config_s *dc)
 			printf("%s\t\t", zone->master);
 		else
 			printf("%s\t", zone->master);
-/*		if (get_uname(zone->cuser))
-			printf("%s\t%s", get_uname(zone->cuser), ctime(&create));
-		else
-			printf("(unkown)\t%s", ctime(&create)); */
 		printf("\n");
 		if (zone->next)
 			zone = zone->next;
@@ -3203,10 +3196,4 @@ get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
 	}
 	return fqdn;
 }
-/*
-void
-glue_sort_fqdn(glue_zone_info_s *glue)
-{
-}
-*/
 
