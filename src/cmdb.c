@@ -46,6 +46,9 @@ cmdb_service_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 cmdb_hardware_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
+int
+cmdb_vmhost_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
 int main(int argc, char *argv[])
 {
 	cmdb_comm_line_s *cm;
@@ -69,32 +72,20 @@ int main(int argc, char *argv[])
 		cmdb_clean_list(base);
 		report_error(retval, "config");
 	}
-	/* Need to decide what to do if we have an error here */
-	if (cm->type == SERVER) {
+	if (cm->type == SERVER)
 		retval = cmdb_server_action(cmc, cm, base);
-	} else if (cm->type == CUSTOMER) {
+	else if (cm->type == CUSTOMER)
 		retval = cmdb_customer_action(cmc, cm, base);
-	} else if (cm->type == CONTACT) {
+	else if (cm->type == CONTACT)
 		retval = cmdb_contact_action(cmc, cm, base);
-	} else if (cm->type == SERVICE) {
+	else if (cm->type == SERVICE)
 		retval = cmdb_service_action(cmc, cm, base);
-	} else if (cm->type == HARDWARE) {
+	else if (cm->type == HARDWARE)
 		retval = cmdb_hardware_action(cmc, cm, base);
-	} else if (cm->type == VM_HOST) {
-		if (cm->action == LIST_OBJ) {
-			display_vm_hosts(cmc);
-		} else if (cm->action == ADD_TO_DB) {
-			if ((retval = add_vm_host_to_db(cmc, cm, base)) == 0)
-				printf("Added vm host server %s to db\n", cm->name);
-			else
-				printf("Error adding vm host server %s to db\n", cm->name);
-		} else {
-			printf("Action not supported (yet)\n");
-			display_action_error(cm->action);
-		}
-	} else {
+	else if (cm->type == VM_HOST)
+		retval = cmdb_vmhost_action(cmc, cm, base);
+	else
 		display_type_error(cm->type);
-	}
 	cmdb_clean_list(base);
 	cmdb_main_free(cm, cmc, cmdb_config);
 	if (retval > 0)
@@ -220,6 +211,24 @@ cmdb_hardware_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			  cmdb->server->name);
 		}
 	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
+}
+
+int
+cmdb_vmhost_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if (cm->action == LIST_OBJ) {
+		display_vm_hosts(ccs);
+	} else if (cm->action == ADD_TO_DB) {
+		if ((retval = add_vm_host_to_db(ccs, cm, cmdb)) == 0)
+			printf("Added vm host server %s to db\n", cm->name);
+		else
+			printf("Error adding vm host server %s to db\n", cm->name);
+	} else {
+		printf("Action not supported (yet)\n");
 		display_action_error(cm->action);
 	}
 	return retval;
