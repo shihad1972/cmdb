@@ -37,6 +37,15 @@ cmdb_server_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 cmdb_customer_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
+int
+cmdb_contact_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
+int
+cmdb_service_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
+int
+cmdb_hardware_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
 int main(int argc, char *argv[])
 {
 	cmdb_comm_line_s *cm;
@@ -66,66 +75,11 @@ int main(int argc, char *argv[])
 	} else if (cm->type == CUSTOMER) {
 		retval = cmdb_customer_action(cmc, cm, base);
 	} else if (cm->type == CONTACT) {
-		if ((cm->action == DISPLAY) || (cm->action == LIST_OBJ)) {
-			if (strncmp(cm->id, "NULL", CONF_S) != 0) {
-				display_customer_contacts(cmc, cm->id);
-			}
-		} else if (cm->action == ADD_TO_DB) {
-			if ((retval = add_contact_to_database(cmc, base)) != 0) {
-				cmdb_main_free(cm, cmc, cmdb_config);
-				printf("Error %d adding contact to DB\n", retval);
-				cmdb_clean_list(base);
-				exit(DB_INSERT_FAILED);
-			} else {
-				printf("Added %s to database\n", base->contact->name);
-			}
-		} else if (cm->action == RM_FROM_DB) {
-			retval = remove_contact_from_database(cmc, cm);
-		} else {
-			display_action_error(cm->action);
-		}
+		retval = cmdb_contact_action(cmc, cm, base);
 	} else if (cm->type == SERVICE) {
-		if (cm->action == LIST_OBJ) {
-			display_service_types(cmc);
-		} else if (cm->action == DISPLAY) {
-			if (cm->name)
-				display_server_services(cmc, cm->name);
-			else if (cm->id)
-				display_customer_services(cmc, cm->id);
-		} else if (cm->action == ADD_TO_DB) {
-			if ((retval = add_service_to_database(cmc, base)) != 0) {
-				cmdb_main_free(cm, cmc, cmdb_config);
-				printf("Error %d adding service %s to DB\n",
-					 retval, base->service->detail);
-				cmdb_clean_list(base);
-				exit(DB_INSERT_FAILED);
-			} else {
-				printf("Service %s added to database\n", base->service->detail);
-			}
-		} else if (cm->action == RM_FROM_DB) {
-			retval = remove_service_from_database(cmc, cm);
-		} else {
-			display_action_error(cm->action);
-		}
+		retval = cmdb_service_action(cmc, cm, base);
 	} else if (cm->type == HARDWARE) {
-		if (cm->action == LIST_OBJ) {
-			display_hardware_types(cmc);
-		} else if (cm->action == DISPLAY) {
-			display_server_hardware(cmc, cm->name);
-		} else if (cm->action == ADD_TO_DB) {
-			if ((retval = add_hardware_to_database(cmc, base)) != 0) {
-				cmdb_main_free(cm, cmc, cmdb_config);
-				printf("Error %d adding hardware %s to DB\n",
-					 retval, base->hardtype->hclass);
-				cmdb_clean_list(base);
-				exit(DB_INSERT_FAILED);
-			} else {
-				printf("\
-Hardware for server %s added to database\n",base->server->name);
-			}
-		} else {
-			display_action_error(cm->action);
-		}
+		retval = cmdb_hardware_action(cmc, cm, base);
 	} else if (cm->type == VM_HOST) {
 		if (cm->action == LIST_OBJ) {
 			display_vm_hosts(cmc);
@@ -198,3 +152,75 @@ cmdb_customer_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	return retval;
 }
 
+int
+cmdb_contact_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if ((cm->action == DISPLAY) || (cm->action == LIST_OBJ)) {
+		if (strncmp(cm->id, "NULL", CONF_S) != 0) {
+			display_customer_contacts(ccs, cm->id);
+		}
+	} else if (cm->action == ADD_TO_DB) {
+		if ((retval = add_contact_to_database(ccs, cmdb)) != 0) {
+			printf("Error %d adding contact to DB\n", retval);
+			retval = DB_INSERT_FAILED;
+		} else {
+			printf("Added %s to database\n", cmdb->contact->name);
+		}
+	} else if (cm->action == RM_FROM_DB) {
+		retval = remove_contact_from_database(ccs, cm);
+	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
+}
+
+int
+cmdb_service_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if (cm->action == LIST_OBJ) {
+		display_service_types(ccs);
+	} else if (cm->action == DISPLAY) {
+		if (cm->name)
+			display_server_services(ccs, cm->name);
+		else if (cm->id)
+			display_customer_services(ccs, cm->id);
+	} else if (cm->action == ADD_TO_DB) {
+		if ((retval = add_service_to_database(ccs, cmdb)) != 0) {
+			printf("Error %d adding service %s to DB\n",
+				 retval, cmdb->service->detail);
+			retval = DB_INSERT_FAILED;
+		} else {
+			printf("Service %s added to database\n", cmdb->service->detail);
+		}
+	} else if (cm->action == RM_FROM_DB) {
+		retval = remove_service_from_database(ccs, cm);
+	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
+}
+
+int
+cmdb_hardware_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
+{
+	int retval = 0;
+	if (cm->action == LIST_OBJ) {
+		display_hardware_types(ccs);
+	} else if (cm->action == DISPLAY) {
+		display_server_hardware(ccs, cm->name);
+	} else if (cm->action == ADD_TO_DB) {
+		if ((retval = add_hardware_to_database(ccs, cmdb)) != 0) {
+			printf("Error %d adding hardware %s to DB\n",
+				 retval, cmdb->hardtype->hclass);
+			retval = DB_INSERT_FAILED;
+		} else {
+			printf("Hardware for server %s added to database\n",
+			  cmdb->server->name);
+		}
+	} else {
+		display_action_error(cm->action);
+	}
+	return retval;
+}
