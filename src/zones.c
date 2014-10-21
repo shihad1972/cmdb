@@ -1151,7 +1151,6 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	}
-//	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	init_multi_dbdata_struct(&start, max);
 	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
 		select_specific_ip(dnsa, cm);
@@ -1327,7 +1326,6 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
 	init_preferred_a_struct(prefer);
 	dnsa->prefer = prefer;
-//	dnsa_init_initial_dbdata(&start, RECORDS_ON_DEST_AND_ID);
 	init_multi_dbdata_struct(&start, max);
 	while (rec) {
 		if (strncmp(name, rec->dest, RBUFF_S) == 0) {
@@ -1361,8 +1359,8 @@ cm->host, cm->domain);
 	}
 	if (i == 0) {
 		fprintf(stderr,
-"You FQDN is not associated with this IP address\n\
-If you it associated with this IP address, please add it as an A record\n\
+"Your FQDN is not associated with this IP address\n\
+If you want it associated with this IP address, please add it as an A record\n\
 Curently you cannot add FQDN's not authoritative on this DNS server\n");
 		return CANNOT_ADD_A_RECORD;
 	}
@@ -1667,7 +1665,6 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		}
 	}
 	fill_rev_zone_info(zone, cm, dc);
-//	print_rev_zone_info(zone);
 	if ((retval = check_for_zone_in_db(dc, dnsa, REVERSE_ZONE)) != 0) {
 		printf("Zone %s already exists in database\n", zone->net_range);
 		dnsa_clean_list(dnsa);
