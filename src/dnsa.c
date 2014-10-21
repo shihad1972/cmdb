@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "dc in dnsa.c");
 	if (!(cm = malloc(sizeof(dnsa_comm_line_s))))
 		report_error(MALLOC_FAIL, "cm in dnsa.c");
-	
 	dnsa_init_all_config(dc, cm);
 	retval = parse_dnsa_command_line(argc, argv, cm);
 	if (retval != 0) {

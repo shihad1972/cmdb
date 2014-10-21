@@ -31,4 +31,7 @@ get_net_range(unsigned long int prefix);
 int
 do_rev_lookup(char *ip, char *host, size_t len);
 
+int
+get_port_number(record_row_s *rec, char *name, unsigned short int *port);
+
 #endif /* __DNSA_NET_H */

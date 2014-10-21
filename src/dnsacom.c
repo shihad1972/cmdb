@@ -386,7 +386,14 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		    (strncmp(comm->host, "@", COMM_S) != 0))
 			if (validate_user_input(comm->host, NAME_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "host");
-
+	} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
+		if ((validate_user_input(comm->dest, DOMAIN_REGEX) < 0) &&
+		    (validate_user_input(comm->dest, NAME_REGEX) < 0))
+			report_error(USER_INPUT_INVALID, "SRV destination");
+		if (validate_user_input(comm->service, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "SRV service");
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "SRV domain");
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");

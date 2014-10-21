@@ -341,8 +341,8 @@ void
 print_zone(dnsa_s *dnsa, char *domain);
 void
 print_record(record_row_s *rec, char *zname);
-int
-get_port_number(record_row_s *rec, char *name, unsigned short int *port);
+/*int
+get_port_number(record_row_s *rec, char *name, unsigned short int *port); */
 void
 display_rev_zone(char *domain, dnsa_config_s *dc);
 void

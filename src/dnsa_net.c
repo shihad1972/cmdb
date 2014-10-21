@@ -36,6 +36,7 @@
 #include <errno.h>
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
+#include "dnsa_net.h"
 
 unsigned long int
 get_net_range(unsigned long int prefix)
@@ -70,3 +71,48 @@ do_rev_lookup(char *ip, char *host, size_t size)
 	}
 	return retval;
 }
+
+int
+get_port_number(record_row_s *rec, char *name, unsigned short int *port)
+{
+	char *host;
+	int retval = 0;
+	size_t len;
+	struct addrinfo hints, *srvinfo;
+	struct sockaddr_in *ipv4;
+
+	if (!(host = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "host in get_port_number");
+	len = strlen(rec->dest);
+	if (rec->dest[len - 1] == '.')
+		snprintf(host, RBUFF_S, "%s", rec->dest);
+	else
+		snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	if ((strncmp(rec->protocol, "tcp", COMM_S)) == 0)
+		hints.ai_socktype = SOCK_STREAM;
+	else if ((strncmp(rec->protocol, "udp", COMM_S)) == 0)
+		hints.ai_socktype = SOCK_DGRAM;
+	else {
+		fprintf(stderr, "Unknown protocol type %s in %s\n",
+		 rec->protocol, rec->host);
+		free(host);
+		return WRONG_PROTO;
+	}
+	hints.ai_flags = AI_PASSIVE;
+	if ((retval = getaddrinfo(host, rec->service, &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
+		return retval;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		*port = (unsigned short int) htons((uint16_t)ipv4->sin_port);
+	} else {
+		retval = WRONG_PROTO;
+	}
+	free(host);
+	freeaddrinfo(srvinfo);
+	return retval;
+}
+

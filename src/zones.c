@@ -275,49 +275,6 @@ srv, proto, zname, rec->pri, port, rec->dest);
 	}
 }
 
-int
-get_port_number(record_row_s *rec, char *name, unsigned short int *port)
-{
-	char *host;
-	int retval = NONE;
-	size_t len;
-	struct addrinfo hints, *srvinfo;
-	struct sockaddr_in *ipv4;
-
-	if (!(host = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "host in get_port_number");
-	len = strlen(rec->dest);
-	if (rec->dest[len - 1] == '.')
-		snprintf(host, RBUFF_S, "%s", rec->dest);
-	else
-		snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
-		hints.ai_socktype = SOCK_STREAM;
-	else if ((strncmp("udp", rec->protocol, RANGE_S)) == 0)
-		hints.ai_socktype = SOCK_DGRAM;
-	else {
-		fprintf(stderr, "Unkown protocol type %s in %s\n",
-		 rec->protocol, rec->host);
-		return WRONG_PROTO;
-	}
-        hints.ai_flags = AI_PASSIVE;
-	if ((retval = getaddrinfo(host, rec->service, &hints, &srvinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		return retval;
-	}
-	if (srvinfo->ai_family == AF_INET) {
-		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
-		*port = (unsigned short int) htons((uint16_t)ipv4->sin_port);
-	} else {
-		report_error(WRONG_PROTO, "add_srv_record");
-	}
-	freeaddrinfo(srvinfo);
-	free(host);
-	return retval;
-}
-
 void
 display_rev_zone(char *domain, dnsa_config_s *dc)
 {
@@ -764,7 +721,11 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 		report_error(MALLOC_FAIL, "buffer in add_srv_record");
 	if (!(host = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "host in add_srv_record");
-	snprintf(host, RBUFF_S, "%s.%s", rec->dest, zinfo->name);
+	len = strlen(rec->dest);
+	if (rec->dest[len - 1] == '.')
+		snprintf(host, RBUFF_S, "%s", rec->dest);
+	else
+		snprintf(host, RBUFF_S, "%s.%s.", rec->dest, zinfo->name);
 	zname = strndup(zinfo->name, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -790,8 +751,8 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 	}
 	freeaddrinfo(srvinfo);
 	snprintf(buffer, BUFF_S, "\
-_%s._%s.%s. %lu IN SRV %lu 0 %u %s.%s.\n", rec->service, rec->protocol, zname,
-zinfo->ttl, rec->pri, port, rec->dest, zname);
+_%s._%s.%s. %lu IN SRV %lu 0 %u %s\n", rec->service, rec->protocol, zname,
+zinfo->ttl, rec->pri, port, host);
 	len = strlen(buffer);
 	if ((len + zone->size) >= zone->len)
 		resize_string_buff(zone);
