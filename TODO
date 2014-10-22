@@ -1,3 +1,13 @@
+22/10/2014
+It seems we can add mount options to the partitioning scheme using the
+following:
+
+options/nodev{ nodev }
+etc.
+
+Need to work on a secure build with some specific options for mounted
+filesystems like /tmp, /var/log etc. See www.gisecurity.org
+
 20/10/2014
 Need to add racks, switches and power outlets into the database. Also maybe
 need external storage arrays, tape drives etc. Perhaps move servers table
