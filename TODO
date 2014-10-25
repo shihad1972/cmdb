@@ -6,7 +6,7 @@ options/nodev{ nodev }
 etc.
 
 Need to work on a secure build with some specific options for mounted
-filesystems like /tmp, /var/log etc. See www.gisecurity.org
+filesystems like /tmp, /var/log etc. See www.cisecurity.org
 
 20/10/2014
 Need to add racks, switches and power outlets into the database. Also maybe
