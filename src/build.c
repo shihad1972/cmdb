@@ -336,7 +336,7 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 		return retval;
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
+		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
 			return retval;
 	type = DHCP_DETAILS;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
@@ -695,7 +695,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
 	if (!(cml->name))
-		if ((retval = get_server_name(cmc, cml, cml->server_id)) != 0)
+		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
 			return retval;
 	server = cml->name;
 	snprintf(build->string, RBUFF_S, "\
@@ -2055,7 +2055,7 @@ chmod 755 kick-postfix.sh\n\
 }
 
 int
-get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id)
+get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
 {
 	int retval = NONE, type = SERVER_NAME_ON_ID;
 	unsigned int max;
@@ -2074,7 +2074,7 @@ get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int serve
 		clean_dbdata_struct(data);
 		return MULTIPLE_SERVERS;
 	} else {
-		snprintf(cml->name, CONF_S, "%s", data->fields.text);
+		snprintf(name, CONF_S, "%s", data->fields.text);
 		retval = NONE;
 	}
 	clean_dbdata_struct(data);
@@ -2134,7 +2134,7 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 int
 get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 {
-	int retval = NONE, type;
+	int retval = NONE, type = OS_ID_ON_NAME;
 	unsigned int max;
 	dbdata_s *data;
 
@@ -2146,7 +2146,6 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 		fprintf(stderr, "No version or version alias provided\n");
 		return NO_OS_VERSION;
 	}
-	type = OS_ID_ON_NAME;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	fill_dbdata_os_search(data, cml);

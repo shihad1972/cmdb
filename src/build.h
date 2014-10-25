@@ -123,7 +123,7 @@ void
 cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[]);
 
 int
-get_server_name(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int server_id);
+get_server_name(cbc_config_s *cmc, char *name, uli_t server_id);
 
 void
 print_build_config(cbc_s *details);
