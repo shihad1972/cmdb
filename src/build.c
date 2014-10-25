@@ -2194,7 +2194,7 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 }
 
 int
-get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id)
+get_def_scheme_id(cbc_config_s *cmc, char *partition, uli_t *def_scheme_id)
 {
 	int retval = NONE, type;
 	unsigned int max;
@@ -2203,17 +2203,17 @@ get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *de
 	type = DEF_SCHEME_ID_ON_SCH_NAME;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, CONF_S, "%s", cml->partition);
+	snprintf(data->args.text, CONF_S, "%s", partition);
 	if ((retval = cbc_run_search(cmc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 1) {
 		*def_scheme_id = data->fields.number;
 		retval = NONE;
 	} else if (retval > 1) {
 		fprintf(stderr,
-		 "Multiple partition schemes found with name %s\n", cml->partition);
+		 "Multiple partition schemes found with name %s\n", partition);
 		retval = MULTIPLE_PART_NAMES;
 	} else {
 		fprintf(stderr,
-		 "No partition schemes found with name %s\n", cml->partition);
+		 "No partition schemes found with name %s\n", partition);
 		retval = PARTITIONS_NOT_FOUND;
 	}
 	clean_dbdata_struct(data);

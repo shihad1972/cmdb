@@ -111,7 +111,7 @@ int
 get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id);
 
 int
-get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id);
+get_def_scheme_id(cbc_config_s *cmc, char *partition, uli_t *def_scheme_id);
 
 int
 get_build_id(cbc_config_s *cbc, uli_t id, char *name, uli_t *build_id);

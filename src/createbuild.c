@@ -501,7 +501,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		if ((retval = get_os_id(cbt, cml, &osid)) != 0)
 			return retval;
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
-		if ((retval = get_def_scheme_id(cbt, cml, &dsid)) != 0)
+		if ((retval = get_def_scheme_id(cbt, cml->partition, &dsid)) != 0)
 			return retval;
 	unsigned long int ids[4] = { vid, osid, dsid, sid };
 	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
