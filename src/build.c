@@ -320,7 +320,7 @@ int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *ip, line[RBUFF_S];
-	int retval = NONE, type;
+	int retval = NONE, type = DHCP_DETAILS;
 	unsigned int max;
 	uint32_t ip_addr;
 	dbdata_s *data;
@@ -339,7 +339,6 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
 			return retval;
-	type = DHCP_DETAILS;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
