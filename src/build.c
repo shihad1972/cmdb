@@ -2221,7 +2221,7 @@ get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *de
 }
 
 int
-get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_id)
+get_build_id(cbc_config_s *cmc, uli_t id, char *name, uli_t *build_id)
 {
 	int retval = NONE, type;
 	unsigned int max;
@@ -2230,17 +2230,17 @@ get_build_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *build_i
 	type = BUILD_ID_ON_SERVER_ID;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
+	data->args.number = id;
 	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_SERVER_ID)) == 1) {
 		*build_id = data->fields.number;
 		retval = NONE;
 	} else if (retval > 1) {
 		fprintf(stderr,
-			"Multiple builds found for server %s\n", cml->name);
+			"Multiple builds found for server %s\n", name);
 		retval = MULTIPLE_SERVER_BUILDS;
 	} else {
 		fprintf(stderr,
-			"No build found for server %s\n", cml->name);
+			"No build found for server %s\n", name);
 		retval = SERVER_BUILD_NOT_FOUND;
 	}
 	clean_dbdata_struct(data);

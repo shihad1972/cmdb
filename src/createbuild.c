@@ -492,7 +492,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	} else {
 		sid = cml->server_id;
 	}
-	if ((retval = get_build_id(cbt, cml, &bid)) != 0)
+	if ((retval = get_build_id(cbt, cml->server_id, cml->name, &bid)) != 0)
 		return retval;
 	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
 		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)

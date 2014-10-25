@@ -114,7 +114,7 @@ int
 get_def_scheme_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *def_scheme_id);
 
 int
-get_build_id(cbc_config_s *cbc, cbc_comm_line_s *cml, unsigned long int *build_id);
+get_build_id(cbc_config_s *cbc, uli_t id, char *name, uli_t *build_id);
 
 int
 get_modify_query(unsigned long int ids[]);
