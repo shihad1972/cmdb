@@ -200,7 +200,10 @@ void
 print_build_config(cbc_s *details)
 {
 	char *name = details->server->name, ip[RANGE_S], *addr;
-	time_t create;
+	char *cuser = get_uname(details->build->cuser);
+	char *muser = get_uname(details->build->muser);
+	time_t crtime = (time_t)details->build->ctime;
+	time_t motime = (time_t)details->build->mtime;
 	unsigned long int sid = details->build->def_scheme_id;
 	uint32_t ip_addr;
 	cbc_pre_part_s *part = details->dpart;
@@ -230,10 +233,8 @@ print_build_config(cbc_s *details)
 		printf("IP address:\t%s\n", addr);
 	else
 		printf("No build IP associated with server %s\n", name);
-	create = (time_t)details->build->ctime;
-	printf("Build created by %s at %s", get_uname(details->build->cuser), ctime(&create));
-	create = (time_t)details->build->mtime;
-	printf("Build updated by %s at %s", get_uname(details->build->muser), ctime(&create));
+	printf("Build created by %s at %s", cuser, ctime(&crtime));
+	printf("Build updated by %s at %s", muser, ctime(&motime));
 	if (part) {
 		printf("Partition information:\n");
 		if (details->sscheme)
