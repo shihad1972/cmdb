@@ -1157,7 +1157,7 @@ d-i preseed/late_command string cd /target/root; wget %shosts/%s.sh \
 			build->len *=2;
 		tmp = realloc(build->string, build->len * sizeof(char));
 		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_partition");
+			report_error(MALLOC_FAIL, "next in fill_packages");
 		else
 			build->string = tmp;
 	}
