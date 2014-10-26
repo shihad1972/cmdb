@@ -468,6 +468,8 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 	snprintf(disk->device, HOST_S, "/dev/%s", data->fields.text);
 	free(data);
 	disk->lvm = details->sscheme->lvm;
+// Maybe it's a bad idea to add the disk dev into DB here while
+// we are not searching for it first
 	if ((retval = cbc_run_insert(cbc, details, DISK_DEVS)) != 0) {
 		printf("Unable to insert disk %s into database\n",
 		       disk->device);
