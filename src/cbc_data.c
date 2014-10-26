@@ -233,13 +233,9 @@ display_build_domain(cbc_build_domain_s *bdom)
 void
 init_build_ip(cbc_build_ip_s *ip)
 {
+	memset(ip, 0, sizeof(cbc_build_ip_s));
 	snprintf(ip->host, COMM_S, "NULL");
 	snprintf(ip->domain, COMM_S, "NULL");
-	ip->ip = NONE;
-	ip->ip_id = NONE;
-	ip->bd_id = NONE;
-	ip->server_id = NONE;
-	ip->next = '\0';
 }
 
 void
@@ -265,14 +261,12 @@ clean_build_ip(cbc_build_ip_s *ip)
 void
 init_build_os(cbc_build_os_s *os)
 {
+	memset(os, 0, sizeof(cbc_build_os_s));
 	snprintf(os->os, COMM_S, "NULL");
 	snprintf(os->version, COMM_S, "NULL");
 	snprintf(os->alias, COMM_S, "NULL");
 	snprintf(os->ver_alias, COMM_S, "NULL");
 	snprintf(os->arch, COMM_S, "NULL");
-	os->os_id = NONE;
-	os->bt_id = NONE;
-	os->next = '\0';
 }
 
 void
@@ -298,13 +292,12 @@ clean_build_os(cbc_build_os_s *os)
 void
 init_build_type(cbc_build_type_s *type)
 {
+	memset(type, 0, sizeof(cbc_build_type_s));
 	snprintf(type->alias, COMM_S, "NULL");
 	snprintf(type->build_type, COMM_S, "NULL");
 	snprintf(type->arg, COMM_S, "NULL");
 	snprintf(type->url, COMM_S, "NULL");
 	snprintf(type->mirror, COMM_S, "NULL");
-	type->bt_id = NONE;
-	type->next = '\0';
 }
 
 void
@@ -330,11 +323,8 @@ clean_build_type(cbc_build_type_s *type)
 void
 init_disk_dev(cbc_disk_dev_s *disk)
 {
+	memset(disk, 0, sizeof(cbc_disk_dev_s));
 	snprintf(disk->device, COMM_S, "NULL");
-	disk->lvm = NONE;
-	disk->disk_id = NONE;
-	disk->server_id = NONE;
-	disk->next = '\0';
 }
 
 void
@@ -360,15 +350,12 @@ clean_disk_dev(cbc_disk_dev_s *disk)
 void
 init_locale(cbc_locale_s *locale)
 {
+	memset(locale, 0, sizeof(cbc_locale_s));
 	snprintf(locale->locale, COMM_S, "NULL");
 	snprintf(locale->country, COMM_S, "NULL");
 	snprintf(locale->language, COMM_S, "NULL");
 	snprintf(locale->keymap, COMM_S, "NULL");
 	snprintf(locale->timezone, COMM_S, "NULL");
-	locale->locale_id = NONE;
-	locale->os_id = NONE;
-	locale->bt_id = NONE;
-	locale->next = '\0';
 }
 
 void
@@ -394,11 +381,8 @@ clean_locale(cbc_locale_s *locale)
 void
 init_package(cbc_package_s *pack)
 {
+	memset(pack, 0, sizeof(cbc_package_s));
 	snprintf(pack->package, COMM_S, "NULL");
-	pack->pack_id = NONE;
-	pack->vari_id = NONE;
-	pack->os_id = NONE;
-	pack->next = '\0';
 }
 
 void
@@ -453,10 +437,8 @@ clean_pre_part(cbc_pre_part_s *prep)
 void
 init_seed_scheme(cbc_seed_scheme_s *seed)
 {
+	memset(seed, 0, sizeof(cbc_seed_scheme_s));
 	snprintf(seed->name, COMM_S, "NULL");
-	seed->lvm = NONE;
-	seed->def_scheme_id = NONE;
-	seed->next = '\0';
 }
 
 void
@@ -482,15 +464,12 @@ clean_seed_scheme(cbc_seed_scheme_s *seed)
 void
 init_cbc_server(cbc_server_s *server)
 {
+	memset(server, 0, sizeof(cbc_server_s));
 	snprintf(server->vendor, COMM_S, "NULL");
 	snprintf(server->make, COMM_S, "NULL");
 	snprintf(server->model, COMM_S, "NULL");
 	snprintf(server->uuid, COMM_S, "NULL");
 	snprintf(server->name, COMM_S, "NULL");
-	server->server_id = NONE;
-	server->cust_id = NONE;
-	server->vm_server_id = NONE;
-	server->next = '\0';
 }
 
 void
@@ -516,10 +495,9 @@ clean_cbc_server(cbc_server_s *server)
 void
 init_varient(cbc_varient_s *vari)
 {
+	memset(vari, 0, sizeof(cbc_varient_s));
 	snprintf(vari->varient, COMM_S, "NULL");
 	snprintf(vari->valias, COMM_S, "NULL");
-	vari->varient_id = NONE;
-	vari->next = '\0';
 }
 
 void
@@ -545,11 +523,9 @@ clean_varient(cbc_varient_s *vari)
 void
 init_vm_hosts(cbc_vm_server_hosts_s *vm)
 {
+	memset(vm, 0, sizeof(cbc_vm_server_hosts_s));
 	snprintf(vm->vm_server, COMM_S, "NULL");
 	snprintf(vm->type, COMM_S, "NULL");
-	vm->vm_s_id = NONE;
-	vm->server_id = NONE;
-	vm->next = '\0';
 }
 
 void
@@ -637,3 +613,4 @@ clean_cbc_iface(cbc_iface_s *ifa)
 			next = '\0';
 	}
 }
+
