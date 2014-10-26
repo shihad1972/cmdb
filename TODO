@@ -1,3 +1,8 @@
+26/10/2014
+It seems that we add teh disk device when we add a server build regardless
+of whether or not we are successful in adding the server build. This needs
+fixed
+
 22/10/2014
 It seems we can add mount options to the partitioning scheme using the
 following:

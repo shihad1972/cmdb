@@ -295,7 +295,7 @@ const unsigned int cbc_select_fields[] = {
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 5, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5
+	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -324,7 +324,7 @@ const int cbc_inserts[][24] = {
 	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
 	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
 	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
-	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
