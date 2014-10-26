@@ -123,6 +123,10 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
+/* FIXME: As well as searching for a disk device to use in the hardware table
+ * this adds the disk it finds to the disk dev table. This is not good if there
+ * already is one, but also if we fail to add the build and try to re-add it
+ * we get another one added to the disk_dev table */
 	if ((retval = check_for_disk_device(cbt, details)) != 0) {
 		printf("Unable to find a disk device for the server\n");
 		CLEAN_CREATE_BUILD_CONFIG(retval);
@@ -459,14 +463,14 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 	data->args.number = disk->server_id = details->server->server_id;
 /* Should run a search here to see if the disk_dev is already in the table */
 	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {
-		free(data);
+		clean_dbdata_struct(data);
 		printf("You need to add a hard disk to build %s\n",
 		       details->server->name);
 		return NO_BASIC_DISK;
 	} else if (retval > 1 )
 		printf("Using fist disk /dev/%s\n", data->fields.text);
 	snprintf(disk->device, HOST_S, "/dev/%s", data->fields.text);
-	free(data);
+	clean_dbdata_struct(data);
 	disk->lvm = details->sscheme->lvm;
 // Maybe it's a bad idea to add the disk dev into DB here while
 // we are not searching for it first
