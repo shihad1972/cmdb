@@ -34,5 +34,6 @@ cbcpart:
 
 cpc:
 	cd $(DIR); $(MAKE) $(MFLAGS) cpc
+
 clean :
 	cd $(DIR); $(MAKE) clean
