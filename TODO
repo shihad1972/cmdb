@@ -1,5 +1,9 @@
+14/11/2014
+Need to add the remove_ functions to cbcpart as we cannot remove
+partitions nor schemes.
+
 26/10/2014
-It seems that we add teh disk device when we add a server build regardless
+It seems that we add the disk device when we add a server build regardless
 of whether or not we are successful in adding the server build. This needs
 fixed
 
