@@ -477,7 +477,7 @@ display_cbcpart_usage(void)
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
-	printf("-m: Use lvm (when adding a partition)\n");
+	printf("-m: Use lvm (when adding a scheme)\n");
 	printf("-g: logical volume (if using lvm)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
