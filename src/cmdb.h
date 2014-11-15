@@ -173,6 +173,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	DB_UPDATE_FAILED = 155,
 	DB_WRONG_TYPE = 156,
 	NO_DATA = 157,
+	PARTITON_NOT_FOUND = 158,
+	DB_DELETE_FAILED = 159,
 	BUILD_DOMAIN_EXISTS = 160,
 	BUILD_OS_EXISTS = 161,
 	OS_ALIAS_NEEDED = 162,

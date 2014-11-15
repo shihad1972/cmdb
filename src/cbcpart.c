@@ -483,13 +483,38 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = 0;
+	int retval = 0, type;
+	unsigned int max;
 	dbdata_s *data;
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in remove_partition_from_scheme");
-	init_dbdata_struct(data);
-
+	type = DEFP_ID_ON_SCHEME_PART;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, CONF_S, "%s", cpl->scheme);
+	snprintf(data->next->args.text, RBUFF_S, "%s", cpl->partition);
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		fprintf(stderr, "Cannot find partition %s in scheme %s\n",
+		 data->next->args.text, data->args.text);
+		clean_dbdata_struct(data);
+		return PARTITON_NOT_FOUND;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple partitions found\n");
+	clean_dbdata_struct(data->next);
+	data->next = '\0';
+	memset(data->args.text, 0, RBUFF_S);
+	data->args.number = data->fields.number;
+	if ((retval = cbc_run_delete(cbc, data, DEF_PART_ON_PART_ID)) == 0) {
+		fprintf(stderr, "Partition %s in scheme %s not deleted\n",
+		 cpl->partition, cpl->scheme);
+		retval = DB_DELETE_FAILED;
+	} else if (retval > 1 ) {
+		fprintf(stderr, "Multiple partitions deleted??\n");
+		retval = 0;
+	} else {
+		printf("Partition %s deleted from scheme %s\n", cpl->partition,
+		 cpl->scheme);
+		retval = 0;
+	}
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -509,14 +534,18 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	}
 	retval = cbc_run_delete(cbc, data, DEF_PART_ON_DEF_ID);
 	printf("Removed %d partition(s)\n", retval);
-	if ((retval = cbc_run_delete(cbc, data, SEED_SCHEME_ON_DEF_ID)) == 0)
+	if ((retval = cbc_run_delete(cbc, data, SEED_SCHEME_ON_DEF_ID)) == 0) {
 		fprintf(stderr, "No scheme removed\n");
-	else if (retval > 1)
+		retval = DB_DELETE_FAILED;
+	} else if (retval > 1) {
 		fprintf(stderr, "Multiple schemes removed\n");
-	else
+		retval = 0;
+	} else {
 		printf("Scheme %s removed\n", cpl->scheme);
+		retval = 0;
+	}
 	clean_dbdata_struct(data);
-	return 0;
+	return retval;
 }
 
 int

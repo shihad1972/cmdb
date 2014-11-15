@@ -222,6 +222,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No build type for that OS\n");
 	} else if (error == CANNOT_UPDATE) {
 		fprintf(stderr, "Database update not possible\n");
+	} else if (error == PARTITON_NOT_FOUND) {
+		fprintf(stderr, "Requested partition not found\n");
+	} else if (error == DB_DELETE_FAILED) {
+		fprintf(stderr, "Delete from database failed\n");
 	} else if (error == CANNOT_BUILD_PACKAGE_LIST) {
 		fprintf(stderr, "Cannot build package list\n");
 	} else {

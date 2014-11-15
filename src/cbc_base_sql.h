@@ -111,7 +111,8 @@ enum {			/* cbc search SQL statements */
 	ALL_CONFIG = 45,
 	NFS_DOMAIN = 46,
 	BUILD_DOM_SERVERS = 47,
-	PACK_ID_ON_DETAILS = 48
+	PACK_ID_ON_DETAILS = 48,
+	DEFP_ID_ON_SCHEME_PART = 49
 };
 
 enum {			/* cbc update SQL statements */

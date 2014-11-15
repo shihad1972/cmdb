@@ -290,7 +290,11 @@ SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
 SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
   s.server_id = bi.server_id WHERE bi.bd_id = ? ORDER BY bi.ip","\
 SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? \
-AND os_id = ?"
+AND os_id = ?","\
+SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss ON \
+  dp.def_scheme_id = ss.def_scheme_id WHERE ss.scheme_name = ? AND \
+  dp.mount_point = ?"
+
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -311,12 +315,12 @@ const unsigned int cbc_delete_args[] = {
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 3
+	1, 1, 1, 1, 3, 2
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1
+	2, 6, 1, 2, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -446,7 +450,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT }
+	{ DBTEXT, DBINT, DBINT } ,
+	{ DBTEXT, DBTEXT, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -497,6 +502,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBSHORT, DBSHORT, DBSHORT, DBSHORT, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
