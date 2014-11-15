@@ -276,6 +276,7 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
+	char *scheme = '\0';
 	int retval = NONE;
 	short int lvm = 0;
 	unsigned long int scheme_id = 0;
@@ -365,21 +366,10 @@ part->log_vol, cpl->scheme);
 		printf("Unable to add partition to DB\n");
 	else
 		printf("Partition added to DB\n");
-	if (retval == 0) {
-		dbdata_s *user;
-		init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
-		user->args.number = (unsigned long int)getuid();
-		user->next->args.number = scheme_id;
-		if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
-			printf("Scheme %s marked as updated\n", cpl->scheme);
-			retval = 0;
-		} else if (retval == 0)
-			printf("Scheme %s not updated\n", cpl->scheme);
-		clean_dbdata_struct(user);
-	}
+	if (retval == 0) 
+		retval = set_scheme_updated(cbc, scheme, scheme_id);
 	part->next = '\0';
 	clean_cbc_struct(base);
-
 	return retval;
 }
 
@@ -506,15 +496,14 @@ remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	if ((retval = cbc_run_delete(cbc, data, DEF_PART_ON_PART_ID)) == 0) {
 		fprintf(stderr, "Partition %s in scheme %s not deleted\n",
 		 cpl->partition, cpl->scheme);
-		retval = DB_DELETE_FAILED;
+		return DB_DELETE_FAILED;
 	} else if (retval > 1 ) {
 		fprintf(stderr, "Multiple partitions deleted??\n");
-		retval = 0;
 	} else {
 		printf("Partition %s deleted from scheme %s\n", cpl->partition,
 		 cpl->scheme);
-		retval = 0;
 	}
+	retval = set_scheme_updated(cbc, cpl->scheme, 0);
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -566,4 +555,34 @@ get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data)
 	return 0;
 }
 
+int
+set_scheme_updated(cbc_config_s *cbc, char *scheme, unsigned long int id)
+{
+	int retval;
+	unsigned long int scheme_id = id;
+	dbdata_s *user;
+
+	if (scheme) {
+		init_multi_dbdata_struct(&user, 1);
+		snprintf(user->args.text, RBUFF_S, "%s", scheme);
+		if ((retval = cbc_run_search(cbc, user, DEF_SCHEME_ID_ON_SCH_NAME)) == 0) {
+			fprintf(stderr, "Cannot find scheme %s\n", scheme);
+			clean_dbdata_struct(user);
+			return SCHEME_NOT_FOUND;
+		} else if (retval > 1)
+			fprintf(stderr, "Multiple schemes! Using first one\n");
+		scheme_id = user->fields.number;
+		clean_dbdata_struct(user);
+	}
+	init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
+	user->args.number = (unsigned long int)getuid();
+	user->next->args.number = scheme_id;
+	if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
+		printf("Scheme marked as updated\n");
+		retval = 0;
+	} else if (retval == 0)
+		printf("Scheme not updated\n");
+	clean_dbdata_struct(user);
+	return retval;
+}
 
