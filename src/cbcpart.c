@@ -72,8 +72,7 @@ main (int argc, char *argv[])
 	else if (cpcl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpcl->action == RM_CONFIG)
-		printf("Removing Config\n");
-
+		retval = remove_scheme_part(cmc, cpcl);
 	if (retval == WRONG_TYPE)
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
@@ -257,7 +256,20 @@ add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = add_new_scheme(cbc, cpl);
 	else
 		retval = WRONG_TYPE;
+	return retval;
+}
 
+int
+remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	if (cpl->type == PARTITION)
+		retval = remove_partition_from_scheme(cbc, cpl);
+	else if (cpl->type == SCHEME)
+		retval = remove_scheme(cbc, cpl);
+	else
+		retval = WRONG_TYPE;
 	return retval;
 }
 
@@ -467,3 +479,62 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 	part->cuser = part->muser = (unsigned long int)getuid();
 	return retval;
 }
+
+int
+remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+	dbdata_s *data;
+
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in remove_partition_from_scheme");
+	init_dbdata_struct(data);
+
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+	dbdata_s *data;
+
+	if (!(data = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "data in remove_scheme");
+	init_dbdata_struct(data);
+	if ((retval = get_scheme_id_on_name(cbc, cpl->scheme, data)) != 0) {
+		clean_dbdata_struct(data);
+		return retval;
+	}
+	retval = cbc_run_delete(cbc, data, DEF_PART_ON_DEF_ID);
+	printf("Removed %d partition(s)\n", retval);
+	if ((retval = cbc_run_delete(cbc, data, SEED_SCHEME_ON_DEF_ID)) == 0)
+		fprintf(stderr, "No scheme removed\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple schemes removed\n");
+	else
+		printf("Scheme %s removed\n", cpl->scheme);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data)
+{
+	int retval;
+	snprintf(data->args.text, RBUFF_S, "%s", scheme);
+	if ((retval = cbc_run_search(cbc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 0) {
+		clean_dbdata_struct(data);
+		printf("Cannot find scheme %s\n", scheme);
+		return SCHEME_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple scheme's found for %s\n", scheme);
+		fprintf(stderr, "Using first one found\n");
+	}
+	memset(data->args.text, 0, RBUFF_S);
+	data->args.number = data->fields.number;
+	return 0;
+}
+
+

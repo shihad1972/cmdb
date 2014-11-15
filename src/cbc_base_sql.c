@@ -392,6 +392,9 @@ const unsigned int cbc_delete_types[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE }
 };
 const unsigned int cbc_search_arg_types[][3] = {

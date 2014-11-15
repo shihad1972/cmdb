@@ -73,5 +73,17 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 int
 add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
 
+int
+remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data);
+
 #endif /* __CBCPART_H__ */
 
