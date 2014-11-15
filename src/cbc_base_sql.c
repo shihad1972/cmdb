@@ -183,7 +183,10 @@ DELETE FROM varient WHERE varient_id = ?","\
 DELETE FROM packages WHERE pack_id = ?","\
 DELETE FROM build_ip WHERE server_id = ?","\
 DELETE FROM build WHERE server_id = ?","\
-DELETE FROM disk_dev WHERE server_id = ?"
+DELETE FROM disk_dev WHERE server_id = ?","\
+DELETE FROM seed_schemes WHERE def_scheme_id = ?","\
+DELETE FROM default_part WHERE def_part_id = ?","\
+DELETE FROM default_part WHERE def_scheme_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -303,7 +306,7 @@ const unsigned int cbc_update_args[] = {
 	5, 6, 3, 3, 3, 3, 3, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1,

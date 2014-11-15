@@ -56,7 +56,10 @@ enum {			/* cbc delete SQL statements */
 	PACK_DEL_PACK_ID = 4,
 	BUILD_IP_ON_SER_ID = 5,
 	BUILD_ON_SERVER_ID = 6,
-	DISK_DEV_ON_SERVER_ID = 7
+	DISK_DEV_ON_SERVER_ID = 7,
+	SEED_SCHEME_ON_DEF_ID = 8,
+	DEF_PART_ON_PART_ID = 9,
+	DEF_PART_ON_SCHEME_ID = 10
 };
 
 enum {			/* cbc search SQL statements */
