@@ -53,11 +53,12 @@ cbcpart_SOURCES = \
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS =
+AM_LIBS = 
 
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)
 AM_LDFLAGS += $(MYSQL_LDFLAGS)
-LIBS += -lmysqlclient
+AM_LIBS += -lmysqlclient
 endif
 
 if HAVE_PCRE
@@ -67,5 +68,5 @@ endif
 if HAVE_SQLITE3
 AM_CFLAGS += $(SQLITE3_CFLAGS)
 AM_LDFLAGS += $(SQLITE3_LDFLAGS)
-LIBS += -lsqlite3
+AM_LIBS += -lsqlite3
 endif
