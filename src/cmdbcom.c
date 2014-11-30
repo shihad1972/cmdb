@@ -1000,11 +1000,11 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	}
 	if (cm->name) {
 		cmdb_server_s *server;
-#ifdef HAVE_LIBPCRE
 		if (!(server = malloc(sizeof(cmdb_server_s))))
 			report_error(MALLOC_FAIL, "server in fill_vmhost_values");
 		cmdb_init_server_t(server);
 		cmdb->server = server;
+#ifdef HAVE_LIBPCRE
 		if (validate_user_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost name");
 #endif /* HAVE_LIBPCRE */

@@ -177,8 +177,10 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
 		retval = NONE;
 	}
+#ifdef HAVE_LIBPCRE
 	if (retval == 0)
 		retval = validate_comm_line(comp);
+#endif /* HAVE_LIBPCRE */
 	return retval;
 }
 
