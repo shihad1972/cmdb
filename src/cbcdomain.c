@@ -264,8 +264,10 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 		} else {
 			return USER_INPUT_INVALID;
 		}
+#ifdef HAVE_LIBPCRE
 		if (validate_user_input(ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network");
+#endif /* HAVE_LIBPCRE */
 		if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		else
