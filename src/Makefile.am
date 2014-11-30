@@ -63,6 +63,7 @@ endif
 
 if HAVE_PCRE
 AM_CFLAGS += $(PCRE_CFLAGS)
+AM_LIBS += $(PCRE_LIBS)
 endif
 
 if HAVE_SQLITE3
