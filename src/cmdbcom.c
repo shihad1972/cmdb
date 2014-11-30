@@ -999,8 +999,8 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		retval = retval | NO_TYPE;
 	}
 	if (cm->name) {
-#ifdef HAVE_LIBPCRE
 		cmdb_server_s *server;
+#ifdef HAVE_LIBPCRE
 		if (!(server = malloc(sizeof(cmdb_server_s))))
 			report_error(MALLOC_FAIL, "server in fill_vmhost_values");
 		cmdb_init_server_t(server);
