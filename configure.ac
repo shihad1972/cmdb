@@ -20,6 +20,8 @@ AC_CONFIG_MACRO_DIRS([m4])
 AX_LIB_MYSQL
 AX_PATH_LIB_PCRE
 AX_LIB_SQLITE3
+
+# Check for packages to enable
 AX_CHECK_DNSA
 
 # Checks for header files.
