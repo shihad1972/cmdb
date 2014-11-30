@@ -111,6 +111,7 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 	init_cbcdomain_comm_line(cdcl);
 }
 
+#ifdef HAVE_LIBPCRE
 void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
@@ -147,7 +148,7 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 		if (validate_user_input(cdl->binddn, CN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "binddn");
 }
-
+#endif /* HAVE_LIBPCRE */
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
@@ -203,7 +204,9 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			return DISPLAY_USAGE;
 		}
 	}
+#ifdef HAVE_LIBPCRE
 	validate_cbcdomain_comm_line(cdl);
+#endif /* HAVE_LIBPCRE */
 	if (argc == 1)
 		return DISPLAY_USAGE;
 	if (cdl->action == CVERSION)
