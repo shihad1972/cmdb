@@ -313,7 +313,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 	rev_zone_info_s *zone = dnsa->rev_zones;
 	if (!(in_addr = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "in_addr in print rev zone");
-	i = j = 0;
+	i = 0;
 	while (zone) {
 		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
 			printf("@\t%s\t%lu\n",zone->pri_dns, zone->serial);
