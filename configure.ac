@@ -14,7 +14,7 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Add m4 macros
-AC_CONFIG_MACRO_DIRS([m4]
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Checks for libraries.
 AX_LIB_MYSQL
