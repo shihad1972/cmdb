@@ -49,15 +49,13 @@
 void
 list_zones(dnsa_config_s *dc)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	size_t len;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
-	
-	retval = 0;
 	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -97,15 +95,13 @@ list_zones(dnsa_config_s *dc)
 void
 list_rev_zones(dnsa_config_s *dc)
 {
-	int retval;
+	int retval = 0;
 	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in list_zones");
-
-	retval = 0;
 	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -162,19 +158,17 @@ display_zone(char *domain, dnsa_config_s *dc)
 	}
 	zone = dnsa->zones;
 	while (zone) {
-		if ((strncmp(zone->name, domain, RBUFF_S)) == 0)
+		if ((strncmp(zone->name, domain, RBUFF_S)) == 0) {
+			if ((strncmp(zone->type, "master", RANGE_S)) == 0)
+				print_zone(dnsa, domain);
+			else
+				printf("This is a slave zone. No records to display\n");
 			break;
-		else
-			zone = zone->next;
+		}
+		zone = zone->next;
 	}
-	if (zone) {
-		if ((strncmp(zone->type, "master", RANGE_S)) == 0)
-			print_zone(dnsa, domain);
-		else
-			printf("This is a slave zone. No records to display\n");
-	} else {
+	if (!(zone))
 		fprintf(stderr, "Zone %s not found\n", domain);
-	}
 	dnsa_clean_list(dnsa);
 }
 
@@ -182,7 +176,7 @@ void
 print_zone(dnsa_s *dnsa, char *domain)
 {
 	char *dot, name[HOST_S];
-	unsigned int i = 0, j = 0;
+	unsigned int i = 0;
 	time_t create, modify;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *records = dnsa->records;
@@ -191,7 +185,6 @@ print_zone(dnsa_s *dnsa, char *domain)
 		if (strncmp(zone->name, domain, RBUFF_S) == 0) {
 			printf("%s.\t%s\thostmaster.%s\t%lu\n",
 zone->name, zone->pri_dns, zone->name, zone->serial);
-			j++;
 			break;
 		} else {
 			zone = zone->next;
@@ -199,7 +192,7 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 	}
 	create = (time_t)zone->ctime;
 	modify = (time_t)zone->mtime;
-	if (j == 0) {
+	if (!(zone)) {
 		printf("No zone %s found\n", domain);
 		return;
 	}
@@ -207,10 +200,8 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 		if (zone->id == records->zone) {
 			print_record(records, zone->name);
 			i++;
-			records = records->next;
-		} else {
-			records = records->next;
 		}
+		records = records->next;
 	}
 	while (glue) {
 		string_len_s *zonefile = '\0';
@@ -220,17 +211,13 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 			*dot = '\0';
 			if (strncmp(glue->sec_dns, "none", COMM_S))
 				printf("\
-%s\tIN\tNS\t%s\n\tIN\tNS\t%s\n",
-name, glue->pri_ns, glue->sec_ns);
+%s\tIN\tNS\t%s\n\tIN\tNS\t%s\n", name, glue->pri_ns, glue->sec_ns);
 			else
 				printf("\
-%s\tIN\tNS\t%s\n",
-name, glue->pri_ns);
+%s\tIN\tNS\t%s\n", name, glue->pri_ns);
 			check_a_record_for_ns(zonefile, glue, zone->name, dnsa);
-			glue = glue->next;
-		} else {
-			glue = glue->next;
 		}
+		glue = glue->next;
 	}
 	if (i == 1)
 		printf("\n%u record\n", i);
@@ -254,11 +241,13 @@ print_record(record_row_s *rec, char *zname)
 
 	if (!(rec) || !(zname))
 		return;
+// This will silently fail to print the record if we cannot get the port number
 	if ((strncmp(rec->type, "SRV", COMM_S)) == 0) {
 		char *srv = rec->service, *proto = rec->protocol;
 		if ((retval = get_port_number(rec, zname, &port)) == 0)
 			printf("_%s._%s.%s.\tIN\tSRV\t%lu 0 %u %s\n",
 srv, proto, zname, rec->pri, port, rec->dest);
+// silent fail
 	} else if ((strncmp(rec->type, "MX", COMM_S)) == 0) {
 		printf("\t\t\tIN\tMX\t%lu %s\n", rec->pri, rec->dest);
 	} else if ((strncmp(rec->type, "NS", COMM_S)) == 0) {
@@ -293,25 +282,24 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 	}
 	rev = dnsa->rev_zones;
 	while (rev) {
-		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0)
+		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0) {
+			if ((strncmp(rev->type, "master", RANGE_S)) == 0) {
+				print_rev_zone(dnsa, domain);
+			} else {
+				create = (time_t)rev->ctime;
+				printf("This is a slave reverse zone. No records to display\n");
+				if (get_uname(rev->cuser))
+					printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
+				else
+					printf("Created by (unknown) on %s", ctime(&create));
+			}
 			break;
-		else
+		} else {
 			rev = rev->next;
-	}
-	if (rev) {
-		create = (time_t)rev->ctime;
-		if ((strncmp(rev->type, "master", RANGE_S)) == 0)
-			print_rev_zone(dnsa, domain);
-		else {
-			printf("This is a slave reverse zone. No records to display\n");
-			if (get_uname(rev->cuser))
-				printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
-			else
-				printf("Created by (unknown) on %s", ctime(&create));
 		}
-	} else {
-		fprintf(stderr, "Reverse zone %s not found\n", domain);
 	}
+	if (!(rev))
+		fprintf(stderr, "Reverse zone %s not found\n", domain);
 	dnsa_clean_list(dnsa);
 }
 
@@ -320,7 +308,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 {
 	char *in_addr;
 	time_t create, modify;
-	unsigned int i, j;
+	unsigned int i;
 	rev_record_row_s *records = dnsa->rev_records;
 	rev_zone_info_s *zone = dnsa->rev_zones;
 	if (!(in_addr = calloc(MAC_S, sizeof(char))))
@@ -329,13 +317,12 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 	while (zone) {
 		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
 			printf("@\t%s\t%lu\n",zone->pri_dns, zone->serial);
-			j++;
 			break;
 		} else {
 			zone = zone->next;
 		}
 	}
-	if (j == 0) {
+	if (!(zone)) {
 		printf("Zone %s not found\n", domain);
 		return;
 	}
