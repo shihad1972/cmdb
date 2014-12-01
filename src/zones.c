@@ -432,7 +432,7 @@ create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, str
 	char *buffer;
 	size_t len;
 	unsigned long int id;
-	if (zone)
+	if ((zone) && (record))
 		id = zone->id;
 	else
 		return;
