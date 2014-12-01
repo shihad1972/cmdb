@@ -427,17 +427,17 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 }
 
 void
-create_fwd_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile)
+create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, string_len_s *zonefile)
 {
 	char *buffer;
 	size_t len;
-	zone_info_s *zone = dnsa->zones;
-	record_row_s *record = dnsa->records;
-	
+	unsigned long int id;
+	if (zone)
+		id = zone->id;
+	else
+		return;
 	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
-	while (zone->id != id)
-		zone = zone->next;
 	snprintf(zonefile->string, BUILD_S, "\
 $TTL %lu\n\
 @\tIN\tSOA\t%s\t%s (\n\
@@ -750,7 +750,7 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 	zonefile->len = BUFF_S;
 	filename = buffer;
 	retval = 0;
-	create_fwd_zone_header(dnsa, dc->hostmaster, zone->id, zonefile);
+	create_fwd_zone_header(dnsa->records, dc->hostmaster, zone, zonefile);
 	add_records_to_fwd_zonefile(dnsa, zone->id, zonefile);
 	snprintf(filename, NAME_S, "%s%s",
 		 dc->dir, zone->name);
