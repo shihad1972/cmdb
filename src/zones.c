@@ -371,7 +371,7 @@ check_zone(char *domain, dnsa_config_s *dc)
 int
 commit_fwd_zones(dnsa_config_s *dc, char *name)
 {
-	char *buffer, *filename;
+	char *filename = '\0';
 	int retval;
 	dnsa_s *dnsa;
 	string_len_s *config;
@@ -379,67 +379,51 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in commit_fwd_zones");
+	if (!(filename = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "filename in commit_fwd_zones");
 	if (!(config = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "config in commit_fwd_zones");
 	
-	filename = buffer;
 	retval = NONE;
 	init_string_len(config);
 	init_dnsa_struct(dnsa);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
-		dnsa_clean_list(dnsa);
-		return MY_QUERY_FAIL;
-	}
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0)
+		goto cleanup;
 	zone = dnsa->zones;
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			if ((strlen(name) > 0) && (strncmp(name, zone->name, RBUFF_S) == 0)) {
+			if (((strlen(name) > 0) &&
+			     (strncmp(name, zone->name, RBUFF_S) == 0)) ||
+			     (strncmp(name, "none", COMM_S) == 0)) {
 				check_for_updated_fwd_zone(dc, zone);
-				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					if (retval == CHKZONE_FAIL) {
-						printf("Zone %s invalid\n", zone->name);
-						retval = NONE;
-					} else {
-						free(buffer);
-						dnsa_clean_list(dnsa);
-						return retval;
-					}
-				}
-			} else if (strncmp(name, "none", COMM_S) == 0) {
-				check_for_updated_fwd_zone(dc, zone);
-				if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-					if (retval == CHKZONE_FAIL) {
-						printf("Zone %s invalid\n", zone->name);
-						retval = NONE;
-					} else {
-						free(buffer);
-						dnsa_clean_list(dnsa);
-						return retval;
-					}
+				if ((retval = validate_fwd_zone(dc, zone, dnsa)) == CHKZONE_FAIL) {
+					printf("Zone %s invalid\n", zone->name);
+					retval = NONE;
+				} else if (retval != 0) {
+					goto cleanup;
 				}
 			}
 		}
 		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Cannot add %s to fwd config\n", zone->name);
-			free(buffer);
-			dnsa_clean_list(dnsa);
-			return retval;
+			goto cleanup;
 		}
 		zone = zone->next;
 	}
 	snprintf(filename, NAME_S, "%s%s", dc->bind, dc->dnsa);
 	if ((retval = write_file(filename, config->string)) != 0)
 		fprintf(stderr, "Unable to write config file %s\n", filename);
-	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
+	snprintf(filename, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	free(buffer);
 	free(config->string);
 	free(config);
-	dnsa_clean_list(dnsa);
-	return retval;
+	goto cleanup;
+
+	cleanup:
+		free(filename);
+		dnsa_clean_list(dnsa);
+		return retval;
 }
 
 void
