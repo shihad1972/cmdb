@@ -457,6 +457,8 @@ setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue);
 int
 get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa);
 void
+check_glue_zone_input(glue_zone_info_s *glue);
+void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone);
 char *
 get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);

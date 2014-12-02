@@ -445,7 +445,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 			if (validate_ext_user_input(comm->glue_ip, regex) < 0)
 				report_error(USER_INPUT_INVALID, "glue IP");
 		}
-	} else {
+	} else if (comm->action != DELETE_ZONE) {
 		if (validate_user_input(comm->glue_ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue IP");
 	}

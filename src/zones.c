@@ -2912,6 +2912,7 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	}
 	glue->cuser = glue->muser = (unsigned long int)getuid();
+	check_glue_zone_input(glue);
 	if ((retval = dnsa_run_insert(dc, dnsa, GLUES)) != 0) {
 		dnsa_clean_list(dnsa);
 		fprintf(stderr, "Cannot insert glue zone %s into database\n",
@@ -3045,7 +3046,6 @@ get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	char *parent;
 	int retval = NONE;
-	unsigned long int id = 0;
 	zone_info_s *zone = dnsa->zones;
 
 	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
@@ -3056,16 +3056,29 @@ get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa)
 	parent++;
 	while (zone) {
 		if ((strncmp(zone->name, parent, RBUFF_S) == 0) &&
-		    (strncmp(zone->type, "master", COMM_S) == 0))
-			id = zone->id;
+		    (strncmp(zone->type, "master", COMM_S) == 0)) {
+			dnsa->glue->zone_id = zone->id;
+			break;
+		}
 		zone = zone->next;
 	}
-	if (id != 0) {
-		dnsa->glue->zone_id = id;
-		retval = NONE;
-	} else
+	if (!(zone))
 		retval = NO_PARENT_ZONE;
 	return retval;
+}
+
+void
+check_glue_zone_input(glue_zone_info_s *glue)
+{
+	if (!(glue))
+		return;
+	char *gzone = glue->name;
+	const char *pri = glue->pri_ns;
+	const char *sec = glue->sec_ns;
+	if (strstr(pri, gzone))
+		add_trailing_dot(glue->pri_ns);
+	if (strstr(sec, gzone))
+		add_trailing_dot(glue->sec_ns);
 }
 
 void
