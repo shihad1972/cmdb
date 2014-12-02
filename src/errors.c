@@ -846,11 +846,13 @@ add_trailing_slash(char *member)
 int
 add_trailing_dot(char *member)
 {
+/* Maximum string size is 255 bytes */
 	size_t len;
 	int retval;
 	
 	retval = 0;
-	len = strlen(member);
+	if ((len = strlen(member)) > 254)
+		return -1;
 	if (member[len - 1] != '.') {
 		member[len] = '.';
 		member[len +1] = '\0';
