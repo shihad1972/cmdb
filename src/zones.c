@@ -355,16 +355,14 @@ int
 check_zone(char *domain, dnsa_config_s *dc)
 {
 	char *command, syscom[RBUFF_S];
-	int error, retval;
+	int retval;
 	
 	command = &syscom[0];
 	
 	snprintf(command, RBUFF_S, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
-	error = system(syscom);
-	if (error != 0)
+	retval = system(syscom);
+	if (retval != 0)
 		retval = CHKZONE_FAIL;
-	else
-		retval = NONE;
 	return retval;
 }
 
@@ -3097,13 +3095,12 @@ print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 			pri = get_zone_fqdn_name(list, glue, 0);
 			sec = get_zone_fqdn_name(list, glue, 1);
 			printf("%s\t%s\t%s,%s\t%s,%s\n",
-list->name, glue->name, pri, sec, glue->pri_dns, glue->sec_dns);
-			list = list->next;
+list->name, glue->name, glue->pri_dns, glue->sec_dns, pri, sec);
+
 			free(sec);
 			free(pri);
-		} else {
-			list = list->next;
 		}
+		list = list->next;
 	}
 }
 
