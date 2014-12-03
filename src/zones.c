@@ -2215,8 +2215,7 @@ insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev
 	while (zones) {
 		if (fwd->zone == zones->id)
 			break;
-		else
-			zones = zones->next;
+		zones = zones->next;
 	}
 	if (!zones) { /* fwd record belongs to non-existent zone */
 		free(new);
@@ -2297,8 +2296,7 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 		while (fwd) {
 			if (list->ip_addr == fwd->ip_addr)
 				break;
-			else
-				fwd = fwd->next;
+			fwd = fwd->next;
 		}
 		if (!fwd) {
 			insert_into_rev_del_list(list, rev);
