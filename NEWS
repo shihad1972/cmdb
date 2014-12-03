@@ -1,4 +1,16 @@
----- Monday 11th February 2012 ---
+---- Wedensday 03rd December 2014 -
+
+Updated dnsa so we can remove glue zones. Also added ability to add a .
+at the end of the NS name if it contains the FQDN - otherwise this will
+append the domain name to the end.
+
+---- Sunday 30th November 2014 ----
+
+Updated the autoconf configure.ac file - using the m4 directory to store
+macros to check for libraries installed. This will be of use when we
+start to add more libraries to be linked.
+
+---- Monday 11th February 2012 ----
 
 Release version 0.2.1 contains the new look cmdb. The database interface
 has been modularised so that either sqlite or mysql can be used, and
@@ -7,7 +19,7 @@ There have been some other code clean ups too.
 The 0.2.x branch will concentrate on the modularised structure for 
 cbc and dnsa.
 
----- Friday 25th January 2013 ----
+---- Friday 25th January 2013 -----
 
 To celebrate Burns night this is the first release of the cmdb programs
 using autoconf

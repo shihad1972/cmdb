@@ -77,6 +77,7 @@ domain
 
 cpc	create preseed config
 ckc	create kickstart config
+**** Basic version of cpc has been written ****
 
 09/08/2014
 Need to be able to update / modify in cmdb. I will need to the add the
