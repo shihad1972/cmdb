@@ -473,45 +473,40 @@ $TTL %lu\n\
 }
 
 void
-add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile)
+add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonef)
 {
 	char *buffer, *dot, name[HOST_S];
-	size_t len, size, blen = 0;
+	size_t blen = 0;
 	glue_zone_info_s *glue = dnsa->glue;
 	record_row_s *record = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
-	len = zonefile->len;
-	size = zonefile->size;
 	
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
 	while (record) {
 		if (record->zone != id)
-			record = record->next;
+			record = record->next; // Skip if not in zone
 		else if ((strncmp(record->type, "MX", COMM_S) == 0) ||
-                           (strncmp(record->type, "NS", COMM_S) == 0) ||
-                           (strncmp(record->type, "SRV", COMM_S) == 0))
-			record = record->next;
-		else {
+                         (strncmp(record->type, "NS", COMM_S) == 0) ||
+                         (strncmp(record->type, "SRV", COMM_S) == 0))
+			record = record->next; // Skip already added records
+		else { // OK - add this one
 			snprintf(buffer, BUFF_S, "\
 %s\tIN\t%s\t%s\n", record->host, record->type, record->dest);
 			blen = strlen(buffer);
-			if (blen + size >= len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + size, blen + 1, "%s", buffer);
+			if (blen + zonef->size >= zonef->len)
+				resize_string_buff(zonef);
+			snprintf(zonef->string + zonef->size, blen + 1, "%s", buffer);
 			record = record->next;
-			zonefile->size += blen;
-			size = zonefile->size;
-			len = zonefile->len;
+			zonef->size += blen;
 		}
 	}
-	while (zone) {
+	while (zone) { // Find zone
 		if (zone->id == id)
 			break;
-		else
-			zone = zone->next;
+		zone = zone->next;
 	}
-	if (!(glue)) {
+	if (!(glue)) { // No glue zones - nothing to do
 		free(buffer);
 		return;
 	}
@@ -521,7 +516,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 		} else {
 			snprintf(name, HOST_S, "%s", glue->name);
 			dot = strchr(name, '.');
-			*dot = '\0';
+			*dot = '\0'; // Get root of glue zone. Assumes only 1 level
 			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
 				snprintf(buffer, BUFF_S, "\
 \n%s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\
@@ -530,13 +525,11 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 				snprintf(buffer, BUFF_S, "\
 \n%s\tIN\tNS\t%s\n", name, glue->pri_ns);
 			blen = strlen(buffer);
-			if (blen + size >= len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + size, blen + 1, "%s", buffer);
-			zonefile->size += blen;
-			check_a_record_for_ns(zonefile, glue, zone->name, dnsa);
-			len = zonefile->len;
-			size = zonefile->size;
+			if (blen + zonef->size >= zonef->len)
+				resize_string_buff(zonef);
+			snprintf(zonef->string + zonef->size, blen + 1, "%s", buffer);
+			zonef->size += blen;
+			check_a_record_for_ns(zonef, glue, zone->name, dnsa);
 			glue = glue->next;
 		}
 	}
@@ -691,7 +684,7 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 		snprintf(host, RBUFF_S, "%s", rec->dest);
 	else
 		snprintf(host, RBUFF_S, "%s.%s.", rec->dest, zinfo->name);
-	zname = strndup(zinfo->name, RBUFF_S);
+	zname = zinfo->name;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
@@ -725,7 +718,6 @@ zinfo->ttl, rec->pri, port, host);
 	zone->size += len;
 	free(buffer);
 	free(host);
-	free(zname);
 }
 
 int
@@ -1014,7 +1006,7 @@ $TTL %lu\n\
 		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
 			 zone->sec_dns);
 		len = strlen(buffer);
-		if ((zonefile->size + len + 1) > zonefile->len)
+		if ((zonefile->size + len) >= zonefile->len)
 			resize_string_buff(zonefile);
 		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
 		zonefile->size += len;
