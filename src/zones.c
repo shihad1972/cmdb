@@ -370,7 +370,7 @@ int
 commit_fwd_zones(dnsa_config_s *dc, char *name)
 {
 	char *filename = '\0';
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	string_len_s *config;
 	zone_info_s *zone;
@@ -381,8 +381,6 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 		report_error(MALLOC_FAIL, "filename in commit_fwd_zones");
 	if (!(config = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "config in commit_fwd_zones");
-	
-	retval = NONE;
 	init_string_len(config);
 	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0)
@@ -488,15 +486,13 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 	if (!(buffer = calloc(BUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
 	while (record) {
-		if (record->zone != id) {
+		if (record->zone != id)
 			record = record->next;
-		} else if (strncmp(record->type, "MX", COMM_S) == 0) {
+		else if ((strncmp(record->type, "MX", COMM_S) == 0) ||
+                           (strncmp(record->type, "NS", COMM_S) == 0) ||
+                           (strncmp(record->type, "SRV", COMM_S) == 0))
 			record = record->next;
-		} else if (strncmp(record->type, "NS", COMM_S) == 0) {
-			record = record->next;
-		} else if (strncmp(record->type, "SRV", COMM_S) == 0) {
-			record = record->next;
-		} else {
+		else {
 			snprintf(buffer, BUFF_S, "\
 %s\tIN\t%s\t%s\n", record->host, record->type, record->dest);
 			blen = strlen(buffer);
