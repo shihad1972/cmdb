@@ -40,6 +40,8 @@ AC_FUNC_MALLOC
 AC_FUNC_MKTIME
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([gethostname memset mkdir strchr strdup strerror strndup strrchr strstr strtol strtoul])
+AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
+  [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 
 AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
