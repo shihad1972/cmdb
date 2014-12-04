@@ -92,6 +92,9 @@ With the checks.[c|h] should add a glib test as well so we do not have to
 use libpcre. Can have the option of one or the other. ./configure should
 bomb out if neither are present but give the user the option to pass
 paramemter --with-usr-input-checks=disabled
+*** Sort of added. If there is not libpcre or it has been disabled then
+    configure bombs out. Must actively pass --disable-user-checks
+    04/12/2014 ***
 
 17/04/2014
 The applications in build domain should be associated with a "system" group
@@ -153,7 +156,7 @@ We could always assume /24, but this will not always be the case.
 ** This has been done now. We check the interfaces and assign dhcpd.network
 entries based on them. Netmask is also being checked.
 
-***Version 0.2.18.3*** 18/07/2017
+***Version 0.2.18.3*** 18/07/2014
 We get a list of the local interfaces and use this for building the
 dhcpd.networks file also checking the build domains.
 Still need to check for multiple build domain overlaps on an interface
