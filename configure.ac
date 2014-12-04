@@ -23,6 +23,7 @@ AX_LIB_SQLITE3
 
 # Check for packages to enable
 AX_CHECK_DNSA
+AX_CHECK_CBC
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
