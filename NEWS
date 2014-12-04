@@ -1,3 +1,7 @@
+---- Thursday 04th December 2014 --
+
+Added the --enable-cbc check to configure
+
 ---- Wedensday 03rd December 2014 -
 
 Updated dnsa so we can remove glue zones. Also added ability to add a .
