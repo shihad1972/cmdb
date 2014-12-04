@@ -14,9 +14,10 @@ AC_DEFUN([AX_USER_CHECKS], [dnl
   AC_ARG_ENABLE([user-checks],
     [  --enable-user-checks           enable user input checks],,
         [enable_user_checks="yes"])
-  AS_IF([test ".enable_user_checks" = ".yes"],
-    [AS_IF([test ".with_pcre" = ".no"],
-      [echo \
+  AS_IF([test ".$enable_user_checks" = ".yes"],
+    [AC_MSG_RESULT([enabled])
+    AS_IF([test ".$with_pcre" = ".no"],
+      [AC_MSG_ERROR([ \
 "********************************************************************
 *** WARNING WARNING WARNING
 *** You do not have, or have chose not to use, libpcre.
@@ -26,7 +27,7 @@ AC_DEFUN([AX_USER_CHECKS], [dnl
 *** libpcre please re-run configure with the --disable-user-checks flag
 ***
 *** Again, you lower the security of these programs if you do this!
-*** YOU HAVE BEEN WARNED "])
-  ])
+*** YOU HAVE BEEN WARNED "])])
+  ], [AC_MSG_RESULT([disabled])])
 ])
 

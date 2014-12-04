@@ -18,10 +18,11 @@ AC_CONFIG_MACRO_DIRS([m4])
 
 # Checks for libraries.
 AX_LIB_MYSQL
-AX_PATH_LIB_PCRE
 AX_LIB_SQLITE3
+AX_PATH_LIB_PCRE
 
 # Check for packages to enable
+AX_USER_CHECKS
 AX_CHECK_DNSA
 AX_CHECK_CBC
 
