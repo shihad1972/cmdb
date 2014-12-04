@@ -5,7 +5,7 @@
 AC_DEFUN([AX_CHECK_DNSA],[dnl
   AC_MSG_CHECKING([to enable dnsa])
   AC_ARG_ENABLE([dnsa],
-    [  --enable-dnsa             compile the dnsa module],,
+    [  --enable-dnsa            compile the dnsa module],,
          enable_dnsa="yes")
   if test ".$enable_dnsa" = ".no" ; then
     AC_MSG_RESULT([disabled])
