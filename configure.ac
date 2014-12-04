@@ -48,6 +48,7 @@ AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
 AM_CONDITIONAL([HAVE_DNSA], [test ".$enable_dnsa" = ".yes"])
+AM_CONDITIONAL([HAVE_CBC], [test ".$enable_cbc" = ".yes"])
 
 AC_CONFIG_FILES([Makefile
                  man/Makefile
