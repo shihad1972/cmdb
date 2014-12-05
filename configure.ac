@@ -27,7 +27,8 @@ AX_CHECK_DNSA
 AX_CHECK_CBC
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
+                  sys/socket.h unistd.h wordexp.h errno.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -41,7 +42,8 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 AC_FUNC_MKTIME
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gethostname memset mkdir strchr strdup strerror strndup strrchr strstr strtol strtoul])
+AC_CHECK_FUNCS([gethostname memset mkdir strchr strdup strerror strndup\
+                wordexp strrchr strstr strtol strtoul])
 AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 
