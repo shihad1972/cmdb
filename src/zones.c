@@ -96,7 +96,6 @@ void
 list_rev_zones(dnsa_config_s *dc)
 {
 	int retval = 0;
-	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 
@@ -111,26 +110,11 @@ list_rev_zones(dnsa_config_s *dc)
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
-		create = (time_t)rev->ctime;
 		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
 			snprintf(rev->master, RANGE_S, "N/A");
 		printf("%s\t/%lu\t%s\t%s\t",
 rev->net_range, rev->prefix, rev->valid, rev->type);
-		if (strlen(rev->master) > 7)
-			if (get_uname(rev->cuser))
-				printf("%s\t%s\t%s",
-rev->master, get_uname(rev->cuser), ctime(&create));
-			else
-				printf("%s\tunkown\t%s",
-rev->master, ctime(&create));
-		else
-			if (get_uname(rev->cuser))
-				printf("%s\t\t%s\t%s",
-rev->master, get_uname(rev->cuser), ctime(&create));
-			else
-				printf("%s\t\tunknown\t%s",
-rev->master, ctime(&create));
-		
+		printf("%s\n", rev->master);
 		if (rev->next)
 			rev = rev->next;
 		else
