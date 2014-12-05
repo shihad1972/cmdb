@@ -5,10 +5,10 @@ build system. It will also create a DHCP entry and PXE boot file so the host
 can boot from the network. With the addition of the DNSA module it will also
 create an A record for the host.
 
-Currently you have to manually restart the DHCPD service, as well as the DNS
-service. The DNS zonefile will have to be written out before the bind server
-is restarted, and you probably want to build the reverse zone in the database
-as well. 
+Currently you have to manually restart the DHCPD service. If you have added
+a forward IP address ( or defined a new build ) then you will probaly want
+to build the reverse zone so there is a PTR record for the new A record
+before you build, if you are using the DNSA module.
 
 Given all the variables in building a system, cbc uses some base concepts:
 
