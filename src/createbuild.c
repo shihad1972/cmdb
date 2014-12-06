@@ -74,14 +74,14 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 #ifndef CLEAN_CREATE_BUILD_CONFIG
 # define CLEAN_CREATE_BUILD_CONFIG(retval) { \
 	clean_cbc_struct(cbc);               \
-	free(details);                       \
+	free(details);           \
 	free(build);                         \
 	return retval;                       \
 }
 #endif
 	details->build = build;
 	query = BUILD_DOMAIN| BUILD_TYPE | BUILD_OS | CSERVER |
-	LOCALE | DPART | VARIENT | SSCHEME;
+	LOCALE | DPART | VARIENT | SSCHEME | DISK_DEV;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
@@ -123,12 +123,10 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
-/* FIXME: As well as searching for a disk device to use in the hardware table
- * this adds the disk it finds to the disk dev table. This is not good if there
- * already is one, but also if we fail to add the build and try to re-add it
- * we get another one added to the disk_dev table */
-	if ((retval = check_for_disk_device(cbt, details)) != 0) {
+	if ((retval = check_for_disk_device(cbt, details, cbc)) != 0) {
 		printf("Unable to find a disk device for the server\n");
+		if (details->diskd)
+			free(details->diskd);
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
 	query = BUILD_IP;
@@ -144,22 +142,26 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 			bip = bip->next;
 		}
 	} else if (retval != NO_RECORDS) {
+		free(details->diskd);
 		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
 	if (!(bip)) {
 		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
+			free(details->diskd);
 			CLEAN_CREATE_BUILD_CONFIG(NO_BUILD_IP);
 		}
 		if ((retval = cbc_run_insert(cbt, details, BUILD_IPS)) != 0) {
 			clean_build_ip(details->bip);
 			clean_pre_part(details->dpart);
 			printf("Unable to insert IP into database\n");
+			free(details->diskd);
 			CLEAN_CREATE_BUILD_CONFIG(retval);
 		}
 		clean_build_ip(details->bip);
 		clean_build_ip(cbc->bip);
 		cbc->bip = '\0';
 		if ((retval = cbc_run_query(cbt, cbc, BUILD_IP)) != 0) {
+			free(details->diskd);
 			CLEAN_CREATE_BUILD_CONFIG(retval);
 		}
 	}
@@ -190,11 +192,20 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	} else
 		return retval;
 #endif /* HAVE_DNSA */
+	if (details->diskd->disk_id == 0) {
+		if ((retval = cbc_run_insert(cbt, details, DISK_DEVS)) != 0) {
+			printf("Unable to insert disk %s into database\n",
+			 details->diskd->device);
+			free(details->diskd);
+			CLEAN_CREATE_BUILD_CONFIG(retval);
+		}
+	}
 	if ((retval = cbc_run_insert(cbt, details, BUILDS)) != 0)
 		printf("Unable to add build to database\n");
 	else
 		printf("Build added to database\n");
 	clean_pre_part(details->dpart);
+	free(details->diskd);
 	CLEAN_CREATE_BUILD_CONFIG(retval);
 #ifdef CLEAN_CREATE_BUILD_CONFIG
 # undef CLEAN_CREATE_BUILD_CONFIG
@@ -447,13 +458,22 @@ cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *
 }
 
 int
-check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
+check_for_disk_device(cbc_config_s *cbc, cbc_s *details, cbc_s *cbs)
 {
 	int retval = NONE, type = HARD_DISK_DEV;
 	unsigned int max;
 	dbdata_s *data;
 	cbc_disk_dev_s *disk;
 
+	disk = cbs->diskd;
+// Check to see if there is already a disk_dev in the database
+	while (disk) {
+		if (details->server->server_id == disk->server_id) {
+			details->diskd = disk;
+			return 0;
+		}
+		disk = disk->next;
+	}
 	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
 		report_error(MALLOC_FAIL, "disk in check_for_disk_device");
 	init_disk_dev(disk);
@@ -461,28 +481,17 @@ check_for_disk_device(cbc_config_s *cbc, cbc_s *details)
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = disk->server_id = details->server->server_id;
-/* Should run a search here to see if the disk_dev is already in the table */
 	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {
 		clean_dbdata_struct(data);
 		printf("You need to add a hard disk to build %s\n",
 		       details->server->name);
 		return NO_BASIC_DISK;
 	} else if (retval > 1 )
-		printf("Using fist disk /dev/%s\n", data->fields.text);
+		printf("Using first disk /dev/%s\n", data->fields.text);
 	snprintf(disk->device, HOST_S, "/dev/%s", data->fields.text);
 	clean_dbdata_struct(data);
 	disk->lvm = details->sscheme->lvm;
-// Maybe it's a bad idea to add the disk dev into DB here while
-// we are not searching for it first
-	if ((retval = cbc_run_insert(cbc, details, DISK_DEVS)) != 0) {
-		printf("Unable to insert disk %s into database\n",
-		       disk->device);
-		free(disk);
-		return retval;
-	}
-	details->diskd = '\0';
-	free(disk);
-	return retval;
+	return 0;
 }
 
 int
