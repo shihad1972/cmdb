@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.18.9.3], [iain-at-thargoid-dot-co-dot-uk])
+AC_INIT([cmdb], [0.2.18.9.3], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -50,8 +50,8 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
 AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
-AM_CONDITIONAL([HAVE_DNSA], [test ".$enable_dnsa" = ".yes"])
-AM_CONDITIONAL([HAVE_CBC], [test ".$enable_cbc" = ".yes"])
+AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
+AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 
 AC_CONFIG_FILES([Makefile
                  man/Makefile
