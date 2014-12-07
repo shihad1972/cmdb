@@ -22,7 +22,7 @@
  *  Contains functions to display / add / modify / delete build details in the
  *  database for the main cbc program.
  * 
- *  (C) Iain M. Conochie 2012 - 2013
+ *  (C) Iain M. Conochie 2012 - 2014
  * 
  */
 #include "../config.h"
@@ -58,130 +58,279 @@
 int
 create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
-	int retval = NONE, query = NONE;
-	cbc_s *cbc, *details;
-	cbc_build_s *build, *list;
-	cbc_build_ip_s *bip = '\0';
-	
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in create_build_config");
-	if (!(details = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "details in create_build_config");
+	int retval = 0;
+	cbc_s *cbc;
+	cbc_build_s *build;
+
 	if (!(build = malloc(sizeof(cbc_build_s))))
 		report_error(MALLOC_FAIL, "build in create_build_config");
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in create_build_config");
 	init_cbc_struct(cbc);
-	init_cbc_struct(details);
 	init_build_struct(build);
-#ifndef CLEAN_CREATE_BUILD_CONFIG
-# define CLEAN_CREATE_BUILD_CONFIG(retval) { \
-	clean_cbc_struct(cbc);               \
-	free(details);           \
-	free(build);                         \
-	return retval;                       \
+	if ((retval = get_server_id(cbt, cml, &(build->server_id))) != 0)
+		goto cleanup;
+	if ((retval = check_for_existing_build(cbt, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_varient(cbt, cml, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_os(cbt, cml, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_locale(cbt, cml, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_partition_scheme(cbt, cml, build)) != 0)
+		goto cleanup;
+// Now the searches will add stuff to the DB. We need to make sure we search first!
+	if ((retval = cbc_add_disk(cbt, cml, build)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_ip_info(cbt, cml, build)) != 0)
+		goto cleanup;
+	build->cuser = build->muser = (unsigned long int)getuid();
+	cbc->build = build;
+	if ((retval = cbc_run_insert(cbt, cbc, BUILDS)) != 0)
+		fprintf(stderr, "Cannot insert build into db\n");
+	else
+		printf("Build inserted into db\n");
+// Still need to set build domain updated
+	goto cleanup;
+
+	cleanup:
+		cbc->build = '\0';
+		clean_cbc_struct(cbc);
+		free(build);
+		return retval;
 }
-#endif
-	details->build = build;
-	query = BUILD_DOMAIN| BUILD_TYPE | BUILD_OS | CSERVER |
-	LOCALE | DPART | VARIENT | SSCHEME | DISK_DEV;
-	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
+
+int
+check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build)
+{
+	int retval = 0, query = BUILD_ID_ON_SERVER_ID;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(build) || !(cbc))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = build->server_id;
+	retval = cbc_run_search(cbc, data, query);
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = MAC_ON_SERVER_ID_DEV;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = build->server_id;
+	if (strncmp(cml->netcard, "NULL", COMM_S) == 0) {
+		fprintf(stderr, "No network card given. Using eth0\n");
+		snprintf(cml->netcard, HOST_S, "eth0");
 	}
-	if ((retval = cbc_get_server(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(SERVER_NOT_FOUND);
+	snprintf(data->next->args.text, COMM_S, "%s", cml->netcard);
+	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
+		retval = NO_NETWORK_HARDWARE;
+		goto cleanup;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple instances of %s?? Using first\n",
+		 data->next->args.text);
+		retval = 0;
+	} else
+		retval = 0;
+	snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
+	snprintf(build->net_int, HOST_S, "%s", cml->netcard);
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = VARIENT_ID_ON_VARIENT;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, HOST_S, "%s", cml->varient);
+	retval = cbc_run_search(cbt, data, query);
+	if (retval == 0) {
+		query = VARIENT_ID_ON_VALIAS;
+		retval = cbc_run_search(cbt, data, query);
 	}
-	query = BUILD;
-	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
-		list = cbc->build;
-		while (list) {
-			if (list->server_id == details->server->server_id) {
-				printf("Server %s already has a build in the database\n",
-				 details->server->name);
-				CLEAN_CREATE_BUILD_CONFIG(BUILD_IN_DATABASE);
-			}
-			list = list->next;
-		}
-	} else if (retval != NO_RECORDS) {
-		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
+	if (retval == 0) {
+		retval = VARIENT_NOT_FOUND;
+		goto cleanup;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple varients found for %s. Using 1st one\n",
+		 cml->varient);
 	}
-	if ((retval = cbc_get_os(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(OS_NOT_FOUND);
+	build->varient_id = data->fields.number;
+	retval = 0;
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = OS_ID_ON_NAME;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, MAC_S, "%s", cml->os);
+	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
+	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
+	retval = cbc_run_search(cbt, data, query);
+	if (retval == 0) {
+		query = OS_ID_ON_ALIAS;
+		retval = cbc_run_search(cbt, data, query);
 	}
-	if ((retval = cbc_get_build_domain(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(BUILD_DOMAIN_NOT_FOUND);
+	if (retval == 0) {
+		query = OS_ID_ON_NAME_VER_ALIAS;
+		retval = cbc_run_search(cbt, data, query);
 	}
-	if ((retval = cbc_get_seed_scheme(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(SCHEME_NOT_FOUND);
+	if (retval == 0) {
+		query = OS_ID_ON_ALIAS_VER_ALIAS;
+		retval = cbc_run_search(cbt, data, query);
 	}
-	if ((retval = cbc_get_varient(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(VARIENT_NOT_FOUND);
+	if (retval > 1) {
+		retval = 0;
+		fprintf(stderr, "Multiple OS's found. Using first one\n");
+	} else if (retval == 0) {
+		retval = OS_NOT_FOUND;
+		goto cleanup;
+	} else {
+		retval = 0;
 	}
-	if ((retval = cbc_get_locale(cml, cbc, details)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(LOCALE_NOT_FOUND);
+	build->os_id = data->fields.number;
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = LOCALE_ID_ON_OS_ID;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	if (cml->locale != 0) {
+// May be nice to show _what_ locale is being used here.
+		build->locale_id = cml->locale;
+		return retval;
 	}
-	if ((retval = cbc_get_build_config(cbc, details, build)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(retval);
-	}
-	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0) {
-		CLEAN_CREATE_BUILD_CONFIG(retval);
-	}
-	if ((retval = check_for_disk_device(cbt, details, cbc)) != 0) {
-		printf("Unable to find a disk device for the server\n");
-		if (details->diskd)
-			free(details->diskd);
-		CLEAN_CREATE_BUILD_CONFIG(retval);
-	}
-// Check if we already have a build_ip in the database
-	query = BUILD_IP;
-	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
-		bip = cbc->bip;
-		while (bip) {
-			if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
-			    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
-				printf("Build ip for %s.%s in database\n", 
-				 bip->host, bip->domain);
-				break;
-			}
-			bip = bip->next;
-		}
-	} else if (retval != NO_RECORDS) {
-		free(details->diskd);
-		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
-	}
-	if (!(bip)) {
-// No build IP in database. Now we have to choose one
-		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
-			free(details->diskd);
-			CLEAN_CREATE_BUILD_CONFIG(NO_BUILD_IP);
-		}
-		if ((retval = cbc_run_insert(cbt, details, BUILD_IPS)) != 0) {
-			clean_build_ip(details->bip);
-			clean_pre_part(details->dpart);
-			printf("Unable to insert IP into database\n");
-			free(details->diskd);
-			CLEAN_CREATE_BUILD_CONFIG(retval);
-		}
-		clean_build_ip(details->bip);
-		clean_build_ip(cbc->bip);
-		cbc->bip = '\0';
-		if ((retval = cbc_run_query(cbt, cbc, BUILD_IP)) != 0) {
-			free(details->diskd);
-			CLEAN_CREATE_BUILD_CONFIG(retval);
-		}
-	}
-	bip = cbc->bip;
-// And why not check for build_ip in DNS and use that one? 
-	while (bip) {
-		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
-		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
-			build->ip_id = bip->ip_id;
-			details->bip = bip;
-		}
-		bip = bip->next;
-	}
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = build->os_id;
+	retval = cbc_run_search(cbt, data, query);
+	if (retval == 0) {
+		retval = LOCALE_NOT_FOUND;
+		goto cleanup;
+	} else if (retval > 1 )
+		fprintf(stderr, "Multiple locale's found for os. Using 1st one\n");
+	retval = 0;
+	build->locale_id = data->fields.number;
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, CONF_S, "%s", cml->partition);
+	retval = cbc_run_search(cbt, data, query);
+	if (retval == 0) {
+		retval = SCHEME_NOT_FOUND;
+		goto cleanup;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple schemes found for %s. Using 1st one\n",
+		 cml->partition);
+	retval = 0;
+	build->def_scheme_id = data->fields.number;
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0;
+	cbc_s *cbc;
+	cbc_build_ip_s *bip;
+	unsigned long int ip[4]; // ip[0] = id, [1] = start, [2] = end, [3] = ip
+	unsigned long int dnsip;
+
+	memset(&ip, 0, sizeof(ip));
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	if ((retval = cbc_search_for_ip(cbt, cml, build)) > 0)
+		return 0;
+	if ((retval = cbc_get_build_dom_info(cbt, cml, ip)) != 0)
+		return retval;
+	check_ip_in_dns(&(ip[3]), cml->name, cml->build_domain);
+	dnsip = ip[3];
+	if ((retval = cbc_check_in_use_ip(cbt, cml, ip)) != 0)
+		return retval;
+	if ((dnsip != 0) && (dnsip != ip[3]))
+		fprintf(stderr, "We could not use the DNS ip address for this host\n");
+	if (!(bip = malloc(sizeof(cbc_build_ip_s))))
+		report_error(MALLOC_FAIL, "bip in cbc_get_ip_info");
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in cbc_get_ip_info");
+	init_cbc_struct(cbc);
+	init_build_ip(bip);
+	cbc->bip = bip;
+	snprintf(bip->host, MAC_S, "%s", cml->name);
+	snprintf(bip->domain, RBUFF_S, "%s", cml->build_domain);
+	bip->ip = ip[3];
+	bip->bd_id = ip[0];
+	bip->server_id = build->server_id;
+	bip->cuser = bip->muser = (unsigned long int)getuid();
+	if ((retval = cbc_run_insert(cbt, cbc, BUILD_IPS)) != 0)
+		goto cleanup;
 #ifdef HAVE_DNSA
-	int dret = NONE;
-	dret = check_for_build_ip_in_dns(cbt, cml, details);
-	if (dret == 1)
+	int dret = 0;
+	if ((dret = check_for_build_ip_in_dns(cbt, cml, cbc)) == 0) {
+		printf("Hostname added into dns\n");
+		write_zone_and_reload_nameserver(cml);
+	} else if (dret == 1)
 		printf("Unable to add IP to DNS\n");
 	else if (dret == 2)
 		printf("Hostname already in domain\n");
@@ -189,348 +338,196 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("Hostname modified in DNS\n");
 	else if (dret == 4)
 		printf("Domain not in database??\n");
-	else if (dret == 0) {
-		printf("Hostname added to DNS\n");
-		write_zone_and_reload_nameserver(cml);
-	} else
-		return retval;
-#endif /* HAVE_DNSA */
-	if (details->diskd->disk_id == 0) {
-		if ((retval = cbc_run_insert(cbt, details, DISK_DEVS)) != 0) {
-			printf("Unable to insert disk %s into database\n",
-			 details->diskd->device);
-			free(details->diskd);
-			CLEAN_CREATE_BUILD_CONFIG(retval);
-		}
-	}
-	if ((retval = cbc_run_insert(cbt, details, BUILDS)) != 0)
-		printf("Unable to add build to database\n");
 	else
-		printf("Build added to database\n");
-	clean_pre_part(details->dpart);
-	free(details->diskd);
-	CLEAN_CREATE_BUILD_CONFIG(retval);
-#ifdef CLEAN_CREATE_BUILD_CONFIG
-# undef CLEAN_CREATE_BUILD_CONFIG
-#endif
-}
+		goto cleanup;
+#endif // HAVE_DNSA
+	cbc_search_for_ip(cbt, cml, build);
+	goto cleanup;
 
-int
-cbc_get_os(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
-{
-	int retval = NONE;
-	cbc_build_os_s *list = cbc->bos;
-	while (list) {
-		if (((strncmp(list->os, cml->os, MAC_S) == 0) ||
-		     (strncmp(list->alias, cml->os, MAC_S) == 0)) &&
-		     (strncmp(list->version, cml->os_version, MAC_S) == 0) &&
-		     (strncmp(list->arch, cml->arch, RANGE_S) == 0))
-			details->bos = list;
-		list = list->next;
-	}
-	if (!details->bos)
-		retval = OS_NOT_FOUND;
-	return retval;
-}
-
-int
-cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
-{
-	int retval = NONE;
-	cbc_build_domain_s *list = cbc->bdom;
-	while (list) {
-		if (strncmp(list->domain, cml->build_domain, RBUFF_S) == 0)
-			details->bdom = list;
-		list = list->next;
-	}
-	if (!details->bdom)
-		retval = BUILD_DOMAIN_NOT_FOUND;
-	return retval;
-}
-
-int
-cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
-{
-	int retval = NONE, type = IP_ON_BD_ID;
-	unsigned int max;
-	unsigned long int ip_addr = details->bdom->start_ip;
-	unsigned long int dns_ip = 0;
-	cbc_build_ip_s *ip = '\0';
-	dbdata_s *data = '\0', *list = '\0';
-
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	if (!(ip = malloc(sizeof(cbc_build_ip_s))))
-		report_error(MALLOC_FAIL, "ip in cbc_get_build_ip");
-	init_build_ip(ip);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = details->bdom->bd_id;
-	check_ip_in_dns(&dns_ip, details);
-	retval = cbc_run_search(cbt, data, IP_ON_BD_ID);
-#ifdef HAVE_DNSA
-// If we found the IP in DNS do not bother to build this list
-	if (dns_ip == 0)
-		get_dns_ip_list(cbt, details, data);
-#endif
-	if (dns_ip != 0) {
-		if ((dns_ip >= details->bdom->start_ip) && (dns_ip <= details->bdom->end_ip))
-			ip_addr = dns_ip;
-		else
-			fprintf(stderr, "DNS returned IP outside build domain %s range\n",
-			 details->bdom->domain);
-	}
-	if ((retval = cbc_find_build_ip(&ip_addr, details, data, list)) != 0) {
-		clean_dbdata_struct(data);
+	cleanup:
+		clean_cbc_struct(cbc);
 		return retval;
-	}
-	cbc_fill_build_ip(ip, cml, details->bdom, ip_addr, details->server);
-	details->bip = ip;
-	ip->cuser = ip->muser = (unsigned long int)getuid();
+}
+
+int
+cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = IP_ID_ON_SERVER_ID;
+	dbdata_s *data;
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = build->server_id;
+	retval = cbc_run_search(cbt, data, query);
+	if (retval > 1)
+		fprintf(stderr, "Multiple build IP's found for server %s. Using 1st one\n",
+		 cml->name);
+	build->ip_id = data->fields.number;
 	clean_dbdata_struct(data);
 	return retval;
 }
 
-void
-check_ip_in_dns(unsigned long int *ip_addr, cbc_s *details)
+int
+cbc_check_in_use_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *ip)
 {
-	int status = 0;
-	struct addrinfo hints, *si, *p;
-	char host[256];
+	int retval = 0, query = IP_ON_BD_ID;
+	unsigned long int dnsip;
+	dbdata_s *data;
 
-	snprintf(host, RBUFF_S, "%s.%s", details->server->name, details->bdom->domain);
-	memset(&hints, 0, sizeof hints);// make sure the struct is empty
-        hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
-        hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-	if ((status = getaddrinfo(host, NULL, &hints, &si)) == 0) {
-		for (p = si; p != NULL; p = p->ai_next) {
-// Only IPv4 for now..
-			if (p->ai_family == AF_INET) {
-				struct in_addr *addr;
-				struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-				addr = &(ipv4->sin_addr);
-				*ip_addr = (unsigned long int)ntohl(addr->s_addr);
-				printf("Found ip %s in DNS\n", inet_ntoa(*addr));
-			}
-		}
-	}
+	if (!(cbt) || !(cml) || !(ip))
+		return NO_DATA;
+	dnsip = *(ip + 3);
+	if (*(ip + 3) == 0) // dns query did not find an IP so start at start
+		*(ip + 3) = *(ip + 1);
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = *ip;
+	if ((retval = cbc_run_search(cbt, data, query)) == 0)
+// nothing built in this domain so we can use IP we have
+		goto cleanup;
+#ifdef HAVE_DNSA
+	if (dnsip == 0)
+		get_dns_ip_list(cbt, ip, data);
+#endif // HAVE_DNSA
+	retval = cbc_find_build_ip(ip, data);
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
 }
 
 int
-cbc_find_build_ip(uli_t *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
+cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data)
 {
-	int retval, i;
-	while (*ip_addr <= details->bdom->end_ip) {
+	int retval = 0, i;
+	dbdata_s *list;
+
+	if (!(ipinfo) || !(data))
+		return NO_DATA;
+	while (*(ipinfo + 3) <= *(ipinfo + 2)) {
 		i = FALSE;
 		list = data;
 		while (list) {
-			if (list->fields.number == *ip_addr)
+			if (list->fields.number == *(ipinfo + 3))
 				i = TRUE;
 			list = list->next;
 		}
 		if (i == FALSE)
 			break;
-		++*ip_addr;
+		++*(ipinfo + 3);
 	}
-	if (*ip_addr > details->bdom->end_ip)
+	if (*(ipinfo + 3) > *(ipinfo + 2))
 		retval = NO_BUILD_IP;
 	else
-		retval = NONE;
+		retval = 0;
 	return retval;
 }
 
 int
-cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
+cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 {
-	int retval = NONE;
-	cbc_varient_s *list = cbc->varient;
-	while (list) {
-		if ((strncmp(list->varient, cml->varient, CONF_S) == 0) ||
-		    (strncmp(list->valias, cml->varient, MAC_S) == 0))
-			details->varient = list;
-		list = list->next;
-	}
-	if (!details->varient)
-		retval = VARIENT_NOT_FOUND;
-	return retval;
-}
-
-int
-cbc_get_seed_scheme(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
-{
-	int retval = NONE;
-	cbc_seed_scheme_s *list = cbc->sscheme;
-	while (list) {
-		if (strncmp(list->name, cml->partition, CONF_S) == 0)
-			details->sscheme = list;
-		list = list->next;
-	}
-	if (!details->sscheme)
-		retval = SCHEME_NOT_FOUND;
-	return retval;
-}
-
-int
-cbc_get_locale(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
-{
-	int retval = NONE;
-	cbc_locale_s *list = cbc->locale;
-	if (cml->locale != 0) {
-		while (list) {
-			if (list->locale_id == cml->locale)
-				details->locale = list;
-			list = list->next;
-		}
-	} else {
-		while (list) {
-			if (list->os_id == details->bos->os_id)
-				details->locale = list;
-			list = list->next;
-		}
-	}
-	if (!details->locale)
-		retval = LOCALE_NOT_FOUND;
-	return retval;
-}
-
-int
-cbc_get_build_config(cbc_s *cbc, cbc_s *details, cbc_build_s *build)
-{
-	int retval = NONE;
-
-	if ((retval = cbc_get_build_partitons(cbc, details)) != 0)
-		return retval;
-	build->varient_id = details->varient->varient_id;
-	build->server_id = details->server->server_id;
-	build->os_id = details->bos->os_id;
-	build->locale_id = details->locale->locale_id;
-	build->def_scheme_id = details->sscheme->def_scheme_id;
-	build->cuser = build->muser = (unsigned long int)getuid();
-
-	return retval;
-}
-
-int
-cbc_get_build_partitons(cbc_s *cbc, cbc_s *details)
-{
-	int retval = NONE;
-	unsigned long int scheme_id = details->sscheme->def_scheme_id;
-	cbc_pre_part_s *part, *new, *old, *next, *list = cbc->dpart;
-
-	part = new = old = next = '\0';
-	while (list) {
-		if (list->link_id.def_scheme_id == scheme_id) {
-			if (!(new = malloc(sizeof(cbc_pre_part_s))))
-				report_error(MALLOC_FAIL, "new in get build part");
-			memcpy(new, list, sizeof(cbc_pre_part_s));
-			new->next = '\0';
-			if (!part) {
-				part = new;
-			} else if (!part->next) {
-				part->next = new;
-			} else {
-				next = part->next;
-				old = part;
-				while (next) {
-					old = next;
-					next = next->next;
-				}
-				old->next = new;
-			}
-		}
-		list = list->next;
-	}
-	if (!part)
-		retval = PARTITIONS_NOT_FOUND;
-	details->dpart = part;
-	return retval;
-}
-
-int
-cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = NONE, type = NETWORK_CARD;
+	int retval = 0, query = BUILD_DOM_IP_RANGE;
 	unsigned int max;
-	dbdata_s *data, *list;
+	unsigned long int *bdom;
+	dbdata_s *data;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	if (!(cbt) || !(cml) || !(bd))
+		return NO_DATA;
+	bdom = bd;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+// This can trim the build domain. Need to increase build_ip hostname and domainname in DB.
+	snprintf(data->args.text, NAME_S, "%s", cml->build_domain);
+	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
+		retval = BUILD_DOMAIN_NOT_FOUND;
+		goto cleanup;
+	} else if (retval > 1)
+		fprintf(stderr, "Multip build domains found for %s. Using 1st one\n",
+		 cml->build_domain);
+	*bdom = data->fields.number;
+	bdom++;
+	*bdom = data->next->fields.number;
+	bdom++;
+	*bdom = data->next->next->fields.number;
+	retval = 0;
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
+cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+{
+	int retval = 0, query = DISK_DEV_ON_SERVER_ID_DEV;
+	unsigned int max;
+	dbdata_s *data, *lvm = 0;
+	cbc_s *cbc = '\0';
+	cbc_disk_dev_s *disk = '\0';
+
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	if ((retval = cbc_search_for_disk(cbt, cml, build)) == 0)
+		return retval;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = build->server_id;
-	if ((retval = cbc_run_search(cbt, data, NETWORK_CARD)) == 0) {
-		clean_dbdata_struct(data);
-		printf("No network hardware found for server %s\n",
-		  cml->name);
-		return NO_NETWORK_HARDWARE;
+	snprintf(data->next->args.text, HOST_S, "%s", cml->harddisk);
+	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
+		retval = NO_HARD_DISK_DEV;
+		goto cleanup;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple disks %s for server\n", cml->harddisk);
+	init_multi_dbdata_struct(&lvm, 1);
+	lvm->args.number = build->def_scheme_id;
+	query = LVM_ON_DEF_SCHEME_ID;
+	if ((retval = cbc_run_search(cbt, lvm, query)) == 0) {
+		retval = PARTITIONS_NOT_FOUND;
+		goto cleanup;
 	}
-	if (strncmp(cml->netcard, "NULL", COMM_S) == 0) {
-		printf("No network card specified. Choosing automatically\n");
-		snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
-		snprintf(build->net_int, RANGE_S, "%s", data->next->fields.text);
-		clean_dbdata_struct(data);
-		return NONE;
-	}
-	list = data;
-	while (list) {
-		if (strncmp(cml->netcard, list->next->fields.text, HOST_S) == 0) {
-			snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
-			snprintf(build->net_int, RANGE_S, "%s", data->next->fields.text);
-			break;
-		}
-		if (list->next)
-			list = list->next->next;
-	}
-	if (list)
-		retval = NONE;
+	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
+		report_error(MALLOC_FAIL, "disk in cbc_add_disk");
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in cbc_add_disk");
+	init_cbc_struct(cbc);
+	init_disk_dev(disk);
+	cbc->diskd = disk;
+	snprintf(disk->device, HOST_S, "%s", cml->harddisk);
+	disk->lvm = lvm->fields.small;
+	disk->server_id = build->server_id;
+	if ((retval = cbc_run_insert(cbt, cbc, DISK_DEVS)) != 0)
+		fprintf(stderr, "Cannot insert disk device %s\n", cml->harddisk);
 	else
-		retval = NO_NETWORK_HARDWARE;
-	clean_dbdata_struct(data);
-	return retval;
-}
+		printf("Inserted disk device into db\n");
+	goto cleanup;
 
-void
-cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server)
-{
-	ip->ip = ip_addr;
-	/* This will trim cml->name */
-	snprintf(ip->host, MAC_S, "%s", cml->name);
-	snprintf(ip->domain, RBUFF_S, "%s", bdom->domain);
-	ip->bd_id = bdom->bd_id;
-	ip->server_id = server->server_id;
+	cleanup:
+		clean_cbc_struct(cbc);
+		clean_dbdata_struct(data);
+		clean_dbdata_struct(lvm);
+		return retval;
 }
 
 int
-check_for_disk_device(cbc_config_s *cbc, cbc_s *details, cbc_s *cbs)
+cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
-	int retval = NONE, type = HARD_DISK_DEV;
+	int retval = 0, query = BASIC_PART;
 	unsigned int max;
 	dbdata_s *data;
-	cbc_disk_dev_s *disk;
 
-	disk = cbs->diskd;
-// Check to see if there is already a disk_dev in the database
-	while (disk) {
-		if (details->server->server_id == disk->server_id) {
-			details->diskd = disk;
-			return 0;
-		}
-		disk = disk->next;
-	}
-	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
-		report_error(MALLOC_FAIL, "disk in check_for_disk_device");
-	init_disk_dev(disk);
-	details->diskd = disk;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	if (!(cbt) || !(cml) || !(build))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
-	data->args.number = disk->server_id = details->server->server_id;
-	if ((retval = cbc_run_search(cbc, data, HARD_DISK_DEV)) == 0) {
-		clean_dbdata_struct(data);
-		printf("You need to add a hard disk to build %s\n",
-		       details->server->name);
-		return NO_BASIC_DISK;
-	} else if (retval > 1 )
-		printf("Using first disk /dev/%s\n", data->fields.text);
-	snprintf(disk->device, HOST_S, "/dev/%s", data->fields.text);
+	data->args.number = build->server_id;
+	if ((retval = cbc_run_search(cbt, data, query)) == 0)
+		retval = 1;
+	else
+		retval = 0;
 	clean_dbdata_struct(data);
-	disk->lvm = details->sscheme->lvm;
-	return 0;
+	return retval;
 }
 
 int

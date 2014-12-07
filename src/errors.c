@@ -626,6 +626,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot get log config.");
 	else if (error == NO_BD_CONFIG)
 		snprintf(errstr, MAC_S, "Cannot get build domain config.");
+	else if (error == NO_HARD_DISK_DEV)
+		snprintf(errstr, MAC_S, "Cannot find disk for server");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

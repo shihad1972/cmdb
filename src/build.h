@@ -36,55 +36,59 @@ int
 cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
-cbc_get_os(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
-cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
-cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details);
-
-void
-check_ip_in_dns(unsigned long int *ip_addr, cbc_s *details);
-
-int
-cbc_find_build_ip(unsigned long int *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list);
-
-int
-cbc_get_varient(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
-cbc_get_seed_scheme(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
-cbc_get_locale(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
-cbc_get_build_config(cbc_s *cbc, cbc_s *details, cbc_build_s *build);
-
-int
-cbc_get_build_partitons(cbc_s *cbc, cbc_s *details);
+create_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
+
+// New functions for new create_build_config
+
+int
+check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build);
 
 int
 cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-check_for_disk_device(cbc_config_s *cbc, cbc_s *details, cbc_s *cbs);
+cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
-void
-cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server);
+int
+cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_check_in_use_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *ip);
+
+int
+cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data);
+
+int
+cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd);
+
+int
+cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+int
+cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+
+// End of new functions
 
 void
 list_build_servers(cbc_config_s *cbt);
 
 int
 write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
-
-int
-create_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
 
 int
 write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);

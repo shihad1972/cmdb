@@ -43,4 +43,7 @@ search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 int
 check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack);
 
+void
+check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
+
 #endif /* CBC_COMMON_H */

@@ -58,6 +58,7 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char action_type[MAC_S];
 	char arch[MAC_S];
 	char netcard[HOST_S];
+	char harddisk[HOST_S];
 	short int action;
 	short int server;
 	short int removeip;

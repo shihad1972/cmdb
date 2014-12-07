@@ -50,9 +50,9 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	int retval, opt, trim;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:gi:k:lmn:o:p:qrs:t:u:vwx:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:de:gi:k:j:lmn:o:p:qrs:t:u:vwx:")) != -1) {
 		if (opt == 'n') {
-			if ((trim = snprintf(cb->name, MAC_S, "%s", optarg)) > 0)
+			if ((trim = snprintf(cb->name, MAC_S, "%s", optarg)) >= MAC_S)
 				fprintf(stderr, "Hostname %s trimmed. 31 chars max!\n", optarg);
 			cb->server = NAME;
 		} else if (opt == 'i') {
@@ -83,6 +83,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->locale = strtoul(optarg, NULL, 10);
 		} else if (opt == 'k') {
 			snprintf(cb->netcard, HOST_S, "%s", optarg);
+		} else if (opt == 'j') {
+			snprintf(cb->harddisk, HOST_S, "%s", optarg);
 		} else if (opt == 'o') {
 			snprintf(cb->os, MAC_S, "%s", optarg);
 		} else if (opt == 'p') {

@@ -86,7 +86,7 @@ copy_cbc_into_dnsa(dnsa_config_s *dc, cbc_config_s *cbc)
 }
 
 int
-get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data)
+get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data)
 {
 	int retval = NONE;
 	dnsa_s *dnsa;
@@ -103,14 +103,14 @@ get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data)
 		free(dc);
 		return retval;
 	}
-	prep_dnsa_ip_list(data, dnsa, details->bdom);
+	prep_dnsa_ip_list(data, dnsa, ip);
 	dnsa_clean_list(dnsa);
 	free(dc);
 	return retval;
 }
 
 void
-prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build)
+prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, uli_t *ip)
 {
 	int i;
 	dbdata_s *pos = data, *list;
@@ -123,8 +123,8 @@ prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build)
 	}
 	while (rec) {
 		add_int_ip_to_fwd_records(rec);
-		if ((rec->ip_addr >= build->start_ip) && 
-		    (rec->ip_addr <= build->end_ip)) {
+		if ((rec->ip_addr >= *(ip + 1)) && 
+		    (rec->ip_addr <= *(ip + 2))) {
 			list = data;
 			i = FALSE;
 			while (list) {
@@ -177,7 +177,7 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 		return retval;
 	}
 	data->args.number = zone->id;
-	fill_rec_with_build_info(rec, zone, cbc);
+	fill_rec_with_build_info(rec, zone, cml, cbc);
 	retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE);
 	if (retval == 0) /* No hosts in zone so just add */ {
 		retval = add_build_host_to_dns(dc, dnsa);
@@ -234,7 +234,7 @@ do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data)
 }
 
 void
-fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc)
+fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *cml, cbc_s *cbc)
 {
 	char *dest = rec->dest;
 	uint32_t ip_addr;
@@ -242,7 +242,7 @@ fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc)
 	rec->pri = 0;
 	snprintf(rec->type, COMM_S, "A");
 	rec->zone = zone->id;
-	snprintf(rec->host, HOST_S, "%s", cbc->server->name);
+	snprintf(rec->host, HOST_S, "%s", cml->name);
 	ip_addr = htonl((uint32_t)cbc->bip->ip);
 	inet_ntop(AF_INET, &ip_addr, dest, RANGE_S);
 	rec->cuser = rec->muser = (unsigned long int)getuid();
@@ -253,14 +253,18 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	int retval = NONE;
 	char *host = dnsa->records->host, *zone = dnsa->zones->name;
-	dbdata_s data;
+	dbdata_s data, next;
 
+	memset(&data, 0, sizeof(data));
+	memset(&next, 0, sizeof(data));
 	data.args.number = dnsa->zones->id;
 	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0) {
 		fprintf(stderr, "Cannot insert host %s into zone %s\n",
 		  host, zone);
 	} else {
 		printf("Host %s added to zone %s\n", host, zone);
+		next.args.number = (unsigned long int)getuid();
+		data.next = &(next);
 		if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
 			fprintf(stderr, "Unable to mark zone as updated!\n");
 		else
@@ -285,16 +289,12 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
 	init_dnsa_struct(dnsa);
 	if ((retval = parse_dnsa_config_file(dc, config)) != 0) {
-		dnsa_clean_list(dnsa);
-		free(dc);
 		fprintf(stderr, "Unable to parse config file??\n");
-		return;
+		goto cleanup;
 	}
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
-		dnsa_clean_list(dnsa);
-		free(dc);
 		fprintf(stderr, "Query for zones and records failed!\n");
-		return;
+		goto cleanup;
 	}
 	zone = dnsa->zones;
 	while (zone) {
@@ -311,6 +311,12 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 		fprintf(stderr, "%s failed with %d\n", buff, retval);
 /* Here we need to be able to work out what the reverse zone is, build it in
  * the database, and commit it on the name server */
+	goto cleanup;
+
+	cleanup:
+		dnsa_clean_list(dnsa);
+		free(dc);
+		return;
 }
 
 #endif /* HAVE_DNSA */

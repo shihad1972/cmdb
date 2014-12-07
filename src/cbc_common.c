@@ -30,6 +30,11 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -138,5 +143,32 @@ check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int v
 	retval = cbc_run_search(cbc, data, PACK_ID_ON_DETAILS);
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+void
+check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
+{
+	int status = 0;
+	struct addrinfo hints, *si = '\0', *p;
+	char host[256];
+
+	snprintf(host, RBUFF_S, "%s.%s", name, domain);
+	memset(&hints, 0, sizeof hints);// make sure the struct is empty
+        hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+        hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+	if ((status = getaddrinfo(host, NULL, &hints, &si)) == 0) {
+		for (p = si; p != NULL; p = p->ai_next) {
+// Only IPv4 for now..
+			if (p->ai_family == AF_INET) {
+				struct in_addr *addr;
+				struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+				addr = &(ipv4->sin_addr);
+				*ip_addr = (unsigned long int)ntohl(addr->s_addr);
+				printf("Found ip %s in DNS\n", inet_ntoa(*addr));
+			}
+		}
+	}
+	if (si)
+		freeaddrinfo(si);
 }
 

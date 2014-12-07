@@ -44,10 +44,10 @@ void
 copy_cbc_into_dnsa(dnsa_config_s *dc, cbc_config_s *cbc);
 
 int
-get_dns_ip_list(cbc_config_s *cbt, cbc_s *details, dbdata_s *data);
+get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data);
 
 void
-prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, cbc_build_domain_s *build);
+prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, uli_t *ip);
 
 int
 check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
@@ -56,7 +56,7 @@ void
 setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, dnsa_config_s *dc, cbc_config_s *cbt, record_row_s *rec);
 
 void
-fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_s *cbc);
+fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *cml, cbc_s *cbc);
 
 int
 do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data);
