@@ -47,12 +47,13 @@
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	int retval, opt;
+	int retval, opt, trim;
 
 	retval = NONE;
 	while ((opt = getopt(argc, argv, "ab:de:gi:k:lmn:o:p:qrs:t:u:vwx:")) != -1) {
 		if (opt == 'n') {
-			snprintf(cb->name, CONF_S, "%s", optarg);
+			if ((trim = snprintf(cb->name, MAC_S, "%s", optarg)) > 0)
+				fprintf(stderr, "Hostname %s trimmed. 31 chars max!\n", optarg);
 			cb->server = NAME;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
