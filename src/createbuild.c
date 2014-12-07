@@ -38,6 +38,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#include <netdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_common.h"
@@ -129,6 +130,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 			free(details->diskd);
 		CLEAN_CREATE_BUILD_CONFIG(retval);
 	}
+// Check if we already have a build_ip in the database
 	query = BUILD_IP;
 	if ((retval = cbc_run_query(cbt, cbc, query)) == 0) {
 		bip = cbc->bip;
@@ -146,6 +148,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		CLEAN_CREATE_BUILD_CONFIG(MY_QUERY_FAIL);
 	}
 	if (!(bip)) {
+// No build IP in database. Now we have to choose one
 		if ((retval = cbc_get_build_ip(cbt, cml, details)) != 0) {
 			free(details->diskd);
 			CLEAN_CREATE_BUILD_CONFIG(NO_BUILD_IP);
@@ -166,7 +169,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		}
 	}
 	bip = cbc->bip;
-/* And why not check for build_ip in DNS and use that one? */
+// And why not check for build_ip in DNS and use that one? 
 	while (bip) {
 		if ((strncmp(bip->host, cml->name, MAC_S) == 0) &&
 		    (strncmp(bip->domain, cml->build_domain, RBUFF_S) == 0)) {
@@ -251,6 +254,7 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 	int retval = NONE, type = IP_ON_BD_ID;
 	unsigned int max;
 	unsigned long int ip_addr = details->bdom->start_ip;
+	unsigned long int dns_ip = 0;
 	cbc_build_ip_s *ip = '\0';
 	dbdata_s *data = '\0', *list = '\0';
 
@@ -260,10 +264,20 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 	init_build_ip(ip);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = details->bdom->bd_id;
+	check_ip_in_dns(&dns_ip, details);
 	retval = cbc_run_search(cbt, data, IP_ON_BD_ID);
 #ifdef HAVE_DNSA
-	get_dns_ip_list(cbt, details, data);
+// If we found the IP in DNS do not bother to build this list
+	if (dns_ip == 0)
+		get_dns_ip_list(cbt, details, data);
 #endif
+	if (dns_ip != 0) {
+		if ((dns_ip >= details->bdom->start_ip) && (dns_ip <= details->bdom->end_ip))
+			ip_addr = dns_ip;
+		else
+			fprintf(stderr, "DNS returned IP outside build domain %s range\n",
+			 details->bdom->domain);
+	}
 	if ((retval = cbc_find_build_ip(&ip_addr, details, data, list)) != 0) {
 		clean_dbdata_struct(data);
 		return retval;
@@ -275,8 +289,33 @@ cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details)
 	return retval;
 }
 
+void
+check_ip_in_dns(unsigned long int *ip_addr, cbc_s *details)
+{
+	int status = 0;
+	struct addrinfo hints, *si, *p;
+	char host[256];
+
+	snprintf(host, RBUFF_S, "%s.%s", details->server->name, details->bdom->domain);
+	memset(&hints, 0, sizeof hints);// make sure the struct is empty
+        hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+        hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+	if ((status = getaddrinfo(host, NULL, &hints, &si)) == 0) {
+		for (p = si; p != NULL; p = p->ai_next) {
+// Only IPv4 for now..
+			if (p->ai_family == AF_INET) {
+				struct in_addr *addr;
+				struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+				addr = &(ipv4->sin_addr);
+				*ip_addr = (unsigned long int)ntohl(addr->s_addr);
+				printf("Found ip %s in DNS\n", inet_ntoa(*addr));
+			}
+		}
+	}
+}
+
 int
-cbc_find_build_ip(unsigned long int *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
+cbc_find_build_ip(uli_t *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list)
 {
 	int retval, i;
 	while (*ip_addr <= details->bdom->end_ip) {

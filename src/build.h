@@ -44,6 +44,9 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 int
 cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details);
 
+void
+check_ip_in_dns(unsigned long int *ip_addr, cbc_s *details);
+
 int
 cbc_find_build_ip(unsigned long int *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list);
 
