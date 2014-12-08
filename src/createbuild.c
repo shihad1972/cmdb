@@ -317,7 +317,7 @@ cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	init_cbc_struct(cbc);
 	init_build_ip(bip);
 	cbc->bip = bip;
-	snprintf(bip->host, MAC_S, "%s", cml->name);
+	snprintf(bip->host, NAME_S, "%s", cml->name);
 	snprintf(bip->domain, RBUFF_S, "%s", cml->build_domain);
 	bip->ip = ip[3];
 	bip->bd_id = ip[0];
@@ -437,8 +437,7 @@ cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 	bdom = bd;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
-// This can trim the build domain. Need to increase build_ip hostname and domainname in DB.
-	snprintf(data->args.text, NAME_S, "%s", cml->build_domain);
+	snprintf(data->args.text, RBUFF_S, "%s", cml->build_domain);
 	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
 		retval = BUILD_DOMAIN_NOT_FOUND;
 		goto cleanup;
