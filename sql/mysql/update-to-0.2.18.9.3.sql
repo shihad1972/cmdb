@@ -1,0 +1,11 @@
+ALTER TABLE build_type MODIFY COLUMN url varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN domain varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN ntp_server varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN ldap_server varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN xymon_server varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN log_server varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN smtp_server varchar(255);
+ALTER TABLE build_domain MODIFY COLUMN nfs_domain varchar(255);
+ALTER TABLE services MODIFY COLUMN url varchar(255);
+ALTER TABLE build_ip MODIFY COLUMN hostname varchar(63);
+ALTER TABLE build_ip MODIFY COLUMN domainname varchar(255);
