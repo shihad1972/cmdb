@@ -443,7 +443,7 @@ cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 		retval = BUILD_DOMAIN_NOT_FOUND;
 		goto cleanup;
 	} else if (retval > 1)
-		fprintf(stderr, "Multip build domains found for %s. Using 1st one\n",
+		fprintf(stderr, "Multiple build domains found for %s. Using 1st one\n",
 		 cml->build_domain);
 	*bdom = data->fields.number;
 	bdom++;
