@@ -94,6 +94,7 @@ ckc	create kickstart config
 Need to be able to update / modify in cmdb. I will need to the add the
 updates to the database.
 *** Server complete 16/10/2014 ***
+*** Customer and services seem complete too ***
 
 09/07/2014
 Adding new OS is not complete. There is no locale for the new OS so we
