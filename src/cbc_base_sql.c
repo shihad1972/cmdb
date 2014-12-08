@@ -1171,13 +1171,13 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 	if (strncmp("0", row[8], CH_S) == 0) {
 		dom->config_ntp = 0;
 	} else {
-		snprintf(dom->ntp_server, HOST_S, "%s", row[7]);
+		snprintf(dom->ntp_server, RBUFF_S, "%s", row[7]);
 		dom->config_ntp = 1;
 	}
 	if (strncmp("0", row[13], CH_S) == 0) {
 		dom->config_ldap = 0;
 	} else {
-		snprintf(dom->ldap_server, URL_S, "%s", row[9]);
+		snprintf(dom->ldap_server, RBUFF_S, "%s", row[9]);
 		snprintf(dom->ldap_dn, URL_S, "%s", row[11]);
 		snprintf(dom->ldap_bind, URL_S, "%s", row[12]);
 		dom->config_ldap = 1;
@@ -1189,22 +1189,22 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 	if (strncmp("0", row[15], CH_S) == 0) {
 		dom->config_log = 0;
 	} else {
-		snprintf(dom->log_server, CONF_S, "%s", row[14]);
+		snprintf(dom->log_server, RBUFF_S, "%s", row[14]);
 		dom->config_log = 1;
 	}
 	if (strncmp("0", row[17], CH_S) == 0) {
 		dom->config_email = 0;
 	} else {
-		snprintf(dom->smtp_server, CONF_S, "%s", row[16]);
+		snprintf(dom->smtp_server, RBUFF_S, "%s", row[16]);
 		dom->config_email = 1;
 	}
 	if (strncmp("0", row[19], CH_S) == 0) {
 		dom->config_xymon = 0;
 	} else {
-		snprintf(dom->xymon_server, CONF_S, "%s", row[18]);
+		snprintf(dom->xymon_server, RBUFF_S, "%s", row[18]);
 		dom->config_xymon = 1;
 	}
-	snprintf(dom->nfs_domain, CONF_S, "%s", row[20]);
+	snprintf(dom->nfs_domain, RBUFF_S, "%s", row[20]);
 	dom->cuser = strtoul(row[21], NULL, 10);
 	dom->muser = strtoul(row[22], NULL, 10);
 	convert_time(row[23], &(dom->ctime));
@@ -1229,7 +1229,7 @@ cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 	init_build_ip(ip);
 	ip->ip_id = strtoul(row[0], NULL, 10);
 	ip->ip = strtoul(row[1], NULL, 10);
-	snprintf(ip->host, MAC_S, "%s", row[2]);
+	snprintf(ip->host, NAME_S, "%s", row[2]);
 	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
 	ip->bd_id = strtoul(row[4], NULL, 10);
 	ip->server_id = strtoul(row[5], NULL, 10);
@@ -1288,8 +1288,8 @@ cbc_store_build_type_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(type->alias, MAC_S, "%s", row[1]);
 	snprintf(type->build_type, MAC_S, "%s", row[2]);
 	snprintf(type->arg, RANGE_S, "%s", row[3]);
-	snprintf(type->url, CONF_S, "%s", row[4]);
-	snprintf(type->mirror, CONF_S, "%s", row[5]);
+	snprintf(type->url, RBUFF_S, "%s", row[4]);
+	snprintf(type->mirror, RBUFF_S, "%s", row[5]);
 	snprintf(type->boot_line, URL_S, "%s", row[6]);
 	list = base->btype;
 	if (list) {

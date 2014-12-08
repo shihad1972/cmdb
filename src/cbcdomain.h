@@ -45,12 +45,12 @@ typedef struct cbcdomain_comm_line_s {
 	char domain[RBUFF_S];
 	char basedn[NAME_S];
 	char binddn[NAME_S];
-	char ldapserver[HOST_S];
-	char logserver[HOST_S];
-	char nfsdomain[CONF_S];
-	char ntpserver[HOST_S];
-	char smtpserver[HOST_S];
-	char xymonserver[HOST_S];
+	char ldapserver[RBUFF_S];
+	char logserver[RBUFF_S];
+	char nfsdomain[RBUFF_S];
+	char ntpserver[RBUFF_S];
+	char smtpserver[RBUFF_S];
+	char xymonserver[RBUFF_S];
 	char config[RBUFF_S];
 	short int action;
 	short int confldap;

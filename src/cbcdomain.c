@@ -173,15 +173,15 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'w') {
 			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'e') {
-			snprintf(cdl->smtpserver, HOST_S, "%s", optarg);
+			snprintf(cdl->smtpserver, RBUFF_S, "%s", optarg);
 			cdl->confsmtp = 1;
 		} else if (opt == 'f') {
-			snprintf(cdl->nfsdomain, CONF_S, "%s", optarg);
+			snprintf(cdl->nfsdomain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'g') {
-			snprintf(cdl->logserver, HOST_S, "%s", optarg);
+			snprintf(cdl->logserver, RBUFF_S, "%s", optarg);
 			cdl->conflog = 1;
 		} else if (opt == 'i') {
-			snprintf(cdl->binddn, NAME_S, "%s", optarg);
+			snprintf(cdl->binddn, RBUFF_S, "%s", optarg);
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
 		} else if (opt == 'n') {
@@ -189,13 +189,13 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'p') {
 			cdl->ldapssl = TRUE;
 		} else if (opt == 's') {
-			snprintf(cdl->ldapserver, HOST_S, "%s", optarg);
+			snprintf(cdl->ldapserver, RBUFF_S, "%s", optarg);
 			cdl->confldap = 1;
 		} else if (opt == 't') {
-			snprintf(cdl->ntpserver, HOST_S, "%s", optarg);
+			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
 			cdl->confntp = 1;
 		} else if (opt == 'x') {
-			snprintf(cdl->xymonserver, HOST_S, "%s", optarg);
+			snprintf(cdl->xymonserver, RBUFF_S, "%s", optarg);
 			cdl->confxymon = 1;
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;

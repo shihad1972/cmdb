@@ -910,7 +910,7 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 	service->cust_id = strtoul(row[2], NULL, 10);
 	service->service_type_id = strtoul(row[3], NULL, 10);
 	snprintf(service->detail, HOST_S, "%s", row[4]);
-	snprintf(service->url, HOST_S, "%s", row[5]);
+	snprintf(service->url, RBUFF_S, "%s", row[5]);
 	service->cuser = strtoul(row[6], NULL, 10);
 	service->muser = strtoul(row[7], NULL, 10);
 	convert_time(row[8], &(service->ctime));
@@ -1531,7 +1531,7 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	service->cust_id = (unsigned long int) sqlite3_column_int(state, 2);
 	service->service_type_id = (unsigned long int) sqlite3_column_int(state, 3);
 	snprintf(service->detail, HOST_S, "%s", sqlite3_column_text(state, 4));
-	snprintf(service->url, HOST_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(service->url, RBUFF_S, "%s", sqlite3_column_text(state, 5));
 	service->cuser = (uli_t) sqlite3_column_int(state, 6);
 	service->muser = (uli_t) sqlite3_column_int(state, 7);
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
