@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.66, for debian-linux-gnu (i486)
+-- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
--- Host: mysql.shihad.org    Database: cmdbdev
+-- Host: mysql    Database: cmdb
 -- ------------------------------------------------------
--- Server version	5.1.66-0+squeeze1-log
+-- Server version	5.5.40-0+wheezy1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -30,25 +30,59 @@ CREATE TABLE `build_domain` (
   `gateway` int(4) unsigned NOT NULL DEFAULT '0',
   `ns` int(4) unsigned NOT NULL DEFAULT '0',
   `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
-  `ntp_server` varchar(64) NOT NULL DEFAULT 'shihad.org',
-  `config_ntp` tinyint(4) NOT NULL DEFAULT '1',
-  `ldap_ssl` tinyint(4) NOT NULL DEFAULT '1',
-  `ldap_dn` varchar(96) NOT NULL DEFAULT 'dc=shihad,dc=org',
-  `ldap_bind` varchar(128) NOT NULL DEFAULT 'cn=thargoid,dc=shihad,dc=org',
-  `ldap_server` varchar(64) NOT NULL DEFAULT 'ldap01.shihad.org',
-  `config_ldap` tinyint(4) NOT NULL DEFAULT '1',
-  `log_server` varchar(64) NOT NULL DEFAULT 'logger01.shihad.org',
-  `config_log` tinyint(4) NOT NULL DEFAULT '1',
-  `smtp_server` varchar(64) NOT NULL DEFAULT 'weezer.epl.shihad.org',
-  `config_email` tinyint(4) NOT NULL DEFAULT '1',
-  `xymon_server` varchar(64) NOT NULL DEFAULT '192.168.1.50',
-  `config_xymon` tinyint(4) NOT NULL DEFAULT '1',
-  `email_server` varchar(64) NOT NULL DEFAULT 'mail01.scots.shihad.org',
-  `xymon_config` tinyint(4) NOT NULL DEFAULT '1',
-  `nfs_domain` varchar(79) NOT NULL DEFAULT 'shihad.org',
-  PRIMARY KEY (`bd_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+  `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
+  `config_ntp` smallint(4) NOT NULL DEFAULT '0',
+  `ldap_ssl` smallint(4) NOT NULL DEFAULT '0',
+  `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
+  `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
+  `config_ldap` smallint(4) NOT NULL DEFAULT '0',
+  `log_server` varchar(63) NOT NULL DEFAULT 'none',
+  `config_log` smallint(4) NOT NULL DEFAULT '0',
+  `smtp_server` varchar(63) NOT NULL DEFAULT 'none',
+  `config_email` smallint(4) NOT NULL DEFAULT '0',
+  `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
+  `config_xymon` smallint(4) NOT NULL DEFAULT '0',
+  `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
+  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none',
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`bd_id`),
+  KEY `config_ntp` (`config_ntp`,`config_ldap`,`config_log`),
+  KEY `config_email` (`config_email`,`config_xymon`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER build_domain_insert BEFORE INSERT ON build_domain FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER build_domain_update BEFORE UPDATE ON build_domain FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -59,4 +93,4 @@ CREATE TABLE `build_domain` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-01-28 22:46:38
+-- Dump completed on 2014-12-08 14:22:49

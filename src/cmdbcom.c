@@ -110,7 +110,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		} else if (opt == 'I') {
 			comp->sid = strtoul(optarg, NULL, 10);
 		} else if (opt == 'L') {
-			comp->url = strndup(optarg, HOST_S);
+			comp->url = strndup(optarg, RBUFF_S);
 		} else if (opt == 'B') {
 			comp->device = strndup(optarg, MAC_S);
 		} else if (opt == 'S') {

@@ -59,15 +59,15 @@ typedef struct cbc_build_s {
 
 typedef struct cbc_build_domain_s {
 	char domain[RBUFF_S];
-	char ntp_server[HOST_S];
+	char ntp_server[RBUFF_S];
 	char ldap_dn[URL_S];
 	char ldap_bind[URL_S];
 	char ldap_host[URL_S];
-	char ldap_server[URL_S];
-	char log_server[CONF_S];
-	char nfs_domain[CONF_S];
-	char smtp_server[CONF_S];
-	char xymon_server[CONF_S];
+	char ldap_server[RBUFF_S];
+	char log_server[RBUFF_S];
+	char nfs_domain[RBUFF_S];
+	char smtp_server[RBUFF_S];
+	char xymon_server[RBUFF_S];
 	short int config_ntp;
 	short int ldap_ssl;
 	short int config_ldap;
@@ -88,7 +88,7 @@ typedef struct cbc_build_domain_s {
 } cbc_build_domain_s;
 
 typedef struct cbc_build_ip_s {
-	char host[MAC_S];
+	char host[HOST_S];
 	char domain[RBUFF_S];
 	unsigned long int ip;
 	unsigned long int ip_id;
@@ -120,7 +120,7 @@ typedef struct cbc_build_type_s {
 	char alias[MAC_S];
 	char build_type[MAC_S];
 	char arg[RANGE_S];
-	char url[CONF_S];
+	char url[RBUFF_S];
 	char mirror[RBUFF_S];
 	char boot_line[URL_S];
 	unsigned long int bt_id;
