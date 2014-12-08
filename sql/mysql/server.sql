@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.66, for debian-linux-gnu (i486)
+-- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
--- Host: mysql.shihad.org    Database: cmdbdev
+-- Host: mysql    Database: cmdb
 -- ------------------------------------------------------
--- Server version	5.1.66-0+squeeze1-log
+-- Server version	5.5.40-0+wheezy1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -24,16 +24,52 @@ DROP TABLE IF EXISTS `server`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `server` (
   `server_id` int(7) NOT NULL AUTO_INCREMENT,
-  `vendor` varchar(63) DEFAULT NULL,
-  `make` varchar(63) DEFAULT NULL,
-  `model` varchar(31) DEFAULT NULL,
-  `uuid` varchar(63) DEFAULT NULL,
-  `cust_id` int(7) DEFAULT NULL,
-  `vm_server_id` int(7) DEFAULT NULL,
+  `vendor` varchar(63) NOT NULL DEFAULT 'none',
+  `make` varchar(63) NOT NULL DEFAULT 'none',
+  `model` varchar(31) NOT NULL DEFAULT 'none',
+  `uuid` varchar(63) NOT NULL DEFAULT 'none',
+  `cust_id` int(7) NOT NULL,
+  `vm_server_id` int(7) NOT NULL DEFAULT '0',
   `name` varchar(63) DEFAULT NULL,
-  PRIMARY KEY (`server_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=latin1;
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`server_id`),
+  KEY `cust_id` (`cust_id`,`vm_server_id`),
+  CONSTRAINT `server_ibfk_1` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER server_insert BEFORE INSERT ON server FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER server_update BEFORE UPDATE ON server FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -44,4 +80,4 @@ CREATE TABLE `server` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-01-28 22:46:39
+-- Dump completed on 2014-12-08 14:22:49

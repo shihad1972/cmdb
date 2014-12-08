@@ -1,3 +1,19 @@
+08/12/2014
+Database updates. Need to update code to match:
+
+build_type.url : increased to 255
+build_domain.domain : increased to 255
+            .ntp_server : increaed to 255
+            .ldap_server : increased to 255
+            .smtp_server : Increased to 255
+            .log_server : increased to 255
+            .xymon_server : increased to 255
+            .nfs_domain : incresed to 255
+service.url : increased to 255
+build_ip.hostname : increased to 63
+build_ip.domainname : increased to 255
+
+
 26/11/2014
 Would be nice if I could create a VM xml file to use for libvirt.
 Not too sure if I need to use the libvirt API or not.

@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.66, for debian-linux-gnu (i486)
+-- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
--- Host: mysql.shihad.org    Database: cmdbdev
+-- Host: mysql    Database: cmdb
 -- ------------------------------------------------------
--- Server version	5.1.66-0+squeeze1-log
+-- Server version	5.5.40-0+wheezy1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,12 +27,18 @@ CREATE TABLE `default_part` (
   `minimum` int(7) NOT NULL,
   `maximum` int(7) NOT NULL,
   `priority` int(7) NOT NULL DEFAULT '0',
-  `mount_point` varchar(64) NOT NULL,
-  `filesystem` varchar(16) NOT NULL,
+  `mount_point` varchar(63) NOT NULL,
+  `filesystem` varchar(15) NOT NULL,
   `def_scheme_id` int(7) NOT NULL,
-  `logical_volume` varchar(16) NOT NULL DEFAULT 'none',
-  PRIMARY KEY (`def_part_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
+  `logical_volume` varchar(31) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`def_part_id`),
+  KEY `def_scheme_id` (`def_scheme_id`),
+  CONSTRAINT `default_part_ibfk_1` FOREIGN KEY (`def_scheme_id`) REFERENCES `seed_schemes` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -44,4 +50,4 @@ CREATE TABLE `default_part` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-01-28 22:46:39
+-- Dump completed on 2014-12-08 14:22:49
