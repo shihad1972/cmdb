@@ -44,6 +44,9 @@ cbc_get_build_domain(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 int
 cbc_get_build_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *details);
 
+void
+check_ip_in_dns(unsigned long int *ip_addr, cbc_s *details);
+
 int
 cbc_find_build_ip(unsigned long int *ip_addr, cbc_s *details, dbdata_s *data, dbdata_s *list);
 
@@ -69,7 +72,7 @@ int
 cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-check_for_disk_device(cbc_config_s *cbc, cbc_s *details);
+check_for_disk_device(cbc_config_s *cbc, cbc_s *details, cbc_s *cbs);
 
 void
 cbc_fill_build_ip(cbc_build_ip_s *ip, cbc_comm_line_s *cml, cbc_build_domain_s *bdom, unsigned long int ip_addr, cbc_server_s *server);

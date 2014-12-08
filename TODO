@@ -133,6 +133,8 @@ Using cbc to add a build, if there is an error on the command line
 it still adds somthing into the build tables, as adding the correct
 one and trying to write the build file results in an error. Perhaps
 should look at doing this as a transaction (sort of).
+*** FIXED IN cac5fe5: This was the disk_dev getting added.
+    06/12/2014 - wow - only a year in there :( ****
 
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build
@@ -164,18 +166,6 @@ Need to add Root-CA field into the build_domain table of database.
 **Debian build want's configuration for libnss-ldap and libpam-ldap if
   we do not automatically configure them.
 Fixed
-
-01/09/2013
-Also if we want to add a dhcpd.network entry will probably need to check
-if one exists already, and also configuration of the IP on that network.
-We could always assume /24, but this will not always be the case.
-** This has been done now. We check the interfaces and assign dhcpd.network
-entries based on them. Netmask is also being checked.
-
-***Version 0.2.18.3*** 18/07/2014
-We get a list of the local interfaces and use this for building the
-dhcpd.networks file also checking the build domains.
-Still need to check for multiple build domain overlaps on an interface
 
 26/08/2013
 Add checks against all strtoul from DB as if given NULL it will segfault.
