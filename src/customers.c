@@ -253,7 +253,7 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 	init_multi_dbdata_struct(&data, max);
 	if (cm->url) {
 		if (cm->service) {
-			snprintf(data->args.text, HOST_S, "%s", cm->url);
+			snprintf(data->args.text, RBUFF_S, "%s", cm->url);
 			snprintf(data->next->args.text, RANGE_S, "%s", cm->service);
 			retval = cmdb_run_search(config, data, SERVICE_ID_ON_URL_SERVICE);
 		} else {
