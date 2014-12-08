@@ -433,8 +433,6 @@ display_cbcos_usage(void);
 void
 display_cbcvarient_usage(void);
 void
-display_cbcpack_usage(void);
-void
 display_cbcpart_usage(void);
 void
 display_dnsa_usage(void);

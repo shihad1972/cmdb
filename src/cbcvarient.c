@@ -352,8 +352,6 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		printf("Unable to add varient %s to database\n", cvl->varient);
 	} else {
 		printf("Varient %s added to database\n", cvl->varient);
-		printf("You can now use cbcpackage to define the packages");
-		printf(" for this build varient\n");
 	}
 	clean_cbc_struct(base);
 	return retval;

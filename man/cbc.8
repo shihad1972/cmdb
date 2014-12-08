@@ -79,6 +79,10 @@ This is the name of the partition scheme you wish to use for this installation.
 .IP "-k <network device>"
 This is the name of the network device used for the installation, such as 
 \fBeth0\fP
+.IP " -j <hard disk device>"
+This is the device name of the hard disk to install onto, such as \fBsda\fP or
+\fBvda\fP for a kvm virtual machine. If the disk is not specified the first
+hard disk found in the database will be used
 .SH FILES
 .I /etc/dnsa/dnsa.conf
 .RS

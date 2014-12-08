@@ -342,8 +342,6 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcos_usage();
 		else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
 			display_cbcvarient_usage();
-		else if ((strncmp(program, "cbcpack", CONF_S) == 0))
-			display_cbcpack_usage();
 		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
 			display_cbcpart_usage();
 		else if ((strncmp(program, "cpc", CONF_S) == 0))
@@ -401,12 +399,12 @@ display_cbc_usage(void)
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
 	printf("cbc ( -a | -m ) -o<OS> -s<version> -t<arch> -b<domain> -x");
-	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> ");
+	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> -j<hardisk device> ");
 	printf("(-n | -i | -u ) ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("for these options.\n\n");
-	printf("cbcos cbcdomain cbcvarient cbcpack cbcpart cbclocale\n");
+	printf("cbcos cbcdomain cbcvarient cbcpart cbclocale\n");
 	
 }
 
@@ -484,28 +482,6 @@ display_cbcpart_usage(void)
 	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
 	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -m ] [ -g \
 log vol ] [ -t <part def>]\n");
-}
-
-void
-display_cbcpack_usage(void)
-{
-	printf("cbcpack: Program to manipulate build packages\n\n");
-	printf("Version: %s\n", VERSION);
-	printf("Action Options:\n");
-	printf("-a: add package\n-r: remove package\n\n");
-	printf("Varient Options:\n");
-	printf("-x: <varient>\n-k: <valias>\n\n");
-	printf("OS options:\n");;
-	printf("-n: <os name>\n-s: <os alias>\n-o: <os version>\n");
-	printf("-e: <version alias>\n-t: <os architecture\n\n");
-	printf("Package Options:\n");
-	printf("-p: <package name>\n\n");
-	printf("Need at least one OS name or alias option and package name\n");
-	printf("OS version / version alias, architecture and varient are optional\n");
-	printf("Not including these will add the package to all of them\n\n");
-	printf("cbcpack [ -a | -r ]  [ -x | -k ]  [ -n | -s ]  [ -o | -e ]  \
-[ -t ] -p <package name>\n");
-	
 }
 
 void
