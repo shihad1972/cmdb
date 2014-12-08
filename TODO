@@ -30,6 +30,7 @@ values from environment.
 It seems that we add the disk device when we add a server build regardless
 of whether or not we are successful in adding the server build. This needs
 fixed
+*** Fixed 07/12/2014: Re-wrote the create_build_config function ***
 
 22/10/2014
 It seems we can add mount options to the partitioning scheme using the
