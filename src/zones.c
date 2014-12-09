@@ -2902,7 +2902,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE, c = NONE;
 	dnsa_s *dnsa;
-	dbdata_s data;
+	dbdata_s data, user;
 	glue_zone_info_s *glue;
 
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
@@ -2930,12 +2930,19 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	} else if (c > 1) {
 		fprintf(stderr, "Multiple glue zones for %s found\n", cm->domain);
 	}
-	if ((retval = dnsa_run_delete(dc, &data, GLUES)) == 0)
+	if ((retval = dnsa_run_delete(dc, &data, GLUES)) == 0) {
 		fprintf(stderr, "Unable to delete glue zone %s\n", cm->domain);
-	else if (retval == 1)
-		printf("Glue zone %s deleted\n", cm->domain);
-	else if (retval > 1)
-		fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
+	} else {
+		if (retval == 1)
+			printf("Glue zone %s deleted\n", cm->domain);
+		else if (retval > 1)
+			fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
+		data.args.number = glue->zone_id;
+		user.args.number = (unsigned long int)getuid();
+		user.next = &data;
+		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
+			fprintf(stderr, "Cannot set zone as update\n");
+	}
 	retval = 0;
 	dnsa_clean_list(dnsa);
 	return retval;
