@@ -100,21 +100,21 @@ CREATE TABLE `build_domain` (
   `netmask` UNSIGNED INTEGER NOT NULL DEFAULT '0',
   `gateway` UNSIGNED INTEGER NOT NULL DEFAULT '0',
   `ns` UNSIGNED INTEGER NOT NULL DEFAULT '0',
-  `domain` varchar(255) NOT NULL DEFAULT 'no.domain',
-  `ntp_server` varchar(255) NOT NULL DEFAULT 'none',
+  `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
+  `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
   `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
   `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
   `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
-  `ldap_server` varchar(255) NOT NULL DEFAULT 'none',
+  `ldap_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_ldap` smallint(4) NOT NULL DEFAULT 0,
-  `log_server` varchar(255) NOT NULL DEFAULT 'none',
+  `log_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_log` smallint(4) NOT NULL DEFAULT 0,
-  `smtp_server` varchar(255) NOT NULL DEFAULT 'none',
+  `smtp_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_email` smallint(4) NOT NULL DEFAULT 0,
-  `xymon_server` varchar(255) NOT NULL DEFAULT 'none',
+  `xymon_server` varchar(63) NOT NULL DEFAULT 'none',
   `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `nfs_domain` varchar(255) NOT NULL DEFAULT 'none'
+  `nfs_domain` varchar(79) NOT NULL DEFAULT 'none'
 , `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0);
 CREATE TRIGGER insert_build_domain AFTER INSERT ON build_domain
 BEGIN
@@ -161,7 +161,7 @@ CREATE TABLE `services` (
   `cust_id` int(7) NOT NULL,
   `service_type_id` int(7) NOT NULL,
   `detail` varchar(63) NOT NULL DEFAULT 'none',
-  `url` varchar(255) NOT NULL DEFAULT 'none', `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0,
+  `url` varchar(63) NOT NULL DEFAULT 'none', `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0,
 
   FOREIGN KEY (`server_id`)
     REFERENCES `server`(`server_id`)
@@ -187,8 +187,8 @@ END;
 CREATE TABLE `build_ip` (
   `ip_id` INTEGER PRIMARY KEY,
   `ip` UNSIGNED INTEGER NOT NULL,
-  `hostname` varchar(63) NOT NULL,
-  `domainname` varchar(255) NOT NULL,
+  `hostname` varchar(31) NOT NULL,
+  `domainname` varchar(127) NOT NULL,
   `bd_id` int(7) NOT NULL,
   `server_id` int(7) NOT NULL, `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0,
 
@@ -327,7 +327,7 @@ CREATE TABLE `build_type` (
   `alias` varchar(25) NOT NULL,
   `build_type` varchar(25) NOT NULL DEFAULT 'none',
   `arg` varchar(15) NOT NULL DEFAULT 'none',
-  `url` varchar(255) NOT NULL DEFAULT 'none',
+  `url` varchar(79) NOT NULL DEFAULT 'none',
   `mirror` varchar(255) NOT NULL DEFAULT 'none',
   `boot_line` varchar(127) NOT NULL DEFAULT 'none'
 );
