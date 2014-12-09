@@ -42,6 +42,9 @@ enum {			/* SELECT statements */
 	CSERVER = 2048,
 	VARIENT = 4096,
 	VMHOST = 8192,
+	SYSPACK = 16384,
+	SYSARG = 32768,
+	SYSCONF = 65536
 };
 
 enum {			/* SELECT and INSERT Indices */
@@ -58,7 +61,10 @@ enum {			/* SELECT and INSERT Indices */
 	SSCHEMES,
 	CSERVERS,
 	VARIENTS,
-	VMHOSTS
+	VMHOSTS,
+	SYSPACKS,
+	SYSARGS,
+	SYSCONFS
 };
 
 /* cmdb queries */

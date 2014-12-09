@@ -85,7 +85,12 @@ SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
  cuser, muser, ctime, mtime FROM server","\
 SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient","\
 SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
- FROM vm_server_hosts"
+ FROM vm_server_hosts","\
+SELECT sys_pack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
+SELECT sys_pack_arg_id, sys_pack_id, field, type, cuser, muser, ctime, mtime \
+ FROM system_package_args","\
+SELECT sys_pack_conf_id, sys_pack_arg_id, sys_pack_id, bd_id, arg, cuser, \
+ muser, ctime, mtime FROM system_package_conf"
 };
 
 const char *cbc_sql_insert[] = { "\
@@ -118,7 +123,12 @@ INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
 cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
- (?, ?, ?, ?, ?)"
+ (?, ?, ?, ?, ?)","\
+INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)","\
+INSERT INTO system_package_args (sys_pack_id, field, type, cuser, muser) \
+ VALUES (?, ?, ?, ?, ?)","\
+INSERT INTO system_package_conf (sys_pack_arg_id, sys_pack_id, bd_id, arg, \
+ cuser, muser) VALUES (?, ?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -307,11 +317,11 @@ SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8
+	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5
+	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6
 };
 
 const unsigned int cbc_update_args[] = {
@@ -361,7 +371,13 @@ const int cbc_inserts[][24] = {
 	{ DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0 }
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cbc_update_types[][6] = {
@@ -693,6 +709,15 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == VMHOST) {
 		*query = cbc_sql_select[VMHOSTS];
 		*fields = cbc_select_fields[VMHOSTS];
+	} else if (type == SYSPACK) {
+		*query = cbc_sql_select[SYSPACKS];
+		*fields = cbc_select_fields[SYSPACKS];
+	} else if (type == SYSARG) {
+		*query = cbc_sql_select[SYSARGS];
+		*fields = cbc_select_fields[SYSARGS];
+	} else if (type == SYSCONF) {
+		*query = cbc_sql_select[SYSCONFS];
+		*fields = cbc_select_fields[SYSCONFS];
 	} else {
 		retval = UNKNOWN_QUERY;
 	}
@@ -815,6 +840,15 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & VMHOST)
 		if ((retval = cbc_run_query_mysql(config, base, VMHOST)) != 0)
+			return retval;
+	if (type & SYSPACK)
+		if ((retval = cbc_run_query_mysql(config, base, SYSPACK)) != 0)
+			return retval;
+	if (type & SYSARG)
+		if ((retval = cbc_run_query_mysql(config, base, SYSARG)) != 0)
+			return retval;
+	if (type & SYSCONF)
+		if ((retval = cbc_run_query_mysql(config, base, SYSCONF)) != 0)
 			return retval;
 	return retval;
 }
@@ -1043,6 +1077,21 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_vmhost_mysql(row, base);
+	} else if (type == SYSPACK) {
+		required = cbc_select_fields[SYSPACKS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_syspack_mysql(row, base);
+	} else if (type == SYSARG) {
+		required = cbc_select_fields[SYSARGS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_sysarg_mysql(row, base);
+	} else if (type == SYSCONF) {
+		required = cbc_select_fields[SYSCONFS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_sysconf_mysql(row, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_mysql");
 	}
@@ -1097,6 +1146,12 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_build(buffer, base, i);
 	else if (type == DISK_DEVS)
 		cbc_setup_bind_mysql_build_disk(buffer, base, i);
+	else if (type == SYSPACKS)
+		cbc_setup_bind_mysql_syspack(buffer, base, i);
+	else if (type == SYSARGS)
+		cbc_setup_bind_mysql_sysarg(buffer, base, i);
+	else if (type == SYSCONFS)
+		cbc_setup_bind_mysql_sysconf(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
 }
@@ -1554,6 +1609,83 @@ cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
+cbc_store_syspack_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_sys_pack_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_syspack_mysql");
+	init_cbc_syspack(spack);
+	spack->sys_pack_id = strtoul(row[0], NULL, 10);
+	snprintf(spack->name, URL_S, "%s", row[1]);
+	spack->cuser = strtoul(row[2], NULL, 10);
+	spack->muser = strtoul(row[3], NULL, 10);
+	convert_time(row[4], &(spack->ctime));
+	convert_time(row[5], &(spack->mtime));
+	list = base->syspack;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->syspack = spack;
+	}
+}
+
+void
+cbc_store_sysarg_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_sys_pack_arg_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_arg_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_mysql");
+	init_cbc_syspack_arg(spack);
+	spack->sys_pack_arg_id = strtoul(row[0], NULL, 10);
+	spack->sys_pack_id = strtoul(row[1], NULL, 10);
+	snprintf(spack->field, URL_S, "%s", row[2]);
+	snprintf(spack->type, MAC_S, "%s", row[3]);
+	spack->cuser = strtoul(row[4], NULL, 10);
+	spack->muser = strtoul(row[5], NULL, 10);
+	convert_time(row[6], &(spack->ctime));
+	convert_time(row[7], &(spack->mtime));
+	list = base->sysarg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->sysarg = spack;
+	}
+}
+
+void
+cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_sys_pack_conf_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_conf_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_sysconf_mysql");
+	init_cbc_syspack_conf(spack);
+	spack->sys_pack_conf_id = strtoul(row[0], NULL, 10);
+	spack->sys_pack_arg_id = strtoul(row[1], NULL, 10);
+	spack->sys_pack_id = strtoul(row[2], NULL, 10);
+	spack->bd_id = strtoul(row[3], NULL, 10);
+	snprintf(spack->arg, RBUFF_S, "%s", row[4]);
+	spack->cuser = strtoul(row[5], NULL, 10);
+	spack->muser = strtoul(row[6], NULL, 10);
+	convert_time(row[7], &(spack->ctime));
+	convert_time(row[8], &(spack->mtime));
+	list = base->sysconf;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->sysconf = spack;
+	}
+}
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
@@ -1741,6 +1873,50 @@ cbc_setup_bind_mysql_build_disk(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 2)
 		*buffer = &(base->diskd->lvm);
 }
+
+void
+cbc_setup_bind_mysql_syspack(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->syspack->name);
+	else if (i == 1)
+		*buffer = &(base->syspack->cuser);
+	else if (i == 2)
+		*buffer = &(base->syspack->muser);
+}
+
+void
+cbc_setup_bind_mysql_sysarg(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->sysarg->sys_pack_id);
+	else if (i == 1)
+		*buffer = &(base->sysarg->field);
+	else if (i == 2)
+		*buffer = &(base->sysarg->type);
+	else if (i == 3)
+		*buffer = &(base->sysarg->cuser);
+	else if (i == 4)
+		*buffer = &(base->sysarg->muser);
+}
+
+void
+cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->sysconf->sys_pack_arg_id);
+	else if (i == 1)
+		*buffer = &(base->sysconf->sys_pack_id);
+	else if (i == 2)
+		*buffer = &(base->sysconf->bd_id);
+	else if (i == 3)
+		*buffer = &(base->sysconf->arg);
+	else if (i == 4)
+		*buffer = &(base->sysconf->cuser);
+	else if (i == 5)
+		*buffer = &(base->sysconf->muser);
+}
+
 
 #endif /* HAVE_MYSQL */
 

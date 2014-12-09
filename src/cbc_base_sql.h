@@ -265,6 +265,15 @@ void
 cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
+cbc_store_syspack_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_sysarg_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
 void
@@ -290,6 +299,15 @@ cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i);
 
 void
 cbc_setup_bind_mysql_build_disk(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_syspack(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_sysarg(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i);
 
 # endif /* HAVE_MYSQL */
 

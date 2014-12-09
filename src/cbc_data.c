@@ -616,3 +616,78 @@ clean_cbc_iface(cbc_iface_s *ifa)
 	}
 }
 
+void
+init_cbc_syspack(cbc_sys_pack_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_sys_pack_s));
+}
+
+void
+clean_cbc_syspack(cbc_sys_pack_s *spack)
+{
+	cbc_sys_pack_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+init_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_sys_pack_conf_s));
+}
+
+void
+clean_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
+{
+	cbc_sys_pack_conf_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+init_cbc_syspack_arg(cbc_sys_pack_arg_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_sys_pack_arg_s));
+}
+
+void
+clean_cbc_syspack_arg(cbc_sys_pack_arg_s *spack)
+{
+	cbc_sys_pack_arg_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
