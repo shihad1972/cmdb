@@ -45,6 +45,8 @@ init_cbc_struct (cbc_s *cbc)
 void
 clean_cbc_struct (cbc_s *cbc)
 {
+	if (!(cbc))
+		return;
 	if (cbc->bootl)
 		clean_boot_line(cbc->bootl);
 	if (cbc->build)

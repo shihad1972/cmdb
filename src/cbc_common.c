@@ -172,3 +172,36 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 		freeaddrinfo(si);
 }
 
+void
+set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
+{
+	int retval, query = UP_BDOM_MUSER;
+	dbdata_s *data;
+	
+
+	if (!(cbt) || (!(domain) && (id == 0)))
+		return;
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	if (id == 0) { // need to get build_domain id
+		snprintf(data->args.text, RBUFF_S, "%s", domain);
+		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
+			fprintf(stderr, "Cannot find build domain %s\n", domain);
+			clean_dbdata_struct(data);
+			return;
+		} else { 
+			data->next->args.number = data->fields.number;
+			memset(&(data->args.text), 0, RBUFF_S);
+		}
+	} else {
+		data->next->args.number = id;
+	}
+	data->args.number = (unsigned long int)getuid();
+	if ((retval = cbc_run_update(cbt, data, query)) == 0)
+		fprintf(stderr, "Build domain cannot be updated\n");
+	else if (retval == 1)
+		printf("Build domain set updated by uid %lu\n", data->args.number);
+	else
+		fprintf(stderr, "Multiple build domains??\n");
+	clean_dbdata_struct(data);
+}
+

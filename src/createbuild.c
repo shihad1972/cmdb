@@ -89,11 +89,12 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		goto cleanup;
 	build->cuser = build->muser = (unsigned long int)getuid();
 	cbc->build = build;
-	if ((retval = cbc_run_insert(cbt, cbc, BUILDS)) != 0)
+	if ((retval = cbc_run_insert(cbt, cbc, BUILDS)) != 0) {
 		fprintf(stderr, "Cannot insert build into db\n");
-	else
+	} else {
 		printf("Build inserted into db\n");
-// Still need to set build domain updated
+		set_build_domain_updated(cbt, cml->build_domain, 0);
+	}
 	goto cleanup;
 
 	cleanup:
@@ -462,7 +463,7 @@ cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = DISK_DEV_ON_SERVER_ID_DEV;
 	unsigned int max;
-	dbdata_s *data, *lvm = 0;
+	dbdata_s *data = '\0', *lvm = 0;
 	cbc_s *cbc = '\0';
 	cbc_disk_dev_s *disk = '\0';
 
