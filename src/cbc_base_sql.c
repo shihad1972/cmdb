@@ -2021,6 +2021,15 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	if (type & VMHOST)
 		if ((retval = cbc_run_query_sqlite(config, base, VMHOST)) != 0)
 			return retval;
+	if (type & SYSPACK)
+		if ((retval = cbc_run_query_sqlite(config, base, SYSPACK)) != 0)
+			return retval;
+	if (type & SYSARG)
+		if ((retval = cbc_run_query_sqlite(config, base, SYSARG)) != 0)
+			return retval;
+	if (type & SYSCONF)
+		if ((retval = cbc_run_query_sqlite(config, base, SYSCONF)) != 0)
+			return retval;
 	return retval;
 }
 
@@ -2293,6 +2302,21 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_vmhost_sqlite(state, base);
+	} else if (type == SYSPACK) {
+		required = cbc_select_fields[SYSPACKS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_syspack_sqlite(state, base);
+	} else if (type == SYSARG) {
+		required = cbc_select_fields[SYSARGS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_sysarg_sqlite(state, base);
+	} else if (type == SYSCONF) {
+		required = cbc_select_fields[SYSCONFS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_sysconf_sqlite(state, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_sqlite");
 	}
@@ -2321,6 +2345,12 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build(state, base->build);
 	else if (type == DISK_DEVS)
 		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
+	else if (type == SYSPACK)
+		retval = cbc_setup_bind_sqlite_syspack(state, base->syspack);
+	else if (type == SYSARG)
+		retval = cbc_setup_bind_sqlite_sysarg(state, base->sysarg);
+	else if (type == SYSCONF)
+		retval = cbc_setup_bind_sqlite_sysconf(state, base->sysconf);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -2842,6 +2872,101 @@ cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base)
 	free(stime);
 }
 
+void
+cbc_store_syspack_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_sys_pack_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_syspack_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_syspack_sqlite");
+	init_cbc_syspack(spack);
+	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(spack->name, URL_S, "%s", sqlite3_column_text(state, 1));
+	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 2);
+	spack->muser = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 4));
+	convert_time(stime, &(spack->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(spack->mtime));
+	list = base->syspack;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->syspack = spack;
+	}
+	free(stime);
+}
+
+void
+cbc_store_sysarg_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_sys_pack_arg_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_arg_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_sysarg_sqlite");
+	init_cbc_syspack_arg(spack);
+	spack->sys_pack_arg_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	snprintf(spack->field, URL_S, "%s", sqlite3_column_text(state, 2));
+	snprintf(spack->type, MAC_S, "%s", sqlite3_column_text(state, 3));
+	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	spack->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(spack->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(spack->mtime));
+	list = base->sysarg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->sysarg = spack;
+	}
+	free(stime);
+}
+
+void
+cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_sys_pack_conf_s *spack, *list;
+
+	if (!(spack = malloc(sizeof(cbc_sys_pack_conf_s))))
+		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_sqlite");
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_sysarg_sqlite");
+	init_cbc_syspack_conf(spack);
+	spack->sys_pack_conf_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	spack->sys_pack_arg_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	spack->bd_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(spack->arg, RBUFF_S, "%s", sqlite3_column_text(state, 4));
+	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
+	spack->muser = (unsigned long int) sqlite3_column_int64(state, 6);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(spack->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(spack->mtime));
+	list = base->sysconf;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = spack;
+	} else {
+		base->sysconf = spack;
+	}
+	free(stime);
+}
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build)
 {
@@ -3264,6 +3389,102 @@ state, 2, disk->device, (int)strlen(disk->device), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int(state, 3, disk->lvm)) > 0) {
 		fprintf(stderr, "Cannot bind LVM\n");
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_sys_pack_s *spack)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, spack->name, (int)strlen(spack->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind name %s\n", spack->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)spack->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", spack->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)spack->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", spack->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_sys_pack_arg_s *spack)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)spack->sys_pack_id)) > 0) {
+		fprintf(stderr, "Cannot bind sys_pack_id %lu\n", spack->sys_pack_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, spack->field, (int)strlen(spack->field), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind field %s\n", spack->field);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, spack->type, (int)strlen(spack->type), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind type %s\n", spack->type);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)spack->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", spack->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)spack->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", spack->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_sys_pack_conf_s *spack)
+{
+	int retval;
+
+	
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite3_int64)spack->sys_pack_arg_id)) > 0) {
+		fprintf(stderr, "Cannot bind sys_pack_arg_id %lu\n",
+		 spack->sys_pack_arg_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)spack->sys_pack_id)) > 0) {
+		fprintf(stderr, "Cannot bind sys_pack_id %lu\n", spack->sys_pack_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)spack->bd_id)) > 0) {
+		fprintf(stderr, "Cannot bind bd_id %lu\n", spack->bd_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, spack->arg, (int)strlen(spack->arg), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind arg %s\n", spack->arg);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)spack->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", spack->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)spack->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", spack->muser);
 		return retval;
 	}
 	return retval;

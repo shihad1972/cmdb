@@ -392,6 +392,15 @@ cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base);
 void
 cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base);
 
+void
+cbc_store_syspack_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_sysarg_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base);
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build);
 
@@ -418,6 +427,15 @@ cbc_setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack);
 
 int
 cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
+
+int
+cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_sys_pack_s *spack);
+
+int
+cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_sys_pack_arg_s *spack);
+
+int
+cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_sys_pack_conf_s *spack);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */
