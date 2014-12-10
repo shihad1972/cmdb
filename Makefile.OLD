@@ -7,7 +7,7 @@ RM = rm -f
 ECHO = echo
 DIR = src
 SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp
 
 all:	$(bin_PROGRAMS)
 
@@ -34,6 +34,9 @@ cbcpart:
 
 cpc:
 	cd $(DIR); $(MAKE) $(MFLAGS) cpc
+
+cbcsysp:
+	cd $(DIR); $(MAKE) $(MFLAGS) cbcsysp
 
 clean :
 	cd $(DIR); $(MAKE) clean

@@ -346,6 +346,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcpart_usage();
 		else if ((strncmp(program, "cpc", CONF_S) == 0))
 			display_cpc_usage();
+		else if ((strncmp(program, "cbcsysp", CONF_S) == 0))
+			display_cbcsysp_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -529,6 +531,23 @@ display_cpc_usage(void)
 	printf("-t <timezone>\n");
 	printf("-u <url>\n");
 	printf("-v <disk drive id>\n");
+}
+
+void
+display_cbcsysp_usage(void)
+{
+	printf("cbcsysp: cbc system package %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcsysp <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add -d: display -l: list -r: remove -m: modify\n");
+	printf("Type options\n");
+	printf("-p: package\t-o: config\t-y: arguments\n");
+	printf("Arguments\n");
+	printf("-b: <domain>\t-f: <field>\t-n: <name>\t-g: <arg>\n");
+	printf("-t: <type>\n");
+	printf("cbcsysp -p -n <name>\ncbcsysp -o -f <field> -t <type>\n");
+	printf("cbcsysp -y -g <arg> -b <domain>\n");
 }
 
 void

@@ -438,6 +438,8 @@ void
 display_dnsa_usage(void);
 void
 display_cpc_usage(void);
+void
+display_cbcsysp_usage(void);
 /* Database fields query mismatch error functions */
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
