@@ -120,7 +120,8 @@ enum {			/* cbc search SQL statements */
 	IP_ID_ON_SERVER_ID = 54,
 	BUILD_DOM_IP_RANGE = 55,
 	DISK_DEV_ON_SERVER_ID_DEV = 56,
-	LVM_ON_DEF_SCHEME_ID = 57
+	LVM_ON_DEF_SCHEME_ID = 57,
+	SYSPACK_ID_ON_NAME = 58
 
 };
 

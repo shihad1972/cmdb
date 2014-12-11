@@ -479,6 +479,9 @@ void
 clean_cbc_syspack(cbc_sys_pack_s *spack);
 
 void
+initialise_cbc_syspack_arg(cbc_sys_pack_arg_s **cpsa);
+
+void
 init_cbc_syspack_arg(cbc_sys_pack_arg_s *spack);
 
 void

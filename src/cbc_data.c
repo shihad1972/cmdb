@@ -689,6 +689,14 @@ clean_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
 }
 
 void
+initialise_cbc_syspack_arg(cbc_sys_pack_arg_s **cpsa)
+{
+	if (!(*cpsa = malloc(sizeof(cbc_sys_pack_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_sys_pack_arg_s");
+	init_cbc_syspack_arg(*cpsa);
+}
+
+void
 init_cbc_syspack_arg(cbc_sys_pack_arg_s *spack)
 {
 	memset(spack, 0, sizeof(cbc_sys_pack_arg_s));

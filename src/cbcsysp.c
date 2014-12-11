@@ -74,7 +74,10 @@ main(int argc, char *argv[])
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
-		retval = WRONG_ACTION;
+		if (cbs->action == LIST_CONFIG)
+			retval = list_cbc_sys_packacg_arg(cbc, cbs);
+		else
+			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
 		retval = WRONG_ACTION;
 	}
@@ -169,6 +172,8 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs)
 	free(cbcs);
 }
 
+// List functions
+
 int
 list_cbc_sys_package(cbc_config_s *cbc)
 {
@@ -177,19 +182,61 @@ list_cbc_sys_package(cbc_config_s *cbc)
 	cbc_sys_pack_s *list;
 
 	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_query(cbc, cbs, SYSPACK)) != 0) {
-		clean_cbc_struct(cbs);
-		return retval;
-	}
-	list = cbs->syspack;
-	while (list) {
-		printf("%s\n", list->name);
-		list = list->next;
-	}
-// Not finished - we do not display anythiing yet
+	if ((retval = cbc_run_query(cbc, cbs, SYSPACK)) == 0) {
+		list = cbs->syspack;
+		while (list) {
+			printf("%s\n", list->name);
+			list = list->next;
+		}
+	} else if (retval == 6)
+		fprintf(stderr, "No system packages to display\n");
 	clean_cbc_struct(cbs);
 	return retval;
 }
+
+int
+list_cbc_sys_packacg_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+{
+	int retval = 0;
+	dbdata_s *data = 0;
+	cbc_s *cbs;
+	cbc_sys_pack_arg_s *cspa, *list;
+
+	initialise_cbc_s(&cbs);
+	initialise_cbc_syspack_arg(&cspa);
+	cbs->sysarg = cspa;
+// First run query for arguments
+	if ((retval = cbc_run_query(cbc, cbs, SYSARG)) == NO_RECORDS) {
+		fprintf(stderr, "\
+There are no arguments configured in the database for any package\n");
+		goto cleanup;
+	} else if (retval != 0)
+		goto cleanup;
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, URL_S, "%s", css->name);
+	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
+		fprintf(stderr, "\
+Package %s does not have any configured arguments\n", css->name);
+		retval = NO_RECORDS;
+		goto cleanup;
+	} else if (retval > 1) {
+		fprintf(stderr, "\
+Multiple id's for package %s??\n", css->name);
+	}
+	list = cspa;
+	while (list) {
+		if (list->sys_pack_id == data->fields.number)
+			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
+		list = list->next;
+	}
+	goto cleanup;
+	cleanup:
+		clean_dbdata_struct(data);
+		clean_cbc_struct(cbs);
+		return retval;
+}
+
+// Add functions
 
 int
 add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbcs)
@@ -209,6 +256,8 @@ add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	clean_cbc_struct(cbs);
 	return retval;
 }
+
+// Helper functions
 
 void
 pack_syspack(cbc_sys_pack_s *spack, cbc_sysp_s *cbs)

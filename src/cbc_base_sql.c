@@ -312,7 +312,8 @@ SELECT locale_id FROM locale WHERE os_id = ?","\
 SELECT ip_id FROM build_ip WHERE server_id = ?","\
 SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?","\
 SELECT hard_id FROM hardware WHERE server_id = ? and device = ?","\
-SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?"
+SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?","\
+SELECT syspack_id FROM system_packages WHERE name = ?"
 
 };
 
@@ -334,12 +335,12 @@ const unsigned int cbc_delete_args[] = {
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1
+	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -485,7 +486,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE } ,
 	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE }
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -545,7 +547,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
