@@ -58,19 +58,25 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs);
 // List functions
 
 int
-list_cbc_sys_package(cbc_config_s *cbc);
+list_cbc_syspackage(cbc_config_s *cbc);
 
 int
-list_cbc_sys_packacg_arg(cbc_config_s *cbc, cbc_sysp_s *css);
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
 
 // Add functions
 
 int
-add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbs);
+add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbs);
+
+int
+add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbs);
 
 // Helper funtions
 
 void
-pack_syspack(cbc_sys_pack_s *spack, cbc_sysp_s *cbs);
+pack_syspack(cbc_syspack_s *spack, cbc_sysp_s *cbs);
+
+void
+pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs);
 
 #endif // __CBCSYSP_H__

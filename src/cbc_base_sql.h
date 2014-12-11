@@ -430,13 +430,13 @@ int
 cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
 
 int
-cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_sys_pack_s *spack);
+cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_syspack_s *spack);
 
 int
-cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_sys_pack_arg_s *spack);
+cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_syspack_arg_s *spack);
 
 int
-cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_sys_pack_conf_s *spack);
+cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_syspack_conf_s *spack);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

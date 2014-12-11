@@ -68,14 +68,16 @@ main(int argc, char *argv[])
         }
 	if (cbs->what == SPACKAGE) {
 		if (cbs->action == LIST_CONFIG)
-			retval = list_cbc_sys_package(cbc);
+			retval = list_cbc_syspackage(cbc);
 		else if (cbs->action == ADD_CONFIG)
-			retval = add_cbc_sys_package(cbc, cbs);
+			retval = add_cbc_syspackage(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
 		if (cbs->action == LIST_CONFIG)
-			retval = list_cbc_sys_packacg_arg(cbc, cbs);
+			retval = list_cbc_syspackage_arg(cbc, cbs);
+		else if (cbs->action == ADD_CONFIG)
+			retval = add_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
@@ -129,7 +131,7 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 				report_error(MALLOC_FAIL, "cbcs->name in parse_cbc_sysp_comm_line");
 			snprintf(cbcs->name, URL_S, "%s", optarg);
 		} else if (opt == 't') {
-			if (!(cbcs->name = calloc(MAC_S, sizeof(char))))
+			if (!(cbcs->type = calloc(MAC_S, sizeof(char))))
 				report_error(MALLOC_FAIL, "cbcs->type in parse_cbc_sysp_comm_line");
 			snprintf(cbcs->type, MAC_S, "%s", optarg);
 		} else
@@ -137,13 +139,15 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	}
 	if (cbcs->what == 0) 
 		retval = DISPLAY_USAGE;
-	else if (cbcs->action != LIST_CONFIG) {
+	else if (cbcs->what != SPACKAGE) {
 		if (!(cbcs->name))
 			retval = DISPLAY_USAGE;
-		else if  ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
-			retval = DISPLAY_USAGE;
-		else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
-			retval = DISPLAY_USAGE;
+		else if (cbcs->action != LIST_CONFIG) {
+			if  ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
+				retval = DISPLAY_USAGE;
+			else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
+				retval = DISPLAY_USAGE;
+		}
 	}
 	return retval;
 }
@@ -175,11 +179,11 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs)
 // List functions
 
 int
-list_cbc_sys_package(cbc_config_s *cbc)
+list_cbc_syspackage(cbc_config_s *cbc)
 {
 	int retval = 0;
 	cbc_s *cbs;
-	cbc_sys_pack_s *list;
+	cbc_syspack_s *list;
 
 	initialise_cbc_s(&cbs);
 	if ((retval = cbc_run_query(cbc, cbs, SYSPACK)) == 0) {
@@ -195,12 +199,12 @@ list_cbc_sys_package(cbc_config_s *cbc)
 }
 
 int
-list_cbc_sys_packacg_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
 {
 	int retval = 0;
 	dbdata_s *data = 0;
 	cbc_s *cbs;
-	cbc_sys_pack_arg_s *cspa, *list;
+	cbc_syspack_arg_s *cspa, *list;
 
 	initialise_cbc_s(&cbs);
 	initialise_cbc_syspack_arg(&cspa);
@@ -220,12 +224,11 @@ Package %s does not have any configured arguments\n", css->name);
 		retval = NO_RECORDS;
 		goto cleanup;
 	} else if (retval > 1) {
-		fprintf(stderr, "\
-Multiple id's for package %s??\n", css->name);
+		fprintf(stderr, " Multiple id's for package %s??\n", css->name);
 	}
 	list = cspa;
 	while (list) {
-		if (list->sys_pack_id == data->fields.number)
+		if (list->syspack_id == data->fields.number)
 			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
 		list = list->next;
 	}
@@ -239,11 +242,11 @@ Multiple id's for package %s??\n", css->name);
 // Add functions
 
 int
-add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0;
 	cbc_s *cbs;
-	cbc_sys_pack_s *spack;
+	cbc_syspack_s *spack;
 
 	initialise_cbc_s(&cbs);
 	initialise_cbc_syspack(&spack);
@@ -257,12 +260,49 @@ add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	return retval;
 }
 
+int
+add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_syspack_arg_s *cpsa;
+	dbdata_s *data = 0;
+
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, URL_S, "%s", cbcs->name);
+	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "No system package of the name %s\n", cbcs->name);
+		return NO_RECORDS;
+	}
+	initialise_cbc_s(&cbs);
+	initialise_cbc_syspack_arg(&cpsa);
+	cbs->sysarg = cpsa;
+	cpsa->syspack_id = data->fields.number;
+	clean_dbdata_struct(data);
+	pack_sysarg(cpsa, cbcs);
+	if ((retval = cbc_run_insert(cbc, cbs, SYSARGS)) != 0)
+		fprintf(stderr, "Cannot insert system package into DB\n");
+	else
+		printf("Package args for package %s inserted into DB\n", cbcs->name);
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
 // Helper functions
 
 void
-pack_syspack(cbc_sys_pack_s *spack, cbc_sysp_s *cbs)
+pack_syspack(cbc_syspack_s *spack, cbc_sysp_s *cbs)
 {
 	snprintf(spack->name, URL_S, "%s", cbs->name);
 	spack->cuser = spack->muser = (unsigned long int)getuid();
+}
+
+void
+pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs)
+{
+	snprintf(cpsa->type, MAC_S, "%s", cbs->type);
+	snprintf(cpsa->field, URL_S, "%s", cbs->field);
+	cpsa->cuser = cpsa->muser = (unsigned long int)getuid();
 }
 

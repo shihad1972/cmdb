@@ -631,23 +631,23 @@ clean_cbc_iface(cbc_iface_s *ifa)
 }
 
 void
-initialise_cbc_syspack(cbc_sys_pack_s **spack)
+initialise_cbc_syspack(cbc_syspack_s **spack)
 {
-	if (!(*spack = malloc(sizeof(cbc_sys_pack_s))))
-		report_error(MALLOC_FAIL, "cbc_sys_pack_s");
+	if (!(*spack = malloc(sizeof(cbc_syspack_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_s");
 	init_cbc_syspack(*spack);
 }
 
 void
-init_cbc_syspack(cbc_sys_pack_s *spack)
+init_cbc_syspack(cbc_syspack_s *spack)
 {
-	memset(spack, 0, sizeof(cbc_sys_pack_s));
+	memset(spack, 0, sizeof(cbc_syspack_s));
 }
 
 void
-clean_cbc_syspack(cbc_sys_pack_s *spack)
+clean_cbc_syspack(cbc_syspack_s *spack)
 {
-	cbc_sys_pack_s *list, *next;
+	cbc_syspack_s *list, *next;
 	if (spack)
 		list = spack;
 	else
@@ -664,15 +664,15 @@ clean_cbc_syspack(cbc_sys_pack_s *spack)
 }
 
 void
-init_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 {
-	memset(spack, 0, sizeof(cbc_sys_pack_conf_s));
+	memset(spack, 0, sizeof(cbc_syspack_conf_s));
 }
 
 void
-clean_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
+clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 {
-	cbc_sys_pack_conf_s *list, *next;
+	cbc_syspack_conf_s *list, *next;
 	if (spack)
 		list = spack;
 	else
@@ -689,23 +689,23 @@ clean_cbc_syspack_conf(cbc_sys_pack_conf_s *spack)
 }
 
 void
-initialise_cbc_syspack_arg(cbc_sys_pack_arg_s **cpsa)
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa)
 {
-	if (!(*cpsa = malloc(sizeof(cbc_sys_pack_arg_s))))
-		report_error(MALLOC_FAIL, "cbc_sys_pack_arg_s");
+	if (!(*cpsa = malloc(sizeof(cbc_syspack_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
 	init_cbc_syspack_arg(*cpsa);
 }
 
 void
-init_cbc_syspack_arg(cbc_sys_pack_arg_s *spack)
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 {
-	memset(spack, 0, sizeof(cbc_sys_pack_arg_s));
+	memset(spack, 0, sizeof(cbc_syspack_arg_s));
 }
 
 void
-clean_cbc_syspack_arg(cbc_sys_pack_arg_s *spack)
+clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 {
-	cbc_sys_pack_arg_s *list, *next;
+	cbc_syspack_arg_s *list, *next;
 	if (spack)
 		list = spack;
 	else

@@ -239,40 +239,40 @@ typedef struct cbc_vm_server_hosts_s {
 	struct cbc_vm_server_hosts_s *next;
 } cbc_vm_server_hosts_s;
 
-typedef struct cbc_sys_pack_s {
+typedef struct cbc_syspack_s {
 	char name[URL_S];
-	unsigned long int sys_pack_id;
+	unsigned long int syspack_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_sys_pack_s *next;
-} cbc_sys_pack_s;
+	struct cbc_syspack_s *next;
+} cbc_syspack_s;
 
-typedef struct cbc_sys_pack_arg_s {
+typedef struct cbc_syspack_arg_s {
 	char field[URL_S];
 	char type[MAC_S];
-	unsigned long int sys_pack_arg_id;
-	unsigned long int sys_pack_id;
+	unsigned long int syspack_arg_id;
+	unsigned long int syspack_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_sys_pack_arg_s *next;
-} cbc_sys_pack_arg_s;
+	struct cbc_syspack_arg_s *next;
+} cbc_syspack_arg_s;
 
-typedef struct cbc_sys_pack_conf_s {
+typedef struct cbc_syspack_conf_s {
 	char arg[RBUFF_S];
-	unsigned long int sys_pack_conf_id;
-	unsigned long int sys_pack_arg_id;
-	unsigned long int sys_pack_id;
+	unsigned long int syspack_conf_id;
+	unsigned long int syspack_arg_id;
+	unsigned long int syspack_id;
 	unsigned long int bd_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_sys_pack_conf_s *next;
-} cbc_sys_pack_conf_s;
+	struct cbc_syspack_conf_s *next;
+} cbc_syspack_conf_s;
 
 typedef struct cbc_s {
 	struct cbc_boot_line_s *bootl;
@@ -290,9 +290,9 @@ typedef struct cbc_s {
 	struct cbc_server_s *server;
 	struct cbc_varient_s *varient;
 	struct cbc_vm_server_hosts_s *vmhost;
-	struct cbc_sys_pack_s *syspack;
-	struct cbc_sys_pack_arg_s *sysarg;
-	struct cbc_sys_pack_conf_s *sysconf;
+	struct cbc_syspack_s *syspack;
+	struct cbc_syspack_arg_s *sysarg;
+	struct cbc_syspack_conf_s *sysconf;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network
@@ -470,27 +470,27 @@ void
 clean_cbc_iface(cbc_iface_s *ifa);
 
 void
-initialise_cbc_syspack(cbc_sys_pack_s **spack);
+initialise_cbc_syspack(cbc_syspack_s **spack);
 
 void
-init_cbc_syspack(cbc_sys_pack_s *spack);
+init_cbc_syspack(cbc_syspack_s *spack);
 
 void
-clean_cbc_syspack(cbc_sys_pack_s *spack);
+clean_cbc_syspack(cbc_syspack_s *spack);
 
 void
-initialise_cbc_syspack_arg(cbc_sys_pack_arg_s **cpsa);
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa);
 
 void
-init_cbc_syspack_arg(cbc_sys_pack_arg_s *spack);
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack);
 
 void
-clean_cbc_syspack_arg(cbc_sys_pack_arg_s *spack);
+clean_cbc_syspack_arg(cbc_syspack_arg_s *spack);
 
 void
-init_cbc_syspack_conf(cbc_sys_pack_conf_s *spack);
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
 
 void
-clean_cbc_syspack_conf(cbc_sys_pack_conf_s *spack);
+clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
 
 #endif /* __CBC_DATA_H__ */

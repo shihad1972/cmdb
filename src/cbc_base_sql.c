@@ -125,9 +125,9 @@ INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
  (?, ?, ?, ?, ?)","\
 INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)","\
-INSERT INTO system_package_args (sys_pack_id, field, type, cuser, muser) \
+INSERT INTO system_package_args (syspack_id, field, type, cuser, muser) \
  VALUES (?, ?, ?, ?, ?)","\
-INSERT INTO system_package_conf (sys_pack_arg_id, sys_pack_id, bd_id, arg, \
+INSERT INTO system_package_conf (syspack_arg_id, syspack_id, bd_id, arg, \
  cuser, muser) VALUES (?, ?, ?, ?, ?, ?)"
 };
 
@@ -1614,12 +1614,12 @@ cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base)
 void
 cbc_store_syspack_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_sys_pack_s *spack, *list;
+	cbc_syspack_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_syspack_mysql");
 	init_cbc_syspack(spack);
-	spack->sys_pack_id = strtoul(row[0], NULL, 10);
+	spack->syspack_id = strtoul(row[0], NULL, 10);
 	snprintf(spack->name, URL_S, "%s", row[1]);
 	spack->cuser = strtoul(row[2], NULL, 10);
 	spack->muser = strtoul(row[3], NULL, 10);
@@ -1638,13 +1638,13 @@ cbc_store_syspack_mysql(MYSQL_ROW row, cbc_s *base)
 void
 cbc_store_sysarg_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_sys_pack_arg_s *spack, *list;
+	cbc_syspack_arg_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_arg_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_arg_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_mysql");
 	init_cbc_syspack_arg(spack);
-	spack->sys_pack_arg_id = strtoul(row[0], NULL, 10);
-	spack->sys_pack_id = strtoul(row[1], NULL, 10);
+	spack->syspack_arg_id = strtoul(row[0], NULL, 10);
+	spack->syspack_id = strtoul(row[1], NULL, 10);
 	snprintf(spack->field, URL_S, "%s", row[2]);
 	snprintf(spack->type, MAC_S, "%s", row[3]);
 	spack->cuser = strtoul(row[4], NULL, 10);
@@ -1664,14 +1664,14 @@ cbc_store_sysarg_mysql(MYSQL_ROW row, cbc_s *base)
 void
 cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base)
 {
-	cbc_sys_pack_conf_s *spack, *list;
+	cbc_syspack_conf_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_conf_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_conf_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_sysconf_mysql");
 	init_cbc_syspack_conf(spack);
-	spack->sys_pack_conf_id = strtoul(row[0], NULL, 10);
-	spack->sys_pack_arg_id = strtoul(row[1], NULL, 10);
-	spack->sys_pack_id = strtoul(row[2], NULL, 10);
+	spack->syspack_conf_id = strtoul(row[0], NULL, 10);
+	spack->syspack_arg_id = strtoul(row[1], NULL, 10);
+	spack->syspack_id = strtoul(row[2], NULL, 10);
 	spack->bd_id = strtoul(row[3], NULL, 10);
 	snprintf(spack->arg, RBUFF_S, "%s", row[4]);
 	spack->cuser = strtoul(row[5], NULL, 10);
@@ -1892,7 +1892,7 @@ void
 cbc_setup_bind_mysql_sysarg(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
-		*buffer = &(base->sysarg->sys_pack_id);
+		*buffer = &(base->sysarg->syspack_id);
 	else if (i == 1)
 		*buffer = &(base->sysarg->field);
 	else if (i == 2)
@@ -1907,9 +1907,9 @@ void
 cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
-		*buffer = &(base->sysconf->sys_pack_arg_id);
+		*buffer = &(base->sysconf->syspack_arg_id);
 	else if (i == 1)
-		*buffer = &(base->sysconf->sys_pack_id);
+		*buffer = &(base->sysconf->syspack_id);
 	else if (i == 2)
 		*buffer = &(base->sysconf->bd_id);
 	else if (i == 3)
@@ -2879,14 +2879,14 @@ void
 cbc_store_syspack_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	char *stime;
-	cbc_sys_pack_s *spack, *list;
+	cbc_syspack_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_syspack_sqlite");
 	if (!(stime = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stime in cbc_store_syspack_sqlite");
 	init_cbc_syspack(spack);
-	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	spack->syspack_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(spack->name, URL_S, "%s", sqlite3_column_text(state, 1));
 	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 2);
 	spack->muser = (unsigned long int) sqlite3_column_int64(state, 3);
@@ -2909,15 +2909,15 @@ void
 cbc_store_sysarg_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	char *stime;
-	cbc_sys_pack_arg_s *spack, *list;
+	cbc_syspack_arg_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_arg_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_arg_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_sqlite");
 	if (!(stime = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stime in cbc_store_sysarg_sqlite");
 	init_cbc_syspack_arg(spack);
-	spack->sys_pack_arg_id = (unsigned long int) sqlite3_column_int64(state, 0);
-	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	spack->syspack_arg_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	spack->syspack_id = (unsigned long int) sqlite3_column_int64(state, 1);
 	snprintf(spack->field, URL_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(spack->type, MAC_S, "%s", sqlite3_column_text(state, 3));
 	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
@@ -2941,16 +2941,16 @@ void
 cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
 	char *stime;
-	cbc_sys_pack_conf_s *spack, *list;
+	cbc_syspack_conf_s *spack, *list;
 
-	if (!(spack = malloc(sizeof(cbc_sys_pack_conf_s))))
+	if (!(spack = malloc(sizeof(cbc_syspack_conf_s))))
 		report_error(MALLOC_FAIL, "spack in cbc_store_sysarg_sqlite");
 	if (!(stime = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stime in cbc_store_sysarg_sqlite");
 	init_cbc_syspack_conf(spack);
-	spack->sys_pack_conf_id = (unsigned long int) sqlite3_column_int64(state, 0);
-	spack->sys_pack_arg_id = (unsigned long int) sqlite3_column_int64(state, 1);
-	spack->sys_pack_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	spack->syspack_conf_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	spack->syspack_arg_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	spack->syspack_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	spack->bd_id = (unsigned long int) sqlite3_column_int64(state, 3);
 	snprintf(spack->arg, RBUFF_S, "%s", sqlite3_column_text(state, 4));
 	spack->cuser = (unsigned long int) sqlite3_column_int64(state, 5);
@@ -3398,7 +3398,7 @@ state, 2, disk->device, (int)strlen(disk->device), SQLITE_STATIC)) > 0) {
 }
 
 int
-cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_sys_pack_s *spack)
+cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_syspack_s *spack)
 {
 	int retval;
 
@@ -3421,13 +3421,13 @@ state, 3, (sqlite3_int64)spack->muser)) > 0) {
 }
 
 int
-cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_sys_pack_arg_s *spack)
+cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_syspack_arg_s *spack)
 {
 	int retval;
 
 	if ((retval = sqlite3_bind_int64(
-state, 1, (sqlite3_int64)spack->sys_pack_id)) > 0) {
-		fprintf(stderr, "Cannot bind sys_pack_id %lu\n", spack->sys_pack_id);
+state, 1, (sqlite3_int64)spack->syspack_id)) > 0) {
+		fprintf(stderr, "Cannot bind syspack_id %lu\n", spack->syspack_id);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_text(
@@ -3454,20 +3454,20 @@ state, 5, (sqlite3_int64)spack->muser)) > 0) {
 }
 
 int
-cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_sys_pack_conf_s *spack)
+cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_syspack_conf_s *spack)
 {
 	int retval;
 
 	
 	if ((retval = sqlite3_bind_int64(
-state, 1, (sqlite3_int64)spack->sys_pack_arg_id)) > 0) {
-		fprintf(stderr, "Cannot bind sys_pack_arg_id %lu\n",
-		 spack->sys_pack_arg_id);
+state, 1, (sqlite3_int64)spack->syspack_arg_id)) > 0) {
+		fprintf(stderr, "Cannot bind syspack_arg_id %lu\n",
+		 spack->syspack_arg_id);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 2, (sqlite3_int64)spack->sys_pack_id)) > 0) {
-		fprintf(stderr, "Cannot bind sys_pack_id %lu\n", spack->sys_pack_id);
+state, 2, (sqlite3_int64)spack->syspack_id)) > 0) {
+		fprintf(stderr, "Cannot bind syspack_id %lu\n", spack->syspack_id);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
