@@ -44,17 +44,44 @@
 int
 main(int argc, char *argv[])
 {
+	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval;
+	cbc_config_s *cbc;
 	cbc_sysp_s *cbs;
 
+	if (!(cbc = malloc(sizeof(cbc_config_s))))
+		report_error(MALLOC_FAIL, "cbc in main");
 	if (!(cbs = malloc(sizeof(cbc_sysp_s))))
 		report_error(MALLOC_FAIL, "cbs in main");
 	init_cbcsysp_s(cbs);
+	init_cbc_config_values(cbc);
 	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
 		clean_cbcsysp_s(cbs);
+		free(cbc);
 		display_command_line_error(retval, argv[0]);
 	}
-
+	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
+		clean_cbcsysp_s(cbs);
+		free(cbc);
+		parse_cbc_config_error(retval);
+		exit(retval);
+        }
+	if (cbs->what == SPACKAGE) {
+		if (cbs->action == LIST_CONFIG)
+			retval = list_cbc_sys_package(cbc);
+		else if (cbs->action == ADD_CONFIG)
+			retval = add_cbc_sys_package(cbc, cbs);
+		else
+			retval = WRONG_ACTION;
+	} else if (cbs->what == SPACKARG) {
+		retval = WRONG_ACTION;
+	} else if (cbs->what == SPACKCNF) {
+		retval = WRONG_ACTION;
+	}
+	if (retval == WRONG_ACTION)
+		fprintf(stderr, "Action not supported for type\n");
+	clean_cbcsysp_s(cbs);
+	free(cbc);
 	return retval;
 }
 
@@ -105,12 +132,16 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		} else
 			retval = DISPLAY_USAGE;
 	}
-	if ((cbcs->what == 0) || !(cbcs->name))
+	if (cbcs->what == 0) 
 		retval = DISPLAY_USAGE;
-	else if ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
-		retval = DISPLAY_USAGE;
-	else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
-		retval = DISPLAY_USAGE;
+	else if (cbcs->action != LIST_CONFIG) {
+		if (!(cbcs->name))
+			retval = DISPLAY_USAGE;
+		else if  ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
+			retval = DISPLAY_USAGE;
+		else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
+			retval = DISPLAY_USAGE;
+	}
 	return retval;
 }
 
@@ -138,4 +169,51 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs)
 	free(cbcs);
 }
 
+int
+list_cbc_sys_package(cbc_config_s *cbc)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_sys_pack_s *list;
+
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_query(cbc, cbs, SYSPACK)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	list = cbs->syspack;
+	while (list) {
+		printf("%s\n", list->name);
+		list = list->next;
+	}
+// Not finished - we do not display anythiing yet
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
+int
+add_cbc_sys_package(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_sys_pack_s *spack;
+
+	initialise_cbc_s(&cbs);
+	initialise_cbc_syspack(&spack);
+	cbs->syspack = spack;
+	pack_syspack(spack, cbcs);
+	if ((retval = cbc_run_insert(cbc, cbs, SYSPACKS)) != 0)
+		fprintf(stderr, "Cannot insert system package into DB\n");
+	else
+		printf("Package %s inserted into db\n", spack->name);
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
+void
+pack_syspack(cbc_sys_pack_s *spack, cbc_sysp_s *cbs)
+{
+	snprintf(spack->name, URL_S, "%s", cbs->name);
+	spack->cuser = spack->muser = (unsigned long int)getuid();
+}
 

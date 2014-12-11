@@ -86,10 +86,10 @@ SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
 SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient","\
 SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime \
  FROM vm_server_hosts","\
-SELECT sys_pack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
-SELECT sys_pack_arg_id, sys_pack_id, field, type, cuser, muser, ctime, mtime \
+SELECT syspack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
+SELECT syspack_arg_id, syspack_id, field, type, cuser, muser, ctime, mtime \
  FROM system_package_args","\
-SELECT sys_pack_conf_id, sys_pack_arg_id, sys_pack_id, bd_id, arg, cuser, \
+SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
  muser, ctime, mtime FROM system_package_conf"
 };
 

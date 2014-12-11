@@ -546,8 +546,11 @@ display_cbcsysp_usage(void)
 	printf("Arguments\n");
 	printf("-b: <domain>\t-f: <field>\t-n: <name>\t-g: <arg>\n");
 	printf("-t: <type>\n");
-	printf("cbcsysp -p -n <name>\ncbcsysp -o -f <field> -t <type>\n");
-	printf("cbcsysp -y -g <arg> -b <domain>\n");
+	printf("Associated arguments\n");
+	printf("cbcsysp <action> -p -n <name>\n");
+	printf("cbcsysp <action> -o -f <field> -t <type> -n <name>\n");
+	printf("cbcsysp <action> -y -g <arg> -b <domain> -n <name>\n");
+	printf("See man page for full details\n");
 }
 
 void

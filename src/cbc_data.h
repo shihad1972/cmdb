@@ -320,6 +320,9 @@ typedef struct cbc_iface_s { // Info about interface
 } cbc_iface_s;
 
 void
+initialise_cbc_s(cbc_s **cbc);
+
+void
 init_cbc_struct (cbc_s *cbc);
 
 void
@@ -465,6 +468,9 @@ init_cbc_iface(cbc_iface_s *ifa);
 
 void
 clean_cbc_iface(cbc_iface_s *ifa);
+
+void
+initialise_cbc_syspack(cbc_sys_pack_s **spack);
 
 void
 init_cbc_syspack(cbc_sys_pack_s *spack);

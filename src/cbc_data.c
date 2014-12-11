@@ -37,6 +37,14 @@
 #include "cbc_data.h"
 
 void
+initialise_cbc_s(cbc_s **cbc)
+{
+	if (!(*cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc_s");
+	init_cbc_struct(*cbc);
+}
+
+void
 init_cbc_struct (cbc_s *cbc)
 {
 	memset(cbc, 0, sizeof(cbc_s));
@@ -77,6 +85,12 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_varient(cbc->varient);
 	if (cbc->vmhost)
 		clean_vm_hosts(cbc->vmhost);
+	if (cbc->syspack)
+		clean_cbc_syspack(cbc->syspack);
+	if (cbc->sysarg)
+		clean_cbc_syspack_arg(cbc->sysarg);
+	if (cbc->sysconf)
+		clean_cbc_syspack_conf(cbc->sysconf);
 	free(cbc);
 }
 
@@ -614,6 +628,14 @@ clean_cbc_iface(cbc_iface_s *ifa)
 		else
 			next = '\0';
 	}
+}
+
+void
+initialise_cbc_syspack(cbc_sys_pack_s **spack)
+{
+	if (!(*spack = malloc(sizeof(cbc_sys_pack_s))))
+		report_error(MALLOC_FAIL, "cbc_sys_pack_s");
+	init_cbc_syspack(*spack);
 }
 
 void
