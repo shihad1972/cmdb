@@ -55,6 +55,9 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs);
 int
 parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs);
 
+int
+check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs);
+
 // List functions
 
 int
@@ -62,6 +65,11 @@ list_cbc_syspackage(cbc_config_s *cbc);
 
 int
 list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
+
+// Display functions
+
+int
+display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
 
 // Add functions
 

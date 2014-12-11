@@ -17,11 +17,11 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  cbcvarient.c
+ *  cbc_common.c
  * 
  *  Functions to get configuration values and also parse command line arguments
  * 
- *  part of the cbcvarient program
+ *  part of the cbc suite of programs
  * 
  */
 #include <ctype.h>
@@ -203,5 +203,47 @@ set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
 	else
 		fprintf(stderr, "Multiple build domains??\n");
 	clean_dbdata_struct(data);
+}
+
+int
+get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id)
+{
+	int retval;
+	dbdata_s *data;
+
+	if (!(cbc) || !(domain))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, RBUFF_S, "%s", domain);
+	if ((retval = cbc_run_search(cbc, data, BD_ID_ON_DOMAIN)) == 0) {
+		fprintf(stderr, "Cannot find build domain %s\n", domain);
+		clean_dbdata_struct(data);
+		return NO_RECORDS;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple build domains found for %s\n", domain);
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_system_package_id(cbc_config_s *cbc, char *package, uli_t *id)
+{
+	int retval;
+	dbdata_s *data;
+
+	if (!(cbc) || !(package))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	snprintf(data->args.text, URL_S, "%s", package);
+	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
+		fprintf(stderr, "Cannot find system package %s\n", package);
+		clean_dbdata_struct(data);
+		return NO_RECORDS;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple system packages found for %s\n", package);
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
 }
 

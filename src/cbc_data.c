@@ -664,6 +664,14 @@ clean_cbc_syspack(cbc_syspack_s *spack)
 }
 
 void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc)
+{
+	if (!(*cpsc = malloc(sizeof(cbc_syspack_conf_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	init_cbc_syspack_conf(*cpsc);
+}
+
+void
 init_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 {
 	memset(spack, 0, sizeof(cbc_syspack_conf_s));

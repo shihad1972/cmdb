@@ -36,6 +36,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
@@ -81,7 +82,10 @@ main(int argc, char *argv[])
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
-		retval = WRONG_ACTION;
+		if (cbs->action == DISPLAY_CONFIG)
+			retval = display_cbc_syspackage_conf(cbc, cbs);
+		else
+			retval = WRONG_ACTION;
 	}
 	if (retval == WRONG_ACTION)
 		fprintf(stderr, "Action not supported for type\n");
@@ -137,15 +141,28 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		} else
 			retval = DISPLAY_USAGE;
 	}
+	if (retval != DISPLAY_USAGE)
+		retval = check_sysp_comm_line_for_errors(cbcs);
+	return retval;
+}
+
+int
+check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
+{
+	int retval;
+
 	if (cbcs->what == 0) 
 		retval = DISPLAY_USAGE;
 	else if (cbcs->what != SPACKAGE) {
 		if (!(cbcs->name))
 			retval = DISPLAY_USAGE;
-		else if (cbcs->action != LIST_CONFIG) {
-			if  ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
+		else if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
+			if ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
 				retval = DISPLAY_USAGE;
 			else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
+				retval = DISPLAY_USAGE;
+		} else {
+			if ((cbcs->what == SPACKCNF) && !(cbcs->domain))
 				retval = DISPLAY_USAGE;
 		}
 	}
@@ -231,6 +248,50 @@ Package %s does not have any configured arguments\n", css->name);
 		if (list->syspack_id == data->fields.number)
 			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
 		list = list->next;
+	}
+	goto cleanup;
+	cleanup:
+		clean_dbdata_struct(data);
+		clean_cbc_struct(cbs);
+		return retval;
+}
+
+// Display functions
+int
+display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
+{
+	int retval = 0, query = SYSP_INFO_SYS_AND_BD_ID;
+	unsigned int max;
+	dbdata_s *data = 0;
+	cbc_s *cbs;
+	cbc_syspack_conf_s *cspc;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	initialise_cbc_s(&cbs);
+	initialise_cbc_syspack_conf(&cspc);
+	cbs->sysconf = cspc;
+	if ((retval = cbc_run_query(cbc, cbs, SYSCONF)) == NO_RECORDS) {
+		fprintf(stderr, "\
+There are no system packages configured in the database for any domain\n");
+		goto cleanup;
+	} else if (retval != 0)
+		goto cleanup;
+	init_multi_dbdata_struct(&data, max);
+	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)
+		goto cleanup;
+// May be cool to be able to see all the package configurations for 1 domain..
+	if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0)
+		goto cleanup;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		printf("Package %s seems to have no configuration info for domain %s\n",
+		 css->name, css->domain);
+	} else {
+		printf("Package configuration information for %s\n", css->domain);
+		while (data) {
+			printf("%s\t%s\t%s\t%s\n", css->name, data->fields.text,
+			 data->next->fields.text, data->next->next->fields.text);
+			data = data->next->next->next;
+		}
 	}
 	goto cleanup;
 	cleanup:

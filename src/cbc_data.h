@@ -488,6 +488,9 @@ void
 clean_cbc_syspack_arg(cbc_syspack_arg_s *spack);
 
 void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc);
+
+void
 init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
 
 void
