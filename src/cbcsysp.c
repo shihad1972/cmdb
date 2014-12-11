@@ -149,22 +149,23 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 int
 check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 {
-	int retval;
+	int retval = 0;
 
-	if (cbcs->what == 0) 
+	if (cbcs->what == 0) {
 		retval = DISPLAY_USAGE;
-	else if (cbcs->what != SPACKAGE) {
+	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name))
 			retval = DISPLAY_USAGE;
-		else if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
-			if ((cbcs->what == SPACKARG) && (!(cbcs->type) || !(cbcs->field)))
-				retval = DISPLAY_USAGE;
-			else if ((cbcs->what == SPACKCNF) && (!(cbcs->arg) || !(cbcs->domain)))
-				retval = DISPLAY_USAGE;
-		} else {
-			if ((cbcs->what == SPACKCNF) && !(cbcs->domain))
+	} else if (cbcs->what == SPACKARG) {
+		if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
+			if (!(cbcs->type) || !(cbcs->field))
 				retval = DISPLAY_USAGE;
 		}
+	} else if (cbcs->what == SPACKCNF) {
+		if (!(cbcs->domain))
+			retval = DISPLAY_USAGE;
+		if ((cbcs->action == DISPLAY_CONFIG) && !(cbcs->name))
+			retval = DISPLAY_USAGE;
 	}
 	return retval;
 }
