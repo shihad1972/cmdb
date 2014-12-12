@@ -75,8 +75,8 @@ main(int argc, char *argv[])
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
-		if (cbs->action == LIST_CONFIG)
-			retval = list_cbc_syspackage_arg(cbc, cbs);
+		if (cbs->action == DISPLAY_CONFIG)
+			retval = display_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
 		else
@@ -84,6 +84,8 @@ main(int argc, char *argv[])
 	} else if (cbs->what == SPACKCNF) {
 		if (cbs->action == DISPLAY_CONFIG)
 			retval = display_cbc_syspackage_conf(cbc, cbs);
+		else if (cbs->action == ADD_CONFIG)
+			retval = add_cbc_syspackage_conf(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	}
@@ -154,7 +156,7 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 	if (cbcs->what == 0) {
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
-		if (!(cbcs->name))
+		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG))
 			retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKARG) {
 		if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
@@ -216,8 +218,10 @@ list_cbc_syspackage(cbc_config_s *cbc)
 	return retval;
 }
 
+// Display functions
+
 int
-list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
 {
 	int retval = 0;
 	dbdata_s *data = 0;
@@ -257,7 +261,6 @@ Package %s does not have any configured arguments\n", css->name);
 		return retval;
 }
 
-// Display functions
 int
 display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 {
@@ -282,6 +285,8 @@ There are no system packages configured in the database for any domain\n");
 		goto cleanup;
 // May be cool to be able to see all the package configurations for 1 domain..
 	if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0)
+		goto cleanup;
+	if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number, &(data->next->next->args.number))) != 0)
 		goto cleanup;
 	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
 		printf("Package %s seems to have no configuration info for domain %s\n",
@@ -326,27 +331,55 @@ int
 add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0;
+	unsigned long int spack_id;
 	cbc_s *cbs;
 	cbc_syspack_arg_s *cpsa;
-	dbdata_s *data = 0;
 
-	init_multi_dbdata_struct(&data, 1);
-	snprintf(data->args.text, URL_S, "%s", cbcs->name);
-	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "No system package of the name %s\n", cbcs->name);
-		return NO_RECORDS;
-	}
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+		return retval;
 	initialise_cbc_s(&cbs);
 	initialise_cbc_syspack_arg(&cpsa);
 	cbs->sysarg = cpsa;
-	cpsa->syspack_id = data->fields.number;
-	clean_dbdata_struct(data);
+	cpsa->syspack_id = spack_id;
 	pack_sysarg(cpsa, cbcs);
 	if ((retval = cbc_run_insert(cbc, cbs, SYSARGS)) != 0)
 		fprintf(stderr, "Cannot insert system package into DB\n");
 	else
 		printf("Package args for package %s inserted into DB\n", cbcs->name);
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
+int
+add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0;
+	unsigned long int spack_id, sconf_id, bd_id;
+	cbc_s *cbs;
+	cbc_syspack_conf_s *cpsc;
+
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+		return retval;
+	if ((retval = get_build_domain_id(cbc, cbcs->domain, &bd_id)) != 0)
+		return retval;
+	if ((retval = get_syspack_arg_id(cbc, cbcs->field, spack_id, &sconf_id)) != 0)
+		return retval;
+	initialise_cbc_s(&cbs);
+	initialise_cbc_syspack_conf(&cpsc);
+	cbs->sysconf = cpsc;
+	cpsc->syspack_id = spack_id;
+	cpsc->syspack_arg_id = sconf_id;
+	cpsc->bd_id = bd_id;
+	pack_sysconf(cpsc, cbcs);
+	if ((retval = cbc_run_insert(cbc, cbs, SYSCONFS)) != 0)
+		fprintf(stderr, "Cannot insert syspack config into DB\n");
+	else
+		printf("Package config for package %s, domain %s inserted into DB\n",
+		 cbcs->name, cbcs->domain);
 	clean_cbc_struct(cbs);
 	return retval;
 }
@@ -366,5 +399,12 @@ pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs)
 	snprintf(cpsa->type, MAC_S, "%s", cbs->type);
 	snprintf(cpsa->field, URL_S, "%s", cbs->field);
 	cpsa->cuser = cpsa->muser = (unsigned long int)getuid();
+}
+
+void
+pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs)
+{
+	snprintf(cbcs->arg, RBUFF_S, "%s", cbs->arg);
+	cbcs->cuser = cbcs->muser = (unsigned long int)getuid();
 }
 

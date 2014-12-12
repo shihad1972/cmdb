@@ -63,10 +63,10 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs);
 int
 list_cbc_syspackage(cbc_config_s *cbc);
 
-int
-list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
-
 // Display functions
+
+int
+display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
 
 int
 display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
@@ -79,6 +79,9 @@ add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbs);
 int
 add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbs);
 
+int
+add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+
 // Helper funtions
 
 void
@@ -86,5 +89,8 @@ pack_syspack(cbc_syspack_s *spack, cbc_sysp_s *cbs);
 
 void
 pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs);
+
+void
+pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs);
 
 #endif // __CBCSYSP_H__

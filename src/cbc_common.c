@@ -247,3 +247,27 @@ get_system_package_id(cbc_config_s *cbc, char *package, uli_t *id)
 	return 0;
 }
 
+int
+get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id)
+{
+	int retval, query = SPARG_ON_SPID_AND_FIELD;
+	dbdata_s *data;
+	unsigned int max;
+
+	if (!(cbc) || !(field) || (sp_id == 0))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = sp_id;
+	snprintf(data->next->args.text, URL_S, "%s", field);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find the package argument\n");
+		clean_dbdata_struct(data);
+		return NO_RECORDS;
+	} else if (retval > 1)
+		fprintf(stderr, "Found multiple arguments for the packages\n");
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
