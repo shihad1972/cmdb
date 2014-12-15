@@ -123,7 +123,9 @@ enum {			/* cbc search SQL statements */
 	LVM_ON_DEF_SCHEME_ID = 57,
 	SYSPACK_ID_ON_NAME = 58,
 	SYSP_INFO_SYS_AND_BD_ID = 59,
-	SPARG_ON_SPID_AND_FIELD = 60
+	SPARG_ON_SPID_AND_FIELD = 60,
+	SYSP_INFO_ARG_AND_BD_ID = 61,
+	SYSP_INFO_ON_BD_ID = 62
 };
 
 enum {			/* cbc update SQL statements */

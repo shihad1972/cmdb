@@ -226,8 +226,6 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Requested partition not found\n");
 	} else if (error == DB_DELETE_FAILED) {
 		fprintf(stderr, "Delete from database failed\n");
-	} else if (error == CANNOT_BUILD_PACKAGE_LIST) {
-		fprintf(stderr, "Cannot build package list\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}

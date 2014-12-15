@@ -84,6 +84,8 @@ main(int argc, char *argv[])
 	} else if (cbs->what == SPACKCNF) {
 		if (cbs->action == DISPLAY_CONFIG)
 			retval = display_cbc_syspackage_conf(cbc, cbs);
+		else if (cbs->action == LIST_CONFIG)
+			retval = list_cbc_syspackage_conf(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
 		else
@@ -179,7 +181,7 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 			fprintf(stderr, "No build domain supplied\n\n");
 			retval = DISPLAY_USAGE;
 		}
-		if ((cbcs->action == DISPLAY_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
+		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
 			fprintf(stderr, "Need both package name and field to display config\n\n");
 			retval = DISPLAY_USAGE;
 		}
@@ -233,6 +235,47 @@ list_cbc_syspackage(cbc_config_s *cbc)
 	return retval;
 }
 
+int
+list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
+{
+	int retval = 0, query;
+	unsigned int max;
+	dbdata_s *data = 0, *list;
+
+	if ((css->field) && (css->name))
+		query = SYSP_INFO_SYS_AND_BD_ID;
+	else if (css->name)
+		query = SYSP_INFO_ARG_AND_BD_ID;
+	else
+		query = SYSP_INFO_ON_BD_ID;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if ((retval = get_syspack_ids(cbc, css, data, query)) != 0) {
+		if (retval == NO_BD_CONFIG)
+			goto cleanup;
+		else if ((retval = NO_BUILD_PACKAGES) && (css->name))
+			goto cleanup;
+		else if ((retval = NO_PACKAGE_CONFIG) && (css->name) && (css->field))
+			goto cleanup;
+	}
+	if ((retval = cbc_run_search(cbc, data, query)) == 0)
+		goto cleanup;
+	retval = 0;
+	list = data;
+	printf("System package config for build domain %s\n\n", css->domain);
+	while (list) {
+		printf("%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		 list->next->next->fields.text);
+		list = list->next->next->next;
+	}
+	goto cleanup;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
+	
+}
+
 // Display functions
 
 int
@@ -263,6 +306,7 @@ Package %s does not have any configured arguments\n", css->name);
 	} else if (retval > 1) {
 		fprintf(stderr, " Multiple id's for package %s??\n", css->name);
 	}
+	retval = 0;
 	list = cspa;
 	while (list) {
 		if (list->syspack_id == data->fields.number)
@@ -296,19 +340,8 @@ There are no system packages configured in the database for any domain\n");
 	} else if (retval != 0)
 		goto cleanup;
 	init_multi_dbdata_struct(&data, max);
-	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0) {
-		fprintf(stderr, "Cannot find build domain %s\n", css->domain);
+	if ((retval = get_syspack_ids(cbc, css, data, query)) != 0) 
 		goto cleanup;
-	}
-// May be cool to be able to see all the package configurations for 1 domain..
-	if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
-		fprintf(stderr, "Cannot find package %s\n", css->name);
-		goto cleanup;
-	}
-	if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number, &(data->next->next->args.number))) != 0) {
-		fprintf(stderr, "Cannot find package field %s\n", css->field);
-		goto cleanup;
-	}
 	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
 		printf("Package %s seems to have no configuration info for domain %s\n",
 		 css->name, css->domain);
@@ -429,3 +462,26 @@ pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs)
 	cbcs->cuser = cbcs->muser = (unsigned long int)getuid();
 }
 
+int
+get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
+{
+	int retval = 0;
+	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0) {
+		fprintf(stderr, "Cannot find build domain %s\n", css->domain);
+		return NO_BD_CONFIG;
+	}
+	if (query != SYSP_INFO_ON_BD_ID) {
+		if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
+			fprintf(stderr, "Cannot find package %s\n", css->name);
+			return NO_BUILD_PACKAGES;
+		}
+	}
+	if (query == SYSP_INFO_SYS_AND_BD_ID) {
+		if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number,
+					&(data->next->next->args.number))) != 0) {
+			fprintf(stderr, "Cannot find package field %s\n", css->field);
+			return NO_PACKAGE_CONFIG;
+		}
+	}
+	return retval;
+}

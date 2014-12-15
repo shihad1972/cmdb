@@ -63,6 +63,9 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs);
 int
 list_cbc_syspackage(cbc_config_s *cbc);
 
+int
+list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
+
 // Display functions
 
 int
@@ -92,5 +95,8 @@ pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs);
 
 void
 pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs);
+
+int
+get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query);
 
 #endif // __CBCSYSP_H__
