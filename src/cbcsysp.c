@@ -93,6 +93,8 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	free(cbc);
+	if (retval != 0)
+		report_error(retval, "");
 	return retval;
 }
 
@@ -112,15 +114,16 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 			cbcs->action = MOD_CONFIG;
 		else if (opt == 'r')
 			cbcs->action = RM_CONFIG;
-		else if (opt == 'v')
-			cbcs->action = CVERSION;
 		else if (opt == 'o')
 			cbcs->what = SPACKCNF;
 		else if (opt == 'p')
 			cbcs->what = SPACKAGE;
 		else if (opt == 'y')
 			cbcs->what = SPACKARG;
-		else if (opt == 'b') {
+		else if (opt == 'v') {
+			cbcs->action = CVERSION;
+			retval = CVERSION;
+		} else if (opt == 'b') {
 			if (!(cbcs->domain = calloc(RBUFF_S, sizeof(char))))
 				report_error(MALLOC_FAIL, "cbcs->domain in parse_cbc_sysp_comm_line");
 			snprintf(cbcs->domain, RBUFF_S, "%s", optarg);
@@ -143,7 +146,9 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		} else
 			retval = DISPLAY_USAGE;
 	}
-	if (retval != DISPLAY_USAGE)
+	if (argc == 1)
+		retval = DISPLAY_USAGE;
+	if ((retval != DISPLAY_USAGE) && (retval != CVERSION))
 		retval = check_sysp_comm_line_for_errors(cbcs);
 	return retval;
 }
@@ -154,20 +159,30 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 	int retval = 0;
 
 	if (cbcs->what == 0) {
+		fprintf(stderr, "No type specified\n\n");
+		retval = DISPLAY_USAGE;
+	} else if (cbcs->action == 0) {
+		fprintf(stderr, "No action spcified\n\n");
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
-		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG))
+		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
+			fprintf(stderr, "You need a package name!\n\n");
 			retval = DISPLAY_USAGE;
+	}
 	} else if (cbcs->what == SPACKARG) {
 		if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
 			if (!(cbcs->type) || !(cbcs->field))
 				retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKCNF) {
-		if (!(cbcs->domain))
+		if (!(cbcs->domain)) {
+			fprintf(stderr, "No build domain supplied\n\n");
 			retval = DISPLAY_USAGE;
-		if ((cbcs->action == DISPLAY_CONFIG) && !(cbcs->name))
+		}
+		if ((cbcs->action == DISPLAY_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
+			fprintf(stderr, "Need both package name and field to display config\n\n");
 			retval = DISPLAY_USAGE;
+		}
 	}
 	return retval;
 }
@@ -281,13 +296,19 @@ There are no system packages configured in the database for any domain\n");
 	} else if (retval != 0)
 		goto cleanup;
 	init_multi_dbdata_struct(&data, max);
-	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)
+	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0) {
+		fprintf(stderr, "Cannot find build domain %s\n", css->domain);
 		goto cleanup;
+	}
 // May be cool to be able to see all the package configurations for 1 domain..
-	if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0)
+	if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
+		fprintf(stderr, "Cannot find package %s\n", css->name);
 		goto cleanup;
-	if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number, &(data->next->next->args.number))) != 0)
+	}
+	if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number, &(data->next->next->args.number))) != 0) {
+		fprintf(stderr, "Cannot find package field %s\n", css->field);
 		goto cleanup;
+	}
 	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
 		printf("Package %s seems to have no configuration info for domain %s\n",
 		 css->name, css->domain);
