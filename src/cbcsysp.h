@@ -1,4 +1,4 @@
-/* 
+/*
  *
  *  cbc: Create Build Configuration
  *  Copyright (C) 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
@@ -18,13 +18,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  cbcsysp.h
- * 
+ *
  *  Header file for data and functions for cbcsysp program
- * 
+ *
  *  part of the cbcsysp program
- * 
+ *
  *  (C) Iain M. Conochie 2014
- * 
+ *
  */
 
 #ifndef __CBCSYSP_H__

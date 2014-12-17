@@ -1,4 +1,4 @@
-/* 
+/*
  *
  *  cbcsysp: Create Build Configuration Partition
  *  Copyright (C) 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
@@ -18,13 +18,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  cbcsysp.c
- * 
+ *
  *  Functions to get configuration values and also parse command line arguments
- * 
+ *
  *  Part of the cbcsysp program
- * 
+ *
  *  (C) Iain M. Conochie 2014
- * 
+ *
  */
 #define _GNU_SOURCE
 #include <ctype.h>
@@ -273,7 +273,6 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 	cleanup:
 		clean_dbdata_struct(data);
 		return retval;
-	
 }
 
 // Display functions
