@@ -53,7 +53,7 @@ report_error(int error, const char *errstr)
 	if (error == ARGC_INVAL) {
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
-		fprintf(stderr, "Argv is invalid\n");
+		;
 	} else if (error == CONF_ERR) {
 		fprintf(stderr, "Config file error\n");
 	} else if (error == PORT_ERR) {
@@ -538,16 +538,12 @@ display_cbcsysp_usage(void)
 	printf("Usage:\t");
 	printf("cbcsysp <action> <type> <arguments>\n");
 	printf("Action options\n");
-	printf("-a: add -d: display -l: list -r: remove -m: modify\n");
+	printf("-a: add -l: list -r: remove -m: modify\n");
 	printf("Type options\n");
 	printf("-p: package\t-o: config\t-y: arguments\n");
 	printf("Arguments\n");
 	printf("-b: <domain>\t-f: <field>\t-n: <name>\t-g: <arg>\n");
 	printf("-t: <type>\n");
-	printf("Associated arguments\n");
-	printf("cbcsysp <action> -p -n <name>\n");
-	printf("cbcsysp <action> -o -f <field> -t <type> -n <name>\n");
-	printf("cbcsysp <action> -y -g <arg> -b <domain> -n <name>\n");
 	printf("See man page for full details\n");
 }
 

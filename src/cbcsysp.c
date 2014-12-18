@@ -56,10 +56,14 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cbs in main");
 	init_cbcsysp_s(cbs);
 	init_cbc_config_values(cbc);
-	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
+	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) == DISPLAY_USAGE) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
+	} else if (retval != 0) {
+		clean_cbcsysp_s(cbs);
+		free(cbc);
+		exit (retval);
 	}
 	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
 		clean_cbcsysp_s(cbs);
@@ -75,16 +79,14 @@ main(int argc, char *argv[])
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
-		if (cbs->action == DISPLAY_CONFIG)
-			retval = display_cbc_syspackage_arg(cbc, cbs);
+		if (cbs->action == LIST_CONFIG)
+			retval = list_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
-		if (cbs->action == DISPLAY_CONFIG)
-			retval = display_cbc_syspackage_conf(cbc, cbs);
-		else if (cbs->action == LIST_CONFIG)
+		if (cbs->action == LIST_CONFIG)
 			retval = list_cbc_syspackage_conf(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
@@ -108,8 +110,6 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	while ((opt = getopt(argc, argv, "ab:df:g:lmn:oprt:vy")) != -1) {
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
-		else if (opt == 'd')
-			cbcs->action = DISPLAY_CONFIG;
 		else if (opt == 'l')
 			cbcs->action = LIST_CONFIG;
 		else if (opt == 'm')
@@ -165,25 +165,31 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
-		retval = DISPLAY_USAGE;
+		retval = ARGV_INVAL;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = DISPLAY_USAGE;
-	}
+			retval = ARGV_INVAL;
+		}
 	} else if (cbcs->what == SPACKARG) {
-		if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
-			if (!(cbcs->type) || !(cbcs->field))
-				retval = DISPLAY_USAGE;
+		if ((cbcs->action != LIST_CONFIG) &&  (!(cbcs->type) || !(cbcs->field))) {
+			fprintf(stderr, "You need both package field and type\n");
+			retval = ARGV_INVAL;
+		} else if (!(cbcs->name)) {
+			fprintf(stderr, "You need a package name!\n\n");
+			retval = ARGV_INVAL;
 		}
 	} else if (cbcs->what == SPACKCNF) {
-		if (!(cbcs->domain)) {
+		if (!(cbcs->domain))  {
 			fprintf(stderr, "No build domain supplied\n\n");
-			retval = DISPLAY_USAGE;
+			retval = ARGV_INVAL;
+		} else if (!(cbcs->name)) {
+			fprintf(stderr, "You need a package name!\n\n");
+			retval = ARGV_INVAL;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
 			fprintf(stderr, "Need both package name and field to display config\n\n");
-			retval = DISPLAY_USAGE;
+			retval = ARGV_INVAL;
 		}
 	}
 	return retval;
@@ -275,10 +281,8 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 		return retval;
 }
 
-// Display functions
-
 int
-display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
 {
 	int retval = 0;
 	dbdata_s *data = 0;
@@ -311,46 +315,6 @@ Package %s does not have any configured arguments\n", css->name);
 		if (list->syspack_id == data->fields.number)
 			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
 		list = list->next;
-	}
-	goto cleanup;
-	cleanup:
-		clean_dbdata_struct(data);
-		clean_cbc_struct(cbs);
-		return retval;
-}
-
-int
-display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
-{
-	int retval = 0, query = SYSP_INFO_SYS_AND_BD_ID;
-	unsigned int max;
-	dbdata_s *data = 0;
-	cbc_s *cbs;
-	cbc_syspack_conf_s *cspc;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack_conf(&cspc);
-	cbs->sysconf = cspc;
-	if ((retval = cbc_run_query(cbc, cbs, SYSCONF)) == NO_RECORDS) {
-		fprintf(stderr, "\
-There are no system packages configured in the database for any domain\n");
-		goto cleanup;
-	} else if (retval != 0)
-		goto cleanup;
-	init_multi_dbdata_struct(&data, max);
-	if ((retval = get_syspack_ids(cbc, css, data, query)) != 0) 
-		goto cleanup;
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		printf("Package %s seems to have no configuration info for domain %s\n",
-		 css->name, css->domain);
-	} else {
-		printf("Package configuration information for %s\n", css->domain);
-		while (data) {
-			printf("%s\t%s\t%s\t%s\n", css->name, data->fields.text,
-			 data->next->fields.text, data->next->next->fields.text);
-			data = data->next->next->next;
-		}
 	}
 	goto cleanup;
 	cleanup:

@@ -1,0 +1,106 @@
+.TH cbcsysp 8 "Version 0.2: 18 December 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+cbcsysp \- Create Build Config System Packages
+.SH SYNOPSIS
+.B cbcsysp
+[
+.B action
+] 
+[
+.B type
+]
+[
+.B specifier
+]
+
+.SH DESCRIPTION
+\fBcbcsysp\fP allows you to specify debian packages to install as part of a
+"system" configuration. As part of the preseed install, debian packages can
+be given specific configuration options. This can be useful to customise a
+base build for a specifc group of servers. These servers are grouped
+together into a \fIbuild domain\fP. For example, one domain may have a
+central authentication mechanism, as well as a specific email relay server.
+.PP
+There are 3 separate types in this program. The package, the arguments for
+the package and the configuration for these arguments. The package type only
+has 1 argument, the package name; the package argument type has 2, the field
+and the type and the configuration type has 1, the argument. For example, the
+postfix package has an argument with a field of \fBpostfix/mailname\fP and a type
+\fBstring\fP. The configuration argument could be \fImailer.mydomain.com\fP.
+These can be taken from running \fIdebconf-get-selections\fP on
+a debian install (this requires the debconf-utils package to be installed).
+When adding a configuration argument, you will need to specify the package
+name and also the field you wish to configure.
+
+.SH OPTIONS
+.B actions (these do not take arguments; only 1 can be used)
+.IP -a
+add
+.IP -l
+list
+.IP -m
+modify
+.IP -r
+remove
+.PP
+.B type
+.IP -p
+package
+.IP -o
+configuration
+.IP -y
+argument
+.PP
+These types specify what you wish to act upon. After adding a package, you will
+most likely want to add the arguments for that package. You will then want to
+add configuration for these package arguments for a specific build domain. In
+this way, you can tailor your build for specific build domains.
+.PP
+.B specifier (these will all take an argument)
+.IP -b
+<build-domain>
+.IP -f
+<field>
+.IP -g
+<argument>
+.IP -n
+<package-name>
+.IP -t
+<type>
+.PP
+.SH EXAMPLES
+.B To add a package
+.IP
+\fBcbcsysp -a -p -n <package-name>\fP
+.PP
+.B To add the arguments for that package
+.IP
+\fBcbcsysp -a -y -f <field> -t <type> -n <package-name>\fP
+.PP
+.B To add a configuration for the package
+.IP
+\fBcbcsysp -a -o -g argument -b <build-domain> -n <package-name>\fP
+.PP
+You will need to be this specific for removing or modifying.
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR cbcdomain(8)
+

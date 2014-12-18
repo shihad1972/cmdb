@@ -66,13 +66,8 @@ list_cbc_syspackage(cbc_config_s *cbc);
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
 
-// Display functions
-
 int
-display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
-
-int
-display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
 
 // Add functions
 
