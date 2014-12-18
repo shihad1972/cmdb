@@ -183,12 +183,9 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		if (!(cbcs->domain))  {
 			fprintf(stderr, "No build domain supplied\n\n");
 			retval = ARGV_INVAL;
-		} else if (!(cbcs->name)) {
-			fprintf(stderr, "You need a package name!\n\n");
-			retval = ARGV_INVAL;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
-			fprintf(stderr, "Need both package name and field to display config\n\n");
+			fprintf(stderr, "Need both package name and field to list config\n\n");
 			retval = ARGV_INVAL;
 		}
 	}
