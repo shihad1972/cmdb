@@ -97,7 +97,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	free(cbc);
-	if (retval != 0)
+	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;
 }

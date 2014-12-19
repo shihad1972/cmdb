@@ -1951,22 +1951,26 @@ int
 cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
-	int retval;
+	int retval = 0, i = 0;
 	unsigned int fields;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
-	retval = 0;
 	file = config->file;
 	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
 		report_error(retval, "cbc_run_query_sqlite");
 	}
 	cmdb_setup_ro_sqlite(query, file, &cbc, &state);
 	fields = (unsigned int) sqlite3_column_count(state);
-	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
+	while ((retval = sqlite3_step(state)) == SQLITE_ROW) {
+		i++;
 		cbc_store_result_sqlite(state, base, type, fields);
+	}
 	cmdb_sqlite_cleanup(cbc, state);
-	return NONE;
+	if (i == 0)
+		return NO_RECORDS;
+	else
+		return NONE;
 }
 
 int
