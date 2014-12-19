@@ -19,7 +19,7 @@ Would be nice if I could create a VM xml file to use for libvirt.
 Not too sure if I need to use the libvirt API or not.
 
 21/11/2014
-Chek the auditd source code for a cool way to read a config file.
+Check the auditd source code for a cool way to read a config file.
 Have to build a list of values that it can read, and will
 probably want to associate these with the struct char memeber somehow.
 Currently config reading is pretty ugly :(

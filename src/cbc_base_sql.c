@@ -314,16 +314,19 @@ SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?","\
 SELECT hard_id FROM hardware WHERE server_id = ? and device = ?","\
 SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?","\
 SELECT syspack_id FROM system_packages WHERE name = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  WHERE spc.bd_id = ? AND spc.syspack_id = ? AND spc.syspack_arg_id = ?","\
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ?","\
 SELECT syspack_arg_id FROM system_package_args WHERE \
   syspack_id = ?  AND field = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
   WHERE spc.bd_id = ? AND spc.syspack_id = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
   WHERE spc.bd_id = ? "
 
 };
@@ -351,7 +354,7 @@ const unsigned int cbc_search_args[] = {
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 3, 1, 3, 3
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4
 };
 
 const int cbc_inserts[][24] = {
@@ -564,10 +567,10 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int

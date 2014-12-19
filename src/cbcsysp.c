@@ -241,6 +241,7 @@ list_cbc_syspackage(cbc_config_s *cbc)
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 {
+	char *package = '\0';
 	int retval = 0, query;
 	unsigned int max;
 	dbdata_s *data = 0, *list;
@@ -265,9 +266,21 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 		goto cleanup;
 	retval = 0;
 	list = data;
-	printf("System package config for build domain %s\n\n", css->domain);
+	printf("System package config for build domain %s\n", css->domain);
 	while (list) {
-		printf("%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		if (!(package)) {
+			printf("\n%s\n", list->fields.text);
+			package = list->fields.text;
+		} else if (strncmp(package, list->fields.text, URL_S) != 0) {
+			printf("\n%s\n", list->fields.text);
+			package = list->fields.text;
+		}
+		list = list->next;
+		if (strlen(list->fields.text) > 23)
+		printf("\t%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		 list->next->next->fields.text);
+		else
+		printf("\t%s\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
 		 list->next->next->fields.text);
 		list = list->next->next->next;
 	}
