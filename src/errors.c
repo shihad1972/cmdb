@@ -103,7 +103,7 @@ report_error(int error, const char *errstr)
 	} else if (error == DB_TYPE_INVALID) {
 		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
-		fprintf(stderr, "Function %s tring to use an unknown struct / db table\n", errstr);
+		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
 	} else if (error == NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {

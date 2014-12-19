@@ -2374,11 +2374,11 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build(state, base->build);
 	else if (type == DISK_DEVS)
 		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
-	else if (type == SYSPACK)
+	else if (type == SYSPACKS)
 		retval = cbc_setup_bind_sqlite_syspack(state, base->syspack);
-	else if (type == SYSARG)
+	else if (type == SYSARGS)
 		retval = cbc_setup_bind_sqlite_sysarg(state, base->sysarg);
-	else if (type == SYSCONF)
+	else if (type == SYSCONFS)
 		retval = cbc_setup_bind_sqlite_sysconf(state, base->sysconf);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
