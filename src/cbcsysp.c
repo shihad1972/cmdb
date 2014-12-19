@@ -294,7 +294,7 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 int
 list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
 {
-	int retval = 0;
+	int retval = 0, count = 0;
 	dbdata_s *data = 0;
 	cbc_s *cbs;
 	cbc_syspack_arg_s *cspa, *list;
@@ -312,20 +312,23 @@ There are no arguments configured in the database for any package\n");
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, URL_S, "%s", css->name);
 	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
-		fprintf(stderr, "\
-Package %s does not have any configured arguments\n", css->name);
+		fprintf(stderr, "Package %s not in the database?\n", css->name);
 		retval = NO_RECORDS;
 		goto cleanup;
 	} else if (retval > 1) {
-		fprintf(stderr, " Multiple id's for package %s??\n", css->name);
+		fprintf(stderr, "Multiple id's for package %s??\n", css->name);
 	}
 	retval = 0;
 	list = cspa;
 	while (list) {
-		if (list->syspack_id == data->fields.number)
+		if (list->syspack_id == data->fields.number) {
 			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
+			count++;
+		}
 		list = list->next;
 	}
+	if (count == 0)
+		printf("Package %s has no arguments in the database\n", css->name);
 	goto cleanup;
 	cleanup:
 		clean_dbdata_struct(data);
