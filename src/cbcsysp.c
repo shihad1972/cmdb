@@ -262,8 +262,12 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 		else if ((retval = NO_PACKAGE_CONFIG) && (css->name) && (css->field))
 			goto cleanup;
 	}
-	if ((retval = cbc_run_search(cbc, data, query)) == 0)
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr,
+"Build domain %s has no configured packages\n", css->domain);
+		retval = NO_RECORDS;
 		goto cleanup;
+	}
 	retval = 0;
 	list = data;
 	printf("System package config for build domain %s\n", css->domain);
