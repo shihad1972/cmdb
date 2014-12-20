@@ -40,12 +40,30 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "build.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
+
+/* Hopefully this will be the file to need these variables 
+   These are used to substitue these values from the database when used as
+   arguments for system_package_conf */
+const char *spvars[] = {
+	"%baseip",
+	"%domain",
+	"%fqdn",
+	"%hostname",
+	"%ip"
+};
+
+//const unsigned int spvar_len[] = { 7, 7, 5, 9, 3 };
+
+const int sp_query[] = { 33, 63, 64, 20, 33 };
+
+const int spvar_no = 5;
 
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
@@ -508,8 +526,13 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	if ((retval = fill_app_config(cmc, cml, build)) != 0) {
+// New code using cbcsysp
+/*	if ((retval = fill_app_config(cmc, cml, build)) != 0) {
 		printf("Failed to get application configuration\n");
+		return retval;
+	} */
+	if ((retval = fill_system_packages(cmc, cml, build)) != 0) {
+		printf("Failed to get system package configuration\n");
 		return retval;
 	}
 	retval = write_file(file, build->string);
@@ -1424,6 +1447,157 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 	}
 	clean_dbdata_struct(data);
 	return NONE;
+}
+
+int
+fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+{
+	int retval, type = SYSP_INFO_ON_BD_ID;
+	char *package = '\0';
+	unsigned int max;
+	unsigned long int bd_id;
+	dbdata_s *data, *list;
+
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		fprintf(stderr, "No build domain in fill_system_packages\n");
+		return NO_RECORDS;
+	}
+	bd_id = data->fields.number;
+	clean_dbdata_struct(data);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
+		printf("No system packages configured for domain\n");
+		clean_dbdata_struct(data);
+		return retval;
+	} else {
+		retval = 0;
+	}
+	list = data;
+	while (list) {
+		if (!(package) || (strncmp(package, list->fields.text, URL_S) != 0)) {
+			if (build->size + 1 >= build->len)
+				resize_string_buff(build);
+			snprintf(build->string + build->size, 2, "\n");
+			build->size++;
+			package = list->fields.text;
+		}
+		add_system_package_line(cmc, cml->server_id, build, list);
+		list = list->next->next->next->next;
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+void
+add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data)
+{
+	char *buff, *arg, *tmp;
+	size_t blen, slen;
+
+	if (!(buff = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buff in add_system_package_line");
+	if ((snprintf(buff, BUFF_S, "%s\t%s\t%s\t", data->fields.text,
+	      data->next->fields.text, data->next->next->fields.text)) >= BUFF_S)
+		fprintf(stderr, "System package line truncated in preseed file!\n");
+	blen = strlen(buff);
+	tmp = data->next->next->next->fields.text;
+	if (!(arg = complete_syspack_arg(cbc, server_id, tmp))) {
+		fprintf(stderr, "Could not complete_syspack_arg for %s\n",
+		 data->next->fields.text);
+		free(buff);
+		return;
+	}
+	slen = strlen(arg);
+	if ((blen + slen + build->size) >= build->len)
+		resize_string_buff(build);
+	snprintf(build->string + build->size, blen + slen + 2, "%s%s\n", buff, arg);
+	build->size += blen + slen + 1;
+	free(arg);
+	free(buff);
+}
+
+char *
+complete_syspack_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
+{
+	char *tmp, *new = 0, *pre, *post;
+	int i, retval;
+	size_t len;
+	dbdata_s *data;
+
+	if (!(arg))
+		return new;
+	if (!(new = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "new in complete_syspack_arg");
+	snprintf(new, TBUFF_S, "%s", arg);
+	for ( i = 0; i < spvar_no; i++ ) {
+		if ((pre = strstr(new, spvars[i]))) {
+// Check we are not the start of the new buffer
+			if ((pre - new) > 0)
+				*pre = '\0';
+// Move forward to part we want to save
+			tmp = pre + strlen(spvars[i]);
+// and save it
+			post = strndup(tmp, TBUFF_S);
+			init_multi_dbdata_struct(&data, cbc_search_fields[sp_query[i]]);
+			data->args.number = server_id;
+			if ((retval = cbc_run_search(cbc, data, sp_query[i])) == 0) {
+				fprintf(stderr,
+"Query returned 0 entries in complete_syspack_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+				goto cleanup;
+			}
+			if (!(tmp = get_replaced_syspack_arg(data, i))) {
+				fprintf(stderr,
+"Cannot get new string in complete_syspack_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+				goto cleanup;
+			}
+			len = strlen(tmp) + strlen(post);
+			if ((len + strlen(new)) < TBUFF_S)
+				snprintf(pre, len + 1, "%s%s", tmp, post);
+			clean_dbdata_struct(data);
+		}
+	}
+	return new;
+
+	cleanup:
+		free(new);
+		clean_dbdata_struct(data);
+		return NULL;
+}
+
+char *
+get_replaced_syspack_arg(dbdata_s *data, int loop)
+{
+// This function NEEDS validated inputs
+	char *str = '\0', *tmp;
+
+	switch(loop) {
+		case 0:
+			str = strndup(data->fields.text, RANGE_S - 1);
+			tmp = strrchr(str, '.');
+			tmp++;
+			*tmp = '0';
+			*(tmp + 1) = '\0';
+			break;
+		case 1:
+			str = strndup(data->fields.text, RBUFF_S - 1);
+			break;
+		case 2:
+			if (!(str = calloc(RBUFF_S, sizeof(char))))
+				report_error(MALLOC_FAIL, "str in get_replaced_syspack_arg");
+			snprintf(str, RBUFF_S, "%s.%s", data->fields.text, data->next->fields.text);
+			break;
+		case 3:
+			str = strndup(data->fields.text, HOST_S - 1);
+			break;
+		case 4:
+			str = strndup(data->fields.text, RANGE_S - 1);
+			break;
+	}
+	return str;
 }
 
 void

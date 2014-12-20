@@ -283,8 +283,11 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 		if (strlen(list->fields.text) > 23)
 		printf("\t%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
 		 list->next->next->fields.text);
-		else
+		else if (strlen(list->fields.text) > 15)
 		printf("\t%s\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		 list->next->next->fields.text);
+		else
+		printf("\t%s\t\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
 		 list->next->next->fields.text);
 		list = list->next->next->next;
 	}

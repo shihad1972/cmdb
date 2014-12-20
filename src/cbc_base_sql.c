@@ -317,18 +317,25 @@ SELECT syspack_id FROM system_packages WHERE name = ?","\
 SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
   LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ?","\
+  WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ? \
+  ORDER BY sp.name, spa.field","\
 SELECT syspack_arg_id FROM system_package_args WHERE \
   syspack_id = ?  AND field = ?","\
 SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
   LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ? AND spc.syspack_id = ?","\
+  WHERE spc.bd_id = ? AND spc.syspack_id = ? ORDER BY sp.name, spa.field","\
 SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
   LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ? "
-
+  WHERE spc.bd_id = ? ORDER BY sp.name, spa.field","\
+SELECT bd.domain FROM build_domain bd \
+  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
+SELECT s.name, bd.domain from server s \
+  LEFT JOIN build_ip ip ON ip.server_id = s.server_id \
+  LEFT JOIN build_domain bd ON ip.bd_id = bd.bd_id where s.server_id = ?","\
+SELECT bd.bd_id FROM build_domain bd \
+  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -349,12 +356,12 @@ const unsigned int cbc_delete_args[] = {
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1
+	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -505,6 +512,9 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, DBINT, DBINT } ,
 	{ DBINT, DBTEXT, NONE } ,
 	{ DBINT, DBINT, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
@@ -570,7 +580,10 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -2160,7 +2173,7 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		cmdb_sqlite_cleanup(cbc, state);
 		return NONE;
 	}
-	i = sqlite3_total_changes(cbc);
+	i = sqlite3_changes(cbc);
 	cmdb_sqlite_cleanup(cbc, state);
 	return i;
 }

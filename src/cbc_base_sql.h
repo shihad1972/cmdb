@@ -125,7 +125,10 @@ enum {			/* cbc search SQL statements */
 	SYSP_INFO_SYS_AND_BD_ID = 59,
 	SPARG_ON_SPID_AND_FIELD = 60,
 	SYSP_INFO_ARG_AND_BD_ID = 61,
-	SYSP_INFO_ON_BD_ID = 62
+	SYSP_INFO_ON_BD_ID = 62,
+	BDOM_NAME_ON_SERVER_ID = 63,
+	NAME_DOM_ON_SERVER_ID = 64,
+	BD_ID_ON_SERVER_ID = 65
 };
 
 enum {			/* cbc update SQL statements */

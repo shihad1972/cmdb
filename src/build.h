@@ -201,6 +201,18 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 int
 fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
+int
+fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+
+void
+add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data);
+
+char *
+complete_syspack_arg(cbc_config_s *cbc, uli_t server_id, char *arg);
+
+char *
+get_replaced_syspack_arg(dbdata_s *data, int loop);
+
 void
 fill_ldap_config(dbdata_s *data, string_len_s *build, char *os);
 
