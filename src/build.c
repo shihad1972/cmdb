@@ -48,7 +48,7 @@
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
 
-/* Hopefully this will be the file to need these variables 
+/* Hopefully this will be the file to need these variables
    These are used to substitue these values from the database when used as
    arguments for system_package_conf */
 const char *spvars[] = {
@@ -729,6 +729,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 #\n", server);
 	len = strlen(build->string);
 	build->size = len;
+// Will need to change this to move to cbcsysp
 	PREP_DB_QUERY(list, ALL_CONFIG)
 	tmp = list;
 	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
