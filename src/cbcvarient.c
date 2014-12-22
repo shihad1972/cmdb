@@ -449,8 +449,8 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 			    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
 				printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-				osid = get_single_os_id(base, cvl);
-				display_specific_os_packages(base, id, osid);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
 		}
@@ -460,8 +460,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 			    (strncmp(cvl->arch, bos->arch, MAC_S) == 0)) {
 				printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-				osid = get_single_os_id(base, cvl);
-				display_specific_os_packages(base, id, osid);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
 		}
@@ -472,8 +472,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
 				printf("\
 Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
-				osid = get_single_os_id(base, cvl);
-				display_specific_os_packages(base, id, osid);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
 		}
