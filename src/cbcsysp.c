@@ -449,10 +449,8 @@ int
 get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
 {
 	int retval = 0;
-	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0) {
-		fprintf(stderr, "Cannot find build domain %s\n", css->domain);
+	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)
 		return NO_BD_CONFIG;
-	}
 	if (query != SYSP_INFO_ON_BD_ID) {
 		if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
 			fprintf(stderr, "Cannot find package %s\n", css->name);
