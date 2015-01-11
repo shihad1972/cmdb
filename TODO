@@ -1,3 +1,11 @@
+06/01/2015
+I want to be able to limit the number of results returned from the DB query
+so we only display, say, 20 servers / dnsa zone records etc. This will mean
+we need to page the terminal and also rerun the query on the database using
+the LIMIT clause in the SQL statement. This can be used in the prepared
+statements but probably not the base queries, so I will have to fix the whole
+DB access :(
+
 08/12/2014
 Database updates. Need to update code to match:
 

@@ -1,0 +1,3 @@
+22/12/2014
+cbcvarient is not honouring the -t <arch> when listing
+ *** FIXED dc4b43c ***
