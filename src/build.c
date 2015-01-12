@@ -779,21 +779,31 @@ chmod 755 ldap-auth.sh\n\
 		}
 	}
 	CHECK_DATA_LIST(0)
-	PREP_DB_QUERY(data, LOG_CONFIG)
-	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_LOG_CONFIG;
-	} else if (retval > 1) {
-		fprintf(stderr, "Associated with multiple build domains?\n");
-		fprintf(stderr, "Using 1st one!!!\n");
-	}
-	if (data->fields.small > NONE) {
+	if (list->fields.small > 0) {
+		PREP_DB_QUERY(data, LOG_CONFIG)
+		if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
+			clean_dbdata_struct(data);
+			return NO_LOG_CONFIG;
+		} else if (retval > 1) {
+			fprintf(stderr, "Associated with multiple build domains?\n");
+			fprintf(stderr, "Using 1st one!!!\n");
+		}
 		server = data->next->fields.text;
 		snprintf(line, RBUFF_S, "\
 $WGET %sscripts/log.sh\n\
 chmod 755 log.sh\n\
 ./log.sh %s>> scripts.log 2>&1\n\
 \n", cml->config, server);
+		PRINT_STRING_WITH_LENGTH_CHECK
+	}
+	CHECK_DATA_LIST(0)
+	if (list->fields.small > 0) {
+		snprintf(line, RBUFF_S, "\
+if $WGET %sscripts/xymon-setup.sh; then\n\
+  chmod 755 xymon-setup.sh\n\
+  ./xymon-setup.sh %sscripts/>> scripts.log 2>&1\n\
+fi\n\
+\n", cml->config, cml->config);
 		PRINT_STRING_WITH_LENGTH_CHECK
 	}
 	server = cml->name;
@@ -1203,11 +1213,13 @@ d-i partman-auto/disk string %s\n\
 d-i partman-auto/choose_recipe select monkey\n\
 d-i partman-auto/method string regular\n\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/choose_partition select finish\n\
 d-i partman/confirm_nooverwrite boolean true\n\
 d-i partman/confirm boolean true\n\
 d-i partman-md/device_remove_md boolean true\n\
+#d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
+#d-i partman/mount_style select uuid\n\
 \n\
 ", cml->partition);
 	else
@@ -1218,7 +1230,7 @@ d-i partman-auto/method string lvm\n\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
 d-i partman-auto-lvm/guided_size string 100%%\n\
 d-i partman-auto-lvm/no_boot boolean true\n\
-d-i partman/choose_partition select Finish partitioning and write changes to disk\n\
+d-i partman/choose_partition select finish\n\
 d-i partman/confirm_nooverwrite boolean true\n\
 d-i partman/confirm boolean true\n\
 d-i partman-lvm/confirm boolean true\n\
@@ -1226,7 +1238,9 @@ d-i partman-lvm/confirm_nooverwrite boolean true\n\
 d-i partman-lvm/device_remove_lvm boolean true\n\
 d-i partman-lvm/device_remove_lvm_span boolean true\n\
 d-i partman-md/device_remove_md boolean true\n\
+d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
+d-i partman/mount_style select uuid\n\
 \n\
 ", cml->partition);
 	plen = strlen(disk);

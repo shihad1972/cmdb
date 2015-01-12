@@ -178,8 +178,6 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
 	} else if (error == BUILD_OS_EXISTS) {
 		fprintf(stderr, "Build OS %s already exists\n", errstr);
-	} else if (error == NO_BUILD_PACKAGES) {
-		fprintf(stderr, "No build packages in database\n");
 	} else if (error == VARIENT_EXISTS) {
 		fprintf(stderr, "Varient already exists in the database\n");
 	} else if (error == OS_ALIAS_NEEDED) {
@@ -622,6 +620,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot get build domain config.");
 	else if (error == NO_HARD_DISK_DEV)
 		snprintf(errstr, MAC_S, "Cannot find disk for server");
+	else if (error == NO_BUILD_PACKAGES)
+		snprintf(errstr, MAC_S, "No build packages in database");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }

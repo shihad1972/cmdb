@@ -494,7 +494,7 @@ cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	init_cbc_struct(cbc);
 	init_disk_dev(disk);
 	cbc->diskd = disk;
-	snprintf(disk->device, HOST_S, "%s", cml->harddisk);
+	snprintf(disk->device, HOST_S, "/dev/%s", cml->harddisk);
 	disk->lvm = lvm->fields.small;
 	disk->server_id = build->server_id;
 	if ((retval = cbc_run_insert(cbt, cbc, DISK_DEVS)) != 0)
