@@ -1,3 +1,10 @@
+14/01/2015
+As well as adding cbcsysp for debian packages, I am going to have to add a
+database table for kickstart scripts (and also scripts for debian for
+packages I cannot preseed).
+As a start, I guess I could do a table of script names and then a table of
+arguments, based on the domain name (or bd_id (build domain))
+
 06/01/2015
 I want to be able to limit the number of results returned from the DB query
 so we only display, say, 20 servers / dnsa zone records etc. This will mean
