@@ -681,7 +681,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char *server, line[TBUFF_S], *pos;
 	int retval = NONE, type;
 	unsigned int max;
-	dbdata_s *list, *data, *tmp;
+	dbdata_s *list, *data = 0, *tmp;
 	size_t len = NONE;
 	string_len_s *build;
 
