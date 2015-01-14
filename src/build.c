@@ -753,7 +753,8 @@ chmod 755 ldap-auth.sh\n\
 \n", cml->config, cml->config);
 			PRINT_STRING_WITH_LENGTH_CHECK
 		}
-	}
+	} else
+		CHECK_DATA_LIST(0)
 	CHECK_DATA_LIST(0)
 	if (list->fields.small > 0) {
 		PREP_DB_QUERY(data, LOG_CONFIG)
