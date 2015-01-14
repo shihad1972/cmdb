@@ -18,8 +18,8 @@
 #  with this program; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-ssl=$1
-url=$2
+url=$1
+ssl=$2
 if [ -d /target ]; then
   TGT=/target/root
 else
