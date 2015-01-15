@@ -226,6 +226,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Delete from database failed\n");
 	} else if (error == NO_BD_CONFIG) {
 		fprintf(stderr, "Unable to find build domain\n");
+	} else if (error == NO_SYSPACK_CONF) {
+		;
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}

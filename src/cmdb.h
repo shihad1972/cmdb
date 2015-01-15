@@ -238,7 +238,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NET_FUNC_FAILED = 220,
 	BDOM_OVERLAP = 221,
 	NO_PACKAGE_CONFIG = 222,
-	NO_HARD_DISK_DEV = 223
+	NO_HARD_DISK_DEV = 223,
+	NO_SYSPACK_CONF = 224
 };
 
 enum {			/* command line error codes */
