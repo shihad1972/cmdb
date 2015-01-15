@@ -85,6 +85,8 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
+		else if (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
@@ -176,9 +178,15 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 			retval = ARGV_INVAL;
 		}
 	} else if (cbcs->what == SPACKARG) {
-		if ((cbcs->action != LIST_CONFIG) &&  (!(cbcs->type) || !(cbcs->field))) {
-			fprintf(stderr, "You need both package field and type\n");
-			retval = ARGV_INVAL;
+		if (cbcs->action != LIST_CONFIG) {
+			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
+				fprintf(stderr, "You need both package field and type\n");
+				retval = ARGV_INVAL;
+			} else if (cbcs->action == RM_CONFIG && !(cbcs->field)) {
+				fprintf(stderr,
+"You need to provide the field you want to remove\n");
+				retval = ARGV_INVAL;
+			}
 		} else if (!(cbcs->name)) {
 			fprintf(stderr, "You need a package name!\n\n");
 			retval = ARGV_INVAL;
@@ -431,20 +439,41 @@ int
 rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0, query = SYSP_PACKAGE;
-	unsigned int args = cbc_search_args[query];
-	unsigned int fields = cbc_search_fields[query];
-	unsigned int max = cmdb_get_max(args, fields);
+	unsigned int args = cbc_delete_args[query];
 	dbdata_s *data = 0;
 	
 	if (!(cbc) || !(cbcs))
 		return NO_DATA;
-	init_multi_dbdata_struct(&data, max);
+	init_multi_dbdata_struct(&data, args);
 	if ((retval = get_system_package_id(cbc, cbcs->name, &(data->args.number))) != 0)
 		return retval;
 	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
 		fprintf(stderr, "Unable to delete system package\n");
 	else
 		printf("Package %s deleted\n", cbcs->name);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYSP_ARG;
+	unsigned int args = cbc_delete_args[query];
+	dbdata_s *data = 0;
+	unsigned long int spack_id;
+
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, args);
+	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+		return retval;
+	if ((retval = get_syspack_arg_id(cbc, cbcs->field, spack_id, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
+		fprintf(stderr, "Unable to delete system package argument\n");
+	else
+		printf("Package %s, field %s deleted\n", cbcs->name, cbcs->field);
 	clean_dbdata_struct(data);
 	return 0;
 }
