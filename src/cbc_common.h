@@ -37,6 +37,9 @@ cbc_get_varient_name(char *varient, char *valias);
 unsigned long int
 cbc_get_varient_id(cbc_varient_s *vari, char *name);
 
+void 
+cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid);
+
 unsigned long int
 search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 

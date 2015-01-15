@@ -536,11 +536,10 @@ get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 int
 add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 {
-	int retval = 0, os, packs = 0, query = UP_VARIENT;
+	int retval = 0, os, packs = 0;
 	unsigned long int *osid, vid;
 	cbc_s *base;
 	cbc_package_s *pack;
-	dbdata_s *data;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_cbc_package");
@@ -550,7 +549,6 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		clean_cbc_struct(base);
 		return retval;
 	}
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
 	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
 	if (vid == 0) 
 		return VARIENT_NOT_FOUND;
@@ -570,19 +568,11 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		base->package = base->package->next;
 	}
 	printf("Inserted %d packages\n", packs);
-	data->args.number = (unsigned long int)getuid();
-	data->next->args.number = vid;
-	if ((retval = cbc_run_update(cbc, data, query)) == 1)
-		printf("Build varient set updated\n");
-	else if (retval > 1)
-		fprintf(stderr, "Multiple build varients udpated??\n");
-	else if (retval == 0)
-		fprintf(stderr, "No build varient updated\n");
-	retval = 0;
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	base->package = pack;
 	free(osid);
 	clean_cbc_struct(base);
-	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -629,6 +619,8 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		list = list->next;
 	}
 	printf("%d packages deleted\n", packs);
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	free(osid);
 	clean_cbc_struct(base);
 	clean_dbdata_struct(data);
