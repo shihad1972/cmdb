@@ -1,7 +1,7 @@
 /*
  *
  *  cbcsysp: Create Build Configuration Partition
- *  Copyright (C) 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2014 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@
  *  Functions to get configuration values and also parse command line arguments
  *
  *  Part of the cbcsysp program
- *
- *  (C) Iain M. Conochie 2014
  *
  */
 #define _GNU_SOURCE
