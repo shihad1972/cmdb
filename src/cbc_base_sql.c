@@ -197,7 +197,10 @@ DELETE FROM build WHERE server_id = ?","\
 DELETE FROM disk_dev WHERE server_id = ?","\
 DELETE FROM seed_schemes WHERE def_scheme_id = ?","\
 DELETE FROM default_part WHERE def_part_id = ?","\
-DELETE FROM default_part WHERE def_scheme_id = ?"
+DELETE FROM default_part WHERE def_scheme_id = ?","\
+DELETE FROM system_packages WHERE syspack_id = ?","\
+DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
+DELETE FROM system_package_conf WHERE syspack_conf_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -335,7 +338,12 @@ SELECT s.name, bd.domain from server s \
   LEFT JOIN build_ip ip ON ip.server_id = s.server_id \
   LEFT JOIN build_domain bd ON ip.bd_id = bd.bd_id where s.server_id = ?","\
 SELECT bd.bd_id FROM build_domain bd \
-  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?"
+  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
+SELECT syspack_conf_id FROM system_package_conf spc \
+  JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id \
+  JOIN build_domain bd ON bd.bd_id = spc.bd_id \
+  WHERE bd.domain = ? AND sp.name = ? AND spa.field =?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -351,17 +359,19 @@ const unsigned int cbc_update_args[] = {
 	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1
+	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
+	3
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
+	1
 };
 
 const int cbc_inserts[][24] = {
@@ -447,6 +457,9 @@ const unsigned int cbc_delete_types[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE }
 };
 const unsigned int cbc_search_arg_types[][3] = {
@@ -515,7 +528,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE }
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -583,6 +597,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 

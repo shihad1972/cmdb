@@ -59,7 +59,10 @@ enum {			/* cbc delete SQL statements */
 	DISK_DEV_ON_SERVER_ID = 7,
 	SEED_SCHEME_ON_DEF_ID = 8,
 	DEF_PART_ON_PART_ID = 9,
-	DEF_PART_ON_DEF_ID = 10
+	DEF_PART_ON_DEF_ID = 10,
+	SYSP_PACKAGE = 11,
+	SYSP_ARG = 12,
+	SYSP_CONF = 13
 };
 
 enum {			/* cbc search SQL statements */
@@ -128,7 +131,8 @@ enum {			/* cbc search SQL statements */
 	SYSP_INFO_ON_BD_ID = 62,
 	BDOM_NAME_ON_SERVER_ID = 63,
 	NAME_DOM_ON_SERVER_ID = 64,
-	BD_ID_ON_SERVER_ID = 65
+	BD_ID_ON_SERVER_ID = 65,
+	SYS_PACK_CONF_ID = 66
 };
 
 enum {			/* cbc update SQL statements */

@@ -90,6 +90,8 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage_conf(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
+		else if  (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage_conf(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	}
@@ -418,6 +420,42 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 		printf("Package config for package %s, domain %s inserted into DB\n",
 		 cbcs->name, cbcs->domain);
 	clean_cbc_struct(cbs);
+	return retval;
+}
+
+// Remove functions
+
+int
+rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYS_PACK_CONF_ID;
+	unsigned int args = cbc_search_args[query];
+	unsigned int fields = cbc_search_fields[query];
+	unsigned int max = cmdb_get_max(args, fields);
+	dbdata_s *data = 0;
+
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", cbcs->domain);
+	snprintf(data->next->args.text, RBUFF_S, "%s", cbcs->name);
+	snprintf(data->next->next->args.text, RBUFF_S, "%s", cbcs->field);
+	if ((retval = cbc_run_search(cbc, data, SYS_PACK_CONF_ID)) == 0) {
+		fprintf(stderr, "Cannot find system package conf\n");
+		clean_dbdata_struct(data);
+		return NO_SYSPACK_CONF;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple system packages? Using 1st\n");
+	data->args.number = data->fields.number;
+	if ((retval = cbc_run_delete(cbc, data, SYSP_CONF)) == 0) {
+		fprintf(stderr, "Cannot remove syspack conf from DB\n");
+		retval = DB_DELETE_FAILED;
+	} else if (retval == 1) {
+		printf("Package config for package %s, domain %s removed from DB\n",
+		 cbcs->name, cbcs->domain);
+		retval = 0;
+	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 
