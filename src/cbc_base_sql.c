@@ -2094,7 +2094,7 @@ int
 cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
 	const char *query = cbc_sql_delete[type], *file = '\0';
-	int retval = 0;
+	int retval = 0, sqlret = 0;
 	unsigned int i;
 	dbdata_s *list = '\0';
 	sqlite3 *cbc;
@@ -2109,6 +2109,10 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 	else
 		report_error(NO_DATA, "data in cbc_run_delete_sqlite");
 	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
+	if ((retval = sqlite3_db_config(cbc, SQLITE_DBCONFIG_ENABLE_FKEY, 1, &sqlret)) != SQLITE_OK)
+		fprintf(stderr, "Cannot enable foreign key support\n");
+	if (sqlret == 0)
+		fprintf(stderr, "Did not enable foreign key support\n");
 	for (i = 1; i <= cbc_delete_args[type]; i++) {
 		if (!list)
 			break;
