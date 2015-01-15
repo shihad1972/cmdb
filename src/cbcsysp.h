@@ -83,6 +83,9 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
 // Remove functions
 
 int
+rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+
+int
 rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
 
 // Helper funtions

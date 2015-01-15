@@ -76,6 +76,8 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage(cbc);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage(cbc, cbs);
+		else if (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
@@ -424,6 +426,28 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 }
 
 // Remove functions
+
+int
+rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYSP_PACKAGE;
+	unsigned int args = cbc_search_args[query];
+	unsigned int fields = cbc_search_fields[query];
+	unsigned int max = cmdb_get_max(args, fields);
+	dbdata_s *data = 0;
+	
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, max);
+	if ((retval = get_system_package_id(cbc, cbcs->name, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
+		fprintf(stderr, "Unable to delete system package\n");
+	else
+		printf("Package %s deleted\n", cbcs->name);
+	clean_dbdata_struct(data);
+	return 0;
+}
 
 int
 rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
