@@ -90,7 +90,10 @@ SELECT syspack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
 SELECT syspack_arg_id, syspack_id, field, type, cuser, muser, ctime, mtime \
  FROM system_package_args","\
 SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
- muser, ctime, mtime FROM system_package_conf"
+ muser, ctime, mtime FROM system_package_conf","\
+SELECT systscr_id, name, cuser, muser, ctime, mtime FROM system_scripts","\
+SELECT systscr_arg_id, systscr_id, arg, no, cuser, muser, ctime, mtime FROM\
+ system_scripts_args"
 };
 
 const char *cbc_sql_insert[] = { "\
@@ -128,7 +131,10 @@ INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)","\
 INSERT INTO system_package_args (syspack_id, field, type, cuser, muser) \
  VALUES (?, ?, ?, ?, ?)","\
 INSERT INTO system_package_conf (syspack_arg_id, syspack_id, bd_id, arg, \
- cuser, muser) VALUES (?, ?, ?, ?, ?, ?)"
+ cuser, muser) VALUES (?, ?, ?, ?, ?, ?)","\
+INSERT INTO system_scripts (name, cuser, muser) VALUES (?, ?, ?)","\
+INSERT INTO system_scripts_args(systscr_id, arg, no, cuser, muser) VALUES\
+ (?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -200,7 +206,9 @@ DELETE FROM default_part WHERE def_part_id = ?","\
 DELETE FROM default_part WHERE def_scheme_id = ?","\
 DELETE FROM system_packages WHERE syspack_id = ?","\
 DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
-DELETE FROM system_package_conf WHERE syspack_conf_id = ?"
+DELETE FROM system_package_conf WHERE syspack_conf_id = ?","\
+DELETE FROM system_scripts WHERE systscr_id = ?","\
+DELETE FROM system_scripts_args WHERE systscr_arg_id = ?"
 };
 
 const char *cbc_sql_search[] = { "\
@@ -347,11 +355,11 @@ SELECT syspack_conf_id FROM system_package_conf spc \
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9
+	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6
+	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -359,7 +367,7 @@ const unsigned int cbc_update_args[] = {
 	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
@@ -409,7 +417,11 @@ const int cbc_inserts[][24] = {
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0 }
+	  0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0 },
+	{ DBINT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cbc_update_types[][6] = {
@@ -448,6 +460,8 @@ const unsigned int cbc_update_types[][6] = {
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
@@ -771,6 +785,12 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == SYSCONF) {
 		*query = cbc_sql_select[SYSCONFS];
 		*fields = cbc_select_fields[SYSCONFS];
+	} else if (type == SCRIPT) {
+		*query = cbc_sql_select[SCRIPTS];
+		*fields = cbc_select_fields[SCRIPTS];
+	} else if (type == SCRIPTA) {
+		*query = cbc_sql_select[SCRIPTAS];
+		*fields = cbc_select_fields[SCRIPTAS];
 	} else {
 		retval = UNKNOWN_QUERY;
 	}
@@ -902,6 +922,12 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SYSCONF)
 		if ((retval = cbc_run_query_mysql(config, base, SYSCONF)) != 0)
+			return retval;
+	if (type & SCRIPT)
+		if ((retval = cbc_run_query_mysql(config, base, SCRIPT)) != 0)
+			return retval;
+	if (type & SCRIPTA)
+		if ((retval = cbc_run_query_mysql(config, base, SCRIPTA)) != 0)
 			return retval;
 	return retval;
 }
@@ -1145,6 +1171,16 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_sysconf_mysql(row, base);
+	} else if (type == SCRIPT) {
+		required = cbc_select_fields[SCRIPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_script_mysql(row, base);
+	} else if (type == SCRIPTA) {
+		required = cbc_select_fields[SCRIPTAS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_scripta_mysql(row, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_mysql");
 	}
@@ -1205,6 +1241,10 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_sysarg(buffer, base, i);
 	else if (type == SYSCONFS)
 		cbc_setup_bind_mysql_sysconf(buffer, base, i);
+	else if (type == SCRIPTS)
+		cbc_setup_bind_mysql_script(buffer, base, i);
+	else if (type == SCRIPTAS)
+		cbc_setup_bind_mysql_scripta(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
 }
@@ -1739,6 +1779,52 @@ cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
+cbc_store_script_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_script_s *scr, *list;
+
+	initialise_cbc_scripts(&scr);
+	scr->systscr_id = strtoul(row[0], NULL, 10);
+	snprintf(scr->name, CONF_S, "%s", row[1]);
+	scr->cuser = strtoul(row[2], NULL, 10);
+	scr->muser = strtoul(row[3], NULL, 10);
+	convert_time(row[4], &(scr->ctime));
+	convert_time(row[5], &(scr->mtime));
+	list = base->scripts;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = scr;
+	} else {
+		base->scripts = scr;
+	}
+}
+
+void
+cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_script_arg_s *arg, *list;
+
+	initialise_cbc_script_args(&arg);
+	arg->systscr_arg_id = strtoul(row[0], NULL, 10);
+	arg->systscr_id = strtoul(row[1], NULL, 10);
+	snprintf(arg->arg, CONF_S, "%s", row[2]);
+	arg->no = strtoul(row[3], NULL, 10);
+	arg->cuser = strtoul(row[4], NULL, 10);
+	arg->muser = strtoul(row[5], NULL, 10);
+	convert_time(row[6], &(arg->ctime));
+	convert_time(row[7], &(arg->mtime));
+	list = base->script_arg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = arg;
+	} else {
+		base->script_arg = arg;
+	}
+}
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
@@ -1970,6 +2056,31 @@ cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->sysconf->muser);
 }
 
+void
+cbc_setup_bind_mysql_script(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->scripts->name);
+	else if (i == 1)
+		*buffer = &(base->scripts->cuser);
+	else if (i == 2)
+		*buffer = &(base->scripts->muser);
+}
+
+void
+cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->script_arg->systscr_id);
+	else if (i == 1)
+		*buffer = &(base->script_arg->arg);
+	else if (i == 2)
+		*buffer = &(base->script_arg->no);
+	else if (i == 3)
+		*buffer = &(base->script_arg->cuser);
+	else if (i == 4)
+		*buffer = &(base->script_arg->muser);
+}
 
 #endif /* HAVE_MYSQL */
 
@@ -2086,6 +2197,12 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SYSCONF)
 		if ((retval = cbc_run_query_sqlite(config, base, SYSCONF)) != 0)
+			return retval;
+	if (type & SCRIPT)
+		if ((retval = cbc_run_query_sqlite(config, base, SCRIPT)) != 0)
+			return retval;
+	if (type & SCRIPTA)
+		if ((retval = cbc_run_query_sqlite(config, base, SCRIPTA)) != 0)
 			return retval;
 	return retval;
 }
@@ -2378,6 +2495,16 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_sysconf_sqlite(state, base);
+	} else if (type == SCRIPT) {
+		required = cbc_select_fields[SCRIPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_script_sqlite(state, base);
+	} else if (type == SCRIPTA) {
+		required = cbc_select_fields[SCRIPTAS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_scripta_sqlite(state, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_sqlite");
 	}
@@ -2412,6 +2539,10 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_sysarg(state, base->sysarg);
 	else if (type == SYSCONFS)
 		retval = cbc_setup_bind_sqlite_sysconf(state, base->sysconf);
+	else if (type == SCRIPTS)
+		retval = cbc_setup_bind_sqlite_script(state, base->scripts);
+	else if (type == SCRIPTAS)
+		retval = cbc_setup_bind_sqlite_scripta(state, base->script_arg);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -3028,6 +3159,64 @@ cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base)
 	free(stime);
 }
 
+void
+cbc_store_script_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_script_s *scr, *list;
+
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_script_sqlite");
+	initialise_cbc_scripts(&scr);
+	scr->systscr_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(scr->name, CONF_S, "%s", sqlite3_column_text(state, 1));
+	scr->muser = (unsigned long int) sqlite3_column_int64(state, 2);
+	scr->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 4));
+	convert_time(stime, &(scr->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(scr->mtime));
+	list = base->scripts;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = scr;
+	} else {
+		base->scripts = scr;
+	}
+	free(stime);
+}
+
+void
+cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_script_arg_s *arg, *list;
+
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_scripta_sqlite");
+	initialise_cbc_script_args(&arg);
+	arg->systscr_arg_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	arg->systscr_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	snprintf(arg->arg, CONF_S, "%s", sqlite3_column_text(state, 2));
+	arg->no = (unsigned long int) sqlite3_column_int64(state, 3);
+	arg->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	arg->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(arg->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(arg->mtime));
+	list = base->script_arg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = arg;
+	} else {
+		base->script_arg = arg;
+	}
+	free(stime);
+}
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build)
 {
@@ -3516,7 +3705,6 @@ cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_syspack_conf_s *spack)
 {
 	int retval;
 
-	
 	if ((retval = sqlite3_bind_int64(
 state, 1, (sqlite3_int64)spack->syspack_arg_id)) > 0) {
 		fprintf(stderr, "Cannot bind syspack_arg_id %lu\n",
@@ -3546,6 +3734,62 @@ state, 5, (sqlite3_int64)spack->cuser)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 6, (sqlite3_int64)spack->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", spack->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_script(sqlite3_stmt *state, cbc_script_s *scr)
+{
+	int retval = 0;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, scr->name, (int)strlen(scr->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind anem %s\n", scr->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)scr->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", scr->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)scr->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", scr->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg)
+{
+	int retval = 0;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite_int64)arg->systscr_id)) > 0) {
+		fprintf(stderr, "Cannot bind systscr_id %lu\n", arg->systscr_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, arg->arg, (int)strlen(arg->arg), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind arg %s\n", arg->arg);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)arg->no)) > 0) {
+		fprintf(stderr, "Cannot bind no %lu\n", arg->no);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)arg->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", arg->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)arg->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", arg->muser);
 		return retval;
 	}
 	return retval;
