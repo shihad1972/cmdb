@@ -274,6 +274,28 @@ typedef struct cbc_syspack_conf_s {
 	struct cbc_syspack_conf_s *next;
 } cbc_syspack_conf_s;
 
+typedef struct cbc_script_s {
+	char name[CONF_S];
+	unsigned long int systscr_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_script_s *next;
+} cbc_script_s;
+
+typedef struct cbc_script_arg_s {
+	char arg[CONF_S];
+	unsigned long int systscr_arg_id;
+	unsigned long int systscr_id;
+	unsigned long int no;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_script_arg_s *next;
+} cbc_script_arg_s;
+
 typedef struct cbc_s {
 	struct cbc_boot_line_s *bootl;
 	struct cbc_build_s *build;
@@ -293,6 +315,8 @@ typedef struct cbc_s {
 	struct cbc_syspack_s *syspack;
 	struct cbc_syspack_arg_s *sysarg;
 	struct cbc_syspack_conf_s *sysconf;
+	struct cbc_script_s *scripts;
+	struct cbc_script_arg_s *script_arg;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network
@@ -495,5 +519,23 @@ init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
 
 void
 clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
+
+void
+initialise_cbc_scripts(cbc_script_s **scripts);
+
+void
+init_cbc_scripts(cbc_script_s *scripts);
+
+void
+clean_cbc_scripts(cbc_script_s *scripts);
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args);
+
+void
+init_cbc_script_args(cbc_script_arg_s *args);
+
+void
+clean_cbc_script_args(cbc_script_arg_s *args);
 
 #endif /* __CBC_DATA_H__ */

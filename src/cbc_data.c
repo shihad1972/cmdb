@@ -729,3 +729,67 @@ clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 	}
 }
 
+void
+initialise_cbc_scripts(cbc_script_s **scripts)
+{
+	if (!(*scripts = malloc(sizeof(cbc_script_s))))
+		report_error(MALLOC_FAIL, "cbc_script_s");
+	init_cbc_scripts(*scripts);
+}
+
+void
+init_cbc_scripts(cbc_script_s *scripts)
+{
+	memset(scripts, 0, sizeof(cbc_script_s));
+}
+
+void
+clean_cbc_scripts(cbc_script_s *scripts)
+{
+	cbc_script_s *list, *next;
+
+	if (scripts)
+		list = scripts;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+	}
+}
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args)
+{
+	if (!(*args = malloc(sizeof(cbc_script_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_script_arg_s");
+	init_cbc_script_args(*args);
+}
+
+void
+init_cbc_script_args(cbc_script_arg_s *args)
+{
+	memset(args, 0, sizeof(cbc_script_arg_s));
+}
+
+void
+clean_cbc_script_args(cbc_script_arg_s *args)
+{
+	cbc_script_arg_s *list, *next;
+
+	if (args)
+		list = args;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+	}
+}
+
