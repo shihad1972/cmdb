@@ -15,7 +15,7 @@ cbcsysp \- Create Build Config System Packages
 
 .SH DESCRIPTION
 \fBcbcsysp\fP allows you to specify debian packages to install as part of a
-"system" configuration. As part of the preseed install, debian packages can
+system's configuration. As part of the preseed install, debian packages can
 be given specific configuration options. This can be useful to customise a
 base build for a specifc group of servers. These servers are grouped
 together into a \fIbuild domain\fP. For example, one domain may have a
@@ -24,7 +24,7 @@ central authentication mechanism, as well as a specific email relay server.
 There are 3 separate types in this program. The package, the arguments for
 the package and the configuration for these arguments. The package type only
 has 1 argument, the package name; the package argument type has 2, the field
-and the type and the configuration type has 1, the argument. For example, the
+and the type, and the configuration type has 1, the argument. For example, the
 postfix package has an argument with a field of \fBpostfix/mailname\fP and a type
 \fBstring\fP. The configuration argument could be \fImailer.mydomain.com\fP.
 These can be taken from running \fIdebconf-get-selections\fP on
@@ -38,8 +38,6 @@ name and also the field you wish to configure.
 add
 .IP -l
 list
-.IP -m
-modify
 .IP -r
 remove
 .PP
@@ -81,7 +79,7 @@ this way, you can tailor your build for specific build domains.
 .IP
 \fBcbcsysp -a -o -f <field> -g <argument> -b <build-domain> -n <package-name>\fP
 .PP
-You will need to be this specific for removing or modifying.
+You will need to be this specific for removing.
 .SH FILES
 .I /etc/dnsa/dnsa.conf
 .RS
