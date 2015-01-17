@@ -1,3 +1,10 @@
+17/01/2015
+For the build scripts mention below, we are going to have to find a way to
+tie them to either an os or a build type. In fact, we should also look at
+tying the build_os to a build type, so that each OS we can build is in the
+build_type table, but that we can also modify information in there or even
+add new build types.
+
 14/01/2015
 As well as adding cbcsysp for debian packages, I am going to have to add a
 database table for kickstart scripts (and also scripts for debian for
