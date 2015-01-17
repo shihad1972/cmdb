@@ -28,4 +28,35 @@
 #ifndef __CBCSCRIPT_H__
 # define __CBCSCRIPT_H__
 
+enum {
+	CBCSCRIPT = 1,
+	CBCSCRARG = 2
+};
+
+typedef struct cbc_syss_s {
+	char *name;
+	char *arg;
+	short int action;
+	short int what;
+	unsigned long int no;
+} cbc_syss_s;
+
+// Helper Functions
+
+void
+initialise_cbc_scr(cbc_syss_s **scr);
+
+void
+init_cbc_sys_script_s(cbc_syss_s *scr);
+
+void
+clean_cbc_syss_s(cbc_syss_s *scr);
+
+int
+parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs);
+
+int
+check_cbc_script_comm_line(cbc_syss_s *cbcs);
+
 #endif // __CBCSCRIPT_H__
+

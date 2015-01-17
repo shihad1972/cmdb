@@ -324,6 +324,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "Slave zone specified but no master name given\n");
 	else if (retval == NO_PREFIX)
 		fprintf(stderr, "No reverse zone prefix was supplied\n");
+	else if (retval == NO_ARG)
+		fprintf(stderr, "No arguemt was supplied\n");
+	else if (retval == NO_NUMBER)
+		fprintf(stderr, "No number was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
@@ -348,6 +352,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cpc_usage();
 		else if ((strncmp(program, "cbcsysp", CONF_S) == 0))
 			display_cbcsysp_usage();
+		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
+			display_cbcscript_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -544,9 +550,24 @@ display_cbcsysp_usage(void)
 	printf("Type options\n");
 	printf("-p: package\t-o: config\t-y: arguments\n");
 	printf("Arguments\n");
-	printf("-b: <domain>\t-f: <field>\t-n: <name>\t-g: <arg>\n");
-	printf("-t: <type>\n");
+	printf("-b <domain>\t-f <field>\t-n <name>\t-g <arg>\n");
+	printf("-t <type>\n");
 	printf("See man page for full details\n");
+}
+
+void
+display_cbcscript_usage(void)
+{
+	printf("cbcscript: cbc scripts %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcscript <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add\t-l: list\t-r: remove\n");
+	printf("Type options\n");
+	printf("-t: arg\t-s: script\n");
+	printf("Arguments\n");
+	printf("-o <number>\t-g <arg>\t-n <name>\n");
+	printf("See man poage for full details\n");
 }
 
 void
