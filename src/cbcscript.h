@@ -69,5 +69,10 @@ cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr);
 int
 cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr);
 
+// List functions
+
+int
+cbc_script_list_script(cbc_config_s *cbc);
+
 #endif // __CBCSCRIPT_H__
 

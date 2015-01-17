@@ -73,6 +73,8 @@ main(int argc, char *argv[])
 			retval = cbc_script_rm_script(cbc, scr);
 		else
 			retval = WRONG_TYPE;
+	} else if (scr->action == LIST_CONFIG) {
+			retval = cbc_script_list_script(cbc);
 	} else {
 		retval = WRONG_ACTION;
 	}
@@ -153,7 +155,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 int
 check_cbc_script_comm_line(cbc_syss_s *cbcs)
 {
-	int retval;
+	int retval = 0;
 
 	if (cbcs->action == 0)
 		retval = NO_ACTION;
@@ -223,6 +225,50 @@ cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
+	return retval;
+}
+
+// List functions
+
+int
+cbc_script_list_script(cbc_config_s *cbc)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_script_s *script;
+	size_t len;
+	time_t create;
+
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_query(cbc, cbs, SCRIPT)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	script = cbs->scripts;
+	if (script) {
+		printf("Build scripts:\n");
+		printf("Script\t\t\tCreation User\tCreation Time\n");
+	}
+	while (script) {
+		create = (time_t)script->ctime;
+		printf("%s", script->name);
+		len = strlen(script->name);
+		if (len < 8)
+			printf("\t\t\t");
+		else if (len < 16)
+			printf("\t\t");
+		else
+			printf("\t");
+		len = strlen(get_uname(script->cuser));
+		printf("%s", get_uname(script->cuser));
+		if (len < 8)
+			printf("\t\t");
+		else
+			printf("\t");
+		printf("%s", ctime(&create));
+		script = script->next;
+	}
+	clean_cbc_struct(cbs);
 	return retval;
 }
 
