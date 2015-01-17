@@ -1,7 +1,7 @@
 CREATE TABLE `system_scripts_args` (
 `systscr_arg_id` INTEGER PRIMARY KEY,
 `systscr_id` int(11) NOT NULL,
-`bd_id` int(11),
+`bd_id` int(11) NOT NULL,
 `arg` varchar(127) NOT NULL,
 `no` int(11) NOT NULL,
 `cuser` int(11) NOT NULL DEFAULT 0,
