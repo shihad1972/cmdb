@@ -351,7 +351,8 @@ SELECT syspack_conf_id FROM system_package_conf spc \
   JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
   JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id \
   JOIN build_domain bd ON bd.bd_id = spc.bd_id \
-  WHERE bd.domain = ? AND sp.name = ? AND spa.field =?"
+  WHERE bd.domain = ? AND sp.name = ? AND spa.field =?","\
+SELECT systscr_id FROM system_scripts WHERE name = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -373,13 +374,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3
+	3, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1
+	1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -543,7 +544,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT }
+	{ DBTEXT, DBTEXT, DBTEXT },
+	{ DBTEXT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -611,6 +613,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };

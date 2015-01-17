@@ -58,4 +58,7 @@ get_system_package_id(cbc_config_s *cbc, char *domain, uli_t *id);
 int
 get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id);
 
+int
+get_system_script_id(cbc_config_s *cbc, char *package, uli_t *id);
+
 #endif /* CBC_COMMON_H */

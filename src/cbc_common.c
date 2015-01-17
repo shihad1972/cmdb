@@ -271,3 +271,25 @@ get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id)
 	return 0;
 }
 
+int
+get_system_script_id(cbc_config_s *cbc, char *script, uli_t *id)
+{
+	int retval, query = SCR_ID_ON_NAME;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(script))
+		return NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", script);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find the script %s\n", script);
+		clean_dbdata_struct(data);
+		return NO_RECORDS;
+	} else if (retval > 1)
+		fprintf(stderr, "Found multiple scripts %s\n", script);
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+

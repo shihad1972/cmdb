@@ -36,6 +36,7 @@ enum {
 typedef struct cbc_syss_s {
 	char *name;
 	char *arg;
+	char *domain;
 	short int action;
 	short int what;
 	unsigned long int no;
@@ -62,6 +63,11 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs);
 
 int
 cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr);
+
+// Remove functions
+
+int
+cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr);
 
 #endif // __CBCSCRIPT_H__
 

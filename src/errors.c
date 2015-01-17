@@ -71,7 +71,7 @@ report_error(int error, const char *errstr)
 	} else if (error == WRONG_ACTION) {
 		fprintf(stderr, "Incorrect action specified\n");
 	} else if (error == WRONG_TYPE) {
-		fprintf(stderr, "Incorrect domain type specified\n");
+		fprintf(stderr, "Incorrect type specified\n");
 	} else if (error == USER_INPUT_INVALID) {
 		fprintf(stderr, "Input %s not valid.\n", errstr);
 	} else if (error == BUFFER_TOO_SMALL) {
@@ -566,8 +566,8 @@ display_cbcscript_usage(void)
 	printf("Type options\n");
 	printf("-t: arg\t-s: script\n");
 	printf("Arguments\n");
-	printf("-o <number>\t-g <arg>\t-n <name>\n");
-	printf("See man poage for full details\n");
+	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
+	printf("See man page for full details\n");
 }
 
 void
