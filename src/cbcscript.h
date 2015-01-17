@@ -58,5 +58,10 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs);
 int
 check_cbc_script_comm_line(cbc_syss_s *cbcs);
 
+// Add functions
+
+int
+cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr);
+
 #endif // __CBCSCRIPT_H__
 

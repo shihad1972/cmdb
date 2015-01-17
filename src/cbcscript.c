@@ -43,6 +43,7 @@
 int
 main(int argc, char *argv[])
 {
+	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval = 0;
 	cbc_syss_s *scr = 0;
 	cbc_config_s *cbc;
@@ -56,6 +57,24 @@ main(int argc, char *argv[])
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
 	}
+	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
+		clean_cbc_syss_s(scr);
+		free(cbc);
+		parse_cbc_config_error(retval);
+		exit(retval);
+	}
+	if (scr->action == ADD_CONFIG) {
+		if (scr->what == CBCSCRIPT)
+			retval = cbc_script_add_script(cbc, scr);
+		else
+			retval = WRONG_TYPE;
+	} else {
+		retval = WRONG_ACTION;
+	}
+	free(cbc);
+	clean_cbc_syss_s(scr);
+	if ((retval != 0) && (retval != NO_RECORDS))
+		report_error(retval, "");
 	return retval;
 }
 
@@ -147,3 +166,26 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 	}
 	return retval;
 }
+
+// Add functions
+
+int
+cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_script_s *cbcscr;
+
+	initialise_cbc_s(&cbs);
+	initialise_cbc_scripts(&cbcscr);
+	cbs->scripts = cbcscr;
+	cbcscr->cuser = cbcscr->muser = (unsigned long int)getuid();
+	snprintf(cbcscr->name, URL_S, "%s", scr->name);
+	if ((retval = cbc_run_insert(cbc, cbs, SCRIPTS)) != 0)
+		fprintf(stderr, "Unable to add script to database\n");
+	else
+		printf("Script %s added to database\n", scr->name);
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
