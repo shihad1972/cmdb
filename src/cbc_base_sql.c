@@ -134,7 +134,7 @@ INSERT INTO system_package_conf (syspack_arg_id, syspack_id, bd_id, arg, \
  cuser, muser) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO system_scripts (name, cuser, muser) VALUES (?, ?, ?)","\
 INSERT INTO system_scripts_args(systscr_id, bd_id, bt_id, arg, no, cuser, \
- muser) VALUES (?, ?, ?, ?, ?, ?)"
+ muser) VALUES (?, ?, ?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
