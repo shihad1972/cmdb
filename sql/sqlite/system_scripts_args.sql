@@ -2,6 +2,7 @@ CREATE TABLE `system_scripts_args` (
 `systscr_arg_id` INTEGER PRIMARY KEY,
 `systscr_id` int(11) NOT NULL,
 `bd_id` int(11) NOT NULL,
+`bt_id` int(11) NOT NULL,
 `arg` varchar(127) NOT NULL,
 `no` int(11) NOT NULL,
 `cuser` int(11) NOT NULL DEFAULT 0,
@@ -13,6 +14,9 @@ REFERENCES `system_scripts`(`systscr_id`)
 ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(`bd_id`)
 REFERENCES `build_domain`(`bd_id`)
+ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(`bt_id`)
+REFERENCES `build_type`(`bt_id`)
 ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TRIGGER insert_system_scripts_args AFTER INSERT ON system_scripts_args
