@@ -37,6 +37,7 @@ typedef struct cbc_syss_s {
 	char *name;
 	char *arg;
 	char *domain;
+	char *type;
 	short int action;
 	short int what;
 	unsigned long int no;
@@ -59,10 +60,16 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs);
 int
 check_cbc_script_comm_line(cbc_syss_s *cbcs);
 
+int
+pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr);
+
 // Add functions
 
 int
 cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr);
+
+int
+cbc_script_add_script_arg(cbc_config_s *cbc, cbc_syss_s *scr);
 
 // Remove functions
 

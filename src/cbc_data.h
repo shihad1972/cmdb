@@ -286,8 +286,11 @@ typedef struct cbc_script_s {
 
 typedef struct cbc_script_arg_s {
 	char arg[CONF_S];
+//	char type[MAC_S];
 	unsigned long int systscr_arg_id;
 	unsigned long int systscr_id;
+	unsigned long int bd_id;
+	unsigned long int bt_id;
 	unsigned long int no;
 	unsigned long int cuser;
 	unsigned long int muser;

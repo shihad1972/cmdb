@@ -66,6 +66,8 @@ main(int argc, char *argv[])
 	if (scr->action == ADD_CONFIG) {
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_add_script(cbc, scr);
+		else if (scr->what == CBCSCRARG)
+			retval = cbc_script_add_script_arg(cbc, scr);
 		else
 			retval = WRONG_TYPE;
 	} else if (scr->action == RM_CONFIG) {
@@ -111,7 +113,9 @@ clean_cbc_syss_s(cbc_syss_s *scr)
 	if (scr->arg)
 		free(scr->arg);
 	if (scr->domain)
-		free(scr->arg);
+		free(scr->domain);
+	if (scr->type)
+		free(scr->type);
 	free(scr);
 }
 
@@ -120,7 +124,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 {
 	int retval = 0, opt;
 
-	while ((opt = getopt(argc, argv, "ab:g:ln:o:rst")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:fg:ln:o:rst:")) != -1) {
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
 		else if (opt == 'l')
@@ -129,7 +133,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 			cbcs->action = RM_CONFIG;
 		else if (opt == 's')
 			cbcs->what = CBCSCRIPT;
-		else if (opt == 't')
+		else if (opt == 'f')
 			cbcs->what = CBCSCRARG;
 		else if (opt == 'o')
 			cbcs->no = strtoul(optarg, NULL, 10);
@@ -142,6 +146,9 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		} else if (opt == 'n') {
 			if (!(cbcs->name = strndup(optarg, (CONF_S - 1))))
 				report_error(MALLOC_FAIL, "cbcs->arg");
+		} else if (opt == 't') {
+			if (!(cbcs->type = strndup(optarg, (MAC_S - 1))))
+				report_error(MALLOC_FAIL, "cbcs->type");
 		} else
 			retval = DISPLAY_USAGE;
 	}
@@ -175,8 +182,44 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 			retval = NO_NAME;
 		else if (!(cbcs->arg))
 			retval = NO_ARG;
+		else if (!(cbcs->domain) || !(cbcs->type))
+			retval = DISPLAY_USAGE;
 	}
 	return retval;
+}
+
+int
+pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
+{
+	int retval = 0;
+	if (scr->name) {
+		if ((retval = get_system_script_id(cbc, scr->name, &(arg->systscr_id))) != 0)
+			return retval;
+	} else {
+		return NO_NAME;
+	}
+	if (scr->domain) {
+		if ((retval = get_build_domain_id(cbc, scr->domain, &(arg->bd_id))) != 0)
+			return retval;
+	} else {
+		return NO_DOMAIN;
+	}
+	if (scr->type) {
+		if ((retval = get_build_type_id(cbc, scr->type, &(arg->bt_id))) != 0)
+			return retval;
+	} else {
+		return NO_DATA;
+	}
+	if (scr->arg)
+		snprintf(arg->arg, URL_S, "%s", scr->arg);
+	else
+		return NO_DATA;
+	if (scr->no > 0)
+		arg->no = scr->no;
+	else
+		return NO_DATA;
+	arg->cuser = arg->muser = (unsigned long int)getuid();
+	return 0;
 }
 
 // Add functions
@@ -199,6 +242,29 @@ cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr)
 		printf("Script %s added to database\n", scr->name);
 	clean_cbc_struct(cbs);
 	return retval;
+}
+
+int
+cbc_script_add_script_arg(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0;
+	cbc_s *cbs;
+	cbc_script_arg_s *arg;
+
+	initialise_cbc_s(&cbs);
+	initialise_cbc_script_args(&arg);
+	cbs->script_arg = arg;
+	if ((retval = pack_script_arg(cbc, arg, scr)) != 0)
+		goto cleanup;
+	if ((retval = cbc_run_insert(cbc, cbs, SCRIPTAS)) != 0)
+		fprintf(stderr, "Unable to add args for script to db\n");
+	else
+		printf("Script args added into db\n");
+	goto cleanup;
+
+	cleanup:
+		clean_cbc_struct(cbs);
+		return retval;
 }
 
 // Remove functions
@@ -245,10 +311,10 @@ cbc_script_list_script(cbc_config_s *cbc)
 		return retval;
 	}
 	script = cbs->scripts;
-	if (script) {
-		printf("Build scripts:\n");
+	if (script)
 		printf("Script\t\t\tCreation User\tCreation Time\n");
-	}
+	else
+		printf("No scripts in the database\n");
 	while (script) {
 		create = (time_t)script->ctime;
 		printf("%s", script->name);

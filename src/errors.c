@@ -562,11 +562,12 @@ display_cbcscript_usage(void)
 	printf("Usage:\t");
 	printf("cbcscript <action> <type> <arguments>\n");
 	printf("Action options\n");
-	printf("-a: add\t-l: list\t-r: remove\n");
+	printf("-a: add\t-l: list -r: remove\n");
 	printf("Type options\n");
-	printf("-t: arg\t-s: script\n");
+	printf("-f: arg\t-s: script\n");
 	printf("Arguments\n");
 	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
+	printf("-t <build os>\n");
 	printf("See man page for full details\n");
 }
 
