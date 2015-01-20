@@ -81,5 +81,20 @@ cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr);
 int
 cbc_script_list_script(cbc_config_s *cbc);
 
+int
+cbc_script_list_args(cbc_config_s *cbc, cbc_syss_s *scr);
+
+int
+cbc_script_args_list_all(cbc_config_s *cbc);
+
+int
+cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr);
+
+int
+cbc_script_args_list_one_domain(cbc_config_s *cbc, cbc_syss_s *scr);
+
+int
+cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr);
+
 #endif // __CBCSCRIPT_H__
 

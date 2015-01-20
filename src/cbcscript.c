@@ -76,7 +76,12 @@ main(int argc, char *argv[])
 		else
 			retval = WRONG_TYPE;
 	} else if (scr->action == LIST_CONFIG) {
+		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_list_script(cbc);
+		else if (scr->what == CBCSCRARG)
+			retval = cbc_script_list_args(cbc, scr);
+		else
+			retval = WRONG_TYPE;
 	} else {
 		retval = WRONG_ACTION;
 	}
@@ -174,16 +179,15 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 		else if (cbcs->what == CBCSCRARG) {
 			if  (!(cbcs->arg))
 				retval = NO_ARG;
-			else if (cbcs->no == 0)
-				retval = NO_NUMBER;
+			else if (!(cbcs->domain))
+				retval = DISPLAY_USAGE;
+			if (cbcs->action == ADD_CONFIG) {
+				if (cbcs->no == 0)
+					retval = NO_NUMBER;
+				else if (!(cbcs->type))
+					retval = DISPLAY_USAGE;
+			}
 		}
-	} else if (cbcs->what == CBCSCRARG) {
-		if (!(cbcs->name))
-			retval = NO_NAME;
-		else if (!(cbcs->arg))
-			retval = NO_ARG;
-		else if (!(cbcs->domain) || !(cbcs->type))
-			retval = DISPLAY_USAGE;
 	}
 	return retval;
 }
@@ -335,6 +339,274 @@ cbc_script_list_script(cbc_config_s *cbc)
 		script = script->next;
 	}
 	clean_cbc_struct(cbs);
+	return retval;
+}
+
+int
+cbc_script_list_args(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0;
+
+	if (!(scr->domain) && !(scr->name))
+		retval = cbc_script_args_list_all(cbc);
+	else if (!(scr->domain) && (scr->name))
+		retval = cbc_script_args_list_all_domain(cbc, scr);
+	else if ((scr->domain) && !(scr->name))
+		retval = cbc_script_args_list_one_domain(cbc, scr);
+	else
+		retval = cbc_script_args_list_one_script(cbc, scr);
+	return retval;
+}
+
+int
+cbc_script_args_list_all(cbc_config_s *cbc)
+{
+	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPT | SCRIPTA;
+	int i, j, k;	// counters
+	char *domain, *build;
+	cbc_s *cbs;
+	cbc_build_domain_s *bdom;
+	cbc_script_s *script;
+	cbc_script_arg_s *arg;
+	cbc_build_type_s *type;
+
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	bdom = cbs->bdom;
+	while (bdom) {
+		domain = bdom->domain;
+		i = 0; // Mark for build domain
+		type = cbs->btype;
+		while (type) {
+			build = type->alias;
+			j = 0; // Mark for build type
+			script = cbs->scripts;
+			while (script) {
+				arg = cbs->script_arg;
+				k = 0;
+				while (arg) {
+					if ((bdom->bd_id == arg->bd_id) &&
+					    (script->systscr_id == arg->systscr_id) &&
+					    (type->bt_id == arg->bt_id)) {
+						i++;
+						j++;
+						k++;
+						if (i == 1)
+							printf("%s\n", domain);
+						if (j == 1)
+							printf("%s build\n", build);
+						printf("\t%s", script->name);
+						break;
+					}
+					arg = arg->next;
+				}
+				while (arg) {
+					if ((bdom->bd_id == arg->bd_id) &&
+					    (script->systscr_id == arg->systscr_id) &&
+					    (type->bt_id == arg->bt_id))
+						printf(" %s", arg->arg);
+					arg = arg->next;
+				}
+				if (k > 0) // We have a script
+					printf("\n");
+				script = script->next;
+			}
+			type = type->next;
+		}
+		if (i > 0)
+			printf("\n");
+		bdom = bdom->next;
+	}
+	clean_cbc_struct(cbs);
+	return retval;
+}
+
+int
+cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPTA;
+	unsigned long int systscr_id;
+	int i, j, k;	// counters
+	char *domain, *build;
+	cbc_s *cbs;
+	cbc_build_domain_s *bdom;
+	cbc_script_arg_s *arg;
+	cbc_build_type_s *type;
+
+	if (!(scr->name))
+		return NO_DATA;
+	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)
+		return retval;
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	bdom = cbs->bdom;
+	while (bdom) {
+		domain = bdom->domain;
+		i = 0; // Mark for build domain
+		type = cbs->btype;
+		while (type) {
+			build = type->alias;
+			j = 0; // Mark for build type
+			arg = cbs->script_arg;
+			while (arg) {
+				k = 0;
+				if ((bdom->bd_id == arg->bd_id) &&
+				    (systscr_id == arg->systscr_id) &&
+				    (type->bt_id == arg->bt_id)) {
+					i++;
+					j++;
+					k++;
+					if (i == 1)
+						printf("%s\n", domain);
+					if (j == 1)
+						printf("%s build\n", build);
+					printf("\t%s", scr->name);
+					break;
+				}
+				arg = arg->next;
+			}
+			while (arg) {
+				if ((bdom->bd_id == arg->bd_id) &&
+				    (systscr_id == arg->systscr_id) &&
+				    (type->bt_id == arg->bt_id))
+					printf(" %s", arg->arg);
+				arg = arg->next;
+			}
+			if (k > 0) // We have a script
+				printf("\n");
+			type = type->next;
+		}
+		if (i > 0)
+			printf("\n");
+		bdom = bdom->next;
+	}
+	return retval;
+}
+
+int
+cbc_script_args_list_one_domain(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0, query = BUILD_TYPE | SCRIPT | SCRIPTA;
+	int i, j, k;	// counters
+	char *build;
+	unsigned long int bd_id;
+	cbc_s *cbs;
+	cbc_script_s *script;
+	cbc_script_arg_s *arg;
+	cbc_build_type_s *type;
+
+	if (!(scr->domain))
+		return NO_DATA;
+	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
+		return retval;
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	type = cbs->btype;
+	i = 0; // Mark for domain
+	while (type) {
+		j = 0; // Mark for build
+		build = type->alias;
+		script = cbs->scripts;
+		while (script) {
+			arg = cbs->script_arg;
+			k = 0; // Mark for script
+			while (arg) {
+				if ((arg->bd_id == bd_id) &&
+				    (arg->bt_id == type->bt_id) &&
+				    (arg->systscr_id == script->systscr_id)) {
+					i++;
+					j++;
+					k++;
+					if (i == 1)
+						printf("%s\n", scr->domain);
+					if (j == 1)
+						printf("%s build\n", build);
+					printf("\t%s", script->name);
+					break;
+				}
+				arg = arg->next;
+			}
+			while (arg) {
+				if ((bd_id == arg->bd_id) &&
+				    (script->systscr_id == arg->systscr_id) &&
+				    (type->bt_id == arg->bt_id))
+					printf(" %s", arg->arg);
+				arg = arg->next;
+			}
+			if (k > 0) // We have a script
+				printf("\n");
+			script = script->next;
+		}
+		type = type->next;
+	}
+	return retval;
+}
+
+int
+cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0, query = BUILD_TYPE | SCRIPTA;
+	int i, j, k;	// counters
+	char *build;
+	unsigned long int bd_id, systscr_id;
+	cbc_s *cbs;
+	cbc_script_arg_s *arg;
+	cbc_build_type_s *type;
+
+	if (!(scr->domain) || !(scr->name))
+		return NO_DATA;
+	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
+		return retval;
+	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)
+		return retval;
+	initialise_cbc_s(&cbs);
+	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
+		clean_cbc_struct(cbs);
+		return retval;
+	}
+	type = cbs->btype;
+	i = 0;
+	while (type) {
+		j = 0;
+		build = type->alias;
+		arg = cbs->script_arg;
+		while (arg) {
+			k = 0;
+			if ((arg->bd_id == bd_id) &&
+			    (arg->bt_id == type->bt_id) &&
+			    (arg->systscr_id == systscr_id)) {
+				i++;
+				j++;
+				k++;
+				if (i == 1)
+					printf("%s\n", scr->domain);
+				if (j == 1)
+					printf("%s build\n", build);
+				printf("\t%s", scr->name);
+				break;
+			}
+			arg = arg->next;
+		}
+		while (arg) {
+			if ((bd_id == arg->bd_id) &&
+			    (systscr_id == arg->systscr_id) &&
+			    (type->bt_id == arg->bt_id))
+				printf(" %s", arg->arg);
+			arg = arg->next;
+		}
+		if (k > 0) // We have a script
+			printf("\n");
+		type = type->next;
+	}
 	return retval;
 }
 

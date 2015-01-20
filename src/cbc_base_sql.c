@@ -93,7 +93,7 @@ SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
  muser, ctime, mtime FROM system_package_conf","\
 SELECT systscr_id, name, cuser, muser, ctime, mtime FROM system_scripts","\
 SELECT systscr_arg_id, systscr_id, bd_id, bt_id, arg, no, cuser, muser, ctime, \
- mtime FROM system_scripts_args"
+ mtime FROM system_scripts_args ORDER BY bd_id, bt_id, systscr_id, no"
 };
 
 const char *cbc_sql_insert[] = { "\
