@@ -3,7 +3,7 @@ CREATE TABLE `system_scripts` (
 `name` varchar(127) NOT NULL,
 `cuser` int(11) NOT NULL DEFAULT 0,
 `muser` int(11) NOT NULL DEFAULT 0,
-`ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+`ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
 PRIMARY KEY (`systscr_id`)
 );
