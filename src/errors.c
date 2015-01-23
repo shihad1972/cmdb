@@ -1072,7 +1072,7 @@ void
 init_string_l(string_l *string)
 {
 	memset(string, 0, sizeof(string_l));
-	if (!(string->string = malloc(RBUFF_S)))
+	if (!(string->string = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
 }
 
