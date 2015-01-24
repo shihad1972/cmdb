@@ -135,7 +135,8 @@ enum {			/* cbc search SQL statements */
 	NAME_DOM_ON_SERVER_ID = 64,
 	BD_ID_ON_SERVER_ID = 65,
 	SYS_PACK_CONF_ID = 66,
-	SCR_ID_ON_NAME = 67
+	SCR_ID_ON_NAME = 67,
+	SCRIPT_CONFIG = 68
 };
 
 enum {			/* cbc update SQL statements */

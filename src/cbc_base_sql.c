@@ -352,7 +352,11 @@ SELECT syspack_conf_id FROM system_package_conf spc \
   JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id \
   JOIN build_domain bd ON bd.bd_id = spc.bd_id \
   WHERE bd.domain = ? AND sp.name = ? AND spa.field =?","\
-SELECT systscr_id FROM system_scripts WHERE name = ?"
+SELECT systscr_id FROM system_scripts WHERE name = ?","\
+SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
+  JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id\
+  JOIN build_type bt ON sa.bt_id = bt.bt_id \
+  WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.arg"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -374,13 +378,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1
+	3, 1, 2
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1
+	1, 1, 3
 };
 
 const int cbc_inserts[][24] = {
@@ -545,7 +549,8 @@ const unsigned int cbc_search_arg_types[][3] = {
 	{ DBINT, NONE, NONE } ,
 	{ DBINT, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT },
-	{ DBTEXT, NONE, NONE }
+	{ DBTEXT, NONE, NONE },
+	{ DBINT, DBTEXT, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -615,7 +620,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
