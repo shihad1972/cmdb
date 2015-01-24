@@ -299,6 +299,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		printf("dhcpd.hosts file written\n");
 	}
+/* This will add the OS alias to cml. This will be useful in writing the
+    host script */
 	if ((retval = write_tftp_config(cmc, cml)) != 0) {
 		printf("Failed to write tftp configuration\n");
 		return retval;
@@ -701,19 +703,17 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char *server, line[TBUFF_S], *pos;
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *list, *data = 0, *tmp;
+	char *server, line[TBUFF_S], *pos, *script;
+	int retval = NONE, scrno = 0, type, query = SCRIPT_CONFIG;
 	size_t len = NONE;
+	unsigned int max;
+	unsigned long int bd_id, argno;
+	dbdata_s *list = 0, *data = 0;
 	string_len_s *build;
 
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
-	build->len = BUFF_S;
-	build->size = NONE;
-	if (!(build->string = calloc(build->len,  sizeof(char))))
-		report_error(MALLOC_FAIL, "build->string in write_pre_host_script");
+	init_string_len(build);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -721,6 +721,17 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
 			return retval;
 	server = cml->name;
+	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		clean_dbdata_struct(list);
+		return NO_BD_CONFIG;
+	} else if (retval > 1) {
+		fprintf(stderr, "Associated with multiple build domains?\n");
+		fprintf(stderr, "Using 1st one!!!\n");
+	}
+	retval = 0;
+	bd_id = data->fields.number;
+	clean_dbdata_struct(data);
 	snprintf(build->string, RBUFF_S, "\
 #!/bin/sh\n\
 #\n\
@@ -730,7 +741,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	len = strlen(build->string);
 	build->size = len;
 // Will need to change this to move to cbcsysp
-	PREP_DB_QUERY(list, ALL_CONFIG)
+/*	PREP_DB_QUERY(list, ALL_CONFIG)
 	tmp = list;
 	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
 		clean_dbdata_struct(list);
@@ -739,7 +750,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Associated with multiple build domains?\n");
 		fprintf(stderr, "Using 1st one!!!\n");
 	}
-	retval = NONE;
+	retval = NONE; */
 	snprintf(line, TBUFF_S, "\
 #\n\
 #\n\
@@ -759,7 +770,52 @@ chmod 755 motd.sh\n\
 ./motd.sh >> scripts.log 2>&1\n\
 \n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
-	CHECK_DATA_LIST(0)
+// Start of new code
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
+	if ((retval = cbc_run_search(cmc, data, query)) > 0) {
+		script = data->fields.text;
+		list = data;
+		while (scrno <= retval) {
+			if (data)
+				argno = data->next->next->fields.number;
+			if (scrno == 0)
+				snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, data->next->fields.text);
+			else {
+				if ((argno > 1) && (data)) {
+					// This is the same script. Must be a new arg
+					len = strlen(line);
+					pos = line + len;
+					snprintf(pos, TBUFF_S - len, "\
+%s ", data->next->fields.text);
+				} else {
+					// This is a new script. Finish off the old one.
+					script = data->fields.text;
+					len = strlen(line);
+					pos = line + len;
+					snprintf(pos, TBUFF_S - len, "\
+>> scripts.log\n\n");
+					PRINT_STRING_WITH_LENGTH_CHECK
+					memset(line, 0, TBUFF_S);
+					if (data) // Is there another script?
+						snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, data->next->fields.text);
+				}
+			}
+			scrno++;
+			if (data)
+				data = data->next->next->next;
+		}
+	} else
+		clean_dbdata_struct(data);
+/*	CHECK_DATA_LIST(0)
 	if (list->fields.small > 0) {
 		CHECK_DATA_LIST(0)
 		if (list->fields.small == 0) {
@@ -805,12 +861,12 @@ if $WGET %sscripts/xymon-setup.sh; then\n\
 fi\n\
 \n", cml->config, cml->config);
 		PRINT_STRING_WITH_LENGTH_CHECK
-	}
+	} */
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
-	clean_dbdata_struct(tmp);
-	clean_dbdata_struct(data);
+	if (list)
+		clean_dbdata_struct(list);
 	free(build->string);
 	free(build);
 	return retval;
