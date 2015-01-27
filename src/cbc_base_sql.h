@@ -136,7 +136,8 @@ enum {			/* cbc search SQL statements */
 	BD_ID_ON_SERVER_ID = 65,
 	SYS_PACK_CONF_ID = 66,
 	SCR_ID_ON_NAME = 67,
-	SCRIPT_CONFIG = 68
+	SCRIPT_CONFIG = 68,
+	BUILD_TYPE_ON_ALIAS = 69
 };
 
 enum {			/* cbc update SQL statements */

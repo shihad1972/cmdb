@@ -211,7 +211,8 @@ DELETE FROM system_scripts WHERE systscr_id = ?","\
 DELETE FROM system_scripts_args WHERE systscr_arg_id = ?"
 };
 
-const char *cbc_sql_search[] = { "\
+const char *cbc_sql_search[] = {
+/* Start at 0 */ "\
 SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
  build_domain WHERE domain = ?","\
 SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
@@ -224,7 +225,8 @@ SELECT os_id FROM build_os WHERE os = ? AND os_version = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND os_version = ? AND arch = ?","\
 SELECT build_id FROM build WHERE os_id = ?","\
 SELECT name FROM server s, build b WHERE b.os_id = ?\
- AND b.server_id = s.server_id","\
+ AND b.server_id = s.server_id"
+/* 10 */,"\
 SELECT varient_id FROM varient WHERE varient = ?","\
 SELECT varient_id FROM varient WHERE valias = ?","\
 SELECT os_id FROM build_os WHERE os = ?","\
@@ -237,7 +239,8 @@ SELECT b.mac_addr, bi.ip, bd.domain FROM server s \
   LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
   LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE s.server_id = ?","\
 SELECT server_id FROM server WHERE uuid = ?","\
-SELECT server_id FROM server WHERE name = ?","\
+SELECT server_id FROM server WHERE name = ?"
+/* 20 */,"\
 SELECT name FROM server WHERE server_id = ?","\
 SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
   bt.arg, bt.url, bo.arch, b.net_inst_int FROM build_type bt \
@@ -275,7 +278,8 @@ SELECT bd.config_xymon, bd.xymon_server, bd.domain FROM build_domain bd \
 SELECT bd.config_email, bd.smtp_server, bd.domain, bi.ip FROM build_domain bd \
   LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
-  WHERE b.server_id = ?","\
+  WHERE b.server_id = ?"
+/* 30 */,"\
 SELECT ip FROM build_ip WHERE bd_id = ?"
 /* This hard codes the network device to be hard_type_id 1
  * and disk device to be 2 */,"\
@@ -289,11 +293,10 @@ SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
 SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
 SELECT bd_id FROM build_domain WHERE domain = ?","\
-SELECT config_ldap FROM build_domain WHERE domain = ?","\
-SELECT bd.config_ldap, bd.ldap_ssl, bd.ldap_server, bd.ldap_dn, l.keymap, \
-  l.locale, l.timezone FROM build b LEFT JOIN locale l ON b.locale_id = \
-  l.locale_id LEFT JOIN build_ip bip ON b.ip_id = bip.ip_id LEFT JOIN \
-  build_domain bd ON bd.bd_id = bip.bd_id WHERE b.server_id = ?","\
+SELECT config_ldap FROM build_domain WHERE domain = ?"
+/* 40 */,"\
+SELECT l.keymap, l.locale, l.timezone FROM build b \
+  LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?","\
 SELECT bt.mirror, bt.alias, bo.arch, bo.os_version, b.net_inst_int, bi.ip, \
   bd.netmask, bd.gateway, bd.ns, bi.hostname, bi.domainname FROM build b \
   LEFT JOIN build_ip bi ON bi.ip_id = b.ip_id LEFT JOIN build_domain bd ON \
@@ -315,7 +318,8 @@ SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? \
 AND os_id = ?","\
 SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss ON \
   dp.def_scheme_id = ss.def_scheme_id WHERE ss.scheme_name = ? AND \
-  dp.mount_point = ?","\
+  dp.mount_point = ?"
+/* 50 */ ,"\
 SELECT ip_id FROM build_ip WHERE hostname = ? AND domainname = ?","\
 SELECT ip_id FROM build_ip WHERE ip = ?","\
 SELECT detail FROM hardware where server_id = ? and device = ?","\
@@ -329,7 +333,8 @@ SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
   LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
   WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ? \
-  ORDER BY sp.name, spa.field","\
+  ORDER BY sp.name, spa.field"
+/* 60 */,"\
 SELECT syspack_arg_id FROM system_package_args WHERE \
   syspack_id = ?  AND field = ?","\
 SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
@@ -356,7 +361,8 @@ SELECT systscr_id FROM system_scripts WHERE name = ?","\
 SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
   JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id\
   JOIN build_type bt ON sa.bt_id = bt.bt_id \
-  WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.arg"
+  WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.no","\
+SELECT build_type FROM build_type WHERE alias = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -382,7 +388,7 @@ const unsigned int cbc_search_args[] = {
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
+	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
 	1, 1, 3
 };
@@ -593,7 +599,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,

@@ -548,14 +548,15 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE, type;
 	unsigned int max;
+	unsigned long int bd_id;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
-	string_l name, surl;
+/*	string_l name, surl;
 
 	name.string = server;
 	name.next = &surl;
 	surl.string = url;
-	surl.next = '\0';
+	surl.next = '\0'; */
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
@@ -625,7 +626,25 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	add_kick_base_script(data, &build);
 	snprintf(url, CONF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, NTP_CONFIG);
+	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build domain for server %s not found\n", server);
+		return BUILD_DOMAIN_NOT_FOUND;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple build domains found for server %s\n", server);
+	bd_id = data->fields.number;
+	clean_dbdata_struct(data);
+	type = SCRIPT_CONFIG;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
+	if ((retval = cbc_run_search(cmc, data, type)) == 0)
+		fprintf(stderr, "No scripts configured for this build\n");
+	else
+		fill_build_scripts(cmc, data, retval, &build, cml);
+/*	PREP_DB_QUERY(data, NTP_CONFIG);
 	if ((retval = cbc_run_search(cmc, data, NTP_CONFIG)) == 0) {
 		fprintf(stderr, "Cannot find NTP config for %s\n", server);
 	} else if (retval > 1) {
@@ -673,7 +692,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		if (data->fields.small > 0)
 			add_kick_xymon_config(data, &build, url, server);
-	}
+	} */
 	add_kick_final_config(&build, url);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
@@ -703,11 +722,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
-	char *server, line[TBUFF_S], *pos, *script;
-	int retval = NONE, scrno = 0, type, query = SCRIPT_CONFIG;
+	char *server, line[TBUFF_S], *pos;
+	int retval = NONE, type, query = SCRIPT_CONFIG;
 	size_t len = NONE;
 	unsigned int max;
-	unsigned long int bd_id, argno;
+	unsigned long int bd_id;
 	dbdata_s *list = 0, *data = 0;
 	string_len_s *build;
 
@@ -763,7 +782,7 @@ chmod 755 motd.sh\n\
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = bd_id;
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
-	if ((retval = cbc_run_search(cmc, data, query)) > 0) {
+	if ((retval = cbc_run_search(cmc, data, query)) > 0) /* {
 		script = data->fields.text;
 		list = data;
 		while (scrno <= retval) {
@@ -802,6 +821,9 @@ chmod 755 %s\n\
 				data = data->next->next->next;
 		}
 	} else
+		clean_dbdata_struct(data); */
+		fill_build_scripts(cmc, data, retval, build, cml);
+	else
 		clean_dbdata_struct(data);
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
@@ -811,6 +833,59 @@ chmod 755 %s\n\
 	free(build->string);
 	free(build);
 	return retval;
+}
+
+void
+fill_build_scripts(cbc_config_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
+{
+	if (!(list))
+		return;
+	char *pos, *script = list->fields.text;
+	char *arg, *newarg;
+	char line[TBUFF_S];
+	int scrno = 0;
+	size_t len;
+	unsigned long int argno;
+	dbdata_s *data = list;
+	while (scrno <= retval) {
+		if (data) {
+			argno = data->next->next->fields.number;
+			arg = data->next->fields.text;
+		}
+		if (!(newarg = cbc_complete_arg(cbc, cml->server_id, arg)))
+			return;
+		if (scrno == 0) {
+			snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, newarg);
+		} else {
+			if ((argno > 1) && (data)) {
+				len = strlen(line);
+				pos = line + len;
+				snprintf(pos, TBUFF_S - len, "\
+%s ", newarg);
+			} else {
+				len = strlen(line);
+				pos = line + len;
+				snprintf(pos, TBUFF_S - len, "\
+>> %s.log 2>&1\n\n", script);
+				PRINT_STRING_WITH_LENGTH_CHECK
+				memset(line, 0, TBUFF_S);
+				if (data) {
+					script = data->fields.text;
+					snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, newarg);
+				}
+			}
+		}
+		scrno++;
+		if (data)
+			data = data->next->next->next;
+		newarg = 0;
+	}
 }
 
 void
@@ -1394,7 +1469,7 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 	}
 	build->size -= 2;
 }
-
+/*
 int
 fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
@@ -1459,7 +1534,7 @@ fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 	}
 	clean_dbdata_struct(data);
 	return NONE;
-}
+} */
 
 int
 fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
@@ -1517,8 +1592,8 @@ add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build,
 		fprintf(stderr, "System package line truncated in preseed file!\n");
 	blen = strlen(buff);
 	tmp = data->next->next->next->fields.text;
-	if (!(arg = complete_syspack_arg(cbc, server_id, tmp))) {
-		fprintf(stderr, "Could not complete_syspack_arg for %s\n",
+	if (!(arg = cbc_complete_arg(cbc, server_id, tmp))) {
+		fprintf(stderr, "Could not cbc_complete_arg for %s\n",
 		 data->next->fields.text);
 		free(buff);
 		return;
@@ -1533,7 +1608,7 @@ add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build,
 }
 
 char *
-complete_syspack_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
+cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
 {
 	char *tmp, *new = 0, *pre, *post;
 	int i, retval;
@@ -1543,7 +1618,7 @@ complete_syspack_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
 	if (!(arg))
 		return new;
 	if (!(new = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "new in complete_syspack_arg");
+		report_error(MALLOC_FAIL, "new in cbc_complete_arg");
 	snprintf(new, TBUFF_S, "%s", arg);
 	for ( i = 0; i < spvar_no; i++ ) {
 		if ((pre = strstr(new, spvars[i]))) {
@@ -1558,12 +1633,12 @@ complete_syspack_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
 			data->args.number = server_id;
 			if ((retval = cbc_run_search(cbc, data, sp_query[i])) == 0) {
 				fprintf(stderr,
-"Query returned 0 entries in complete_syspack_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+"Query returned 0 entries in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
 				goto cleanup;
 			}
 			if (!(tmp = get_replaced_syspack_arg(data, i))) {
 				fprintf(stderr,
-"Cannot get new string in complete_syspack_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+"Cannot get new string in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
 				goto cleanup;
 			}
 			len = strlen(tmp) + strlen(post);
@@ -1584,7 +1659,8 @@ char *
 get_replaced_syspack_arg(dbdata_s *data, int loop)
 {
 // This function NEEDS validated inputs
-	char *str = '\0', *tmp;
+	char *str = '\0', *tmp, addr[RANGE_S], *ip;
+	uint32_t ip_addr;
 
 	switch(loop) {
 		case 0:
@@ -1606,12 +1682,16 @@ get_replaced_syspack_arg(dbdata_s *data, int loop)
 			str = strndup(data->fields.text, HOST_S - 1);
 			break;
 		case 4:
-			str = strndup(data->fields.text, RANGE_S - 1);
+// This is broken. The IP address is a number and will need to be converted to a string
+			ip_addr = htonl((uint32_t)data->fields.number);
+			ip = addr;
+			inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+			str = strndup(ip, RANGE_S - 1);
 			break;
 	}
 	return str;
 }
-
+/*
 void
 fill_ldap_config(dbdata_s *data, string_len_s *build, char *os)
 {
@@ -1773,59 +1853,19 @@ postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
 	}
 	snprintf(build->string + build->size, len + 1, "%s", buff);
 	build->size += len;
-}
+} */
 
 void
 fill_kick_base(dbdata_s *data, string_len_s *build)
 {
 	char buff[FILE_S], *tmp;
-	char *serv = data->next->next->fields.text;
-	char *dn = data->next->next->next->fields.text;
-	char *key = data->next->next->next->next->fields.text;
-	char *loc = data->next->next->next->next->next->fields.text;
-	char *tim = data->next->next->next->next->next->next->fields.text;
-	short int ldapconf = data->fields.small, ldapssl = data->next->fields.small;
+	char *key = data->fields.text;
+	char *loc = data->next->fields.text;
+	char *tim = data->next->next->fields.text;
 	size_t len;
 
 	/* root password is k1Ckstart */
-	if (ldapconf > 0) {
-		if (ldapssl > 0)
-			snprintf(buff, FILE_S, "\
-auth --useshadow --enablemd5 --enableldap --enableldaptls --enableldapauth \
---ldapserver=%s --ldapbasedn=%s\n\
-bootloader --location=mbr\n\
-text\n\
-firewall --disabled\n\
-firstboot --disable\n\
-keyboard %s\n\
-lang %s\n\
-logging --level=info\n\
-reboot\n\
-rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
-selinux --disabled\n\
-skipx\n\
-timezone  %s\n\
-install\n\
-\n", serv, dn, key, loc, tim);
-		else
-			snprintf(buff, FILE_S, "\
-auth --useshadow --enablemd5 --enableldap --enableldapauth --ldapserver=%s --ldapbasedn=%s\n\
-bootloader --location=mbr\n\
-text\n\
-firewall --disabled\n\
-firstboot --disable\n\
-keyboard %s\n\
-lang %s\n\
-logging --level=info\n\
-reboot\n\
-rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
-selinux --disabled\n\
-skipx\n\
-timezone  %s\n\
-install\n\
-\n", serv, dn, key, loc, tim);
-	} else {
-		snprintf(buff, FILE_S, "\
+	snprintf(buff, FILE_S, "\
 auth --useshadow --enablemd5\n\
 bootloader --location=mbr\n\
 text\n\
@@ -1841,7 +1881,6 @@ skipx\n\
 timezone  %s\n\
 install\n\
 \n", key, loc, tim);
-	}
 	if ((len = strlen(buff)) > build->len) {
 		build->len = FILE_S;
 		tmp = realloc(build->string, build->len * sizeof(char));
@@ -2016,12 +2055,17 @@ add_kick_base_script(dbdata_s *data, string_len_s *build)
 	snprintf(buff, BUFF_S, "\
 \n\
 %%post\n\
+WGET=/usr/bin/wget\n\
 cd /root\n\
 wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
 \n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh >> scripts.log 2>&1\n\
+\n\
 wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log\n", list->fields.text, list->fields.text);
+./motd.sh > motd.log\n\n", list->fields.text, list->fields.text, list->fields.text);
 	len = strlen(buff);
 	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
@@ -2030,6 +2074,7 @@ chmod 755 motd.sh\n\
 	build->size += len;
 }
 
+/*
 void
 add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url)
 {
@@ -2060,7 +2105,6 @@ add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url)
 		return;
 	}
 	if (ssl > 0)
-/* Will need to get this from the database */
 		snprintf(buff, BUFF_S, "\
 wget %sRoot-CA.pem\n\
 cp Root-CA.pem /etc/openldap/cacerts\n\
@@ -2081,7 +2125,7 @@ cp Root-CA.pem /etc/openldap/cacerts\n\
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
 	build->size += len;
-}
+} */
 
 #ifndef CHECK_KICK_CONFIG
 # define CHECK_KICK_CONFIG(conf) {                \
@@ -2106,7 +2150,7 @@ cp Root-CA.pem /etc/openldap/cacerts\n\
 	}                                         \
 }
 #endif /* CHECK_KICK_CONFIG */
-
+/*
 void
 add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url)
 {
@@ -2125,7 +2169,7 @@ chmod 755 kick-ntp.sh\n\
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
 	build->size += len;
-}
+} 
 
 void
 add_kick_log_config(dbdata_s *data, string_len_s *build, char *url)
@@ -2165,7 +2209,7 @@ chmod 755 xymon-client.sh\n\
 	tmp = build->string + build->size;
 	snprintf(tmp, len + 1, "%s", buff);
 	build->size += len;
-}
+} */
 
 void
 add_kick_final_config (string_len_s *build, char *url)
@@ -2190,7 +2234,7 @@ chmod 755 kick-final.sh\n\
 	snprintf(tmp, COMM_S, "%%end\n\n");
 	build->size += 6;
 }
-
+/*
 void
 add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf)
 {
@@ -2238,7 +2282,7 @@ chmod 755 kick-postfix.sh\n\
 	snprintf(tmp, len + 1, "%s", buff);
 	build->size += len;
 	free(ip);
-}
+} */
 
 int
 get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
