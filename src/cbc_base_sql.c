@@ -363,6 +363,9 @@ SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
   JOIN build_type bt ON sa.bt_id = bt.bt_id \
   WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.no","\
 SELECT build_type FROM build_type WHERE alias = ?"
+/* 70 */,"\
+SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
+  AND systscr_id = ? AND no = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -384,13 +387,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2
+	3, 1, 2, 1, 4
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3
+	1, 1, 3, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -487,76 +490,78 @@ const unsigned int cbc_delete_types[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE }
 };
-const unsigned int cbc_search_arg_types[][3] = {
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, DBINT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT },
-	{ DBTEXT, NONE, NONE },
-	{ DBINT, DBTEXT, NONE }
+const unsigned int cbc_search_arg_types[][4] = {
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ DBINT, DBTEXT, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ DBINT, DBINT, DBINT, DBINT }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -627,7 +632,9 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int

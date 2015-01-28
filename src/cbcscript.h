@@ -63,6 +63,9 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs);
 int
 pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr);
 
+void
+pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg);
+
 // Add functions
 
 int
@@ -75,6 +78,9 @@ cbc_script_add_script_arg(cbc_config_s *cbc, cbc_syss_s *scr);
 
 int
 cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr);
+
+int
+cbc_script_rm_arg(cbc_config_s *cbc, cbc_syss_s *scr);
 
 // List functions
 

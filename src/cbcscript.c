@@ -73,6 +73,8 @@ main(int argc, char *argv[])
 	} else if (scr->action == RM_CONFIG) {
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_rm_script(cbc, scr);
+		else if (scr->what == CBCSCRARG)
+			retval = cbc_script_rm_arg(cbc, scr);
 		else
 			retval = WRONG_TYPE;
 	} else if (scr->action == LIST_CONFIG) {
@@ -177,15 +179,15 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 		if (!(cbcs->name))
 			retval = NO_NAME;
 		else if (cbcs->what == CBCSCRARG) {
-			if  (!(cbcs->arg))
-				retval = NO_ARG;
+			if (cbcs->no == 0)
+				retval = NO_NUMBER;
+			else if (!(cbcs->type))
+				retval = DISPLAY_USAGE;
 			else if (!(cbcs->domain))
 				retval = DISPLAY_USAGE;
 			if (cbcs->action == ADD_CONFIG) {
-				if (cbcs->no == 0)
-					retval = NO_NUMBER;
-				else if (!(cbcs->type))
-					retval = DISPLAY_USAGE;
+				if  (!(cbcs->arg))
+					retval = NO_ARG;
 			}
 		}
 	}
@@ -216,7 +218,7 @@ pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 	}
 	if (scr->arg)
 		snprintf(arg->arg, URL_S, "%s", scr->arg);
-	else
+	else if (scr->action == ADD_CONFIG)
 		return NO_DATA;
 	if (scr->no > 0)
 		arg->no = scr->no;
@@ -224,6 +226,15 @@ pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 		return NO_DATA;
 	arg->cuser = arg->muser = (unsigned long int)getuid();
 	return 0;
+}
+
+void
+pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
+{
+	data->args.number = arg->bd_id;
+	data->next->args.number = arg->bt_id;
+	data->next->next->args.number = arg->systscr_id;
+	data->next->next->next->args.number = arg->no;
 }
 
 // Add functions
@@ -296,6 +307,36 @@ cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr)
 	}
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+int
+cbc_script_rm_arg(cbc_config_s *cbc, cbc_syss_s *scr)
+{
+	int retval = 0;
+	dbdata_s *data;
+	cbc_script_arg_s *arg;
+
+	if (!(arg = malloc(sizeof(cbc_script_arg_s))))
+		report_error(MALLOC_FAIL, "arg in cbc_script_rm_arg");
+	init_cbc_script_args(arg);
+	if ((retval = pack_script_arg(cbc, arg, scr)) != 0) {
+		clean_cbc_script_args(arg);
+		return retval;
+	}
+	init_multi_dbdata_struct(&data, 4);
+	pack_script_arg_data(data, arg);
+	if ((retval = cbc_run_search(cbc, data, SCR_ARG_ID)) == 0) {
+		clean_dbdata_struct(data);
+		clean_cbc_script_args(arg);
+		return NO_ARG;
+	} else if (retval > 1)
+		fprintf(stderr, "More than one cbcscript ar returned. Using 1st\n");
+	clean_dbdata_struct(data->next);
+	data->next = 0;
+	data->args.number = data->fields.number;
+	retval = cbc_run_delete(cbc, data, CBCSCRARG_ON_ID);
+	printf("%d args deleted\n", retval);
+	return 0;
 }
 
 // List functions

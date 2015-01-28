@@ -44,7 +44,7 @@ extern const unsigned int cbc_delete_fields[];
 
 extern const unsigned int cbc_update_types[][6];
 extern const unsigned int cbc_delete_types[][2];
-extern const unsigned int cbc_search_arg_types[][3];
+extern const unsigned int cbc_search_arg_types[][4];
 extern const unsigned int cbc_search_field_types[][11];
 
 
@@ -137,7 +137,8 @@ enum {			/* cbc search SQL statements */
 	SYS_PACK_CONF_ID = 66,
 	SCR_ID_ON_NAME = 67,
 	SCRIPT_CONFIG = 68,
-	BUILD_TYPE_ON_ALIAS = 69
+	BUILD_TYPE_ON_ALIAS = 69,
+	SCR_ARG_ID = 70
 };
 
 enum {			/* cbc update SQL statements */
