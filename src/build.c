@@ -2050,7 +2050,9 @@ add_kick_base_script(dbdata_s *data, string_len_s *build)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
-	dbdata_s *list = data;
+	if (!(data))
+		return;
+	char *script = data->fields.text;
 
 	snprintf(buff, BUFF_S, "\
 \n\
@@ -2065,7 +2067,7 @@ chmod 755 firstboot.sh\n\
 \n\
 wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log\n\n", list->fields.text, list->fields.text, list->fields.text);
+./motd.sh > motd.log\n\n", script, script, script);
 	len = strlen(buff);
 	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
