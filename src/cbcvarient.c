@@ -230,9 +230,9 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		return VARIENT_NOT_FOUND;
 	}
 	printf("Build Varients\n");
-	printf("Name\t\tAlias\t\tUser\t\tTime\n");
+	printf("Name\t\tAlias\t\tUser\t\tLast Modified\n");
 	while (list) {
-		create = (time_t)list->ctime;
+		create = (time_t)list->mtime;
 		if (strlen(list->varient) < 8)
 			printf("%s\t\t", list->varient);
 		else if (strlen(list->varient) < 16)
@@ -568,6 +568,8 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		base->package = base->package->next;
 	}
 	printf("Inserted %d packages\n", packs);
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	base->package = pack;
 	free(osid);
 	clean_cbc_struct(base);
@@ -617,6 +619,8 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		list = list->next;
 	}
 	printf("%d packages deleted\n", packs);
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	free(osid);
 	clean_cbc_struct(base);
 	clean_dbdata_struct(data);

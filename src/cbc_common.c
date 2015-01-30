@@ -60,6 +60,25 @@ cbc_get_varient_id(cbc_varient_s *vari, char *name)
 	return NONE;
 }
 
+void
+cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
+{
+	int query = UP_VARIENT, retval;
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	data->args.number = (unsigned long int)getuid();
+	data->next->args.number = vid;
+	if ((retval = cbc_run_update(cbc, data, query)) == 1)
+		printf("Varient updated\n");
+	else if (retval == 0)
+		fprintf(stderr, "Unable to update varient\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple varients updated??\n");
+	clean_dbdata_struct(data);
+		
+}
+
 unsigned long int
 search_for_vid(cbc_varient_s *vari, char *varient, char *valias)
 {
