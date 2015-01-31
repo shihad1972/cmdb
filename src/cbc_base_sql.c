@@ -102,7 +102,7 @@ INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
  domain, ntp_server, config_ntp, cuser, muser) VALUES (\
- ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
  muser) VALUES  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\

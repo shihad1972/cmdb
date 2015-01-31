@@ -30,7 +30,7 @@ CREATE TABLE `build_domain` (
   `gateway` int(4) unsigned NOT NULL DEFAULT '0',
   `ns` int(4) unsigned NOT NULL DEFAULT '0',
   `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
-  `ntp_server` varchar(63) NOT NULL DEFAULT 'none',
+  `ntp_server` varchar(255) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT '0',
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
