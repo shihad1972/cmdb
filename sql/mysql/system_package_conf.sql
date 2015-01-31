@@ -16,30 +16,28 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `build_domain`
+-- Table structure for table `system_package_conf`
 --
 
-DROP TABLE IF EXISTS `build_domain`;
+DROP TABLE IF EXISTS `system_package_conf`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `build_domain` (
-  `bd_id` int(7) NOT NULL AUTO_INCREMENT,
-  `start_ip` int(4) unsigned NOT NULL DEFAULT '0',
-  `end_ip` int(4) unsigned NOT NULL DEFAULT '0',
-  `netmask` int(4) unsigned NOT NULL DEFAULT '0',
-  `gateway` int(4) unsigned NOT NULL DEFAULT '0',
-  `ns` int(4) unsigned NOT NULL DEFAULT '0',
-  `domain` varchar(150) NOT NULL DEFAULT 'no.domain',
-  `ntp_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_ntp` smallint(4) NOT NULL DEFAULT '0',
+CREATE TABLE `system_package_conf` (
+  `syspack_conf_id` int(7) NOT NULL AUTO_INCREMENT,
+  `syspack_arg_id` int(11) NOT NULL,
+  `syspack_id` int(11) NOT NULL,
+  `bd_id` int(11) NOT NULL,
+  `arg` varchar(255) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
-  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`bd_id`),
-  KEY `config_ntp` (`config_ntp`,`config_ldap`,`config_log`),
-  KEY `config_email` (`config_email`,`config_xymon`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`syspack_conf_id`),
+  KEY `syspack_id` (`syspack_id`),
+  KEY `syspack_arg_id` (`syspack_arg_id`),
+  CONSTRAINT `syspack_conf_ibkf_1` FOREIGN KEY (`syspack_id`) REFERENCES `system_packages` (`syspack_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `syspack_conf_ibkf_2` FOREIGN KEY (`syspack_arg_id`) REFERENCES `system_package_args` (`syspack_arg_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -50,7 +48,7 @@ CREATE TABLE `build_domain` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER build_domain_insert BEFORE INSERT ON build_domain FOR EACH ROW set NEW.mtime = NOW() */;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_package_conf_insert BEFORE INSERT ON system_package_conf FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -65,7 +63,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER build_domain_update BEFORE UPDATE ON build_domain FOR EACH ROW set NEW.mtime = NOW() */;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_package_conf_update BEFORE UPDATE ON system_package_conf FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -81,4 +79,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-08 14:22:49
+-- Dump completed on 2014-12-09 21:51:39

@@ -37,6 +37,14 @@
 #include "cbc_data.h"
 
 void
+initialise_cbc_s(cbc_s **cbc)
+{
+	if (!(*cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc_s");
+	init_cbc_struct(*cbc);
+}
+
+void
 init_cbc_struct (cbc_s *cbc)
 {
 	memset(cbc, 0, sizeof(cbc_s));
@@ -77,6 +85,12 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_varient(cbc->varient);
 	if (cbc->vmhost)
 		clean_vm_hosts(cbc->vmhost);
+	if (cbc->syspack)
+		clean_cbc_syspack(cbc->syspack);
+	if (cbc->sysarg)
+		clean_cbc_syspack_arg(cbc->sysarg);
+	if (cbc->sysconf)
+		clean_cbc_syspack_conf(cbc->sysconf);
 	free(cbc);
 }
 
@@ -142,7 +156,7 @@ init_build_domain(cbc_build_domain_s *dom)
 {
 	memset(dom, 0, sizeof(cbc_build_domain_s));
 	snprintf(dom->domain, COMM_S, "NULL");
-	snprintf(dom->ntp_server, COMM_S, "NULL");
+/*	snprintf(dom->ntp_server, COMM_S, "NULL");
 	snprintf(dom->ldap_dn, COMM_S, "NULL");
 	snprintf(dom->ldap_bind, COMM_S, "NULL");
 	snprintf(dom->ldap_host, COMM_S, "NULL");
@@ -150,7 +164,7 @@ init_build_domain(cbc_build_domain_s *dom)
 	snprintf(dom->log_server, COMM_S, "NULL");
 	snprintf(dom->nfs_domain, COMM_S, "NULL");
 	snprintf(dom->smtp_server, COMM_S, "NULL");
-	snprintf(dom->xymon_server, COMM_S, "NULL");
+	snprintf(dom->xymon_server, COMM_S, "NULL"); */
 }
 
 void
@@ -202,7 +216,7 @@ display_build_domain(cbc_build_domain_s *bdom)
 		printf("NTP server: %s\n", bdom->ntp_server);
 	else
 		printf("No NTP configuration\n");
-	if (bdom->config_ldap > 0) {
+/*	if (bdom->config_ldap > 0) {
 		printf("LDAP configuration:\n");
 		printf("\tLDAP Server: %s\n", bdom->ldap_server);
 		if (bdom->ldap_ssl > 0)
@@ -224,7 +238,7 @@ display_build_domain(cbc_build_domain_s *bdom)
 	if (bdom->config_xymon > 0)
 		printf("Xymon monitoring server: %s\n", bdom->xymon_server);
 	else
-		printf("No xymon monitoring configuration\n");
+		printf("No xymon monitoring configuration\n"); */
 	create = (time_t)bdom->ctime;
 	printf("Build domain created by %s on %s", get_uname(bdom->cuser), ctime(&create));
 	create = (time_t)bdom->mtime;
@@ -613,6 +627,169 @@ clean_cbc_iface(cbc_iface_s *ifa)
 			next = next->next;
 		else
 			next = '\0';
+	}
+}
+
+void
+initialise_cbc_syspack(cbc_syspack_s **spack)
+{
+	if (!(*spack = malloc(sizeof(cbc_syspack_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_s");
+	init_cbc_syspack(*spack);
+}
+
+void
+init_cbc_syspack(cbc_syspack_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_s));
+}
+
+void
+clean_cbc_syspack(cbc_syspack_s *spack)
+{
+	cbc_syspack_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc)
+{
+	if (!(*cpsc = malloc(sizeof(cbc_syspack_conf_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	init_cbc_syspack_conf(*cpsc);
+}
+
+void
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_conf_s));
+}
+
+void
+clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
+{
+	cbc_syspack_conf_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa)
+{
+	if (!(*cpsa = malloc(sizeof(cbc_syspack_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	init_cbc_syspack_arg(*cpsa);
+}
+
+void
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_arg_s));
+}
+
+void
+clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
+{
+	cbc_syspack_arg_s *list, *next;
+	if (spack)
+		list = spack;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+		else
+			next = '\0';
+	}
+}
+
+void
+initialise_cbc_scripts(cbc_script_s **scripts)
+{
+	if (!(*scripts = malloc(sizeof(cbc_script_s))))
+		report_error(MALLOC_FAIL, "cbc_script_s");
+	init_cbc_scripts(*scripts);
+}
+
+void
+init_cbc_scripts(cbc_script_s *scripts)
+{
+	memset(scripts, 0, sizeof(cbc_script_s));
+}
+
+void
+clean_cbc_scripts(cbc_script_s *scripts)
+{
+	cbc_script_s *list, *next;
+
+	if (scripts)
+		list = scripts;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+	}
+}
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args)
+{
+	if (!(*args = malloc(sizeof(cbc_script_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_script_arg_s");
+	init_cbc_script_args(*args);
+}
+
+void
+init_cbc_script_args(cbc_script_arg_s *args)
+{
+	memset(args, 0, sizeof(cbc_script_arg_s));
+}
+
+void
+clean_cbc_script_args(cbc_script_arg_s *args)
+{
+	cbc_script_arg_s *list, *next;
+
+	if (args)
+		list = args;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
 	}
 }
 

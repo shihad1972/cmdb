@@ -14,16 +14,16 @@ YUM=/usr/bin/yum
 HOST=$1
 URL=$2
 
-NRPE=2.14
+NRPE=2.15
 NAGPLUG=2.0
 #
 # Grab headers needed for compilation
 
-$YUM install zlib-devel krb5-devel openssl-devel
+$YUM install -y zlib-devel krb5-devel openssl-devel make gcc
 
 cd /tmp
 
-for i in nagios-plugins-${NAGPLU}.tar.gz nrpe-${NRPE}.tar.gz
+for i in nagios-plugins-${NAGPLUG}.tar.gz nrpe-${NRPE}.tar.gz
 
   do wget ${URL}/${i}
 

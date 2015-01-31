@@ -40,12 +40,30 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "build.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
+
+/* Hopefully this will be the file to need these variables
+   These are used to substitue these values from the database when used as
+   arguments for system_package_conf */
+const char *spvars[] = {
+	"%baseip",
+	"%domain",
+	"%fqdn",
+	"%hostname",
+	"%ip"
+};
+
+//const unsigned int spvar_len[] = { 7, 7, 5, 9, 3 };
+
+const int sp_query[] = { 33, 63, 64, 20, 33 };
+
+const int spvar_no = 5;
 
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
@@ -281,6 +299,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		printf("dhcpd.hosts file written\n");
 	}
+/* This will add the OS alias to cml. This will be useful in writing the
+    host script */
 	if ((retval = write_tftp_config(cmc, cml)) != 0) {
 		printf("Failed to write tftp configuration\n");
 		return retval;
@@ -508,8 +528,8 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	if ((retval = fill_app_config(cmc, cml, build)) != 0) {
-		printf("Failed to get application configuration\n");
+	if ((retval = fill_system_packages(cmc, cml, build)) != 0) {
+		printf("Failed to get system package configuration\n");
 		return retval;
 	}
 	retval = write_file(file, build->string);
@@ -523,14 +543,10 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE, type;
 	unsigned int max;
+	unsigned long int bd_id;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
-	string_l name, surl;
 
-	name.string = server;
-	name.next = &surl;
-	surl.string = url;
-	surl.next = '\0';
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
@@ -600,55 +616,24 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	add_kick_base_script(data, &build);
 	snprintf(url, CONF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, NTP_CONFIG);
-	if ((retval = cbc_run_search(cmc, data, NTP_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot find NTP config for %s\n", server);
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple NTP configs for %s\n", server);
-	} else {
-		if (data->fields.small > 0)
-			add_kick_ntp_config(data, &build, url);
-	}
+	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		clean_dbdata_struct(data);
+		fprintf(stderr, "Build domain for server %s not found\n", server);
+		return BUILD_DOMAIN_NOT_FOUND;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple build domains found for server %s\n", server);
+	bd_id = data->fields.number;
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, LDAP_CONFIG)
-	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot get LDAP config for %s\n", server);
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple LDAP configs for %s\n", server);
-	} else {
-		if (data->fields.small > 0)
-			add_kick_ldap_config(data, &build, url);
-	}
-	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, SMTP_CONFIG)
-	if ((retval = cbc_run_search(cmc, data, SMTP_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot get SMTP config for %s\n", server);
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple SMTP configs for %s\n", server);
-	} else {
-		if (data->fields.small > 0)
-			add_kick_smtp_config(data, &build, &name);
-	}
-	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, LOG_CONFIG);
-	if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
-		fprintf(stderr, "Cannot find LOG config for %s\n", server);
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple LOG configs for %s\n", server);
-	} else {
-		if (data->fields.small > 0)
-			add_kick_log_config(data, &build, url);
-	}
-	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, XYMON_CONFIG);
-	if ((retval = cbc_run_search(cmc, data, XYMON_CONFIG)) == 0){
-		fprintf(stderr, "Cannot find XYMON config for %s\n", server);
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple XYMON configs for %s\n", server);
-	} else {
-		if (data->fields.small > 0)
-			add_kick_xymon_config(data, &build, url, server);
-	}
+	type = SCRIPT_CONFIG;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
+	if ((retval = cbc_run_search(cmc, data, type)) == 0)
+		fprintf(stderr, "No scripts configured for this build\n");
+	else
+		fill_build_scripts(cmc, data, retval, &build, cml);
 	add_kick_final_config(&build, url);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
@@ -679,18 +664,16 @@ int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char *server, line[TBUFF_S], *pos;
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *list, *data = 0, *tmp;
+	int retval = NONE, type, query = SCRIPT_CONFIG;
 	size_t len = NONE;
+	unsigned int max;
+	unsigned long int bd_id;
+	dbdata_s *list = 0, *data = 0;
 	string_len_s *build;
 
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
-	build->len = BUFF_S;
-	build->size = NONE;
-	if (!(build->string = calloc(build->len,  sizeof(char))))
-		report_error(MALLOC_FAIL, "build->string in write_pre_host_script");
+	init_string_len(build);
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
@@ -698,6 +681,17 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
 			return retval;
 	server = cml->name;
+	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		clean_dbdata_struct(list);
+		return NO_BD_CONFIG;
+	} else if (retval > 1) {
+		fprintf(stderr, "Associated with multiple build domains?\n");
+		fprintf(stderr, "Using 1st one!!!\n");
+	}
+	retval = 0;
+	bd_id = data->fields.number;
+	clean_dbdata_struct(data);
 	snprintf(build->string, RBUFF_S, "\
 #!/bin/sh\n\
 #\n\
@@ -706,16 +700,6 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 #\n", server);
 	len = strlen(build->string);
 	build->size = len;
-	PREP_DB_QUERY(list, ALL_CONFIG)
-	tmp = list;
-	if ((retval = cbc_run_search(cmc, list, ALL_CONFIG)) == 0) {
-		clean_dbdata_struct(list);
-		return NO_BD_CONFIG;
-	} else if (retval > 1) {
-		fprintf(stderr, "Associated with multiple build domains?\n");
-		fprintf(stderr, "Using 1st one!!!\n");
-	}
-	retval = NONE;
 	snprintf(line, TBUFF_S, "\
 #\n\
 #\n\
@@ -735,62 +719,75 @@ chmod 755 motd.sh\n\
 ./motd.sh >> scripts.log 2>&1\n\
 \n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
-	CHECK_DATA_LIST(0)
-	if (list->fields.small > 0) {
-		CHECK_DATA_LIST(0)
-		if (list->fields.small == 0) {
-			snprintf(line, RBUFF_S, "\
-$WGET %sscripts/ldap-auth.sh\n\
-chmod 755 ldap-auth.sh\n\
-./ldap-auth.sh >> scripts.log 2>&1\n\
-\n", cml->config);
-			PRINT_STRING_WITH_LENGTH_CHECK
-		} else {
-			snprintf(line, RBUFF_S, "\
-$WGET %sscripts/ldap-auth.sh\n\
-chmod 755 ldap-auth.sh\n\
-./ldap-auth.sh %s ssl>> scripts.log 2>&1\n\
-\n", cml->config, cml->config);
-			PRINT_STRING_WITH_LENGTH_CHECK
-		}
-	} else
-		CHECK_DATA_LIST(0)
-	CHECK_DATA_LIST(0)
-	if (list->fields.small > 0) {
-		PREP_DB_QUERY(data, LOG_CONFIG)
-		if ((retval = cbc_run_search(cmc, data, LOG_CONFIG)) == 0) {
-			clean_dbdata_struct(data);
-			return NO_LOG_CONFIG;
-		} else if (retval > 1) {
-			fprintf(stderr, "Associated with multiple build domains?\n");
-			fprintf(stderr, "Using 1st one!!!\n");
-		}
-		server = data->next->fields.text;
-		snprintf(line, RBUFF_S, "\
-$WGET %sscripts/log.sh\n\
-chmod 755 log.sh\n\
-./log.sh %s>> scripts.log 2>&1\n\
-\n", cml->config, server);
-		PRINT_STRING_WITH_LENGTH_CHECK
-	}
-	CHECK_DATA_LIST(0)
-	if (list->fields.small > 0) {
-		snprintf(line, RBUFF_S, "\
-if $WGET %sscripts/xymon-setup.sh; then\n\
-  chmod 755 xymon-setup.sh\n\
-  ./xymon-setup.sh %sscripts/>> scripts.log 2>&1\n\
-fi\n\
-\n", cml->config, cml->config);
-		PRINT_STRING_WITH_LENGTH_CHECK
-	}
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
+	if ((retval = cbc_run_search(cmc, data, query)) > 0)
+		fill_build_scripts(cmc, data, retval, build, cml);
+	else
+		clean_dbdata_struct(data);
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
-	clean_dbdata_struct(tmp);
-	clean_dbdata_struct(data);
+	if (list)
+		clean_dbdata_struct(list);
 	free(build->string);
 	free(build);
 	return retval;
+}
+
+void
+fill_build_scripts(cbc_config_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
+{
+	if (!(list))
+		return;
+	char *pos, *script = list->fields.text;
+	char *arg, *newarg;
+	char line[TBUFF_S];
+	int scrno = 0;
+	size_t len;
+	unsigned long int argno;
+	dbdata_s *data = list;
+	while (scrno <= retval) {
+		if (data) {
+			argno = data->next->next->fields.number;
+			arg = data->next->fields.text;
+		}
+		if (!(newarg = cbc_complete_arg(cbc, cml->server_id, arg)))
+			return;
+		if (scrno == 0) {
+			snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, newarg);
+		} else {
+			if ((argno > 1) && (data)) {
+				len = strlen(line);
+				pos = line + len;
+				snprintf(pos, TBUFF_S - len, "\
+%s ", newarg);
+			} else {
+				len = strlen(line);
+				pos = line + len;
+				snprintf(pos, TBUFF_S - len, "\
+>> %s.log 2>&1\n\n", script);
+				PRINT_STRING_WITH_LENGTH_CHECK
+				memset(line, 0, TBUFF_S);
+				if (data) {
+					script = data->fields.text;
+					snprintf(line, TBUFF_S, "\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s ", cml->config, script, script, script, newarg);
+				}
+			}
+		}
+		scrno++;
+		if (data)
+			data = data->next->next->next;
+		newarg = 0;
+	}
 }
 
 void
@@ -1376,285 +1373,172 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 }
 
 int
-fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	int retval, type = LDAP_CONFIG;
+	int retval, type = SYSP_INFO_ON_BD_ID;
+	char *package = '\0';
 	unsigned int max;
+	unsigned long int bd_id;
+	dbdata_s *data, *list;
+
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+		fprintf(stderr, "No build domain in fill_system_packages\n");
+		return NO_RECORDS;
+	}
+	bd_id = data->fields.number;
+	clean_dbdata_struct(data);
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bd_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
+		printf("No system packages configured for domain\n");
+		clean_dbdata_struct(data);
+		return retval;
+	} else {
+		retval = 0;
+	}
+	list = data;
+	while (list) {
+		if (!(package) || (strncmp(package, list->fields.text, URL_S) != 0)) {
+			if (build->size + 1 >= build->len)
+				resize_string_buff(build);
+			snprintf(build->string + build->size, 2, "\n");
+			build->size++;
+			package = list->fields.text;
+		}
+		add_system_package_line(cmc, cml->server_id, build, list);
+		list = list->next->next->next->next;
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+void
+add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data)
+{
+	char *buff, *arg, *tmp;
+	size_t blen, slen;
+
+	if (!(buff = calloc(BUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "buff in add_system_package_line");
+	if ((snprintf(buff, BUFF_S, "%s\t%s\t%s\t", data->fields.text,
+	      data->next->fields.text, data->next->next->fields.text)) >= BUFF_S)
+		fprintf(stderr, "System package line truncated in preseed file!\n");
+	blen = strlen(buff);
+	tmp = data->next->next->next->fields.text;
+	if (!(arg = cbc_complete_arg(cbc, server_id, tmp))) {
+		fprintf(stderr, "Could not cbc_complete_arg for %s\n",
+		 data->next->fields.text);
+		free(buff);
+		return;
+	}
+	slen = strlen(arg);
+	if ((blen + slen + build->size) >= build->len)
+		resize_string_buff(build);
+	snprintf(build->string + build->size, blen + slen + 2, "%s%s\n", buff, arg);
+	build->size += blen + slen + 1;
+	free(arg);
+	free(buff);
+}
+
+char *
+cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
+{
+	char *tmp, *new = 0, *pre, *post;
+	int i, retval;
+	size_t len;
 	dbdata_s *data;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, LDAP_CONFIG)) == 0) {
-		printf("No build domain associated with %s?\n", cml->name);
-		clean_dbdata_struct(data);
-		return BUILD_DOMAIN_NOT_FOUND;
-	} else if (retval > 1) {
-		printf("Multiple build domains associated with %s?\n",
-		       cml->name);
-		clean_dbdata_struct(data);
-		return MULTIPLE_BUILD_DOMAINS;
-	} else {
-		if (data->fields.small > 0)
-			fill_ldap_config(data, build, cml->os);
-		else
-			printf("LDAP authentication configuration skipped\n");
+	if (!(arg))
+		return new;
+	if (!(new = calloc(TBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "new in cbc_complete_arg");
+	snprintf(new, TBUFF_S, "%s", arg);
+	for ( i = 0; i < spvar_no; i++ ) {
+		if ((pre = strstr(new, spvars[i]))) {
+// Check we are not the start of the new buffer
+			if ((pre - new) > 0)
+				*pre = '\0';
+// Move forward to part we want to save
+			tmp = pre + strlen(spvars[i]);
+// and save it
+			post = strndup(tmp, TBUFF_S);
+			init_multi_dbdata_struct(&data, cbc_search_fields[sp_query[i]]);
+			data->args.number = server_id;
+			if ((retval = cbc_run_search(cbc, data, sp_query[i])) == 0) {
+				fprintf(stderr,
+"Query returned 0 entries in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+				goto cleanup;
+			}
+			if (!(tmp = get_replaced_syspack_arg(data, i))) {
+				fprintf(stderr,
+"Cannot get new string in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
+				goto cleanup;
+			}
+			len = strlen(tmp) + strlen(post);
+			if ((len + strlen(new)) < TBUFF_S)
+				snprintf(pre, len + 1, "%s%s", tmp, post);
+			clean_dbdata_struct(data);
+		}
 	}
-	clean_dbdata_struct(data);
-	type = XYMON_CONFIG;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, XYMON_CONFIG)) == 0) {
-		printf("No build domain associated with %s?\n", cml->name);
+	return new;
+
+	cleanup:
+		free(new);
 		clean_dbdata_struct(data);
-		return BUILD_DOMAIN_NOT_FOUND;
-	} else if (retval > 1) {
-		printf("Multiple build domains associated with %s?\n",
-		       cml->name);
-		clean_dbdata_struct(data);
-		return MULTIPLE_BUILD_DOMAINS;
-	} else {
-		if (data->fields.small > 0)
-			fill_xymon_config(cml, data, build);
-		else
-			printf("Xymon configuration skipped\n");
-	}
-	clean_dbdata_struct(data);
-	type = SMTP_CONFIG;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, SMTP_CONFIG)) == 0) {
-		printf("No build domain associated with %s?\n", cml->name);
-		clean_dbdata_struct(data);
-		return BUILD_DOMAIN_NOT_FOUND;
-	} else if (retval > 1) {
-		printf("Multiple build domains associated with %s?\n",
-		       cml->name);
-		clean_dbdata_struct(data);
-		return MULTIPLE_BUILD_DOMAINS;
-	} else {
-		fill_smtp_config(cml, data, build);
-	}
-	clean_dbdata_struct(data);
-	return NONE;
+		return NULL;
 }
 
-void
-fill_ldap_config(dbdata_s *data, string_len_s *build, char *os)
+char *
+get_replaced_syspack_arg(dbdata_s *data, int loop)
 {
-	char url[URL_S], buff[BUFF_S];
-	dbdata_s *list = data->next;
-	char *server = list->fields.text;
-	list = list->next;
-	short int ssl = list->fields.small;
-	list = list->next;
-	char *base = list->fields.text;
-	list = list->next;
-	char *root = list->fields.text;
-	size_t len;
-	if (ssl > 0)
-		snprintf(url, URL_S, "ldaps://%s", server);
-	else
-		snprintf(url, URL_S, "ldap://%s", server);
-	snprintf(buff, BUFF_S, "\n\
-# Application Configuration\n\
-libnss-ldapd    libnss-ldap/bindpw      password\n\
-libnss-ldapd    libnss-ldap/rootbindpw  password\n\
-libnss-ldapd    libnss-ldap/dblogin     boolean false\n\
-libnss-ldapd    libnss-ldap/override    boolean true\n\
-libnss-ldapd    shared/ldapns/base-dn   string  %s\n\
-libnss-ldapd    libnss-ldap/rootbinddn  string  %s\n\
-libnss-ldapd    shared/ldapns/ldap_version      select  3\n\
-libnss-ldapd    libnss-ldap/binddn      string  %s\n\
-libnss-ldapd    shared/ldapns/ldap-server       string %s\n\
-libnss-ldapd    libnss-ldap/nsswitch    note\n\
-libnss-ldapd    libnss-ldap/confperm    boolean false\n\
-libnss-ldapd    libnss-ldap/dbrootlogin boolean true\n\
-\n", base, root, root, url);
-	len = strlen(buff);
-	if ((len + build->size) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
-	snprintf(buff, BUFF_S, "\
-libpam-ldapd    libpam-ldap/rootbindpw  password\n\
-libpam-ldapd    libpam-ldap/bindpw      password\n\
-libpam-runtime  libpam-runtime/profiles multiselect     unix, ldap\n\
-libpam-ldapd    shared/ldapns/base-dn   string  %s\n\
-libpam-ldapd    libpam-ldap/override    boolean true\n\
-libpam-ldapd    shared/ldapns/ldap_version      select  3\n\
-libpam-ldapd    libpam-ldap/dblogin     boolean false\n\
-libpam-ldapd    shared/ldapns/ldap-server       string  %s\n\
-libpam-ldapd    libpam-ldap/pam_password        select  crypt\n\
-libpam-ldapd    libpam-ldap/binddn      string  %s\n\
-libpam-ldapd    libpam-ldap/rootbinddn  string  %s\n\
-libpam-ldapd    libpam-ldap/dbrootlogin boolean true\n\
-\n", base, url, root, root);
-	len = strlen(buff);
-	if ((len + build->size) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
-	snprintf(buff, BUFF_S, "\
-nslcd   nslcd/ldap-bindpw       password\n\
-nslcd   nslcd/ldap-sasl-authcid string\n\
-nslcd   nslcd/ldap-sasl-realm   string\n\
-nslcd   nslcd/ldap-sasl-mech    select\n\
-nslcd   nslcd/ldap-starttls     boolean true\n\
-nslcd   nslcd/ldap-base         string  %s\n\
-nslcd   nslcd/ldap-sasl-krb5-ccname     string  /var/run/nslcd/nslcd.tkt\n\
-nslcd   nslcd/ldap-auth-type    select  none\n\
-nslcd   nslcd/ldap-reqcert      select  demand\n\
-nslcd   nslcd/ldap-sasl-authzid string\n\
-nslcd   nslcd/ldap-uris         string  %s\n\
-nslcd   nslcd/ldap-sasl-secprops        string\n\
-nslcd   nslcd/ldap-binddn       string %s\n\
-\n", base, url, root);
-	len = strlen(buff);
-	if ((len + build->size) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
-	if ((strncmp(os, "ubuntu", COMM_S)) == 0) {
-		snprintf(buff, BUFF_S, "\
-ldap-auth-config        ldap-auth-config/bindpw password\n\
-ldap-auth-config        ldap-auth-config/rootbindpw     password\n\
-ldap-auth-config        ldap-auth-config/binddn string  cn=proxyuser,dc=example,dc=net\n\
-ldap-auth-config        ldap-auth-config/dbrootlogin    boolean true\n\
-ldap-auth-config        ldap-auth-config/rootbinddn     string  %s\n\
-ldap-auth-config        ldap-auth-config/pam_password   select  md5\n\
-ldap-auth-config        ldap-auth-config/move-to-debconf        boolean true\n\
-ldap-auth-config        ldap-auth-config/ldapns/ldap-server     string  %s\n\
-ldap-auth-config        ldap-auth-config/ldapns/base-dn string  %s\n\
-ldap-auth-config        ldap-auth-config/override       boolean true\n\
-ldap-auth-config        ldap-auth-config/ldapns/ldap_version    select  3\n\
-ldap-auth-config        ldap-auth-config/dblogin        boolean false\n\
-\n", root, url, base);
-		len = strlen(buff);
-		if ((len + build->size) >= build->len)
-			resize_string_buff(build);
-		snprintf(build->string + build->size, len + 1, "%s", buff);
-		build->size += len;
-	}
-}
+// This function NEEDS validated inputs
+	char *str = '\0', *tmp, addr[RANGE_S], *ip;
+	uint32_t ip_addr;
 
-void
-fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	dbdata_s *list = data->next;
-	char *server = list->fields.text;
-	char *domain = list->next->fields.text;
-	char buff[BUFF_S], *tmp;
-	size_t len;
-
-	snprintf(buff, BUFF_S, "\
-xymon-client    hobbit-client/HOBBITSERVERS     string  %s\n\
-xymon-client    hobbit-client/CLIENTHOSTNAME    string  %s.%s\n\
-", server, cml->name, domain);
-	len = strlen(buff);
-	if ((len + build->size) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_xymon_config");
-		else
-			build->string = tmp;
+	switch(loop) {
+		case 0:
+			str = strndup(data->fields.text, RANGE_S - 1);
+			tmp = strrchr(str, '.');
+			tmp++;
+			*tmp = '0';
+			*(tmp + 1) = '\0';
+			break;
+		case 1:
+			str = strndup(data->fields.text, RBUFF_S - 1);
+			break;
+		case 2:
+			if (!(str = calloc(RBUFF_S, sizeof(char))))
+				report_error(MALLOC_FAIL, "str in get_replaced_syspack_arg");
+			snprintf(str, RBUFF_S, "%s.%s", data->fields.text, data->next->fields.text);
+			break;
+		case 3:
+			str = strndup(data->fields.text, HOST_S - 1);
+			break;
+		case 4:
+// This is broken. The IP address is a number and will need to be converted to a string
+			ip_addr = htonl((uint32_t)data->fields.number);
+			ip = addr;
+			inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+			str = strndup(ip, RANGE_S - 1);
+			break;
 	}
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
-}
-
-void
-fill_smtp_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	short int relay = data->fields.small;
-	dbdata_s *list = data->next;
-	char *smtp = list->fields.text;
-	list = list->next;
-	char *domain = list->fields.text;
-	char buff[BUFF_S], *tmp;
-	size_t len;
-	if (relay > 0)
-		snprintf(buff, BUFF_S, "\n\
-postfix postfix/mailname        string  %s.%s\n\
-postfix postfix/main_mailer_type        select  Internet with smarthost\n\
-postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
-postfix postfix/relayhost       string  %s\n\
-", cml->name, domain, cml->name, domain, domain, smtp);
-	else
-		snprintf(buff, BUFF_S, "\
-postfix postfix/mailname        string  %s.%s\n\
-postfix postfix/main_mailer_type        select  Internet Site\n\
-postfix postfix/destinations    string  %s.%s, localhost.%s, localhost\n\
-", cml->name, domain, cml->name, domain, domain);
-	len = strlen(buff);
-	if ((len + build->size) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_smtp_config");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
+	return str;
 }
 
 void
 fill_kick_base(dbdata_s *data, string_len_s *build)
 {
 	char buff[FILE_S], *tmp;
-	char *serv = data->next->next->fields.text;
-	char *dn = data->next->next->next->fields.text;
-	char *key = data->next->next->next->next->fields.text;
-	char *loc = data->next->next->next->next->next->fields.text;
-	char *tim = data->next->next->next->next->next->next->fields.text;
-	short int ldapconf = data->fields.small, ldapssl = data->next->fields.small;
+	char *key = data->fields.text;
+	char *loc = data->next->fields.text;
+	char *tim = data->next->next->fields.text;
 	size_t len;
 
 	/* root password is k1Ckstart */
-	if (ldapconf > 0) {
-		if (ldapssl > 0)
-			snprintf(buff, FILE_S, "\
-auth --useshadow --enablemd5 --enableldap --enableldaptls --enableldapauth \
---ldapserver=%s --ldapbasedn=%s\n\
-bootloader --location=mbr\n\
-text\n\
-firewall --disabled\n\
-firstboot --disable\n\
-keyboard %s\n\
-lang %s\n\
-logging --level=info\n\
-reboot\n\
-rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
-selinux --disabled\n\
-skipx\n\
-timezone  %s\n\
-install\n\
-\n", serv, dn, key, loc, tim);
-		else
-			snprintf(buff, FILE_S, "\
-auth --useshadow --enablemd5 --enableldap --enableldapauth --ldapserver=%s --ldapbasedn=%s\n\
-bootloader --location=mbr\n\
-text\n\
-firewall --disabled\n\
-firstboot --disable\n\
-keyboard %s\n\
-lang %s\n\
-logging --level=info\n\
-reboot\n\
-rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
-selinux --disabled\n\
-skipx\n\
-timezone  %s\n\
-install\n\
-\n", serv, dn, key, loc, tim);
-	} else {
-		snprintf(buff, FILE_S, "\
+	snprintf(buff, FILE_S, "\
 auth --useshadow --enablemd5\n\
 bootloader --location=mbr\n\
 text\n\
@@ -1670,7 +1554,6 @@ skipx\n\
 timezone  %s\n\
 install\n\
 \n", key, loc, tim);
-	}
 	if ((len = strlen(buff)) > build->len) {
 		build->len = FILE_S;
 		tmp = realloc(build->string, build->len * sizeof(char));
@@ -1840,70 +1723,24 @@ add_kick_base_script(dbdata_s *data, string_len_s *build)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
-	dbdata_s *list = data;
+	if (!(data))
+		return;
+	char *script = data->fields.text;
 
 	snprintf(buff, BUFF_S, "\
 \n\
 %%post\n\
+WGET=/usr/bin/wget\n\
 cd /root\n\
 wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
 \n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh >> scripts.log 2>&1\n\
+\n\
 wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log\n", list->fields.text, list->fields.text);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-}
-
-void
-add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url)
-{
-	char buff[BUFF_S], *tmp, *server = '\0', *dn = '\0';
-	short int ssl = NONE;
-	size_t len = NONE;
-	dbdata_s *list = data;
-
-	if (list->next) {
-		list = list->next;
-		server = list->fields.text;
-	} else {
-		fprintf(stderr, "ldap config linked list has no server\n");
-		return;
-	}
-	if (list->next) {
-		list = list->next;
-		ssl = list->fields.small;
-	} else {
-		fprintf(stderr, "ldap config linked list has no ssl\n");
-		return;
-	}
-	if (list->next) {
-		list = list->next;
-		dn = list->fields.text;
-	} else {
-		fprintf(stderr, "ldap config linked list has no dn\n");
-		return;
-	}
-	if (ssl > 0)
-/* Will need to get this from the database */
-		snprintf(buff, BUFF_S, "\
-wget %sRoot-CA.pem\n\
-cp Root-CA.pem /etc/openldap/cacerts\n\
-/usr/bin/c_rehash /etc/openldap/cacerts\n\
-/usr/sbin/authconfig --update --enableldap --enableldapauth --enableldaptls \
---ldapserver=%s --ldapbasedn=%s --enablemkhomedir\n\
-/sbin/chkconfig nscd on\n\
-\n", url, server, dn);
-	else
-		snprintf(buff, BUFF_S, "\
-/usr/sbin/authconfig --update --enableldap --enableldapauth --ldapserver=%s \
---ldapbasedn=%s --enablemkhomedir\n\
-/sbin/chkconfig nscd on\n\
-\n", server, dn);
+./motd.sh > motd.log\n\n", script, script, script);
 	len = strlen(buff);
 	if ((build->size + len) >= build->len)
 		resize_string_buff(build);
@@ -1937,66 +1774,6 @@ cp Root-CA.pem /etc/openldap/cacerts\n\
 #endif /* CHECK_KICK_CONFIG */
 
 void
-add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url)
-{
-	char buff[BUFF_S], *tmp, *server;
-	size_t len = NONE;
-
-	CHECK_KICK_CONFIG(ntp)
-	snprintf(buff, BUFF_S, "\
-wget %sscripts/kick-ntp.sh\n\
-chmod 755 kick-ntp.sh\n\
-./kick-ntp.sh %s > ntp.log 2>&1\n\
-\n", url, server);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-}
-
-void
-add_kick_log_config(dbdata_s *data, string_len_s *build, char *url)
-{
-	char buff[BUFF_S], *tmp, *server;
-	size_t len = NONE;
-
-	CHECK_KICK_CONFIG(log)
-	snprintf(buff, BUFF_S, "\
-wget %sscripts/log.sh\n\
-chmod 755 log.sh\n\
-./log.sh %s > logging.log 2>&1\n\
-\n", url, server);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-}
-
-void
-add_kick_xymon_config (dbdata_s *data, string_len_s *build, char *url, char *host)
-{
-	char buff[BUFF_S], *tmp, *server;
-	size_t len = NONE;
-
-	CHECK_KICK_CONFIG(xymon)
-	snprintf(buff, BUFF_S, "\
-wget %sscripts/xymon-client.sh\n\
-chmod 755 xymon-client.sh\n\
-./xymon-client.sh %s %sscripts %s > xymon.log 2>&1\n\
-\n", url, host, url, server);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-}
-
-void
 add_kick_final_config (string_len_s *build, char *url)
 {
 	char buff[BUFF_S], *tmp;
@@ -2018,55 +1795,6 @@ chmod 755 kick-final.sh\n\
 		resize_string_buff(build);
 	snprintf(tmp, COMM_S, "%%end\n\n");
 	build->size += 6;
-}
-
-void
-add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf)
-{
-	char buff[BUFF_S], *tmp, *server, *domain, *ip;
-	uint32_t ip_addr;
-	size_t len = NONE;
-	dbdata_s *list = data;
-
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in add_kick_smtp_config");
-	if (list->next) {
-		list = list->next;
-		server = list->fields.text;
-	} else {
-		fprintf(stderr,
-		 "Only one data struct in linked list in smtp config\n");
-		return;
-	}
-	if (list->next) {
-		list = list->next;
-		domain = list->fields.text;
-	} else {
-		fprintf(stderr,
-		 "Only two data structs in linked list in smtp config\n");
-		return;
-	}
-	if (list->next) {
-		list = list->next;
-		ip_addr = htonl((uint32_t)list->fields.number);
-		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	} else {
-		fprintf(stderr,
-		 "Only three data structs in linked list in smtp config\n");
-		return;
-	}
-	snprintf(buff, BUFF_S, "\
-wget %sscripts/kick-postfix.sh\n\
-chmod 755 kick-postfix.sh\n\
-./kick-postfix.sh -h %s -i %s -d %s -r %s > postfix.log 2>&1\n\
-\n", conf->next->string, conf->string, ip, domain, server);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-	free(ip);
 }
 
 int

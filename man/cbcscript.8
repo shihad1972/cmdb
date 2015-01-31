@@ -1,0 +1,104 @@
+.TH cbcscript 8 "Version 0.2: 29th January 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+cbcscript \- Create Build Config Scripts
+.SH SYNOPSIS
+.B cbcscript
+[
+.B action
+]
+[
+.B type
+]
+[
+.B specifier
+]
+
+.SH DESCRIPTION
+\fBcbcscript\fP add scripts to the final stage of a build. These can be used
+to configure the completed build, such as creating configuration files for
+software installed, run commands on the new build and in other ways configure
+the new build. You can add scripts, and then add arguments for these scripts
+,specified by a positional number, so multiple arguments can be provided. These
+can be static, or they can be dynamic and based on information from the build.
+.PP
+You will have to group these scripts and options by \fIbuild domain\fP and
+\fIbuild type\fP. Build domains are defined in the \fBcbcdomain\fP command,
+whereas the build types are one of the base operating systems you can build
+for.
+.PP
+Action and type switches do not take arguments.
+
+.SH OPTIONS
+.B actions
+.IP -a
+add
+.IP -l
+list
+.IP -r
+remove
+.PP
+.B type
+.IP -f
+arg
+.IP -s
+script
+.PP
+These actions specify what you want to do, and what objects you wish to act
+on. How you act on them is specified via the options below, which all take
+arguments.
+.PP
+.B specifiers
+.IP -b
+<build domain>
+.IP -o
+<number>
+.IP -g
+<argument>
+.IP -n
+<name>
+.IP -t
+<build type>
+.PP
+.SH EXAMPLES
+.B To add a script
+.IP
+\fBcbcscript -a -s -n <script-name>\fP
+.PP
+.B To add an argument to a script
+\fBcbcscript -a -f -b <domain> -n <script-name> -g <argument> -t <build-type-os> -o <number>\fP
+.PP
+.B To list scripts
+.IP
+\fBcbcscript -l -s
+.PP
+.B To list script configs for a domain
+.IP
+\fBcbcscript -l -f -b <domain>\fP. You can also add more identifiers if you
+want a more specific listing
+.PP
+.B To remove a script argument
+.IP
+\fBcbcscript -r -f -b <domain> -n <script-name> -t <build-type-os> -o number\fP
+.PP
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for the cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.I ~/.dnsa.conf
+.RS
+User configuration for the cmdb / dnsa / cbc suite of programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR cbcdomain(8) cbcsysp(8)
+

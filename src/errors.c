@@ -53,7 +53,7 @@ report_error(int error, const char *errstr)
 	if (error == ARGC_INVAL) {
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
-		fprintf(stderr, "Argv is invalid\n");
+		;
 	} else if (error == CONF_ERR) {
 		fprintf(stderr, "Config file error\n");
 	} else if (error == PORT_ERR) {
@@ -71,7 +71,7 @@ report_error(int error, const char *errstr)
 	} else if (error == WRONG_ACTION) {
 		fprintf(stderr, "Incorrect action specified\n");
 	} else if (error == WRONG_TYPE) {
-		fprintf(stderr, "Incorrect domain type specified\n");
+		fprintf(stderr, "Incorrect type specified\n");
 	} else if (error == USER_INPUT_INVALID) {
 		fprintf(stderr, "Input %s not valid.\n", errstr);
 	} else if (error == BUFFER_TOO_SMALL) {
@@ -103,7 +103,7 @@ report_error(int error, const char *errstr)
 	} else if (error == DB_TYPE_INVALID) {
 		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
-		fprintf(stderr, "Function %s tring to use an unknown struct / db table\n", errstr);
+		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
 	} else if (error == NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
@@ -224,8 +224,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Requested partition not found\n");
 	} else if (error == DB_DELETE_FAILED) {
 		fprintf(stderr, "Delete from database failed\n");
-	} else if (error == CANNOT_BUILD_PACKAGE_LIST) {
-		fprintf(stderr, "Cannot build package list\n");
+	} else if (error == NO_BD_CONFIG) {
+		fprintf(stderr, "Unable to find build domain\n");
+	} else if (error == NO_SYSPACK_CONF) {
+		;
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -322,6 +324,12 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "Slave zone specified but no master name given\n");
 	else if (retval == NO_PREFIX)
 		fprintf(stderr, "No reverse zone prefix was supplied\n");
+	else if (retval == NO_ARG)
+		fprintf(stderr, "No arguemt was supplied\n");
+	else if (retval == NO_NUMBER)
+		fprintf(stderr, "No number was supplied\n");
+	else if (retval == NO_NTP_SERVER)
+		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
@@ -344,6 +352,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcpart_usage();
 		else if ((strncmp(program, "cpc", CONF_S) == 0))
 			display_cpc_usage();
+		else if ((strncmp(program, "cbcsysp", CONF_S) == 0))
+			display_cbcsysp_usage();
+		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
+			display_cbcscript_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -416,15 +428,17 @@ display_cbcdomain_usage(void)
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
-	printf("Detail Options:\n");
+/*	printf("Detail Options:\n");
 	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
-	printf("\n\t-p use ssl for ldap connection\n\n");
+	printf("\n\t-p use ssl for ldap connection\n\n"); */
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
-	printf("Application server configurations\n");
+/*	printf("Application server configurations\n");
 	printf("-e smtp_server\n-f nfs_domain\n-g logging server\n");
-	printf("-t ntp_server\n-x xymon_server\n\n");
-	printf("cbcdomain [ -a | -d | -l | -m | -r | -w ] -n [ app options ]\n\n");
+	printf("-t ntp_server\n-x xymon_server\n\n"); */
+	printf("NTP server configuration:\n");
+	printf("-t ntp_server\n\n");
+	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
 }
 
 void
@@ -527,6 +541,38 @@ display_cpc_usage(void)
 	printf("-t <timezone>\n");
 	printf("-u <url>\n");
 	printf("-v <disk drive id>\n");
+}
+
+void
+display_cbcsysp_usage(void)
+{
+	printf("cbcsysp: cbc system package %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcsysp <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add -l: list -r: remove -m: modify\n");
+	printf("Type options\n");
+	printf("-p: package\t-o: config\t-y: arguments\n");
+	printf("Arguments\n");
+	printf("-b <domain>\t-f <field>\t-n <name>\t-g <arg>\n");
+	printf("-t <type>\n");
+	printf("See man page for full details\n");
+}
+
+void
+display_cbcscript_usage(void)
+{
+	printf("cbcscript: cbc scripts %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcscript <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add\t-l: list -r: remove\n");
+	printf("Type options\n");
+	printf("-f: arg\t-s: script\n");
+	printf("Arguments\n");
+	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
+	printf("-t <build os>\n");
+	printf("See man page for full details\n");
 }
 
 void
@@ -1030,7 +1076,7 @@ void
 init_string_l(string_l *string)
 {
 	memset(string, 0, sizeof(string_l));
-	if (!(string->string = malloc(RBUFF_S)))
+	if (!(string->string = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
 }
 

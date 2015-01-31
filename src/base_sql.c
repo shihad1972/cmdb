@@ -161,9 +161,13 @@ cmdb_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite
 void
 cmdb_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
 {
-	int retval;
+	int retval, sqlret = 0;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
+	if ((retval = sqlite3_db_config(*cmdb, SQLITE_DBCONFIG_ENABLE_FKEY, 1, &sqlret)) != SQLITE_OK)
+		fprintf(stderr, "Cannot enable foreign key support\n");
+	if (sqlret == 0)
+		fprintf(stderr, "Did not enable foreign key support\n");
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
 		retval = sqlite3_close(*cmdb);
 		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");

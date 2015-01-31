@@ -52,4 +52,19 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
 void
 set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id);
 
+int
+get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id);
+
+int
+get_system_package_id(cbc_config_s *cbc, char *domain, uli_t *id);
+
+int
+get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id);
+
+int
+get_system_script_id(cbc_config_s *cbc, char *package, uli_t *id);
+
+int
+get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id);
+
 #endif /* CBC_COMMON_H */

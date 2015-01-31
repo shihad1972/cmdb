@@ -1,6 +1,6 @@
 /*
  *  cbc: Create Build config
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ extern const unsigned int cbc_delete_fields[];
 
 extern const unsigned int cbc_update_types[][6];
 extern const unsigned int cbc_delete_types[][2];
-extern const unsigned int cbc_search_arg_types[][3];
+extern const unsigned int cbc_search_arg_types[][4];
 extern const unsigned int cbc_search_field_types[][11];
 
 
@@ -59,7 +59,12 @@ enum {			/* cbc delete SQL statements */
 	DISK_DEV_ON_SERVER_ID = 7,
 	SEED_SCHEME_ON_DEF_ID = 8,
 	DEF_PART_ON_PART_ID = 9,
-	DEF_PART_ON_DEF_ID = 10
+	DEF_PART_ON_DEF_ID = 10,
+	SYSP_PACKAGE = 11,
+	SYSP_ARG = 12,
+	SYSP_CONF = 13,
+	CBCSCR_ON_ID = 14,
+	CBCSCRARG_ON_ID = 15
 };
 
 enum {			/* cbc search SQL statements */
@@ -120,8 +125,20 @@ enum {			/* cbc search SQL statements */
 	IP_ID_ON_SERVER_ID = 54,
 	BUILD_DOM_IP_RANGE = 55,
 	DISK_DEV_ON_SERVER_ID_DEV = 56,
-	LVM_ON_DEF_SCHEME_ID = 57
-
+	LVM_ON_DEF_SCHEME_ID = 57,
+	SYSPACK_ID_ON_NAME = 58,
+	SYSP_INFO_SYS_AND_BD_ID = 59,
+	SPARG_ON_SPID_AND_FIELD = 60,
+	SYSP_INFO_ARG_AND_BD_ID = 61,
+	SYSP_INFO_ON_BD_ID = 62,
+	BDOM_NAME_ON_SERVER_ID = 63,
+	NAME_DOM_ON_SERVER_ID = 64,
+	BD_ID_ON_SERVER_ID = 65,
+	SYS_PACK_CONF_ID = 66,
+	SCR_ID_ON_NAME = 67,
+	SCRIPT_CONFIG = 68,
+	BUILD_TYPE_ON_ALIAS = 69,
+	SCR_ARG_ID = 70
 };
 
 enum {			/* cbc update SQL statements */
@@ -265,6 +282,21 @@ void
 cbc_store_vmhost_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
+cbc_store_syspack_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_sysarg_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_script_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
+cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
 void
@@ -291,6 +323,20 @@ cbc_setup_bind_mysql_build(void **buffer, cbc_s *base, unsigned int i);
 void
 cbc_setup_bind_mysql_build_disk(void **buffer, cbc_s *base, unsigned int i);
 
+void
+cbc_setup_bind_mysql_syspack(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_sysarg(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_script(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i);
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -374,6 +420,21 @@ cbc_store_varient_sqlite(sqlite3_stmt *state, cbc_s *base);
 void
 cbc_store_vmhost_sqlite(sqlite3_stmt *state, cbc_s *base);
 
+void
+cbc_store_syspack_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_sysarg_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_script_sqlite(sqlite3_stmt *state, cbc_s *base);
+
+void
+cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base);
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build);
 
@@ -401,5 +462,19 @@ cbc_setup_bind_sqlite_build_pack(sqlite3_stmt *state, cbc_package_s *pack);
 int
 cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
 
+int
+cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_syspack_s *spack);
+
+int
+cbc_setup_bind_sqlite_sysarg(sqlite3_stmt *state, cbc_syspack_arg_s *spack);
+
+int
+cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_syspack_conf_s *spack);
+
+int
+cbc_setup_bind_sqlite_script(sqlite3_stmt *state, cbc_script_s *scr);
+
+int
+cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg);
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */
