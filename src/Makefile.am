@@ -38,11 +38,11 @@ cbcdomain_SOURCES = \
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h\
 		base_sql.h cbcdomain.h cbc_common.h cbcnet.h
 cbcsysp_SOURCES = \
-		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
+		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES) base_sql.c \
 		cbcsysp.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h base_sql.h \
 		cbc_base_sql.h checks.h
 cbcscript_SOURCES = \
-		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
+		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) base_sql.c \
 		cbcscript.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h base_sql.h \
 		cbc_base_sql.h checks.h
 if HAVE_CBC
