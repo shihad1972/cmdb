@@ -1,0 +1,1 @@
+ALTER TABLE build_domain DROP COLUMN ldap_ssl, DROP COLUMN ldap_dn, DROP COLUMN ldap_bind, DROP COLUMN config_ldap, DROP COLUMN log_server, DROP COLUMN config_log, DROP COLUMN smtp_server, DROP COLUMN config_email, DROP COLUMN xymon_server, DROP COLUMN config_xymon, DROP COLUMN ldap_server, DROP COLUMN nfs_domain;

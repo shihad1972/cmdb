@@ -46,19 +46,10 @@ CREATE TABLE `build_domain` (
   `domain` varchar(255) NOT NULL DEFAULT 'no.domain',
   `ntp_server` varchar(255) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
-  `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
-  `ldap_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_ldap` smallint(4) NOT NULL DEFAULT 0,
-  `log_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_log` smallint(4) NOT NULL DEFAULT 0,
-  `smtp_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_email` smallint(4) NOT NULL DEFAULT 0,
-  `xymon_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `nfs_domain` varchar(255) NOT NULL DEFAULT 'none'
-, `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0);
+  `cuser` int(11) NOT NULL DEFAULT 0,
+  `muser` int(11) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0);
 CREATE TABLE `contacts` (
   `cont_id` INTEGER PRIMARY KEY,
   `name` varchar(50) NOT NULL,
