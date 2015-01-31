@@ -98,6 +98,6 @@ int
 write_dhcp_net_config(cbc_config_s *cbs);
 
 void
-display_one_build_domain(cbc_s *cbc, char *domain);
+display_bdom_servers(cbc_config_s *cbs, char *domain);
 
 #endif /* __CBCDOMAIN_H__ */

@@ -294,7 +294,10 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 int
 list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
-	int retval = 0;
+	if (!(cbs) || !(cdl))
+		return NO_DATA;
+	char *domain = cdl->domain;
+	int retval = 0, i = 0;
 	cbc_s *cbc;
 	cbc_build_domain_s *bdom;
 
@@ -303,10 +306,19 @@ list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 	init_cbc_struct(cbc);
 	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0)
 		goto cleanup;
+	bdom = cbc->bdom;
 	if (strncmp(cdl->domain, "NULL", COMM_S) != 0) {
-		display_one_build_domain(cbc, cdl->domain);
+		while (bdom) {
+			if (strncmp(bdom->domain, domain, RBUFF_S) == 0) {
+				display_build_domain(bdom);
+				i++;
+				display_bdom_servers(cbs, domain);
+			}
+			bdom = bdom->next;
+		}
+		if (i == 0)
+			printf("Build domain %s not found\n", cdl->domain);
 	} else {
-		bdom = cbc->bdom;
 		while (bdom) {
 			printf("%s\n", bdom->domain);
 			bdom = bdom->next;
@@ -352,7 +364,42 @@ write_dhcp_net_config(cbc_config_s *cbs)
 }
 
 void
-display_one_build_domain(cbc_s *cbc, char *domain)
+display_bdom_servers(cbc_config_s *cbs, char *domain)
 {
+	if (!(cbs) || !(domain))
+		return;
+	dbdata_s *data, *list;
+	char *ip;
+	int query = BUILD_DOM_SERVERS, retval;
+	uint32_t ip_addr;
+	unsigned int max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+
+	if (!(ip = malloc(RANGE_S)))
+		report_error(MALLOC_FAIL, "ip in display_bdom_servers");
+	init_multi_dbdata_struct(&data, max);
+	list = data;
+	if ((retval = get_build_domain_id(cbs, domain, &(data->args.number))) != 0)
+		goto cleanup;
+	if ((retval = cbc_run_search(cbs, data, query)) == 0) {
+		printf("Build domain %s has no servers\n", domain);
+	} else {
+		printf("Built Servers\tIP\n");
+		while (list) {
+			memset(ip, 0, RANGE_S);
+			ip_addr = htonl((uint32_t)list->next->fields.number);
+			inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
+			if (strlen(list->fields.text) > 7)
+				printf("%s\t%s\n", list->fields.text, ip);
+			else
+				printf("%s\t\t%s\n", list->fields.text, ip);
+			list = list->next->next;
+		}
+	}
+	goto cleanup;
+
+	cleanup:
+		free(ip);
+		clean_dbdata_struct(data);
+		return;
 }
 

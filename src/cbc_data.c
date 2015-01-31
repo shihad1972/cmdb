@@ -216,7 +216,7 @@ display_build_domain(cbc_build_domain_s *bdom)
 		printf("NTP server: %s\n", bdom->ntp_server);
 	else
 		printf("No NTP configuration\n");
-	if (bdom->config_ldap > 0) {
+/*	if (bdom->config_ldap > 0) {
 		printf("LDAP configuration:\n");
 		printf("\tLDAP Server: %s\n", bdom->ldap_server);
 		if (bdom->ldap_ssl > 0)
@@ -238,7 +238,7 @@ display_build_domain(cbc_build_domain_s *bdom)
 	if (bdom->config_xymon > 0)
 		printf("Xymon monitoring server: %s\n", bdom->xymon_server);
 	else
-		printf("No xymon monitoring configuration\n");
+		printf("No xymon monitoring configuration\n"); */
 	create = (time_t)bdom->ctime;
 	printf("Build domain created by %s on %s", get_uname(bdom->cuser), ctime(&create));
 	create = (time_t)bdom->mtime;
