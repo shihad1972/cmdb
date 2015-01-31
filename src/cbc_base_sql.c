@@ -63,9 +63,7 @@ SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
  ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
- ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
-config_ldap, log_server, config_log, smtp_server, config_email, xymon_server, \
-config_xymon, nfs_domain, cuser, muser, ctime, mtime FROM build_domain","\
+ ntp_server, config_ntp, cuser, muser, ctime, mtime FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id, server_id, cuser, muser, \
  ctime, mtime FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
@@ -103,9 +101,7 @@ INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
- domain, ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
- config_ldap, log_server, config_log, smtp_server, config_email, \
- xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
+ domain, ntp_server, config_ntp, cuser, muser) VALUES (\
  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
  muser) VALUES  (?, ?, ?, ?, ?, ?, ?)","\
@@ -369,11 +365,11 @@ SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10
+	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7
+	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7
 };
 
 const unsigned int cbc_update_args[] = {
@@ -401,9 +397,8 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
 	  DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
-	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
-	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT,
+	  DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
@@ -1346,7 +1341,7 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		snprintf(dom->ntp_server, RBUFF_S, "%s", row[7]);
 		dom->config_ntp = 1;
 	}
-	if (strncmp("0", row[13], CH_S) == 0) {
+/*	if (strncmp("0", row[13], CH_S) == 0) {
 		dom->config_ldap = 0;
 	} else {
 		snprintf(dom->ldap_server, RBUFF_S, "%s", row[9]);
@@ -1376,11 +1371,15 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		snprintf(dom->xymon_server, RBUFF_S, "%s", row[18]);
 		dom->config_xymon = 1;
 	}
-	snprintf(dom->nfs_domain, RBUFF_S, "%s", row[20]);
+	snprintf(dom->nfs_domain, RBUFF_S, "%s", row[20]); 
 	dom->cuser = strtoul(row[21], NULL, 10);
 	dom->muser = strtoul(row[22], NULL, 10);
 	convert_time(row[23], &(dom->ctime));
-	convert_time(row[24], &(dom->mtime));
+	convert_time(row[24], &(dom->mtime)); */
+	dom->cuser = strtoul(row[9], NULL, 10);
+	dom->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(dom->ctime));
+	convert_time(row[12], &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -1868,6 +1867,10 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 7)
 		*buffer = &(base->bdom->config_ntp);
 	else if (i == 8)
+		*buffer = &(base->bdom->cuser);
+	else if (i == 9)
+		*buffer = &(base->bdom->muser);
+/*	else if (i == 8)
 		*buffer = &(base->bdom->ldap_server);
 	else if (i == 9)
 		*buffer = &(base->bdom->ldap_ssl);
@@ -1894,7 +1897,7 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 20)
 		*buffer = &(base->bdom->cuser);
 	else if (i == 21)
-		*buffer = &(base->bdom->muser);
+		*buffer = &(base->bdom->muser); */
 }
 
 void
@@ -2657,7 +2660,7 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 8)) != 0)
 		snprintf(dom->ntp_server, HOST_S, "%s",
 		 sqlite3_column_text(state, 7));
-	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 13)) != 0) {
+/*	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 13)) != 0) {
 		snprintf(dom->ldap_server, URL_S, "%s", 
 			 sqlite3_column_text(state, 9));
 		snprintf(dom->ldap_dn, URL_S, "%s",
@@ -2682,6 +2685,12 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 23));
 	convert_time(stime, &(dom->ctime));
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 24));
+	convert_time(stime, &(dom->mtime)); */
+	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	dom->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	convert_time(stime, &(dom->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
 	convert_time(stime, &(dom->mtime));
 	list = base->bdom;
 	if (list) {
@@ -3350,7 +3359,17 @@ state, 7, bdom->ntp_server, (int)strlen(bdom->ntp_server), SQLITE_STATIC)) > 0){
 		fprintf(stderr, "Cannot bind config ntp");
 		return retval;
 	}
-	if ((retval = sqlite3_bind_text(
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)bdom->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 10, (sqlite3_int64)bdom->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser");
+		return retval;
+	}
+/*	if ((retval = sqlite3_bind_text(
 state, 9, bdom->ldap_server, (int)strlen(bdom->ldap_server), SQLITE_STATIC)) > 0) {
 		fprintf(stderr,
 "Cannot bind ldap server %s\n", bdom->ldap_server);
@@ -3419,7 +3438,7 @@ state, 21, (sqlite3_int64)bdom->cuser)) > 0) {
 state, 22, (sqlite3_int64)bdom->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser");
 		return retval;
-	}
+	} */
 	return retval;
 }
 
