@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 201r54  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,9 +37,11 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
+#include "cbc_base_sql.h"
 #include "checks.h"
 #include "cbcdomain.h"
-#include "builddomain.h"
+//#include "builddomain.h"
 
 int
 main(int argc, char *argv[])
@@ -65,11 +67,11 @@ main(int argc, char *argv[])
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
-	if ((cdcl->action == DISPLAY_CONFIG) ||
+/*	if ((cdcl->action == DISPLAY_CONFIG) ||
 		(cdcl->action == LIST_SERVERS))
-		retval = display_cbc_build_domain(cmc, cdcl);
+		retval = display_cbc_build_domain(cmc, cdcl); */
 	else if (cdcl->action == LIST_CONFIG)
-		retval = list_cbc_build_domain(cmc);
+		retval = list_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == ADD_CONFIG)
 		retval = add_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == RM_CONFIG)
@@ -94,14 +96,14 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 	memset(cdcl, 0, sizeof (cbcdomain_comm_line_s));
 	get_config_file_location(cdcl->config);
 	snprintf(cdcl->domain, COMM_S, "NULL");
-	snprintf(cdcl->basedn, COMM_S, "NULL");
+	snprintf(cdcl->ntpserver, COMM_S, "NULL");
+/*	snprintf(cdcl->basedn, COMM_S, "NULL");
 	snprintf(cdcl->binddn, COMM_S, "NULL");
 	snprintf(cdcl->ldapserver, COMM_S, "NULL");
 	snprintf(cdcl->logserver, COMM_S, "NULL");
 	snprintf(cdcl->nfsdomain, COMM_S, "NULL");
-	snprintf(cdcl->ntpserver, COMM_S, "NULL");
 	snprintf(cdcl->smtpserver, COMM_S, "NULL");
-	snprintf(cdcl->xymonserver, COMM_S, "NULL");
+	snprintf(cdcl->xymonserver, COMM_S, "NULL"); */
 }
 
 void
@@ -115,7 +117,7 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
-	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
+/*	if (strncmp(cdl->smtpserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->smtpserver, DOMAIN_REGEX) < 0)
 			if (validate_user_input(cdl->smtpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "smtp server");
@@ -133,12 +135,12 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 	if (strncmp(cdl->xymonserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->xymonserver, DOMAIN_REGEX) < 0)
 			if (validate_user_input(cdl->xymonserver, IP_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "xymon server");
+				report_error(USER_INPUT_INVALID, "xymon server"); */
 	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
 			if (validate_user_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
-	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
+/*	if (strncmp(cdl->domain, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
 	if (strncmp(cdl->basedn, "NULL", COMM_S) != 0)
@@ -146,7 +148,7 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 			report_error(USER_INPUT_INVALID, "basedn");
 	if (strncmp(cdl->binddn, "NULL", COMM_S) != 0)
 		if (validate_user_input(cdl->binddn, CN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "binddn");
+			report_error(USER_INPUT_INVALID, "binddn"); */
 }
 #endif /* HAVE_LIBPCRE */
 int
@@ -155,24 +157,25 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:f:g:i:jk:lmn:prs:t:vwx:")) != -1) {
+	while ((opt = getopt(argc, argv, "ak:lmn:rt:vw")) != -1) {
+/*	while ((opt = getopt(argc, argv, "ab:de:f:g:i:jk:lmn:prs:t:vwx:")) != -1) { */
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
-		} else if (opt == 'b') {
+/*		} else if (opt == 'b') {
 			snprintf(cdl->basedn, NAME_S, "%s", optarg);
 		} else if (opt == 'd') {
-			cdl->action = DISPLAY_CONFIG;
+			cdl->action = DISPLAY_CONFIG; */
 		} else if (opt == 'l') {
 			cdl->action = LIST_CONFIG;
 		} else if (opt == 'm') {
 			cdl->action = MOD_CONFIG;
 		} else if (opt == 'r') {
 			cdl->action = RM_CONFIG;
-		} else if (opt == 'j') {
-			cdl->action = LIST_SERVERS;
+/*		} else if (opt == 'j') {
+			cdl->action = LIST_SERVERS; */
 		} else if (opt == 'w') {
 			cdl->action = WRITE_CONFIG;
-		} else if (opt == 'e') {
+/*		} else if (opt == 'e') {
 			snprintf(cdl->smtpserver, RBUFF_S, "%s", optarg);
 			cdl->confsmtp = 1;
 		} else if (opt == 'f') {
@@ -181,22 +184,22 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			snprintf(cdl->logserver, RBUFF_S, "%s", optarg);
 			cdl->conflog = 1;
 		} else if (opt == 'i') {
-			snprintf(cdl->binddn, RBUFF_S, "%s", optarg);
+			snprintf(cdl->binddn, RBUFF_S, "%s", optarg); */
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
 		} else if (opt == 'n') {
 			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
-		} else if (opt == 'p') {
+/*		} else if (opt == 'p') {
 			cdl->ldapssl = TRUE;
 		} else if (opt == 's') {
 			snprintf(cdl->ldapserver, RBUFF_S, "%s", optarg);
-			cdl->confldap = 1;
+			cdl->confldap = 1; */
 		} else if (opt == 't') {
 			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
 			cdl->confntp = 1;
-		} else if (opt == 'x') {
+/*		} else if (opt == 'x') {
 			snprintf(cdl->xymonserver, RBUFF_S, "%s", optarg);
-			cdl->confxymon = 1;
+			cdl->confxymon = 1; */
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;
 		} else {
@@ -222,7 +225,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		                            (cdl->gateway != 0) ||
 		                            (cdl->ns != 0)))
 		return NO_MOD_BUILD_DOM_NET;
-	if ((cdl->action == MOD_CONFIG) &&
+/*	if ((cdl->action == MOD_CONFIG) &&
 	    (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0) &&
 	   ((cdl->conflog > 0) || (cdl->confsmtp > 0) || (cdl->confntp > 0) ||
 	    (cdl->confxymon > 0)))
@@ -242,7 +245,9 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	if ((cdl->action == MOD_CONFIG) && (cdl->confxymon > 0) &&
 	   ((cdl->confsmtp > 0) || (cdl->conflog > 0) || (cdl->confntp > 0) ||
 	   (strncmp(cdl->nfsdomain, "NULL", COMM_S) != 0)))
-		return MULTI_BUILD_DOM_APP_MOD;
+		return MULTI_BUILD_DOM_APP_MOD; */
+	if ((cdl->action == MOD_CONFIG) && (cdl->confntp == 0))
+		return NO_NTP_SERVER;
 	return retval;
 }
 
@@ -285,3 +290,69 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 	}
 	return retval;
 }
+
+int
+list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	int retval = 0;
+	cbc_s *cbc;
+	cbc_build_domain_s *bdom;
+
+	if (!(cbc = malloc(sizeof(cbc_s))))
+		report_error(MALLOC_FAIL, "cbc in list_cbc_build_domain");
+	init_cbc_struct(cbc);
+	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0)
+		goto cleanup;
+	if (strncmp(cdl->domain, "NULL", COMM_S) != 0) {
+		display_one_build_domain(cbc, cdl->domain);
+	} else {
+		bdom = cbc->bdom;
+		while (bdom) {
+			printf("%s\n", bdom->domain);
+			bdom = bdom->next;
+		}
+	}
+	goto cleanup;
+
+	cleanup:
+		clean_cbc_struct(cbc);
+		return retval;
+}
+
+int
+add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	int retval = 0;
+
+	return retval;
+}
+
+int
+remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	int retval = 0;
+
+	return retval;
+}
+
+int
+modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	int retval = 0;
+
+	return retval;
+}
+
+int
+write_dhcp_net_config(cbc_config_s *cbs)
+{
+	int retval = 0;
+
+	return retval;
+}
+
+void
+display_one_build_domain(cbc_s *cbc, char *domain)
+{
+}
+

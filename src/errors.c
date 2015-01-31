@@ -328,6 +328,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No arguemt was supplied\n");
 	else if (retval == NO_NUMBER)
 		fprintf(stderr, "No number was supplied\n");
+	else if (retval == NO_NTP_SERVER)
+		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
@@ -426,15 +428,17 @@ display_cbcdomain_usage(void)
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
-	printf("Detail Options:\n");
+/*	printf("Detail Options:\n");
 	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
-	printf("\n\t-p use ssl for ldap connection\n\n");
+	printf("\n\t-p use ssl for ldap connection\n\n"); */
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
-	printf("Application server configurations\n");
+/*	printf("Application server configurations\n");
 	printf("-e smtp_server\n-f nfs_domain\n-g logging server\n");
-	printf("-t ntp_server\n-x xymon_server\n\n");
-	printf("cbcdomain [ -a | -d | -l | -m | -r | -w ] -n [ app options ]\n\n");
+	printf("-t ntp_server\n-x xymon_server\n\n"); */
+	printf("NTP server configuration:\n");
+	printf("-t ntp_server\n\n");
+	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
 }
 
 void

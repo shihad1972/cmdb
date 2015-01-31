@@ -241,7 +241,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_HARD_DISK_DEV = 223,
 	NO_SYSPACK_CONF = 224,
 	NO_ARG = 225,
-	NO_NUMBER = 226
+	NO_NUMBER = 226,
+	NO_NTP_SERVER = 227
 };
 
 enum {			/* command line error codes */
