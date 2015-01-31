@@ -371,9 +371,24 @@ remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 int
 modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
-	int retval = 0;
+	if (!(cbs) || !(cdl))
+		return NO_DATA;
+	char *domain = cdl->domain;
+	int retval = 0, query = UP_DOM_NTP;
+	unsigned long int *bd_id;
+	dbdata_s *data;
 
-	return retval;
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	snprintf(data->args.text, RBUFF_S, "%s", cdl->ntpserver);
+	data->next->args.number = (unsigned long int)getuid();
+	bd_id = &(data->next->next->args.number);
+	if ((retval = get_build_domain_id(cbs, domain, bd_id)) != 0) {
+		clean_dbdata_struct(data);
+		return retval;
+	}
+	retval = cbc_run_update(cbs, data, query);
+	printf("%d domains modified\n", retval);
+	return 0;
 }
 
 int
