@@ -346,9 +346,26 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 int
 remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
+	if (!(cbs) || !(cdl))
+		return NO_DATA;
+	char *domain = cdl->domain;
 	int retval = 0;
+	dbdata_s *data;
 
-	return retval;
+	if (!(data = calloc(sizeof(dbdata_s), 1)))
+		report_error(MALLOC_FAIL, "data in remove_cbc_build_domain");
+	unsigned long int *bd_id = &(data->args.number);
+	if ((retval = get_build_domain_id(cbs, domain, bd_id)) != 0)
+		goto cleanup;
+	retval = cbc_run_delete(cbs, data, BDOM_DEL_DOM_ID);
+	printf ("%d build domain(s) deleted for %s\n", retval, domain);
+	if ((retval = write_dhcp_net_config(cbs)) != 0)
+		fprintf(stderr, "Cannot write new dhcpd.networks file\n");
+	goto cleanup;
+
+	cleanup:
+		free(data);
+		return retval;
 }
 
 int
