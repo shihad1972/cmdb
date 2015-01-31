@@ -4,6 +4,7 @@ tie them to either an os or a build type. In fact, we should also look at
 tying the build_os to a build type, so that each OS we can build is in the
 build_type table, but that we can also modify information in there or even
 add new build types.
+*** Completed. We use the alias in the build_type DB table ***
 
 14/01/2015
 As well as adding cbcsysp for debian packages, I am going to have to add a
@@ -11,6 +12,7 @@ database table for kickstart scripts (and also scripts for debian for
 packages I cannot preseed).
 As a start, I guess I could do a table of script names and then a table of
 arguments, based on the domain name (or bd_id (build domain))
+*** Completed. Version 0.2.21 has cbcscript ***
 
 06/01/2015
 I want to be able to limit the number of results returned from the DB query
