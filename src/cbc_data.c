@@ -156,7 +156,7 @@ init_build_domain(cbc_build_domain_s *dom)
 {
 	memset(dom, 0, sizeof(cbc_build_domain_s));
 	snprintf(dom->domain, COMM_S, "NULL");
-	snprintf(dom->ntp_server, COMM_S, "NULL");
+/*	snprintf(dom->ntp_server, COMM_S, "NULL");
 	snprintf(dom->ldap_dn, COMM_S, "NULL");
 	snprintf(dom->ldap_bind, COMM_S, "NULL");
 	snprintf(dom->ldap_host, COMM_S, "NULL");
@@ -164,7 +164,7 @@ init_build_domain(cbc_build_domain_s *dom)
 	snprintf(dom->log_server, COMM_S, "NULL");
 	snprintf(dom->nfs_domain, COMM_S, "NULL");
 	snprintf(dom->smtp_server, COMM_S, "NULL");
-	snprintf(dom->xymon_server, COMM_S, "NULL");
+	snprintf(dom->xymon_server, COMM_S, "NULL"); */
 }
 
 void

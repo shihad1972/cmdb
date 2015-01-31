@@ -60,20 +60,20 @@ typedef struct cbc_build_s {
 typedef struct cbc_build_domain_s {
 	char domain[RBUFF_S];
 	char ntp_server[RBUFF_S];
-	char ldap_dn[URL_S];
+/*	char ldap_dn[URL_S];
 	char ldap_bind[URL_S];
 	char ldap_host[URL_S];
 	char ldap_server[RBUFF_S];
 	char log_server[RBUFF_S];
 	char nfs_domain[RBUFF_S];
 	char smtp_server[RBUFF_S];
-	char xymon_server[RBUFF_S];
+	char xymon_server[RBUFF_S]; */
 	short int config_ntp;
-	short int ldap_ssl;
+/*	short int ldap_ssl;
 	short int config_ldap;
 	short int config_log;
 	short int config_email;
-	short int config_xymon;
+	short int config_xymon; */
 	unsigned long int bd_id;
 	unsigned long int start_ip;
 	unsigned long int end_ip;

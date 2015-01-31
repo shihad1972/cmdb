@@ -44,6 +44,12 @@
 #include "cbcdomain.h"
 //#include "builddomain.h"
 
+#ifdef HAVE_DNSA
+# include "cmdb_dnsa.h"
+# include "dnsa_base_sql.h"
+# include "cbc_dnsa.h"
+#endif // HAVE_DNSA 
+
 int
 main(int argc, char *argv[])
 {
@@ -302,9 +308,7 @@ list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 	cbc_s *cbc;
 	cbc_build_domain_s *bdom;
 
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in list_cbc_build_domain");
-	init_cbc_struct(cbc);
+	initialise_cbc_s(&cbc);
 	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0)
 		goto cleanup;
 	bdom = cbc->bdom;
@@ -335,8 +339,92 @@ list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 int
 add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
+	if (!(cbs) || !(cdl))
+		return NO_DATA;
+	char *domain = cdl->domain;
 	int retval = 0;
+	cbc_s *base;
+	cbc_build_domain_s *bdom;
+	dbdata_s *data;
 
+	initialise_cbc_s(&base);
+	if (!(bdom = malloc(sizeof(cbc_build_domain_s))))
+		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
+	init_build_domain(bdom);
+	base->bdom = bdom;
+	if ((retval = get_build_domain_id(cbs, domain, &(bdom->bd_id))) == 0) {
+		clean_cbc_struct(base);
+		report_error(BUILD_DOMAIN_EXISTS, domain);
+	}
+	init_multi_dbdata_struct(&data, 1);
+	fill_bdom_values(bdom, cdl);
+	check_bdom_overlap(cbs, bdom);
+#ifdef HAVE_DNSA
+	dnsa_config_s *dc;
+	dnsa_s *dnsa;
+	dbdata_s *user;
+	zone_info_s *zone;
+
+	if (!(dc = malloc(sizeof(dnsa_config_s))))
+		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
+	if (!(dnsa = malloc(sizeof(dnsa_s))))
+		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
+	if (!(zone = malloc(sizeof(zone_info_s))))
+		report_error(MALLOC_FAIL, "zone in add_cbc_build_domain");
+	if (!(user = malloc(sizeof(dbdata_s))))
+		report_error(MALLOC_FAIL, "user in add_cbc_build_domain");
+	dnsa_init_config_values(dc);
+	init_dnsa_struct(dnsa);
+	init_dbdata_struct(user);
+	init_zone_struct(zone);
+	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
+		fprintf(stderr, "Error in config file %s\n", cdl->config);
+		free(dc);
+		free(dnsa);
+		free(zone);
+		free(data);
+		clean_cbc_struct(base);
+		return retval;
+	}
+	fill_cbc_fwd_zone(zone, bdom->domain, dc);
+	dnsa->zones = zone;
+	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
+		printf("Zone %s already in DNS\n", bdom->domain);
+		retval = NONE;
+	} else {
+		if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
+			fprintf(stderr, "Unable to add zone %s to dns\n", zone->name);
+			retval = 0;
+		} else {
+			fprintf(stderr, "Added zone %s\n", zone->name);
+		}
+	}
+	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+		dnsa_clean_list(dnsa);
+		free(dc);
+		free(data);
+		clean_cbc_struct(base);
+		return retval;
+	}
+	data->args.number = zone->id;
+	user->args.number = (unsigned long int)getuid();
+	user->next = data;
+	if ((retval = dnsa_run_update(dc, user, ZONE_VALID_YES)) != 0)
+		printf("Unable to mark zone as valid in database\n");
+	else
+		printf("Zone marked as valid in the database\n");
+	user->next = '\0';
+	clean_dbdata_struct(user);
+#endif // HAVE_DNSA
+	if ((retval = cbc_run_insert(cbs, base, BUILD_DOMAINS)) != 0) {
+		fprintf(stderr, "Unable to add build domain %s\n", domain);
+	} else {
+		printf("Build domain %s added\n", domain);
+		if ((retval = write_dhcp_net_config(cbs)) != 0)
+			fprintf(stderr, "Cannot write dhcpd.networks!!\n");
+	}
+	clean_cbc_struct(base);
+	free(data);
 	return retval;
 }
 
@@ -490,5 +578,60 @@ fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
 	inet_ntop(AF_INET, &ip_addr, dst->nm, INET6_ADDRSTRLEN);
 	ip_addr = htonl((uint32_t)src->ip);
 	inet_ntop(AF_INET, &ip_addr, dst->ip, INET6_ADDRSTRLEN);
+}
+
+void
+check_bdom_overlap(cbc_config_s *cbs, cbc_build_domain_s *bdom)
+{
+	int retval;
+	cbc_s *cbc;
+	cbc_build_domain_s *list = '\0';
+
+	initialise_cbc_s(&cbc);
+	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0) {
+		if (retval != NO_RECORDS)
+			fprintf(stderr, "Build domain query failed\n");
+		goto cleanup;
+	}
+	list = cbc->bdom;
+	while (list) {
+		if ((retval = build_dom_overlap(list, bdom)) != 0) {
+			clean_cbc_struct(cbc);
+			report_error(retval, bdom->domain);
+		} else
+			list = list->next;
+	}
+	goto cleanup;
+
+	cleanup:
+		clean_cbc_struct(cbc);
+		return;
+}
+
+int
+build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *new)
+{
+	int retval = 0;
+
+	if (((new->start_ip >= list->start_ip) && (new->start_ip <= list->end_ip)) ||
+	   ((new->end_ip >= list->start_ip) && (new->end_ip <= list->end_ip )))
+		retval = BDOM_OVERLAP;
+	return retval;
+}
+
+void
+fill_bdom_values(cbc_build_domain_s *bdom, cbcdomain_comm_line_s *cdl)
+{
+	if (cdl->confntp > 0) {
+		bdom->config_ntp = 1;
+		snprintf(bdom->ntp_server, RBUFF_S, "%s", cdl->ntpserver);
+	}
+	bdom->start_ip = cdl->start_ip;
+	bdom->end_ip = cdl->end_ip;
+	bdom->netmask = cdl->netmask;
+	bdom->gateway = cdl->gateway;
+	bdom->ns = cdl->ns;
+	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
+	bdom->cuser = bdom->muser = (unsigned long int)getuid();
 }
 
