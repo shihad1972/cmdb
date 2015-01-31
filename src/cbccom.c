@@ -84,6 +84,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'k') {
 			snprintf(cb->netcard, HOST_S, "%s", optarg);
 		} else if (opt == 'j') {
+// We do not check for a starting /dev here.
 			snprintf(cb->harddisk, HOST_S, "%s", optarg);
 		} else if (opt == 'o') {
 			snprintf(cb->os, MAC_S, "%s", optarg);

@@ -1,7 +1,7 @@
-/* 
+/*
  *
  *  cbcsysp: Create Build Configuration Partition
- *  Copyright (C) 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2014 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,13 +18,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  cbcsysp.c
- * 
+ *
  *  Functions to get configuration values and also parse command line arguments
- * 
+ *
  *  Part of the cbcsysp program
- * 
- *  (C) Iain M. Conochie 2014
- * 
+ *
  */
 #define _GNU_SOURCE
 #include <ctype.h>
@@ -56,10 +54,14 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cbs in main");
 	init_cbcsysp_s(cbs);
 	init_cbc_config_values(cbc);
-	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
+	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) == DISPLAY_USAGE) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
+	} else if (retval != 0) {
+		clean_cbcsysp_s(cbs);
+		free(cbc);
+		exit (retval);
 	}
 	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
 		clean_cbcsysp_s(cbs);
@@ -72,22 +74,26 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage(cbc);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage(cbc, cbs);
+		else if (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
-		if (cbs->action == DISPLAY_CONFIG)
-			retval = display_cbc_syspackage_arg(cbc, cbs);
+		if (cbs->action == LIST_CONFIG)
+			retval = list_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
+		else if (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
-		if (cbs->action == DISPLAY_CONFIG)
-			retval = display_cbc_syspackage_conf(cbc, cbs);
-		else if (cbs->action == LIST_CONFIG)
+		if (cbs->action == LIST_CONFIG)
 			retval = list_cbc_syspackage_conf(cbc, cbs);
 		else if (cbs->action == ADD_CONFIG)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
+		else if  (cbs->action == RM_CONFIG)
+			retval = rem_cbc_syspackage_conf(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	}
@@ -95,7 +101,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	free(cbc);
-	if (retval != 0)
+	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;
 }
@@ -108,8 +114,6 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	while ((opt = getopt(argc, argv, "ab:df:g:lmn:oprt:vy")) != -1) {
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
-		else if (opt == 'd')
-			cbcs->action = DISPLAY_CONFIG;
 		else if (opt == 'l')
 			cbcs->action = LIST_CONFIG;
 		else if (opt == 'm')
@@ -165,25 +169,34 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
-		retval = DISPLAY_USAGE;
+		retval = ARGV_INVAL;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = DISPLAY_USAGE;
-	}
+			retval = ARGV_INVAL;
+		}
 	} else if (cbcs->what == SPACKARG) {
-		if ((cbcs->action != LIST_CONFIG) && (cbcs->action != DISPLAY_CONFIG)) {
-			if (!(cbcs->type) || !(cbcs->field))
-				retval = DISPLAY_USAGE;
+		if (cbcs->action != LIST_CONFIG) {
+			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
+				fprintf(stderr, "You need both package field and type\n");
+				retval = ARGV_INVAL;
+			} else if (cbcs->action == RM_CONFIG && !(cbcs->field)) {
+				fprintf(stderr,
+"You need to provide the field you want to remove\n");
+				retval = ARGV_INVAL;
+			}
+		} else if (!(cbcs->name)) {
+			fprintf(stderr, "You need a package name!\n\n");
+			retval = ARGV_INVAL;
 		}
 	} else if (cbcs->what == SPACKCNF) {
-		if (!(cbcs->domain)) {
+		if (!(cbcs->domain))  {
 			fprintf(stderr, "No build domain supplied\n\n");
-			retval = DISPLAY_USAGE;
+			retval = ARGV_INVAL;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
-			fprintf(stderr, "Need both package name and field to display config\n\n");
-			retval = DISPLAY_USAGE;
+			fprintf(stderr, "Need both package name and field to list config\n\n");
+			retval = ARGV_INVAL;
 		}
 	}
 	return retval;
@@ -238,6 +251,7 @@ list_cbc_syspackage(cbc_config_s *cbc)
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 {
+	char *package = '\0';
 	int retval = 0, query;
 	unsigned int max;
 	dbdata_s *data = 0, *list;
@@ -258,13 +272,32 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 		else if ((retval = NO_PACKAGE_CONFIG) && (css->name) && (css->field))
 			goto cleanup;
 	}
-	if ((retval = cbc_run_search(cbc, data, query)) == 0)
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr,
+"Build domain %s has no configured packages\n", css->domain);
+		retval = NO_RECORDS;
 		goto cleanup;
+	}
 	retval = 0;
 	list = data;
-	printf("System package config for build domain %s\n\n", css->domain);
+	printf("System package config for build domain %s\n", css->domain);
 	while (list) {
-		printf("%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		if (!(package)) {
+			printf("\n%s\n", list->fields.text);
+			package = list->fields.text;
+		} else if (strncmp(package, list->fields.text, URL_S) != 0) {
+			printf("\n%s\n", list->fields.text);
+			package = list->fields.text;
+		}
+		list = list->next;
+		if (strlen(list->fields.text) > 23)
+		printf("\t%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		 list->next->next->fields.text);
+		else if (strlen(list->fields.text) > 15)
+		printf("\t%s\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
+		 list->next->next->fields.text);
+		else
+		printf("\t%s\t\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
 		 list->next->next->fields.text);
 		list = list->next->next->next;
 	}
@@ -273,15 +306,12 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 	cleanup:
 		clean_dbdata_struct(data);
 		return retval;
-	
 }
 
-// Display functions
-
 int
-display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
 {
-	int retval = 0;
+	int retval = 0, count = 0;
 	dbdata_s *data = 0;
 	cbc_s *cbs;
 	cbc_syspack_arg_s *cspa, *list;
@@ -299,60 +329,23 @@ There are no arguments configured in the database for any package\n");
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, URL_S, "%s", css->name);
 	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
-		fprintf(stderr, "\
-Package %s does not have any configured arguments\n", css->name);
+		fprintf(stderr, "Package %s not in the database?\n", css->name);
 		retval = NO_RECORDS;
 		goto cleanup;
 	} else if (retval > 1) {
-		fprintf(stderr, " Multiple id's for package %s??\n", css->name);
+		fprintf(stderr, "Multiple id's for package %s??\n", css->name);
 	}
 	retval = 0;
 	list = cspa;
 	while (list) {
-		if (list->syspack_id == data->fields.number)
+		if (list->syspack_id == data->fields.number) {
 			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
+			count++;
+		}
 		list = list->next;
 	}
-	goto cleanup;
-	cleanup:
-		clean_dbdata_struct(data);
-		clean_cbc_struct(cbs);
-		return retval;
-}
-
-int
-display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
-{
-	int retval = 0, query = SYSP_INFO_SYS_AND_BD_ID;
-	unsigned int max;
-	dbdata_s *data = 0;
-	cbc_s *cbs;
-	cbc_syspack_conf_s *cspc;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack_conf(&cspc);
-	cbs->sysconf = cspc;
-	if ((retval = cbc_run_query(cbc, cbs, SYSCONF)) == NO_RECORDS) {
-		fprintf(stderr, "\
-There are no system packages configured in the database for any domain\n");
-		goto cleanup;
-	} else if (retval != 0)
-		goto cleanup;
-	init_multi_dbdata_struct(&data, max);
-	if ((retval = get_syspack_ids(cbc, css, data, query)) != 0) 
-		goto cleanup;
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		printf("Package %s seems to have no configuration info for domain %s\n",
-		 css->name, css->domain);
-	} else {
-		printf("Package configuration information for %s\n", css->domain);
-		while (data) {
-			printf("%s\t%s\t%s\t%s\n", css->name, data->fields.text,
-			 data->next->fields.text, data->next->next->fields.text);
-			data = data->next->next->next;
-		}
-	}
+	if (count == 0)
+		printf("Package %s has no arguments in the database\n", css->name);
 	goto cleanup;
 	cleanup:
 		clean_dbdata_struct(data);
@@ -438,6 +431,85 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	return retval;
 }
 
+// Remove functions
+
+int
+rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYSP_PACKAGE;
+	unsigned int args = cbc_delete_args[query];
+	dbdata_s *data = 0;
+	
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, args);
+	if ((retval = get_system_package_id(cbc, cbcs->name, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
+		fprintf(stderr, "Unable to delete system package\n");
+	else
+		printf("Package %s deleted\n", cbcs->name);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYSP_ARG;
+	unsigned int args = cbc_delete_args[query];
+	dbdata_s *data = 0;
+	unsigned long int spack_id;
+
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, args);
+	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+		return retval;
+	if ((retval = get_syspack_arg_id(cbc, cbcs->field, spack_id, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
+		fprintf(stderr, "Unable to delete system package argument\n");
+	else
+		printf("Package %s, field %s deleted\n", cbcs->name, cbcs->field);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+{
+	int retval = 0, query = SYS_PACK_CONF_ID;
+	unsigned int args = cbc_search_args[query];
+	unsigned int fields = cbc_search_fields[query];
+	unsigned int max = cmdb_get_max(args, fields);
+	dbdata_s *data = 0;
+
+	if (!(cbc) || !(cbcs))
+		return NO_DATA;
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", cbcs->domain);
+	snprintf(data->next->args.text, RBUFF_S, "%s", cbcs->name);
+	snprintf(data->next->next->args.text, RBUFF_S, "%s", cbcs->field);
+	if ((retval = cbc_run_search(cbc, data, SYS_PACK_CONF_ID)) == 0) {
+		fprintf(stderr, "Cannot find system package conf\n");
+		clean_dbdata_struct(data);
+		return NO_SYSPACK_CONF;
+	} else if (retval > 1)
+		fprintf(stderr, "Multiple system packages? Using 1st\n");
+	data->args.number = data->fields.number;
+	if ((retval = cbc_run_delete(cbc, data, SYSP_CONF)) == 0) {
+		fprintf(stderr, "Cannot remove syspack conf from DB\n");
+		retval = DB_DELETE_FAILED;
+	} else if (retval == 1) {
+		printf("Package config for package %s, domain %s removed from DB\n",
+		 cbcs->name, cbcs->domain);
+		retval = 0;
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
 // Helper functions
 
 void
@@ -466,10 +538,8 @@ int
 get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
 {
 	int retval = 0;
-	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0) {
-		fprintf(stderr, "Cannot find build domain %s\n", css->domain);
+	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)
 		return NO_BD_CONFIG;
-	}
 	if (query != SYSP_INFO_ON_BD_ID) {
 		if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
 			fprintf(stderr, "Cannot find package %s\n", css->name);

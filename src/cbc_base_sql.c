@@ -63,9 +63,7 @@ SELECT boot_id, os, os_ver, bt_id, boot_line FROM boot_line","\
 SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
  ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
 SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
- ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
-config_ldap, log_server, config_log, smtp_server, config_email, xymon_server, \
-config_xymon, nfs_domain, cuser, muser, ctime, mtime FROM build_domain","\
+ ntp_server, config_ntp, cuser, muser, ctime, mtime FROM build_domain","\
 SELECT ip_id, ip, hostname, domainname, bd_id, server_id, cuser, muser, \
  ctime, mtime FROM build_ip","\
 SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
@@ -90,7 +88,10 @@ SELECT syspack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
 SELECT syspack_arg_id, syspack_id, field, type, cuser, muser, ctime, mtime \
  FROM system_package_args","\
 SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
- muser, ctime, mtime FROM system_package_conf"
+ muser, ctime, mtime FROM system_package_conf","\
+SELECT systscr_id, name, cuser, muser, ctime, mtime FROM system_scripts","\
+SELECT systscr_arg_id, systscr_id, bd_id, bt_id, arg, no, cuser, muser, ctime, \
+ mtime FROM system_scripts_args ORDER BY bd_id, bt_id, systscr_id, no"
 };
 
 const char *cbc_sql_insert[] = { "\
@@ -100,10 +101,8 @@ INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_domain (start_ip, end_ip, netmask, gateway, ns,\
- domain, ntp_server, config_ntp, ldap_server, ldap_ssl, ldap_dn, ldap_bind, \
- config_ldap, log_server, config_log, smtp_server, config_email, \
- xymon_server, config_xymon, nfs_domain, cuser, muser) VALUES (\
- ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+ domain, ntp_server, config_ntp, cuser, muser) VALUES (\
+ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
  muser) VALUES  (?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
@@ -128,7 +127,10 @@ INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)","\
 INSERT INTO system_package_args (syspack_id, field, type, cuser, muser) \
  VALUES (?, ?, ?, ?, ?)","\
 INSERT INTO system_package_conf (syspack_arg_id, syspack_id, bd_id, arg, \
- cuser, muser) VALUES (?, ?, ?, ?, ?, ?)"
+ cuser, muser) VALUES (?, ?, ?, ?, ?, ?)","\
+INSERT INTO system_scripts (name, cuser, muser) VALUES (?, ?, ?)","\
+INSERT INTO system_scripts_args(systscr_id, bd_id, bt_id, arg, no, cuser, \
+ muser) VALUES (?, ?, ?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -197,10 +199,16 @@ DELETE FROM build WHERE server_id = ?","\
 DELETE FROM disk_dev WHERE server_id = ?","\
 DELETE FROM seed_schemes WHERE def_scheme_id = ?","\
 DELETE FROM default_part WHERE def_part_id = ?","\
-DELETE FROM default_part WHERE def_scheme_id = ?"
+DELETE FROM default_part WHERE def_scheme_id = ?","\
+DELETE FROM system_packages WHERE syspack_id = ?","\
+DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
+DELETE FROM system_package_conf WHERE syspack_conf_id = ?","\
+DELETE FROM system_scripts WHERE systscr_id = ?","\
+DELETE FROM system_scripts_args WHERE systscr_arg_id = ?"
 };
 
-const char *cbc_sql_search[] = { "\
+const char *cbc_sql_search[] = {
+/* Start at 0 */ "\
 SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
  build_domain WHERE domain = ?","\
 SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
@@ -213,7 +221,8 @@ SELECT os_id FROM build_os WHERE os = ? AND os_version = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND os_version = ? AND arch = ?","\
 SELECT build_id FROM build WHERE os_id = ?","\
 SELECT name FROM server s, build b WHERE b.os_id = ?\
- AND b.server_id = s.server_id","\
+ AND b.server_id = s.server_id"
+/* 10 */,"\
 SELECT varient_id FROM varient WHERE varient = ?","\
 SELECT varient_id FROM varient WHERE valias = ?","\
 SELECT os_id FROM build_os WHERE os = ?","\
@@ -226,7 +235,8 @@ SELECT b.mac_addr, bi.ip, bd.domain FROM server s \
   LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
   LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE s.server_id = ?","\
 SELECT server_id FROM server WHERE uuid = ?","\
-SELECT server_id FROM server WHERE name = ?","\
+SELECT server_id FROM server WHERE name = ?"
+/* 20 */,"\
 SELECT name FROM server WHERE server_id = ?","\
 SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
   bt.arg, bt.url, bo.arch, b.net_inst_int FROM build_type bt \
@@ -264,7 +274,8 @@ SELECT bd.config_xymon, bd.xymon_server, bd.domain FROM build_domain bd \
 SELECT bd.config_email, bd.smtp_server, bd.domain, bi.ip FROM build_domain bd \
   LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
   LEFT JOIN build b ON b.ip_id = bi.ip_id \
-  WHERE b.server_id = ?","\
+  WHERE b.server_id = ?"
+/* 30 */,"\
 SELECT ip FROM build_ip WHERE bd_id = ?"
 /* This hard codes the network device to be hard_type_id 1
  * and disk device to be 2 */,"\
@@ -278,11 +289,10 @@ SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
 SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
 SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
 SELECT bd_id FROM build_domain WHERE domain = ?","\
-SELECT config_ldap FROM build_domain WHERE domain = ?","\
-SELECT bd.config_ldap, bd.ldap_ssl, bd.ldap_server, bd.ldap_dn, l.keymap, \
-  l.locale, l.timezone FROM build b LEFT JOIN locale l ON b.locale_id = \
-  l.locale_id LEFT JOIN build_ip bip ON b.ip_id = bip.ip_id LEFT JOIN \
-  build_domain bd ON bd.bd_id = bip.bd_id WHERE b.server_id = ?","\
+SELECT config_ldap FROM build_domain WHERE domain = ?"
+/* 40 */,"\
+SELECT l.keymap, l.locale, l.timezone FROM build b \
+  LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?","\
 SELECT bt.mirror, bt.alias, bo.arch, bo.os_version, b.net_inst_int, bi.ip, \
   bd.netmask, bd.gateway, bd.ns, bi.hostname, bi.domainname FROM build b \
   LEFT JOIN build_ip bi ON bi.ip_id = b.ip_id LEFT JOIN build_domain bd ON \
@@ -304,7 +314,8 @@ SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? \
 AND os_id = ?","\
 SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss ON \
   dp.def_scheme_id = ss.def_scheme_id WHERE ss.scheme_name = ? AND \
-  dp.mount_point = ?","\
+  dp.mount_point = ?"
+/* 50 */ ,"\
 SELECT ip_id FROM build_ip WHERE hostname = ? AND domainname = ?","\
 SELECT ip_id FROM build_ip WHERE ip = ?","\
 SELECT detail FROM hardware where server_id = ? and device = ?","\
@@ -314,26 +325,51 @@ SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?","\
 SELECT hard_id FROM hardware WHERE server_id = ? and device = ?","\
 SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?","\
 SELECT syspack_id FROM system_packages WHERE name = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  WHERE spc.bd_id = ? AND spc.syspack_id = ? AND spc.syspack_arg_id = ?","\
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ? \
+  ORDER BY sp.name, spa.field"
+/* 60 */,"\
 SELECT syspack_arg_id FROM system_package_args WHERE \
   syspack_id = ?  AND field = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  WHERE spc.bd_id = ? AND spc.syspack_id = ?","\
-SELECT spa.field, spa.type, spc.arg FROM system_package_args spa \
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  WHERE spc.bd_id = ? AND spc.syspack_id = ? ORDER BY sp.name, spa.field","\
+SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
   LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  WHERE spc.bd_id = ? "
-
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  WHERE spc.bd_id = ? ORDER BY sp.name, spa.field","\
+SELECT bd.domain FROM build_domain bd \
+  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
+SELECT s.name, bd.domain from server s \
+  LEFT JOIN build_ip ip ON ip.server_id = s.server_id \
+  LEFT JOIN build_domain bd ON ip.bd_id = bd.bd_id where s.server_id = ?","\
+SELECT bd.bd_id FROM build_domain bd \
+  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
+SELECT syspack_conf_id FROM system_package_conf spc \
+  JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id \
+  JOIN build_domain bd ON bd.bd_id = spc.bd_id \
+  WHERE bd.domain = ? AND sp.name = ? AND spa.field =?","\
+SELECT systscr_id FROM system_scripts WHERE name = ?","\
+SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
+  JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id\
+  JOIN build_type bt ON sa.bt_id = bt.bt_id \
+  WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.no","\
+SELECT build_type FROM build_type WHERE alias = ?"
+/* 70 */,"\
+SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
+  AND systscr_id = ? AND no = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 25, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9
+	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 22, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6
+	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7
 };
 
 const unsigned int cbc_update_args[] = {
@@ -341,17 +377,19 @@ const unsigned int cbc_update_args[] = {
 	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1
+	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
+	3, 1, 2, 1, 4
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 7, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 3, 1, 3, 3
+	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
+	1, 1, 3, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -359,9 +397,8 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
 	  DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT, DBTEXT,
-	  DBSHORT, DBTEXT, DBTEXT, DBSHORT, DBTEXT, DBSHORT, DBTEXT, DBSHORT,
-	  DBTEXT, DBSHORT, DBTEXT, DBINT, DBINT, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBSHORT,
+	  DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0,
@@ -389,7 +426,11 @@ const int cbc_inserts[][24] = {
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0 }
+	  0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBINT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cbc_update_types[][6] = {
@@ -437,72 +478,85 @@ const unsigned int cbc_delete_types[][2] = {
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE }
 };
-const unsigned int cbc_search_arg_types[][3] = {
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, DBTEXT, DBTEXT } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, DBINT, DBINT } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBTEXT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE } ,
-	{ DBINT, DBINT, DBINT } ,
-	{ DBINT, DBTEXT, NONE } ,
-	{ DBINT, DBINT, NONE } ,
-	{ DBINT, NONE, NONE }
+const unsigned int cbc_search_arg_types[][4] = {
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, DBINT, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE } ,
+	{ DBINT, DBINT, DBINT, NONE } ,
+	{ DBINT, DBTEXT, NONE, NONE } ,
+	{ DBINT, DBINT, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ DBINT, DBTEXT, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ DBINT, DBINT, DBINT, DBINT }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -545,7 +599,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBTEXT, DBTEXT } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -564,10 +618,18 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBSHORT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -740,6 +802,12 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == SYSCONF) {
 		*query = cbc_sql_select[SYSCONFS];
 		*fields = cbc_select_fields[SYSCONFS];
+	} else if (type == SCRIPT) {
+		*query = cbc_sql_select[SCRIPTS];
+		*fields = cbc_select_fields[SCRIPTS];
+	} else if (type == SCRIPTA) {
+		*query = cbc_sql_select[SCRIPTAS];
+		*fields = cbc_select_fields[SCRIPTAS];
 	} else {
 		retval = UNKNOWN_QUERY;
 	}
@@ -871,6 +939,12 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SYSCONF)
 		if ((retval = cbc_run_query_mysql(config, base, SYSCONF)) != 0)
+			return retval;
+	if (type & SCRIPT)
+		if ((retval = cbc_run_query_mysql(config, base, SCRIPT)) != 0)
+			return retval;
+	if (type & SCRIPTA)
+		if ((retval = cbc_run_query_mysql(config, base, SCRIPTA)) != 0)
 			return retval;
 	return retval;
 }
@@ -1114,6 +1188,16 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_sysconf_mysql(row, base);
+	} else if (type == SCRIPT) {
+		required = cbc_select_fields[SCRIPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_script_mysql(row, base);
+	} else if (type == SCRIPTA) {
+		required = cbc_select_fields[SCRIPTAS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_scripta_mysql(row, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_mysql");
 	}
@@ -1174,6 +1258,10 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_sysarg(buffer, base, i);
 	else if (type == SYSCONFS)
 		cbc_setup_bind_mysql_sysconf(buffer, base, i);
+	else if (type == SCRIPTS)
+		cbc_setup_bind_mysql_script(buffer, base, i);
+	else if (type == SCRIPTAS)
+		cbc_setup_bind_mysql_scripta(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
 }
@@ -1253,41 +1341,10 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		snprintf(dom->ntp_server, RBUFF_S, "%s", row[7]);
 		dom->config_ntp = 1;
 	}
-	if (strncmp("0", row[13], CH_S) == 0) {
-		dom->config_ldap = 0;
-	} else {
-		snprintf(dom->ldap_server, RBUFF_S, "%s", row[9]);
-		snprintf(dom->ldap_dn, URL_S, "%s", row[11]);
-		snprintf(dom->ldap_bind, URL_S, "%s", row[12]);
-		dom->config_ldap = 1;
-	}
-	if (strncmp("0", row[10], CH_S) == 0)
-		dom->ldap_ssl = 0;
-	else
-		dom->ldap_ssl = 1;
-	if (strncmp("0", row[15], CH_S) == 0) {
-		dom->config_log = 0;
-	} else {
-		snprintf(dom->log_server, RBUFF_S, "%s", row[14]);
-		dom->config_log = 1;
-	}
-	if (strncmp("0", row[17], CH_S) == 0) {
-		dom->config_email = 0;
-	} else {
-		snprintf(dom->smtp_server, RBUFF_S, "%s", row[16]);
-		dom->config_email = 1;
-	}
-	if (strncmp("0", row[19], CH_S) == 0) {
-		dom->config_xymon = 0;
-	} else {
-		snprintf(dom->xymon_server, RBUFF_S, "%s", row[18]);
-		dom->config_xymon = 1;
-	}
-	snprintf(dom->nfs_domain, RBUFF_S, "%s", row[20]);
-	dom->cuser = strtoul(row[21], NULL, 10);
-	dom->muser = strtoul(row[22], NULL, 10);
-	convert_time(row[23], &(dom->ctime));
-	convert_time(row[24], &(dom->mtime));
+	dom->cuser = strtoul(row[9], NULL, 10);
+	dom->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(dom->ctime));
+	convert_time(row[12], &(dom->mtime));
 	list = base->bdom;
 	if (list) {
 		while (list->next)
@@ -1708,6 +1765,54 @@ cbc_store_sysconf_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
+cbc_store_script_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_script_s *scr, *list;
+
+	initialise_cbc_scripts(&scr);
+	scr->systscr_id = strtoul(row[0], NULL, 10);
+	snprintf(scr->name, CONF_S, "%s", row[1]);
+	scr->cuser = strtoul(row[2], NULL, 10);
+	scr->muser = strtoul(row[3], NULL, 10);
+	convert_time(row[4], &(scr->ctime));
+	convert_time(row[5], &(scr->mtime));
+	list = base->scripts;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = scr;
+	} else {
+		base->scripts = scr;
+	}
+}
+
+void
+cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base)
+{
+	cbc_script_arg_s *arg, *list;
+
+	initialise_cbc_script_args(&arg);
+	arg->systscr_arg_id = strtoul(row[0], NULL, 10);
+	arg->systscr_id = strtoul(row[1], NULL, 10);
+	arg->bd_id = strtoul(row[2], NULL, 10);
+	arg->bt_id = strtoul(row[3], NULL, 10);
+	snprintf(arg->arg, CONF_S, "%s", row[4]);
+	arg->no = strtoul(row[5], NULL, 10);
+	arg->cuser = strtoul(row[6], NULL, 10);
+	arg->muser = strtoul(row[7], NULL, 10);
+	convert_time(row[8], &(arg->ctime));
+	convert_time(row[9], &(arg->mtime));
+	list = base->script_arg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = arg;
+	} else {
+		base->script_arg = arg;
+	}
+}
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
@@ -1727,32 +1832,8 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 7)
 		*buffer = &(base->bdom->config_ntp);
 	else if (i == 8)
-		*buffer = &(base->bdom->ldap_server);
-	else if (i == 9)
-		*buffer = &(base->bdom->ldap_ssl);
-	else if (i == 10)
-		*buffer = &(base->bdom->ldap_dn);
-	else if (i == 11)
-		*buffer = &(base->bdom->ldap_bind);
-	else if (i == 12)
-		*buffer = &(base->bdom->config_ldap);
-	else if (i == 13)
-		*buffer = &(base->bdom->log_server);
-	else if (i == 14)
-		*buffer = &(base->bdom->config_log);
-	else if (i == 15)
-		*buffer = &(base->bdom->smtp_server);
-	else if (i == 16)
-		*buffer = &(base->bdom->config_email);
-	else if (i == 17)
-		*buffer = &(base->bdom->xymon_server);
-	else if (i == 18)
-		*buffer = &(base->bdom->config_xymon);
-	else if (i == 19)
-		*buffer = &(base->bdom->nfs_domain);
-	else if (i == 20)
 		*buffer = &(base->bdom->cuser);
-	else if (i == 21)
+	else if (i == 9)
 		*buffer = &(base->bdom->muser);
 }
 
@@ -1939,6 +2020,35 @@ cbc_setup_bind_mysql_sysconf(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->sysconf->muser);
 }
 
+void
+cbc_setup_bind_mysql_script(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->scripts->name);
+	else if (i == 1)
+		*buffer = &(base->scripts->cuser);
+	else if (i == 2)
+		*buffer = &(base->scripts->muser);
+}
+
+void
+cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->script_arg->systscr_id);
+	else if (i == 1)
+		*buffer = &(base->script_arg->bd_id);
+	else if (i == 2)
+		*buffer = &(base->script_arg->bt_id);
+	else if (i == 3)
+		*buffer = &(base->script_arg->arg);
+	else if (i == 4)
+		*buffer = &(base->script_arg->no);
+	else if (i == 5)
+		*buffer = &(base->script_arg->cuser);
+	else if (i == 6)
+		*buffer = &(base->script_arg->muser);
+}
 
 #endif /* HAVE_MYSQL */
 
@@ -1948,22 +2058,26 @@ int
 cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
-	int retval;
+	int retval = 0, i = 0;
 	unsigned int fields;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
-	retval = 0;
 	file = config->file;
 	if ((retval = cbc_get_query(type, &query, &fields)) != 0) {
 		report_error(retval, "cbc_run_query_sqlite");
 	}
 	cmdb_setup_ro_sqlite(query, file, &cbc, &state);
 	fields = (unsigned int) sqlite3_column_count(state);
-	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
+	while ((retval = sqlite3_step(state)) == SQLITE_ROW) {
+		i++;
 		cbc_store_result_sqlite(state, base, type, fields);
+	}
 	cmdb_sqlite_cleanup(cbc, state);
-	return NONE;
+	if (i == 0)
+		return NO_RECORDS;
+	else
+		return NONE;
 }
 
 int
@@ -2051,6 +2165,12 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SYSCONF)
 		if ((retval = cbc_run_query_sqlite(config, base, SYSCONF)) != 0)
+			return retval;
+	if (type & SCRIPT)
+		if ((retval = cbc_run_query_sqlite(config, base, SCRIPT)) != 0)
+			return retval;
+	if (type & SCRIPTA)
+		if ((retval = cbc_run_query_sqlite(config, base, SCRIPTA)) != 0)
 			return retval;
 	return retval;
 }
@@ -2153,7 +2273,7 @@ cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 		cmdb_sqlite_cleanup(cbc, state);
 		return NONE;
 	}
-	i = sqlite3_total_changes(cbc);
+	i = sqlite3_changes(cbc);
 	cmdb_sqlite_cleanup(cbc, state);
 	return i;
 }
@@ -2339,6 +2459,16 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_sysconf_sqlite(state, base);
+	} else if (type == SCRIPT) {
+		required = cbc_select_fields[SCRIPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_script_sqlite(state, base);
+	} else if (type == SCRIPTA) {
+		required = cbc_select_fields[SCRIPTAS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_scripta_sqlite(state, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_sqlite");
 	}
@@ -2367,12 +2497,16 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build(state, base->build);
 	else if (type == DISK_DEVS)
 		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
-	else if (type == SYSPACK)
+	else if (type == SYSPACKS)
 		retval = cbc_setup_bind_sqlite_syspack(state, base->syspack);
-	else if (type == SYSARG)
+	else if (type == SYSARGS)
 		retval = cbc_setup_bind_sqlite_sysarg(state, base->sysarg);
-	else if (type == SYSCONF)
+	else if (type == SYSCONFS)
 		retval = cbc_setup_bind_sqlite_sysconf(state, base->sysconf);
+	else if (type == SCRIPTS)
+		retval = cbc_setup_bind_sqlite_script(state, base->scripts);
+	else if (type == SCRIPTAS)
+		retval = cbc_setup_bind_sqlite_scripta(state, base->script_arg);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -2459,31 +2593,11 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 8)) != 0)
 		snprintf(dom->ntp_server, HOST_S, "%s",
 		 sqlite3_column_text(state, 7));
-	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 13)) != 0) {
-		snprintf(dom->ldap_server, URL_S, "%s", 
-			 sqlite3_column_text(state, 9));
-		snprintf(dom->ldap_dn, URL_S, "%s",
-			 sqlite3_column_text(state, 11));
-		snprintf(dom->ldap_bind, URL_S, "%s",
-			 sqlite3_column_text(state, 12));
-	}
-	dom->ldap_ssl = (short int) sqlite3_column_int(state, 10);
-	if ((dom->config_log = (short int) sqlite3_column_int(state, 15)) != 0)
-		snprintf(dom->log_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 14));
-	if ((dom->config_email = (short int) sqlite3_column_int(state, 17)) != 0)
-		snprintf(dom->smtp_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 16));
-	if ((dom->config_xymon = (short int) sqlite3_column_int(state, 19)) != 0)
-		snprintf(dom->xymon_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 18));
-	snprintf(dom->nfs_domain, CONF_S, "%s",
-		 sqlite3_column_text(state, 20));
-	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 21);
-	dom->muser = (unsigned long int) sqlite3_column_int64(state, 22);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 23));
+	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	dom->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
 	convert_time(stime, &(dom->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 24));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
 	convert_time(stime, &(dom->mtime));
 	list = base->bdom;
 	if (list) {
@@ -2989,6 +3103,66 @@ cbc_store_sysconf_sqlite(sqlite3_stmt *state, cbc_s *base)
 	free(stime);
 }
 
+void
+cbc_store_script_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_script_s *scr, *list;
+
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_script_sqlite");
+	initialise_cbc_scripts(&scr);
+	scr->systscr_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	snprintf(scr->name, CONF_S, "%s", sqlite3_column_text(state, 1));
+	scr->muser = (unsigned long int) sqlite3_column_int64(state, 2);
+	scr->cuser = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 4));
+	convert_time(stime, &(scr->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 5));
+	convert_time(stime, &(scr->mtime));
+	list = base->scripts;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = scr;
+	} else {
+		base->scripts = scr;
+	}
+	free(stime);
+}
+
+void
+cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+	char *stime;
+	cbc_script_arg_s *arg, *list;
+
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_scripta_sqlite");
+	initialise_cbc_script_args(&arg);
+	arg->systscr_arg_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	arg->systscr_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	arg->bd_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	arg->bt_id = (unsigned long int) sqlite3_column_int64(state, 3);
+	snprintf(arg->arg, CONF_S, "%s", sqlite3_column_text(state, 4));
+	arg->no = (unsigned long int) sqlite3_column_int64(state, 5);
+	arg->cuser = (unsigned long int) sqlite3_column_int64(state, 6);
+	arg->muser = (unsigned long int) sqlite3_column_int64(state, 7);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
+	convert_time(stime, &(arg->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	convert_time(stime, &(arg->mtime));
+	list = base->script_arg;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = arg;
+	} else {
+		base->script_arg = arg;
+	}
+	free(stime);
+}
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build)
 {
@@ -3092,73 +3266,13 @@ state, 7, bdom->ntp_server, (int)strlen(bdom->ntp_server), SQLITE_STATIC)) > 0){
 		fprintf(stderr, "Cannot bind config ntp");
 		return retval;
 	}
-	if ((retval = sqlite3_bind_text(
-state, 9, bdom->ldap_server, (int)strlen(bdom->ldap_server), SQLITE_STATIC)) > 0) {
-		fprintf(stderr,
-"Cannot bind ldap server %s\n", bdom->ldap_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 10, bdom->ldap_ssl)) > 0) {
-		fprintf(stderr, "Cannot bind ldap ssl");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 11, bdom->ldap_dn, (int)strlen(bdom->ldap_dn), SQLITE_STATIC)) > 0) {
-		fprintf(stderr, "Cannot bind ldap dn %s\n", bdom->ldap_dn);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 12, bdom->ldap_bind, (int)strlen(bdom->ldap_bind), SQLITE_STATIC)) > 0) {
-		fprintf(stderr, "Cannot bind ldap bind %s\n", bdom->ldap_bind);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 13, bdom->config_ldap)) > 0) {
-		fprintf(stderr, "Cannot bind config ldap");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 14, bdom->log_server, (int)strlen(bdom->log_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind log server %s\n", bdom->log_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 15, bdom->config_log)) > 0) {
-		fprintf(stderr, "Cannot bind config log");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 16, bdom->smtp_server, (int)strlen(bdom->smtp_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind smtp server %s\n", bdom->smtp_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 17, bdom->config_email)) > 0) {
-		fprintf(stderr, "Cannot bind config email");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 18, bdom->xymon_server, (int)strlen(bdom->xymon_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind xymon server %s\n", bdom->xymon_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 19, bdom->config_xymon)) > 0) {
-		fprintf(stderr, "Cannot bind config xymon");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind nfs domain %s\n", bdom->nfs_domain);
-		return retval;
-	}
 	if ((retval = sqlite3_bind_int64(
-state, 21, (sqlite3_int64)bdom->cuser)) > 0) {
+state, 9, (sqlite3_int64)bdom->cuser)) > 0) {
 		fprintf(stderr, "Cannot bind cuser");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 22, (sqlite3_int64)bdom->muser)) > 0) {
+state, 10, (sqlite3_int64)bdom->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser");
 		return retval;
 	}
@@ -3477,7 +3591,6 @@ cbc_setup_bind_sqlite_sysconf(sqlite3_stmt *state, cbc_syspack_conf_s *spack)
 {
 	int retval;
 
-	
 	if ((retval = sqlite3_bind_int64(
 state, 1, (sqlite3_int64)spack->syspack_arg_id)) > 0) {
 		fprintf(stderr, "Cannot bind syspack_arg_id %lu\n",
@@ -3507,6 +3620,72 @@ state, 5, (sqlite3_int64)spack->cuser)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 6, (sqlite3_int64)spack->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", spack->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_script(sqlite3_stmt *state, cbc_script_s *scr)
+{
+	int retval = 0;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, scr->name, (int)strlen(scr->name), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind anem %s\n", scr->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite3_int64)scr->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", scr->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite3_int64)scr->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", scr->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg)
+{
+	int retval = 0;
+
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite_int64)arg->systscr_id)) > 0) {
+		fprintf(stderr, "Cannot bind systscr_id %lu\n", arg->systscr_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite_int64)arg->bd_id)) > 0) {
+		fprintf(stderr, "Cannot bind bd_id %lu\n", arg->bd_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 3, (sqlite_int64)arg->bt_id)) > 0) {
+		fprintf(stderr, "Cannot bind bt_id %lu\n", arg->bt_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, arg->arg, (int)strlen(arg->arg), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind arg %s\n", arg->arg);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)arg->no)) > 0) {
+		fprintf(stderr, "Cannot bind no %lu\n", arg->no);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)arg->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", arg->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)arg->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", arg->muser);
 		return retval;
 	}
 	return retval;

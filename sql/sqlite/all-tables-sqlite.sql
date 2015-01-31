@@ -46,19 +46,10 @@ CREATE TABLE `build_domain` (
   `domain` varchar(255) NOT NULL DEFAULT 'no.domain',
   `ntp_server` varchar(255) NOT NULL DEFAULT 'none',
   `config_ntp` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_ssl` smallint(4) NOT NULL DEFAULT 0,
-  `ldap_dn` varchar(96) NOT NULL DEFAULT 'none',
-  `ldap_bind` varchar(127) NOT NULL DEFAULT 'none',
-  `ldap_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_ldap` smallint(4) NOT NULL DEFAULT 0,
-  `log_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_log` smallint(4) NOT NULL DEFAULT 0,
-  `smtp_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_email` smallint(4) NOT NULL DEFAULT 0,
-  `xymon_server` varchar(255) NOT NULL DEFAULT 'none',
-  `config_xymon` smallint(4) NOT NULL DEFAULT 0,
-  `nfs_domain` varchar(255) NOT NULL DEFAULT 'none'
-, `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0);
+  `cuser` int(11) NOT NULL DEFAULT 0,
+  `muser` int(11) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0);
 CREATE TABLE `contacts` (
   `cont_id` INTEGER PRIMARY KEY,
   `name` varchar(50) NOT NULL,
@@ -542,11 +533,11 @@ CREATE TABLE `system_packages` (
 );
 CREATE TRIGGER insert_system_packages AFTER INSERT ON system_packages
 BEGIN
-UPDATE system_packages SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_packages SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE syspack_id = new.syspack_id;
 end;
 CREATE TRIGGER update_system_packages AFTER UPDATE ON system_packages
 BEGIN
-UPDATE system_packages SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_packages SET mtime = CURRENT_TIMESTAMP WHERE syspack_id = new.syspack_id;
 END;
 CREATE TABLE `system_package_args` (
 `syspack_arg_id` INTEGER PRIMARY KEY,
@@ -563,11 +554,11 @@ ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TRIGGER insert_system_package_args AFTER INSERT ON system_package_args
 BEGIN
-UPDATE system_package_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+UPDATE system_package_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where syspack_arg_id = new.syspack_arg_id;
 END;
 CREATE TRIGGER update_system_package_args AFTER UPDATE ON system_package_args
 BEGIN
-UPDATE system_package_args SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_package_args SET mtime = CURRENT_TIMESTAMP WHERE syspack_arg_id = new.syspack_arg_id;
 END;
 CREATE TABLE `system_package_conf` (
 `syspack_conf_id` INTEGER PRIMARY KEY,
@@ -588,9 +579,9 @@ ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TRIGGER insert_system_package_conf AFTER INSERT ON system_package_conf
 BEGIN
-UPDATE system_package_conf SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+UPDATE system_package_conf SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where syspack_conf_id = new.syspack_conf_id;
 END;
 CREATE TRIGGER update_system_package_conf AFTER UPDATE ON system_package_conf
 BEGIN
-UPDATE system_package_conf SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_package_conf SET mtime = CURRENT_TIMESTAMP WHERE syspack_conf_id = new.syspack_conf_id;
 END;

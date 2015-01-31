@@ -238,7 +238,11 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NET_FUNC_FAILED = 220,
 	BDOM_OVERLAP = 221,
 	NO_PACKAGE_CONFIG = 222,
-	NO_HARD_DISK_DEV = 223
+	NO_HARD_DISK_DEV = 223,
+	NO_SYSPACK_CONF = 224,
+	NO_ARG = 225,
+	NO_NUMBER = 226,
+	NO_NTP_SERVER = 227
 };
 
 enum {			/* command line error codes */
@@ -440,6 +444,8 @@ void
 display_cpc_usage(void);
 void
 display_cbcsysp_usage(void);
+void
+display_cbcscript_usage(void);
 /* Database fields query mismatch error functions */
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);

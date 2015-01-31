@@ -37,6 +37,9 @@ cbc_get_varient_name(char *varient, char *valias);
 unsigned long int
 cbc_get_varient_id(cbc_varient_s *vari, char *name);
 
+void 
+cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid);
+
 unsigned long int
 search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 
@@ -57,5 +60,11 @@ get_system_package_id(cbc_config_s *cbc, char *domain, uli_t *id);
 
 int
 get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id);
+
+int
+get_system_script_id(cbc_config_s *cbc, char *package, uli_t *id);
+
+int
+get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id);
 
 #endif /* CBC_COMMON_H */

@@ -44,7 +44,9 @@ enum {			/* SELECT statements */
 	VMHOST = 8192,
 	SYSPACK = 16384,
 	SYSARG = 32768,
-	SYSCONF = 65536
+	SYSCONF = 65536,
+	SCRIPT = 131072,
+	SCRIPTA = 262144
 };
 
 enum {			/* SELECT and INSERT Indices */
@@ -64,7 +66,9 @@ enum {			/* SELECT and INSERT Indices */
 	VMHOSTS,
 	SYSPACKS,
 	SYSARGS,
-	SYSCONFS
+	SYSCONFS,
+	SCRIPTS,
+	SCRIPTAS
 };
 
 /* cmdb queries */

@@ -1,7 +1,7 @@
-/* 
+/*
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2014 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,13 +18,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  cbcsysp.h
- * 
+ *
  *  Header file for data and functions for cbcsysp program
- * 
+ *
  *  part of the cbcsysp program
- * 
- *  (C) Iain M. Conochie 2014
- * 
+ *
  */
 
 #ifndef __CBCSYSP_H__
@@ -66,13 +64,8 @@ list_cbc_syspackage(cbc_config_s *cbc);
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
 
-// Display functions
-
 int
-display_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
-
-int
-display_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
+list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
 
 // Add functions
 
@@ -84,6 +77,17 @@ add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbs);
 
 int
 add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+
+// Remove functions
+
+int
+rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+
+int
+rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+
+int
+rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
 
 // Helper funtions
 

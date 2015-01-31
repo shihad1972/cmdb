@@ -163,22 +163,10 @@ void
 fill_kick_packages(dbdata_s *data, string_len_s *build);
 
 void
-add_kick_ntp_config(dbdata_s *data, string_len_s *build, char *url);
-
-void
-add_kick_xymon_config (dbdata_s *data, string_len_s *build, char *url, char *host);
-
-void
-add_kick_ldap_config(dbdata_s *data, string_len_s *build, char *url);
-
-void
-add_kick_smtp_config(dbdata_s *data, string_len_s *build, string_l *conf);
-
-void
 add_kick_base_script(dbdata_s *data, string_len_s *build);
 
 void
-add_kick_log_config(dbdata_s *data, string_len_s *build, char *url);
+fill_build_scripts(cbc_config_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
 
 void
 add_kick_final_config(string_len_s *build, char *url);
@@ -199,16 +187,16 @@ int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 int
-fill_app_config(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 void
-fill_ldap_config(dbdata_s *data, string_len_s *build, char *os);
+add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data);
 
-void
-fill_xymon_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+char *
+cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg);
 
-void
-fill_smtp_config(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+char *
+get_replaced_syspack_arg(dbdata_s *data, int loop);
 
 int
 modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
