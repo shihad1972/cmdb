@@ -470,7 +470,7 @@ cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPTA;
 	unsigned long int systscr_id;
-	int i, j, k;	// counters
+	int i, j, k = 0;	// counters
 	char *domain, *build;
 	cbc_s *cbs;
 	cbc_build_domain_s *bdom;
@@ -596,7 +596,7 @@ int
 cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_TYPE | SCRIPTA;
-	int i, j, k;	// counters
+	int i, j, k = 0;	// counters
 	char *build;
 	unsigned long int bd_id, systscr_id;
 	cbc_s *cbs;
