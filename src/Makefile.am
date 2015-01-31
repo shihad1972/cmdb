@@ -34,8 +34,8 @@ cbc_SOURCES =	cbc.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
 		cbcdomain.c $(combo_SOURCES) base_sql.c \
-		$(cbc_combo_SOURCES) builddomain.c cbccom.c cbcnet.c\
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
+		$(cbc_combo_SOURCES) cbccom.c cbcnet.c\
+		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h\
 		base_sql.h cbcdomain.h cbc_common.h cbcnet.h
 cbcsysp_SOURCES = \
 		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES) \

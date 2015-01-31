@@ -743,11 +743,11 @@ fill_build_scripts(cbc_config_s *cbc, dbdata_s *list, int retval, string_len_s *
 	if (!(list))
 		return;
 	char *pos, *script = list->fields.text;
-	char *arg, *newarg;
+	char *arg = 0, *newarg;
 	char line[TBUFF_S];
 	int scrno = 0;
 	size_t len;
-	unsigned long int argno;
+	unsigned long int argno = 0;
 	dbdata_s *data = list;
 	while (scrno <= retval) {
 		if (data) {
