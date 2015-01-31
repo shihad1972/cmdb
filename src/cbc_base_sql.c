@@ -1341,41 +1341,6 @@ cbc_store_build_domain_mysql(MYSQL_ROW row, cbc_s *base)
 		snprintf(dom->ntp_server, RBUFF_S, "%s", row[7]);
 		dom->config_ntp = 1;
 	}
-/*	if (strncmp("0", row[13], CH_S) == 0) {
-		dom->config_ldap = 0;
-	} else {
-		snprintf(dom->ldap_server, RBUFF_S, "%s", row[9]);
-		snprintf(dom->ldap_dn, URL_S, "%s", row[11]);
-		snprintf(dom->ldap_bind, URL_S, "%s", row[12]);
-		dom->config_ldap = 1;
-	}
-	if (strncmp("0", row[10], CH_S) == 0)
-		dom->ldap_ssl = 0;
-	else
-		dom->ldap_ssl = 1;
-	if (strncmp("0", row[15], CH_S) == 0) {
-		dom->config_log = 0;
-	} else {
-		snprintf(dom->log_server, RBUFF_S, "%s", row[14]);
-		dom->config_log = 1;
-	}
-	if (strncmp("0", row[17], CH_S) == 0) {
-		dom->config_email = 0;
-	} else {
-		snprintf(dom->smtp_server, RBUFF_S, "%s", row[16]);
-		dom->config_email = 1;
-	}
-	if (strncmp("0", row[19], CH_S) == 0) {
-		dom->config_xymon = 0;
-	} else {
-		snprintf(dom->xymon_server, RBUFF_S, "%s", row[18]);
-		dom->config_xymon = 1;
-	}
-	snprintf(dom->nfs_domain, RBUFF_S, "%s", row[20]); 
-	dom->cuser = strtoul(row[21], NULL, 10);
-	dom->muser = strtoul(row[22], NULL, 10);
-	convert_time(row[23], &(dom->ctime));
-	convert_time(row[24], &(dom->mtime)); */
 	dom->cuser = strtoul(row[9], NULL, 10);
 	dom->muser = strtoul(row[10], NULL, 10);
 	convert_time(row[11], &(dom->ctime));
@@ -1870,34 +1835,6 @@ cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->bdom->cuser);
 	else if (i == 9)
 		*buffer = &(base->bdom->muser);
-/*	else if (i == 8)
-		*buffer = &(base->bdom->ldap_server);
-	else if (i == 9)
-		*buffer = &(base->bdom->ldap_ssl);
-	else if (i == 10)
-		*buffer = &(base->bdom->ldap_dn);
-	else if (i == 11)
-		*buffer = &(base->bdom->ldap_bind);
-	else if (i == 12)
-		*buffer = &(base->bdom->config_ldap);
-	else if (i == 13)
-		*buffer = &(base->bdom->log_server);
-	else if (i == 14)
-		*buffer = &(base->bdom->config_log);
-	else if (i == 15)
-		*buffer = &(base->bdom->smtp_server);
-	else if (i == 16)
-		*buffer = &(base->bdom->config_email);
-	else if (i == 17)
-		*buffer = &(base->bdom->xymon_server);
-	else if (i == 18)
-		*buffer = &(base->bdom->config_xymon);
-	else if (i == 19)
-		*buffer = &(base->bdom->nfs_domain);
-	else if (i == 20)
-		*buffer = &(base->bdom->cuser);
-	else if (i == 21)
-		*buffer = &(base->bdom->muser); */
 }
 
 void
@@ -2660,32 +2597,6 @@ cbc_store_build_domain_sqlite(sqlite3_stmt *state, cbc_s *base)
 	if ((dom->config_ntp = (short int) sqlite3_column_int(state, 8)) != 0)
 		snprintf(dom->ntp_server, HOST_S, "%s",
 		 sqlite3_column_text(state, 7));
-/*	if ((dom->config_ldap = (short int) sqlite3_column_int(state, 13)) != 0) {
-		snprintf(dom->ldap_server, URL_S, "%s", 
-			 sqlite3_column_text(state, 9));
-		snprintf(dom->ldap_dn, URL_S, "%s",
-			 sqlite3_column_text(state, 11));
-		snprintf(dom->ldap_bind, URL_S, "%s",
-			 sqlite3_column_text(state, 12));
-	}
-	dom->ldap_ssl = (short int) sqlite3_column_int(state, 10);
-	if ((dom->config_log = (short int) sqlite3_column_int(state, 15)) != 0)
-		snprintf(dom->log_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 14));
-	if ((dom->config_email = (short int) sqlite3_column_int(state, 17)) != 0)
-		snprintf(dom->smtp_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 16));
-	if ((dom->config_xymon = (short int) sqlite3_column_int(state, 19)) != 0)
-		snprintf(dom->xymon_server, CONF_S, "%s",
-			 sqlite3_column_text(state, 18));
-	snprintf(dom->nfs_domain, CONF_S, "%s",
-		 sqlite3_column_text(state, 20));
-	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 21);
-	dom->muser = (unsigned long int) sqlite3_column_int64(state, 22);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 23));
-	convert_time(stime, &(dom->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 24));
-	convert_time(stime, &(dom->mtime)); */
 	dom->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
 	dom->muser = (unsigned long int) sqlite3_column_int64(state, 10);
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
@@ -3369,76 +3280,6 @@ state, 10, (sqlite3_int64)bdom->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser");
 		return retval;
 	}
-/*	if ((retval = sqlite3_bind_text(
-state, 9, bdom->ldap_server, (int)strlen(bdom->ldap_server), SQLITE_STATIC)) > 0) {
-		fprintf(stderr,
-"Cannot bind ldap server %s\n", bdom->ldap_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 10, bdom->ldap_ssl)) > 0) {
-		fprintf(stderr, "Cannot bind ldap ssl");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 11, bdom->ldap_dn, (int)strlen(bdom->ldap_dn), SQLITE_STATIC)) > 0) {
-		fprintf(stderr, "Cannot bind ldap dn %s\n", bdom->ldap_dn);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 12, bdom->ldap_bind, (int)strlen(bdom->ldap_bind), SQLITE_STATIC)) > 0) {
-		fprintf(stderr, "Cannot bind ldap bind %s\n", bdom->ldap_bind);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 13, bdom->config_ldap)) > 0) {
-		fprintf(stderr, "Cannot bind config ldap");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 14, bdom->log_server, (int)strlen(bdom->log_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind log server %s\n", bdom->log_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 15, bdom->config_log)) > 0) {
-		fprintf(stderr, "Cannot bind config log");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 16, bdom->smtp_server, (int)strlen(bdom->smtp_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind smtp server %s\n", bdom->smtp_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 17, bdom->config_email)) > 0) {
-		fprintf(stderr, "Cannot bind config email");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 18, bdom->xymon_server, (int)strlen(bdom->xymon_server), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind xymon server %s\n", bdom->xymon_server);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int(state, 19, bdom->config_xymon)) > 0) {
-		fprintf(stderr, "Cannot bind config xymon");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 20, bdom->nfs_domain, (int)strlen(bdom->nfs_domain), SQLITE_STATIC)) > 0){
-		fprintf(stderr,
-"Cannot bind nfs domain %s\n", bdom->nfs_domain);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 21, (sqlite3_int64)bdom->cuser)) > 0) {
-		fprintf(stderr, "Cannot bind cuser");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 22, (sqlite3_int64)bdom->muser)) > 0) {
-		fprintf(stderr, "Cannot bind muser");
-		return retval;
-	} */
 	return retval;
 }
 
