@@ -100,4 +100,10 @@ write_dhcp_net_config(cbc_config_s *cbs);
 void
 display_bdom_servers(cbc_config_s *cbs, char *domain);
 
+int
+fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
+
+void
+fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
+
 #endif /* __CBCDOMAIN_H__ */

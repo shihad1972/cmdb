@@ -38,6 +38,7 @@
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
+#include "cbcnet.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
 #include "cbcdomain.h"
@@ -358,9 +359,40 @@ modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 int
 write_dhcp_net_config(cbc_config_s *cbs)
 {
+	if (!(cbs))
+		return NO_DATA;
 	int retval = 0;
+	char filename[CONF_S];
+	cbc_s *cbc;
+	cbc_dhcp_s *dhcp = 0;
+	string_len_s *conf = 0;
 
-	return retval;
+	if (!(conf = malloc(sizeof(string_len_s))))
+		report_error(MALLOC_FAIL, "conf in write_dhcp_net_config");
+	initialise_cbc_s(&cbc);
+	init_string_len(conf);
+	if (snprintf(filename, CONF_S, "%s/dhcpd.networks", cbs->dhcpconf) >= CONF_S)
+		fprintf(stderr, "filename for dhcpd.networks truncated!\n");
+	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0) {
+		if (retval == NO_RECORDS)
+			printf("No build domains configured\n");
+		else
+			printf("Build domain query failed\n");
+		goto cleanup;
+	}
+	if ((retval = get_net_list_for_dhcp(cbc->bdom, &dhcp)) != 0)
+		goto cleanup;
+	if ((retval = fill_dhcp_net_config(conf, dhcp)) != 0)
+		goto cleanup;
+	retval = write_file(filename, conf->string);
+	goto cleanup;
+
+	cleanup:
+		if (dhcp)
+			clean_cbc_dhcp(dhcp);
+		clean_cbc_struct(cbc);
+		clean_string_len(conf);
+		return retval;
 }
 
 void
@@ -401,5 +433,62 @@ display_bdom_servers(cbc_config_s *cbs, char *domain)
 		free(ip);
 		clean_dbdata_struct(data);
 		return;
+}
+
+int
+fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
+{
+	char *buff, *pos;
+	int retval = 0;
+	size_t len;
+	cbc_dhcp_s *list;
+	cbc_dhcp_string_s val;
+
+	if (!(conf) || !(dh))
+		return NULL_POINTER_PASSED;
+	if (!(buff = malloc(BUFF_S * 2)))
+		report_error(MALLOC_FAIL, "buff in fill_dhcp_net_config");
+	list = dh;
+	while(list) {
+		fill_dhcp_val(list, &val);
+		snprintf(buff, (BUFF_S * 2), "\
+  shared-network %s {\n\
+        option domain-name-servers %s;\n\
+        option domain-search \"%s\";\n\
+        option routers %s;\n\
+        subnet %s netmask %s {\n\
+                authoratative;\n\
+                next-server %s;\n\
+                filename \"pxelinux.0\";\n\
+        }\n\
+}\n\n", list->dname, val.ns, list->dom_search->string, val.gw, val.sn,
+        val.nm, val.gw);
+		len = strlen(buff);
+		if ((len + conf->size) > conf->len)
+			resize_string_buff(conf);
+		pos = conf->string + conf->size;
+		snprintf(pos, len + 1, "%s", buff);
+		conf->size += len;
+		list = list->next;
+	}
+	free(buff);
+	return retval;
+}
+
+void
+fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
+{
+	uint32_t ip_addr;
+
+	ip_addr = htonl((uint32_t)src->ns);
+	inet_ntop(AF_INET, &ip_addr, dst->ns, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->gw);
+	inet_ntop(AF_INET, &ip_addr, dst->gw, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->nw);
+	inet_ntop(AF_INET, &ip_addr, dst->sn, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->nm);
+	inet_ntop(AF_INET, &ip_addr, dst->nm, INET6_ADDRSTRLEN);
+	ip_addr = htonl((uint32_t)src->ip);
+	inet_ntop(AF_INET, &ip_addr, dst->ip, INET6_ADDRSTRLEN);
 }
 
