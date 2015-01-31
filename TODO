@@ -1,3 +1,7 @@
+31/01/2015
+Need to check all programs are checking for ~/.dnsa.conf and also add
+the -c <confg-file> option
+
 17/01/2015
 For the build scripts mention below, we are going to have to find a way to
 tie them to either an os or a build type. In fact, we should also look at
