@@ -121,7 +121,8 @@ parse_cpc_config_file(cpc_config_s *cpc)
 #endif
 
 	home = getenv("HOME");
-	asprintf(&file, "%s/.cpc.conf", home);
+	if (asprintf(&file, "%s/.cpc.conf", home) < 0)
+		return CONF_ERR;
 	if (!(config = fopen(file, "r"))) 
 		return retval;
 	CPC_GET_CONFIG_FILE("CPC_DISK=%s", disk);

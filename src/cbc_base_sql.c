@@ -1365,7 +1365,7 @@ cbc_store_build_ip_mysql(MYSQL_ROW row, cbc_s *base)
 	init_build_ip(ip);
 	ip->ip_id = strtoul(row[0], NULL, 10);
 	ip->ip = strtoul(row[1], NULL, 10);
-	snprintf(ip->host, NAME_S, "%s", row[2]);
+	snprintf(ip->host, HOST_S, "%s", row[2]);
 	snprintf(ip->domain, RBUFF_S, "%s", row[3]);
 	ip->bd_id = strtoul(row[4], NULL, 10);
 	ip->server_id = strtoul(row[5], NULL, 10);

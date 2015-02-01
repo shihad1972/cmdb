@@ -148,7 +148,7 @@ cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build
 	} else
 		retval = 0;
 	snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
-	snprintf(build->net_int, HOST_S, "%s", cml->netcard);
+	snprintf(build->net_int, RANGE_S, "%s", cml->netcard);
 	goto cleanup;
 
 	cleanup:
@@ -318,7 +318,7 @@ cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	init_cbc_struct(cbc);
 	init_build_ip(bip);
 	cbc->bip = bip;
-	snprintf(bip->host, NAME_S, "%s", cml->name);
+	snprintf(bip->host, HOST_S, "%s", cml->name);
 	snprintf(bip->domain, RBUFF_S, "%s", cml->build_domain);
 	bip->ip = ip[3];
 	bip->bd_id = ip[0];
