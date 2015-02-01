@@ -33,8 +33,8 @@ cbc_SOURCES =	cbc.c cbccom.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
 		cbcdomain.c $(combo_SOURCES) base_sql.c \
-		$(cbc_combo_SOURCES) cbccom.c cbcnet.c\
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h \
+		$(cbc_combo_SOURCES) builddomain.c cbccom.c cbcnet.c\
+		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h builddomain.h\
 		base_sql.h cbcdomain.h cbc_common.h cbcnet.h
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcvarient cbcpart
