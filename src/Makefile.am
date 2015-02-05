@@ -34,15 +34,15 @@ cbc_SOURCES =	cbc.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cbc_data.h build.h base_sql.h
 cbcdomain_SOURCES = \
 		cbcdomain.c $(combo_SOURCES) base_sql.c \
-		$(cbc_combo_SOURCES) cbccom.c cbcnet.c\
+		$(cbc_combo_SOURCES) cbcnet.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h\
 		base_sql.h cbcdomain.h cbc_common.h cbcnet.h
 cbcsysp_SOURCES = \
-		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
+		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES) base_sql.c \
 		cbcsysp.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h base_sql.h \
 		cbc_base_sql.h checks.h
 cbcscript_SOURCES = \
-		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
+		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) base_sql.c \
 		cbcscript.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h base_sql.h \
 		cbc_base_sql.h checks.h
 if HAVE_CBC
@@ -67,16 +67,16 @@ AM_LIBS =
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)
 AM_LDFLAGS += $(MYSQL_LDFLAGS)
-AM_LIBS += -lmysqlclient
+LIBS += -lmysqlclient
 endif
 
 if HAVE_PCRE
 AM_CFLAGS += $(PCRE_CFLAGS)
-AM_LIBS += $(PCRE_LIBS)
+LIBS += $(PCRE_LIBS)
 endif
 
 if HAVE_SQLITE3
 AM_CFLAGS += $(SQLITE3_CFLAGS)
 AM_LDFLAGS += $(SQLITE3_LDFLAGS)
-AM_LIBS += -lsqlite3
+LIBS += -lsqlite3
 endif

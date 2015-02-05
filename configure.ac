@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.21], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.2.22], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -14,7 +14,7 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Add m4 macros
-AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for libraries.
 AX_LIB_MYSQL

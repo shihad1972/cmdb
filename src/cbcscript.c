@@ -217,7 +217,7 @@ pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 		return NO_DATA;
 	}
 	if (scr->arg)
-		snprintf(arg->arg, URL_S, "%s", scr->arg);
+		snprintf(arg->arg, CONF_S, "%s", scr->arg);
 	else if (scr->action == ADD_CONFIG)
 		return NO_DATA;
 	if (scr->no > 0)
@@ -250,7 +250,7 @@ cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr)
 	initialise_cbc_scripts(&cbcscr);
 	cbs->scripts = cbcscr;
 	cbcscr->cuser = cbcscr->muser = (unsigned long int)getuid();
-	snprintf(cbcscr->name, URL_S, "%s", scr->name);
+	snprintf(cbcscr->name, CONF_S, "%s", scr->name);
 	if ((retval = cbc_run_insert(cbc, cbs, SCRIPTS)) != 0)
 		fprintf(stderr, "Unable to add script to database\n");
 	else
@@ -470,7 +470,7 @@ cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPTA;
 	unsigned long int systscr_id;
-	int i, j, k;	// counters
+	int i, j, k = 0;	// counters
 	char *domain, *build;
 	cbc_s *cbs;
 	cbc_build_domain_s *bdom;
@@ -596,7 +596,7 @@ int
 cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_TYPE | SCRIPTA;
-	int i, j, k;	// counters
+	int i, j, k = 0;	// counters
 	char *build;
 	unsigned long int bd_id, systscr_id;
 	cbc_s *cbs;
