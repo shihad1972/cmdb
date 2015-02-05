@@ -58,18 +58,6 @@ CREATE TABLE build_domain (
   domain varchar(255) NOT NULL DEFAULT 'no.domain',
   ntp_server varchar(255) NOT NULL DEFAULT 'none',
   config_ntp smallint NOT NULL DEFAULT 0,
-  ldap_ssl smallint NOT NULL DEFAULT 0,
-  ldap_dn varchar(96) NOT NULL DEFAULT 'none',
-  ldap_bind varchar(127) NOT NULL DEFAULT 'none',
-  ldap_server varchar(255) NOT NULL DEFAULT 'none',
-  config_ldap smallint NOT NULL DEFAULT 0,
-  log_server varchar(255) NOT NULL DEFAULT 'none',
-  config_log smallint NOT NULL DEFAULT 0,
-  smtp_server varchar(255) NOT NULL DEFAULT 'none',
-  config_email smallint NOT NULL DEFAULT 0,
-  xymon_server varchar(255) NOT NULL DEFAULT 'none',
-  config_xymon smallint NOT NULL DEFAULT 0,
-  nfs_domain varchar(255) NOT NULL DEFAULT 'none',
   cuser int NOT NULL DEFAULT 0,
   muser int NOT NULL DEFAULT 0,
   ctime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
@@ -362,6 +350,36 @@ FOREIGN KEY(syspack_arg_id)
 REFERENCES system_package_args(syspack_arg_id)                                    
 ON UPDATE CASCADE ON DELETE CASCADE
 );
+CREATE TABLE system_scripts (
+systscr_id INTEGER PRIMARY KEY,
+name varchar(127) NOT NULL,
+cuser int NOT NULL DEFAULT 0,
+muser int NOT NULL DEFAULT 0,
+ctime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+mtime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+);
+CREATE TABLE system_scripts_args (
+systscr_arg_id INTEGER PRIMARY KEY,
+systscr_id int NOT NULL,
+bd_id int NOT NULL,
+bt_id int NOT NULL,
+arg varchar(127) NOT NULL,
+no int NOT NULL,
+cuser int NOT NULL DEFAULT 0,
+muser int NOT NULL DEFAULT 0,
+ctime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+mtime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+FOREIGN KEY(systscr_id)
+REFERENCES system_scripts(systscr_id)
+ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(bd_id)
+REFERENCES build_domain(bd_id)
+ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(bt_id)
+REFERENCES build_type(bt_id)
+ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 CREATE TRIGGER insert_build AFTER INSERT ON build
 BEGIN
 UPDATE build SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE build_id = new.build_id;
@@ -553,4 +571,20 @@ END;
 CREATE TRIGGER update_system_package_conf AFTER UPDATE ON system_package_conf
 BEGIN
 UPDATE system_package_conf SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER system_scripts_update AFTER UPDATE ON system_scripts
+BEGIN
+UPDATE system_scripts SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER system_scripts_insert AFTER INSERT ON system_scripts
+BEGIN
+UPDATE system_scripts SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+END;
+CREATE TRIGGER system_scripts_args_update AFTER UPDATE ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER system_scripts_args_insert AFTER INSERT ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
 END;
