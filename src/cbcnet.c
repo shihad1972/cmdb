@@ -116,7 +116,8 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 	bdl = bd;
 	while (bdl) {
 		insert_into_dhcp_list(&list, &temp);
-		if ((retval = fill_dhcp_server(bdl, i, temp)) != 0) {
+// To check if the this network is already added, we need to pass list
+		if ((retval = fill_dhcp_server(bdl, i, list)) != 0) {
 			remove_from_dhcp_list(&list);
 			if (retval == 1)
 				fprintf(stderr, "\
@@ -124,6 +125,9 @@ Skipping domain %s: No interface\n", bdl->domain);
 			else if (retval == 2)
 				fprintf(stderr, "\
 Netmask does not correlate for domain %s\n", bdl->domain);
+			else if (retval == 3)
+				fprintf(stderr, "\
+Network already has a configuration in dhcpd.networks\n");
 		}
 		bdl = bdl->next;
 		retval = 0;
@@ -140,6 +144,9 @@ insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
 	if (!(i = malloc(sizeof(cbc_dhcp_s))))
 		report_error(MALLOC_FAIL, "i in insert_into_dhcp_list");
 	init_cbc_dhcp(i);
+	if (!(i->dom_search = malloc(sizeof(string_l))))
+		report_error(MALLOC_FAIL, "dh->dom_search in fill_dhcp_server");
+	init_string_l(i->dom_search);
 	*item = i;
 	if (!(*list))
 		*list = i;
@@ -169,21 +176,32 @@ remove_from_dhcp_list(cbc_dhcp_s **list)
 }
 
 int
-fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh)
+fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *list)
 {
 	int retval = 0;
 	cbc_iface_s *cif = i;
+	cbc_dhcp_s *dh, *cp;
 	unsigned long int sip, fip;
 	
-	if (!(cif) || !(dh))
+	if (!(cif) || !(list))
 		return NULL_POINTER_PASSED;
-	if (!(dh->dom_search = malloc(sizeof(string_l))))
-		report_error(MALLOC_FAIL, "dh->dom_search in fill_dhcp_server");
-	init_string_l(dh->dom_search);
+	dh = list;
+	while (dh->next)
+		dh = dh->next;
 	while (cif) {
 		sip = (unsigned long int)cif->sip;
 		fip = (unsigned long int)cif->fip;
 		if ((bd->start_ip >= sip) && (bd->end_ip <= fip)) {
+			cp = list;
+			while (cp) {
+				if (cp->nw == cif->nw) {
+					retval = 3;
+					break;
+				}
+				cp = cp->next;
+			}
+			if (retval == 3)
+				break;
 			snprintf(dh->iname, RBUFF_S, "%s", cif->name);
 			snprintf(dh->dname, RBUFF_S, "%s", bd->domain);
 			dh->gw = bd->gateway;
