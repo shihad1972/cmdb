@@ -40,6 +40,9 @@ build_domain.domain : increased to 255
 service.url : increased to 255
 build_ip.hostname : increased to 63
 build_ip.domainname : increased to 255
+*** Fixed. Most of the build domain servers do not exist any more; we have
+cbcsysp and cbcscript now
+***
 
 
 26/11/2014
