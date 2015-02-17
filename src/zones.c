@@ -2901,6 +2901,7 @@ int
 delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE, c = NONE;
+	unsigned long int glue_id;
 	dnsa_s *dnsa;
 	dbdata_s data, user;
 	glue_zone_info_s *glue;
@@ -2921,6 +2922,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		} else {
 			c++;
 			snprintf(data.args.text, CONF_S, "%s", glue->name);
+			glue_id = glue->id;
 			glue = glue->next;
 		}
 	}
@@ -2937,7 +2939,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 			printf("Glue zone %s deleted\n", cm->domain);
 		else if (retval > 1)
 			fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
-		data.args.number = glue->zone_id;
+		data.args.number = glue_id;
 		user.args.number = (unsigned long int)getuid();
 		user.next = &data;
 		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
