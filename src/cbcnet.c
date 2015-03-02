@@ -139,13 +139,13 @@ Network already has a configuration in dhcpd.networks\n");
 void
 insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
 {
-	cbc_dhcp_s *i, *l;
+	cbc_dhcp_s *i = '\0', *l = '\0';
 
 	if (!(i = malloc(sizeof(cbc_dhcp_s))))
 		report_error(MALLOC_FAIL, "i in insert_into_dhcp_list");
 	init_cbc_dhcp(i);
 	if (!(i->dom_search = malloc(sizeof(string_l))))
-		report_error(MALLOC_FAIL, "dh->dom_search in fill_dhcp_server");
+		report_error(MALLOC_FAIL, "dh->dom_search in insert_into_dhcp_list");
 	init_string_l(i->dom_search);
 	*item = i;
 	if (!(*list))
@@ -172,6 +172,8 @@ remove_from_dhcp_list(cbc_dhcp_s **list)
 		l = l->next;
 	}
 	p->next = '\0';
+	if (p == l)
+		*list = '\0';
 	clean_cbc_dhcp(l);
 }
 
