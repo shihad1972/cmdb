@@ -1,3 +1,8 @@
+27/02/2015
+Should probably get rid of cbcos. Should check if we have an alias in
+build_type and we can add the bt_id into the build table and remove
+os_id.
+
 18/02/2015
 Need to get rid of the search / extended search in dnsa and cmdb
 

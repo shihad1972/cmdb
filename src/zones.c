@@ -108,6 +108,7 @@ list_rev_zones(dnsa_config_s *dc)
 	}
 	rev = dnsa->rev_zones;
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
+// asuming IPv4 address length for range
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
 		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
