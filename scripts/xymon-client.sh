@@ -16,7 +16,7 @@ URL=$2
 IP=$3
 
 # Version of the client.
-VER=4.3.12
+VER=4.3.18
 
 [ -n $HOST ] || echo "No host set"
 [ -n $URL ] || echo "No url set"
