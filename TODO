@@ -1,3 +1,10 @@
+03/03/2015
+I want to get rid of the need to have a server already in the database before
+adding a build. This would mean extending the ethernet and hard-disk options
+when creating the build to be able to add the server and requisite hardware
+into the database before creating the build. Of course if the server and
+or hardware is already in the database, then that will be fine.
+
 27/02/2015
 Should probably get rid of cbcos. Should check if we have an alias in
 build_type and we can add the bt_id into the build table and remove
