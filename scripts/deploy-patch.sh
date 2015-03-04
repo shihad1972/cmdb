@@ -49,9 +49,9 @@ if [ -f /etc/redhat-release ]; then # Either redhat or centos
         else
             echo "
 [patches]
-        ENVFILE \$XYMONCLIENTHOME/etc/hobbitclient.cfg
+        ENVFILE \$XYMONCLIENTHOME/etc/xymonclient.cfg
         CMD \$XYMONCLIENTHOME/ext/hobbit-patch.sh
-        LOGFILE \$XYMONCLIENTHOME/logs/hobbit-patch.sh
+        LOGFILE \$XYMONCLIENTLOGS/hobbit-patch.sh
         INTERVAL 6h
 
 " >> /opt/xymon/client/etc/clientlaunch.cfg
