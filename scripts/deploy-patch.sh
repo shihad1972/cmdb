@@ -35,7 +35,7 @@ if [ -f /etc/redhat-release ]; then # Either redhat or centos
         ENVFILE \$HOBBITCLIENTHOME/etc/hobbitclient.cfg
         CMD \$HOBBITCLIENTHOME/ext/hobbit-patch.sh
         LOGFILE \$HOBBITCLIENTHOME/logs/hobbit-patch.sh
-        INTERVAL 6h
+        INTERVAL 220m
 
 " >> /opt/hobbit/client/etc/clientlaunch.cfg
         fi
@@ -51,7 +51,7 @@ if [ -f /etc/redhat-release ]; then # Either redhat or centos
 [patches]
         ENVFILE \$XYMONCLIENTHOME/etc/xymonclient.cfg
         CMD \$XYMONCLIENTHOME/ext/hobbit-patch.sh
-        LOGFILE \$XYMONCLIENTLOGS/hobbit-patch.sh
+        LOGFILE \$XYMONCLIENTLOGS/hobbit-patch.log
         INTERVAL 6h
 
 " >> /opt/xymon/client/etc/clientlaunch.cfg
