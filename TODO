@@ -1,3 +1,8 @@
+06/03/2015
+Looks like I now need to add a grub part to preseed:
+d-i grub-installer/only_debian boolean true
+Ned to add this to cbc and cpc
+
 03/03/2015
 I want to get rid of the need to have a server already in the database before
 adding a build. This would mean extending the ethernet and hard-disk options
