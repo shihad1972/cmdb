@@ -273,7 +273,7 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No model specified on command line.\n");
 	else if (retval == NO_VENDOR)
 		fprintf(stderr, "No vendor specified on command line.\n");
-	else if (retval == NO_ADDRESS)
+	else if (retval == CBC_NO_ADDRESS)
 		fprintf(stderr, "No address specified on command line.\n");
 	else if (retval == NO_CITY)
 		fprintf(stderr, "No city specified on command line.\n");

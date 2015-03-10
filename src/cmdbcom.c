@@ -723,7 +723,7 @@ fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 #endif /* HAVE_LIBPCRE */
 		snprintf(cust->address, NAME_S, "%s", cm->address);
 	} else {
-		retval = retval | NO_ADDRESS;
+		retval = retval | CBC_NO_ADDRESS;
 	}
 	if (cm->city) {
 #ifdef HAVE_LIBPCRE

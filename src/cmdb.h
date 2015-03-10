@@ -258,7 +258,7 @@ enum {			/* command line error codes */
 	NO_VENDOR = 256,
 	NO_MODEL = 512,
 	NO_UUID = 1024,
-	NO_ADDRESS = 2048,
+	CBC_NO_ADDRESS = 2048,
 	NO_CITY = 4096,
 	NO_COUNTY = 8192,
 	NO_POSTCODE = 16384,
