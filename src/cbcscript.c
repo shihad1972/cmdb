@@ -214,16 +214,16 @@ pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 		if ((retval = get_build_type_id(cbc, scr->type, &(arg->bt_id))) != 0)
 			return retval;
 	} else {
-		return NO_DATA;
+		return CBC_NO_DATA;
 	}
 	if (scr->arg)
 		snprintf(arg->arg, CONF_S, "%s", scr->arg);
 	else if (scr->action == ADD_CONFIG)
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if (scr->no > 0)
 		arg->no = scr->no;
 	else
-		return NO_DATA;
+		return CBC_NO_DATA;
 	arg->cuser = arg->muser = (unsigned long int)getuid();
 	return 0;
 }
@@ -478,7 +478,7 @@ cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 	cbc_build_type_s *type;
 
 	if (!(scr->name))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)
 		return retval;
 	initialise_cbc_s(&cbs);
@@ -543,7 +543,7 @@ cbc_script_args_list_one_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 	cbc_build_type_s *type;
 
 	if (!(scr->domain))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
 		return retval;
 	initialise_cbc_s(&cbs);
@@ -604,7 +604,7 @@ cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr)
 	cbc_build_type_s *type;
 
 	if (!(scr->domain) || !(scr->name))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
 		return retval;
 	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)

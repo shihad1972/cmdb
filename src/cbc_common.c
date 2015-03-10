@@ -232,7 +232,7 @@ get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id)
 	dbdata_s *data;
 
 	if (!(cbc) || !(domain))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, RBUFF_S, "%s", domain);
 	if ((retval = cbc_run_search(cbc, data, BD_ID_ON_DOMAIN)) == 0) {
@@ -253,7 +253,7 @@ get_system_package_id(cbc_config_s *cbc, char *package, uli_t *id)
 	dbdata_s *data;
 
 	if (!(cbc) || !(package))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, URL_S, "%s", package);
 	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
@@ -275,7 +275,7 @@ get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id)
 	unsigned int max;
 
 	if (!(cbc) || !(field) || (sp_id == 0))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = sp_id;
@@ -298,7 +298,7 @@ get_system_script_id(cbc_config_s *cbc, char *script, uli_t *id)
 	dbdata_s *data;
 	unsigned int max;
 	if (!(cbc) || !(script))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, RBUFF_S, "%s", script);
@@ -320,7 +320,7 @@ get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id)
 	dbdata_s *data;
 	unsigned int max;
 	if (!(cbc) || !(os))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, RBUFF_S, "%s", os);

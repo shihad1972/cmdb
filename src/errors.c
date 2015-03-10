@@ -104,7 +104,7 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
 		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
-	} else if (error == NO_DATA) {
+	} else if (error == CBC_NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
@@ -965,7 +965,7 @@ get_ip_from_hostname(dbdata_s *data)
 	dbdata_s *list;
 
 	if (!(data))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	list = data;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;

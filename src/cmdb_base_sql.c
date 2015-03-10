@@ -1121,12 +1121,12 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 	if (ccs)
 		file = ccs->file;
 	else
-		report_error(NO_DATA, "ccs in cmdb_run_search_sqlite");
+		report_error(CBC_NO_DATA, "ccs in cmdb_run_search_sqlite");
 	cmdb_setup_ro_sqlite(query, file, &cmdb, &state);
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cmdb_run_search_sqlite");
+		report_error(CBC_NO_DATA, "data in cmdb_run_search_sqlite");
 	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
 		if ((retval = set_cmdb_args_sqlite(state, list, cmdb_search_args_type[type][i], i)) < 0)
 			break;
@@ -1163,11 +1163,11 @@ cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 	if (config)
 		file = config->file;
 	else
-		report_error(NO_DATA, "config in cmdb_run_update_sqlite");
+		report_error(CBC_NO_DATA, "config in cmdb_run_update_sqlite");
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cmdb_run_update_sqlite");
+		report_error(CBC_NO_DATA, "data in cmdb_run_update_sqlite");
 	query = cmdb_sql_update[type];
 	cmdb_setup_rw_sqlite(query, file, &cmdb, &state);
 	for (i = 0; (unsigned)i < cmdb_update_args[type]; i++) {

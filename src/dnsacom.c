@@ -366,7 +366,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (comm)
 		host = comm->host;
 	else
-		report_error(NO_DATA, "comm in validate_fwd_comm_line");
+		report_error(CBC_NO_DATA, "comm in validate_fwd_comm_line");
 	if (strlen(comm->rtype) != 0)
 		if (validate_user_input(comm->rtype, FS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "record type");

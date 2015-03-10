@@ -217,7 +217,7 @@ int
 list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	char *domain = cdl->domain;
 	int retval = 0, i = 0;
 	cbc_s *cbc;
@@ -255,7 +255,7 @@ int
 add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	char *domain = cdl->domain;
 	int retval = 0;
 	cbc_s *base;
@@ -347,7 +347,7 @@ int
 remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	char *domain = cdl->domain;
 	int retval = 0;
 	dbdata_s *data;
@@ -372,7 +372,7 @@ int
 modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	char *domain = cdl->domain;
 	int retval = 0, query = UP_DOM_NTP;
 	unsigned long int *bd_id;
@@ -395,7 +395,7 @@ int
 write_dhcp_net_config(cbc_config_s *cbs)
 {
 	if (!(cbs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	int retval = 0;
 	char filename[CONF_S];
 	cbc_s *cbc;

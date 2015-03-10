@@ -112,7 +112,7 @@ check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(build) || !(cbc))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = build->server_id;
@@ -129,7 +129,7 @@ cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = build->server_id;
@@ -163,7 +163,7 @@ cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, HOST_S, "%s", cml->varient);
 	retval = cbc_run_search(cbt, data, query);
@@ -195,7 +195,7 @@ cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, MAC_S, "%s", cml->os);
@@ -239,7 +239,7 @@ cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if (cml->locale != 0) {
 // May be nice to show _what_ locale is being used here.
 		build->locale_id = cml->locale;
@@ -270,7 +270,7 @@ cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *b
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, 1);
 	snprintf(data->args.text, CONF_S, "%s", cml->partition);
 	retval = cbc_run_search(cbt, data, query);
@@ -300,7 +300,7 @@ cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 
 	memset(&ip, 0, sizeof(ip));
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = cbc_search_for_ip(cbt, cml, build)) > 0)
 		return 0;
 	if ((retval = cbc_get_build_dom_info(cbt, cml, ip)) != 0)
@@ -357,7 +357,7 @@ cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, 1);
 	data->args.number = build->server_id;
 	retval = cbc_run_search(cbt, data, query);
@@ -377,7 +377,7 @@ cbc_check_in_use_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *ip)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(ip))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	dnsip = *(ip + 3);
 	if (*(ip + 3) == 0) // dns query did not find an IP so start at start
 		*(ip + 3) = *(ip + 1);
@@ -405,7 +405,7 @@ cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data)
 	dbdata_s *list;
 
 	if (!(ipinfo) || !(data))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	while (*(ipinfo + 3) <= *(ipinfo + 2)) {
 		i = FALSE;
 		list = data;
@@ -434,7 +434,7 @@ cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(bd))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	bdom = bd;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
@@ -468,7 +468,7 @@ cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	cbc_disk_dev_s *disk = '\0';
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = cbc_search_for_disk(cbt, cml, build)) == 0)
 		return retval;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
@@ -518,7 +518,7 @@ cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	dbdata_s *data;
 
 	if (!(cbt) || !(cml) || !(build))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = build->server_id;

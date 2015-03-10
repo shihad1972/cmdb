@@ -694,7 +694,7 @@ update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type)
 	dbdata_s *data = '\0';
 
 	if (!(id))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	else
 		list = id;
 	list++;
