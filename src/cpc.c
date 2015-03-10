@@ -28,7 +28,6 @@
 #define _GNU_SOURCE
 #include <ctype.h>
 #include <errno.h>
-#include <error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -186,7 +185,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 
 	uid = getuid();
 	if (!(user = getpwuid(uid))) {
-		error(0, errno, "getpwuid: ");
+		fprintf(stderr, "getpwuid: %s\n", strerror(errno));
 		snprintf(cpc->uname, RBUFF_S, "debian");
 		snprintf(cpc->user, RBUFF_S, "Debian User");
 		snprintf(cpc->uid, RBUFF_S, "1000");

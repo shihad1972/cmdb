@@ -35,7 +35,6 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <errno.h>
-#include <error.h>
 #include "cmdb.h"
 #include "cbcnet.h"
 #include "cbc_data.h"
