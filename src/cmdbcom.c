@@ -459,7 +459,7 @@ clean_server_list(cmdb_server_s *list)
 		if (next) {
 			next = server->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -477,7 +477,7 @@ clean_customer_list(cmdb_customer_s *list)
 		if (next) {
 			next = customer->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -495,7 +495,7 @@ clean_contact_list(cmdb_contact_s *list)
 		if (next) {
 			next = contact->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -513,7 +513,7 @@ clean_service_list(cmdb_service_s *list)
 		if (next) {
 			next = service->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -531,7 +531,7 @@ clean_service_type_list(cmdb_service_type_s *list)
 		if (next) {
 			next = service->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -549,7 +549,7 @@ clean_hardware_list(cmdb_hardware_s *list)
 		if (next) {
 			next = hardware->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -567,7 +567,7 @@ clean_hardware_type_list(cmdb_hard_type_s *list)
 		if (next) {
 			next = hardware->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }
@@ -585,7 +585,7 @@ clean_vmhost_list(cmdb_vm_host_s *list)
 		if (next) {
 			next = vmhost->next;
 		} else {
-			next = '\0';
+			next = NULL;
 		}
 	}
 }

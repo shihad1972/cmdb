@@ -361,7 +361,7 @@ validate_comm_line(dnsa_comm_line_s *comm)
 void
 validate_fwd_comm_line(dnsa_comm_line_s *comm)
 {
-	char *host = '\0';
+	char *host = NULL;
 
 	if (comm)
 		host = comm->host;
@@ -638,7 +638,7 @@ dnsa_clean_zones(zone_info_s *list)
 	if (zone->next)
 		next = zone->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (zone) {
 		free(zone);
 		if (next)
@@ -648,7 +648,7 @@ dnsa_clean_zones(zone_info_s *list)
 		if (zone->next)
 			next = zone->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -664,7 +664,7 @@ dnsa_clean_rev_zones(rev_zone_info_s *list)
 	if (zone->next)
 		next = zone->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (zone) {
 		free(zone);
 		if (next)
@@ -674,7 +674,7 @@ dnsa_clean_rev_zones(rev_zone_info_s *list)
 		if (zone->next)
 			next = zone->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -690,7 +690,7 @@ dnsa_clean_records(record_row_s *list)
 	if (rec->next)
 		next = rec->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (rec) {
 		free(rec);
 		if (next)
@@ -700,7 +700,7 @@ dnsa_clean_records(record_row_s *list)
 		if (rec->next)
 			next = rec->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -716,7 +716,7 @@ dnsa_clean_rev_records(rev_record_row_s *list)
 	if (rec->next)
 		next = rec->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (rec) {
 		free(rec);
 		if (next)
@@ -726,7 +726,7 @@ dnsa_clean_rev_records(rev_record_row_s *list)
 		if (rec->next)
 			next = rec->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -742,7 +742,7 @@ dnsa_clean_prefer(preferred_a_s *list)
 	if (prefer->next)
 		next = prefer->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (prefer) {
 		free(prefer);
 		if (next)
@@ -752,7 +752,7 @@ dnsa_clean_prefer(preferred_a_s *list)
 		if (prefer->next)
 			next = prefer->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -768,7 +768,7 @@ dnsa_clean_glue(glue_zone_info_s *list)
 	if (glu->next)
 		next = glu->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (glu) {
 		free(glu);
 		if (next)
@@ -778,7 +778,7 @@ dnsa_clean_glue(glue_zone_info_s *list)
 		if (glu->next)
 			next = glu->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 

@@ -98,7 +98,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	goto cleanup;
 
 	cleanup:
-		cbc->build = '\0';
+		cbc->build = NULL;
 		clean_cbc_struct(cbc);
 		free(build);
 		return retval;
@@ -463,9 +463,9 @@ cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = DISK_DEV_ON_SERVER_ID_DEV;
 	unsigned int max;
-	dbdata_s *data = '\0', *lvm = 0;
-	cbc_s *cbc = '\0';
-	cbc_disk_dev_s *disk = '\0';
+	dbdata_s *data = NULL, *lvm = 0;
+	cbc_s *cbc = NULL;
+	cbc_disk_dev_s *disk = NULL;
 
 	if (!(cbt) || !(cml) || !(build))
 		return CBC_NO_DATA;

@@ -44,7 +44,7 @@ int
 get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
 {
 	int retval = 0;
-	struct cbc_iface_s *info = '\0';
+	struct cbc_iface_s *info = NULL;
 
 	if (!bd)
 		return 1;
@@ -58,7 +58,7 @@ void
 get_iface_info(cbc_iface_s **info)
 {
 	struct ifaddrs *iface, *ilist;
-	cbc_iface_s *list = '\0', *temp;
+	cbc_iface_s *list = NULL, *temp;
 
 	if (getifaddrs(&iface) == -1) 
 		report_error(IFACE_LIST_FAILED, "get_net_list_for_dhcp");
@@ -107,7 +107,7 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 {
 	int retval = 0;
 	cbc_build_domain_s *bdl;
-	cbc_dhcp_s *list = '\0', *temp;
+	cbc_dhcp_s *list = NULL, *temp;
 
 	if (!(bd))
 		return NO_BUILD_DOMAIN;
@@ -139,7 +139,7 @@ Network already has a configuration in dhcpd.networks\n");
 void
 insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
 {
-	cbc_dhcp_s *i = '\0', *l = '\0';
+	cbc_dhcp_s *i = NULL, *l = NULL;
 
 	if (!(i = malloc(sizeof(cbc_dhcp_s))))
 		report_error(MALLOC_FAIL, "i in insert_into_dhcp_list");
@@ -171,9 +171,9 @@ remove_from_dhcp_list(cbc_dhcp_s **list)
 		p = l;
 		l = l->next;
 	}
-	p->next = '\0';
+	p->next = NULL;
 	if (p == l)
-		*list = '\0';
+		*list = NULL;
 	clean_cbc_dhcp(l);
 }
 

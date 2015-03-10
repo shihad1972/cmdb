@@ -251,7 +251,7 @@ list_cbc_syspackage(cbc_config_s *cbc)
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 {
-	char *package = '\0';
+	char *package = NULL;
 	int retval = 0, query;
 	unsigned int max;
 	dbdata_s *data = 0, *list;

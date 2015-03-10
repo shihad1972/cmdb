@@ -119,7 +119,7 @@ clean_boot_line(cbc_boot_line_s *boot)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -147,7 +147,7 @@ clean_build_struct(cbc_build_s *build)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -174,7 +174,7 @@ clean_build_domain(cbc_build_domain_s *dom)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -238,7 +238,7 @@ clean_build_ip(cbc_build_ip_s *ip)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -269,7 +269,7 @@ clean_build_os(cbc_build_os_s *os)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -300,7 +300,7 @@ clean_build_type(cbc_build_type_s *type)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -327,7 +327,7 @@ clean_disk_dev(cbc_disk_dev_s *disk)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -358,7 +358,7 @@ clean_locale(cbc_locale_s *locale)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -385,7 +385,7 @@ clean_package(cbc_package_s *pack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -414,7 +414,7 @@ clean_pre_part(cbc_pre_part_s *prep)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -441,7 +441,7 @@ clean_seed_scheme(cbc_seed_scheme_s *seed)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -472,7 +472,7 @@ clean_cbc_server(cbc_server_s *server)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -500,7 +500,7 @@ clean_varient(cbc_varient_s *vari)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -528,7 +528,7 @@ clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -564,7 +564,7 @@ clean_cbc_dhcp(cbc_dhcp_s *dh)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -594,7 +594,7 @@ clean_cbc_iface(cbc_iface_s *ifa)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -627,7 +627,7 @@ clean_cbc_syspack(cbc_syspack_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -660,7 +660,7 @@ clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -693,7 +693,7 @@ clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 

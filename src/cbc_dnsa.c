@@ -90,7 +90,7 @@ get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data)
 {
 	int retval = NONE;
 	dnsa_s *dnsa;
-	dnsa_config_s *dc = '\0';
+	dnsa_config_s *dc = NULL;
 
 	if (!(dc = calloc(sizeof(dnsa_config_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "dc in get_dns_ip_list");

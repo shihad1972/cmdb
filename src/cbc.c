@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
 	char sretval[MAC_S], conf[CONF_S];
-	const char *config = '\0';
+	const char *config = NULL;
 	int retval = NONE;
 	
 	if (!(cmc = malloc(sizeof(cbc_config_s))))

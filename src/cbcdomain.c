@@ -328,7 +328,7 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 		printf("Unable to mark zone as valid in database\n");
 	else
 		printf("Zone marked as valid in the database\n");
-	user->next = '\0';
+	user->next = NULL;
 	clean_dbdata_struct(user);
 #endif // HAVE_DNSA
 	if ((retval = cbc_run_insert(cbs, base, BUILD_DOMAINS)) != 0) {
@@ -532,7 +532,7 @@ check_bdom_overlap(cbc_config_s *cbs, cbc_build_domain_s *bdom)
 {
 	int retval;
 	cbc_s *cbc;
-	cbc_build_domain_s *list = '\0';
+	cbc_build_domain_s *list = NULL;
 
 	initialise_cbc_s(&cbc);
 	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0) {

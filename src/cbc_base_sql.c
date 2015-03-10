@@ -2083,7 +2083,7 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
-	const char *query, *file = '\0';
+	const char *query, *file = NULL;
 	int retval;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
@@ -2178,10 +2178,10 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_delete[type], *file = '\0';
+	const char *query = cbc_sql_delete[type], *file = NULL;
 	int retval = 0;
 	unsigned int i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
@@ -2224,9 +2224,9 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 int
 cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_search[type], *file = '\0';
+	const char *query = cbc_sql_search[type], *file = NULL;
 	int retval = 0, i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 

@@ -109,7 +109,7 @@ void
 check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 {
 	int status = 0;
-	struct addrinfo hints, *si = '\0', *p;
+	struct addrinfo hints, *si = NULL, *p;
 	char host[256];
 
 	snprintf(host, RBUFF_S, "%s.%s", name, domain);

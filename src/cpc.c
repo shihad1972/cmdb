@@ -45,7 +45,7 @@ int
 main (int argc, char *argv[])
 {
 	int retval = NONE;
-	cpc_config_s *cpc = '\0';
+	cpc_config_s *cpc = NULL;
 
 	if (!(cpc = malloc(sizeof(cpc_config_s))))
 		report_error(MALLOC_FAIL, "cpc in main");
@@ -285,7 +285,7 @@ d-i hw-detect/load_firmware boolean true\n\
 void
 add_mirror(string_len_s *pre, cpc_config_s *cpc)
 {
-	char *buffer, *proxy = '\0';
+	char *buffer, *proxy = NULL;
 	size_t size, psize = 0, tsize;
 
 	if ((asprintf(&buffer, "\
@@ -387,7 +387,7 @@ d-i passwd/root-login boolean false\n\
 void
 add_user_account(string_len_s *pre, cpc_config_s *cpc)
 {
-	char *buffer = '\0', *pass = '\0', *uid = '\0', *groups = '\0';
+	char *buffer = NULL, *pass = NULL, *uid = NULL, *groups = NULL;
 	size_t size;
 
 	if ((asprintf(&buffer, "\
@@ -450,7 +450,7 @@ d-i passwd/user-default-groups string %s\n\
 void
 add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc)
 {
-	char *ntp = '\0', *tzone, *utc;
+	char *ntp = NULL, *tzone, *utc;
 	size_t nsize, tsize, usize, size;
 
 	nsize = tsize = usize = 0;
@@ -722,7 +722,7 @@ clean_cpc_config(cpc_config_s *cpc)
 void
 replace_space(char *packages)
 {
-	char *s = '\0';
+	char *s = NULL;
 
 	while ((s = strchr(packages, ',')) != NULL)
 		*s = ' ';

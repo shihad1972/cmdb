@@ -1004,8 +1004,8 @@ void
 init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 {
 	unsigned int max;
-	dbdata_s *data = '\0', *dlist = '\0';
-	*list = '\0';
+	dbdata_s *data = NULL, *dlist = NULL;
+	*list = NULL;
 
 	for (max = 0; max < i; max++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
@@ -1024,7 +1024,7 @@ init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 void
 clean_dbdata_struct(dbdata_s *list)
 {
-	dbdata_s *data = '\0', *next = '\0';
+	dbdata_s *data = NULL, *next = NULL;
 
 	if (list)
 		data = list;
@@ -1033,7 +1033,7 @@ clean_dbdata_struct(dbdata_s *list)
 	if (data->next)
 		next = data->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (data) {
 		free(data);
 		if (next)
@@ -1043,7 +1043,7 @@ clean_dbdata_struct(dbdata_s *list)
 		if (data->next)
 			next = data->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -1099,7 +1099,7 @@ void
 init_initial_string_l(string_l **string, int count)
 {
 	int i;
-	string_l *data, *list = '\0';
+	string_l *data, *list = NULL;
 
 	for (i = 0; i < count; i++) {
 		if (!(data = malloc(sizeof(string_l))))

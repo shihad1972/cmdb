@@ -260,7 +260,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	unsigned int max;
 	cbc_s *cbc;
 	cbc_build_os_s *os;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	if (!(os = malloc(sizeof(cbc_build_os_s))))
 		report_error(MALLOC_FAIL, "os in add_cbc_build_os");
@@ -338,7 +338,7 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	int retval = NONE, i, type = OS_ID_ON_NAME;
 	unsigned int max;
 	unsigned long int id;
-	dbdata_s *data = '\0', *list;
+	dbdata_s *data = NULL, *list;
 
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
@@ -394,7 +394,7 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	clean_dbdata_struct(data);
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in remove_cbc_build_os");
-	data->next = '\0';
+	data->next = NULL;
 	data->args.number = id;
 	if ((retval = cbc_run_delete(cmc, data, BOS_DEL_BOS_ID)) != 1) {
 		fprintf(stderr, "%d oses deleted for %s %s %s\n",
