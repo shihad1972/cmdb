@@ -852,7 +852,7 @@ add_trailing_slash(char *member)
 	if ((member[len - 1] != '/') && len < CONF_S) {
 		member[len] = '/';
 		member[len + 1] = '\0';
-	} else if ((member[len - 1] == '/')) {
+	} else if (member[len - 1] == '/') {
 		retval = NONE;
 	} else {
 		retval = -1;

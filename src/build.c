@@ -1829,7 +1829,7 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 {
 	int retval = NONE, type;
 	unsigned int max;
-	dbdata_s *data;
+	dbdata_s *data = NULL;
 
 	if (cml->server == NAME) {
 		type = SERVER_ID_ON_SNAME;

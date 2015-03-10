@@ -197,7 +197,7 @@ check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm)
 		retval = NO_NAME_OR_ID;
 	else if ((cl == NO_NAME) && (cm->action != DISPLAY))
 		retval = NO_NAME;
-	else if ((cl == NO_SERVICE_URL))
+	else if (cl == NO_SERVICE_URL)
 		retval = NO_SERVICE_URL;
 	else if ((cl & NO_COID) && (cm->action == ADD_TO_DB) && (cm->type = CONTACT))
 		retval = NO_COID;
