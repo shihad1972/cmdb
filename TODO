@@ -1,3 +1,8 @@
+09/03/2015
+I want to be able to add copy functionality to cbcos and cbcvarient so that
+when a new OS or varient is created, it will copy the settings from an
+existing one. This will make the adding of a varient / OS much easier
+
 06/03/2015
 Looks like I now need to add a grub part to preseed:
 d-i grub-installer/only_debian boolean true
