@@ -47,7 +47,7 @@ enum {			/* SELECT statements */
 	SYSCONF = 65536,
 	SCRIPT = 131072,
 	SCRIPTA = 262144,
-	PARTOPT = 524266
+	PARTOPT = 524288
 };
 
 enum {			/* SELECT and INSERT Indices */
