@@ -48,7 +48,7 @@ add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb
 	int retval = 0;
 	unsigned int max;
 	cmdb_vm_host_s *vmhost;
-//	dbdata_s *data = '\0';
+//	dbdata_s *data = NULL;
 	dbdata_s *data;
 	
 	if (!(input = calloc(RBUFF_S, sizeof(char))))
@@ -291,7 +291,7 @@ display_hardware_types(cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb in display_server_info");
 
 	cmdb_init_struct(cmdb);
-	cmdb->hardtype = '\0';
+	cmdb->hardtype = NULL;
 	if ((retval = cmdb_run_query(config, cmdb, HARDWARE_TYPE)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -497,7 +497,7 @@ display_vm_hosts(cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb_list in display_server_info");
 
 	cmdb_init_struct(cmdb);
-	cmdb->vmhost = '\0';
+	cmdb->vmhost = NULL;
 	if ((retval = cmdb_run_query(config, cmdb, VM_HOST)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -631,7 +631,7 @@ void
 set_server_updated(cmdb_config_s *config, unsigned long int *ids)
 {
 	int retval;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 	unsigned long int *user = ids;
 
 	init_multi_dbdata_struct(&data, cmdb_update_args[UP_SERVER_MUSER]);
@@ -667,7 +667,7 @@ int
 update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, int type)
 {
 	int retval = NONE;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	init_multi_dbdata_struct(&data, cmdb_update_args[type]);
 	snprintf(data->args.text, RBUFF_S, "%s", member);
@@ -691,10 +691,10 @@ update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type)
 {
 	int retval = 0;
 	unsigned long int *list;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	if (!(id))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	else
 		list = id;
 	list++;

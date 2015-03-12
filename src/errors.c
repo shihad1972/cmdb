@@ -104,7 +104,7 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
 		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
-	} else if (error == NO_DATA) {
+	} else if (error == CBC_NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
@@ -273,7 +273,7 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No model specified on command line.\n");
 	else if (retval == NO_VENDOR)
 		fprintf(stderr, "No vendor specified on command line.\n");
-	else if (retval == NO_ADDRESS)
+	else if (retval == CBC_NO_ADDRESS)
 		fprintf(stderr, "No address specified on command line.\n");
 	else if (retval == NO_CITY)
 		fprintf(stderr, "No city specified on command line.\n");
@@ -424,18 +424,12 @@ display_cbcdomain_usage(void)
 	printf("cbcdomain: Program to manipulate build domains\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add build domain\n-d: display build domain details\n");
+	printf("-a: add build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
-/*	printf("Detail Options:\n");
-	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
-	printf("\n\t-p use ssl for ldap connection\n\n"); */
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
-/*	printf("Application server configurations\n");
-	printf("-e smtp_server\n-f nfs_domain\n-g logging server\n");
-	printf("-t ntp_server\n-x xymon_server\n\n"); */
 	printf("NTP server configuration:\n");
 	printf("-t ntp_server\n\n");
 	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
@@ -858,7 +852,7 @@ add_trailing_slash(char *member)
 	if ((member[len - 1] != '/') && len < CONF_S) {
 		member[len] = '/';
 		member[len + 1] = '\0';
-	} else if ((member[len - 1] == '/')) {
+	} else if (member[len - 1] == '/') {
 		retval = NONE;
 	} else {
 		retval = -1;
@@ -971,7 +965,7 @@ get_ip_from_hostname(dbdata_s *data)
 	dbdata_s *list;
 
 	if (!(data))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	list = data;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -1010,8 +1004,8 @@ void
 init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 {
 	unsigned int max;
-	dbdata_s *data = '\0', *dlist = '\0';
-	*list = '\0';
+	dbdata_s *data = NULL, *dlist = NULL;
+	*list = NULL;
 
 	for (max = 0; max < i; max++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
@@ -1030,7 +1024,7 @@ init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 void
 clean_dbdata_struct(dbdata_s *list)
 {
-	dbdata_s *data = '\0', *next = '\0';
+	dbdata_s *data = NULL, *next = NULL;
 
 	if (list)
 		data = list;
@@ -1039,7 +1033,7 @@ clean_dbdata_struct(dbdata_s *list)
 	if (data->next)
 		next = data->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (data) {
 		free(data);
 		if (next)
@@ -1049,7 +1043,7 @@ clean_dbdata_struct(dbdata_s *list)
 		if (data->next)
 			next = data->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -1105,7 +1099,7 @@ void
 init_initial_string_l(string_l **string, int count)
 {
 	int i;
-	string_l *data, *list = '\0';
+	string_l *data, *list = NULL;
 
 	for (i = 0; i < count; i++) {
 		if (!(data = malloc(sizeof(string_l))))

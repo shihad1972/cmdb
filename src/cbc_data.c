@@ -119,7 +119,7 @@ clean_boot_line(cbc_boot_line_s *boot)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -147,7 +147,7 @@ clean_build_struct(cbc_build_s *build)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -156,15 +156,6 @@ init_build_domain(cbc_build_domain_s *dom)
 {
 	memset(dom, 0, sizeof(cbc_build_domain_s));
 	snprintf(dom->domain, COMM_S, "NULL");
-/*	snprintf(dom->ntp_server, COMM_S, "NULL");
-	snprintf(dom->ldap_dn, COMM_S, "NULL");
-	snprintf(dom->ldap_bind, COMM_S, "NULL");
-	snprintf(dom->ldap_host, COMM_S, "NULL");
-	snprintf(dom->ldap_server, COMM_S, "NULL");
-	snprintf(dom->log_server, COMM_S, "NULL");
-	snprintf(dom->nfs_domain, COMM_S, "NULL");
-	snprintf(dom->smtp_server, COMM_S, "NULL");
-	snprintf(dom->xymon_server, COMM_S, "NULL"); */
 }
 
 void
@@ -183,7 +174,7 @@ clean_build_domain(cbc_build_domain_s *dom)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -216,29 +207,6 @@ display_build_domain(cbc_build_domain_s *bdom)
 		printf("NTP server: %s\n", bdom->ntp_server);
 	else
 		printf("No NTP configuration\n");
-/*	if (bdom->config_ldap > 0) {
-		printf("LDAP configuration:\n");
-		printf("\tLDAP Server: %s\n", bdom->ldap_server);
-		if (bdom->ldap_ssl > 0)
-			printf("\tLDAP URL: ldaps://%s\n", bdom->ldap_server);
-		else
-			printf("\tLDAP URL: ldap://%s\n", bdom->ldap_server);
-		printf("\tLDAP base DN: %s\n", bdom->ldap_dn);
-		printf("\tLDAP bind DN: %s\n", bdom->ldap_bind);
-	} else 
-		printf("No LDAP configuration\n");
-	if (bdom->config_log > 0)
-		printf("Logging server: %s\n", bdom->log_server);
-	else
-		printf("No logging server configuration\n");
-	if (bdom->config_email > 0)
-		printf("SMTP relay server: %s\n", bdom->smtp_server);
-	else
-		printf("No SMTP relay configuration\n");
-	if (bdom->config_xymon > 0)
-		printf("Xymon monitoring server: %s\n", bdom->xymon_server);
-	else
-		printf("No xymon monitoring configuration\n"); */
 	create = (time_t)bdom->ctime;
 	printf("Build domain created by %s on %s", get_uname(bdom->cuser), ctime(&create));
 	create = (time_t)bdom->mtime;
@@ -270,7 +238,7 @@ clean_build_ip(cbc_build_ip_s *ip)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -301,7 +269,7 @@ clean_build_os(cbc_build_os_s *os)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -332,7 +300,7 @@ clean_build_type(cbc_build_type_s *type)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -359,7 +327,7 @@ clean_disk_dev(cbc_disk_dev_s *disk)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -390,7 +358,7 @@ clean_locale(cbc_locale_s *locale)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -417,7 +385,7 @@ clean_package(cbc_package_s *pack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -446,7 +414,7 @@ clean_pre_part(cbc_pre_part_s *prep)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -473,7 +441,7 @@ clean_seed_scheme(cbc_seed_scheme_s *seed)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -504,7 +472,7 @@ clean_cbc_server(cbc_server_s *server)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -532,7 +500,7 @@ clean_varient(cbc_varient_s *vari)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -560,7 +528,7 @@ clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -596,7 +564,7 @@ clean_cbc_dhcp(cbc_dhcp_s *dh)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -626,7 +594,7 @@ clean_cbc_iface(cbc_iface_s *ifa)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -659,7 +627,7 @@ clean_cbc_syspack(cbc_syspack_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -692,7 +660,7 @@ clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -725,7 +693,7 @@ clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 		if (next)
 			next = next->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 

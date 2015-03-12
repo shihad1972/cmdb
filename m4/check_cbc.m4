@@ -9,7 +9,7 @@ dnl
 AC_DEFUN([AX_CHECK_CBC], [dnl
   AC_MSG_CHECKING([to enable cbc])
   AC_ARG_ENABLE([cbc],
-    [  --enable-cbc             enable cbc and associated programs],,
+    [  --enable-cbc            enable cbc and associated programs],,
         [enable_cbc="yes"])
   AS_IF([test ".$enable_cbc" = ".no"],
    [AC_MSG_RESULT([disabled]) m4_ifval($2,$2)],

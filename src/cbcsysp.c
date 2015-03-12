@@ -251,7 +251,7 @@ list_cbc_syspackage(cbc_config_s *cbc)
 int
 list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 {
-	char *package = '\0';
+	char *package = NULL;
 	int retval = 0, query;
 	unsigned int max;
 	dbdata_s *data = 0, *list;
@@ -383,7 +383,7 @@ add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	cbc_syspack_arg_s *cpsa;
 
 	if (!(cbc) || !(cbcs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
 		return retval;
 	initialise_cbc_s(&cbs);
@@ -408,7 +408,7 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	cbc_syspack_conf_s *cpsc;
 
 	if (!(cbc) || !(cbcs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
 		return retval;
 	if ((retval = get_build_domain_id(cbc, cbcs->domain, &bd_id)) != 0)
@@ -441,7 +441,7 @@ rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	dbdata_s *data = 0;
 	
 	if (!(cbc) || !(cbcs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, args);
 	if ((retval = get_system_package_id(cbc, cbcs->name, &(data->args.number))) != 0)
 		return retval;
@@ -462,7 +462,7 @@ rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	unsigned long int spack_id;
 
 	if (!(cbc) || !(cbcs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, args);
 	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
 		return retval;
@@ -486,7 +486,7 @@ rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 	dbdata_s *data = 0;
 
 	if (!(cbc) || !(cbcs))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	init_multi_dbdata_struct(&data, max);
 	snprintf(data->args.text, RBUFF_S, "%s", cbcs->domain);
 	snprintf(data->next->args.text, RBUFF_S, "%s", cbcs->name);

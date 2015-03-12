@@ -381,7 +381,7 @@ const unsigned int cbc_delete_args[] = {
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, // 22
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
 	3, 1, 2, 1, 4
 };
@@ -2083,7 +2083,7 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 {
-	const char *query, *file = '\0';
+	const char *query, *file = NULL;
 	int retval;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
@@ -2093,7 +2093,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 	if (config)
 		file = config->file;
 	else
-		report_error(NO_DATA, "config in cbc_run_insert_sqlite");
+		report_error(CBC_NO_DATA, "config in cbc_run_insert_sqlite");
 	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
 	if ((retval = cbc_setup_insert_sqlite_bind(state, base, type)) != 0) {
 		printf("Error: %s\n", sqlite3_errmsg(cbc));
@@ -2178,21 +2178,21 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 int
 cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_delete[type], *file = '\0';
+	const char *query = cbc_sql_delete[type], *file = NULL;
 	int retval = 0;
 	unsigned int i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
 	if (ccs)
 		file = ccs->file;
 	else
-		report_error(NO_DATA, "ccs in cbc_run_delete_sqlite");
+		report_error(CBC_NO_DATA, "ccs in cbc_run_delete_sqlite");
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cbc_run_delete_sqlite");
+		report_error(CBC_NO_DATA, "data in cbc_run_delete_sqlite");
 	cmdb_setup_rw_sqlite(query, file, &cbc, &state);
 	for (i = 1; i <= cbc_delete_args[type]; i++) {
 		if (!list)
@@ -2224,20 +2224,20 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 int
 cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = cbc_sql_search[type], *file = '\0';
+	const char *query = cbc_sql_search[type], *file = NULL;
 	int retval = 0, i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cbc;
 	sqlite3_stmt *state;
 
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cbc_run_search_sqlite");
+		report_error(CBC_NO_DATA, "data in cbc_run_search_sqlite");
 	if (ccs)
 		file = ccs->file;
 	else
-		report_error(NO_DATA, "css in cbc_run_search_sqlite");
+		report_error(CBC_NO_DATA, "css in cbc_run_search_sqlite");
 	cmdb_setup_ro_sqlite(query, file, &cbc, &state);
 	for (i = 0; (unsigned long)i < cbc_search_args[type]; i++) {
 		set_cbc_search_sqlite(state, list, type, i);

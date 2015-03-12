@@ -821,7 +821,7 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	convert_time(timestamp, &(server->ctime));
 	timestamp = row[11];
 	convert_time(timestamp, &(server->mtime));
-	server->next = '\0';
+	server->next = NULL;
 	list = base->server;
 	if (list) {
 		while (list->next) {
@@ -854,7 +854,7 @@ store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 	convert_time(timestamp, &(customer->ctime));
 	timestamp = row[10];
 	convert_time(timestamp, &(customer->mtime));
-	customer->next = '\0';
+	customer->next = NULL;
 	list = base->customer;
 	if (list) {
 		while(list->next) {
@@ -885,7 +885,7 @@ store_contact_mysql(MYSQL_ROW row, cmdb_s *base)
 	convert_time(timestamp, &(contact->ctime));
 	timestamp = row[8];
 	convert_time(timestamp, &(contact->mtime));
-	contact->next = '\0';
+	contact->next = NULL;
 	list = base->contact;
 	if (list) {
 		while (list->next) {
@@ -915,14 +915,14 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 	service->muser = strtoul(row[7], NULL, 10);
 	convert_time(row[8], &(service->ctime));
 	convert_time(row[9], &(service->mtime));
-	service->next = '\0';
+	service->next = NULL;
 	type = base->servicetype;
 	if (type) {
 		while (service->service_type_id != type->service_id)
 			type = type->next;
 		service->servicetype = type;
 	} else {
-		service->servicetype = '\0';
+		service->servicetype = NULL;
 	}
 	list = base->service;
 	if (list) {
@@ -946,7 +946,7 @@ store_service_type_mysql(MYSQL_ROW row, cmdb_s *base)
 	service->service_id = strtoul(row[0], NULL, 10);
 	snprintf(service->service, RANGE_S, "%s", row[1]);
 	snprintf(service->detail, MAC_S, "%s", row[2]);
-	service->next = '\0';
+	service->next = NULL;
 	list = base->servicetype;
 	if (list) {
 		while (list->next) {
@@ -976,14 +976,14 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_s *base)
 	hard->muser = strtoul(row[6], NULL, 10);
 	convert_time(row[7], &(hard->ctime));
 	convert_time(row[8], &(hard->mtime));
-	hard->next = '\0';
+	hard->next = NULL;
 	type = base->hardtype;
 	if (type) {
 		while (hard->ht_id != type->ht_id)
 			type = type->next;
 		hard->hardtype = type;
 	} else {
-		hard->hardtype = '\0';
+		hard->hardtype = NULL;
 	}
 	list = base->hardware;
 	if (list) {
@@ -1007,7 +1007,7 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 	hard->ht_id = strtoul(row[0], NULL, 10);
 	snprintf(hard->type, MAC_S, "%s", row[1]);
 	snprintf(hard->hclass, MAC_S, "%s", row[2]);
-	hard->next = '\0';
+	hard->next = NULL;
 	list = base->hardtype;
 	if (list) {
 		while (list->next) {
@@ -1037,7 +1037,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 	convert_time(timestamp, &(vmhost->ctime));
 	timestamp = row[7];
 	convert_time(timestamp, &(vmhost->mtime));
-	vmhost->next = '\0';
+	vmhost->next = NULL;
 	list = base->vmhost;
 	if (list) {
 		while(list->next) {
@@ -1111,9 +1111,9 @@ cmdb_run_multiple_query_sqlite(cmdb_config_s *config, cmdb_s *base, int type)
 int
 cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 {
-	const char *query = '\0', *file = '\0';
+	const char *query = NULL, *file = NULL;
 	int retval = NONE, i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
@@ -1121,12 +1121,12 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 	if (ccs)
 		file = ccs->file;
 	else
-		report_error(NO_DATA, "ccs in cmdb_run_search_sqlite");
+		report_error(CBC_NO_DATA, "ccs in cmdb_run_search_sqlite");
 	cmdb_setup_ro_sqlite(query, file, &cmdb, &state);
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cmdb_run_search_sqlite");
+		report_error(CBC_NO_DATA, "data in cmdb_run_search_sqlite");
 	for (i = 0; (unsigned)i < cmdb_search_args[type]; i++) {
 		if ((retval = set_cmdb_args_sqlite(state, list, cmdb_search_args_type[type][i], i)) < 0)
 			break;
@@ -1154,20 +1154,20 @@ cmdb_run_search_sqlite(cmdb_config_s *ccs, dbdata_s *data, int type)
 int
 cmdb_run_update_sqlite(cmdb_config_s *config, dbdata_s *data, int type)
 {
-	const char *query = '\0', *file = '\0';
+	const char *query = NULL, *file = NULL;
 	int retval = NONE, i;
-	dbdata_s *list = '\0';
+	dbdata_s *list = NULL;
 	sqlite3 *cmdb;
 	sqlite3_stmt *state;
 
 	if (config)
 		file = config->file;
 	else
-		report_error(NO_DATA, "config in cmdb_run_update_sqlite");
+		report_error(CBC_NO_DATA, "config in cmdb_run_update_sqlite");
 	if (data)
 		list = data;
 	else
-		report_error(NO_DATA, "data in cmdb_run_update_sqlite");
+		report_error(CBC_NO_DATA, "data in cmdb_run_update_sqlite");
 	query = cmdb_sql_update[type];
 	cmdb_setup_rw_sqlite(query, file, &cmdb, &state);
 	for (i = 0; (unsigned)i < cmdb_update_args[type]; i++) {
@@ -1428,7 +1428,7 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
 	convert_time(stime, &(server->mtime));
 	memset(stime, 0, MAC_S);
-	server->next = '\0';
+	server->next = NULL;
 	list = base->server;
 	if (list) {
 		while (list->next) {
@@ -1466,7 +1466,7 @@ store_customer_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
 	convert_time(stime, &(cust->mtime));
 	memset(stime, 0, MAC_S);
-	cust->next = '\0';
+	cust->next = NULL;
 	list = base->customer;
 	if (list) {
 		while (list->next) {
@@ -1502,7 +1502,7 @@ store_contact_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
 	convert_time(stime, &(contact->mtime));
 	memset(stime, 0, MAC_S);
-	contact->next = '\0';
+	contact->next = NULL;
 	list = base->contact;
 	if (list) {
 		while (list->next) {
@@ -1546,9 +1546,9 @@ store_service_sqlite(sqlite3_stmt *state, cmdb_s *base)
 			type = type->next;
 		service->servicetype = type;
 	} else {
-		service->servicetype = '\0';
+		service->servicetype = NULL;
 	}
-	service->next = '\0';
+	service->next = NULL;
 	list = base->service;
 	if (list) {
 		while (list->next) {
@@ -1572,7 +1572,7 @@ store_service_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	service->service_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(service->service, RANGE_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(service->detail, MAC_S, "%s", sqlite3_column_text(state, 2));
-	service->next = '\0';
+	service->next = NULL;
 	list = base->servicetype;
 	if (list) {
 		while (list->next) {
@@ -1608,14 +1608,14 @@ store_hardware_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 8));
 	convert_time(stime, &(hard->mtime));
 	memset(stime, 0, MAC_S);
-	hard->next = '\0';
+	hard->next = NULL;
 	type = base->hardtype;
 	if (type) {
 		while (hard->ht_id != type->ht_id)
 			type = type->next;
 		hard->hardtype = type;
 	} else {
-		hard->hardtype = '\0';
+		hard->hardtype = NULL;
 	}
 	list = base->hardware;
 	if (list) {
@@ -1640,7 +1640,7 @@ store_hardware_type_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	hard->ht_id = (unsigned long int) sqlite3_column_int(state, 0);
 	snprintf(hard->type, MAC_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(hard->hclass, MAC_S, "%s", sqlite3_column_text(state, 2));
-	hard->next = '\0';
+	hard->next = NULL;
 	list = base->hardtype;
 	if (list) {
 		while (list->next) {
@@ -1674,7 +1674,7 @@ store_vm_hosts_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
 	convert_time(stime, &(vmhost->mtime));
 	memset(stime, 0, MAC_S);
-	vmhost->next = '\0';
+	vmhost->next = NULL;
 	list = base->vmhost;
 	if (list) {
 		while(list->next) {

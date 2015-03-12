@@ -23,6 +23,9 @@ CLIGRP=`id $CLIUSER | awk '{print $2}' | sed -e s'/gid=[0-9]*//' | sed -e 's/(//
 
 if [ -f /etc/redhat-release ]; then # Either redhat or centos
     if [ -d /opt/hobbit ]; then
+        if [ ! -d /opt/hobbit/client ]; then
+            ln -s /opt/hobbit /opt/hobbit/client
+        fi
         mv hobbit-patch.sh /opt/hobbit/client/ext
         if grep patches /opt/hobbit/client/etc/clientlaunch.cfg; then
             echo "Not adding to /opt/hobbit/client/etc/clientlaunch.cfg. Already there"
@@ -32,20 +35,23 @@ if [ -f /etc/redhat-release ]; then # Either redhat or centos
         ENVFILE \$HOBBITCLIENTHOME/etc/hobbitclient.cfg
         CMD \$HOBBITCLIENTHOME/ext/hobbit-patch.sh
         LOGFILE \$HOBBITCLIENTHOME/logs/hobbit-patch.sh
-        INTERVAL 6h
+        INTERVAL 220m
 
 " >> /opt/hobbit/client/etc/clientlaunch.cfg
         fi
     elif [ -d /opt/xymon ]; then
+        if [ ! -d /opt/xymon/client ]; then
+            ln -s /opt/xymon /opt/xymon/client
+        fi
         mv hobbit-patch.sh /opt/xymon/client/ext
         if grep patches /opt/xymon/client/etc/clientlaunch.cfg; then
             echo "Not adding to /opt/xymon/client/etc/clientlaunch.cfg. Already there"
         else
             echo "
 [patches]
-        ENVFILE \$XYMONCLIENTHOME/etc/hobbitclient.cfg
+        ENVFILE \$XYMONCLIENTHOME/etc/xymonclient.cfg
         CMD \$XYMONCLIENTHOME/ext/hobbit-patch.sh
-        LOGFILE \$XYMONCLIENTHOME/logs/hobbit-patch.sh
+        LOGFILE \$XYMONCLIENTLOGS/hobbit-patch.log
         INTERVAL 6h
 
 " >> /opt/xymon/client/etc/clientlaunch.cfg

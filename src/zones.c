@@ -87,7 +87,7 @@ list_zones(dnsa_config_s *dc)
 		if (zone->next)
 			zone = zone->next;
 		else
-			zone = '\0';
+			zone = NULL;
 	}
 	dnsa_clean_list(dnsa);
 }
@@ -108,6 +108,7 @@ list_rev_zones(dnsa_config_s *dc)
 	}
 	rev = dnsa->rev_zones;
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
+// asuming IPv4 address length for range
 	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
 	while (rev) {
 		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
@@ -118,7 +119,7 @@ rev->net_range, rev->prefix, rev->valid, rev->type);
 		if (rev->next)
 			rev = rev->next;
 		else
-			rev = '\0';
+			rev = NULL;
 	}
 	dnsa_clean_list(dnsa);
 }
@@ -188,7 +189,7 @@ zone->name, zone->pri_dns, zone->name, zone->serial);
 		records = records->next;
 	}
 	while (glue) {
-		string_len_s *zonefile = '\0';
+		string_len_s *zonefile = NULL;
 		if (glue->zone_id == zone->id) {
 			snprintf(name, HOST_S, "%s", glue->name);
 			dot = strchr(name, '.');
@@ -353,7 +354,7 @@ check_zone(char *domain, dnsa_config_s *dc)
 int
 commit_fwd_zones(dnsa_config_s *dc, char *name)
 {
-	char *filename = '\0';
+	char *filename = NULL;
 	int retval = 0;
 	dnsa_s *dnsa;
 	string_len_s *config;
@@ -738,7 +739,7 @@ int
 create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config)
 {
 	int retval;
-	char *buffer, *buff, *host = '\0';
+	char *buffer, *buff, *host = NULL;
 	size_t len;
 	
 	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
@@ -817,7 +818,7 @@ check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone)
 int
 check_notify_ip(zone_info_s *zone, char **ipstr)
 {
-	char *host = '\0', *dhost = '\0', *dipstr = '\0';
+	char *host = NULL, *dhost = NULL, *dipstr = NULL;
 	int retval = NONE;
 	void *addr;
 	struct addrinfo hints, *srvnfo;
@@ -869,7 +870,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	}
 	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) == 0) {
 		free(*ipstr);
-		*ipstr = '\0';
+		*ipstr = NULL;
 		retval = CANNOT_CONVERT;
 	}
 	free(host);
@@ -1151,7 +1152,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 	time_t create;
 	dbdata_s *dlist;
 	record_row_s *records = dnsa->records;
-	preferred_a_s *prefer = dnsa->prefer, *mark = '\0';
+	preferred_a_s *prefer = dnsa->prefer, *mark = NULL;
 	fqdn = &name[0];
 	while (records) {
 		dlist = start;
@@ -1181,7 +1182,7 @@ print_multiple_a_records(dnsa_config_s *dc, dbdata_s *start, dnsa_s *dnsa)
 		dlist = start->next->next->next;
 		clean_dbdata_struct(dlist);
 		dlist = start->next->next;
-		dlist->next = '\0';
+		dlist->next = NULL;
 	}
 	if (mark) {
 		create = (time_t)mark->ctime;
@@ -1278,7 +1279,7 @@ get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
 		if (rec->next)
 			rec = rec->next;
 		else
-			rec = '\0';
+			rec = NULL;
 	}
 	snprintf(start->args.text, RANGE_S, "%s", name);
 	i = dnsa_run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
@@ -1499,7 +1500,7 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	else
 		printf("Zone marked as valid in the database\n");
 	dnsa_clean_zones(zone);
-	dnsa->zones = '\0';
+	dnsa->zones = NULL;
 	retval = create_and_write_fwd_config(dc, dnsa);
 	dnsa_clean_list(dnsa);
 	return retval;
@@ -1527,7 +1528,7 @@ delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	}
 	zone = dnsa->zones;
-	fwd = other = '\0';
+	fwd = other = NULL;
 	name = fqdn;
 	while (zone) {
 		if (strncmp(cm->domain, zone->name, RBUFF_S) == 0)
@@ -1639,7 +1640,7 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	else
 		printf("Rev zone %s marked as valid\n", zone->net_range);
 	dnsa_clean_rev_zones(zone);
-	dnsa->rev_zones = '\0';
+	dnsa->rev_zones = NULL;
 	retval = create_and_write_rev_config(dc, dnsa);
 	dnsa_clean_list(dnsa);
 	return retval;
@@ -1877,7 +1878,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		report_error(MALLOC_FAIL, "data in build_reverse_zone");
 	retval = 0;
 /* Set to NULL so we can check if there are no records to add / delete */
-	add = delete = '\0';
+	add = delete = NULL;
 	init_dnsa_struct(dnsa);
 	init_dbdata_struct(data);
 	if ((retval = dnsa_run_multiple_query(
@@ -1892,11 +1893,11 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 /* No Duplicate records. Just convert all A records */
 		dnsa_clean_records(dnsa->records);
 		dnsa_clean_prefer(dnsa->prefer);
-		dnsa->records = '\0';
-		dnsa->prefer = '\0';
+		dnsa->records = NULL;
+		dnsa->prefer = NULL;
 	}
 	rec = dnsa->records; /* Holds duplicate A records */
-	dnsa->records = '\0';
+	dnsa->records = NULL;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
 		dnsa_clean_records(rec);
 		dnsa_clean_list(dnsa);
@@ -1983,11 +1984,11 @@ get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	zone_info_s *fwd, *list, *next;
 	fwd = dnsa->zones;
-	list = '\0';
+	list = NULL;
 	if (fwd->next)
 		next = fwd->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (fwd) {
 		if (strncmp(fwd->name, cm->domain, RBUFF_S) == 0) {
 			list = fwd;
@@ -2001,7 +2002,7 @@ get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 	}
 	dnsa->zones = list;
 	if (list) {
-		list->next = '\0';
+		list->next = NULL;
 		return NONE;
 	}
 	fprintf(stderr, "Forward domain %s not found\n", cm->domain);
@@ -2013,11 +2014,11 @@ get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	rev_zone_info_s *rev, *list, *next;
 	rev = dnsa->rev_zones;
-	list = '\0';
+	list = NULL;
 	if (rev->next)
 		next = rev->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (rev) {
 		if (strncmp(rev->net_range, cm->domain, RANGE_S) == 0) {
 			list = rev;
@@ -2031,7 +2032,7 @@ get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 	}
 	dnsa->rev_zones = list;
 	if (list) {
-		list->next = '\0';
+		list->next = NULL;
 		return NONE;
 	}
 	fprintf(stderr, "Reverse domain %s not found\n", cm->domain);
@@ -2564,24 +2565,24 @@ split_fwd_record_list(zone_info_s *zone, record_row_s *rec, record_row_s **fwd, 
 		if (rec->zone == zone->id) {
 			if (!(*fwd)) {
 				*fwd = rec;
-				rec->next = '\0';
+				rec->next = NULL;
 			} else {
 				list = *fwd;
 				while (list->next)
 					list = list->next;
 				list->next = rec;
-				rec->next = '\0';
+				rec->next = NULL;
 			}
 		} else {
 			if (!(*other)) {
 				*other = rec;
-				rec->next = '\0';
+				rec->next = NULL;
 			} else {
 				list = *other;
 				while (list->next)
 					list = list->next;
 				list->next = rec;
-				rec->next = '\0';
+				rec->next = NULL;
 			}
 		}
 		rec = next;
@@ -2730,7 +2731,7 @@ select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	record_row_s *records, *next, *ip;
 
-	ip = '\0';
+	ip = NULL;
 	records = dnsa->records;
 	next = records->next;
 	while (records) {
@@ -2748,7 +2749,7 @@ select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 	}
 	dnsa->records = ip;
 	if (ip)
-		ip->next = '\0';
+		ip->next = NULL;
 }
 
 /*
@@ -2901,6 +2902,7 @@ int
 delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE, c = NONE;
+	unsigned long int glue_id;
 	dnsa_s *dnsa;
 	dbdata_s data, user;
 	glue_zone_info_s *glue;
@@ -2921,6 +2923,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		} else {
 			c++;
 			snprintf(data.args.text, CONF_S, "%s", glue->name);
+			glue_id = glue->id;
 			glue = glue->next;
 		}
 	}
@@ -2937,7 +2940,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 			printf("Glue zone %s deleted\n", cm->domain);
 		else if (retval > 1)
 			fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
-		data.args.number = glue->zone_id;
+		data.args.number = glue_id;
 		user.args.number = (unsigned long int)getuid();
 		user.next = &data;
 		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
@@ -3060,7 +3063,7 @@ void
 print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
 {
 	char *pri, *sec;
-	zone_info_s *list = '\0';
+	zone_info_s *list = NULL;
 	if (zone)
 		list = zone;
 	else {

@@ -209,8 +209,8 @@ int
 list_cbc_build_varient(cbc_config_s *cmc)
 {
 	int retval = NONE;
-	cbc_s *base = '\0';
-	cbc_varient_s *list = '\0';
+	cbc_s *base = NULL;
+	cbc_varient_s *list = NULL;
 	time_t create;
 
 	if (!(base = malloc(sizeof(cbc_s))))
@@ -266,7 +266,7 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	unsigned int max;
 	unsigned long int id;
 	cbc_s *base;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_cbc_build_varient");
@@ -363,7 +363,7 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	char varient[HOST_S];
 	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
 	unsigned int max;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
@@ -631,7 +631,7 @@ int
 cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id)
 {
 	int retval = NONE;
-	unsigned long int *os_id = '\0';
+	unsigned long int *os_id = NULL;
 
 	if ((retval = cbc_get_os_list(os, name, alias, arch, ver, os_id)) == 0)
 		return retval;
@@ -704,7 +704,7 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 {
 	int i;
 	unsigned long int *osid, vid;
-	cbc_package_s *package, *list = '\0', *tmp;
+	cbc_package_s *package, *list = NULL, *tmp;
 
 	if (!(os))
 		return list;
@@ -742,7 +742,7 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 {
 	int retval, i;
 	unsigned long int vid, *id_list;
-	dbdata_s *data, *elem, *list = '\0', *dlist;
+	dbdata_s *data, *elem, *list = NULL, *dlist;
 	if (!(ids))
 		return list;
 	if (!(pack))

@@ -1,3 +1,28 @@
+09/03/2015
+I want to be able to add copy functionality to cbcos and cbcvarient so that
+when a new OS or varient is created, it will copy the settings from an
+existing one. This will make the adding of a varient / OS much easier
+
+06/03/2015
+Looks like I now need to add a grub part to preseed:
+d-i grub-installer/only_debian boolean true
+Ned to add this to cbc and cpc
+
+03/03/2015
+I want to get rid of the need to have a server already in the database before
+adding a build. This would mean extending the ethernet and hard-disk options
+when creating the build to be able to add the server and requisite hardware
+into the database before creating the build. Of course if the server and
+or hardware is already in the database, then that will be fine.
+
+27/02/2015
+Should probably get rid of cbcos. Should check if we have an alias in
+build_type and we can add the bt_id into the build table and remove
+os_id.
+
+18/02/2015
+Need to get rid of the search / extended search in dnsa and cmdb
+
 31/01/2015
 Need to check all programs are checking for ~/.dnsa.conf and also add
 the -c <confg-file> option
@@ -40,6 +65,9 @@ build_domain.domain : increased to 255
 service.url : increased to 255
 build_ip.hostname : increased to 63
 build_ip.domainname : increased to 255
+*** Fixed. Most of the build domain servers do not exist any more; we have
+cbcsysp and cbcscript now
+***
 
 
 26/11/2014

@@ -276,7 +276,7 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	char *scheme = '\0';
+	char *scheme = NULL;
 	int retval = NONE;
 	short int lvm = 0;
 	unsigned long int scheme_id = 0;
@@ -368,7 +368,7 @@ part->log_vol, cpl->scheme);
 		printf("Partition added to DB\n");
 	if (retval == 0) 
 		retval = set_scheme_updated(cbc, scheme, scheme_id);
-	part->next = '\0';
+	part->next = NULL;
 	clean_cbc_struct(base);
 	return retval;
 }
@@ -490,7 +490,7 @@ remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	} else if (retval > 1)
 		fprintf(stderr, "Multiple partitions found\n");
 	clean_dbdata_struct(data->next);
-	data->next = '\0';
+	data->next = NULL;
 	memset(data->args.text, 0, RBUFF_S);
 	data->args.number = data->fields.number;
 	if ((retval = cbc_run_delete(cbc, data, DEF_PART_ON_PART_ID)) == 0) {

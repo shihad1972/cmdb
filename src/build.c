@@ -599,7 +599,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	PREP_DB_QUERY(data, BUILD_PACKAGES);
 	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
 		clean_dbdata_struct(data);
-		data = '\0';
+		data = NULL;
 		fprintf(stderr, "Build for %s has no packages associated.\n",
 		 server);
 	}
@@ -1261,7 +1261,7 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 
 	for (j = 0; j < k; j++) {
 		pri = min = max = 0;
-		fs = mnt = '\0';
+		fs = mnt = NULL;
 		if (list)
 			pri = list->fields.number;
 		if (list->next)
@@ -1306,7 +1306,7 @@ add_pre_part(dbdata_s *data, int retval, string_len_s *build)
 void
 add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 {
-	char *next = '\0', line[RBUFF_S], *fs, *mnt, *lv;
+	char *next = NULL, line[RBUFF_S], *fs, *mnt, *lv;
 	int j, k = retval;
 	unsigned long int pri, min, max;
 	size_t len;
@@ -1314,7 +1314,7 @@ add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
 
 	for (j = 0; j < k; j++) {
 		pri = min = max = 0;
-		fs = mnt = lv = '\0';
+		fs = mnt = lv = NULL;
 		if (list)
 			pri = list->fields.number;
 		if (list->next) {
@@ -1376,7 +1376,7 @@ int
 fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	int retval, type = SYSP_INFO_ON_BD_ID;
-	char *package = '\0';
+	char *package = NULL;
 	unsigned int max;
 	unsigned long int bd_id;
 	dbdata_s *data, *list;
@@ -1495,7 +1495,7 @@ char *
 get_replaced_syspack_arg(dbdata_s *data, int loop)
 {
 // This function NEEDS validated inputs
-	char *str = '\0', *tmp, addr[RANGE_S], *ip;
+	char *str = NULL, *tmp, addr[RANGE_S], *ip;
 	uint32_t ip_addr;
 
 	switch(loop) {
@@ -1829,7 +1829,7 @@ get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server
 {
 	int retval = NONE, type;
 	unsigned int max;
-	dbdata_s *data;
+	dbdata_s *data = NULL;
 
 	if (cml->server == NAME) {
 		type = SERVER_ID_ON_SNAME;

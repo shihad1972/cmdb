@@ -53,7 +53,7 @@ display_customer_info(char *name, char *coid, cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb_s in display_customer_info");
 	cmdb_init_struct(cmdb);
 
-	cmdb->customer = '\0';
+	cmdb->customer = NULL;
 	if ((retval = cmdb_run_multiple_query(config, cmdb,
 CUSTOMER | CONTACT | SERVICE | SERVER)) != 0) {
 		cmdb_clean_list(cmdb);
@@ -102,7 +102,7 @@ display_all_customers(cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb_s in display_customer_info");
 	cmdb_init_struct(cmdb);
 
-	cmdb->customer = '\0';
+	cmdb->customer = NULL;
 	if ((retval = cmdb_run_query(config, cmdb, CUSTOMER)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -306,7 +306,7 @@ add_contact_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
 	cmdb_contact_s *cont;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	cont = cmdb->contact;
 	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
@@ -336,7 +336,7 @@ add_service_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
 	unsigned long int ids[2];
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	init_multi_dbdata_struct(&data, cmdb_search_args[CUST_ID_ON_COID]);
 	snprintf(data->args.text, RBUFF_S, "%s", cmdb->customer->coid);
@@ -412,7 +412,7 @@ display_service_types(cmdb_config_s *config)
 		report_error(MALLOC_FAIL, "cmdb_s in display_service_types");
 	cmdb_init_struct(cmdb);
 
-	cmdb->servicetype = '\0';
+	cmdb->servicetype = NULL;
 	if ((retval = cmdb_run_query(config, cmdb, SERVICE_TYPE)) != 0) {
 		cmdb_clean_list(cmdb);
 		return;
@@ -615,10 +615,10 @@ get_customer(cmdb_config_s *config, cmdb_s *cmdb, char *coid)
 			cust = next;
 		}
 	} else {
-		cmdb->customer = '\0';
+		cmdb->customer = NULL;
 		return CUSTOMER_NOT_FOUND;
 	}
-	cmdb->customer->next = '\0';
+	cmdb->customer->next = NULL;
 	return 0;
 }
 
@@ -648,7 +648,7 @@ set_customer_updated(cmdb_config_s *config, cmdb_s *cmdb)
 {
 	int retval = NONE;
 	unsigned int num = cmdb_update_args[UP_CUST_MUSER];
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	init_multi_dbdata_struct(&data, num);
 	data->args.number = cmdb->customer->muser;
