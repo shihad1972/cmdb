@@ -60,20 +60,7 @@ typedef struct cbc_build_s {
 typedef struct cbc_build_domain_s {
 	char domain[RBUFF_S];
 	char ntp_server[RBUFF_S];
-	char ldap_dn[URL_S];
-	char ldap_bind[URL_S];
-	char ldap_host[URL_S];
-	char ldap_server[RBUFF_S];
-	char log_server[RBUFF_S];
-	char nfs_domain[RBUFF_S];
-	char smtp_server[RBUFF_S];
-	char xymon_server[RBUFF_S];
 	short int config_ntp;
-	short int ldap_ssl;
-	short int config_ldap;
-	short int config_log;
-	short int config_email;
-	short int config_xymon;
 	unsigned long int bd_id;
 	unsigned long int start_ip;
 	unsigned long int end_ip;
@@ -239,6 +226,66 @@ typedef struct cbc_vm_server_hosts_s {
 	struct cbc_vm_server_hosts_s *next;
 } cbc_vm_server_hosts_s;
 
+typedef struct cbc_syspack_s {
+	char name[URL_S];
+	unsigned long int syspack_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_syspack_s *next;
+} cbc_syspack_s;
+
+typedef struct cbc_syspack_arg_s {
+	char field[URL_S];
+	char type[MAC_S];
+	unsigned long int syspack_arg_id;
+	unsigned long int syspack_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_syspack_arg_s *next;
+} cbc_syspack_arg_s;
+
+typedef struct cbc_syspack_conf_s {
+	char arg[RBUFF_S];
+	unsigned long int syspack_conf_id;
+	unsigned long int syspack_arg_id;
+	unsigned long int syspack_id;
+	unsigned long int bd_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_syspack_conf_s *next;
+} cbc_syspack_conf_s;
+
+typedef struct cbc_script_s {
+	char name[CONF_S];
+	unsigned long int systscr_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_script_s *next;
+} cbc_script_s;
+
+typedef struct cbc_script_arg_s {
+	char arg[CONF_S];
+//	char type[MAC_S];
+	unsigned long int systscr_arg_id;
+	unsigned long int systscr_id;
+	unsigned long int bd_id;
+	unsigned long int bt_id;
+	unsigned long int no;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_script_arg_s *next;
+} cbc_script_arg_s;
+
 typedef struct cbc_s {
 	struct cbc_boot_line_s *bootl;
 	struct cbc_build_s *build;
@@ -255,6 +302,11 @@ typedef struct cbc_s {
 	struct cbc_server_s *server;
 	struct cbc_varient_s *varient;
 	struct cbc_vm_server_hosts_s *vmhost;
+	struct cbc_syspack_s *syspack;
+	struct cbc_syspack_arg_s *sysarg;
+	struct cbc_syspack_conf_s *sysconf;
+	struct cbc_script_s *scripts;
+	struct cbc_script_arg_s *script_arg;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network
@@ -280,6 +332,9 @@ typedef struct cbc_iface_s { // Info about interface
         uint32_t ip, sip, fip, nm, bc, nw;
         struct cbc_iface_s *next;
 } cbc_iface_s;
+
+void
+initialise_cbc_s(cbc_s **cbc);
 
 void
 init_cbc_struct (cbc_s *cbc);
@@ -427,5 +482,50 @@ init_cbc_iface(cbc_iface_s *ifa);
 
 void
 clean_cbc_iface(cbc_iface_s *ifa);
+
+void
+initialise_cbc_syspack(cbc_syspack_s **spack);
+
+void
+init_cbc_syspack(cbc_syspack_s *spack);
+
+void
+clean_cbc_syspack(cbc_syspack_s *spack);
+
+void
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa);
+
+void
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack);
+
+void
+clean_cbc_syspack_arg(cbc_syspack_arg_s *spack);
+
+void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc);
+
+void
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
+
+void
+clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
+
+void
+initialise_cbc_scripts(cbc_script_s **scripts);
+
+void
+init_cbc_scripts(cbc_script_s *scripts);
+
+void
+clean_cbc_scripts(cbc_script_s *scripts);
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args);
+
+void
+init_cbc_script_args(cbc_script_arg_s *args);
+
+void
+clean_cbc_script_args(cbc_script_arg_s *args);
 
 #endif /* __CBC_DATA_H__ */

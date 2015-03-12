@@ -53,7 +53,7 @@ report_error(int error, const char *errstr)
 	if (error == ARGC_INVAL) {
 		fprintf(stderr, "Argc is invalid\n");
 	} else if (error == ARGV_INVAL) {
-		fprintf(stderr, "Argv is invalid\n");
+		;
 	} else if (error == CONF_ERR) {
 		fprintf(stderr, "Config file error\n");
 	} else if (error == PORT_ERR) {
@@ -71,7 +71,7 @@ report_error(int error, const char *errstr)
 	} else if (error == WRONG_ACTION) {
 		fprintf(stderr, "Incorrect action specified\n");
 	} else if (error == WRONG_TYPE) {
-		fprintf(stderr, "Incorrect domain type specified\n");
+		fprintf(stderr, "Incorrect type specified\n");
 	} else if (error == USER_INPUT_INVALID) {
 		fprintf(stderr, "Input %s not valid.\n", errstr);
 	} else if (error == BUFFER_TOO_SMALL) {
@@ -103,8 +103,8 @@ report_error(int error, const char *errstr)
 	} else if (error == DB_TYPE_INVALID) {
 		fprintf(stderr, "DB type %s invalid\n", errstr);
 	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
-		fprintf(stderr, "Function %s tring to use an unknown struct / db table\n", errstr);
-	} else if (error == NO_DATA) {
+		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
+	} else if (error == CBC_NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
@@ -178,8 +178,6 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
 	} else if (error == BUILD_OS_EXISTS) {
 		fprintf(stderr, "Build OS %s already exists\n", errstr);
-	} else if (error == NO_BUILD_PACKAGES) {
-		fprintf(stderr, "No build packages in database\n");
 	} else if (error == VARIENT_EXISTS) {
 		fprintf(stderr, "Varient already exists in the database\n");
 	} else if (error == OS_ALIAS_NEEDED) {
@@ -226,8 +224,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Requested partition not found\n");
 	} else if (error == DB_DELETE_FAILED) {
 		fprintf(stderr, "Delete from database failed\n");
-	} else if (error == CANNOT_BUILD_PACKAGE_LIST) {
-		fprintf(stderr, "Cannot build package list\n");
+	} else if (error == NO_BD_CONFIG) {
+		fprintf(stderr, "Unable to find build domain\n");
+	} else if (error == NO_SYSPACK_CONF) {
+		;
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -273,7 +273,7 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No model specified on command line.\n");
 	else if (retval == NO_VENDOR)
 		fprintf(stderr, "No vendor specified on command line.\n");
-	else if (retval == NO_ADDRESS)
+	else if (retval == CBC_NO_ADDRESS)
 		fprintf(stderr, "No address specified on command line.\n");
 	else if (retval == NO_CITY)
 		fprintf(stderr, "No city specified on command line.\n");
@@ -324,6 +324,12 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "Slave zone specified but no master name given\n");
 	else if (retval == NO_PREFIX)
 		fprintf(stderr, "No reverse zone prefix was supplied\n");
+	else if (retval == NO_ARG)
+		fprintf(stderr, "No arguemt was supplied\n");
+	else if (retval == NO_NUMBER)
+		fprintf(stderr, "No number was supplied\n");
+	else if (retval == NO_NTP_SERVER)
+		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
@@ -346,6 +352,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcpart_usage();
 		else if ((strncmp(program, "cpc", CONF_S) == 0))
 			display_cpc_usage();
+		else if ((strncmp(program, "cbcsysp", CONF_S) == 0))
+			display_cbcsysp_usage();
+		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
+			display_cbcscript_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -414,19 +424,15 @@ display_cbcdomain_usage(void)
 	printf("cbcdomain: Program to manipulate build domains\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add build domain\n-d: display build domain details\n");
+	printf("-a: add build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
-	printf("Detail Options:\n");
-	printf("LDAP:\n\t-b <basedn>\n\t-i <binddn>\n\t-s <ldapserver>");
-	printf("\n\t-p use ssl for ldap connection\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
-	printf("Application server configurations\n");
-	printf("-e smtp_server\n-f nfs_domain\n-g logging server\n");
-	printf("-t ntp_server\n-x xymon_server\n\n");
-	printf("cbcdomain [ -a | -d | -l | -m | -r | -w ] -n [ app options ]\n\n");
+	printf("NTP server configuration:\n");
+	printf("-t ntp_server\n\n");
+	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
 }
 
 void
@@ -532,6 +538,38 @@ display_cpc_usage(void)
 }
 
 void
+display_cbcsysp_usage(void)
+{
+	printf("cbcsysp: cbc system package %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcsysp <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add -l: list -r: remove -m: modify\n");
+	printf("Type options\n");
+	printf("-p: package\t-o: config\t-y: arguments\n");
+	printf("Arguments\n");
+	printf("-b <domain>\t-f <field>\t-n <name>\t-g <arg>\n");
+	printf("-t <type>\n");
+	printf("See man page for full details\n");
+}
+
+void
+display_cbcscript_usage(void)
+{
+	printf("cbcscript: cbc scripts %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbcscript <action> <type> <arguments>\n");
+	printf("Action options\n");
+	printf("-a: add\t-l: list -r: remove\n");
+	printf("Type options\n");
+	printf("-f: arg\t-s: script\n");
+	printf("Arguments\n");
+	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
+	printf("-t <build os>\n");
+	printf("See man page for full details\n");
+}
+
+void
 get_error_string(int error, char *errstr)
 {
 	if (error == SERVER_NOT_FOUND)
@@ -604,6 +642,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Cannot get build domain config.");
 	else if (error == NO_HARD_DISK_DEV)
 		snprintf(errstr, MAC_S, "Cannot find disk for server");
+	else if (error == NO_BUILD_PACKAGES)
+		snprintf(errstr, MAC_S, "No build packages in database");
 	else
 		snprintf(errstr, MAC_S, "Unknown error %d", error);
 }
@@ -812,7 +852,7 @@ add_trailing_slash(char *member)
 	if ((member[len - 1] != '/') && len < CONF_S) {
 		member[len] = '/';
 		member[len + 1] = '\0';
-	} else if ((member[len - 1] == '/')) {
+	} else if (member[len - 1] == '/') {
 		retval = NONE;
 	} else {
 		retval = -1;
@@ -925,7 +965,7 @@ get_ip_from_hostname(dbdata_s *data)
 	dbdata_s *list;
 
 	if (!(data))
-		return NO_DATA;
+		return CBC_NO_DATA;
 	list = data;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -964,8 +1004,8 @@ void
 init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 {
 	unsigned int max;
-	dbdata_s *data = '\0', *dlist = '\0';
-	*list = '\0';
+	dbdata_s *data = NULL, *dlist = NULL;
+	*list = NULL;
 
 	for (max = 0; max < i; max++) {
 		if (!(data = malloc(sizeof(dbdata_s))))
@@ -984,7 +1024,7 @@ init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
 void
 clean_dbdata_struct(dbdata_s *list)
 {
-	dbdata_s *data = '\0', *next = '\0';
+	dbdata_s *data = NULL, *next = NULL;
 
 	if (list)
 		data = list;
@@ -993,7 +1033,7 @@ clean_dbdata_struct(dbdata_s *list)
 	if (data->next)
 		next = data->next;
 	else
-		next = '\0';
+		next = NULL;
 	while (data) {
 		free(data);
 		if (next)
@@ -1003,7 +1043,7 @@ clean_dbdata_struct(dbdata_s *list)
 		if (data->next)
 			next = data->next;
 		else
-			next = '\0';
+			next = NULL;
 	}
 }
 
@@ -1030,7 +1070,7 @@ void
 init_string_l(string_l *string)
 {
 	memset(string, 0, sizeof(string_l));
-	if (!(string->string = malloc(RBUFF_S)))
+	if (!(string->string = calloc(RBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
 }
 
@@ -1059,7 +1099,7 @@ void
 init_initial_string_l(string_l **string, int count)
 {
 	int i;
-	string_l *data, *list = '\0';
+	string_l *data, *list = NULL;
 
 	for (i = 0; i < count; i++) {
 		if (!(data = malloc(sizeof(string_l))))

@@ -209,8 +209,8 @@ int
 list_cbc_build_varient(cbc_config_s *cmc)
 {
 	int retval = NONE;
-	cbc_s *base = '\0';
-	cbc_varient_s *list = '\0';
+	cbc_s *base = NULL;
+	cbc_varient_s *list = NULL;
 	time_t create;
 
 	if (!(base = malloc(sizeof(cbc_s))))
@@ -230,9 +230,9 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		return VARIENT_NOT_FOUND;
 	}
 	printf("Build Varients\n");
-	printf("Name\t\tAlias\t\tUser\t\tTime\n");
+	printf("Name\t\tAlias\t\tUser\t\tLast Modified\n");
 	while (list) {
-		create = (time_t)list->ctime;
+		create = (time_t)list->mtime;
 		if (strlen(list->varient) < 8)
 			printf("%s\t\t", list->varient);
 		else if (strlen(list->varient) < 16)
@@ -266,7 +266,7 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	unsigned int max;
 	unsigned long int id;
 	cbc_s *base;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in display_cbc_build_varient");
@@ -363,7 +363,7 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	char varient[HOST_S];
 	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
 	unsigned int max;
-	dbdata_s *data = '\0';
+	dbdata_s *data = NULL;
 
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
@@ -417,7 +417,7 @@ display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 int
 display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE, i = NONE;
+	int retval = NONE;
 	unsigned long int osid;
 	cbc_build_os_s *bos = base->bos;
 
@@ -429,12 +429,12 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 			return retval;
 	while (bos) {
 		if ((strncmp(bos->alias, cvl->alias, MAC_S)) == 0)
-			i++;
+			break;
 		bos = bos->next;
 	}
-	bos = base->bos;
-	if (i == 0)
+	if (!(bos))
 		return OS_NOT_FOUND;
+	bos = base->bos;
 	printf("\nDisplaying build packages for os %s\n", cvl->alias);
 	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) &&
 	    (strncmp(cvl->arch, "NULL", COMM_S) != 0)) {
@@ -447,11 +447,21 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 		while (bos) {
 			if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
 			    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
-				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
 				printf("\
-Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
-				osid = get_single_os_id(base, cvl);
-				display_specific_os_packages(base, id, osid);
+Version: %s\tArch: %s\n\t", bos->version, bos->arch);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
+			}
+			bos = bos->next;
+		}
+	} else if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
+		while (bos) {
+			if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
+			    (strncmp(cvl->arch, bos->arch, MAC_S) == 0)) {
+				printf("\
+Version: %s\tArch: %s\n\t", bos->version, bos->arch);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
 		}
@@ -462,8 +472,8 @@ Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
 				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
 				printf("\
 Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
-				osid = get_single_os_id(base, cvl);
-				display_specific_os_packages(base, id, osid);
+//				osid = get_single_os_id(base, cvl);
+				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
 		}
@@ -558,6 +568,8 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		base->package = base->package->next;
 	}
 	printf("Inserted %d packages\n", packs);
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	base->package = pack;
 	free(osid);
 	clean_cbc_struct(base);
@@ -607,6 +619,8 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		list = list->next;
 	}
 	printf("%d packages deleted\n", packs);
+	if (packs > 0)
+		cbc_set_varient_updated(cbc, vid);
 	free(osid);
 	clean_cbc_struct(base);
 	clean_dbdata_struct(data);
@@ -617,7 +631,7 @@ int
 cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id)
 {
 	int retval = NONE;
-	unsigned long int *os_id = '\0';
+	unsigned long int *os_id = NULL;
 
 	if ((retval = cbc_get_os_list(os, name, alias, arch, ver, os_id)) == 0)
 		return retval;
@@ -690,7 +704,7 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 {
 	int i;
 	unsigned long int *osid, vid;
-	cbc_package_s *package, *list = '\0', *tmp;
+	cbc_package_s *package, *list = NULL, *tmp;
 
 	if (!(os))
 		return list;
@@ -728,7 +742,7 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 {
 	int retval, i;
 	unsigned long int vid, *id_list;
-	dbdata_s *data, *elem, *list = '\0', *dlist;
+	dbdata_s *data, *elem, *list = NULL, *dlist;
 	if (!(ids))
 		return list;
 	if (!(pack))

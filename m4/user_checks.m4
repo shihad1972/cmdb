@@ -12,7 +12,7 @@ dnl
 AC_DEFUN([AX_USER_CHECKS], [dnl
   AC_MSG_CHECKING([for user checks enabled])
   AC_ARG_ENABLE([user-checks],
-    [  --enable-user-checks           enable user input checks],,
+    [  --enable-user-checks    enable user input checks],,
         [enable_user_checks="yes"])
   AS_IF([test ".$enable_user_checks" = ".yes"],
     [AC_MSG_RESULT([enabled])

@@ -40,3 +40,11 @@ CREATE TRIGGER default_part_update BEFORE UPDATE ON default_part FOR EACH ROW se
 CREATE TRIGGER default_part_insert BEFORE INSERT ON default_part FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER locale_update BEFORE UPDATE ON locale FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER locale_insert BEFORE INSERT ON locale FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_packages_update BEFORE UPDATE ON system_packages FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_packages_insert BEFORE INSERT ON system_packages FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_package_args_update BEFORE UPDATE ON system_package_args FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_package_args_insert BEFORE INSERT ON system_package_args FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_package_conf_update BEFORE UPDATE ON system_package_conf FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER system_package_conf_insert BEFORE INSERT ON system_package_conf FOR EACH ROW set NEW.mtime = NOW();
+
+

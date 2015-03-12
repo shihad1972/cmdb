@@ -120,7 +120,8 @@ INSERT INTO zones (name, pri_dns, sec_dns, serial, refresh, retry, expire, \
 ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_zones (net_range, prefix, net_start, net_finish, start_ip, \
 finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, \
-master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
+?)","\
 INSERT INTO records (zone, host, type, protocol, service, pri, destination, \
 cuser, muser)  VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES \

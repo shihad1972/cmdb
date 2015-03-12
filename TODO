@@ -1,3 +1,56 @@
+09/03/2015
+I want to be able to add copy functionality to cbcos and cbcvarient so that
+when a new OS or varient is created, it will copy the settings from an
+existing one. This will make the adding of a varient / OS much easier
+
+06/03/2015
+Looks like I now need to add a grub part to preseed:
+d-i grub-installer/only_debian boolean true
+Ned to add this to cbc and cpc
+
+03/03/2015
+I want to get rid of the need to have a server already in the database before
+adding a build. This would mean extending the ethernet and hard-disk options
+when creating the build to be able to add the server and requisite hardware
+into the database before creating the build. Of course if the server and
+or hardware is already in the database, then that will be fine.
+
+27/02/2015
+Should probably get rid of cbcos. Should check if we have an alias in
+build_type and we can add the bt_id into the build table and remove
+os_id.
+
+18/02/2015
+Need to get rid of the search / extended search in dnsa and cmdb
+
+31/01/2015
+Need to check all programs are checking for ~/.dnsa.conf and also add
+the -c <confg-file> option
+
+17/01/2015
+For the build scripts mention below, we are going to have to find a way to
+tie them to either an os or a build type. In fact, we should also look at
+tying the build_os to a build type, so that each OS we can build is in the
+build_type table, but that we can also modify information in there or even
+add new build types.
+*** Completed. We use the alias in the build_type DB table ***
+
+14/01/2015
+As well as adding cbcsysp for debian packages, I am going to have to add a
+database table for kickstart scripts (and also scripts for debian for
+packages I cannot preseed).
+As a start, I guess I could do a table of script names and then a table of
+arguments, based on the domain name (or bd_id (build domain))
+*** Completed. Version 0.2.21 has cbcscript ***
+
+06/01/2015
+I want to be able to limit the number of results returned from the DB query
+so we only display, say, 20 servers / dnsa zone records etc. This will mean
+we need to page the terminal and also rerun the query on the database using
+the LIMIT clause in the SQL statement. This can be used in the prepared
+statements but probably not the base queries, so I will have to fix the whole
+DB access :(
+
 08/12/2014
 Database updates. Need to update code to match:
 
@@ -12,6 +65,9 @@ build_domain.domain : increased to 255
 service.url : increased to 255
 build_ip.hostname : increased to 63
 build_ip.domainname : increased to 255
+*** Fixed. Most of the build domain servers do not exist any more; we have
+cbcsysp and cbcscript now
+***
 
 
 26/11/2014
@@ -19,7 +75,7 @@ Would be nice if I could create a VM xml file to use for libvirt.
 Not too sure if I need to use the libvirt API or not.
 
 21/11/2014
-Chek the auditd source code for a cool way to read a config file.
+Check the auditd source code for a cool way to read a config file.
 Have to build a list of values that it can read, and will
 probably want to associate these with the struct char memeber somehow.
 Currently config reading is pretty ugly :(

@@ -172,7 +172,7 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	DB_INSERT_FAILED = 154,
 	DB_UPDATE_FAILED = 155,
 	DB_WRONG_TYPE = 156,
-	NO_DATA = 157,
+	CBC_NO_DATA = 157,
 	PARTITON_NOT_FOUND = 158,
 	DB_DELETE_FAILED = 159,
 	BUILD_DOMAIN_EXISTS = 160,
@@ -237,8 +237,12 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	DNS_LOOKUP_FAILED = 219,
 	NET_FUNC_FAILED = 220,
 	BDOM_OVERLAP = 221,
-	CANNOT_BUILD_PACKAGE_LIST = 222,
-	NO_HARD_DISK_DEV = 223
+	NO_PACKAGE_CONFIG = 222,
+	NO_HARD_DISK_DEV = 223,
+	NO_SYSPACK_CONF = 224,
+	NO_ARG = 225,
+	NO_NUMBER = 226,
+	NO_NTP_SERVER = 227
 };
 
 enum {			/* command line error codes */
@@ -254,7 +258,7 @@ enum {			/* command line error codes */
 	NO_VENDOR = 256,
 	NO_MODEL = 512,
 	NO_UUID = 1024,
-	NO_ADDRESS = 2048,
+	CBC_NO_ADDRESS = 2048,
 	NO_CITY = 4096,
 	NO_COUNTY = 8192,
 	NO_POSTCODE = 16384,
@@ -438,6 +442,10 @@ void
 display_dnsa_usage(void);
 void
 display_cpc_usage(void);
+void
+display_cbcsysp_usage(void);
+void
+display_cbcscript_usage(void);
 /* Database fields query mismatch error functions */
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);

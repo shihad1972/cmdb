@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.18.9.4], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.2.22], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -12,19 +12,6 @@ AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-
-# Add m4 macros
-AC_CONFIG_MACRO_DIRS([m4])
-
-# Checks for libraries.
-AX_LIB_MYSQL
-AX_LIB_SQLITE3
-AX_PATH_LIB_PCRE
-
-# Check for packages to enable
-AX_USER_CHECKS
-AX_CHECK_DNSA
-AX_CHECK_CBC
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
@@ -44,6 +31,20 @@ AC_FUNC_MKTIME
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([gethostname memset mkdir strchr strdup strerror strndup\
                 wordexp strrchr strstr strtol strtoul])
+
+# Add m4 macros
+AC_CONFIG_MACRO_DIR([m4])
+
+# Checks for libraries.
+AX_LIB_MYSQL
+AX_LIB_SQLITE3
+AX_PATH_LIB_PCRE
+
+# Check for packages to enable
+AX_USER_CHECKS
+AX_CHECK_DNSA
+AX_CHECK_CBC
+
 AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 

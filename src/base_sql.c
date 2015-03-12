@@ -117,7 +117,7 @@ cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
 	dbdata_u *list;
 
 	if (!(data))
-		report_error(NO_DATA, "data in cmdb_set_bind_mysql");
+		report_error(CBC_NO_DATA, "data in cmdb_set_bind_mysql");
 	list = data;
 	if (i == DBINT) {
 		mybind->buffer_type = MYSQL_TYPE_LONG;
@@ -153,20 +153,26 @@ cmdb_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READONLY, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
+		printf("%s\n", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_setup_ro_sqlite");
 	}
 }
 
 void
 cmdb_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
 {
-	int retval;
+	int retval, sqlret = 0;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0)
 		report_error(FILE_O_FAIL, file);
+	if ((retval = sqlite3_db_config(*cmdb, SQLITE_DBCONFIG_ENABLE_FKEY, 1, &sqlret)) != SQLITE_OK)
+		fprintf(stderr, "Cannot enable foreign key support\n");
+	if (sqlret == 0)
+		fprintf(stderr, "Did not enable foreign key support\n");
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
+		printf("%s\n", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_run_search_sqlite");
+		report_error(SQLITE_STATEMENT_FAILED, "error in cmdb_setup_rw_sqlite");
 	}
 }
 
