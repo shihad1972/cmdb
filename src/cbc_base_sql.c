@@ -1834,6 +1834,25 @@ cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base)
 void
 cbc_store_partopt_mysql(MYSQL_ROW row, cbc_s *base)
 {
+	cbc_part_opt_s *opt, *list;
+
+	initialise_cbc_part_opt(&opt);
+	opt->part_options_id = strtoul(row[0], NULL, 10);
+	opt->def_part_id = strtoul(row[1], NULL, 10);
+	opt->def_scheme_id = strtoul(row[2], NULL, 10);
+	snprintf(opt->option, CONF_S, "%s", row[3]);
+	opt->cuser = strtoul(row[4], NULL, 10);
+	opt->muser = strtoul(row[5], NULL, 10);
+	convert_time(row[6], &(opt->ctime));
+	convert_time(row[7], &(opt->mtime));
+	list = base->part_opt;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = opt;
+	} else {
+		base->part_opt = opt;
+	}
 }
 
 void
@@ -2077,6 +2096,16 @@ cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i)
 void
 cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i)
 {
+	if (i == 0)
+		*buffer = &(base->part_opt->def_part_id);
+	else if (i == 1)
+		*buffer = &(base->part_opt->def_scheme_id);
+	else if (i == 2)
+		*buffer = &(base->part_opt->option);
+	else if (i == 3)
+		*buffer = &(base->part_opt->cuser);
+	else if (i == 4)
+		*buffer = &(base->part_opt->muser);
 }
 
 #endif /* HAVE_MYSQL */
@@ -3205,6 +3234,31 @@ cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base)
 void
 cbc_store_partopt_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
+	char *stime;
+	cbc_part_opt_s *opt, *list;
+
+	if (!(stime = calloc(MAC_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stime in cbc_store_partopt_sqlite");
+	initialise_cbc_part_opt(&opt);
+	opt->part_options_id = (unsigned long int) sqlite3_column_int64(state, 0);
+	opt->def_part_id = (unsigned long int) sqlite3_column_int64(state, 1);
+	opt->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	snprintf(opt->option, CONF_S, "%s", sqlite3_column_text(state, 3));
+	opt->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
+	opt->muser = (unsigned long int) sqlite3_column_int64(state, 5);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 6));
+	convert_time(stime, &(opt->ctime));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 7));
+	convert_time(stime, &(opt->mtime));
+	list = base->part_opt;
+	if (list) {
+		while (list->next)
+			list = list->next;
+		list->next = opt;
+	} else {
+		base->part_opt = opt;
+	}
+	free(stime);
 }
 
 int
@@ -3740,6 +3794,31 @@ cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt)
 {
 	int retval = 0;
 
+	if ((retval = sqlite3_bind_int64(
+state, 1, (sqlite_int64)opt->def_part_id)) > 0) {
+		fprintf(stderr, "Cannot bind def_part_id %lu\n", opt->def_part_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 2, (sqlite_int64)opt->def_scheme_id)) > 0) {
+		fprintf(stderr, "Cannot bind def_scheme_id %lu\n", opt->def_scheme_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, opt->option, (int)strlen(opt->option), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "cannot bind option %s\n", opt->option);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 4, (sqlite3_int64)opt->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", opt->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite3_int64)opt->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", opt->muser);
+		return retval;
+	}
 	return retval;
 }
 

@@ -288,10 +288,10 @@ typedef struct cbc_script_arg_s {
 } cbc_script_arg_s;
 
 typedef struct cbc_part_opt_s {
+	char option[CONF_S];
 	unsigned long int part_options_id;
 	unsigned long int def_part_id;
 	unsigned long int def_scheme_id;
-	char option[CONF_S];
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
@@ -541,5 +541,14 @@ init_cbc_script_args(cbc_script_arg_s *args);
 
 void
 clean_cbc_script_args(cbc_script_arg_s *args);
+
+void
+initialise_cbc_part_opt(cbc_part_opt_s **opt);
+
+void
+init_cbc_part_opt(cbc_part_opt_s *opt);
+
+void
+clean_cbc_part_opt(cbc_part_opt_s *opt);
 
 #endif /* __CBC_DATA_H__ */

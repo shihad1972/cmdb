@@ -91,6 +91,8 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_cbc_syspack_arg(cbc->sysarg);
 	if (cbc->sysconf)
 		clean_cbc_syspack_conf(cbc->sysconf);
+	if (cbc->part_opt)
+		clean_cbc_part_opt(cbc->part_opt);
 	free(cbc);
 }
 
@@ -750,6 +752,38 @@ clean_cbc_script_args(cbc_script_arg_s *args)
 
 	if (args)
 		list = args;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+	}
+}
+
+void
+initialise_cbc_part_opt(cbc_part_opt_s **opt)
+{
+	if (!(*opt = malloc(sizeof(cbc_part_opt_s))))
+		report_error(MALLOC_FAIL, "cbc_part_opt_s");
+	init_cbc_part_opt(*opt);
+}
+
+void
+init_cbc_part_opt(cbc_part_opt_s *opt)
+{
+	memset(opt, 0, sizeof(cbc_part_opt_s));
+}
+
+void
+clean_cbc_part_opt(cbc_part_opt_s *opt)
+{
+	cbc_part_opt_s *list, *next;
+
+	if (opt)
+		list = opt;
 	else
 		return;
 	next = list->next;
