@@ -287,6 +287,18 @@ typedef struct cbc_script_arg_s {
 	struct cbc_script_arg_s *next;
 } cbc_script_arg_s;
 
+typedef struct cbc_part_opt_s {
+	unsigned long int part_options_id;
+	unsigned long int def_part_id;
+	unsigned long int def_scheme_id;
+	char option[CONF_S];
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cbc_part_opt_s *next;
+} cbc_part_opt_s;
+
 typedef struct cbc_s {
 	struct cbc_boot_line_s *bootl;
 	struct cbc_build_s *build;
@@ -308,6 +320,7 @@ typedef struct cbc_s {
 	struct cbc_syspack_conf_s *sysconf;
 	struct cbc_script_s *scripts;
 	struct cbc_script_arg_s *script_arg;
+	struct cbc_part_opt_s *part_opt;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network

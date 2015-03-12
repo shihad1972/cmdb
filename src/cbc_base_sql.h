@@ -297,6 +297,9 @@ void
 cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
+cbc_store_partopt_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
 void
@@ -337,6 +340,10 @@ cbc_setup_bind_mysql_script(void **buffer, cbc_s *base, unsigned int i);
 
 void
 cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -435,6 +442,9 @@ cbc_store_script_sqlite(sqlite3_stmt *state, cbc_s *base);
 void
 cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base);
 
+void
+cbc_store_partopt_sqlite(sqlite3_stmt *state, cbc_s *base);
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build);
 
@@ -476,5 +486,9 @@ cbc_setup_bind_sqlite_script(sqlite3_stmt *state, cbc_script_s *scr);
 
 int
 cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg);
+
+int
+cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt);
+
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

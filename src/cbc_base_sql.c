@@ -91,7 +91,9 @@ SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
  muser, ctime, mtime FROM system_package_conf","\
 SELECT systscr_id, name, cuser, muser, ctime, mtime FROM system_scripts","\
 SELECT systscr_arg_id, systscr_id, bd_id, bt_id, arg, no, cuser, muser, ctime, \
- mtime FROM system_scripts_args ORDER BY bd_id, bt_id, systscr_id, no"
+ mtime FROM system_scripts_args ORDER BY bd_id, bt_id, systscr_id, no","\
+SELECT part_options_id, def_part_id, def_scheme_id, poption, cuser, muser, \
+ ctime, mtime FROM part_options ORDER BY def_scheme_id, def_part_id"
 };
 
 const char *cbc_sql_insert[] = { "\
@@ -130,7 +132,9 @@ INSERT INTO system_package_conf (syspack_arg_id, syspack_id, bd_id, arg, \
  cuser, muser) VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO system_scripts (name, cuser, muser) VALUES (?, ?, ?)","\
 INSERT INTO system_scripts_args(systscr_id, bd_id, bt_id, arg, no, cuser, \
- muser) VALUES (?, ?, ?, ?, ?, ?, ?)"
+ muser) VALUES (?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO part_options(def_part_id, def_scheme_id, poption, cuser, muser) \
+ VALUES (?, ?, ?, ?, ?)"
 };
 
 const char *cbc_sql_update[] = { "\
@@ -365,11 +369,11 @@ SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10
+	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7
+	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -430,7 +434,9 @@ const int cbc_inserts[][24] = {
 	{ DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBINT, DBINT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const unsigned int cbc_update_types[][6] = {
@@ -808,6 +814,9 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 	} else if (type == SCRIPTA) {
 		*query = cbc_sql_select[SCRIPTAS];
 		*fields = cbc_select_fields[SCRIPTAS];
+	} else if (type == PARTOPT) {
+		*query = cbc_sql_select[PARTOPTS];
+		*fields = cbc_select_fields[PARTOPTS];
 	} else {
 		retval = UNKNOWN_QUERY;
 	}
@@ -945,6 +954,9 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SCRIPTA)
 		if ((retval = cbc_run_query_mysql(config, base, SCRIPTA)) != 0)
+			return retval;
+	if (type & PARTOPT)
+		if ((retval = cbc_run_query_mysql(config, base, PARTOPT)) != 0)
 			return retval;
 	return retval;
 }
@@ -1198,6 +1210,11 @@ cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_scripta_mysql(row, base);
+	} else if (type == PARTOPT) {
+		required = cbc_select_fields[PARTOPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_partopt_mysql(row, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_mysql");
 	}
@@ -1262,6 +1279,8 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_script(buffer, base, i);
 	else if (type == SCRIPTAS)
 		cbc_setup_bind_mysql_scripta(buffer, base, i);
+	else if (type == PARTOPTS)
+		cbc_setup_bind_mysql_partopts(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
 }
@@ -1813,6 +1832,11 @@ cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base)
 }
 
 void
+cbc_store_partopt_mysql(MYSQL_ROW row, cbc_s *base)
+{
+}
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i)
 {
 	if (i == 0)
@@ -2050,6 +2074,11 @@ cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->script_arg->muser);
 }
 
+void
+cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i)
+{
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -2171,6 +2200,9 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 			return retval;
 	if (type & SCRIPTA)
 		if ((retval = cbc_run_query_sqlite(config, base, SCRIPTA)) != 0)
+			return retval;
+	if (type & PARTOPT)
+		if ((retval = cbc_run_query_sqlite(config, base, PARTOPT)) != 0)
 			return retval;
 	return retval;
 }
@@ -2469,6 +2501,11 @@ cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_scripta_sqlite(state, base);
+	} else if (type == PARTOPT) {
+		required = cbc_select_fields[PARTOPTS];
+		if (fields != required)
+			cbc_query_mismatch(fields, required, type);
+		cbc_store_partopt_sqlite(state, base);
 	} else {
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_store_result_sqlite");
 	}
@@ -2507,6 +2544,8 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_script(state, base->scripts);
 	else if (type == SCRIPTAS)
 		retval = cbc_setup_bind_sqlite_scripta(state, base->script_arg);
+	else if (type == PARTOPTS)
+		retval = cbc_setup_bind_sqlite_partopt(state, base->part_opt);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -3163,6 +3202,11 @@ cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base)
 	free(stime);
 }
 
+void
+cbc_store_partopt_sqlite(sqlite3_stmt *state, cbc_s *base)
+{
+}
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build)
 {
@@ -3688,6 +3732,14 @@ state, 7, (sqlite3_int64)arg->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", arg->muser);
 		return retval;
 	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt)
+{
+	int retval = 0;
+
 	return retval;
 }
 

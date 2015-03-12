@@ -41,6 +41,7 @@ typedef struct cbcpart_comm_line_s {
 	char scheme[CONF_S];
 	char partition[RBUFF_S];
 	char log_vol[MAC_S];
+	char option[CONF_S];
 	short int action;
 	short int lvm;
 	short int type;
