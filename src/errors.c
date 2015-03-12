@@ -477,16 +477,18 @@ display_cbcpart_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add scheme / partition\n-d: display scheme\n");
-	printf("-l: list schemes\n-r: remove scheme / partition\n\n");
+	printf("-l: list schemes\n-r: remove scheme / partition\n");
+	printf("-m: modify\n\n");
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
-	printf("-m: Use lvm (when adding a scheme)\n");
+	printf("-u: Use lvm (when adding a scheme)\n");
 	printf("-g: logical volume (if using lvm)\n");
+	printf("-o: mount-option\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
 	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
-	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -m ] [ -g \
+	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -u ] [ -g \
 log vol ] [ -t <part def>]\n");
 }
 

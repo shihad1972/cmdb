@@ -164,6 +164,7 @@ typedef struct cbc_pre_part_s {
 	char mount[HOST_S];
 	char fs[RANGE_S];
 	char log_vol[MAC_S];
+	char option[CONF_S];
 	unsigned long int min;
 	unsigned long int max;
 	unsigned long int pri;

@@ -103,16 +103,18 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "adg:lmn:prst:v")) != -1) {
+	while ((opt = getopt(argc, argv, "adg:lmn:o:prst:uv")) != -1) {
 		if (opt == 'a')
 			cpl->action = ADD_CONFIG;
 		else if (opt == 'd')
 			cpl->action = DISPLAY_CONFIG;
 		else if (opt == 'l')
 			cpl->action = LIST_CONFIG;
+		else if (opt == 'm')
+			cpl->action = MOD_CONFIG;
 		else if (opt == 'r')
 			cpl->action = RM_CONFIG;
-		else if (opt == 'm')
+		else if (opt == 'u')
 			cpl->lvm = TRUE;
 		else if (opt == 'v')
 			cpl->action = CVERSION;
@@ -124,6 +126,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			snprintf(cpl->log_vol, MAC_S, "%s", optarg);
 		} else if (opt == 'n')
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
+		else if (opt == 'o')
+			snprintf(cpl->option, CONF_S, "%s", optarg);
 		else if (opt == 'p')
 			cpl->type = PARTITION;
 		else if (opt == 's')
@@ -141,13 +145,14 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		return CVERSION;
 	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
-	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) && 
-	     cpl->type == NONE)
-		return NO_TYPE;
-	if ((cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG) &&
-	    (strncmp(cpl->partition, "NULL", COMM_S) == 0) &&
-	    (cpl->type == PARTITION))
-		return NO_PARTITION_INFO;
+	if (cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG ||
+	    cpl->action == MOD_CONFIG) {
+		if (cpl->type == NONE)
+			return NO_TYPE;
+		if ((strncmp(cpl->partition, "NULL", COMM_S) == 0) &&
+		    (cpl->type == PARTITION))
+			return NO_PARTITION_INFO;
+	}
 	if ((cpl->action != LIST_CONFIG) && 
 	    (strncmp(cpl->scheme, "NULL", COMM_S) == 0))
 		return NO_SCHEME_INFO;

@@ -15,11 +15,11 @@ cbcpart \- Create Build Config Partitions
 
 .B cbcpart
 [
-.B -adlrv
+.B -adlmrv
 ] [
 .B -p | -s
 ] [
-.B -gmn
+.B -ogun
 ] [
 .B -t
 ]
@@ -41,6 +41,8 @@ add a partition or scheme.
 display partitions in a scheme.
 .IP -l
 list all partition schemes.
+.IP -m
+modify a scheme / partition.
 .IP -r
 remove a partition from a scheme or an entire partition scheme.
 .IP -v
@@ -61,8 +63,10 @@ work on a scheme.
 the name for the logical volume.
 .IP "-n <scheme name>"
 the name of the partition scheme.
-.IP -m
+.IP -u
 when adding a partition scheme, this option marks the scheme as using LVM.
+.IP "-u <option>"
+you can use this to supply a mount option for the partition
 .PP
 .B partition information
 .IP "-t min,max,priority,mount,fs"
