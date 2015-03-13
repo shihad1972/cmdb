@@ -69,6 +69,14 @@ main (int argc, char *argv[])
 		retval = add_scheme_part(cmc, cpcl);
 	else if (cpcl->action == DISPLAY_CONFIG)
 		retval = display_full_seed_scheme(cmc, cpcl);
+	else if (cpcl->action == MOD_CONFIG) {
+		if (cpcl->type == PARTITION)
+			retval = modify_partition_config(cmc, cpcl);
+		else if (cpcl->type == SCHEME)
+			retval = modify_scheme_config(cmc, cpcl);
+		else
+			retval = WRONG_TYPE;
+	}
 	else if (cpcl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpcl->action == RM_CONFIG)
@@ -281,90 +289,51 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	char *scheme = NULL;
 	int retval = NONE;
 	short int lvm = 0;
 	unsigned long int scheme_id = 0;
 	cbc_pre_part_s *part, *dpart;
-	cbc_seed_scheme_s *seed;
 	cbc_s *base;
+	dbdata_s *data;
 
+	init_multi_dbdata_struct(&data, 1);
+	if ((retval = get_scheme_id_on_name(cbc, cpl->scheme, data)) != 0) {
+		clean_dbdata_struct(data);
+		return retval;
+	}
+	scheme_id = data->fields.number;
+	if ((retval = cbc_run_search(cbc, data, LVM_ON_DEF_SCHEME_ID)) > 1)
+		fprintf(stderr, "More than one scheme_id %lu in DB>??\n", scheme_id);
+	else if (retval != 1)
+		fprintf(stderr, "Cannot find scheme_id %lu in DB??\n", scheme_id);
+	lvm = data->fields.small;
+	clean_dbdata_struct(data);
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_part_to_scheme");
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
 	init_cbc_struct(base);
-	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
-		if (retval == 6)
-			fprintf(stderr, "No partition schemes in DB\n");
-		else
-			fprintf(stderr, "Unable to get schemes from DB\n");
-		clean_cbc_struct(base);
-		free(part);
-		return retval;
-	}
-	seed = base->sscheme;
-	while (seed) {
-		if (strncmp(cpl->scheme, seed->name, CONF_S) == 0) {
-			scheme_id = seed->def_scheme_id;
-			lvm = seed->lvm;
-		}
-		seed = seed->next;
-	}
-	if (scheme_id == 0) {
-		printf("No scheme named %s\n", cpl->scheme);
-		return SCHEME_NOT_FOUND;
-	}
-	if ((lvm > 0) && (cpl->lvm < 1)) {
-		printf("Logical volume defined for scheme %s\n", cpl->scheme);
-		printf("Please supply logical volume details\n");
-		free(part);
-		clean_cbc_struct(base);
-		return NO_LOG_VOL;
-	}
-	if ((lvm < 1) && (cpl->lvm > 0)) {
-		printf("You have defined a logical volume, but this ");
-		printf("scheme %s does not use it\n", cpl->scheme);
-		free(part);
-		clean_cbc_struct(base);
-		return EXTRA_LOG_VOL;
-	}
+	init_pre_part(part);
+	if ((retval = check_cbcpart_lvm(cpl, lvm)) != 0)
+		goto cleanup;
 	if ((retval = cbc_run_query(cbc, base, DPART)) != 0) {
+// Not sure why we are doing this. If there are no partitions yet just add it
 		if (retval == 6)
-			fprintf(stderr, "No partition schemes in the DB\n");
+			fprintf(stderr, "No partitions in the DB\n");
 		else
 			fprintf(stderr, "Unable to get partitions from DB\n");
-		clean_cbc_struct(base);
-		free(part);
-		return retval;
+		goto cleanup;
 	}
 	dpart = base->dpart;
 	part->link_id.def_scheme_id = scheme_id;
 	snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
 	if ((retval = add_part_info(cpl, part)) != 0) {
 		fprintf(stderr, "Unable to add part info for DB insert\n");
-		return retval;
+		goto cleanup;
 	}
-	while (dpart) {
-		if (scheme_id == dpart->link_id.def_scheme_id) {
-			if (strncmp(part->mount, dpart->mount, RANGE_S) == 0) {
-				fprintf(stderr, "Partition %s already defined in %s\n",
-part->mount, cpl->scheme);
-				clean_cbc_struct(base);
-				free(part);
-				return PARTITION_EXISTS;
-			}
-			if ((strncmp(part->log_vol, dpart->log_vol, MAC_S) == 0) &&
-				lvm > 0) {
-				fprintf(stderr, "Logical volume %s already used in %s\n",
-part->log_vol, cpl->scheme);
-				clean_cbc_struct(base);
-				free(part);
-				return LOG_VOL_EXISTS;
-			}
-		}
-		dpart = dpart->next;
-	}
+	cpl->scheme_id = scheme_id;
+	if ((retval = check_cbcpart_names(dpart, part, cpl)) != 0)
+		goto cleanup;
 	clean_pre_part(base->dpart);
 	base->dpart = part;
 	if ((retval = cbc_run_insert(cbc, base, DPARTS)) != 0)
@@ -372,10 +341,50 @@ part->log_vol, cpl->scheme);
 	else
 		printf("Partition added to DB\n");
 	if (retval == 0) 
-		retval = set_scheme_updated(cbc, scheme, scheme_id);
-	part->next = NULL;
-	clean_cbc_struct(base);
-	return retval;
+		retval = set_scheme_updated(cbc, cpl->scheme);
+	base->dpart = NULL;
+	goto cleanup;
+	cleanup:
+		free(part);
+		clean_cbc_struct(base);
+		return retval;
+}
+
+int
+check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm)
+{
+	if ((lvm > 0) && (cpl->lvm < 1)) {
+		printf("Logical volume defined for scheme %s\n", cpl->scheme);
+		printf("Please supply logical volume details\n");
+		return NO_LOG_VOL;
+	}
+	if ((lvm < 1) && (cpl->lvm > 0)) {
+		printf("You have defined a logical volume, but this ");
+		printf("scheme %s does not use it\n", cpl->scheme);
+		return EXTRA_LOG_VOL;
+	}
+	return 0;
+}
+
+int
+check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl)
+{
+	while (dpart) {
+		if (cpl->scheme_id == dpart->link_id.def_scheme_id) {
+			if (strncmp(part->mount, dpart->mount, RANGE_S) == 0) {
+				fprintf(stderr, "Partition %s already defined in %s\n",
+part->mount, cpl->scheme);
+			 	return PARTITION_EXISTS;
+			}
+			if ((strncmp(part->log_vol, dpart->log_vol, MAC_S) == 0) &&
+				cpl->lvm > 0) {
+				fprintf(stderr, "Logical volume %s already used in %s\n",
+part->log_vol, cpl->scheme);
+				return LOG_VOL_EXISTS;
+			}
+		}
+		dpart = dpart->next;
+	}
 }
 
 int
@@ -508,7 +517,7 @@ remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		printf("Partition %s deleted from scheme %s\n", cpl->partition,
 		 cpl->scheme);
 	}
-	retval = set_scheme_updated(cbc, cpl->scheme, 0);
+	retval = set_scheme_updated(cbc, cpl->scheme);
 	clean_dbdata_struct(data);
 	return retval;
 }
@@ -561,23 +570,22 @@ get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data)
 }
 
 int
-set_scheme_updated(cbc_config_s *cbc, char *scheme, unsigned long int id)
+set_scheme_updated(cbc_config_s *cbc, char *scheme)
 {
 	int retval;
-	unsigned long int scheme_id = id;
+	unsigned long int scheme_id;
 	dbdata_s *user;
 
 	if (scheme) {
 		init_multi_dbdata_struct(&user, 1);
-		snprintf(user->args.text, RBUFF_S, "%s", scheme);
-		if ((retval = cbc_run_search(cbc, user, DEF_SCHEME_ID_ON_SCH_NAME)) == 0) {
-			fprintf(stderr, "Cannot find scheme %s\n", scheme);
+		if ((retval = get_scheme_id_on_name(cbc, scheme, user)) != 0) {
 			clean_dbdata_struct(user);
-			return SCHEME_NOT_FOUND;
-		} else if (retval > 1)
-			fprintf(stderr, "Multiple schemes! Using first one\n");
-		scheme_id = user->fields.number;
+			return retval;
+		}
+		scheme_id = user->args.number;
 		clean_dbdata_struct(user);
+	} else {
+		return SCHEME_NOT_FOUND;
 	}
 	init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
 	user->args.number = (unsigned long int)getuid();
@@ -588,6 +596,22 @@ set_scheme_updated(cbc_config_s *cbc, char *scheme, unsigned long int id)
 	} else if (retval == 0)
 		printf("Scheme not updated\n");
 	clean_dbdata_struct(user);
+	return retval;
+}
+
+int
+modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+
+	return retval;
+}
+
+int
+modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+
 	return retval;
 }
 

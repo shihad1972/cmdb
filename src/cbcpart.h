@@ -38,6 +38,10 @@ enum {
 };
 
 typedef struct cbcpart_comm_line_s {
+	unsigned long int min;
+	unsigned long int max;
+	unsigned long int pri;
+	unsigned long int scheme_id;
 	char scheme[CONF_S];
 	char partition[RBUFF_S];
 	char log_vol[MAC_S];
@@ -69,6 +73,12 @@ int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
+check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm);
+
+int
+check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl);
+
+int
 add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
@@ -87,7 +97,13 @@ int
 get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data);
 
 int
-set_scheme_updated(cbc_config_s *cbc, char *scheme, unsigned long int id);
+set_scheme_updated(cbc_config_s *cbc, char *scheme);
+
+int
+modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 #endif /* __CBCPART_H__ */
 
