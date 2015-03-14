@@ -48,39 +48,37 @@ main (int argc, char *argv[])
 	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval = NONE;
 	cbc_config_s *cmc;
-	cbcpart_comm_line_s *cpcl;
+	cbcpart_comm_line_s *cpl;
 	
-	if (!(cmc = malloc(sizeof(cbc_config_s))))
-		report_error(MALLOC_FAIL, "cmc in cbcpart main");
-	if (!(cpcl = malloc(sizeof(cbcpart_comm_line_s))))
-		report_error(MALLOC_FAIL, "cpcl in cbcpart main");
-	init_cbcpart_config(cmc, cpcl);
-	if ((retval = parse_cbcpart_comm_line(argc, argv, cpcl)) != 0) {
+	cmc = cmdb_malloc(sizeof(cbc_config_s), "main");
+	cpl = cmdb_malloc(sizeof(cbcpart_comm_line_s), "main");
+	init_cbcpart_config(cmc, cpl);
+	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
 		free(cmc);
-		free(cpcl);
+		free(cpl);
 		display_command_line_error(retval, argv[0]);
 	}
 
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
-		free (cpcl);
+		free (cpl);
 		free (cmc);
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
-	if (cpcl->action == ADD_CONFIG)
-		retval = add_scheme_part(cmc, cpcl);
-	else if (cpcl->action == DISPLAY_CONFIG)
-		retval = display_full_seed_scheme(cmc, cpcl);
-	else if (cpcl->action == MOD_CONFIG)
-		retval = mod_scheme_part(cmc, cpcl);
-	else if (cpcl->action == LIST_CONFIG)
+	if (cpl->action == ADD_CONFIG)
+		retval = add_scheme_part(cmc, cpl);
+	else if (cpl->action == DISPLAY_CONFIG)
+		retval = display_full_seed_scheme(cmc, cpl);
+	else if (cpl->action == MOD_CONFIG)
+		retval = mod_scheme_part(cmc, cpl);
+	else if (cpl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
-	else if (cpcl->action == RM_CONFIG)
-		retval = remove_scheme_part(cmc, cpcl);
+	else if (cpl->action == RM_CONFIG)
+		retval = remove_scheme_part(cmc, cpl);
 	if (retval == WRONG_TYPE)
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
-	clean_cbcpart_comm_line(cpcl);
+	clean_cbcpart_comm_line(cpl);
 	exit (retval);
 }
 
@@ -275,9 +273,7 @@ list_seed_schemes(cbc_config_s *cbc)
 	cbc_s *base;
 	cbc_seed_scheme_s *seeds;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_seed_schemes");
-	init_cbc_struct(base);
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
 		if (retval == 6)
 			fprintf(stderr, "No Partition schemes in DB\n");
@@ -299,6 +295,7 @@ list_seed_schemes(cbc_config_s *cbc)
 int
 display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
+	char *mount, *logvol, *options;
 	int retval = NONE, i = 0;
 	unsigned long int def_id = 0;
 	cbc_s *base;
@@ -306,9 +303,7 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	cbc_pre_part_s *part;
 	time_t create;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in display_full_seed_scheme\n");
-	init_cbc_struct(base);
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
 		fprintf(stderr, "Seed scheme and default part query failed\n");
 		free(base);
@@ -440,11 +435,9 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	lvm = data->fields.small;
 	clean_dbdata_struct(data);
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in add_part_to_scheme");
+	initialise_cbc_s(&base);
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
-	init_cbc_struct(base);
 	init_pre_part(part);
 
 	if ((retval = check_cbcpart_lvm(cpl, lvm)) != 0)
