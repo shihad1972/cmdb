@@ -272,6 +272,7 @@ enum {			/* command line error codes */
 	NO_CLASS = 4194304,
 	NO_SERVICE_URL = 8388608,
 	NO_NAME_COID = 16777216,
+	NO_FILE_SYSTEM = 33554432,
 	NO_DOMAIN_NAME = -8,
 	NO_IP_ADDRESS = -9,
 	NO_HOST_NAME = -10,
@@ -486,6 +487,8 @@ void
 clean_string_l(string_l *list);
 void
 init_initial_string_l(string_l **string, int count);
+void *
+cmdb_malloc(size_t len, const char *msg);
 void
 resize_string_buff(string_len_s *build);
 int
