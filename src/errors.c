@@ -333,6 +333,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if ((retval == USER_INPUT_INVALID) &&
 		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+	else if (retval == NO_FILE_SYSTEM)
+		fprintf(stderr, "No file system type was supplied\n");
+	else if (retval == NO_LOG_VOL)
+		fprintf(stderr, "No logical volume name supplied\n");
 	else if (retval == CVERSION)
 		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
@@ -483,13 +487,17 @@ display_cbcpart_usage(void)
 	printf("-p: partition\n-s: scheme\n\n");
 	printf("Detail Options\n");
 	printf("-u: Use lvm (when adding a scheme)\n");
-	printf("-g: logical volume (if using lvm)\n");
-	printf("-o: mount-option\n");
+	printf("-g: <logical-volume> (if using lvm)\n");
+	printf("-o: <mount-option>\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
-	printf("-t: min size,max size,priority,mount point,filesystem\n\n");
-	printf("cbcpart: [ -a | -d | -l | -r ] [ -p | -s ] [ -u ] [ -g \
-log vol ] [ -t <part def>]\n");
+	printf("-i: <minimum-size>\n");
+	printf("-x: <maximum-size>\n");
+	printf("-y: <priority>\n");
+	printf("-o: <mount-option>\n");
+	printf("-t: <mount point>\n\n");
+	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s ) [ ( -u -g \
+log vol ) ] ( -x -t [ -i ] [ -y ] [ -o ] )\n");
 }
 
 void

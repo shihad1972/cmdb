@@ -37,7 +37,9 @@
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcpart.h"
 
 int
@@ -69,14 +71,8 @@ main (int argc, char *argv[])
 		retval = add_scheme_part(cmc, cpcl);
 	else if (cpcl->action == DISPLAY_CONFIG)
 		retval = display_full_seed_scheme(cmc, cpcl);
-	else if (cpcl->action == MOD_CONFIG) {
-		if (cpcl->type == PARTITION)
-			retval = modify_partition_config(cmc, cpcl);
-		else if (cpcl->type == SCHEME)
-			retval = modify_scheme_config(cmc, cpcl);
-		else
-			retval = WRONG_TYPE;
-	}
+	else if (cpcl->action == MOD_CONFIG)
+		retval = mod_scheme_part(cmc, cpcl);
 	else if (cpcl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpcl->action == RM_CONFIG)
@@ -84,7 +80,7 @@ main (int argc, char *argv[])
 	if (retval == WRONG_TYPE)
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
-	free(cpcl);
+	clean_cbcpart_comm_line(cpcl);
 	exit (retval);
 }
 
@@ -98,57 +94,153 @@ init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 void
 init_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
-	cpl->action = 0;
-	cpl->lvm = 0;
-	cpl->type = 0;
-	snprintf(cpl->partition, COMM_S, "NULL");
-	snprintf(cpl->scheme, COMM_S, "NULL");
-	snprintf(cpl->log_vol, COMM_S, "none");
+	memset(cpl, 0, sizeof(cbcpart_comm_line_s));
+}
+
+void
+clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
+{
+	if (cpl->fs)
+		free(cpl->fs);
+	if (cpl->scheme)
+		free(cpl->scheme);
+	if (cpl->option)
+		free(cpl->option);
+	if (cpl->log_vol)
+		free(cpl->log_vol);
+	if (cpl->partition)
+		free(cpl->partition);
+	free(cpl);
 }
 
 int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
-	int opt;
+	int opt, retval = 0;
+	const char *errmsg = "parse_cbcpart_comm_line";
 
-	while ((opt = getopt(argc, argv, "adg:lmn:o:prst:uv")) != -1) {
-		if (opt == 'a')
+	while ((opt = getopt(argc, argv, "adf:g:i:lmn:o:prst:uvx:y:")) != -1) {
+		if (opt == 'a') {
 			cpl->action = ADD_CONFIG;
-		else if (opt == 'd')
+		} else if (opt == 'd') {
 			cpl->action = DISPLAY_CONFIG;
-		else if (opt == 'l')
+		} else if (opt == 'l') {
 			cpl->action = LIST_CONFIG;
-		else if (opt == 'm')
+		} else if (opt == 'm') {
 			cpl->action = MOD_CONFIG;
-		else if (opt == 'r')
+		} else if (opt == 'r') {
 			cpl->action = RM_CONFIG;
-		else if (opt == 'u')
+		} else if (opt == 'u') {
 			cpl->lvm = TRUE;
-		else if (opt == 'v')
+		} else if (opt == 'v') {
 			cpl->action = CVERSION;
+		} else if (opt == 'p') {
+			cpl->type = PARTITION;
+		} else if (opt == 's') {
+			cpl->type = SCHEME;
+		} else if (opt == 'f') {
+			cpl->fs = cmdb_malloc(RANGE_S, errmsg);
+			snprintf(cpl->fs, RANGE_S, "%s", optarg);
+		}
 		else if (opt == 'g') {
 			if (cpl->lvm < 1) {
 				fprintf(stderr, "LVM not set before logvol\n");
 				return DISPLAY_USAGE;
 			}
+			cpl->log_vol = cmdb_malloc(MAC_S, errmsg);
 			snprintf(cpl->log_vol, MAC_S, "%s", optarg);
-		} else if (opt == 'n')
+		} else if (opt == 'n') {
+			cpl->scheme = cmdb_malloc(CONF_S, errmsg);
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
-		else if (opt == 'o')
+		} else if (opt == 'o') {
+			cpl->option = cmdb_malloc(CONF_S, errmsg);
 			snprintf(cpl->option, CONF_S, "%s", optarg);
-		else if (opt == 'p')
-			cpl->type = PARTITION;
-		else if (opt == 's')
-			cpl->type = SCHEME;
-		else if (opt == 't')
+		} else if (opt == 't') {
+			cpl->partition = cmdb_malloc(RBUFF_S, errmsg);
 			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
-		else {
+#ifdef HAVE_LIBPCRE
+		} else if (opt == 'i') {
+			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+				fprintf(stderr, "minimum not a number?\n");
+				return USER_INPUT_INVALID;
+			}
+			cpl->min = strtoul(optarg, NULL, 10);
+		} else if (opt == 'x') {
+			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+				fprintf(stderr, "maximum not a number?\n");
+				return USER_INPUT_INVALID;
+			}
+			cpl->max = strtoul(optarg, NULL, 10);
+		} else if (opt == 'y') {
+			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+				fprintf(stderr, "priority not a number?\n");
+				return USER_INPUT_INVALID;
+			}
+			cpl->pri = strtoul(optarg, NULL, 10);
+#else
+		} else if (opt == 'i') {
+			cpl->min = strtoul(optarg, NULL, 10);
+		} else if (opt == 'x') {
+			cpl->max = strtoul(optarg, NULL, 10);
+		} else if (opt == 'y') {
+			cpl->pri = strtoul(optarg, NULL, 10);
+#endif
+		} else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
 		}
 	}
+#ifdef HAVE_LIBPCRE
+	if ((validate_cbcpart_comm_line(cpl)) != 0)
+		return USER_INPUT_INVALID;
+#endif // HAVE_LIBPCRE
 	if (argc == 1)
 		return DISPLAY_USAGE;
+	retval = validate_cbcpart_user_input(cpl, argc);
+	return retval;
+}
+
+#ifdef HAVE_LIBPCRE
+int
+validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+
+	if (cpl->fs) {
+		if ((validate_user_input(cpl->fs, FS_REGEX)) < 0) {
+			fprintf(stderr, "filesystem (-f) invalid!\n");
+			return USER_INPUT_INVALID;
+		}
+	} else if (cpl->log_vol) {
+		if ((validate_user_input(cpl->log_vol, LOGVOL_REGEX)) < 0) {
+			fprintf(stderr, "logical volume name (-g) invalid!\n");
+			return USER_INPUT_INVALID;
+		}
+	} else if (cpl->partition) {
+		if ((validate_user_input(cpl->partition, PATH_REGEX)) < 0) {
+			fprintf(stderr, "path (-t) invalid!\n");
+			return USER_INPUT_INVALID;
+		}
+	} else if (cpl->option) {
+		if ((validate_user_input(cpl->option, FS_REGEX)) < 0) {
+			fprintf(stderr, "partition option (-o) invalid!\n");
+			return USER_INPUT_INVALID;
+		}
+	} else if (cpl->scheme) {
+		if ((validate_user_input(cpl->scheme, NAME_REGEX)) < 0) {
+			fprintf(stderr, "partition scheme name (-n) invalid!\n");
+			return USER_INPUT_INVALID;
+		}
+	}
+	return retval;
+}
+#endif // HAVE_LIBPCRE
+
+int
+validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
+{
+	int retval = 0;
+
 	if (cpl->action == CVERSION)
 		return CVERSION;
 	if (cpl->action == NONE && argc != 1)
@@ -157,14 +249,23 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	    cpl->action == MOD_CONFIG) {
 		if (cpl->type == NONE)
 			return NO_TYPE;
-		if ((strncmp(cpl->partition, "NULL", COMM_S) == 0) &&
-		    (cpl->type == PARTITION))
+		if (!(cpl->partition) && (cpl->type == PARTITION))
 			return NO_PARTITION_INFO;
 	}
+	if (cpl->action == ADD_CONFIG) {
+		if ((cpl->min == 0) && (cpl->max > 0))
+			cpl->min = cpl->max;
+		if (cpl->pri == 0)
+			cpl->pri = 100;
+		if (!(cpl->fs))
+			return NO_FILE_SYSTEM;
+		if ((cpl->lvm > 0) && !(cpl->log_vol))
+			return NO_LOG_VOL;
+	}
 	if ((cpl->action != LIST_CONFIG) && 
-	    (strncmp(cpl->scheme, "NULL", COMM_S) == 0))
+	    (!(cpl->scheme)))
 		return NO_SCHEME_INFO;
-	return NONE;
+	return retval;
 }
 
 int
@@ -228,7 +329,7 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 			printf("Created by %s on %s", get_uname(seed->cuser), ctime(&create));
 			create = (time_t)seed->mtime;
 			printf("Modified by %s on %s", get_uname(seed->muser), ctime(&create));
-			printf("\tMount\tFS\tMin\tMax");
+			printf("Mount\t\tFS\tMin\tMax");
 			if (seed->lvm > 0)
 				printf("\tVolume\n");
 			else
@@ -239,12 +340,27 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		}
 		while (part) {
 			if (def_id == part->link_id.def_scheme_id) {
-				if (seed->lvm > 0)
-					printf("\t%s\t%s\t%lu\t%lu\t%s\n",
+				if (seed->lvm > 0) {
+					if (strlen(part->mount) >= 16)
+						printf("%s\n\t\t%s\t%lu\t%lu\t%s\n",
 part->mount, part->fs, part->min, part->max, part->log_vol);
-				else
-					printf("\t%s\t%s\t%lu\t%lu\n",
+					else if (strlen(part->mount) >= 8)
+						printf("%s\t%s\t%lu\t%lu\t%s\n",
+part->mount, part->fs, part->min, part->max, part->log_vol);
+					else
+						printf("%s\t\t%s\t%lu\t%lu\t%s\n",
+part->mount, part->fs, part->min, part->max, part->log_vol);
+				} else {
+					if (strlen(part->mount) >= 16)
+						printf("%s\n\t\t%s\t%lu\t%lu\n",
 part->mount, part->fs, part->min, part->max);
+					if (strlen(part->mount) >= 8)
+						printf("%s\t%s\t%lu\t%lu\n",
+part->mount, part->fs, part->min, part->max);
+					else
+						printf("%s\t\t%s\t%lu\t%lu\n",
+part->mount, part->fs, part->min, part->max);
+				}
 			}
 			part = part->next;
 		}
@@ -287,6 +403,20 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 int
+mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = NONE;
+
+	if (cpl->type == PARTITION)
+		retval = modify_partition_config(cbc, cpl);
+	else if (cpl->type == SCHEME)
+		retval = modify_scheme_config(cbc, cpl);
+	else
+		retval = WRONG_TYPE;
+	return retval;
+}
+
+int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -302,31 +432,36 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		return retval;
 	}
 	scheme_id = data->fields.number;
+
 	if ((retval = cbc_run_search(cbc, data, LVM_ON_DEF_SCHEME_ID)) > 1)
 		fprintf(stderr, "More than one scheme_id %lu in DB>??\n", scheme_id);
 	else if (retval != 1)
 		fprintf(stderr, "Cannot find scheme_id %lu in DB??\n", scheme_id);
 	lvm = data->fields.small;
 	clean_dbdata_struct(data);
+
 	if (!(base = malloc(sizeof(cbc_s))))
 		report_error(MALLOC_FAIL, "base in add_part_to_scheme");
 	if (!(part = malloc(sizeof(cbc_pre_part_s))))
 		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
 	init_cbc_struct(base);
 	init_pre_part(part);
+
 	if ((retval = check_cbcpart_lvm(cpl, lvm)) != 0)
 		goto cleanup;
 	if ((retval = cbc_run_query(cbc, base, DPART)) != 0) {
-// Not sure why we are doing this. If there are no partitions yet just add it
-		if (retval == 6)
-			fprintf(stderr, "No partitions in the DB\n");
-		else
+		if (retval != 6) {
 			fprintf(stderr, "Unable to get partitions from DB\n");
-		goto cleanup;
+			goto cleanup;
+		}
 	}
 	dpart = base->dpart;
 	part->link_id.def_scheme_id = scheme_id;
-	snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
+	if (cpl->log_vol)
+		snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
+	else
+		snprintf(part->log_vol, MAC_S, "none");
+
 	if ((retval = add_part_info(cpl, part)) != 0) {
 		fprintf(stderr, "Unable to add part info for DB insert\n");
 		goto cleanup;
@@ -340,6 +475,8 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		printf("Unable to add partition to DB\n");
 	else
 		printf("Partition added to DB\n");
+	if (cpl->option)
+		cbcpart_add_part_option(cbc, base, cpl);
 	if (retval == 0) 
 		retval = set_scheme_updated(cbc, cpl->scheme);
 	base->dpart = NULL;
@@ -385,6 +522,7 @@ part->log_vol, cpl->scheme);
 		}
 		dpart = dpart->next;
 	}
+	return NONE;
 }
 
 int
@@ -425,6 +563,49 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
+int
+add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
+{
+	int retval = NONE;
+
+	part->min = cpl->min;
+	part->max = cpl->max;
+	part->pri = cpl->pri;
+	if (cpl->partition) {
+		snprintf(part->mount, HOST_S, "%s", cpl->partition);
+	} else {
+		fprintf(stderr, "No Partition??\n");
+		return NO_PARTITION_INFO;
+	}
+	if (cpl->fs) {
+		snprintf(part->fs, RANGE_S, "%s", cpl->fs);
+	} else {
+		fprintf(stderr, "No Filesystem??\n");
+		return NO_FILE_SYSTEM;
+	}
+	return retval;
+}
+
+void
+cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl)
+{
+	cbc_part_opt_s *opt;
+
+	initialise_cbc_part_opt(&opt);
+	base->part_opt = opt;
+	if (get_partition_id(cbc, cpl->scheme, cpl->partition, &(opt->def_part_id)) != 0)
+		return;
+	opt->def_scheme_id = cpl->scheme_id;
+	opt->option = cmdb_malloc(MAC_S, "cbcpart_add_part_option");
+	snprintf(opt->option, MAC_S, "%s", cpl->option);
+	opt->cuser = opt->muser = (unsigned long int)getuid();
+	if (cbc_run_insert(cbc, base, PARTOPTS) != 0)
+		fprintf(stderr, "Cannot add partition option to database\n");
+	else
+		printf("Partition option added to database\n");
+}
+
+/*
 int
 add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 {
@@ -482,7 +663,7 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 	snprintf(part->fs, RANGE_S, "%s", sbuck);
 	part->cuser = part->muser = (unsigned long int)getuid();
 	return retval;
-}
+} */
 
 int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
@@ -603,8 +784,22 @@ int
 modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
+	unsigned long int scheme_id;
+	short int lvm;
+	dbdata_s *data;
 
-	return retval;
+	if (!(cpl->scheme))
+		return CBC_NO_DATA;
+	init_multi_dbdata_struct(&data, 1);
+	if ((retval = get_scheme_id_on_name(cbc, cpl->scheme, data)) != 0)
+		goto cleanup;
+	scheme_id = data->fields.number;
+	if ((retval = cbc_run_search(cbc, data, LVM_ON_DEF_SCHEME_ID)) != 0)
+		goto cleanup;
+	lvm = data->fields.small;
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
 }
 
 int

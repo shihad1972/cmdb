@@ -29,6 +29,7 @@
 
 #ifndef __CBCPART_H__
 # define __CBCPART_H__
+# include "../config.h"
 # include "cmdb.h"
 # include "cbc_data.h"
 
@@ -42,10 +43,11 @@ typedef struct cbcpart_comm_line_s {
 	unsigned long int max;
 	unsigned long int pri;
 	unsigned long int scheme_id;
-	char scheme[CONF_S];
-	char partition[RBUFF_S];
-	char log_vol[MAC_S];
-	char option[CONF_S];
+	char *fs;
+	char *log_vol;
+	char *option;
+	char *partition;
+	char *scheme;
 	short int action;
 	short int lvm;
 	short int type;
@@ -57,8 +59,19 @@ init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 void
 init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
 
+void
+clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+
 int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl);
+
+# ifdef HAVE_LIBPCRE
+int
+validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+# endif // HAVE_LIBPCRE
+
+int
+validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc);
 
 int
 list_seed_schemes(cbc_config_s *cbc);
@@ -68,6 +81,12 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
 add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+int
+mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
@@ -84,8 +103,8 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 int
 add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
 
-int
-remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+void
+cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
 
 int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
