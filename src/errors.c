@@ -488,16 +488,16 @@ display_cbcpart_usage(void)
 	printf("Detail Options\n");
 	printf("-u: Use lvm (when adding a scheme)\n");
 	printf("-g: <logical-volume> (if using lvm)\n");
-	printf("-o: <mount-option>\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
 	printf("-i: <minimum-size>\n");
 	printf("-x: <maximum-size>\n");
 	printf("-y: <priority>\n");
 	printf("-o: <mount-option>\n");
+	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
 	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s ) [ ( -u -g \
-log vol ) ] ( -x -t [ -i ] [ -y ] [ -o ] )\n");
+log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -o ] )\n");
 }
 
 void

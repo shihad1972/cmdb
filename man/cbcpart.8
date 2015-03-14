@@ -1,4 +1,4 @@
-.TH cbcpart 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcpart 8 "Version 0.2: 14 March 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcpart \- Create Build Config Partitions
 .SH SYNOPSIS
@@ -56,23 +56,37 @@ work on a partition.
 .IP -s
 work on a scheme.
 
-\fBNote\fP: these options are mutually exclusive.
 .PP
 .B details
+.IP -u
+when adding a partition scheme, this option marks the scheme as using LVM.
 .IP "-g <log vol name>"
 the name for the logical volume.
 .IP "-n <scheme name>"
 the name of the partition scheme.
-.IP -u
-when adding a partition scheme, this option marks the scheme as using LVM.
-.IP "-u <option>"
+.IP "-o <option>"
 you can use this to supply a mount option for the partition
 .PP
 .B partition information
-.IP "-t min,max,priority,mount,fs"
-when adding a partition to a scheme, this is used to specify the partition
-information. The information you will provide is the minimum size, maximum
-size, the size priority, the mount point and the filesystem type.
+.IP "-f <file system type>"
+the file system type for the partition
+.IP "-t <mount-point>
+the mount point of the partition
+.IP "-i <minimum size>"
+the minimum size of the partition
+.IP "-x <maximum size>"
+the maximum size of the partition
+.IP "-y <priority>"
+the priority given to a partition when determining it's size
+.PP
+If you do not wish to use the min,max,priority scheme, just specify the maximum
+size. The minimum will be set to this value and priority assigned a default
+value of 100.
+.PP
+If \fBcbcpart\fP has been compiled with \fIlibpcre\fP support then there will
+be checks against the validity of names of the scheme and logical volume, as
+well as against the mount point and filesystem type. It is best to keep them all
+lower case.
 .PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf
