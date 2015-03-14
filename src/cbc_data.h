@@ -347,74 +347,190 @@ typedef struct cbc_iface_s { // Info about interface
         struct cbc_iface_s *next;
 } cbc_iface_s;
 
+// Initialiser functions
+
 void
 initialise_cbc_s(cbc_s **cbc);
+
+void
+initialise_cbc_syspack(cbc_syspack_s **spack);
+
+void
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa);
+
+void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc);
+
+void
+initialise_cbc_scripts(cbc_script_s **scripts);
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args);
+
+void
+initialise_cbc_part_opt(cbc_part_opt_s **opt);
+
+// init functions - mostly memset(0) to clean out memory
 
 void
 init_cbc_struct (cbc_s *cbc);
 
 void
-clean_cbc_struct (cbc_s *cbc);
-
-void
 init_boot_line(cbc_boot_line_s *boot);
-
-void
-clean_boot_line(cbc_boot_line_s *boot);
-
-void
-display_boot_line(cbc_s *base);
 
 void
 init_build_struct(cbc_build_s *build);
 
 void
-clean_build_struct(cbc_build_s *build);
-
-void
-display_build_struct(cbc_s *base);
-
-void
 init_build_domain(cbc_build_domain_s *dom);
-
-void
-clean_build_domain(cbc_build_domain_s *dom);
-
-void
-display_build_domain(cbc_build_domain_s *dom);
 
 void
 init_build_ip(cbc_build_ip_s *ip);
 
 void
-clean_build_ip(cbc_build_ip_s *ip);
-
-void
-display_build_ip(cbc_s *base);
-
-void
 init_build_os(cbc_build_os_s *os);
-
-void
-clean_build_os(cbc_build_os_s *os);
-
-void
-display_build_os(cbc_s *base);
 
 void
 init_build_type(cbc_build_type_s *type);
 
 void
-clean_build_type(cbc_build_type_s *type);
-
-void
-display_build_type(cbc_s *base);
-
-void
 init_pre_part(cbc_pre_part_s *prep);
 
 void
+init_disk_dev(cbc_disk_dev_s *disk);
+
+void
+init_locale(cbc_locale_s *locale);
+
+void
+init_package(cbc_package_s *pack);
+
+void
+init_seed_scheme(cbc_seed_scheme_s *seed);
+
+void
+init_cbc_server(cbc_server_s *server);
+
+void
+init_varient(cbc_varient_s *vari);
+
+void
+init_vm_hosts(cbc_vm_server_hosts_s *vm);
+
+void
+init_cbc_dhcp(cbc_dhcp_s *dh);
+
+void
+init_cbc_iface(cbc_iface_s *ifa);
+
+void
+init_cbc_syspack(cbc_syspack_s *spack);
+
+void
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack);
+
+void
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
+
+void
+init_cbc_scripts(cbc_script_s *scripts);
+
+void
+init_cbc_script_args(cbc_script_arg_s *args);
+
+void
+init_cbc_part_opt(cbc_part_opt_s *opt);
+
+// Clean functions - free linked lists and members
+
+void
+clean_cbc_struct (cbc_s *cbc);
+
+void
+clean_boot_line(cbc_boot_line_s *boot);
+
+void
+clean_build_struct(cbc_build_s *build);
+
+void
+clean_build_domain(cbc_build_domain_s *dom);
+
+void
+clean_build_ip(cbc_build_ip_s *ip);
+
+void
+clean_build_os(cbc_build_os_s *os);
+
+void
+clean_build_type(cbc_build_type_s *type);
+
+void
 clean_pre_part(cbc_pre_part_s *prep);
+
+void
+clean_disk_dev(cbc_disk_dev_s *disk);
+
+void
+clean_locale(cbc_locale_s *locale);
+
+void
+clean_package(cbc_package_s *pack);
+
+void
+clean_seed_scheme(cbc_seed_scheme_s *seed);
+
+void
+clean_cbc_server(cbc_server_s *server);
+
+void
+clean_varient(cbc_varient_s *vari);
+
+void
+clean_vm_hosts(cbc_vm_server_hosts_s *vm);
+
+void
+clean_cbc_dhcp(cbc_dhcp_s *dh);
+
+void
+clean_cbc_iface(cbc_iface_s *ifa);
+
+void
+clean_cbc_syspack(cbc_syspack_s *spack);
+
+void
+clean_cbc_syspack_arg(cbc_syspack_arg_s *spack);
+
+void
+clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
+
+void
+clean_cbc_scripts(cbc_script_s *scripts);
+
+void
+clean_cbc_script_args(cbc_script_arg_s *args);
+
+void
+clean_cbc_part_opt(cbc_part_opt_s *opt);
+
+// Display functions - print struct members
+
+void
+display_boot_line(cbc_s *base);
+
+void
+display_build_struct(cbc_s *base);
+
+void
+display_build_domain(cbc_build_domain_s *dom);
+
+void
+display_build_ip(cbc_s *base);
+
+void
+display_build_os(cbc_s *base);
+
+void
+display_build_type(cbc_s *base);
 
 void
 display_def_part(cbc_s *base);
@@ -423,132 +539,24 @@ void
 display_seed_part(cbc_s *base);
 
 void
-init_disk_dev(cbc_disk_dev_s *disk);
-
-void
-clean_disk_dev(cbc_disk_dev_s *disk);
-
-void
 display_disk_dev(cbc_s *base);
-
-void
-init_locale(cbc_locale_s *locale);
-
-void
-clean_locale(cbc_locale_s *locale);
 
 void
 display_locale(cbc_s *base);
 
 void
-init_package(cbc_package_s *pack);
-
-void
-clean_package(cbc_package_s *pack);
-
-void
 display_package(cbc_s *base);
-
-void
-init_seed_scheme(cbc_seed_scheme_s *seed);
-
-void
-clean_seed_scheme(cbc_seed_scheme_s *seed);
 
 void
 display_seed_scheme(cbc_s *base);
 
 void
-init_cbc_server(cbc_server_s *server);
-
-void
-clean_cbc_server(cbc_server_s *server);
-
-void
 display_cbc_server(cbc_s *base);
-
-void
-init_varient(cbc_varient_s *vari);
-
-void
-clean_varient(cbc_varient_s *vari);
 
 void
 display_varient(cbc_s *base);
 
 void
-init_vm_hosts(cbc_vm_server_hosts_s *vm);
-
-void
-clean_vm_hosts(cbc_vm_server_hosts_s *vm);
-
-void
 display_vm_hosts(cbc_s *base);
-
-void
-init_cbc_dhcp(cbc_dhcp_s *dh);
-
-void
-clean_cbc_dhcp(cbc_dhcp_s *dh);
-
-void
-init_cbc_iface(cbc_iface_s *ifa);
-
-void
-clean_cbc_iface(cbc_iface_s *ifa);
-
-void
-initialise_cbc_syspack(cbc_syspack_s **spack);
-
-void
-init_cbc_syspack(cbc_syspack_s *spack);
-
-void
-clean_cbc_syspack(cbc_syspack_s *spack);
-
-void
-initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa);
-
-void
-init_cbc_syspack_arg(cbc_syspack_arg_s *spack);
-
-void
-clean_cbc_syspack_arg(cbc_syspack_arg_s *spack);
-
-void
-initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc);
-
-void
-init_cbc_syspack_conf(cbc_syspack_conf_s *spack);
-
-void
-clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
-
-void
-initialise_cbc_scripts(cbc_script_s **scripts);
-
-void
-init_cbc_scripts(cbc_script_s *scripts);
-
-void
-clean_cbc_scripts(cbc_script_s *scripts);
-
-void
-initialise_cbc_script_args(cbc_script_arg_s **args);
-
-void
-init_cbc_script_args(cbc_script_arg_s *args);
-
-void
-clean_cbc_script_args(cbc_script_arg_s *args);
-
-void
-initialise_cbc_part_opt(cbc_part_opt_s **opt);
-
-void
-init_cbc_part_opt(cbc_part_opt_s *opt);
-
-void
-clean_cbc_part_opt(cbc_part_opt_s *opt);
 
 #endif /* __CBC_DATA_H__ */
