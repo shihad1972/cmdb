@@ -788,6 +788,8 @@ clean_cbc_part_opt(cbc_part_opt_s *opt)
 		return;
 	next = list->next;
 	while (list) {
+		if (list->option)
+			free(list->option);
 		free(list);
 		list = next;
 		if (next)

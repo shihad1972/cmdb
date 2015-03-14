@@ -288,7 +288,7 @@ typedef struct cbc_script_arg_s {
 } cbc_script_arg_s;
 
 typedef struct cbc_part_opt_s {
-	char option[CONF_S];
+	char *option;
 	unsigned long int part_options_id;
 	unsigned long int def_part_id;
 	unsigned long int def_scheme_id;
