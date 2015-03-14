@@ -335,3 +335,29 @@ get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id)
 	return 0;
 }
 
+int
+get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
+{
+	int retval = 0, query = DEFP_ID_ON_SCHEME_PART;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name) || !(mount))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", name);
+	snprintf(data->next->args.text, RBUFF_S, "%s", mount);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find partition %s in scheme %s\n",
+		 mount, name);
+		clean_dbdata_struct(data);
+		return NO_RECORDS;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple partitions %s in scheme %s?\n",
+		 mount, name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
