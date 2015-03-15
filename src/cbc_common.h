@@ -70,4 +70,10 @@ get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id);
 int
 get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id);
 
+int
+get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id);
+
+int
+get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id);
+
 #endif /* CBC_COMMON_H */

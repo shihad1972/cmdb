@@ -351,7 +351,7 @@ get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
 		fprintf(stderr, "Cannot find partition %s in scheme %s\n",
 		 mount, name);
 		clean_dbdata_struct(data);
-		return NO_RECORDS;
+		return PARTITIONS_NOT_FOUND;
 	} else if (retval > 1) {
 		fprintf(stderr, "Found multiple partitions %s in scheme %s?\n",
 		 mount, name);
@@ -359,5 +359,33 @@ get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
 	*id = data->fields.number;
 	clean_dbdata_struct(data);
 	return 0;
+}
+
+int
+get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
+{
+	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", name);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find scheme %s\n", name);
+		clean_dbdata_struct(data);
+		return SCHEME_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple schemes with name %s?\n", name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
+{
 }
 
