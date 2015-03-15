@@ -242,7 +242,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_SYSPACK_CONF = 224,
 	NO_ARG = 225,
 	NO_NUMBER = 226,
-	NO_NTP_SERVER = 227
+	NO_NTP_SERVER = 227,
+	NO_OPTION = 228
 };
 
 enum {			/* command line error codes */
@@ -471,28 +472,37 @@ void
 convert_time(char *timestamp, unsigned long int *store);
 char *
 get_uname(unsigned long int uid);
+int
+get_ip_from_hostname(dbdata_s *data);
+
+// Initialisation functions
+
+void
+initialise_string_array(char *list[], size_t num, size_t len[]);
 void
 init_dbdata_struct(dbdata_s *data);
 void
 init_multi_dbdata_struct(dbdata_s **data, unsigned int i);
 void
-clean_dbdata_struct(dbdata_s *data);
-void
 init_string_len(string_len_s *string);
-void
-clean_string_len(string_len_s *string);
 void
 init_string_l(string_l *string);
 void
-clean_string_l(string_l *list);
-void
 init_initial_string_l(string_l **string, int count);
+
+// Memory functions - first cleanup
+void
+clean_dbdata_struct(dbdata_s *data);
+void
+clean_string_len(string_len_s *string);
+void
+clean_string_l(string_l *list);
+// And now manipulation
 void *
 cmdb_malloc(size_t len, const char *msg);
 void
 resize_string_buff(string_len_s *build);
-int
-get_ip_from_hostname(dbdata_s *data);
+
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *

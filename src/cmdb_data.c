@@ -56,3 +56,12 @@ cmdb_malloc(size_t len, const char *msg)
 	return data;
 }
 
+void
+initialise_string_array(char *list[], size_t quantity, size_t quality[])
+{
+	size_t i;
+
+	for (i = 0; i < quantity; i++)
+		list[i] = cmdb_malloc(quality[i], "initialise_string_array");
+}
+
