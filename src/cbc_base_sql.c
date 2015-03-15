@@ -365,7 +365,8 @@ SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
 SELECT build_type FROM build_type WHERE alias = ?"
 /* 70 */,"\
 SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
-  AND systscr_id = ? AND no = ?"
+  AND systscr_id = ? AND no = ?","\
+SELECT poption FROM part_options WHERE def_part_id = ? and def_scheme_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -387,13 +388,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4
+	3, 1, 2, 1, 4, 2
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1
+	1, 1, 3, 1, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -562,7 +563,8 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBTEXT, NONE, NONE, NONE },
 	{ DBINT, DBTEXT, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE },
-	{ DBINT, DBINT, DBINT, DBINT }
+	{ DBINT, DBINT, DBINT, DBINT },
+	{ DBINT, DBINT, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -635,7 +637,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
