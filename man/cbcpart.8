@@ -17,11 +17,11 @@ cbcpart \- Create Build Config Partitions
 [
 .B -adlmrv
 ] [
-.B -p | -s
+.B -p | -s | -o
 ] [
-.B -ogun
+.B -bogun
 ] [
-.B -t
+.B -tfixy
 ]
 
 .SH DESCRIPTION
@@ -55,6 +55,8 @@ version (no other argument needed)
 work on a partition.
 .IP -s
 work on a scheme.
+.IP -o
+work on a partition option.
 
 .PP
 .B details
@@ -64,7 +66,7 @@ when adding a partition scheme, this option marks the scheme as using LVM.
 the name for the logical volume.
 .IP "-n <scheme name>"
 the name of the partition scheme.
-.IP "-o <option>"
+.IP "-b <option>"
 you can use this to supply a mount option for the partition
 .PP
 .B partition information
