@@ -359,26 +359,6 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 printf("%s\t%s\t%lu\t%lu\t%s\t%s\n", p[0], p[1], part->min, part->max, p[2], p[3]);
 				else
 printf("%s\t%s\t%lu\t%lu\t%s\n", p[0], p[1], part->min, part->max, p[2]);
-/*					if (strlen(part->mount) >= 16)
-						printf("%s\n\t\t%s\t%lu\t%lu\t%s\n",
-part->mount, part->fs, part->min, part->max, part->log_vol);
-					else if (strlen(part->mount) >= 8)
-						printf("%s\t%s\t%lu\t%lu\t%s\n",
-part->mount, part->fs, part->min, part->max, part->log_vol);
-					else
-						printf("%s\t\t%s\t%lu\t%lu\t%s\n",
-part->mount, part->fs, part->min, part->max, part->log_vol);
-				} else {
-					if (strlen(part->mount) >= 16)
-						printf("%s\n\t\t%s\t%lu\t%lu\n",
-part->mount, part->fs, part->min, part->max);
-					if (strlen(part->mount) >= 8)
-						printf("%s\t%s\t%lu\t%lu\n",
-part->mount, part->fs, part->min, part->max);
-					else
-						printf("%s\t\t%s\t%lu\t%lu\n",
-part->mount, part->fs, part->min, part->max); 
-				} */
 			}
 			part = part->next;
 		}
@@ -418,6 +398,8 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = remove_partition_from_scheme(cbc, cpl);
 	else if (cpl->type == SCHEME)
 		retval = remove_scheme(cbc, cpl);
+	else if (cpl->type == OPTION)
+		retval = remove_part_option(cbc, cpl);
 	else
 		retval = WRONG_TYPE;
 	return retval;
@@ -682,9 +664,7 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	int retval = 0;
 	dbdata_s *data;
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in remove_scheme");
-	init_dbdata_struct(data);
+	init_multi_dbdata_struct(&data, 1);
 	if ((retval = get_scheme_id_on_name(cbc, cpl->scheme, data)) != 0) {
 		clean_dbdata_struct(data);
 		return retval;
@@ -703,6 +683,26 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	}
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+int
+remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	int retval = 0;
+	dbdata_s *data;
+	init_multi_dbdata_struct(&data, 1);
+	if ((retval = get_part_opt_id(cbc, cpl->scheme, cpl->partition, cpl->option, &(data->args.number))) != 0) {
+		clean_dbdata_struct(data);
+		return retval;
+	}
+	if ((retval = cbc_run_delete(cbc, data, PART_OPT_ON_ID)) > 1)
+		printf("Removed %d options\n", retval);
+	else if (retval == 1)
+		printf("Remove 1 option\n");
+	else
+		fprintf(stderr, "No options removed from DB\n");
+	clean_dbdata_struct(data);
+	return 0;
 }
 
 int

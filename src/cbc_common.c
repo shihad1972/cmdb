@@ -387,5 +387,29 @@ get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
 int
 get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
 {
+	int retval = 0, query = PART_OPT_ID;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name) || !(part) || !(opt))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if ((retval = get_partition_id(cbc, name, part, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = get_scheme_id(cbc, name, &(data->next->args.number))) != 0)
+		return retval;
+	snprintf(data->next->next->args.text, RBUFF_S, "%s", opt);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find option %s for part %s, scheme %s\n",
+		 opt, part, name);
+		clean_dbdata_struct(data);
+		return NO_OPTION;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple options %s for part %s, scheme %s?\n",
+		 opt, part, name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
 }
 

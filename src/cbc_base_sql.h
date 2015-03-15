@@ -64,7 +64,8 @@ enum {			/* cbc delete SQL statements */
 	SYSP_ARG = 12,
 	SYSP_CONF = 13,
 	CBCSCR_ON_ID = 14,
-	CBCSCRARG_ON_ID = 15
+	CBCSCRARG_ON_ID = 15,
+	PART_OPT_ON_ID = 16
 };
 
 enum {			/* cbc search SQL statements */
@@ -139,7 +140,8 @@ enum {			/* cbc search SQL statements */
 	SCRIPT_CONFIG = 68,
 	BUILD_TYPE_ON_ALIAS = 69,
 	SCR_ARG_ID = 70,
-	PART_OPT_ON_SCHEME_ID = 71
+	PART_OPT_ON_SCHEME_ID = 71,
+	PART_OPT_ID = 72
 };
 
 enum {			/* cbc update SQL statements */
