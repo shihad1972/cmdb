@@ -35,12 +35,19 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif // HAVE_LIBPCRE
 #include "cbcpart.h"
+
+static void
+cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt);
+
+static void
+get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt);
 
 int
 main (int argc, char *argv[])
@@ -69,8 +76,8 @@ main (int argc, char *argv[])
 		retval = add_scheme_part(cmc, cpl);
 	else if (cpl->action == DISPLAY_CONFIG)
 		retval = display_full_seed_scheme(cmc, cpl);
-	else if (cpl->action == MOD_CONFIG)
-		retval = mod_scheme_part(cmc, cpl);
+/*	else if (cpl->action == MOD_CONFIG)
+		retval = mod_scheme_part(cmc, cpl); */
 	else if (cpl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpl->action == RM_CONFIG)
@@ -117,7 +124,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	int opt, retval = 0;
 	const char *errmsg = "parse_cbcpart_comm_line";
 
-	while ((opt = getopt(argc, argv, "adf:g:i:lmn:o:prst:uvx:y:")) != -1) {
+	while ((opt = getopt(argc, argv, "ab:df:g:i:lmn:oprst:uvx:y:")) != -1) {
 		if (opt == 'a') {
 			cpl->action = ADD_CONFIG;
 		} else if (opt == 'd') {
@@ -136,6 +143,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->type = PARTITION;
 		} else if (opt == 's') {
 			cpl->type = SCHEME;
+		} else if (opt == 'o') {
+			cpl->type = OPTION;
 		} else if (opt == 'f') {
 			cpl->fs = cmdb_malloc(RANGE_S, errmsg);
 			snprintf(cpl->fs, RANGE_S, "%s", optarg);
@@ -150,7 +159,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'n') {
 			cpl->scheme = cmdb_malloc(CONF_S, errmsg);
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
-		} else if (opt == 'o') {
+		} else if (opt == 'b') {
 			cpl->option = cmdb_malloc(CONF_S, errmsg);
 			snprintf(cpl->option, CONF_S, "%s", optarg);
 		} else if (opt == 't') {
@@ -255,10 +264,12 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 			cpl->min = cpl->max;
 		if (cpl->pri == 0)
 			cpl->pri = 100;
-		if (!(cpl->fs))
+		if (!(cpl->fs) && cpl->type != OPTION)
 			return NO_FILE_SYSTEM;
 		if ((cpl->lvm > 0) && !(cpl->log_vol))
 			return NO_LOG_VOL;
+		if ((cpl->type == OPTION) && !(cpl->option))
+			return NO_OPTION;
 	}
 	if ((cpl->action != LIST_CONFIG) && 
 	    (!(cpl->scheme)))
@@ -295,20 +306,27 @@ list_seed_schemes(cbc_config_s *cbc)
 int
 display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	char *mount, *logvol, *options;
+	char *opt;
 	int retval = NONE, i = 0;
 	unsigned long int def_id = 0;
+	size_t num = 4, j;
+	char *p[num];
+	size_t len[num];
+	time_t create;
 	cbc_s *base;
 	cbc_seed_scheme_s *seed;
 	cbc_pre_part_s *part;
-	time_t create;
 
 	initialise_cbc_s(&base);
+	for (j = 0; j < num; j++)
+		len[j] = RBUFF_S;
+	initialise_string_array(p, num, len);
 	if ((retval = cbc_run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
 		fprintf(stderr, "Seed scheme and default part query failed\n");
 		free(base);
 		return retval;
 	}
+	opt = cmdb_malloc(RBUFF_S, "display_full_seed_scheme");
 	seed = base->sscheme;
 	while (seed) {
 		part = base->dpart;
@@ -324,7 +342,7 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 			printf("Created by %s on %s", get_uname(seed->cuser), ctime(&create));
 			create = (time_t)seed->mtime;
 			printf("Modified by %s on %s", get_uname(seed->muser), ctime(&create));
-			printf("Mount\t\tFS\tMin\tMax");
+			printf("Mount\t\tFS\tMin\tMax\tOptions\t\t");
 			if (seed->lvm > 0)
 				printf("\tVolume\n");
 			else
@@ -335,8 +353,13 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		}
 		while (part) {
 			if (def_id == part->link_id.def_scheme_id) {
-				if (seed->lvm > 0) {
-					if (strlen(part->mount) >= 16)
+				get_opts_for_part(cbc, part, opt);
+				cbcp_setup_parts(p, part, opt);
+				if (seed->lvm > 0)
+printf("%s\t%s\t%lu\t%lu\t%s\t%s\n", p[0], p[1], part->min, part->max, p[2], p[3]);
+				else
+printf("%s\t%s\t%lu\t%lu\t%s\n", p[0], p[1], part->min, part->max, p[2]);
+/*					if (strlen(part->mount) >= 16)
 						printf("%s\n\t\t%s\t%lu\t%lu\t%s\n",
 part->mount, part->fs, part->min, part->max, part->log_vol);
 					else if (strlen(part->mount) >= 8)
@@ -354,8 +377,8 @@ part->mount, part->fs, part->min, part->max);
 part->mount, part->fs, part->min, part->max);
 					else
 						printf("%s\t\t%s\t%lu\t%lu\n",
-part->mount, part->fs, part->min, part->max);
-				}
+part->mount, part->fs, part->min, part->max); 
+				} */
 			}
 			part = part->next;
 		}
@@ -366,6 +389,7 @@ part->mount, part->fs, part->min, part->max);
 		printf("No scheme with name %s found\n", cpl->scheme);
 	}
 	clean_cbc_struct(base);
+	free(opt);
 	return retval;
 }
 
@@ -378,6 +402,8 @@ add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = add_partition_to_scheme(cbc, cpl);
 	else if (cpl->type == SCHEME)
 		retval = add_new_scheme(cbc, cpl);
+	else if (cpl->type == OPTION)
+		retval = add_new_partition_option(cbc, cpl);
 	else
 		retval = WRONG_TYPE;
 	return retval;
@@ -396,7 +422,7 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = WRONG_TYPE;
 	return retval;
 }
-
+/*
 int
 mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
@@ -410,7 +436,7 @@ mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = WRONG_TYPE;
 	return retval;
 }
-
+*/
 int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
@@ -598,65 +624,19 @@ cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl
 		printf("Partition option added to database\n");
 }
 
-/*
 int
-add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
+add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = NONE, i = NONE;
-	char *sbuck, *pbuck;
-	sbuck = cpl->partition;
-	if (!(pbuck = strchr(cpl->partition, ','))) {
-		printf("Invalid input for partition\n");
-		printf("You need 5 strings separated by 4 commas\n");
-		printf("You have %d commas\n", i);
-		return USER_INPUT_INVALID;
-	} else {
-		i++;
-	}
-	*pbuck = '\0';
-	pbuck++;
-	part->min = strtoul(sbuck, NULL, 10);
-	sbuck = pbuck;
-	if (!(pbuck = strchr(sbuck, ','))) {
-		printf("Invalid input for partition\n");
-		printf("You need 5 strings separated by 4 commas\n");
-		printf("You have %d commas\n", i);
-		return USER_INPUT_INVALID;
-	} else {
-		i++;
-	}
-	*pbuck = '\0';
-	pbuck++;
-	part->max = strtoul(sbuck, NULL, 10);
-	sbuck = pbuck;
-	if (!(pbuck = strchr(sbuck, ','))) {
-		printf("Invalid input for partition\n");
-		printf("You need 5 strings separated by 4 commas\n");
-		printf("You have %d commas\n", i);
-		return USER_INPUT_INVALID;
-	} else {
-		i++;
-	}
-	*pbuck = '\0';
-	pbuck++;
-	part->pri = strtoul(sbuck, NULL, 10);
-	sbuck = pbuck;
-	if (!(pbuck = strchr(sbuck, ','))) {
-		printf("Invalid input for partition\n");
-		printf("You need 5 strings separated by 4 commas\n");
-		printf("You have %d commas\n", i);
-		return USER_INPUT_INVALID;
-	} else {
-		i++;
-	}
-	*pbuck = '\0';
-	pbuck++;
-	snprintf(part->mount, HOST_S, "%s", sbuck);
-	sbuck = pbuck;
-	snprintf(part->fs, RANGE_S, "%s", sbuck);
-	part->cuser = part->muser = (unsigned long int)getuid();
-	return retval;
-} */
+	cbc_s *base;
+	int retval = 0;
+
+	if ((retval = get_scheme_id(cbc, cpl->scheme, &(cpl->scheme_id))) != 0)
+		return retval;
+	initialise_cbc_s(&base);
+	cbcpart_add_part_option(cbc, base, cpl);
+	clean_cbc_struct(base);
+	return 0;
+}
 
 int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
@@ -772,7 +752,7 @@ set_scheme_updated(cbc_config_s *cbc, char *scheme)
 	clean_dbdata_struct(user);
 	return retval;
 }
-
+/*
 int
 modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
@@ -801,5 +781,64 @@ modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	int retval = 0;
 
 	return retval;
+}
+*/
+void
+get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt)
+{
+	char *newopt, *optpos;
+	int retval = 0, query = PART_OPT_ON_SCHEME_ID;
+	unsigned int max = 0;
+	size_t len, size;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = part->id.def_part_id;
+	data->next->args.number = part->link_id.def_scheme_id;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		snprintf(opt, MAC_S, "none");
+		clean_dbdata_struct(data);
+		return;
+	} else {
+		retval = 0;
+		list = data;
+		while (list) {
+			if (retval == 0) {
+				snprintf(opt, MAC_S, "%s", list->fields.text);
+	//			list = list->next;
+			} else {
+				newopt = list->fields.text;
+				size = strlen(opt);
+				len = strlen(newopt);
+				optpos = opt + size;
+				if ((len + size) < RBUFF_S)
+					snprintf(optpos, len + 2, ",%s", newopt);
+				else
+					fprintf(stderr, "Too many options!\n");
+			}
+			retval++;
+			list = list->next;
+		}
+	}
+}
+
+void
+cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt)
+{
+	if (strlen(part->mount) >= 16)
+		snprintf(p[0], RBUFF_S, "%s\n\t", part->mount);
+	else if (strlen(part->mount) >= 8)
+		snprintf(p[0], RBUFF_S, "%s", part->mount);
+	else
+		snprintf(p[0], RBUFF_S, "%s\t", part->mount);
+	snprintf(p[1], RBUFF_S, "%s", part->fs);
+	if (strlen(opt) >= 16)
+		snprintf(p[2], RBUFF_S, "%s", opt);
+	else if (strlen(opt) >= 8)
+		snprintf(p[2], RBUFF_S, "%s\t", opt);
+	else
+		snprintf(p[2], RBUFF_S, "%s\t\t", opt);
+	snprintf(p[3], RBUFF_S, "%s", part->log_vol);
 }
 

@@ -36,6 +36,7 @@
 enum {
 	PARTITION = 1,
 	SCHEME = 2,
+	OPTION = 3
 };
 
 typedef struct cbcpart_comm_line_s {
@@ -105,6 +106,9 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
 
 void
 cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
+
+int
+add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);

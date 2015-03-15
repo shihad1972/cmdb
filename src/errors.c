@@ -337,6 +337,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No file system type was supplied\n");
 	else if (retval == NO_LOG_VOL)
 		fprintf(stderr, "No logical volume name supplied\n");
+	else if (retval == NO_OPTION)
+		fprintf(stderr, "Partition option specified but no option supplied\n");
 	else if (retval == CVERSION)
 		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
@@ -484,7 +486,7 @@ display_cbcpart_usage(void)
 	printf("-l: list schemes\n-r: remove scheme / partition\n");
 	printf("-m: modify\n\n");
 	printf("Definition Options:\n");
-	printf("-p: partition\n-s: scheme\n\n");
+	printf("-p: partition\n-s: scheme\n-o: option\n\n");
 	printf("Detail Options\n");
 	printf("-u: Use lvm (when adding a scheme)\n");
 	printf("-g: <logical-volume> (if using lvm)\n");
@@ -493,11 +495,11 @@ display_cbcpart_usage(void)
 	printf("-i: <minimum-size>\n");
 	printf("-x: <maximum-size>\n");
 	printf("-y: <priority>\n");
-	printf("-o: <mount-option>\n");
+	printf("-b: <mount-option>\n");
 	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
-	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s ) [ ( -u -g \
-log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -o ] )\n");
+	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s | -o ) [ ( -u -g \
+log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -b ] )\n");
 }
 
 void
