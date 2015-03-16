@@ -78,7 +78,7 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
+	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME | PARTOPT;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -356,9 +356,10 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	init_string_len(dhcp);
 	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 		return retval;
+/* This should never need to be run - we always have the sevrer name
 	if (strncmp(cml->name, "NULL", COMM_S) == 0)
 		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval;
+			return retval; */
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
@@ -677,9 +678,10 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (cml->server_id == 0)
 		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
 			return retval;
+/* This should never have to run - we always have the server name
 	if (!(cml->name))
 		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval;
+			return retval; */
 	server = cml->name;
 	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
 	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
@@ -1796,7 +1798,7 @@ chmod 755 kick-final.sh\n\
 	snprintf(tmp, COMM_S, "%%end\n\n");
 	build->size += 6;
 }
-
+/*
 int
 get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
 {
@@ -1822,7 +1824,7 @@ get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
 	}
 	clean_dbdata_struct(data);
 	return retval;
-}
+} */
 
 int
 get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
@@ -1922,41 +1924,13 @@ get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
 					fprintf(stderr,
 					 "Multiple OS's found!\n");
 					retval = MULTIPLE_OS;
-				 
-} else {
+				} else {
 					fprintf(stderr,
 					 "No OS found!\n");
 					retval = OS_NOT_FOUND;
 				 }
 			}
 		}
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-get_def_scheme_id(cbc_config_s *cmc, char *partition, uli_t *def_scheme_id)
-{
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data;
-
-	type = DEF_SCHEME_ID_ON_SCH_NAME;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, CONF_S, "%s", partition);
-	if ((retval = cbc_run_search(cmc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 1) {
-		*def_scheme_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr,
-		 "Multiple partition schemes found with name %s\n", partition);
-		retval = MULTIPLE_PART_NAMES;
-	} else {
-		fprintf(stderr,
-		 "No partition schemes found with name %s\n", partition);
-		retval = PARTITIONS_NOT_FOUND;
 	}
 	clean_dbdata_struct(data);
 	return retval;
