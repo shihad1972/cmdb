@@ -2110,7 +2110,7 @@ cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 1)
 		*buffer = &(base->part_opt->def_scheme_id);
 	else if (i == 2)
-		*buffer = &(base->part_opt->option);
+		*buffer = base->part_opt->option; // This is a pointer anyway
 	else if (i == 3)
 		*buffer = &(base->part_opt->cuser);
 	else if (i == 4)
