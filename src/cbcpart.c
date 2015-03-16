@@ -252,6 +252,8 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 		return CVERSION;
 	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
+	if ((cpl->action != LIST_CONFIG) && (!(cpl->scheme)))
+		return NO_SCHEME_INFO;
 	if (cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG ||
 	    cpl->action == MOD_CONFIG) {
 		if (cpl->type == NONE)
@@ -260,20 +262,19 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 			return NO_PARTITION_INFO;
 	}
 	if (cpl->action == ADD_CONFIG) {
-		if ((cpl->min == 0) && (cpl->max > 0))
-			cpl->min = cpl->max;
-		if (cpl->pri == 0)
-			cpl->pri = 100;
-		if (!(cpl->fs) && cpl->type != OPTION)
-			return NO_FILE_SYSTEM;
-		if ((cpl->lvm > 0) && !(cpl->log_vol))
-			return NO_LOG_VOL;
+		if (cpl->type == PARTITION) {
+			if ((cpl->min == 0) && (cpl->max > 0))
+				cpl->min = cpl->max;
+			if (cpl->pri == 0)
+				cpl->pri = 100;
+			if (!(cpl->fs))
+				return NO_FILE_SYSTEM;
+			if ((cpl->lvm > 0) && !(cpl->log_vol))
+				return NO_LOG_VOL;
+		}
 		if ((cpl->type == OPTION) && !(cpl->option))
 			return NO_OPTION;
 	}
-	if ((cpl->action != LIST_CONFIG) && 
-	    (!(cpl->scheme)))
-		return NO_SCHEME_INFO;
 	return retval;
 }
 
@@ -669,8 +670,8 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		clean_dbdata_struct(data);
 		return retval;
 	}
-	retval = cbc_run_delete(cbc, data, DEF_PART_ON_DEF_ID);
-	printf("Removed %d partition(s)\n", retval);
+/*	retval = cbc_run_delete(cbc, data, DEF_PART_ON_DEF_ID);
+	printf("Removed %d partition(s)\n", retval); */
 	if ((retval = cbc_run_delete(cbc, data, SEED_SCHEME_ON_DEF_ID)) == 0) {
 		fprintf(stderr, "No scheme removed\n");
 		retval = DB_DELETE_FAILED;
@@ -762,10 +763,12 @@ get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt)
 				size = strlen(opt);
 				len = strlen(newopt);
 				optpos = opt + size;
-				if ((len + size) < RBUFF_S)
-					snprintf(optpos, len + 2, ",%s", newopt);
-				else
-					fprintf(stderr, "Too many options!\n");
+				if (len > 0) {
+					if  ((len + size) < RBUFF_S)
+						snprintf(optpos, len + 2, ",%s", newopt);
+					else
+						fprintf(stderr, "Too many options!\n");
+				}
 			}
 			retval++;
 			list = list->next;
