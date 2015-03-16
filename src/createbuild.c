@@ -68,7 +68,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "cbc in create_build_config");
 	init_cbc_struct(cbc);
 	init_build_struct(build);
-	if ((retval = get_server_id(cbt, cml, &(build->server_id))) != 0)
+	if ((retval = get_server_id(cbt, cml->name, &(build->server_id))) != 0)
 		goto cleanup;
 	if ((retval = check_for_existing_build(cbt, build)) != 0)
 		goto cleanup;
@@ -538,7 +538,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	dbdata_s *data;
 
 	if (cml->server_id == 0) {
-		if ((retval = get_server_id(cbt, cml, &sid)) != 0)
+		if ((retval = get_server_id(cbt, cml->name, &sid)) != 0)
 			return retval;
 	} else {
 		sid = cml->server_id;

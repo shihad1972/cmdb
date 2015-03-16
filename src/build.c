@@ -354,12 +354,8 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
 		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
 	init_string_len(dhcp);
-	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 		return retval;
-/* This should never need to be run - we always have the sevrer name
-	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval; */
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
@@ -450,7 +446,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	dbdata_s *data;
 
 	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 			return retval;
 	PREP_DB_QUERY(data, BUILD_IP_ON_SERVER_ID)
 	if ((retval = cbc_run_search(cmc, data, BUILD_IP_ON_SERVER_ID)) == 0) {
@@ -487,7 +483,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
 	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 			return retval;
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
@@ -550,7 +546,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
@@ -676,12 +672,8 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
 	init_string_len(build);
 	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 			return retval;
-/* This should never have to run - we always have the server name
-	if (!(cml->name))
-		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval; */
 	server = cml->name;
 	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
 	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
@@ -1036,7 +1028,7 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 	dbdata_s *data;
 
 	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
+		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 			return retval;
 	PREP_DB_QUERY(data, BASIC_PART)
 	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
@@ -1797,83 +1789,6 @@ chmod 755 kick-final.sh\n\
 		resize_string_buff(build);
 	snprintf(tmp, COMM_S, "%%end\n\n");
 	build->size += 6;
-}
-/*
-int
-get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
-{
-	int retval = NONE, type = SERVER_NAME_ON_ID;
-	unsigned int max;
-	dbdata_s *data;
-
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = server_id;
-	if ((retval = cbc_run_search(cmc, data, SERVER_NAME_ON_ID)) == 0) {
-		printf("Cannot find server name based on id %lu\n", server_id);
-		clean_dbdata_struct(data);
-		return SERVER_NOT_FOUND;
-	} else if (retval > 1) {
-		printf("Multiple servers found base on id %lu\n", server_id);
-		printf("Check your database!!!!\n");
-		clean_dbdata_struct(data);
-		return MULTIPLE_SERVERS;
-	} else {
-		snprintf(name, CONF_S, "%s", data->fields.text);
-		retval = NONE;
-	}
-	clean_dbdata_struct(data);
-	return retval;
-} */
-
-int
-get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
-{
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data = NULL;
-
-	if (cml->server == NAME) {
-		type = SERVER_ID_ON_SNAME;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, CONF_S, "%s", cml->name);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
-			printf("Server %s does not exist\n", cml->name);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for name %s\n", cml->name);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = cml->server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == UUID) {
-		type = SERVER_ID_ON_UUID;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
-			printf("Server with uuid %s does not exist\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for uuid %s\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = cml->server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == ID) {
-		*server_id = cml->server_id;
-	} else {
-		return NO_NAME_UUID_ID;
-	}
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 int

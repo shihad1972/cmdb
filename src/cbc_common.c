@@ -138,6 +138,30 @@ cbc_get_varient_name(char *varient, char *valias)
 }
 
 int
+get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id)
+{
+	int retval = 0, query = SERVER_ID_ON_SNAME;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbc) || !(server))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, HOST_S, "%s", server);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find server %s\n", server);
+		clean_dbdata_struct(data);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple servers found for %s\n", server);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
 get_varient_id(cbc_config_s *cmc, char *var, unsigned long int *varient_id)
 {
 	int retval = NONE, type;

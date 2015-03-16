@@ -53,6 +53,9 @@ void
 set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id);
 
 int
+get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id);
+
+int
 get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id);
 
 int
