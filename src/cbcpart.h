@@ -117,12 +117,6 @@ int
 remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int
-get_scheme_id_on_name(cbc_config_s *cbc, char *scheme, dbdata_s *data);
-
-int
-set_scheme_updated(cbc_config_s *cbc, char *scheme);
-
-int
 mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
 
 int

@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,15 +17,10 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  errors.c:
- * 
- *  Error reporting functions.
- * 
- *  enum constants defined in cmdb_dnsa.h
+ *  cmdb_data.c: data functions for the cmdb suite of programs
  * 
  *  Part of the CMDB program
  * 
- *  (C) Iain M Conochie 2012 - 2013
  * 
  */
 #include "../config.h"

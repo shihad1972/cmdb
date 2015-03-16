@@ -60,25 +60,6 @@ cbc_get_varient_id(cbc_varient_s *vari, char *name)
 	return NONE;
 }
 
-void
-cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
-{
-	int query = UP_VARIENT, retval;
-	dbdata_s *data;
-
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	data->args.number = (unsigned long int)getuid();
-	data->next->args.number = vid;
-	if ((retval = cbc_run_update(cbc, data, query)) == 1)
-		printf("Varient updated\n");
-	else if (retval == 0)
-		fprintf(stderr, "Unable to update varient\n");
-	else if (retval > 1)
-		fprintf(stderr, "Multiple varients updated??\n");
-	clean_dbdata_struct(data);
-		
-}
-
 unsigned long int
 search_for_vid(cbc_varient_s *vari, char *varient, char *valias)
 {
@@ -130,39 +111,6 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 	}
 	if (si)
 		freeaddrinfo(si);
-}
-
-void
-set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
-{
-	int retval, query = UP_BDOM_MUSER;
-	dbdata_s *data;
-	
-
-	if (!(cbt) || (!(domain) && (id == 0)))
-		return;
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	if (id == 0) { // need to get build_domain id
-		snprintf(data->args.text, RBUFF_S, "%s", domain);
-		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
-			fprintf(stderr, "Cannot find build domain %s\n", domain);
-			clean_dbdata_struct(data);
-			return;
-		} else { 
-			data->next->args.number = data->fields.number;
-			memset(&(data->args.text), 0, RBUFF_S);
-		}
-	} else {
-		data->next->args.number = id;
-	}
-	data->args.number = (unsigned long int)getuid();
-	if ((retval = cbc_run_update(cbt, data, query)) == 0)
-		fprintf(stderr, "Build domain cannot be updated\n");
-	else if (retval == 1)
-		printf("Build domain set updated by uid %lu\n", data->args.number);
-	else
-		fprintf(stderr, "Multiple build domains??\n");
-	clean_dbdata_struct(data);
 }
 
 char *
@@ -411,5 +359,78 @@ get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
 	*id = data->fields.number;
 	clean_dbdata_struct(data);
 	return 0;
+}
+
+int
+set_scheme_updated(cbc_config_s *cbc, char *scheme)
+{
+	int retval;
+	unsigned long int scheme_id;
+	dbdata_s *user;
+
+	if (!(cbc) || !(scheme))
+		return CBC_NO_DATA;
+	if ((retval = get_scheme_id(cbc, scheme, &(scheme_id))) != 0)
+		return retval;
+	init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
+	user->args.number = (unsigned long int)getuid();
+	user->next->args.number = scheme_id;
+	if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
+		printf("Scheme marked as updated\n");
+		retval = 0;
+	} else if (retval == 0)
+		printf("Scheme not updated\n");
+	clean_dbdata_struct(user);
+	return retval;
+}
+// Should get rid of the uli_id *id in this function
+void
+set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
+{
+	int retval, query = UP_BDOM_MUSER;
+	dbdata_s *data;
+
+	if (!(cbt) || (!(domain) && (id == 0)))
+		return;
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	if (id == 0) { // need to get build_domain id
+		snprintf(data->args.text, RBUFF_S, "%s", domain);
+		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
+			fprintf(stderr, "Cannot find build domain %s\n", domain);
+			clean_dbdata_struct(data);
+			return;
+		} else {
+			data->next->args.number = data->fields.number;
+			memset(&(data->args.text), 0, RBUFF_S);
+		}
+	} else {
+		data->next->args.number = id;
+	}
+	data->args.number = (unsigned long int)getuid();
+	if ((retval = cbc_run_update(cbt, data, query)) == 0)
+		fprintf(stderr, "Build domain cannot be updated\n");
+	else if (retval == 1)
+		printf("Build domain set updated by uid %lu\n", data->args.number);
+	else
+		fprintf(stderr, "Multiple build domains??\n");
+	clean_dbdata_struct(data);
+}
+// Should be passing the varient name to this function
+void
+cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
+{
+	int query = UP_VARIENT, retval;
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	data->args.number = (unsigned long int)getuid();
+	data->next->args.number = vid;
+	if ((retval = cbc_run_update(cbc, data, query)) == 1)
+		printf("Varient updated\n");
+	else if (retval == 0)
+		fprintf(stderr, "Unable to update varient\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple varients updated??\n");
+	clean_dbdata_struct(data);
 }
 

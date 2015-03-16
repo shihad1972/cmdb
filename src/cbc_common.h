@@ -76,4 +76,7 @@ get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id);
 int
 get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id);
 
+int
+set_scheme_updated(cbc_config_s *cbc, char *scheme);
+
 #endif /* CBC_COMMON_H */
