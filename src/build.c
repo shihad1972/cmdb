@@ -65,6 +65,10 @@ const int sp_query[] = { 33, 63, 64, 20, 33 };
 
 const int spvar_no = 5;
 
+// const unsigned int *cbc_search[] = { &cbc_search_args[0], &cbc_search_fields[0] };
+
+const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
+
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
@@ -293,6 +297,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
+	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
+		return retval;
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
 		printf("Failed to write dhcpd.hosts file\n");
 		return retval;
@@ -354,8 +360,6 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
 		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
 	init_string_len(dhcp);
-	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-		return retval;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
@@ -441,15 +445,12 @@ int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = BUILD_IP_ON_SERVER_ID;
 	dbdata_s *data;
 
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-			return retval;
-	PREP_DB_QUERY(data, BUILD_IP_ON_SERVER_ID)
-	if ((retval = cbc_run_search(cmc, data, BUILD_IP_ON_SERVER_ID)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return CANNOT_FIND_BUILD_IP;
 	} else if (retval > 1) 
@@ -457,8 +458,11 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	snprintf(pxe, RBUFF_S, "%s%s%lX", cmc->tftpdir, cmc->pxe,
 		 data->fields.number);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, TFTP_DETAILS)
-	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
+
+	type = TFTP_DETAILS;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_TFTP_B_ERR;
 	} else if (retval > 1) {
@@ -482,9 +486,6 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	string_len_s *build;
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-			return retval;
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
 	init_string_len(build);
@@ -525,10 +526,8 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	if ((retval = fill_system_packages(cmc, cml, build)) != 0) {
-		printf("Failed to get system package configuration\n");
+	if ((retval = fill_system_packages(cmc, cml, build)) != 0)
 		return retval;
-	}
 	retval = write_file(file, build->string);
 	clean_string_len(build);
 	return retval;
@@ -545,11 +544,8 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	string_len_s build = { .len = BUFF_S, .size = NONE };
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
+		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
 	PREP_DB_QUERY(data, KICK_BASE);
 	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
 		clean_dbdata_struct(data);
@@ -671,9 +667,6 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
 	init_string_len(build);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-			return retval;
 	server = cml->name;
 	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
 	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
@@ -1027,9 +1020,6 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 	size_t len;
 	dbdata_s *data;
 
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-			return retval;
 	PREP_DB_QUERY(data, BASIC_PART)
 	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
 		clean_dbdata_struct(data);

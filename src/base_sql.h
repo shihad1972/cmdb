@@ -170,6 +170,9 @@ enum {			/* Update indexes */
 	ZONE_VALID_NO
 };
 
+void
+cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 

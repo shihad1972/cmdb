@@ -38,6 +38,14 @@
 #include "base_sql.h"
 
 
+void
+cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query)
+{
+	unsigned int max = 0;
+	max = cmdb_get_max(values[0][query], values[1][query]);
+	init_multi_dbdata_struct(data, max);
+}
+
 #ifdef HAVE_MYSQL
 
 void
