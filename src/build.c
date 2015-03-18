@@ -432,15 +432,6 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 	free(buff);
 }
 
-#ifndef PREP_DB_QUERY
-# define PREP_DB_QUERY(data, query) {          \
-	type = query;			       \
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]); \
-	init_multi_dbdata_struct(&data, max);  \
-	data->args.number = cml->server_id;    \
-}
-#endif /* PREP_DB_QUERY */
-
 int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
@@ -480,8 +471,7 @@ int
 write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = NET_BUILD_DETAILS;
 	dbdata_s *data;
 	string_len_s *build;
 
@@ -489,8 +479,9 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
 	init_string_len(build);
-	PREP_DB_QUERY(data, NET_BUILD_DETAILS);
-	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_NET_BUILD_ERR;
 	} else if (retval > 1) {
@@ -501,8 +492,11 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_MIRROR);
-	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
+
+	type = BUILD_MIRROR;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_MIRR_ERR;
 	} else if (retval > 1) {
@@ -512,13 +506,17 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_mirror_output(cml, data, build);
 		retval = 0;
 	}
+
 	if ((retval = fill_partition(cmc, cml, build)) != 0)
 		return retval;
 	if ((retval = fill_kernel(cml, build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_PACKAGES);
-	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+
+	type = BUILD_PACKAGES;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
 	} else {
@@ -526,6 +524,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
+
 	if ((retval = fill_system_packages(cmc, cml, build)) != 0)
 		return retval;
 	retval = write_file(file, build->string);
@@ -537,8 +536,7 @@ int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S], url[CONF_S], *server = cml->name;
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = KICK_BASE;
 	unsigned long int bd_id;
 	dbdata_s *data, *part;
 	string_len_s build = { .len = BUFF_S, .size = NONE };
@@ -546,8 +544,9 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (!(build.string = calloc(build.len, sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
-	PREP_DB_QUERY(data, KICK_BASE);
-	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_KICKSTART_ERR;
 	} else if (retval > 1) {
@@ -558,7 +557,10 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = NONE;
 	}
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BASIC_PART);
+
+	type = BASIC_PART;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
 	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BASIC_DISK;
@@ -566,16 +568,22 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		clean_dbdata_struct(data);
 		return MULTI_BASIC_DISK;
 	}
-	PREP_DB_QUERY(part, FULL_PART);
+
+	type = FULL_PART;
+	cmdb_prep_db_query(&part, cbc_search, type);
+	part->args.number = cml->server_id;
 	data->next->next = part;
-	if ((retval = cbc_run_search(cmc, part, FULL_PART)) == 0) {
+	if ((retval = cbc_run_search(cmc, part, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_FULL_DISK;
 	}
 	fill_kick_partitions(cml, data, &build);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, KICK_NET_DETAILS);
-	if ((retval = cbc_run_search(cmc, data, KICK_NET_DETAILS)) == 0) {
+
+	type = KICK_NET_DETAILS;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build for %s has no network information.\n",
 		 server);
@@ -589,8 +597,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_kick_network_info(data, &build);
 	}
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_PACKAGES);
-	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+
+	type = BUILD_PACKAGES;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		data = NULL;
 		fprintf(stderr, "Build for %s has no packages associated.\n",
@@ -598,8 +609,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	}
 	fill_kick_packages(data, &build);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_TYPE_URL);
-	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_URL)) == 0) {
+
+	type = BUILD_TYPE_URL;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build type for %s has no url??\n", server);
 		return NO_BUILD_URL;
@@ -609,8 +623,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	add_kick_base_script(data, &build);
 	snprintf(url, CONF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
-	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+
+	type = BD_ID_ON_SERVER_ID;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build domain for server %s not found\n", server);
 		return BUILD_DOMAIN_NOT_FOUND;
@@ -618,9 +635,9 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Multiple build domains found for server %s\n", server);
 	bd_id = data->fields.number;
 	clean_dbdata_struct(data);
+
 	type = SCRIPT_CONFIG;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
+	cmdb_prep_db_query(&data, cbc_search, type);
 	data->args.number = bd_id;
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
 	if ((retval = cbc_run_search(cmc, data, type)) == 0)
@@ -659,7 +676,6 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char *server, line[TBUFF_S], *pos;
 	int retval = NONE, type, query = SCRIPT_CONFIG;
 	size_t len = NONE;
-	unsigned int max;
 	unsigned long int bd_id;
 	dbdata_s *list = 0, *data = 0;
 	string_len_s *build;
@@ -668,8 +684,10 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
 	init_string_len(build);
 	server = cml->name;
-	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
-	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+	type = BD_ID_ON_SERVER_ID;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(list);
 		return NO_BD_CONFIG;
 	} else if (retval > 1) {
@@ -679,6 +697,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	retval = 0;
 	bd_id = data->fields.number;
 	clean_dbdata_struct(data);
+
 	snprintf(build->string, RBUFF_S, "\
 #!/bin/sh\n\
 #\n\
@@ -706,14 +725,15 @@ chmod 755 motd.sh\n\
 ./motd.sh >> scripts.log 2>&1\n\
 \n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
+
+	cmdb_prep_db_query(&data, cbc_search, query);
 	data->args.number = bd_id;
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
 	if ((retval = cbc_run_search(cmc, data, query)) > 0)
 		fill_build_scripts(cmc, data, retval, build, cml);
 	else
 		clean_dbdata_struct(data);
+
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
@@ -773,6 +793,7 @@ chmod 755 %s\n\
 		scrno++;
 		if (data)
 			data = data->next->next->next;
+		free(newarg);
 		newarg = 0;
 	}
 }
@@ -946,6 +967,7 @@ fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	size_t len;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
+// Would be nice to be able to add a password for the user and root here.
 		snprintf(output, BUFF_S, "\
 d-i netcfg/wireless_wep string\n\
 d-i hw-detect/load_firmware boolean true\n\
@@ -1014,14 +1036,14 @@ int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char *next, disk[FILE_S];
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = BASIC_PART;
 	short int lvm;
 	size_t len;
 	dbdata_s *data;
 
-	PREP_DB_QUERY(data, BASIC_PART)
-	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BASIC_DISK;
 	} else if (retval > 1) {
@@ -1044,8 +1066,11 @@ d-i partman-auto/expert_recipe string                         \\\n\
 	snprintf(next, len + 1, "%s", disk);
 	build->size += len;
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, FULL_PART)
-	if ((retval = cbc_run_search(cmc, data, FULL_PART)) == 0) {
+
+	type = FULL_PART;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_FULL_DISK;
 	} else {
@@ -1465,6 +1490,8 @@ cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
 			if ((len + strlen(new)) < TBUFF_S)
 				snprintf(pre, len + 1, "%s%s", tmp, post);
 			clean_dbdata_struct(data);
+			free(tmp);
+			free(post);
 		}
 	}
 	return new;
@@ -1944,6 +1971,5 @@ fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
 	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
 }
 
-#undef PREP_DB_QUERY
 #undef PRINT_STRING_WITH_LENGTH_CHECK
 
