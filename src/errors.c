@@ -227,7 +227,7 @@ report_error(int error, const char *errstr)
 	} else if (error == NO_BD_CONFIG) {
 		fprintf(stderr, "Unable to find build domain\n");
 	} else if (error == CBC_DATA_WRONG_COUNT) {
-		fprintf(stderr, "dbdata count is wrong\n");
+		fprintf(stderr, "dbdata count is wrong in %s\n", errstr);
 	} else if (error == NO_SYSPACK_CONF) {
 		;
 	} else {
