@@ -1849,6 +1849,7 @@ cbc_store_partopt_mysql(MYSQL_ROW row, cbc_s *base)
 	opt->part_options_id = strtoul(row[0], NULL, 10);
 	opt->def_part_id = strtoul(row[1], NULL, 10);
 	opt->def_scheme_id = strtoul(row[2], NULL, 10);
+	opt->option = cmdb_malloc(CONF_S, "cbc_store_partopt_mysql");
 	snprintf(opt->option, CONF_S, "%s", row[3]);
 	opt->cuser = strtoul(row[4], NULL, 10);
 	opt->muser = strtoul(row[5], NULL, 10);
