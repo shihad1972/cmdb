@@ -369,7 +369,10 @@ SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
   AND systscr_id = ? AND no = ?","\
 SELECT poption FROM part_options WHERE def_part_id = ? AND def_scheme_id = ?","\
 SELECT part_options_id FROM part_options WHERE def_part_id = ? AND \
-  def_scheme_id = ? and poption = ?"
+  def_scheme_id = ? and poption = ?","\
+SELECT def_scheme_id FROM build WHERE server_id = ?","\
+SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
+  ss.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -391,13 +394,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3
+	3, 1, 2, 1, 4, 2, 3, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1
+	1, 1, 3, 1, 1, 1, 1, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -569,7 +572,9 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBTEXT, NONE, NONE, NONE },
 	{ DBINT, DBINT, DBINT, DBINT },
 	{ DBINT, DBINT, NONE, NONE },
-	{ DBINT, DBINT, DBTEXT, NONE }
+	{ DBINT, DBINT, DBTEXT, NONE },
+	{ DBINT, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -644,7 +649,9 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -1076,7 +1083,7 @@ cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 int
 cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
-	int retval = 0, j;
+	int retval = 0, j, n, q;
 	static int m = 0, stype = 0;
 	unsigned int dbtype;
 	dbdata_s *list, *new;
@@ -1090,8 +1097,12 @@ cbc_set_search_fields_mysql(MYSQL_BIND *mybind, unsigned int i, int k, int type,
 		m = 0;
 	}
 	/* Check if this is the first row returned. If not we need to create
-	 * a dbdata_s to hold the returned data */
-	if (k > 0) {
+	 * a dbdata_s to hold the returned data.
+	 * However, if the args list is longer than fields list, then check
+	 * if we have spare capacity. */
+	n = (int)cbc_search_args[type];
+	q = (int)cbc_search_fields[type];
+	if ((k > 0) && (((k + 1) * q) > n)) {
 		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in cbc_set_search_fields_mysql");
 		init_dbdata_struct(new);

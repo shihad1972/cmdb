@@ -141,7 +141,9 @@ enum {			/* cbc search SQL statements */
 	BUILD_TYPE_ON_ALIAS = 69,
 	SCR_ARG_ID = 70,
 	PART_OPT_ON_SCHEME_ID = 71,
-	PART_OPT_ID = 72
+	PART_OPT_ID = 72,
+	DEF_SCHEME_ID_FROM_BUILD = 73,
+	SCHEME_NAME_ON_SERVER_ID = 74
 };
 
 enum {			/* cbc update SQL statements */
