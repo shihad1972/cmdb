@@ -226,6 +226,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Delete from database failed\n");
 	} else if (error == NO_BD_CONFIG) {
 		fprintf(stderr, "Unable to find build domain\n");
+	} else if (error == CBC_DATA_WRONG_COUNT) {
+		fprintf(stderr, "dbdata count is wrong\n");
 	} else if (error == NO_SYSPACK_CONF) {
 		;
 	} else {
@@ -892,15 +894,6 @@ add_trailing_dot(char *member)
 		retval = -1;
 	}
 	return retval;
-}
-
-unsigned int
-cmdb_get_max(const unsigned int args, const unsigned int fields)
-{
-	unsigned int max;
-
-	max = (fields >= args) ? fields :  args ;
-	return max;
 }
 
 int

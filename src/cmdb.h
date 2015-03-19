@@ -243,7 +243,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_ARG = 225,
 	NO_NUMBER = 226,
 	NO_NTP_SERVER = 227,
-	NO_OPTION = 228
+	NO_OPTION = 228,
+	CBC_DATA_WRONG_COUNT = 229
 };
 
 enum {			/* command line error codes */
@@ -466,6 +467,10 @@ int
 add_trailing_dot(char *member);
 unsigned int
 cmdb_get_max(const unsigned int args, const unsigned int fields);
+void
+cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query);
+unsigned int
+cmdb_search_get_max(const unsigned int *search[], int query);
 int
 write_file(char *filename, char *output);
 void

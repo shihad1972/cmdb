@@ -60,3 +60,28 @@ initialise_string_array(char *list[], size_t quantity, size_t quality[])
 		list[i] = cmdb_malloc(quality[i], "initialise_string_array");
 }
 
+void
+cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query)
+{
+	unsigned int max = 0;
+	max = cmdb_get_max(values[0][query], values[1][query]);
+	init_multi_dbdata_struct(data, max);
+}
+
+unsigned int
+cmdb_search_get_max(const unsigned int *search[], int query)
+{
+	unsigned int max;
+	max = cmdb_get_max(search[0][query], search[1][query]);
+	return max;
+}
+
+unsigned int
+cmdb_get_max(const unsigned int args, const unsigned int fields)
+{
+	unsigned int max;
+
+	max = (fields >= args) ? fields :  args ;
+	return max;
+}
+
