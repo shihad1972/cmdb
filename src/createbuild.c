@@ -540,6 +540,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if (cml->server_id == 0) {
 		if ((retval = get_server_id(cbt, cml->name, &sid)) != 0)
 			return retval;
+		cml->server_id = sid;
 	} else {
 		sid = cml->server_id;
 	}
