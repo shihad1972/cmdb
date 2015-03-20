@@ -170,12 +170,18 @@ add_kick_final_config(string_len_s *build, char *url);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
-
+/*
 void
 add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *disk);
 
 void
-add_pre_part(dbdata_s *data, int retval, string_len_s *disk);
+add_pre_part(dbdata_s *data, int retval, string_len_s *disk); */
+
+int
+add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm);
+
+int
+get_pre_part_options(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts);
 
 void
 add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *disk);

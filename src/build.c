@@ -65,8 +65,6 @@ const int sp_query[] = { 33, 63, 64, 20, 33 };
 
 const int spvar_no = 5;
 
-// const unsigned int *cbc_search[] = { &cbc_search_args[0], &cbc_search_fields[0] };
-
 const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
 
 int
@@ -298,6 +296,8 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	int retval = NONE;
 
 	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
+		return retval;
+	if ((retval = get_scheme_name(cmc, cml->server_id, cml->partition)) != 0)
 		return retval;
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
 		printf("Failed to write dhcpd.hosts file\n");
@@ -668,6 +668,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	pos = build->string + build->size;           \
 	snprintf(pos, len + 1, "%s", line);          \
 	build->size += len;                          \
+	memset(line, 0, len);                        \
 }
 #endif /* PRINT_STRING_WITH_LENGTH_CHECK */
 int
@@ -1035,7 +1036,7 @@ d-i clock-setup/ntp-server string %s\n\
 int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *next, disk[FILE_S];
+	char *pos, line[FILE_S];
 	int retval = NONE, type = BASIC_PART;
 	short int lvm;
 	size_t len;
@@ -1050,39 +1051,22 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 		clean_dbdata_struct(data);
 		return MULTI_BASIC_DISK;
 	} else {
-		add_pre_start_part(cml, data, disk);
+		add_pre_start_part(cml, data, line);
 	}
+
 	lvm = data->next->fields.small;
-	len = strlen(disk);
-	next = (disk + len);
-	snprintf(next, URL_S, "\
-d-i partman-auto/expert_recipe string                         \\\n\
-      monkey ::                                               \\\n");
-	next +=128;
-	len = strlen(disk);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, len + 1, "%s", disk);
-	build->size += len;
+	len = strlen(line);
+	pos = (line + len);
+	snprintf(pos, URL_S, "\
+d-i partman-auto/expert_recipe string \\\n\
+      monkey :: \\\n");
+	PRINT_STRING_WITH_LENGTH_CHECK
 	clean_dbdata_struct(data);
 
-	type = FULL_PART;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	} else {
-		if (lvm > 0) {
-			add_pre_volume_group(cml, build);
-			add_pre_lvm_part(data, retval, build);
-		} else {
-			add_pre_part(data, retval, build);
-		}
-		next++;
-	}
-	clean_dbdata_struct(data);
+	if (lvm > 0)
+		add_pre_volume_group(cml, build);
+	if ((retval = add_pre_parts(cmc, cml, build, lvm)) != 0)
+		return retval;
 	return NONE;
 }
 
@@ -1189,7 +1173,7 @@ add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
 	short int lvm = data->next->fields.small;
 	size_t plen;
 
-	snprintf(cml->partition, CONF_S, "%s", data->fields.text);
+	snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
 	if (lvm == 0)
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
@@ -1204,7 +1188,7 @@ d-i partman-md/device_remove_md boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
 #d-i partman/mount_style select uuid\n\
 \n\
-", cml->partition);
+", cml->harddisk);
 	else
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
@@ -1225,160 +1209,115 @@ d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
 d-i partman/mount_style select uuid\n\
 \n\
-", cml->partition);
+", cml->harddisk);
 	plen = strlen(disk);
 	return (disk + plen);
+}
+
+int
+add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm)
+{
+	char *pos, line[BUFF_S], *fs, *mnt, *lv, *opt;
+	int retval = 0, query = FULL_PART, optno, i;
+	unsigned int dlen;
+	unsigned long int pri, min, max;
+	size_t len;
+	dbdata_s *data, *opts, *list, *lopt;
+
+	cmdb_prep_db_query(&data, cbc_search, query);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	}
+	dlen = cbc_search_fields[query];
+	list = data;
+	while (list) {
+		if ((retval = check_data_length(list, dlen)) != 0) {
+			clean_dbdata_struct(data);
+			return CBC_DATA_WRONG_COUNT;
+		}
+		pri = list->fields.number;
+		min = list->next->fields.number;
+		max = list->next->next->fields.number;
+		fs = list->next->next->next->fields.text;
+		lv = list->next->next->next->next->fields.text;
+		mnt = list->next->next->next->next->next->fields.text;
+		optno = get_pre_part_options(cbc, cml, mnt, &opts);
+		snprintf(line, RBUFF_S, "\
+              %lu %lu %lu %s  \\\n", pri, min, max, fs);
+		PRINT_STRING_WITH_LENGTH_CHECK
+		if (lvm > 0) {
+			snprintf(line, TBUFF_S, "\
+                       $lvmok \\\n\
+                       in_vg{ systemvg } \\\n\
+                       lv_name{ %s } \\\n", lv);
+			PRINT_STRING_WITH_LENGTH_CHECK
+		}
+		if ((strncmp(fs, "swap", COMM_S) != 0) &&
+		    (strncmp(fs, "linux-swap", RANGE_S) != 0))
+			snprintf(line, TBUFF_S, "\
+                       method{ format } format{ } \\\n\
+                       use_filesystem{ } filesystem{ %s } \\\n\
+                       mountpoint{ %s } \\\n", fs, mnt);
+		else
+			snprintf(line, TBUFF_S, "\
+                       method{ swap } format{ } \\\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		list = move_down_list_data(list, dlen);
+		if (optno > 0) {
+			lopt = opts;
+			i = optno;
+			while (i > 0) {
+				opt = lopt->fields.text;
+				snprintf(line, RBUFF_S, "\
+                       options/%s{ %s } \\\n", opt, opt);
+				PRINT_STRING_WITH_LENGTH_CHECK
+				lopt = lopt->next;
+				i--;
+			}
+		}
+		snprintf(line, MAC_S, "\
+               . \\\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		clean_dbdata_struct(opts);
+	}
+	build->size -= 2;
+	return retval;
+}
+
+int
+get_pre_part_options(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts)
+{
+	int retval, query = PART_OPT_ON_SCHEME_ID;
+
+	cmdb_prep_db_query(opts, cbc_search, query);
+	if ((retval = get_partition_id(cbc, cml->partition, mnt, &(*opts)->args.number)) != 0)
+		return 0;
+	if ((retval = get_scheme_id_from_build(cbc, cml->server_id, &(*opts)->next->args.number)) != 0)
+		return 0;
+	retval = cbc_run_search(cbc, *opts, query);
+	return retval;
 }
 
 void
 add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char line[RBUFF_S], *next;
-	size_t plen;
+	char line[RBUFF_S], *pos;
+	size_t len;
 
 	snprintf(line, RBUFF_S, "\
-              100 1000 1000000000 ext3       \\\n\
-                       $defaultignore{ }     \\\n\
-                       $primary{ }           \\\n\
-                       method{ lvm }         \\\n");
-	plen = strlen(line);
-	if ((build->size + plen) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, plen + 1, "%s", line);
-	plen = strlen(next);
-	build->size += plen;
+              100 1000 1000000000 ext3 \\\n\
+                       $defaultignore{ } \\\n\
+                       $primary{ } \\\n\
+                       method{ lvm } \\\n");
+	PRINT_STRING_WITH_LENGTH_CHECK
+	memset(&line, 0, RBUFF_S);
 	snprintf(line, RBUFF_S, "\
-                       device{ %s }  \\\n\
-                       vg_name{ systemlv }    \\\n\
-              .              \\\n", cml->partition);
-	plen = strlen(line);
-	if ((build->size + plen) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, plen + 1, "%s", line);
-	build->size += plen;
-}
-void
-add_pre_part(dbdata_s *data, int retval, string_len_s *build)
-{
-	char *next, line[TBUFF_S], *fs, *mnt;
-	int j, k = retval;
-	unsigned long int pri, min, max;
-	size_t len;
-	dbdata_s *list = data;
-
-	for (j = 0; j < k; j++) {
-		pri = min = max = 0;
-		fs = mnt = NULL;
-		if (list)
-			pri = list->fields.number;
-		if (list->next)
-			min = list->next->fields.number;
-		if (list->next->next)
-			max = list->next->next->fields.number;
-		if (list->next->next->next)
-			fs = list->next->next->next->fields.text;
-		if (list->next->next->next->next->next)
-			mnt = list->next->next->next->next->next->fields.text;
-		snprintf(line, HOST_S, "\
-              %lu %lu %lu %s \\\n", pri, min, max, fs);
-		if ((build->size + HOST_S) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		len = strlen(line);
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if ((strncmp(fs, "swap", COMM_S) != 0) &&
-		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
-			snprintf(line, RBUFF_S, "\
-                     method{ format } format{ } \\\n\
-                     use_filesystem{ } filesystem{ %s } \\\n\
-                     mountpoint{ %s }     \\\n", fs, mnt);
-		} else {
-			snprintf(line, HOST_S + 1, "\
-                       method{ swap } format{ }  \\\n");
-		}
-		strncat(line, "              .  \\\n", HOST_S + 1);
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if (list->next->next->next->next->next->next)
-			list = list->next->next->next->next->next->next;
-	}
-	build->size -= 2;
-}
-
-void
-add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
-{
-	char *next = NULL, line[RBUFF_S], *fs, *mnt, *lv;
-	int j, k = retval;
-	unsigned long int pri, min, max;
-	size_t len;
-	dbdata_s *list = data;
-
-	for (j = 0; j < k; j++) {
-		pri = min = max = 0;
-		fs = mnt = lv = NULL;
-		if (list)
-			pri = list->fields.number;
-		if (list->next) {
-			list = list->next;
-			min = list->fields.number;
-		}
-		if (list->next) {
-			list = list->next;
-			max = list->fields.number;
-		}
-		if (list->next) {
-			list = list->next;
-			fs = list->fields.text;
-		}
-		if (list->next) {
-			list = list->next;
-			lv = list->fields.text;
-		}
-		if (list->next) {
-			list = list->next;
-			mnt = list->fields.text;
-		}
-		snprintf(line, RBUFF_S, "\
-              %lu %lu %lu %s  \\\n\
-                       $lvmok                                 \\\n\
-                       in_vg{ systemlv }                      \\\n\
-                       lv_name{ %s } \\\n", pri, min, max, fs, lv);
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if ((strncmp(fs, "swap", COMM_S) != 0) &&
-		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
-			snprintf(line, RBUFF_S, "\
-                       method{ format } format{ }             \\\n\
-                       use_filesystem{ } filesystem{ %s }   \\\n\
-                       mountpoint{ %s }   \\\n\
-              .         \\\n", fs, mnt);
-		} else {
-			snprintf(line, RBUFF_S, "\
-                       method{ swap } format{ } \\\n\
-              .         \\\n");
-		}
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if (list->next)
-			list = list->next;
-	}
-	build->size -= 2;
+                       device{ %s } \\\n\
+                       vg_name{ systemvg } \\\n\
+              . \\\n", cml->harddisk);
+	PRINT_STRING_WITH_LENGTH_CHECK
 }
 
 int
