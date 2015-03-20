@@ -417,7 +417,7 @@ typedef unsigned long int uli_t;
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-/* Error reporting function */
+// Error reporting function
 void 
 report_error(int error, const char *errstr);
 void
@@ -426,7 +426,9 @@ void
 display_type_error(short int type);
 void
 get_error_string(int error, char *errstr);
-/* cmdb comand line error function */
+
+// cmdb comand line error function
+
 void
 display_command_line_error(int retval, char *program);
 void
@@ -449,14 +451,18 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
-/* Database fields query mismatch error functions */
+
+// Database fields query mismatch error functions
+
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
 cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
 dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
-/* Miscellaneous  */
+
+// Miscellaneous
+
 void
 chomp(char *input);
 void
@@ -470,7 +476,11 @@ cmdb_get_max(const unsigned int args, const unsigned int fields);
 void
 cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query);
 unsigned int
-cmdb_search_get_max(const unsigned int *search[], int query);
+cmdb_get_max_val(const unsigned int *search[], int query);
+int
+check_data_length(dbdata_s *data, unsigned int len);
+dbdata_s *
+move_down_list_data(dbdata_s *data, unsigned int len);
 int
 write_file(char *filename, char *output);
 void
@@ -502,7 +512,9 @@ void
 clean_string_len(string_len_s *string);
 void
 clean_string_l(string_l *list);
+
 // And now manipulation
+
 void *
 cmdb_malloc(size_t len, const char *msg);
 void
