@@ -3264,6 +3264,8 @@ cbc_store_partopt_sqlite(sqlite3_stmt *state, cbc_s *base)
 	opt->part_options_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	opt->def_part_id = (unsigned long int) sqlite3_column_int64(state, 1);
 	opt->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 2);
+	if (!(opt->option))
+		opt->option = cmdb_malloc(CONF_S, "opt->option in cbc_store_partopt_sqlite");
 	snprintf(opt->option, CONF_S, "%s", sqlite3_column_text(state, 3));
 	opt->cuser = (unsigned long int) sqlite3_column_int64(state, 4);
 	opt->muser = (unsigned long int) sqlite3_column_int64(state, 5);
