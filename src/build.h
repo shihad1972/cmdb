@@ -147,11 +147,17 @@ fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
 void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
 
-void
-fill_kick_base(dbdata_s *data, string_len_s *build);
+int
+fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
 
-void
-fill_kick_partitions(cbc_comm_line_s *cmc, dbdata_s *data, string_len_s *build);
+int
+fill_kick_partitions(cbc_config_s *cbc, cbc_comm_line_s *cmc, string_len_s *build);
+
+int
+fill_kick_part_header(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
+
+char *
+get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt);
 
 void
 fill_kick_network_info(dbdata_s *data, string_len_s *build);

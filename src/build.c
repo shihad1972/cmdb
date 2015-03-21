@@ -538,47 +538,16 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE, type = KICK_BASE;
 	unsigned long int bd_id;
-	dbdata_s *data, *part;
-	string_len_s build = { .len = BUFF_S, .size = NONE };
+	dbdata_s *data;
+	string_len_s build = { .len = FILE_S, .size = NONE };
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
 	if (!(build.string = calloc(build.len, sizeof(char))))
 		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_KICKSTART_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_KICKSTART_ERR;
-	} else {
-		fill_kick_base(data, &build);
-		retval = NONE;
-	}
-	clean_dbdata_struct(data);
-
-	type = BASIC_PART;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BASIC_DISK;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BASIC_DISK;
-	}
-
-	type = FULL_PART;
-	cmdb_prep_db_query(&part, cbc_search, type);
-	part->args.number = cml->server_id;
-	data->next->next = part;
-	if ((retval = cbc_run_search(cmc, part, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	}
-	fill_kick_partitions(cml, data, &build);
-	clean_dbdata_struct(data);
+	if ((retval = fill_kick_base(cmc, cml, &build)) != 0)
+		return retval;
+	if ((retval = fill_kick_partitions(cmc, cml, &build)) != 0)
+		return retval;
 
 	type = KICK_NET_DETAILS;
 	cmdb_prep_db_query(&data, cbc_search, type);
@@ -1478,14 +1447,29 @@ get_replaced_syspack_arg(dbdata_s *data, int loop)
 	return str;
 }
 
-void
-fill_kick_base(dbdata_s *data, string_len_s *build)
+int
+fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	char buff[FILE_S], *tmp;
-	char *key = data->fields.text;
-	char *loc = data->next->fields.text;
-	char *tim = data->next->next->fields.text;
+	char buff[FILE_S], *key, *loc, *tim;
+	int retval, type = KICK_BASE;
 	size_t len;
+	dbdata_s *data;
+
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_KICKSTART_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_KICKSTART_ERR;
+	} else {
+		retval = NONE;
+	}
+
+	key = data->fields.text;
+	loc = data->next->fields.text;
+	tim = data->next->next->fields.text;
 
 	/* root password is k1Ckstart */
 	snprintf(buff, FILE_S, "\
@@ -1504,32 +1488,124 @@ skipx\n\
 timezone  %s\n\
 install\n\
 \n", key, loc, tim);
-	if ((len = strlen(buff)) > build->len) {
-		build->len = FILE_S;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "string in fill_kick_base");
-		else
-			build->string = tmp;
-	}
+	if ((len = strlen(buff)) > build->len)
+		resize_string_buff(build);
 	snprintf(build->string, len + 1, "%s", buff);
 	build->size += len;
+	clean_dbdata_struct(data);
+	return retval;
 }
 
-void
-fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+int
+fill_kick_partitions(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	dbdata_s *list = data;
-	char *device = list->fields.text, buff[FILE_S], *tmp;
-	CHECK_DATA_LIST()
-	short int lvm = list->fields.small;
-	CHECK_DATA_LIST()
-	unsigned long int psize;
-	char *fs, *lv, *mount;
+	char line[TBUFF_S], *fs, *lv, *mount, *opts, *pos;
+	int retval, query = FULL_PART;
 	size_t len;
+	short int lvm;
+	unsigned int dlen;
+	unsigned long int psize;
+	dbdata_s *part, *list;
 
+	if ((retval = fill_kick_part_header(cbc, cml, build)) != 0)
+		return retval;
+	lvm = cml->lvm;
+	cmdb_prep_db_query(&part, cbc_search, query);
+	part->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, part, query)) == 0) {
+		clean_dbdata_struct(part);
+		return NO_FULL_DISK;
+	}
+
+	dlen = cbc_search_fields[query];
+	list = part;
+	while (list) {
+		if ((retval = check_data_length(list, dlen)) != 0) {
+			clean_dbdata_struct(part);
+			return CBC_DATA_WRONG_COUNT;
+		}
+		psize = list->next->fields.number;
+		fs = list->next->next->next->fields.text;
+		lv = list->next->next->next->next->fields.text;
+		mount = list->next->next->next->next->next->fields.text;
+		opts = get_kick_part_opts(cbc, cml, mount);
+		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
+			snprintf(line, BUFF_S, "\
+logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\
+", mount, fs, lv, cml->name, psize);
+		else if (strncmp(mount, "/boot", COMM_S) != 0)
+			snprintf(line, BUFF_S, "\
+part %s --fstype=\"%s\" --size=%lu\
+", mount, fs, psize);
+		else
+			fprintf(stderr, "\
+Sorry, we have already added a boot partition\n");
+		len = strlen(line);
+		pos = line + len;
+		if (opts)
+			snprintf(pos, HOST_S, "\
+ --fsoptions=\"%s\"", opts);
+		len = strlen(line);	
+		pos = line + len;
+		snprintf(pos, COMM_S, "\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		list = move_down_list_data(list, dlen);
+		free(opts);
+	}
+
+	clean_dbdata_struct(part);
+	return 0;
+}
+
+char *
+get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt)
+{	
+	int retval;
+	char *opts = 0, *pos;
+	size_t len;
+	dbdata_s *data = 0, *list;
+
+	if ((retval = get_pre_part_options(cbc, cml, mnt, &data)) == 0) {
+		clean_dbdata_struct(data);
+		return opts;
+	}
+	opts = cmdb_malloc(HOST_S, "opts in get_kick_part_opts");
+	snprintf(opts, HOST_S, "%s", data->fields.text);
+	list = data->next;
+	retval--;
+	while (retval > 0) {
+		len = strlen(opts);
+		pos = opts + len;
+		snprintf(pos, HOST_S - len, ",%s", list->fields.text);
+		list = list->next;
+		retval--;
+	}
+	clean_dbdata_struct(data);
+	return opts;
+}
+
+int
+fill_kick_part_header(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+{
+	char *device, *pos, line[FILE_S];
+	int retval, type = BASIC_PART;
+	size_t len;
+	short int lvm;
+	dbdata_s *data;
+
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BASIC_DISK;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_BASIC_DISK;
+	}
+	device = data->fields.text;
+	cml->lvm = lvm = data->next->fields.small;
 	if (lvm > 0)
-		snprintf(buff, FILE_S, "\
+		snprintf(line, FILE_S, "\
 zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n\
@@ -1538,41 +1614,14 @@ part pv.1 --asprimary --size=1 --grow\n\
 volgroup %s --pesize=32768 pv.1\n\
 ",  device, cml->name);
 	else
-		snprintf(buff, FILE_S, "\
+		snprintf(line, FILE_S, "\
 zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n\
 ", device);
-	len = strlen(buff);
-	tmp = buff + len;
-	while (list) {
-		CHECK_DATA_LIST()
-		psize = list->fields.number;
-		CHECK_DATA_LIST()
-		CHECK_DATA_LIST()
-		fs = list->fields.text;
-		CHECK_DATA_LIST()
-		lv = list->fields.text;
-		CHECK_DATA_LIST()
-		mount = list->fields.text;
-		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
-			snprintf(tmp, BUFF_S, "\
-logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\n\
-", mount, fs, lv, cml->name, psize);
-		else if (strncmp(mount, "/boot", COMM_S) != 0)
-			snprintf(tmp, BUFF_S, "\
-part %s --fstype=\"%s\" --size=%lu\n\
-", mount, fs, psize);
-		len = strlen(buff);
-		tmp = buff + len;
-		list = list->next;
-	}
-	snprintf(tmp, COMM_S, "\n");
-	len++;
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
+	PRINT_STRING_WITH_LENGTH_CHECK
+	clean_dbdata_struct(data);
+	return 0;
 }
 
 void
