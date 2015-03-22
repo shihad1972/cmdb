@@ -6,7 +6,7 @@ existing one. This will make the adding of a varient / OS much easier
 06/03/2015
 Looks like I now need to add a grub part to preseed:
 d-i grub-installer/only_debian boolean true
-Ned to add this to cbc and cpc
+Need to add this to cbc and cpc
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before
@@ -27,22 +27,6 @@ Need to get rid of the search / extended search in dnsa and cmdb
 Need to check all programs are checking for ~/.dnsa.conf and also add
 the -c <confg-file> option
 
-17/01/2015
-For the build scripts mention below, we are going to have to find a way to
-tie them to either an os or a build type. In fact, we should also look at
-tying the build_os to a build type, so that each OS we can build is in the
-build_type table, but that we can also modify information in there or even
-add new build types.
-*** Completed. We use the alias in the build_type DB table ***
-
-14/01/2015
-As well as adding cbcsysp for debian packages, I am going to have to add a
-database table for kickstart scripts (and also scripts for debian for
-packages I cannot preseed).
-As a start, I guess I could do a table of script names and then a table of
-arguments, based on the domain name (or bd_id (build domain))
-*** Completed. Version 0.2.21 has cbcscript ***
-
 06/01/2015
 I want to be able to limit the number of results returned from the DB query
 so we only display, say, 20 servers / dnsa zone records etc. This will mean
@@ -50,25 +34,6 @@ we need to page the terminal and also rerun the query on the database using
 the LIMIT clause in the SQL statement. This can be used in the prepared
 statements but probably not the base queries, so I will have to fix the whole
 DB access :(
-
-08/12/2014
-Database updates. Need to update code to match:
-
-build_type.url : increased to 255
-build_domain.domain : increased to 255
-            .ntp_server : increaed to 255
-            .ldap_server : increased to 255
-            .smtp_server : Increased to 255
-            .log_server : increased to 255
-            .xymon_server : increased to 255
-            .nfs_domain : incresed to 255
-service.url : increased to 255
-build_ip.hostname : increased to 63
-build_ip.domainname : increased to 255
-*** Fixed. Most of the build domain servers do not exist any more; we have
-cbcsysp and cbcscript now
-***
-
 
 26/11/2014
 Would be nice if I could create a VM xml file to use for libvirt.
@@ -82,12 +47,6 @@ Currently config reading is pretty ugly :(
 Also need to add the ENV options too - should be able to get the
 values from environment.
 
-26/10/2014
-It seems that we add the disk device when we add a server build regardless
-of whether or not we are successful in adding the server build. This needs
-fixed
-*** Fixed 07/12/2014: Re-wrote the create_build_config function ***
-
 22/10/2014
 It seems we can add mount options to the partitioning scheme using the
 following:
@@ -97,6 +56,7 @@ etc.
 
 Need to work on a secure build with some specific options for mounted
 filesystems like /tmp, /var/log etc. See www.cisecurity.org
+*** Fixed in 135f524c26116913469405f5418cbd2feb6d4b40 22 March 2015 ***
 
 20/10/2014
 Need to add racks, switches and power outlets into the database. Also maybe
@@ -161,15 +121,6 @@ cannot use it. This is error 190
 02/06/2014
 Need to add support for internal / external views.
 
-21/04/2014
-With the checks.[c|h] should add a glib test as well so we do not have to
-use libpcre. Can have the option of one or the other. ./configure should
-bomb out if neither are present but give the user the option to pass
-paramemter --with-usr-input-checks=disabled
-*** Sort of added. If there is not libpcre or it has been disabled then
-    configure bombs out. Must actively pass --disable-user-checks
-    04/12/2014 ***
-
 17/04/2014
 The applications in build domain should be associated with a "system" group
 of packages, separate from the "application" packages currently in the
@@ -179,20 +130,13 @@ configurations for those packages, as this is what the build domain
 applications currently do. For kickstart, there would be a configuration
 script associated with them. Can also have a config script associated
 with preseed.
+*** Maybe fixed? cbcsysp and cbcscript ***
 
 29/03/2014
 If I change the id field in the database to a uuid then I can have
 a local file storage, i.e. not use a database. If I am to do this
 it may be helpful to be able to import and export these fields in
 raw text. libxml anyone?
-
-05/12/2013
-Using cbc to add a build, if there is an error on the command line
-it still adds somthing into the build tables, as adding the correct
-one and trying to write the build file results in an error. Perhaps
-should look at doing this as a transaction (sort of).
-*** FIXED IN cac5fe5: This was the disk_dev getting added.
-    06/12/2014 - wow - only a year in there :( ****
 
 23/11/2013
 Allow mysql to be network aware, so that we can have multiple build
