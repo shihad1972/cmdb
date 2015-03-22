@@ -597,10 +597,12 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		clean_cbc_struct(base);
 		return VARIENT_NOT_FOUND;
 	}
+// This will setup the array of osid's in osid if we have more than one version / arch
 	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
 		clean_cbc_struct(base);
 		return OS_NOT_FOUND;
 	}
+// Set the last to the varient_id
 	*(osid + (unsigned long int)os) = vid;
 	if (!(data = build_rem_pack_list(cbc, osid, os, cvl->package))) {
 		fprintf(stderr, "No packages to remove\n");
@@ -610,7 +612,8 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	}
 	list = data;
 	while (list) {
-		packid = list->args.number;
+		packid = list->fields.number;
+		list->args.number = packid;
 		if ((retval = cbc_run_delete(cbc, list, PACK_DEL_PACK_ID)) > 1)
 			fprintf(stderr, "Multiple packages deleted on pack id %lu\n", packid);
 		else if (retval == 0)
@@ -740,21 +743,23 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 dbdata_s *
 build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack)
 {
-	int retval, i;
+	int retval, i, query = PACK_ID_ON_DETAILS;
+	unsigned int max;
 	unsigned long int vid, *id_list;
-	dbdata_s *data, *elem, *list = NULL, *dlist;
+	dbdata_s *data, *list = NULL, *dlist;
 	if (!(ids))
 		return list;
 	if (!(pack))
 		return list;
 	id_list = ids;
 	vid = *(ids + (unsigned long)noids);
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
 	for (i = 0; i < noids; i++) {
-		init_multi_dbdata_struct(&data, cbc_search_args[PACK_ID_ON_DETAILS]);
+		init_multi_dbdata_struct(&data, max);
 		snprintf(data->args.text, RBUFF_S, "%s", pack);
 		data->next->args.number = vid;
 		data->next->next->args.number = *id_list;
-		if ((retval = cbc_run_search(cbc, data, PACK_ID_ON_DETAILS)) == 1) {
+/*		if ((retval = cbc_run_search(cbc, data, query)) == 1) {
 			if (!(elem = malloc(sizeof(dbdata_s))))
 				report_error(MALLOC_FAIL, "elem in build_rem_pack_list");
 			init_dbdata_struct(elem);
@@ -767,9 +772,31 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 					dlist = dlist->next;
 				dlist->next = elem;
 			}
+		} */
+		if ((retval = cbc_run_search(cbc, data, query)) > 0) {
+			dlist = list;
+			if (dlist) {
+				while (dlist->next)
+					dlist = dlist->next;
+				dlist->next = data;
+			} else {
+				list = data;
+			}
+			if (retval < 3) {
+				if (retval > 1) {
+					dlist = data->next->next;
+					data->next->next = NULL;
+				} else {
+					dlist = data->next;
+					data->next = NULL;
+				}
+				clean_dbdata_struct(dlist);
+			}
+		} else {
+			clean_dbdata_struct(data);
 		}
 		id_list++;
-		clean_dbdata_struct(data);
+//		clean_dbdata_struct(data);
 	}
 	return list;
 }
