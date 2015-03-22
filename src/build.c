@@ -701,14 +701,10 @@ chmod 755 motd.sh\n\
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
 	if ((retval = cbc_run_search(cmc, data, query)) > 0)
 		fill_build_scripts(cmc, data, retval, build, cml);
-	else
-		clean_dbdata_struct(data);
-
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
-	if (list)
-		clean_dbdata_struct(list);
+	clean_dbdata_struct(data);
 	free(build->string);
 	free(build);
 	return retval;
@@ -1252,6 +1248,7 @@ add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, shor
 		clean_dbdata_struct(opts);
 	}
 	build->size -= 2;
+	clean_dbdata_struct(data);
 	return retval;
 }
 

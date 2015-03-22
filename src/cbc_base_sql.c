@@ -2433,6 +2433,8 @@ get_cbc_search_res_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i)
 				data->fields.small = (short int)sqlite3_column_int(state, j);
 			else
 				report_error(DB_WRONG_TYPE, cbc_sql_search[type]);
+			if (list->next)
+				clean_dbdata_struct(list->next);
 			list->next = data;
 			list = list->next;
 		}
