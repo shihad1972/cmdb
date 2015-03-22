@@ -720,8 +720,9 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 			osid++;
 			continue;
 		}
-		if (!(tmp = malloc(sizeof(cbc_package_s))))
-			report_error(MALLOC_FAIL, "tmp in build_package_list");
+		tmp = cmdb_malloc(sizeof(cbc_package_s), "tmp in build_package_list");
+/*		if (!(tmp = malloc(sizeof(cbc_package_s))))
+			report_error(MALLOC_FAIL, "tmp in build_package_list"); */
 		init_package(tmp);
 		if (package) {
 			while (list->next)
@@ -759,20 +760,6 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 		snprintf(data->args.text, RBUFF_S, "%s", pack);
 		data->next->args.number = vid;
 		data->next->next->args.number = *id_list;
-/*		if ((retval = cbc_run_search(cbc, data, query)) == 1) {
-			if (!(elem = malloc(sizeof(dbdata_s))))
-				report_error(MALLOC_FAIL, "elem in build_rem_pack_list");
-			init_dbdata_struct(elem);
-			elem->args.number = data->fields.number;
-			if (!(list))
-				list = elem;
-			else {
-				dlist = list;
-				while (dlist->next)
-					dlist = dlist->next;
-				dlist->next = elem;
-			}
-		} */
 		if ((retval = cbc_run_search(cbc, data, query)) > 0) {
 			dlist = list;
 			if (dlist) {
@@ -784,19 +771,17 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 			}
 			if (retval < 3) {
 				if (retval > 1) {
-					dlist = data->next->next;
+					clean_dbdata_struct(data->next->next);
 					data->next->next = NULL;
 				} else {
-					dlist = data->next;
+					clean_dbdata_struct(data->next);
 					data->next = NULL;
 				}
-				clean_dbdata_struct(dlist);
 			}
 		} else {
 			clean_dbdata_struct(data);
 		}
 		id_list++;
-//		clean_dbdata_struct(data);
 	}
 	return list;
 }

@@ -18,6 +18,7 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubu
 INSERT INTO locale (os_id, bt_id) SELECT os_id, bt_id FROM build_os;
 --
 -- Create build varients
+INSERT INTO varient (varient, valias) VALUES ("Base Build", "base");
 INSERT INTO varient (varient, valias) VALUES ("Web Server", "web");
 INSERT INTO varient (varient, valias) VALUES ("MySQL Server", "mysql");
 INSERT INTO varient (varient, valias) VALUES ("Full Lamp Stack", "lamp");
