@@ -1794,66 +1794,6 @@ chmod 755 kick-final.sh\n\
 }
 
 int
-get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
-{
-	int retval = NONE, type = OS_ID_ON_NAME;
-	unsigned int max;
-	dbdata_s *data;
-
-	if (strncmp(cml->arch, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "No architecture provided for OS\n");
-		return NO_ARCH;
-	}
-	if (strncmp(cml->os_version, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "No version or version alias provided\n");
-		return NO_OS_VERSION;
-	}
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	fill_dbdata_os_search(data, cml);
-	if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 1) {
-		*os_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple OS's found!\n");
-		retval = MULTIPLE_OS;
-	} else {
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 1) {
-			*os_id = data->fields.number;
-			retval = NONE;
-		} else if (retval > 1) {
-			fprintf(stderr, "Multiple OS's found!\n");
-			retval = MULTIPLE_OS;
-		} else {
-			if ((retval = cbc_run_search
-			  (cmc, data, OS_ID_ON_NAME_VER_ALIAS)) == 1) {
-				*os_id = data->fields.number;
-				retval = NONE;
-			} else if (retval > 1) {
-				fprintf(stderr, "Multiple OS's found!\n");
-				retval = MULTIPLE_OS;
-			} else {
-				if ((retval = cbc_run_search
-				 (cmc, data, OS_ID_ON_ALIAS_VER_ALIAS)) == 1) {
-					 *os_id = data->fields.number;
-					 retval = NONE;
-				 } else if (retval > 1) {
-					fprintf(stderr,
-					 "Multiple OS's found!\n");
-					retval = MULTIPLE_OS;
-				} else {
-					fprintf(stderr,
-					 "No OS found!\n");
-					retval = OS_NOT_FOUND;
-				 }
-			}
-		}
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
 get_build_id(cbc_config_s *cmc, uli_t id, char *name, uli_t *build_id)
 {
 	int retval = NONE, type;
@@ -1946,14 +1886,6 @@ cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
 		data->args.number = ids[2];
 		data->next->args.number = ids[3];
 	}
-}
-
-void
-fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
-{
-	snprintf(data->args.text, CONF_S, "%s", cml->os);
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
-	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
 }
 
 #undef PRINT_STRING_WITH_LENGTH_CHECK

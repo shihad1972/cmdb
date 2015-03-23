@@ -112,10 +112,10 @@ int
 write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml);
 /*
 int
-get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id); */
+get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id); 
 
 int
-get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id);
+get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id); */
 
 int
 get_build_id(cbc_config_s *cbc, uli_t id, char *name, uli_t *build_id);
@@ -212,8 +212,5 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
 
 int
 remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
-
-void
-fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml);
 
 #endif /* __CBC_BUILD_H__ */

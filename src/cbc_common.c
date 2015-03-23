@@ -506,3 +506,71 @@ cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
 	clean_dbdata_struct(data);
 }
 
+int
+get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id)
+{
+	int retval = NONE, type = OS_ID_ON_NAME;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (strncmp(os[0], "NULL", COMM_S) == 0) {
+		fprintf(stderr, "No architecture provided for OS\n");
+		return NO_ARCH;
+	}
+	if (strncmp(os[1], "NULL", COMM_S) == 0) {
+		fprintf(stderr, "No version or version alias provided\n");
+		return NO_OS_VERSION;
+	}
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	fill_dbdata_os_search(data, os);
+	if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 1) {
+		*os_id = data->fields.number;
+		retval = NONE;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple OS's found!\n");
+		retval = MULTIPLE_OS;
+	} else {
+		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 1) {
+			*os_id = data->fields.number;
+			retval = NONE;
+		} else if (retval > 1) {
+			fprintf(stderr, "Multiple OS's found!\n");
+			retval = MULTIPLE_OS;
+		} else {
+			if ((retval = cbc_run_search
+			  (cmc, data, OS_ID_ON_NAME_VER_ALIAS)) == 1) {
+				*os_id = data->fields.number;
+				retval = NONE;
+			} else if (retval > 1) {
+				fprintf(stderr, "Multiple OS's found!\n");
+				retval = MULTIPLE_OS;
+			} else {
+				if ((retval = cbc_run_search
+				 (cmc, data, OS_ID_ON_ALIAS_VER_ALIAS)) == 1) {
+					 *os_id = data->fields.number;
+					 retval = NONE;
+				 } else if (retval > 1) {
+					fprintf(stderr,
+					 "Multiple OS's found!\n");
+					retval = MULTIPLE_OS;
+				} else {
+					fprintf(stderr,
+					 "No OS found!\n");
+					retval = OS_NOT_FOUND;
+				 }
+			}
+		}
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+void
+fill_dbdata_os_search(dbdata_s *data, char *os[])
+{
+        snprintf(data->args.text, CONF_S, "%s", os[2]);
+        snprintf(data->next->args.text, MAC_S, "%s", os[1]);
+        snprintf(data->next->next->args.text, MAC_S, "%s", os[0]);
+}
+

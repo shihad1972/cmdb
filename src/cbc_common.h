@@ -56,6 +56,9 @@ int
 get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id);
 
 int
+get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id);
+
+int
 get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id);
 
 int
@@ -87,5 +90,8 @@ get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
 
 int
 set_scheme_updated(cbc_config_s *cbc, char *scheme);
+
+void
+fill_dbdata_os_search(dbdata_s *data, char *os[]);
 
 #endif /* CBC_COMMON_H */
