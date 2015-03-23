@@ -75,16 +75,13 @@ int
 remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
 
 int
-display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
+display_all_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
 
 int
-display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
+display_one_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
 
 int
 display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid);
-
-int
-get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl);
 
 unsigned long int
 get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl);

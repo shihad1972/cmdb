@@ -83,6 +83,9 @@ int
 get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id);
 
 int
+get_os_alias(cbc_config_s *cbc, char *os, char *alias);
+
+int
 get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name);
 
 int

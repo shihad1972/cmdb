@@ -283,9 +283,9 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	if ((strncmp(cvl->os, "NULL", COMM_S) == 0) &&
 	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
-		retval = display_all_os_packages(base, id, cvl);
+		retval = display_all_os_packages(cmc, base, id, cvl);
 	else
-		retval = display_one_os_packages(base, id, cvl);
+		retval = display_one_os_packages(cmc, base, id, cvl);
 
 	clean_cbc_struct(base);
 	return retval;
@@ -378,7 +378,7 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 }
 
 int
-display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
+display_all_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
 	cbc_build_os_s *bos = base->bos;
 	if (!(bos))
@@ -386,7 +386,7 @@ display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 	printf("Displaying all OS build packages\n");
 	while (bos) {
 		snprintf(cvl->alias, MAC_S, "%s", bos->alias);
-		display_one_os_packages(base, id, cvl);
+		display_one_os_packages(cbc, base, id, cvl);
 		while ((bos) && strncmp(cvl->alias, bos->alias, MAC_S) == 0)
 			bos = bos->next;
 		snprintf(cvl->version, MAC_S, "NULL");
@@ -396,7 +396,7 @@ display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 }
 
 int
-display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
+display_one_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
 	unsigned long int osid;
@@ -406,7 +406,7 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 		return OS_NOT_FOUND;
 	if ((strncmp(cvl->os, "NULL", COMM_S) != 0) &&
 	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
-		if ((retval = get_os_alias(base, cvl)) != 0)
+		if ((retval = get_os_alias(cbc, cvl->os, cvl->alias)) != 0)
 			return retval;
 	while (bos) {
 		if ((strncmp(bos->alias, cvl->alias, MAC_S)) == 0)
@@ -476,23 +476,6 @@ display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long in
 	if (i == 0)
 		return SERVER_PACKAGES_NOT_FOUND;
 	return NONE;
-}
-
-int
-get_os_alias(cbc_s *base, cbcvari_comm_line_s *cvl)
-{
-	char *os = cvl->os;
-	cbc_build_os_s *bos = base->bos;
-	if (!(bos))
-		return OS_NOT_FOUND;
-	while (bos) {
-		if (strncmp(os, bos->os, MAC_S) == 0) {
-			snprintf(cvl->alias, MAC_S, "%s", bos->alias);
-			return NONE;
-		}
-		bos = bos->next;
-	}
-	return OS_NOT_FOUND;
 }
 
 unsigned long int

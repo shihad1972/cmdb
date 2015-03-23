@@ -574,3 +574,24 @@ fill_dbdata_os_search(dbdata_s *data, char *os[])
         snprintf(data->next->next->args.text, MAC_S, "%s", os[0]);
 }
 
+int
+get_os_alias(cbc_config_s *cbc, char *os, char *alias)
+{
+	int retval, type = OS_ALIAS_ON_OS;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbc) || !(os) || !(alias))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, MAC_S, "%s", os);
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return OS_NOT_FOUND;
+	}
+	snprintf(alias, MAC_S, "%s", data->fields.text);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
