@@ -353,6 +353,9 @@ void
 initialise_cbc_s(cbc_s **cbc);
 
 void
+initialise_cbc_package_s(cbc_package_s **pack);
+
+void
 initialise_cbc_syspack(cbc_syspack_s **spack);
 
 void

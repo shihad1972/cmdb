@@ -143,7 +143,8 @@ enum {			/* cbc search SQL statements */
 	PART_OPT_ON_SCHEME_ID = 71,
 	PART_OPT_ID = 72,
 	DEF_SCHEME_ID_FROM_BUILD = 73,
-	SCHEME_NAME_ON_SERVER_ID = 74
+	SCHEME_NAME_ON_SERVER_ID = 74,
+	PACKAGE_OS_ID_ON_VID = 75
 };
 
 enum {			/* cbc update SQL statements */

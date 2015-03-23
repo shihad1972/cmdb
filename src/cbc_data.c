@@ -45,6 +45,13 @@ initialise_cbc_s(cbc_s **cbc)
 }
 
 void
+initialise_cbc_package_s(cbc_package_s **pack)
+{
+	*pack = cmdb_malloc(sizeof(cbc_package_s), "pack in initialise_cbc_package_s");
+	init_package(*pack);
+}
+
+void
 initialise_cbc_syspack(cbc_syspack_s **spack)
 {
 	if (!(*spack = malloc(sizeof(cbc_syspack_s))))

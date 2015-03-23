@@ -261,43 +261,24 @@ list_cbc_build_varient(cbc_config_s *cmc)
 int
 display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
-	char varient[HOST_S];
-	unsigned int max;
+	int retval = NONE;
 	unsigned long int id;
 	cbc_s *base;
-	dbdata_s *data = NULL;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in display_cbc_build_varient");
-	init_cbc_struct(base);
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
-		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
-		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);
-		if (retval != 1) {
-			clean_dbdata_struct(data);
-			return VARIENT_NOT_FOUND;
-		}
-	} else if (strncmp(cvl->valias, "NULL", COMM_S) != 0) {
-		snprintf(data->args.text, HOST_S, "%s", cvl->valias);
-		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS);
-		if (retval != 1) {
-			clean_dbdata_struct(data);
-			return VARIENT_NOT_FOUND;
-		}
+	if ((strncmp(cvl->varient, "NULL", COMM_S)) != 0) {
+		if ((retval = get_varient_id(cmc, cvl->varient, &id)) != 0)
+			return retval;
+	} else if ((strncmp(cvl->valias, "NULL", COMM_S)) != 0) {
+		if ((retval = get_varient_id(cmc, cvl->valias, &id)) != 0)
+			return retval;
 	}
-	snprintf(varient, HOST_S, "%s", data->args.text);
-	id = data->fields.number;
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | BPACKAGE)) != 0) {
-		clean_dbdata_struct(data);
 		clean_cbc_struct(base);
 		return MY_QUERY_FAIL;
 	}
 	if (!(base->package)) {
 		clean_cbc_struct(base);
-		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
 	}
 	if ((strncmp(cvl->os, "NULL", COMM_S) == 0) &&
@@ -307,7 +288,6 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 		retval = display_one_os_packages(base, id, cvl);
 
 	clean_cbc_struct(base);
-	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -353,6 +333,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	} else {
 		printf("Varient %s added to database\n", cvl->varient);
 	}
+	copy_packages_from_base_varient(cmc, cvl->varient);
 	clean_cbc_struct(base);
 	return retval;
 }
@@ -449,7 +430,6 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 			    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
 				printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-//				osid = get_single_os_id(base, cvl);
 				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
@@ -460,7 +440,6 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 			    (strncmp(cvl->arch, bos->arch, MAC_S) == 0)) {
 				printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-//				osid = get_single_os_id(base, cvl);
 				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
@@ -472,7 +451,6 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 				snprintf(cvl->arch, RANGE_S, "%s", bos->arch);
 				printf("\
 Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
-//				osid = get_single_os_id(base, cvl);
 				display_specific_os_packages(base, id, bos->os_id);
 			}
 			bos = bos->next;
@@ -531,6 +509,44 @@ get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 		bos = bos->next;
 	}
 	return NONE;
+}
+
+void
+copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
+{
+	char *bvar; 
+	int retval, packs = 0;
+	unsigned long int vid, bvid;
+	cbc_s *base;
+	cbc_package_s *pack;
+
+	bvar = cmdb_malloc(COMM_S, "bvar in copy_packages_from_base_varient");
+	snprintf(bvar, COMM_S, "base");
+	if ((retval = get_varient_id(cbc, bvar, &bvid)) != 0) {
+		fprintf(stderr, "Cannot find base varient\n");
+		free(bvar);
+		return;
+	}
+	free(bvar);
+	if ((retval = get_varient_id(cbc, varient, &vid)) != 0) {
+		fprintf(stderr, "Cannot get varient_id for %s\n", varient);
+		return;
+	}
+	initialise_cbc_s(&base);
+	if ((retval = build_copy_package_list(cbc, base, bvid, vid)) != 0) {
+		fprintf(stderr, "Cannot build package copy list\n");
+		clean_cbc_struct(base);
+		return;
+	}
+	pack = base->package;
+	while (base->package) {
+		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) == 0)
+			packs++;
+		base->package = base->package->next;
+	}
+	printf("Inserted %d packages\n", packs);
+	base->package = pack;
+	clean_cbc_struct(base);
 }
 
 int
@@ -721,8 +737,6 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 			continue;
 		}
 		tmp = cmdb_malloc(sizeof(cbc_package_s), "tmp in build_package_list");
-/*		if (!(tmp = malloc(sizeof(cbc_package_s))))
-			report_error(MALLOC_FAIL, "tmp in build_package_list"); */
 		init_package(tmp);
 		if (package) {
 			while (list->next)
@@ -784,5 +798,49 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 		id_list++;
 	}
 	return list;
+}
+
+int
+build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id)
+{
+	int retval, query = PACKAGE_OS_ID_ON_VID;
+	unsigned int max;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = bid;
+	if ((retval = cbc_run_search(cbc, data, query)) > 0) {
+		list = data;
+		while (list) {
+			add_package_to_list(base, list, id);
+			list = move_down_list_data(list, max);
+		}
+	}
+	clean_dbdata_struct(data);
+	if (retval > 0)
+		return 0;
+	else
+		return 1;
+}
+
+void
+add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id)
+{
+	cbc_package_s *pack, *list;
+
+	initialise_cbc_package_s(&pack);
+	snprintf(pack->package, HOST_S, "%s", data->fields.text);
+	pack->os_id = data->next->fields.number;
+	pack->vari_id = id;
+	pack->muser = pack->cuser = (unsigned long int)getuid();
+	if (!(base->package)) {
+		base->package = pack;
+	} else {
+		list = base->package;
+		while (list->next)
+			list = list->next;
+		list->next = pack;
+	}
 }
 

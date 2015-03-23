@@ -372,7 +372,8 @@ SELECT part_options_id FROM part_options WHERE def_part_id = ? AND \
   def_scheme_id = ? and poption = ?","\
 SELECT def_scheme_id FROM build WHERE server_id = ?","\
 SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
-  ss.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?"
+  ss.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?","\
+SELECT package, os_id FROM packages WHERE varient_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -394,13 +395,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2
 };
 
 const int cbc_inserts[][24] = {
@@ -574,6 +575,7 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, DBINT, NONE, NONE },
 	{ DBINT, DBINT, DBTEXT, NONE },
 	{ DBINT, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
@@ -651,7 +653,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
