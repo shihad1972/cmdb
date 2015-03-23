@@ -36,6 +36,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
@@ -209,9 +210,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	cbc_s *base;
 	cbc_build_os_s *os;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
-	init_cbc_struct(base);
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_query(cmc, base, BUILD_OS)) != 0) {
 		if (retval == 6) {
 			fprintf(stderr, "No build OS's\n");
@@ -255,65 +254,39 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
-	char *name = col->os;
-	int retval = NONE, type;
-	unsigned int max;
+	char *oss[3];
+	int retval = NONE, i;
+	unsigned long int id;
 	cbc_s *cbc;
 	cbc_build_os_s *os;
 	dbdata_s *data = NULL;
 
-	if (!(os = malloc(sizeof(cbc_build_os_s))))
-		report_error(MALLOC_FAIL, "os in add_cbc_build_os");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in add_cbc_build_os");
-	init_cbc_struct(cbc);
-	init_build_os(os);
+	initialise_cbc_s(&cbc);
+	initialise_cbc_os_s(&os);
 	cbc->bos = os;
 /* If we have a build alias we need to check if this is a valid OS in the 
  * build_type table */
 	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
 	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
-		type = OS_ALIAS_ON_OS;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, MAC_S, "%s", name);
-		if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
-			clean_dbdata_struct(data);
+		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
+			clean_cbc_struct(cbc);
 			return OS_NOT_FOUND;
 		}
-		snprintf(col->alias, MAC_S, "%s", data->fields.text);
-		clean_dbdata_struct(data);
 	}
-	type = BUILD_TYPE_ID_ON_ALIAS;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, MAC_S, "%s", col->alias);
-	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
-		clean_dbdata_struct(data);
+	if ((retval = get_build_type_id(cmc, col->alias, &(os->bt_id))) != 0) {
+		clean_cbc_struct(cbc);
 		return BUILD_TYPE_NOT_FOUND;
 	}
-	os->bt_id = data->fields.number;
-	clean_dbdata_struct(data);
-	retval = NONE;
 /* Get all examples of this OS in the DB and check this particular one is
  * not already in the DB */
-	type = BUILD_OS_ON_NAME;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, MAC_S, "%s", name);
-	retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME);
-	if (retval > 0) {
-		if (check_for_build_os(col, data) != 0) {
-			clean_dbdata_struct(data);
-			return BUILD_OS_EXISTS;
-		}
-		retval = NONE;
-		if ((strncmp(data->next->fields.text, "none", COMM_S) != 0) &&
-		    (strncmp(col->ver_alias, "none", COMM_S) == 0)) {
-			clean_dbdata_struct(data);
-			return OS_ALIAS_NEEDED;
-		}
+	oss[0] = strndup(col->arch, MAC_S);
+	oss[1] = strndup(col->version, MAC_S);
+	oss[2] = strndup(col->os, MAC_S);
+	if ((retval = get_os_id(cmc, oss, &id)) != OS_NOT_FOUND) {
+		fprintf(stderr, "OS %s already in database\n", col->os);
+		clean_cbc_struct(cbc);
+		return BUILD_OS_EXISTS;
 	}
 	snprintf(os->alias, MAC_S, "%s", col->alias);
 	snprintf(os->os, MAC_S, "%s", col->os);
@@ -327,6 +300,8 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Build os added to database\n");
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
+	for (i = 0; i < 3; i++)
+		free(oss[i]);
 	return retval;
 }
 

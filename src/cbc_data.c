@@ -39,8 +39,7 @@
 void
 initialise_cbc_s(cbc_s **cbc)
 {
-	if (!(*cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc_s");
+	*cbc = cmdb_malloc(sizeof(cbc_s), "cbc in initialise_cbc_s");
 	init_cbc_struct(*cbc);
 }
 
@@ -49,6 +48,13 @@ initialise_cbc_package_s(cbc_package_s **pack)
 {
 	*pack = cmdb_malloc(sizeof(cbc_package_s), "pack in initialise_cbc_package_s");
 	init_package(*pack);
+}
+
+void
+initialise_cbc_os_s(cbc_build_os_s **os)
+{
+	*os = cmdb_malloc(sizeof(cbc_build_os_s), "os in initialise_cbc_os_s");
+	init_build_os(*os);
 }
 
 void

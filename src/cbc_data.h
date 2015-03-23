@@ -356,6 +356,9 @@ void
 initialise_cbc_package_s(cbc_package_s **pack);
 
 void
+initialise_cbc_os_s(cbc_build_os_s **os);
+
+void
 initialise_cbc_syspack(cbc_syspack_s **spack);
 
 void
