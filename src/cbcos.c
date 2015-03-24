@@ -255,7 +255,7 @@ int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *oss[3];
-	int retval = NONE, i;
+	int retval = NONE;
 	unsigned long int id;
 	cbc_s *cbc;
 	cbc_build_os_s *os;
@@ -280,9 +280,9 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	}
 /* Get all examples of this OS in the DB and check this particular one is
  * not already in the DB */
-	oss[0] = strndup(col->arch, MAC_S);
-	oss[1] = strndup(col->version, MAC_S);
-	oss[2] = strndup(col->os, MAC_S);
+	oss[0] = col->arch;
+	oss[1] = col->version;
+	oss[2] = col->os;
 	if ((retval = get_os_id(cmc, oss, &id)) != OS_NOT_FOUND) {
 		fprintf(stderr, "OS %s already in database\n", col->os);
 		clean_cbc_struct(cbc);
@@ -300,73 +300,28 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Build os added to database\n");
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
-	for (i = 0; i < 3; i++)
-		free(oss[i]);
 	return retval;
 }
 
 int
 remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
-	char *name = col->os, *alias = col->alias;
+	if (!(cmc) || !(col))
+		return CBC_NO_DATA;
+	char *name = col->os;
 	char *version = col->version, *arch = col->arch;
-	int retval = NONE, i, type = OS_ID_ON_NAME;
-	unsigned int max;
+	char *oss[3];
+	int retval = NONE;
 	unsigned long int id;
-	dbdata_s *data = NULL, *list;
+	dbdata_s *data = NULL;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if (strncmp(name, "NULL", MAC_S) != 0) {
-		snprintf(data->args.text, MAC_S, "%s", name);
-		snprintf(data->next->args.text, MAC_S, "%s", version);
-		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 0) {
-			clean_dbdata_struct(data);
-			return OS_NOT_FOUND;
-		}
-	} else if (strncmp(alias, "NULL", MAC_S) != 0) {
-		snprintf(data->args.text, MAC_S, "%s", alias);
-		snprintf(data->next->args.text, MAC_S, "%s", version);
-		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 0) {
-			clean_dbdata_struct(data);
-			return OS_NOT_FOUND;
-		}
-	} else {
-		clean_dbdata_struct(data);
+	oss[0] = col->arch;
+	oss[1] = col->version;
+	oss[2] = col->os;
+	if ((retval = get_os_id(cmc, oss, &id)) != 0)
 		return OS_NOT_FOUND;
-	}
-	id = data->fields.number;
-	clean_dbdata_struct(data);
-	type = BUILD_ID_ON_OS_ID;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = id;
-	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_OS_ID)) != 0) {
-		clean_dbdata_struct(data);
-		type = SERVERS_USING_BUILD_OS;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		data->args.number = id;
-		retval = cbc_run_search(cmc, data, SERVERS_USING_BUILD_OS);
-		printf("Server(s) ");
-		list = data;
-		for (i = 0; i < retval; i++) {
-			if (i + 1 == retval)
-				printf("%s ", list->fields.text);
-			else
-				printf("%s, ", list->fields.text);
-			if (list->next)
-				list = list->next;
-			else
-				break;
-		}
-		printf("are using build os.\n");
-		clean_dbdata_struct(data);
+	if ((retval = check_for_build_os_in_use(cmc, id)) != 0)
 		return BUILD_OS_IN_USE;
-	}
-	clean_dbdata_struct(data);
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in remove_cbc_build_os");
 	data->next = NULL;
@@ -402,3 +357,39 @@ check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
 	}
 	return NONE;
 }
+
+int
+check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
+{
+	int retval, query = BUILD_ID_ON_OS_ID, i;
+	char *name;
+	unsigned int max;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = os_id;
+	if ((retval = cbc_run_search(cbc, data, query)) != 0) {
+		clean_dbdata_struct(data->next);
+		data->next = NULL;
+		memset(data->fields.text, 0, RBUFF_S);
+		retval = cbc_run_search(cbc, data, SERVERS_USING_BUILD_OS);
+		printf("%d server(s) ", retval);
+		list = data;
+		for (i = 0; i < retval; i++) {
+			name = list->fields.text;
+			if (i + 1 == retval)
+				printf("%s ", name);
+			else
+				printf("%s, ", name);
+			if (list->next)
+				list = list->next;
+			else
+				break;
+		}
+		printf("are using build os.\n");
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
