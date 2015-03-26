@@ -64,4 +64,19 @@ check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data);
 int
 check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id);
 
+void
+copy_new_os_profile(cbc_config_s *cmc, char *oss[]);
+
+int
+cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[]);
+
+void
+copy_new_build_os(cbc_config_s *cbc, uli_t *id);
+
+void
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id);
+
+void
+copy_packages_for_os(cbc_config_s *cbc, uli_t *id);
+
 #endif /* __CBCOS_H__ */

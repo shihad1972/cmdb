@@ -264,8 +264,6 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	initialise_cbc_s(&cbc);
 	initialise_cbc_os_s(&os);
 	cbc->bos = os;
-/* If we have a build alias we need to check if this is a valid OS in the 
- * build_type table */
 	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
 	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
@@ -278,8 +276,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		clean_cbc_struct(cbc);
 		return BUILD_TYPE_NOT_FOUND;
 	}
-/* Get all examples of this OS in the DB and check this particular one is
- * not already in the DB */
+/* Check to make sure this OS not already in DB */
 	oss[0] = col->arch;
 	oss[1] = col->version;
 	oss[2] = col->os;
@@ -298,6 +295,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Unable to add build os to database\n");
 	else
 		printf("Build os added to database\n");
+	copy_new_os_profile(cmc, oss);
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
 	return retval;
@@ -391,5 +389,203 @@ check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 	}
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+void
+copy_new_os_profile(cbc_config_s *cmc, char *oss[])
+{
+	char alias[RANGE_S];
+	int retval;
+	unsigned long int id[3]; //os_id = 0, bt_id = 1, id to copy from = 2
+
+	memset(id, 0, sizeof(id));
+	if ((retval = get_os_id(cmc, oss, &id[0])) != 0) {
+		fprintf(stderr, "Cannot find OS? %s, %s, %s\n", oss[0], oss[1], oss[2]);
+		return;
+	}
+	if ((retval = get_os_alias(cmc, oss[2], alias)) != 0) {
+		fprintf(stderr, "Cannot find alias for os %s\n", oss[2]);
+		return;
+	}
+	if ((retval = get_build_type_id(cmc, alias, &id[1])) != 0) {
+		fprintf(stderr, "Cannot find build type for alias %s\n", alias);
+		return;
+	}
+	if ((retval = cbc_choose_os_to_copy(cmc, id, oss)) != 0) {
+		fprintf(stderr, "Cannot choose an os to copy??\n");
+		return;
+	}
+	copy_new_build_os(cmc, id);
+	return;
+}
+
+int
+cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
+{
+	if (!(cbc) || !(oss) || !(id))
+		return CBC_NO_DATA;
+	char *arch = oss[0];
+	int retval = 0, query = OS_DETAIL_ON_BT_ID;
+	unsigned int max;
+	unsigned long int time = 0, ctime;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = *(id + 1);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find any previous os for %s\n", oss[2]);
+		clean_dbdata_struct(data);
+		return OS_DOES_NOT_EXIST;
+	}
+	if (check_data_length(data, max) != 0) {
+		clean_dbdata_struct(data);
+		return CBC_DATA_WRONG_COUNT;
+	}
+	list = data;
+	while (data) {
+		if ((strncmp(arch, data->next->next->fields.text, RBUFF_S) == 0) &&
+		    (data->fields.number != id[0])) {
+			convert_time(data->next->fields.text, &ctime);
+			if (ctime > time) {
+				id[2] = data->fields.number;
+				time = ctime; 
+			}
+		}
+		data = move_down_list_data(data, max);
+	}
+	clean_dbdata_struct(list);
+	if (id[2] == 0)
+		return 1;
+	else
+		return 0;
+}
+
+void
+copy_new_build_os(cbc_config_s *cbc, uli_t *id)
+{
+	if (!(cbc) || !(id)) {
+		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
+		return;
+	}
+	copy_locale_for_os(cbc, id);
+	copy_packages_for_os(cbc, id);
+}
+
+void
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
+{
+	int retval = 0, query = LOCALE_DETAILS_ON_OS_ID, i = 0;
+	unsigned int max;
+	dbdata_s *data, *dlist;
+	cbc_s *base;
+	cbc_locale_s *loc, *llist = NULL, *next;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number =  id[2];
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "No locale for OS??\n");
+		clean_dbdata_struct(data);
+		return;
+	}
+	dlist = data;
+	if (check_data_length(dlist, max) != 0) {
+		fprintf(stderr, "dbdata count wrong in copy_locale_for_os");
+		clean_dbdata_struct(data);
+		return;
+	}
+	while (dlist) {
+		loc = cmdb_malloc(sizeof(cbc_locale_s), "loc in copy_local_for_os");
+		init_locale(loc);
+		loc->os_id = id[0];
+		loc->bt_id = id[1];
+		snprintf(loc->locale, MAC_S, "%s", dlist->fields.text);
+		snprintf(loc->country, RANGE_S, "%s", dlist->next->fields.text);
+		snprintf(loc->language, RANGE_S, "%s", dlist->next->next->fields.text);
+		snprintf(loc->keymap, RANGE_S, "%s", dlist->next->next->next->fields.text);
+		snprintf(loc->timezone, HOST_S, "%s", dlist->next->next->next->next->fields.text);
+		loc->cuser = loc->muser = (unsigned long int)getuid();
+		if (!(llist)) {
+			llist = loc;
+		} else {
+			next = llist;
+			while (next->next)
+				next = next->next;
+			next->next = loc;
+		}
+		dlist = move_down_list_data(dlist, max);
+	}
+	clean_dbdata_struct(data);
+	initialise_cbc_s(&base);
+	loc = llist;
+	while (loc) {
+		base->locale = loc;
+		if ((retval = cbc_run_insert(cbc, base, LOCALES)) != 0)
+			fprintf(stderr, "Locale not inserted!\n");
+		else
+			i++;
+		loc = loc->next;
+	}
+	printf("%d locale(s) inserted for new OS\n", i);
+	base->locale = llist;
+	clean_cbc_struct(base);
+}
+
+void
+copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
+{
+	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
+	unsigned int max;
+	dbdata_s *data, *dlist;
+	cbc_s *base;
+	cbc_package_s *pack, *plist = NULL, *next;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = id[2];
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "No packages for OS?\n");
+		clean_dbdata_struct(data);
+		return;
+	}
+	dlist = data;
+	if (check_data_length(dlist, max) != 0) {
+		fprintf(stderr, "dbdata count wrong in copy_packages_for_os");
+		clean_dbdata_struct(data);
+		return;
+	}
+	initialise_cbc_s(&base);
+	data = dlist;
+	while (data) {
+		initialise_cbc_package_s(&pack);
+		snprintf(pack->package, HOST_S, "%s", data->fields.text);
+		pack->vari_id = data->next->fields.number;
+		pack->os_id = id[0];
+		pack->cuser = pack->muser = (unsigned long int)getuid();
+		if (!(plist)) {
+			plist = pack;
+		} else {
+			next = plist;
+			while (next->next)
+				next = next->next;
+			next->next = pack;
+		}
+		data = move_down_list_data(data, max);
+	}
+	pack = plist;
+	clean_dbdata_struct(dlist);
+	while (pack) {
+		base->package = pack;
+		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) != 0) {
+			fprintf(stderr, "Cannot insert package %s\n", pack->package);
+		} else {
+			i++;
+		}
+		pack = pack->next;
+	}
+	printf("%d package(s) inserted\n", i);
+	base->package = plist;
+	clean_cbc_struct(base);
 }
 

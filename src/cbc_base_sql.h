@@ -144,7 +144,10 @@ enum {			/* cbc search SQL statements */
 	PART_OPT_ID = 72,
 	DEF_SCHEME_ID_FROM_BUILD = 73,
 	SCHEME_NAME_ON_SERVER_ID = 74,
-	PACKAGE_OS_ID_ON_VID = 75
+	PACKAGE_OS_ID_ON_VID = 75,
+	OS_DETAIL_ON_BT_ID = 76,
+	LOCALE_DETAILS_ON_OS_ID = 77,
+	PACKAGE_VID_ON_OS_ID = 78
 };
 
 enum {			/* cbc update SQL statements */
@@ -319,6 +322,9 @@ cbc_setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int 
 
 void
 cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i);
 
 void
 cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i);

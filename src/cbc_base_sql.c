@@ -373,7 +373,10 @@ SELECT part_options_id FROM part_options WHERE def_part_id = ? AND \
 SELECT def_scheme_id FROM build WHERE server_id = ?","\
 SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
   ss.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?","\
-SELECT package, os_id FROM packages WHERE varient_id = ?"
+SELECT package, os_id FROM packages WHERE varient_id = ?","\
+SELECT os_id, ctime, arch FROM build_os WHERE bt_id = ?","\
+SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?","\
+SELECT package, varient_id FROM packages WHERE os_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -395,13 +398,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2
 };
 
 const int cbc_inserts[][24] = {
@@ -419,8 +422,8 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBINT, DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT, DBINT, DBINT, 0,
@@ -576,6 +579,9 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, DBINT, DBTEXT, NONE },
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
@@ -654,6 +660,9 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
@@ -1292,6 +1301,8 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_build(buffer, base, i);
 	else if (type == DISK_DEVS)
 		cbc_setup_bind_mysql_build_disk(buffer, base, i);
+	else if (type == LOCALES)
+		cbc_setup_bind_mysql_locale(buffer, base, i);
 	else if (type == SYSPACKS)
 		cbc_setup_bind_mysql_syspack(buffer, base, i);
 	else if (type == SYSARGS)
@@ -1305,7 +1316,7 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 	else if (type == PARTOPTS)
 		cbc_setup_bind_mysql_partopts(buffer, base, i);
 	else
-		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_mysql");
+		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_setup_insert_mysql_buffer");
 }
 
 void
@@ -1972,6 +1983,29 @@ cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->dpart->cuser);
 	else if (i == 8)
 		*buffer = &(base->dpart->muser);
+}
+
+void
+cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->locale->locale);
+	else if (i == 1)
+		*buffer = &(base->locale->country);
+	else if (i == 2)
+		*buffer = &(base->locale->language);
+	else if (i == 3)
+		*buffer = &(base->locale->keymap);
+	else if (i == 4)
+		*buffer = &(base->locale->os_id);
+	else if (i == 5)
+		*buffer = &(base->locale->bt_id);
+	else if (i == 6)
+		*buffer = &(base->locale->timezone);
+	else if (i == 7)
+		*buffer = &(base->locale->cuser);
+	else if (i == 8)
+		*buffer = &(base->locale->muser);
 }
 
 void
