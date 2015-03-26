@@ -485,6 +485,9 @@ int
 cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
 
 int
+cbc_setup_bind_sqlite_locale(sqlite3_stmt *state, cbc_locale_s *loc);
+
+int
 cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_syspack_s *spack);
 
 int

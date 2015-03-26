@@ -2623,6 +2623,8 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_build(state, base->build);
 	else if (type == DISK_DEVS)
 		retval = cbc_setup_bind_sqlite_build_disk(state, base->diskd);
+	else if (type == LOCALES)
+		retval = cbc_setup_bind_sqlite_locale(state, base->locale);
 	else if (type == SYSPACKS)
 		retval = cbc_setup_bind_sqlite_syspack(state, base->syspack);
 	else if (type == SYSARGS)
@@ -3685,6 +3687,59 @@ state, 2, disk->device, (int)strlen(disk->device), SQLITE_STATIC)) > 0) {
 	}
 	if ((retval = sqlite3_bind_int(state, 3, disk->lvm)) > 0) {
 		fprintf(stderr, "Cannot bind LVM\n");
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_locale(sqlite3_stmt *state, cbc_locale_s *loc)
+{
+	int retval;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, loc->locale, (int)strlen(loc->locale), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind locale %s\n", loc->locale);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, loc->country, (int)strlen(loc->country), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind country %s\n", loc->country);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, loc->language, (int)strlen(loc->language), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind language %s\n", loc->language);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, loc->keymap, (int)strlen(loc->keymap), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind keymap %s\n", loc->keymap);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 5, (sqlite_int64)loc->os_id)) > 0) {
+		fprintf(stderr, "Cannot bind os_id %lu\n", loc->os_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)loc->bt_id)) > 0) {
+		fprintf(stderr, "Cannot bind bt_id %lu\n", loc->bt_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 7, loc->timezone, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind timezone %s\n", loc->timezone);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite_int64)loc->cuser)) > 0) {
+		fprintf(stderr, "Cannot bind cuser %lu\n", loc->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)loc->muser)) > 0) {
+		fprintf(stderr, "Cannot bind muser %lu\n", loc->muser);
 		return retval;
 	}
 	return retval;
