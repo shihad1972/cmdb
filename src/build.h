@@ -163,7 +163,7 @@ void
 fill_kick_network_info(dbdata_s *data, string_len_s *build);
 
 void
-fill_kick_packages(dbdata_s *data, string_len_s *build);
+fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 void
 add_kick_base_script(dbdata_s *data, string_len_s *build);
@@ -172,7 +172,7 @@ void
 fill_build_scripts(cbc_config_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
 
 void
-add_kick_final_config(string_len_s *build, char *url);
+add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url);
 
 char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);

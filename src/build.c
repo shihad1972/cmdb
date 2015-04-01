@@ -576,7 +576,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Build for %s has no packages associated.\n",
 		 server);
 	}
-	fill_kick_packages(data, &build);
+	fill_kick_packages(cml, data, &build);
 	clean_dbdata_struct(data);
 
 	type = BUILD_TYPE_URL;
@@ -613,7 +613,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "No scripts configured for this build\n");
 	else
 		fill_build_scripts(cmc, data, retval, &build, cml);
-	add_kick_final_config(&build, url);
+	add_kick_final_config(cml, &build, url);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
@@ -774,6 +774,7 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	snprintf(cml->os, CONF_S, "%s", alias);
 	CHECK_DATA_LIST()
 	char *osver = list->fields.text;
+	snprintf(cml->os_version, MAC_S, "%s", osver);
 	CHECK_DATA_LIST()
 	char *country = list->fields.text;
 	CHECK_DATA_LIST()
@@ -1677,7 +1678,7 @@ network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --names
 }
 
 void
-fill_kick_packages(dbdata_s *data, string_len_s *build)
+fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
@@ -1710,8 +1711,11 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 	tmp++;
 	if ((build->size + 6) >= build->len)
 		resize_string_buff(build);
-	snprintf(tmp, COMM_S, "%%end\n\n");
-	build->size += 6;
+// This breaks a Centos 5 build
+	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
+		snprintf(tmp, COMM_S, "%%end\n\n");
+		build->size += 6;
+	}
 }
 
 void
@@ -1770,7 +1774,7 @@ chmod 755 motd.sh\n\
 #endif /* CHECK_KICK_CONFIG */
 
 void
-add_kick_final_config (string_len_s *build, char *url)
+add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
@@ -1789,8 +1793,11 @@ chmod 755 kick-final.sh\n\
 	tmp += len;
 	if ((build->size + 6) >= build->len)
 		resize_string_buff(build);
-	snprintf(tmp, COMM_S, "%%end\n\n");
-	build->size += 6;
+// This breaks a Centos 5 build
+	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
+		snprintf(tmp, COMM_S, "%%end\n\n");
+		build->size += 6;
+	}
 }
 
 int
