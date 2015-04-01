@@ -31,17 +31,8 @@
 int
 get_varient_id(cbc_config_s *cmc, char *vari, unsigned long int *varient_id);
 
-char *
-cbc_get_varient_name(char *varient, char *valias);
-
-unsigned long int
-cbc_get_varient_id(cbc_varient_s *vari, char *name);
-
 void 
 cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid);
-
-unsigned long int
-search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 
 int
 check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack);
@@ -96,5 +87,8 @@ set_scheme_updated(cbc_config_s *cbc, char *scheme);
 
 void
 fill_dbdata_os_search(dbdata_s *data, char *os[]);
+
+void
+check_for_alias(char **what, char *name, char *alias);
 
 #endif /* CBC_COMMON_H */

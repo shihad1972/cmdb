@@ -42,34 +42,6 @@
 #include "cbc_base_sql.h"
 #include "cbc_common.h"
 
-unsigned long int
-cbc_get_varient_id(cbc_varient_s *vari, char *name)
-{
-	cbc_varient_s *list;
-
-	if (!vari)
-		return NONE;
-	else
-		list = vari;
-	while (list) {
-		if ((strncmp(name, list->varient, HOST_S) == 0) ||
-		    (strncmp(name, list->valias, MAC_S) == 0))
-			return list->varient_id;
-		list = list->next;
-	}
-	return NONE;
-}
-
-unsigned long int
-search_for_vid(cbc_varient_s *vari, char *varient, char *valias)
-{
-	char *name;
-
-	if (!(name = cbc_get_varient_name(varient, valias)))
-		return NONE;
-	return cbc_get_varient_id(vari, name);
-}
-
 int
 check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
 {
@@ -111,30 +83,6 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 	}
 	if (si)
 		freeaddrinfo(si);
-}
-
-char *
-cbc_get_varient_name(char *varient, char *valias)
-{
-	if ((!varient) && (!valias))
-		return NULL;
-	else if (varient && !valias) {
-		if (strncmp(varient, "NULL", COMM_S) != 0)
-			return varient;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return NULL;
-	} else if (!varient && valias) {
-		if (strncmp(valias, "NULL", COMM_S) != 0)
-			return valias;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return NULL;
-	} else {
-		if (strncmp(valias, "NULL", COMM_S) == 0)
-			return varient;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return valias;
-	}
-	return varient;
 }
 
 int
@@ -593,5 +541,14 @@ get_os_alias(cbc_config_s *cbc, char *os, char *alias)
 	snprintf(alias, MAC_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
 	return 0;
+}
+
+void
+check_for_alias(char **what, char *name, char *alias)
+{
+	if (strncmp(name, "NULL", COMM_S) != 0)
+		*what = name;
+	else
+		*what = alias;
 }
 

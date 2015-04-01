@@ -535,24 +535,25 @@ copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
 int
 add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 {
+	char *varient;
 	int retval = 0, os, packs = 0;
 	unsigned long int *osid, vid;
 	cbc_s *base;
 	cbc_package_s *pack;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in add_cbc_package");
-	init_cbc_struct(base);
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_multiple_query(cbc, base, BUILD_OS | VARIENT)) != 0) {
 		fprintf(stderr, "Cannot run os and / or varient query\n");
 		clean_cbc_struct(base);
 		return retval;
 	}
-	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
-	if (vid == 0) 
-		return VARIENT_NOT_FOUND;
+	check_for_alias(&varient, cvl->varient, cvl->valias);
+	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
+		return retval;
+// This will setup the array of osid's in osid if we have more than one version / arch
 	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0)
 		return OS_NOT_FOUND;
+// Set the last to the varient_id
 	*(osid + (unsigned long int)os) = vid;
 	if (!(pack = build_package_list(cbc, osid, os, cvl->package))) {
 		fprintf(stderr, "No packages to add\n");
@@ -578,6 +579,7 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 int
 remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 {
+	char *varient;
 	int retval = 0, os, packs = 0;
 	unsigned long int *osid, vid, packid;
 	cbc_s *base;
@@ -591,11 +593,9 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 		clean_cbc_struct(base);
 		return retval;
 	}
-	vid = search_for_vid(base->varient, cvl->varient, cvl->valias);
-	if (vid == 0) {
-		clean_cbc_struct(base);
-		return VARIENT_NOT_FOUND;
-	}
+	check_for_alias(&varient, cvl->varient, cvl->valias);
+	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
+		return retval;
 // This will setup the array of osid's in osid if we have more than one version / arch
 	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
 		clean_cbc_struct(base);
