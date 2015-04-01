@@ -263,8 +263,9 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
 		  host, zone);
 	} else {
 		printf("Host %s added to zone %s\n", host, zone);
-		next.args.number = (unsigned long int)getuid();
 		data.next = &(next);
+		data.args.number = (unsigned long int)getuid();
+		next.args.number = dnsa->zones->id;
 		if ((retval = dnsa_run_update(dc, &data, ZONE_UPDATED_YES)) != 0)
 			fprintf(stderr, "Unable to mark zone as updated!\n");
 		else
