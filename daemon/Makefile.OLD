@@ -7,7 +7,12 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-CPPFLAGS = -I../src/
+LDFLAGS =
+CPPFLAGS =
+CFLAGS += `libgcrypt-config --cflags`
+LDFLAGS += `libgcrypt-config --libs`
+CPPFLAGS += -I../src/
+
 sbin_PROGRAMS = cmdbd
 
 CDOBJECTS = cmdbd.c

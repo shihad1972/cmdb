@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.24.2], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.2.24.3], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
@@ -39,6 +39,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
 AX_PATH_LIB_PCRE
+AM_PATH_LIBGCRYPT([1.5.0], [AM_CONDITIONAL([HAVE_LIBGCRYPT], [$HAVE_LIBGCRYPT])])
 
 # Check for packages to enable
 AX_USER_CHECKS
