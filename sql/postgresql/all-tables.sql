@@ -379,6 +379,22 @@ FOREIGN KEY(bt_id)
 REFERENCES build_type(bt_id)
 ON UPDATE CASCADE ON DELETE CASCADE
 );
+CREATE TABLE part_options(
+part_options_id INTEGER PRIMARY KEY,
+def_part_id int NOT NULL,
+def_scheme_id int NOT NULL,
+poption` varchar(31) NOT NULL,
+cuser int NOT NULL DEFAULT 0,
+muser int NOT NULL DEFAULT 0,
+ctime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+mtime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
+FOREIGN KEY(def_part_id)
+REFERENCES default_part(def_part_id)
+ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(def_scheme_id)
+REFERENCES seed_schemes(def_scheme_id)
+ON UPDATE CASCADE ON DELETE CASCADE
+);
 
 CREATE TRIGGER insert_build AFTER INSERT ON build
 BEGIN
@@ -534,11 +550,11 @@ UPDATE zones SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
 CREATE TRIGGER insert_locale AFTER INSERT ON locale
 BEGIN
-UPDATE locale SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE locale SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE locale_id = new.locale_id;
 END;
 CREATE TRIGGER update_locale AFTER UPDATE ON locale
 BEGIN
-UPDATE locale SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE locale SET mtime = CURRENT_TIMESTAMP WHERE locale_id = new.locale_id;
 END;
 CREATE TRIGGER insert_default_part AFTER INSERT ON default_part
 BEGIN
@@ -550,27 +566,51 @@ UPDATE default_part SET mtime = CURRENT_TIMESTAMP WHERE def_part_id = new.def_pa
 END;
 CREATE TRIGGER insert_system_packages AFTER INSERT ON system_packages
 BEGIN
-UPDATE system_packages SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_packages SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE syspack_id = new.syspack_id;
 end;
 CREATE TRIGGER update_system_packages AFTER UPDATE ON system_packages
 BEGIN
-UPDATE system_packages SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_packages SET mtime = CURRENT_TIMESTAMP WHERE syspack_id = new.syspack_id;
 END;
 CREATE TRIGGER insert_system_package_args AFTER INSERT ON system_package_args
 BEGIN
-UPDATE system_package_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+UPDATE system_package_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where syspack_arg_id = new.syspack_arg_id;
 END;
 CREATE TRIGGER update_system_package_args AFTER UPDATE ON system_package_args
 BEGIN
-UPDATE system_package_args SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_package_args SET mtime = CURRENT_TIMESTAMP WHERE syspack_arg_id = new.syspack_arg_id;
 END;
 CREATE TRIGGER insert_system_package_conf AFTER INSERT ON system_package_conf
 BEGIN
-UPDATE system_package_conf SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+UPDATE system_package_conf SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where syspack_conf_id = new.syspack_conf_id;
 END;
 CREATE TRIGGER update_system_package_conf AFTER UPDATE ON system_package_conf
 BEGIN
-UPDATE system_package_conf SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+UPDATE system_package_conf SET mtime = CURRENT_TIMESTAMP WHERE syspack_conf_id = new.syspack_conf_id;
+END;
+CREATE TRIGGER insert_system_scripts AFTER INSERT ON system_scripts
+BEGIN
+UPDATE system_scripts SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE systscr_id = new.systscr_id;
+end;
+CREATE TRIGGER update_system_scripts AFTER UPDATE ON system_scripts
+BEGIN
+UPDATE system_scripts SET mtime = CURRENT_TIMESTAMP WHERE systscr_id = new.systscr_id;
+END;
+CREATE TRIGGER insert_system_scripts_args AFTER INSERT ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where systscr_arg_id = new.systscr_arg_id;
+END;
+CREATE TRIGGER update_system_scripts_args AFTER UPDATE ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET mtime = CURRENT_TIMESTAMP WHERE systscr_arg_id = new.systscr_arg_id;
+END;
+CREATE TRIGGER insert_part_options AFTER INSERT ON part_options
+BEGIN
+UPDATE part_options SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP WHERE part_options_id = new.part_options_id;
+END;
+CREATE TRIGGER update_part_options AFTER UPDATE on part_options
+BEGIN
+UPDATE part_options SET mtime = CURRENT_TIMESTAMP WHERE part_options_id = new.part_options_id;
 END;
 CREATE TRIGGER system_scripts_update AFTER UPDATE ON system_scripts
 BEGIN

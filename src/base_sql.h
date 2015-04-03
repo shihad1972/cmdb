@@ -46,7 +46,8 @@ enum {			/* SELECT statements */
 	SYSARG = 32768,
 	SYSCONF = 65536,
 	SCRIPT = 131072,
-	SCRIPTA = 262144
+	SCRIPTA = 262144,
+	PARTOPT = 524288
 };
 
 enum {			/* SELECT and INSERT Indices */
@@ -68,7 +69,8 @@ enum {			/* SELECT and INSERT Indices */
 	SYSARGS,
 	SYSCONFS,
 	SCRIPTS,
-	SCRIPTAS
+	SCRIPTAS,
+	PARTOPTS
 };
 
 /* cmdb queries */

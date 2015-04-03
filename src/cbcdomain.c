@@ -400,6 +400,7 @@ write_dhcp_net_config(cbc_config_s *cbs)
 	char filename[CONF_S];
 	cbc_s *cbc;
 	cbc_dhcp_s *dhcp = 0;
+// Why am I bothering to use string_len_s here?
 	string_len_s *conf = 0;
 
 	if (!(conf = malloc(sizeof(string_len_s))))

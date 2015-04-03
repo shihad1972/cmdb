@@ -42,6 +42,7 @@ enum {			/* regex search codes */
 	IP_REGEX,
 	DOMAIN_REGEX,
 	PATH_REGEX,
+	LOGVOL_REGEX,
 	FS_REGEX,
 	ADDRESS_REGEX,
 	DEV_REGEX,

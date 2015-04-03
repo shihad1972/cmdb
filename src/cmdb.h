@@ -242,7 +242,9 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_SYSPACK_CONF = 224,
 	NO_ARG = 225,
 	NO_NUMBER = 226,
-	NO_NTP_SERVER = 227
+	NO_NTP_SERVER = 227,
+	NO_OPTION = 228,
+	CBC_DATA_WRONG_COUNT = 229
 };
 
 enum {			/* command line error codes */
@@ -272,6 +274,7 @@ enum {			/* command line error codes */
 	NO_CLASS = 4194304,
 	NO_SERVICE_URL = 8388608,
 	NO_NAME_COID = 16777216,
+	NO_FILE_SYSTEM = 33554432,
 	NO_DOMAIN_NAME = -8,
 	NO_IP_ADDRESS = -9,
 	NO_HOST_NAME = -10,
@@ -414,7 +417,7 @@ typedef unsigned long int uli_t;
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-/* Error reporting function */
+// Error reporting function
 void 
 report_error(int error, const char *errstr);
 void
@@ -423,7 +426,9 @@ void
 display_type_error(short int type);
 void
 get_error_string(int error, char *errstr);
-/* cmdb comand line error function */
+
+// cmdb comand line error function
+
 void
 display_command_line_error(int retval, char *program);
 void
@@ -446,14 +451,18 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
-/* Database fields query mismatch error functions */
+
+// Database fields query mismatch error functions
+
 void
 cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
 cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
 void
 dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
-/* Miscellaneous  */
+
+// Miscellaneous
+
 void
 chomp(char *input);
 void
@@ -464,32 +473,53 @@ int
 add_trailing_dot(char *member);
 unsigned int
 cmdb_get_max(const unsigned int args, const unsigned int fields);
+void
+cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query);
+unsigned int
+cmdb_get_max_val(const unsigned int *search[], int query);
+int
+check_data_length(dbdata_s *data, unsigned int len);
+dbdata_s *
+move_down_list_data(dbdata_s *data, unsigned int len);
 int
 write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
 char *
 get_uname(unsigned long int uid);
+int
+get_ip_from_hostname(dbdata_s *data);
+
+// Initialisation functions
+
+void
+initialise_string_array(char *list[], size_t num, size_t len[]);
 void
 init_dbdata_struct(dbdata_s *data);
 void
 init_multi_dbdata_struct(dbdata_s **data, unsigned int i);
 void
-clean_dbdata_struct(dbdata_s *data);
-void
 init_string_len(string_len_s *string);
-void
-clean_string_len(string_len_s *string);
 void
 init_string_l(string_l *string);
 void
-clean_string_l(string_l *list);
-void
 init_initial_string_l(string_l **string, int count);
+
+// Memory functions - first cleanup
+void
+clean_dbdata_struct(dbdata_s *data);
+void
+clean_string_len(string_len_s *string);
+void
+clean_string_l(string_l *list);
+
+// And now manipulation
+
+void *
+cmdb_malloc(size_t len, const char *msg);
 void
 resize_string_buff(string_len_s *build);
-int
-get_ip_from_hostname(dbdata_s *data);
+
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *

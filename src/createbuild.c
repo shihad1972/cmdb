@@ -68,7 +68,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		report_error(MALLOC_FAIL, "cbc in create_build_config");
 	init_cbc_struct(cbc);
 	init_build_struct(build);
-	if ((retval = get_server_id(cbt, cml, &(build->server_id))) != 0)
+	if ((retval = get_server_id(cbt, cml->name, &(build->server_id))) != 0)
 		goto cleanup;
 	if ((retval = check_for_existing_build(cbt, build)) != 0)
 		goto cleanup;
@@ -533,13 +533,15 @@ cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 int
 modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
+	char *os[3];
 	int retval = NONE, type = NONE;
 	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0, bid = 0;
 	dbdata_s *data;
 
 	if (cml->server_id == 0) {
-		if ((retval = get_server_id(cbt, cml, &sid)) != 0)
+		if ((retval = get_server_id(cbt, cml->name, &sid)) != 0)
 			return retval;
+		cml->server_id = sid;
 	} else {
 		sid = cml->server_id;
 	}
@@ -548,11 +550,15 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
 		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)
 			return retval;
-	if (strncmp(cml->os, "NULL", COMM_S) != 0)
-		if ((retval = get_os_id(cbt, cml, &osid)) != 0)
+	if (strncmp(cml->os, "NULL", COMM_S) != 0) {
+		os[0] = strndup(cml->arch, MAC_S);
+		os[1] = strndup(cml->os_version, MAC_S);
+		os[2] = strndup(cml->os, CONF_S);
+		if ((retval = get_os_id(cbt, os, &osid)) != 0)
 			return retval;
+	}
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
-		if ((retval = get_def_scheme_id(cbt, cml->partition, &dsid)) != 0)
+		if ((retval = get_scheme_id(cbt, cml->partition, &dsid)) != 0)
 			return retval;
 	unsigned long int ids[4] = { vid, osid, dsid, sid };
 	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
