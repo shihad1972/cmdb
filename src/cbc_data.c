@@ -39,15 +39,254 @@
 void
 initialise_cbc_s(cbc_s **cbc)
 {
-	if (!(*cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc_s");
+	*cbc = cmdb_malloc(sizeof(cbc_s), "cbc in initialise_cbc_s");
 	init_cbc_struct(*cbc);
+}
+
+void
+initialise_cbc_package_s(cbc_package_s **pack)
+{
+	*pack = cmdb_malloc(sizeof(cbc_package_s), "pack in initialise_cbc_package_s");
+	init_package(*pack);
+}
+
+void
+initialise_cbc_os_s(cbc_build_os_s **os)
+{
+	*os = cmdb_malloc(sizeof(cbc_build_os_s), "os in initialise_cbc_os_s");
+	init_build_os(*os);
+}
+
+void
+initialise_cbc_syspack(cbc_syspack_s **spack)
+{
+	if (!(*spack = malloc(sizeof(cbc_syspack_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_s");
+	init_cbc_syspack(*spack);
+}
+
+void
+initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc)
+{
+	if (!(*cpsc = malloc(sizeof(cbc_syspack_conf_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	init_cbc_syspack_conf(*cpsc);
+}
+
+void
+initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa)
+{
+	if (!(*cpsa = malloc(sizeof(cbc_syspack_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	init_cbc_syspack_arg(*cpsa);
+}
+
+void
+initialise_cbc_scripts(cbc_script_s **scripts)
+{
+	if (!(*scripts = malloc(sizeof(cbc_script_s))))
+		report_error(MALLOC_FAIL, "cbc_script_s");
+	init_cbc_scripts(*scripts);
+}
+
+void
+initialise_cbc_script_args(cbc_script_arg_s **args)
+{
+	if (!(*args = malloc(sizeof(cbc_script_arg_s))))
+		report_error(MALLOC_FAIL, "cbc_script_arg_s");
+	init_cbc_script_args(*args);
+}
+
+void
+initialise_cbc_part_opt(cbc_part_opt_s **opt)
+{
+	if (!(*opt = malloc(sizeof(cbc_part_opt_s))))
+		report_error(MALLOC_FAIL, "cbc_part_opt_s");
+	init_cbc_part_opt(*opt);
 }
 
 void
 init_cbc_struct (cbc_s *cbc)
 {
 	memset(cbc, 0, sizeof(cbc_s));
+}
+
+void
+init_boot_line(cbc_boot_line_s *boot)
+{
+	memset(boot, 0, sizeof(cbc_boot_line_s));
+	snprintf(boot->os, COMM_S, "NULL");
+	snprintf(boot->os_ver, COMM_S, "NULL");
+	snprintf(boot->boot_line, COMM_S, "NULL");
+}
+
+void
+init_build_struct(cbc_build_s *build)
+{
+	memset(build, 0, sizeof(cbc_build_s));
+	snprintf(build->mac_addr, COMM_S, "NULL");
+	snprintf(build->net_int, COMM_S, "NULL");
+}
+
+void
+init_build_domain(cbc_build_domain_s *dom)
+{
+	memset(dom, 0, sizeof(cbc_build_domain_s));
+	snprintf(dom->domain, COMM_S, "NULL");
+}
+
+void
+init_build_ip(cbc_build_ip_s *ip)
+{
+	memset(ip, 0, sizeof(cbc_build_ip_s));
+	snprintf(ip->host, COMM_S, "NULL");
+	snprintf(ip->domain, COMM_S, "NULL");
+}
+
+void
+init_build_os(cbc_build_os_s *os)
+{
+	memset(os, 0, sizeof(cbc_build_os_s));
+	snprintf(os->os, COMM_S, "NULL");
+	snprintf(os->version, COMM_S, "NULL");
+	snprintf(os->alias, COMM_S, "NULL");
+	snprintf(os->ver_alias, COMM_S, "NULL");
+	snprintf(os->arch, COMM_S, "NULL");
+}
+
+void
+init_build_type(cbc_build_type_s *type)
+{
+	memset(type, 0, sizeof(cbc_build_type_s));
+	snprintf(type->alias, COMM_S, "NULL");
+	snprintf(type->build_type, COMM_S, "NULL");
+	snprintf(type->arg, COMM_S, "NULL");
+	snprintf(type->url, COMM_S, "NULL");
+	snprintf(type->mirror, COMM_S, "NULL");
+}
+
+void
+init_disk_dev(cbc_disk_dev_s *disk)
+{
+	memset(disk, 0, sizeof(cbc_disk_dev_s));
+	snprintf(disk->device, COMM_S, "NULL");
+}
+
+void
+init_locale(cbc_locale_s *locale)
+{
+	memset(locale, 0, sizeof(cbc_locale_s));
+	snprintf(locale->locale, COMM_S, "NULL");
+	snprintf(locale->country, COMM_S, "NULL");
+	snprintf(locale->language, COMM_S, "NULL");
+	snprintf(locale->keymap, COMM_S, "NULL");
+	snprintf(locale->timezone, COMM_S, "NULL");
+}
+
+void
+init_package(cbc_package_s *pack)
+{
+	memset(pack, 0, sizeof(cbc_package_s));
+	snprintf(pack->package, COMM_S, "NULL");
+}
+
+void
+init_pre_part(cbc_pre_part_s *prep)
+{
+	memset(prep, 0, sizeof(cbc_pre_part_s));
+	snprintf(prep->mount, COMM_S, "NULL");
+	snprintf(prep->fs, COMM_S, "NULL");
+	snprintf(prep->log_vol, COMM_S, "NULL");
+}
+
+void
+init_seed_scheme(cbc_seed_scheme_s *seed)
+{
+	memset(seed, 0, sizeof(cbc_seed_scheme_s));
+	snprintf(seed->name, COMM_S, "NULL");
+}
+
+void
+init_cbc_server(cbc_server_s *server)
+{
+	memset(server, 0, sizeof(cbc_server_s));
+	snprintf(server->vendor, COMM_S, "NULL");
+	snprintf(server->make, COMM_S, "NULL");
+	snprintf(server->model, COMM_S, "NULL");
+	snprintf(server->uuid, COMM_S, "NULL");
+	snprintf(server->name, COMM_S, "NULL");
+}
+
+void
+init_varient(cbc_varient_s *vari)
+{
+	memset(vari, 0, sizeof(cbc_varient_s));
+	snprintf(vari->varient, COMM_S, "NULL");
+	snprintf(vari->valias, COMM_S, "NULL");
+}
+
+void
+init_vm_hosts(cbc_vm_server_hosts_s *vm)
+{
+	memset(vm, 0, sizeof(cbc_vm_server_hosts_s));
+	snprintf(vm->vm_server, COMM_S, "NULL");
+	snprintf(vm->type, COMM_S, "NULL");
+}
+
+void
+init_cbc_dhcp(cbc_dhcp_s *dh)
+{
+	const char *msg = "init_cbc_dhcp";
+	memset(dh, 0, sizeof(cbc_dhcp_s));
+	dh->iname = cmdb_malloc(RBUFF_S, msg);
+	dh->dname = cmdb_malloc(RBUFF_S, msg);
+	memset(dh->iname, 0, RBUFF_S);
+	memset(dh->dname, 0, RBUFF_S);
+}
+
+void
+init_cbc_iface(cbc_iface_s *ifa)
+{
+	const char *msg = "init_cbc_iface";
+	memset(ifa, 0, sizeof(cbc_iface_s));
+	ifa->name = cmdb_malloc(RBUFF_S, msg);
+	memset(ifa->name, 0, RBUFF_S);
+}
+
+void
+init_cbc_syspack(cbc_syspack_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_s));
+}
+
+void
+init_cbc_syspack_conf(cbc_syspack_conf_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_conf_s));
+}
+
+void
+init_cbc_syspack_arg(cbc_syspack_arg_s *spack)
+{
+	memset(spack, 0, sizeof(cbc_syspack_arg_s));
+}
+
+void
+init_cbc_scripts(cbc_script_s *scripts)
+{
+	memset(scripts, 0, sizeof(cbc_script_s));
+}
+
+void
+init_cbc_script_args(cbc_script_arg_s *args)
+{
+	memset(args, 0, sizeof(cbc_script_arg_s));
+}
+
+void
+init_cbc_part_opt(cbc_part_opt_s *opt)
+{
+	memset(opt, 0, sizeof(cbc_part_opt_s));
 }
 
 void
@@ -91,16 +330,9 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_cbc_syspack_arg(cbc->sysarg);
 	if (cbc->sysconf)
 		clean_cbc_syspack_conf(cbc->sysconf);
+	if (cbc->part_opt)
+		clean_cbc_part_opt(cbc->part_opt);
 	free(cbc);
-}
-
-void
-init_boot_line(cbc_boot_line_s *boot)
-{
-	memset(boot, 0, sizeof(cbc_boot_line_s));
-	snprintf(boot->os, COMM_S, "NULL");
-	snprintf(boot->os_ver, COMM_S, "NULL");
-	snprintf(boot->boot_line, COMM_S, "NULL");
 }
 
 void
@@ -124,14 +356,6 @@ clean_boot_line(cbc_boot_line_s *boot)
 }
 
 void
-init_build_struct(cbc_build_s *build)
-{
-	memset(build, 0, sizeof(cbc_build_s));
-	snprintf(build->mac_addr, COMM_S, "NULL");
-	snprintf(build->net_int, COMM_S, "NULL");
-}
-
-void
 clean_build_struct(cbc_build_s *build)
 {
 	cbc_build_s *list, *next;
@@ -149,13 +373,6 @@ clean_build_struct(cbc_build_s *build)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_build_domain(cbc_build_domain_s *dom)
-{
-	memset(dom, 0, sizeof(cbc_build_domain_s));
-	snprintf(dom->domain, COMM_S, "NULL");
 }
 
 void
@@ -215,14 +432,6 @@ display_build_domain(cbc_build_domain_s *bdom)
 }
 
 void
-init_build_ip(cbc_build_ip_s *ip)
-{
-	memset(ip, 0, sizeof(cbc_build_ip_s));
-	snprintf(ip->host, COMM_S, "NULL");
-	snprintf(ip->domain, COMM_S, "NULL");
-}
-
-void
 clean_build_ip(cbc_build_ip_s *ip)
 {
 	cbc_build_ip_s *list, *next;
@@ -240,17 +449,6 @@ clean_build_ip(cbc_build_ip_s *ip)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_build_os(cbc_build_os_s *os)
-{
-	memset(os, 0, sizeof(cbc_build_os_s));
-	snprintf(os->os, COMM_S, "NULL");
-	snprintf(os->version, COMM_S, "NULL");
-	snprintf(os->alias, COMM_S, "NULL");
-	snprintf(os->ver_alias, COMM_S, "NULL");
-	snprintf(os->arch, COMM_S, "NULL");
 }
 
 void
@@ -274,17 +472,6 @@ clean_build_os(cbc_build_os_s *os)
 }
 
 void
-init_build_type(cbc_build_type_s *type)
-{
-	memset(type, 0, sizeof(cbc_build_type_s));
-	snprintf(type->alias, COMM_S, "NULL");
-	snprintf(type->build_type, COMM_S, "NULL");
-	snprintf(type->arg, COMM_S, "NULL");
-	snprintf(type->url, COMM_S, "NULL");
-	snprintf(type->mirror, COMM_S, "NULL");
-}
-
-void
 clean_build_type(cbc_build_type_s *type)
 {
 	cbc_build_type_s *list, *next;
@@ -302,13 +489,6 @@ clean_build_type(cbc_build_type_s *type)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_disk_dev(cbc_disk_dev_s *disk)
-{
-	memset(disk, 0, sizeof(cbc_disk_dev_s));
-	snprintf(disk->device, COMM_S, "NULL");
 }
 
 void
@@ -332,17 +512,6 @@ clean_disk_dev(cbc_disk_dev_s *disk)
 }
 
 void
-init_locale(cbc_locale_s *locale)
-{
-	memset(locale, 0, sizeof(cbc_locale_s));
-	snprintf(locale->locale, COMM_S, "NULL");
-	snprintf(locale->country, COMM_S, "NULL");
-	snprintf(locale->language, COMM_S, "NULL");
-	snprintf(locale->keymap, COMM_S, "NULL");
-	snprintf(locale->timezone, COMM_S, "NULL");
-}
-
-void
 clean_locale(cbc_locale_s *locale)
 {
 	cbc_locale_s *list, *next;
@@ -360,13 +529,6 @@ clean_locale(cbc_locale_s *locale)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_package(cbc_package_s *pack)
-{
-	memset(pack, 0, sizeof(cbc_package_s));
-	snprintf(pack->package, COMM_S, "NULL");
 }
 
 void
@@ -390,15 +552,6 @@ clean_package(cbc_package_s *pack)
 }
 
 void
-init_pre_part(cbc_pre_part_s *prep)
-{
-	memset(prep, 0, sizeof(cbc_pre_part_s));
-	snprintf(prep->mount, COMM_S, "NULL");
-	snprintf(prep->fs, COMM_S, "NULL");
-	snprintf(prep->log_vol, COMM_S, "NULL");
-}
-
-void
 clean_pre_part(cbc_pre_part_s *prep)
 {
 	cbc_pre_part_s *list, *next;
@@ -416,13 +569,6 @@ clean_pre_part(cbc_pre_part_s *prep)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_seed_scheme(cbc_seed_scheme_s *seed)
-{
-	memset(seed, 0, sizeof(cbc_seed_scheme_s));
-	snprintf(seed->name, COMM_S, "NULL");
 }
 
 void
@@ -446,17 +592,6 @@ clean_seed_scheme(cbc_seed_scheme_s *seed)
 }
 
 void
-init_cbc_server(cbc_server_s *server)
-{
-	memset(server, 0, sizeof(cbc_server_s));
-	snprintf(server->vendor, COMM_S, "NULL");
-	snprintf(server->make, COMM_S, "NULL");
-	snprintf(server->model, COMM_S, "NULL");
-	snprintf(server->uuid, COMM_S, "NULL");
-	snprintf(server->name, COMM_S, "NULL");
-}
-
-void
 clean_cbc_server(cbc_server_s *server)
 {
 	cbc_server_s *list, *next;
@@ -474,14 +609,6 @@ clean_cbc_server(cbc_server_s *server)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_varient(cbc_varient_s *vari)
-{
-	memset(vari, 0, sizeof(cbc_varient_s));
-	snprintf(vari->varient, COMM_S, "NULL");
-	snprintf(vari->valias, COMM_S, "NULL");
 }
 
 void
@@ -505,14 +632,6 @@ clean_varient(cbc_varient_s *vari)
 }
 
 void
-init_vm_hosts(cbc_vm_server_hosts_s *vm)
-{
-	memset(vm, 0, sizeof(cbc_vm_server_hosts_s));
-	snprintf(vm->vm_server, COMM_S, "NULL");
-	snprintf(vm->type, COMM_S, "NULL");
-}
-
-void
 clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 {
 	cbc_vm_server_hosts_s *list, *next;
@@ -530,18 +649,6 @@ clean_vm_hosts(cbc_vm_server_hosts_s *vm)
 		else
 			next = NULL;
 	}
-}
-
-void
-init_cbc_dhcp(cbc_dhcp_s *dh)
-{
-	memset(dh, 0, sizeof(cbc_dhcp_s));
-	if (!(dh->iname = malloc(RBUFF_S)))
-		report_error(MALLOC_FAIL, "dh->iname");
-	if (!(dh->dname = malloc(RBUFF_S)))
-		report_error(MALLOC_FAIL, "dh->dname");
-	memset(dh->iname, 0, RBUFF_S);
-	memset(dh->dname, 0, RBUFF_S);
 }
 
 void
@@ -569,15 +676,6 @@ clean_cbc_dhcp(cbc_dhcp_s *dh)
 }
 
 void
-init_cbc_iface(cbc_iface_s *ifa)
-{
-	memset(ifa, 0, sizeof(cbc_iface_s));
-	if (!(ifa->name = malloc(RBUFF_S)))
-		report_error(MALLOC_FAIL, "ifa->name");
-	memset(ifa->name, 0, RBUFF_S);
-}
-
-void
 clean_cbc_iface(cbc_iface_s *ifa)
 {
 	cbc_iface_s *list, *next;
@@ -596,20 +694,6 @@ clean_cbc_iface(cbc_iface_s *ifa)
 		else
 			next = NULL;
 	}
-}
-
-void
-initialise_cbc_syspack(cbc_syspack_s **spack)
-{
-	if (!(*spack = malloc(sizeof(cbc_syspack_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_s");
-	init_cbc_syspack(*spack);
-}
-
-void
-init_cbc_syspack(cbc_syspack_s *spack)
-{
-	memset(spack, 0, sizeof(cbc_syspack_s));
 }
 
 void
@@ -632,20 +716,6 @@ clean_cbc_syspack(cbc_syspack_s *spack)
 }
 
 void
-initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc)
-{
-	if (!(*cpsc = malloc(sizeof(cbc_syspack_conf_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
-	init_cbc_syspack_conf(*cpsc);
-}
-
-void
-init_cbc_syspack_conf(cbc_syspack_conf_s *spack)
-{
-	memset(spack, 0, sizeof(cbc_syspack_conf_s));
-}
-
-void
 clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 {
 	cbc_syspack_conf_s *list, *next;
@@ -662,20 +732,6 @@ clean_cbc_syspack_conf(cbc_syspack_conf_s *spack)
 		else
 			next = NULL;
 	}
-}
-
-void
-initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa)
-{
-	if (!(*cpsa = malloc(sizeof(cbc_syspack_arg_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
-	init_cbc_syspack_arg(*cpsa);
-}
-
-void
-init_cbc_syspack_arg(cbc_syspack_arg_s *spack)
-{
-	memset(spack, 0, sizeof(cbc_syspack_arg_s));
 }
 
 void
@@ -698,20 +754,6 @@ clean_cbc_syspack_arg(cbc_syspack_arg_s *spack)
 }
 
 void
-initialise_cbc_scripts(cbc_script_s **scripts)
-{
-	if (!(*scripts = malloc(sizeof(cbc_script_s))))
-		report_error(MALLOC_FAIL, "cbc_script_s");
-	init_cbc_scripts(*scripts);
-}
-
-void
-init_cbc_scripts(cbc_script_s *scripts)
-{
-	memset(scripts, 0, sizeof(cbc_script_s));
-}
-
-void
 clean_cbc_scripts(cbc_script_s *scripts)
 {
 	cbc_script_s *list, *next;
@@ -730,20 +772,6 @@ clean_cbc_scripts(cbc_script_s *scripts)
 }
 
 void
-initialise_cbc_script_args(cbc_script_arg_s **args)
-{
-	if (!(*args = malloc(sizeof(cbc_script_arg_s))))
-		report_error(MALLOC_FAIL, "cbc_script_arg_s");
-	init_cbc_script_args(*args);
-}
-
-void
-init_cbc_script_args(cbc_script_arg_s *args)
-{
-	memset(args, 0, sizeof(cbc_script_arg_s));
-}
-
-void
 clean_cbc_script_args(cbc_script_arg_s *args)
 {
 	cbc_script_arg_s *list, *next;
@@ -754,6 +782,26 @@ clean_cbc_script_args(cbc_script_arg_s *args)
 		return;
 	next = list->next;
 	while (list) {
+		free(list);
+		list = next;
+		if (next)
+			next = next->next;
+	}
+}
+
+void
+clean_cbc_part_opt(cbc_part_opt_s *opt)
+{
+	cbc_part_opt_s *list, *next;
+
+	if (opt)
+		list = opt;
+	else
+		return;
+	next = list->next;
+	while (list) {
+		if (list->option)
+			free(list->option);
 		free(list);
 		list = next;
 		if (next)

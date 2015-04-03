@@ -36,6 +36,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
@@ -209,9 +210,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	cbc_s *base;
 	cbc_build_os_s *os;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
-	init_cbc_struct(base);
+	initialise_cbc_s(&base);
 	if ((retval = cbc_run_query(cmc, base, BUILD_OS)) != 0) {
 		if (retval == 6) {
 			fprintf(stderr, "No build OS's\n");
@@ -255,65 +254,36 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
-	char *name = col->os;
-	int retval = NONE, type;
-	unsigned int max;
+	char *oss[3];
+	int retval = NONE;
+	unsigned long int id;
 	cbc_s *cbc;
 	cbc_build_os_s *os;
 	dbdata_s *data = NULL;
 
-	if (!(os = malloc(sizeof(cbc_build_os_s))))
-		report_error(MALLOC_FAIL, "os in add_cbc_build_os");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in add_cbc_build_os");
-	init_cbc_struct(cbc);
-	init_build_os(os);
+	initialise_cbc_s(&cbc);
+	initialise_cbc_os_s(&os);
 	cbc->bos = os;
-/* If we have a build alias we need to check if this is a valid OS in the 
- * build_type table */
 	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
 	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
-		type = OS_ALIAS_ON_OS;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, MAC_S, "%s", name);
-		if ((retval = cbc_run_search(cmc, data, OS_ALIAS_ON_OS)) == 0) {
-			clean_dbdata_struct(data);
+		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
+			clean_cbc_struct(cbc);
 			return OS_NOT_FOUND;
 		}
-		snprintf(col->alias, MAC_S, "%s", data->fields.text);
-		clean_dbdata_struct(data);
 	}
-	type = BUILD_TYPE_ID_ON_ALIAS;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, MAC_S, "%s", col->alias);
-	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_ID_ON_ALIAS)) == 0) {
-		clean_dbdata_struct(data);
+	if ((retval = get_build_type_id(cmc, col->alias, &(os->bt_id))) != 0) {
+		clean_cbc_struct(cbc);
 		return BUILD_TYPE_NOT_FOUND;
 	}
-	os->bt_id = data->fields.number;
-	clean_dbdata_struct(data);
-	retval = NONE;
-/* Get all examples of this OS in the DB and check this particular one is
- * not already in the DB */
-	type = BUILD_OS_ON_NAME;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, MAC_S, "%s", name);
-	retval = cbc_run_search(cmc, data, BUILD_OS_ON_NAME);
-	if (retval > 0) {
-		if (check_for_build_os(col, data) != 0) {
-			clean_dbdata_struct(data);
-			return BUILD_OS_EXISTS;
-		}
-		retval = NONE;
-		if ((strncmp(data->next->fields.text, "none", COMM_S) != 0) &&
-		    (strncmp(col->ver_alias, "none", COMM_S) == 0)) {
-			clean_dbdata_struct(data);
-			return OS_ALIAS_NEEDED;
-		}
+/* Check to make sure this OS not already in DB */
+	oss[0] = col->arch;
+	oss[1] = col->version;
+	oss[2] = col->os;
+	if ((retval = get_os_id(cmc, oss, &id)) != OS_NOT_FOUND) {
+		fprintf(stderr, "OS %s already in database\n", col->os);
+		clean_cbc_struct(cbc);
+		return BUILD_OS_EXISTS;
 	}
 	snprintf(os->alias, MAC_S, "%s", col->alias);
 	snprintf(os->os, MAC_S, "%s", col->os);
@@ -325,6 +295,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		printf("Unable to add build os to database\n");
 	else
 		printf("Build os added to database\n");
+	copy_new_os_profile(cmc, oss);
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
 	return retval;
@@ -333,65 +304,22 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 int
 remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
-	char *name = col->os, *alias = col->alias;
+	if (!(cmc) || !(col))
+		return CBC_NO_DATA;
+	char *name = col->os;
 	char *version = col->version, *arch = col->arch;
-	int retval = NONE, i, type = OS_ID_ON_NAME;
-	unsigned int max;
+	char *oss[3];
+	int retval = NONE;
 	unsigned long int id;
-	dbdata_s *data = NULL, *list;
+	dbdata_s *data = NULL;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if (strncmp(name, "NULL", MAC_S) != 0) {
-		snprintf(data->args.text, MAC_S, "%s", name);
-		snprintf(data->next->args.text, MAC_S, "%s", version);
-		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 0) {
-			clean_dbdata_struct(data);
-			return OS_NOT_FOUND;
-		}
-	} else if (strncmp(alias, "NULL", MAC_S) != 0) {
-		snprintf(data->args.text, MAC_S, "%s", alias);
-		snprintf(data->next->args.text, MAC_S, "%s", version);
-		snprintf(data->next->next->args.text, RANGE_S, "%s", arch);
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 0) {
-			clean_dbdata_struct(data);
-			return OS_NOT_FOUND;
-		}
-	} else {
-		clean_dbdata_struct(data);
+	oss[0] = col->arch;
+	oss[1] = col->version;
+	oss[2] = col->os;
+	if ((retval = get_os_id(cmc, oss, &id)) != 0)
 		return OS_NOT_FOUND;
-	}
-	id = data->fields.number;
-	clean_dbdata_struct(data);
-	type = BUILD_ID_ON_OS_ID;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = id;
-	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_OS_ID)) != 0) {
-		clean_dbdata_struct(data);
-		type = SERVERS_USING_BUILD_OS;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		data->args.number = id;
-		retval = cbc_run_search(cmc, data, SERVERS_USING_BUILD_OS);
-		printf("Server(s) ");
-		list = data;
-		for (i = 0; i < retval; i++) {
-			if (i + 1 == retval)
-				printf("%s ", list->fields.text);
-			else
-				printf("%s, ", list->fields.text);
-			if (list->next)
-				list = list->next;
-			else
-				break;
-		}
-		printf("are using build os.\n");
-		clean_dbdata_struct(data);
+	if ((retval = check_for_build_os_in_use(cmc, id)) != 0)
 		return BUILD_OS_IN_USE;
-	}
-	clean_dbdata_struct(data);
 	if (!(data = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "data in remove_cbc_build_os");
 	data->next = NULL;
@@ -427,3 +355,237 @@ check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
 	}
 	return NONE;
 }
+
+int
+check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
+{
+	int retval, query = BUILD_ID_ON_OS_ID, i;
+	char *name;
+	unsigned int max;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = os_id;
+	if ((retval = cbc_run_search(cbc, data, query)) != 0) {
+		clean_dbdata_struct(data->next);
+		data->next = NULL;
+		memset(data->fields.text, 0, RBUFF_S);
+		retval = cbc_run_search(cbc, data, SERVERS_USING_BUILD_OS);
+		printf("%d server(s) ", retval);
+		list = data;
+		for (i = 0; i < retval; i++) {
+			name = list->fields.text;
+			if (i + 1 == retval)
+				printf("%s ", name);
+			else
+				printf("%s, ", name);
+			if (list->next)
+				list = list->next;
+			else
+				break;
+		}
+		printf("are using build os.\n");
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+void
+copy_new_os_profile(cbc_config_s *cmc, char *oss[])
+{
+	char alias[RANGE_S];
+	int retval;
+	unsigned long int id[3]; //os_id = 0, bt_id = 1, id to copy from = 2
+
+	memset(id, 0, sizeof(id));
+	if ((retval = get_os_id(cmc, oss, &id[0])) != 0) {
+		fprintf(stderr, "Cannot find OS? %s, %s, %s\n", oss[0], oss[1], oss[2]);
+		return;
+	}
+	if ((retval = get_os_alias(cmc, oss[2], alias)) != 0) {
+		fprintf(stderr, "Cannot find alias for os %s\n", oss[2]);
+		return;
+	}
+	if ((retval = get_build_type_id(cmc, alias, &id[1])) != 0) {
+		fprintf(stderr, "Cannot find build type for alias %s\n", alias);
+		return;
+	}
+	if ((retval = cbc_choose_os_to_copy(cmc, id, oss)) != 0) {
+		fprintf(stderr, "Cannot choose an os to copy??\n");
+		return;
+	}
+	copy_new_build_os(cmc, id);
+	return;
+}
+
+int
+cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
+{
+	if (!(cbc) || !(oss) || !(id))
+		return CBC_NO_DATA;
+	char *arch = oss[0];
+	int retval = 0, query = OS_DETAIL_ON_BT_ID;
+	unsigned int max;
+	unsigned long int time = 0, ctime;
+	dbdata_s *data, *list;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = *(id + 1);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find any previous os for %s\n", oss[2]);
+		clean_dbdata_struct(data);
+		return OS_DOES_NOT_EXIST;
+	}
+	if (check_data_length(data, max) != 0) {
+		clean_dbdata_struct(data);
+		return CBC_DATA_WRONG_COUNT;
+	}
+	list = data;
+	while (data) {
+		if ((strncmp(arch, data->next->next->fields.text, RBUFF_S) == 0) &&
+		    (data->fields.number != id[0])) {
+			convert_time(data->next->fields.text, &ctime);
+			if (ctime > time) {
+				id[2] = data->fields.number;
+				time = ctime; 
+			}
+		}
+		data = move_down_list_data(data, max);
+	}
+	clean_dbdata_struct(list);
+	if (id[2] == 0)
+		return 1;
+	else
+		return 0;
+}
+
+void
+copy_new_build_os(cbc_config_s *cbc, uli_t *id)
+{
+	if (!(cbc) || !(id)) {
+		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
+		return;
+	}
+	copy_locale_for_os(cbc, id);
+	copy_packages_for_os(cbc, id);
+}
+
+void
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
+{
+	int retval = 0, query = LOCALE_DETAILS_ON_OS_ID, i = 0;
+	unsigned int max;
+	dbdata_s *data, *dlist;
+	cbc_s *base;
+	cbc_locale_s *loc, *llist = NULL, *next;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number =  id[2];
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "No locale for OS??\n");
+		clean_dbdata_struct(data);
+		return;
+	}
+	dlist = data;
+	if (check_data_length(dlist, max) != 0) {
+		fprintf(stderr, "dbdata count wrong in copy_locale_for_os");
+		clean_dbdata_struct(data);
+		return;
+	}
+	while (dlist) {
+		loc = cmdb_malloc(sizeof(cbc_locale_s), "loc in copy_local_for_os");
+		init_locale(loc);
+		loc->os_id = id[0];
+		loc->bt_id = id[1];
+		snprintf(loc->locale, MAC_S, "%s", dlist->fields.text);
+		snprintf(loc->country, RANGE_S, "%s", dlist->next->fields.text);
+		snprintf(loc->language, RANGE_S, "%s", dlist->next->next->fields.text);
+		snprintf(loc->keymap, RANGE_S, "%s", dlist->next->next->next->fields.text);
+		snprintf(loc->timezone, HOST_S, "%s", dlist->next->next->next->next->fields.text);
+		loc->cuser = loc->muser = (unsigned long int)getuid();
+		if (!(llist)) {
+			llist = loc;
+		} else {
+			next = llist;
+			while (next->next)
+				next = next->next;
+			next->next = loc;
+		}
+		dlist = move_down_list_data(dlist, max);
+	}
+	clean_dbdata_struct(data);
+	initialise_cbc_s(&base);
+	loc = llist;
+	while (loc) {
+		base->locale = loc;
+		if ((retval = cbc_run_insert(cbc, base, LOCALES)) != 0)
+			fprintf(stderr, "Locale not inserted!\n");
+		else
+			i++;
+		loc = loc->next;
+	}
+	printf("%d locale(s) inserted for new OS\n", i);
+	base->locale = llist;
+	clean_cbc_struct(base);
+}
+
+void
+copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
+{
+	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
+	unsigned int max;
+	dbdata_s *data, *dlist;
+	cbc_s *base;
+	cbc_package_s *pack, *plist = NULL, *next;
+
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = id[2];
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "No packages for OS?\n");
+		clean_dbdata_struct(data);
+		return;
+	}
+	dlist = data;
+	if (check_data_length(dlist, max) != 0) {
+		fprintf(stderr, "dbdata count wrong in copy_packages_for_os");
+		clean_dbdata_struct(data);
+		return;
+	}
+	initialise_cbc_s(&base);
+	data = dlist;
+	while (data) {
+		initialise_cbc_package_s(&pack);
+		snprintf(pack->package, HOST_S, "%s", data->fields.text);
+		pack->vari_id = data->next->fields.number;
+		pack->os_id = id[0];
+		pack->cuser = pack->muser = (unsigned long int)getuid();
+		if (!(plist)) {
+			plist = pack;
+		} else {
+			next = plist;
+			while (next->next)
+				next = next->next;
+			next->next = pack;
+		}
+		data = move_down_list_data(data, max);
+	}
+	pack = plist;
+	clean_dbdata_struct(dlist);
+	while (pack) {
+		base->package = pack;
+		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) != 0) {
+			fprintf(stderr, "Cannot insert package %s\n", pack->package);
+		} else {
+			i++;
+		}
+		pack = pack->next;
+	}
+	printf("%d package(s) inserted\n", i);
+	base->package = plist;
+	clean_cbc_struct(base);
+}
+

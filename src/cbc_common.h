@@ -31,17 +31,8 @@
 int
 get_varient_id(cbc_config_s *cmc, char *vari, unsigned long int *varient_id);
 
-char *
-cbc_get_varient_name(char *varient, char *valias);
-
-unsigned long int
-cbc_get_varient_id(cbc_varient_s *vari, char *name);
-
 void 
 cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid);
-
-unsigned long int
-search_for_vid(cbc_varient_s *vari, char *varient, char *valias);
 
 int
 check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack);
@@ -51,6 +42,12 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
 
 void
 set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id);
+
+int
+get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id);
+
+int
+get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id);
 
 int
 get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id);
@@ -66,5 +63,32 @@ get_system_script_id(cbc_config_s *cbc, char *package, uli_t *id);
 
 int
 get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id);
+
+int
+get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id);
+
+int
+get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id);
+
+int
+get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id);
+
+int
+get_os_alias(cbc_config_s *cbc, char *os, char *alias);
+
+int
+get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name);
+
+int
+get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id);
+
+int
+set_scheme_updated(cbc_config_s *cbc, char *scheme);
+
+void
+fill_dbdata_os_search(dbdata_s *data, char *os[]);
+
+void
+check_for_alias(char **what, char *name, char *alias);
 
 #endif /* CBC_COMMON_H */

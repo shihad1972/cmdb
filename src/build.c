@@ -65,6 +65,8 @@ const int sp_query[] = { 33, 63, 64, 20, 33 };
 
 const int spvar_no = 5;
 
+const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
+
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 {
@@ -78,7 +80,7 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME;
+	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME | PARTOPT;
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -293,6 +295,10 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
+	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
+		return retval;
+	if ((retval = get_scheme_name(cmc, cml->server_id, cml->partition)) != 0)
+		return retval;
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
 		printf("Failed to write dhcpd.hosts file\n");
 		return retval;
@@ -354,11 +360,6 @@ write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
 		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
 	init_string_len(dhcp);
-	if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-		return retval;
-	if (strncmp(cml->name, "NULL", COMM_S) == 0)
-		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	data->args.number = cml->server_id;
@@ -431,28 +432,16 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 	free(buff);
 }
 
-#ifndef PREP_DB_QUERY
-# define PREP_DB_QUERY(data, query) {          \
-	type = query;			       \
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]); \
-	init_multi_dbdata_struct(&data, max);  \
-	data->args.number = cml->server_id;    \
-}
-#endif /* PREP_DB_QUERY */
-
 int
 write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = BUILD_IP_ON_SERVER_ID;
 	dbdata_s *data;
 
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-			return retval;
-	PREP_DB_QUERY(data, BUILD_IP_ON_SERVER_ID)
-	if ((retval = cbc_run_search(cmc, data, BUILD_IP_ON_SERVER_ID)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return CANNOT_FIND_BUILD_IP;
 	} else if (retval > 1) 
@@ -460,8 +449,11 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	snprintf(pxe, RBUFF_S, "%s%s%lX", cmc->tftpdir, cmc->pxe,
 		 data->fields.number);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, TFTP_DETAILS)
-	if ((retval = cbc_run_search(cmc, data, TFTP_DETAILS)) == 0) {
+
+	type = TFTP_DETAILS;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_TFTP_B_ERR;
 	} else if (retval > 1) {
@@ -479,20 +471,17 @@ int
 write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = NET_BUILD_DETAILS;
 	dbdata_s *data;
 	string_len_s *build;
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-			return retval;
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
 	init_string_len(build);
-	PREP_DB_QUERY(data, NET_BUILD_DETAILS);
-	if ((retval = cbc_run_search(cmc, data, NET_BUILD_DETAILS)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_NET_BUILD_ERR;
 	} else if (retval > 1) {
@@ -503,8 +492,11 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_MIRROR);
-	if ((retval = cbc_run_search(cmc, data, BUILD_MIRROR)) == 0) {
+
+	type = BUILD_MIRROR;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_MIRR_ERR;
 	} else if (retval > 1) {
@@ -514,13 +506,17 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_mirror_output(cml, data, build);
 		retval = 0;
 	}
+
 	if ((retval = fill_partition(cmc, cml, build)) != 0)
 		return retval;
 	if ((retval = fill_kernel(cml, build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_PACKAGES);
-	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+
+	type = BUILD_PACKAGES;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BUILD_PACKAGES;
 	} else {
@@ -528,10 +524,9 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	if ((retval = fill_system_packages(cmc, cml, build)) != 0) {
-		printf("Failed to get system package configuration\n");
+
+	if ((retval = fill_system_packages(cmc, cml, build)) != 0)
 		return retval;
-	}
 	retval = write_file(file, build->string);
 	clean_string_len(build);
 	return retval;
@@ -541,48 +536,23 @@ int
 write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S], url[CONF_S], *server = cml->name;
-	int retval = NONE, type;
-	unsigned int max;
+	int retval = NONE, type = KICK_BASE;
 	unsigned long int bd_id;
-	dbdata_s *data, *part;
-	string_len_s build = { .len = BUFF_S, .size = NONE };
+	dbdata_s *data;
+	string_len_s build = { .len = FILE_S, .size = NONE };
 
 	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-			return retval;
 	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_preseed_build_file");
-	PREP_DB_QUERY(data, KICK_BASE);
-	if ((retval = cbc_run_search(cmc, data, KICK_BASE)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_KICKSTART_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_KICKSTART_ERR;
-	} else {
-		fill_kick_base(data, &build);
-		retval = NONE;
-	}
-	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BASIC_PART);
-	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BASIC_DISK;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BASIC_DISK;
-	}
-	PREP_DB_QUERY(part, FULL_PART);
-	data->next->next = part;
-	if ((retval = cbc_run_search(cmc, part, FULL_PART)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	}
-	fill_kick_partitions(cml, data, &build);
-	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, KICK_NET_DETAILS);
-	if ((retval = cbc_run_search(cmc, data, KICK_NET_DETAILS)) == 0) {
+		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
+	if ((retval = fill_kick_base(cmc, cml, &build)) != 0)
+		return retval;
+	if ((retval = fill_kick_partitions(cmc, cml, &build)) != 0)
+		return retval;
+
+	type = KICK_NET_DETAILS;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build for %s has no network information.\n",
 		 server);
@@ -596,17 +566,23 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fill_kick_network_info(data, &build);
 	}
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_PACKAGES);
-	if ((retval = cbc_run_search(cmc, data, BUILD_PACKAGES)) == 0) {
+
+	type = BUILD_PACKAGES;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		data = NULL;
 		fprintf(stderr, "Build for %s has no packages associated.\n",
 		 server);
 	}
-	fill_kick_packages(data, &build);
+	fill_kick_packages(cml, data, &build);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BUILD_TYPE_URL);
-	if ((retval = cbc_run_search(cmc, data, BUILD_TYPE_URL)) == 0) {
+
+	type = BUILD_TYPE_URL;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build type for %s has no url??\n", server);
 		return NO_BUILD_URL;
@@ -616,8 +592,11 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	add_kick_base_script(data, &build);
 	snprintf(url, CONF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
-	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+
+	type = BD_ID_ON_SERVER_ID;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		fprintf(stderr, "Build domain for server %s not found\n", server);
 		return BUILD_DOMAIN_NOT_FOUND;
@@ -625,16 +604,16 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		fprintf(stderr, "Multiple build domains found for server %s\n", server);
 	bd_id = data->fields.number;
 	clean_dbdata_struct(data);
+
 	type = SCRIPT_CONFIG;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
+	cmdb_prep_db_query(&data, cbc_search, type);
 	data->args.number = bd_id;
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
 	if ((retval = cbc_run_search(cmc, data, type)) == 0)
 		fprintf(stderr, "No scripts configured for this build\n");
 	else
 		fill_build_scripts(cmc, data, retval, &build, cml);
-	add_kick_final_config(&build, url);
+	add_kick_final_config(cml, &build, url);
 	clean_dbdata_struct(data);
 	retval = write_file(file, build.string);
 	free(build.string);
@@ -658,6 +637,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	pos = build->string + build->size;           \
 	snprintf(pos, len + 1, "%s", line);          \
 	build->size += len;                          \
+	memset(line, 0, len);                        \
 }
 #endif /* PRINT_STRING_WITH_LENGTH_CHECK */
 int
@@ -666,7 +646,6 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	char *server, line[TBUFF_S], *pos;
 	int retval = NONE, type, query = SCRIPT_CONFIG;
 	size_t len = NONE;
-	unsigned int max;
 	unsigned long int bd_id;
 	dbdata_s *list = 0, *data = 0;
 	string_len_s *build;
@@ -674,15 +653,11 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	if (!(build = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "build in write_pre_host_script");
 	init_string_len(build);
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-			return retval;
-	if (!(cml->name))
-		if ((retval = get_server_name(cmc, cml->name, cml->server_id)) != 0)
-			return retval;
 	server = cml->name;
-	PREP_DB_QUERY(data, BD_ID_ON_SERVER_ID);
-	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
+	type = BD_ID_ON_SERVER_ID;
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(list);
 		return NO_BD_CONFIG;
 	} else if (retval > 1) {
@@ -692,6 +667,7 @@ write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
 	retval = 0;
 	bd_id = data->fields.number;
 	clean_dbdata_struct(data);
+
 	snprintf(build->string, RBUFF_S, "\
 #!/bin/sh\n\
 #\n\
@@ -719,19 +695,16 @@ chmod 755 motd.sh\n\
 ./motd.sh >> scripts.log 2>&1\n\
 \n", cml->config, cml->config, cml->config);
 	PRINT_STRING_WITH_LENGTH_CHECK
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
+
+	cmdb_prep_db_query(&data, cbc_search, query);
 	data->args.number = bd_id;
 	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
 	if ((retval = cbc_run_search(cmc, data, query)) > 0)
 		fill_build_scripts(cmc, data, retval, build, cml);
-	else
-		clean_dbdata_struct(data);
 	server = cml->name;
 	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
 	retval = write_file(line, build->string);
-	if (list)
-		clean_dbdata_struct(list);
+	clean_dbdata_struct(data);
 	free(build->string);
 	free(build);
 	return retval;
@@ -786,6 +759,7 @@ chmod 755 %s\n\
 		scrno++;
 		if (data)
 			data = data->next->next->next;
+		free(newarg);
 		newarg = 0;
 	}
 }
@@ -800,6 +774,7 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	snprintf(cml->os, CONF_S, "%s", alias);
 	CHECK_DATA_LIST()
 	char *osver = list->fields.text;
+	snprintf(cml->os_version, MAC_S, "%s", osver);
 	CHECK_DATA_LIST()
 	char *country = list->fields.text;
 	CHECK_DATA_LIST()
@@ -959,6 +934,7 @@ fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	size_t len;
 
 	if (strncmp(cml->os, "debian", COMM_S) == 0)
+// Would be nice to be able to add a password for the user and root here.
 		snprintf(output, BUFF_S, "\
 d-i netcfg/wireless_wep string\n\
 d-i hw-detect/load_firmware boolean true\n\
@@ -1026,54 +1002,37 @@ d-i clock-setup/ntp-server string %s\n\
 int
 fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *next, disk[FILE_S];
-	int retval = NONE, type;
-	unsigned int max;
+	char *pos, line[FILE_S];
+	int retval = NONE, type = BASIC_PART;
 	short int lvm;
 	size_t len;
 	dbdata_s *data;
 
-	if (cml->server_id == 0)
-		if ((retval = get_server_id(cmc, cml, &cml->server_id)) != 0)
-			return retval;
-	PREP_DB_QUERY(data, BASIC_PART)
-	if ((retval = cbc_run_search(cmc, data, BASIC_PART)) == 0) {
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
 		clean_dbdata_struct(data);
 		return NO_BASIC_DISK;
 	} else if (retval > 1) {
 		clean_dbdata_struct(data);
 		return MULTI_BASIC_DISK;
 	} else {
-		add_pre_start_part(cml, data, disk);
+		add_pre_start_part(cml, data, line);
 	}
+
 	lvm = data->next->fields.small;
-	len = strlen(disk);
-	next = (disk + len);
-	snprintf(next, URL_S, "\
-d-i partman-auto/expert_recipe string                         \\\n\
-      monkey ::                                               \\\n");
-	next +=128;
-	len = strlen(disk);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, len + 1, "%s", disk);
-	build->size += len;
+	len = strlen(line);
+	pos = (line + len);
+	snprintf(pos, URL_S, "\
+d-i partman-auto/expert_recipe string \\\n\
+      monkey :: \\\n");
+	PRINT_STRING_WITH_LENGTH_CHECK
 	clean_dbdata_struct(data);
-	PREP_DB_QUERY(data, FULL_PART)
-	if ((retval = cbc_run_search(cmc, data, FULL_PART)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	} else {
-		if (lvm > 0) {
-			add_pre_volume_group(cml, build);
-			add_pre_lvm_part(data, retval, build);
-		} else {
-			add_pre_part(data, retval, build);
-		}
-		next++;
-	}
-	clean_dbdata_struct(data);
+
+	if (lvm > 0)
+		add_pre_volume_group(cml, build);
+	if ((retval = add_pre_parts(cmc, cml, build, lvm)) != 0)
+		return retval;
 	return NONE;
 }
 
@@ -1180,7 +1139,7 @@ add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
 	short int lvm = data->next->fields.small;
 	size_t plen;
 
-	snprintf(cml->partition, CONF_S, "%s", data->fields.text);
+	snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
 	if (lvm == 0)
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
@@ -1195,7 +1154,7 @@ d-i partman-md/device_remove_md boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
 #d-i partman/mount_style select uuid\n\
 \n\
-", cml->partition);
+", cml->harddisk);
 	else
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
@@ -1216,160 +1175,116 @@ d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
 d-i partman/mount_style select uuid\n\
 \n\
-", cml->partition);
+", cml->harddisk);
 	plen = strlen(disk);
 	return (disk + plen);
+}
+
+int
+add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm)
+{
+	char *pos, line[BUFF_S], *fs, *mnt, *lv, *opt;
+	int retval = 0, query = FULL_PART, optno, i;
+	unsigned int dlen;
+	unsigned long int pri, min, max;
+	size_t len;
+	dbdata_s *data, *opts, *list, *lopt;
+
+	cmdb_prep_db_query(&data, cbc_search, query);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_FULL_DISK;
+	}
+	dlen = cbc_search_fields[query];
+	list = data;
+	while (list) {
+		if ((retval = check_data_length(list, dlen)) != 0) {
+			clean_dbdata_struct(data);
+			return CBC_DATA_WRONG_COUNT;
+		}
+		pri = list->fields.number;
+		min = list->next->fields.number;
+		max = list->next->next->fields.number;
+		fs = list->next->next->next->fields.text;
+		lv = list->next->next->next->next->fields.text;
+		mnt = list->next->next->next->next->next->fields.text;
+		optno = get_pre_part_options(cbc, cml, mnt, &opts);
+		snprintf(line, RBUFF_S, "\
+              %lu %lu %lu %s  \\\n", pri, min, max, fs);
+		PRINT_STRING_WITH_LENGTH_CHECK
+		if (lvm > 0) {
+			snprintf(line, TBUFF_S, "\
+                       $lvmok \\\n\
+                       in_vg{ systemvg } \\\n\
+                       lv_name{ %s } \\\n", lv);
+			PRINT_STRING_WITH_LENGTH_CHECK
+		}
+		if ((strncmp(fs, "swap", COMM_S) != 0) &&
+		    (strncmp(fs, "linux-swap", RANGE_S) != 0))
+			snprintf(line, TBUFF_S, "\
+                       method{ format } format{ } \\\n\
+                       use_filesystem{ } filesystem{ %s } \\\n\
+                       mountpoint{ %s } \\\n", fs, mnt);
+		else
+			snprintf(line, TBUFF_S, "\
+                       method{ swap } format{ } \\\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		list = move_down_list_data(list, dlen);
+		if (optno > 0) {
+			lopt = opts;
+			i = optno;
+			while (i > 0) {
+				opt = lopt->fields.text;
+				snprintf(line, RBUFF_S, "\
+                       options/%s{ %s } \\\n", opt, opt);
+				PRINT_STRING_WITH_LENGTH_CHECK
+				lopt = lopt->next;
+				i--;
+			}
+		}
+		snprintf(line, MAC_S, "\
+               . \\\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		clean_dbdata_struct(opts);
+	}
+	build->size -= 2;
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+int
+get_pre_part_options(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts)
+{
+	int retval, query = PART_OPT_ON_SCHEME_ID;
+
+	cmdb_prep_db_query(opts, cbc_search, query);
+	if ((retval = get_partition_id(cbc, cml->partition, mnt, &(*opts)->args.number)) != 0)
+		return 0;
+	if ((retval = get_scheme_id_from_build(cbc, cml->server_id, &(*opts)->next->args.number)) != 0)
+		return 0;
+	retval = cbc_run_search(cbc, *opts, query);
+	return retval;
 }
 
 void
 add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char line[RBUFF_S], *next;
-	size_t plen;
+	char line[RBUFF_S], *pos;
+	size_t len;
 
 	snprintf(line, RBUFF_S, "\
-              100 1000 1000000000 ext3       \\\n\
-                       $defaultignore{ }     \\\n\
-                       $primary{ }           \\\n\
-                       method{ lvm }         \\\n");
-	plen = strlen(line);
-	if ((build->size + plen) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, plen + 1, "%s", line);
-	plen = strlen(next);
-	build->size += plen;
+              100 1000 1000000000 ext3 \\\n\
+                       $defaultignore{ } \\\n\
+                       $primary{ } \\\n\
+                       method{ lvm } \\\n");
+	PRINT_STRING_WITH_LENGTH_CHECK
+	memset(&line, 0, RBUFF_S);
 	snprintf(line, RBUFF_S, "\
-                       device{ %s }  \\\n\
-                       vg_name{ systemlv }    \\\n\
-              .              \\\n", cml->partition);
-	plen = strlen(line);
-	if ((build->size + plen) >= build->len)
-		resize_string_buff(build);
-	next = build->string + build->size;
-	snprintf(next, plen + 1, "%s", line);
-	build->size += plen;
-}
-void
-add_pre_part(dbdata_s *data, int retval, string_len_s *build)
-{
-	char *next, line[TBUFF_S], *fs, *mnt;
-	int j, k = retval;
-	unsigned long int pri, min, max;
-	size_t len;
-	dbdata_s *list = data;
-
-	for (j = 0; j < k; j++) {
-		pri = min = max = 0;
-		fs = mnt = NULL;
-		if (list)
-			pri = list->fields.number;
-		if (list->next)
-			min = list->next->fields.number;
-		if (list->next->next)
-			max = list->next->next->fields.number;
-		if (list->next->next->next)
-			fs = list->next->next->next->fields.text;
-		if (list->next->next->next->next->next)
-			mnt = list->next->next->next->next->next->fields.text;
-		snprintf(line, HOST_S, "\
-              %lu %lu %lu %s \\\n", pri, min, max, fs);
-		if ((build->size + HOST_S) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		len = strlen(line);
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if ((strncmp(fs, "swap", COMM_S) != 0) &&
-		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
-			snprintf(line, RBUFF_S, "\
-                     method{ format } format{ } \\\n\
-                     use_filesystem{ } filesystem{ %s } \\\n\
-                     mountpoint{ %s }     \\\n", fs, mnt);
-		} else {
-			snprintf(line, HOST_S + 1, "\
-                       method{ swap } format{ }  \\\n");
-		}
-		strncat(line, "              .  \\\n", HOST_S + 1);
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if (list->next->next->next->next->next->next)
-			list = list->next->next->next->next->next->next;
-	}
-	build->size -= 2;
-}
-
-void
-add_pre_lvm_part(dbdata_s *data, int retval, string_len_s *build)
-{
-	char *next = NULL, line[RBUFF_S], *fs, *mnt, *lv;
-	int j, k = retval;
-	unsigned long int pri, min, max;
-	size_t len;
-	dbdata_s *list = data;
-
-	for (j = 0; j < k; j++) {
-		pri = min = max = 0;
-		fs = mnt = lv = NULL;
-		if (list)
-			pri = list->fields.number;
-		if (list->next) {
-			list = list->next;
-			min = list->fields.number;
-		}
-		if (list->next) {
-			list = list->next;
-			max = list->fields.number;
-		}
-		if (list->next) {
-			list = list->next;
-			fs = list->fields.text;
-		}
-		if (list->next) {
-			list = list->next;
-			lv = list->fields.text;
-		}
-		if (list->next) {
-			list = list->next;
-			mnt = list->fields.text;
-		}
-		snprintf(line, RBUFF_S, "\
-              %lu %lu %lu %s  \\\n\
-                       $lvmok                                 \\\n\
-                       in_vg{ systemlv }                      \\\n\
-                       lv_name{ %s } \\\n", pri, min, max, fs, lv);
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if ((strncmp(fs, "swap", COMM_S) != 0) &&
-		    (strncmp(fs, "linux-swap", RANGE_S) != 0)) {
-			snprintf(line, RBUFF_S, "\
-                       method{ format } format{ }             \\\n\
-                       use_filesystem{ } filesystem{ %s }   \\\n\
-                       mountpoint{ %s }   \\\n\
-              .         \\\n", fs, mnt);
-		} else {
-			snprintf(line, RBUFF_S, "\
-                       method{ swap } format{ } \\\n\
-              .         \\\n");
-		}
-		len = strlen(line);
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		next = build->string + build->size;
-		snprintf(next, len + 1, "%s", line);
-		build->size += len;
-		if (list->next)
-			list = list->next;
-	}
-	build->size -= 2;
+                       device{ %s } \\\n\
+                       vg_name{ systemvg } \\\n\
+              . \\\n", cml->harddisk);
+	PRINT_STRING_WITH_LENGTH_CHECK
 }
 
 int
@@ -1481,6 +1396,8 @@ cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
 			if ((len + strlen(new)) < TBUFF_S)
 				snprintf(pre, len + 1, "%s%s", tmp, post);
 			clean_dbdata_struct(data);
+			free(tmp);
+			free(post);
 		}
 	}
 	return new;
@@ -1528,14 +1445,29 @@ get_replaced_syspack_arg(dbdata_s *data, int loop)
 	return str;
 }
 
-void
-fill_kick_base(dbdata_s *data, string_len_s *build)
+int
+fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	char buff[FILE_S], *tmp;
-	char *key = data->fields.text;
-	char *loc = data->next->fields.text;
-	char *tim = data->next->next->fields.text;
+	char buff[FILE_S], *key, *loc, *tim;
+	int retval, type = KICK_BASE;
 	size_t len;
+	dbdata_s *data;
+
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_KICKSTART_ERR;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_KICKSTART_ERR;
+	} else {
+		retval = NONE;
+	}
+
+	key = data->fields.text;
+	loc = data->next->fields.text;
+	tim = data->next->next->fields.text;
 
 	/* root password is k1Ckstart */
 	snprintf(buff, FILE_S, "\
@@ -1554,32 +1486,124 @@ skipx\n\
 timezone  %s\n\
 install\n\
 \n", key, loc, tim);
-	if ((len = strlen(buff)) > build->len) {
-		build->len = FILE_S;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "string in fill_kick_base");
-		else
-			build->string = tmp;
-	}
+	if ((len = strlen(buff)) > build->len)
+		resize_string_buff(build);
 	snprintf(build->string, len + 1, "%s", buff);
 	build->size += len;
+	clean_dbdata_struct(data);
+	return retval;
 }
 
-void
-fill_kick_partitions(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
+int
+fill_kick_partitions(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
-	dbdata_s *list = data;
-	char *device = list->fields.text, buff[FILE_S], *tmp;
-	CHECK_DATA_LIST()
-	short int lvm = list->fields.small;
-	CHECK_DATA_LIST()
-	unsigned long int psize;
-	char *fs, *lv, *mount;
+	char line[TBUFF_S], *fs, *lv, *mount, *opts, *pos;
+	int retval, query = FULL_PART;
 	size_t len;
+	short int lvm;
+	unsigned int dlen;
+	unsigned long int psize;
+	dbdata_s *part, *list;
 
+	if ((retval = fill_kick_part_header(cbc, cml, build)) != 0)
+		return retval;
+	lvm = cml->lvm;
+	cmdb_prep_db_query(&part, cbc_search, query);
+	part->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, part, query)) == 0) {
+		clean_dbdata_struct(part);
+		return NO_FULL_DISK;
+	}
+
+	dlen = cbc_search_fields[query];
+	list = part;
+	while (list) {
+		if ((retval = check_data_length(list, dlen)) != 0) {
+			clean_dbdata_struct(part);
+			return CBC_DATA_WRONG_COUNT;
+		}
+		psize = list->next->fields.number;
+		fs = list->next->next->next->fields.text;
+		lv = list->next->next->next->next->fields.text;
+		mount = list->next->next->next->next->next->fields.text;
+		opts = get_kick_part_opts(cbc, cml, mount);
+		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
+			snprintf(line, BUFF_S, "\
+logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\
+", mount, fs, lv, cml->name, psize);
+		else if (strncmp(mount, "/boot", COMM_S) != 0)
+			snprintf(line, BUFF_S, "\
+part %s --fstype=\"%s\" --size=%lu\
+", mount, fs, psize);
+		else
+			fprintf(stderr, "\
+Sorry, we have already added a boot partition\n");
+		len = strlen(line);
+		pos = line + len;
+		if (opts)
+			snprintf(pos, HOST_S, "\
+ --fsoptions=\"%s\"", opts);
+		len = strlen(line);	
+		pos = line + len;
+		snprintf(pos, COMM_S, "\n");
+		PRINT_STRING_WITH_LENGTH_CHECK
+		list = move_down_list_data(list, dlen);
+		free(opts);
+	}
+
+	clean_dbdata_struct(part);
+	return 0;
+}
+
+char *
+get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt)
+{	
+	int retval;
+	char *opts = 0, *pos;
+	size_t len;
+	dbdata_s *data = 0, *list;
+
+	if ((retval = get_pre_part_options(cbc, cml, mnt, &data)) == 0) {
+		clean_dbdata_struct(data);
+		return opts;
+	}
+	opts = cmdb_malloc(HOST_S, "opts in get_kick_part_opts");
+	snprintf(opts, HOST_S, "%s", data->fields.text);
+	list = data->next;
+	retval--;
+	while (retval > 0) {
+		len = strlen(opts);
+		pos = opts + len;
+		snprintf(pos, HOST_S - len, ",%s", list->fields.text);
+		list = list->next;
+		retval--;
+	}
+	clean_dbdata_struct(data);
+	return opts;
+}
+
+int
+fill_kick_part_header(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+{
+	char *device, *pos, line[FILE_S];
+	int retval, type = BASIC_PART;
+	size_t len;
+	short int lvm;
+	dbdata_s *data;
+
+	cmdb_prep_db_query(&data, cbc_search, type);
+	data->args.number = cml->server_id;
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return NO_BASIC_DISK;
+	} else if (retval > 1) {
+		clean_dbdata_struct(data);
+		return MULTI_BASIC_DISK;
+	}
+	device = data->fields.text;
+	cml->lvm = lvm = data->next->fields.small;
 	if (lvm > 0)
-		snprintf(buff, FILE_S, "\
+		snprintf(line, FILE_S, "\
 zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n\
@@ -1588,41 +1612,14 @@ part pv.1 --asprimary --size=1 --grow\n\
 volgroup %s --pesize=32768 pv.1\n\
 ",  device, cml->name);
 	else
-		snprintf(buff, FILE_S, "\
+		snprintf(line, FILE_S, "\
 zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n\
 ", device);
-	len = strlen(buff);
-	tmp = buff + len;
-	while (list) {
-		CHECK_DATA_LIST()
-		psize = list->fields.number;
-		CHECK_DATA_LIST()
-		CHECK_DATA_LIST()
-		fs = list->fields.text;
-		CHECK_DATA_LIST()
-		lv = list->fields.text;
-		CHECK_DATA_LIST()
-		mount = list->fields.text;
-		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
-			snprintf(tmp, BUFF_S, "\
-logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\n\
-", mount, fs, lv, cml->name, psize);
-		else if (strncmp(mount, "/boot", COMM_S) != 0)
-			snprintf(tmp, BUFF_S, "\
-part %s --fstype=\"%s\" --size=%lu\n\
-", mount, fs, psize);
-		len = strlen(buff);
-		tmp = buff + len;
-		list = list->next;
-	}
-	snprintf(tmp, COMM_S, "\n");
-	len++;
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, len + 1, "%s", buff);
-	build->size += len;
+	PRINT_STRING_WITH_LENGTH_CHECK
+	clean_dbdata_struct(data);
+	return 0;
 }
 
 void
@@ -1681,7 +1678,7 @@ network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --names
 }
 
 void
-fill_kick_packages(dbdata_s *data, string_len_s *build)
+fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
@@ -1714,8 +1711,11 @@ fill_kick_packages(dbdata_s *data, string_len_s *build)
 	tmp++;
 	if ((build->size + 6) >= build->len)
 		resize_string_buff(build);
-	snprintf(tmp, COMM_S, "%%end\n\n");
-	build->size += 6;
+// This breaks a Centos 5 build
+	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
+		snprintf(tmp, COMM_S, "%%end\n\n");
+		build->size += 6;
+	}
 }
 
 void
@@ -1774,7 +1774,7 @@ chmod 755 motd.sh\n\
 #endif /* CHECK_KICK_CONFIG */
 
 void
-add_kick_final_config (string_len_s *build, char *url)
+add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url)
 {
 	char buff[BUFF_S], *tmp;
 	size_t len = NONE;
@@ -1793,173 +1793,11 @@ chmod 755 kick-final.sh\n\
 	tmp += len;
 	if ((build->size + 6) >= build->len)
 		resize_string_buff(build);
-	snprintf(tmp, COMM_S, "%%end\n\n");
-	build->size += 6;
-}
-
-int
-get_server_name(cbc_config_s *cmc, char *name, unsigned long int server_id)
-{
-	int retval = NONE, type = SERVER_NAME_ON_ID;
-	unsigned int max;
-	dbdata_s *data;
-
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = server_id;
-	if ((retval = cbc_run_search(cmc, data, SERVER_NAME_ON_ID)) == 0) {
-		printf("Cannot find server name based on id %lu\n", server_id);
-		clean_dbdata_struct(data);
-		return SERVER_NOT_FOUND;
-	} else if (retval > 1) {
-		printf("Multiple servers found base on id %lu\n", server_id);
-		printf("Check your database!!!!\n");
-		clean_dbdata_struct(data);
-		return MULTIPLE_SERVERS;
-	} else {
-		snprintf(name, CONF_S, "%s", data->fields.text);
-		retval = NONE;
+// This breaks a Centos 5 build
+	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
+		snprintf(tmp, COMM_S, "%%end\n\n");
+		build->size += 6;
 	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-get_server_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *server_id)
-{
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data = NULL;
-
-	if (cml->server == NAME) {
-		type = SERVER_ID_ON_SNAME;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, CONF_S, "%s", cml->name);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_SNAME)) == 0) {
-			printf("Server %s does not exist\n", cml->name);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for name %s\n", cml->name);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = cml->server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == UUID) {
-		type = SERVER_ID_ON_UUID;
-		max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, CONF_S, "%s", cml->uuid);
-		if ((retval = cbc_run_search(cmc, data, SERVER_ID_ON_UUID)) == 0) {
-			printf("Server with uuid %s does not exist\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return SERVER_NOT_FOUND;
-		} else if (retval > 1) {
-			printf("Multiple servers found for uuid %s\n", cml->uuid);
-			clean_dbdata_struct(data);
-			return MULTIPLE_SERVERS;
-		} else {
-			*server_id = cml->server_id = data->fields.number;
-			retval = 0;
-		}
-	} else if (cml->server == ID) {
-		*server_id = cml->server_id;
-	} else {
-		return NO_NAME_UUID_ID;
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-get_os_id(cbc_config_s *cmc, cbc_comm_line_s *cml, unsigned long int *os_id)
-{
-	int retval = NONE, type = OS_ID_ON_NAME;
-	unsigned int max;
-	dbdata_s *data;
-
-	if (strncmp(cml->arch, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "No architecture provided for OS\n");
-		return NO_ARCH;
-	}
-	if (strncmp(cml->os_version, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "No version or version alias provided\n");
-		return NO_OS_VERSION;
-	}
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	fill_dbdata_os_search(data, cml);
-	if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 1) {
-		*os_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple OS's found!\n");
-		retval = MULTIPLE_OS;
-	} else {
-		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 1) {
-			*os_id = data->fields.number;
-			retval = NONE;
-		} else if (retval > 1) {
-			fprintf(stderr, "Multiple OS's found!\n");
-			retval = MULTIPLE_OS;
-		} else {
-			if ((retval = cbc_run_search
-			  (cmc, data, OS_ID_ON_NAME_VER_ALIAS)) == 1) {
-				*os_id = data->fields.number;
-				retval = NONE;
-			} else if (retval > 1) {
-				fprintf(stderr, "Multiple OS's found!\n");
-				retval = MULTIPLE_OS;
-			} else {
-				if ((retval = cbc_run_search
-				 (cmc, data, OS_ID_ON_ALIAS_VER_ALIAS)) == 1) {
-					 *os_id = data->fields.number;
-					 retval = NONE;
-				 } else if (retval > 1) {
-					fprintf(stderr,
-					 "Multiple OS's found!\n");
-					retval = MULTIPLE_OS;
-				 
-} else {
-					fprintf(stderr,
-					 "No OS found!\n");
-					retval = OS_NOT_FOUND;
-				 }
-			}
-		}
-	}
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-get_def_scheme_id(cbc_config_s *cmc, char *partition, uli_t *def_scheme_id)
-{
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data;
-
-	type = DEF_SCHEME_ID_ON_SCH_NAME;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, CONF_S, "%s", partition);
-	if ((retval = cbc_run_search(cmc, data, DEF_SCHEME_ID_ON_SCH_NAME)) == 1) {
-		*def_scheme_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr,
-		 "Multiple partition schemes found with name %s\n", partition);
-		retval = MULTIPLE_PART_NAMES;
-	} else {
-		fprintf(stderr,
-		 "No partition schemes found with name %s\n", partition);
-		retval = PARTITIONS_NOT_FOUND;
-	}
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 int
@@ -2057,14 +1895,5 @@ cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
 	}
 }
 
-void
-fill_dbdata_os_search(dbdata_s *data, cbc_comm_line_s *cml)
-{
-	snprintf(data->args.text, CONF_S, "%s", cml->os);
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
-	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
-}
-
-#undef PREP_DB_QUERY
 #undef PRINT_STRING_WITH_LENGTH_CHECK
 

@@ -64,7 +64,8 @@ enum {			/* cbc delete SQL statements */
 	SYSP_ARG = 12,
 	SYSP_CONF = 13,
 	CBCSCR_ON_ID = 14,
-	CBCSCRARG_ON_ID = 15
+	CBCSCRARG_ON_ID = 15,
+	PART_OPT_ON_ID = 16
 };
 
 enum {			/* cbc search SQL statements */
@@ -138,7 +139,15 @@ enum {			/* cbc search SQL statements */
 	SCR_ID_ON_NAME = 67,
 	SCRIPT_CONFIG = 68,
 	BUILD_TYPE_ON_ALIAS = 69,
-	SCR_ARG_ID = 70
+	SCR_ARG_ID = 70,
+	PART_OPT_ON_SCHEME_ID = 71,
+	PART_OPT_ID = 72,
+	DEF_SCHEME_ID_FROM_BUILD = 73,
+	SCHEME_NAME_ON_SERVER_ID = 74,
+	PACKAGE_OS_ID_ON_VID = 75,
+	OS_DETAIL_ON_BT_ID = 76,
+	LOCALE_DETAILS_ON_OS_ID = 77,
+	PACKAGE_VID_ON_OS_ID = 78
 };
 
 enum {			/* cbc update SQL statements */
@@ -297,6 +306,9 @@ void
 cbc_store_scripta_mysql(MYSQL_ROW row, cbc_s *base);
 
 void
+cbc_store_partopt_mysql(MYSQL_ROW row, cbc_s *base);
+
+void
 cbc_setup_bind_mysql_build_domain(void **buffer, cbc_s *base, unsigned int i);
 
 void
@@ -310,6 +322,9 @@ cbc_setup_bind_mysql_build_part_scheme(void **buffer, cbc_s *base, unsigned int 
 
 void
 cbc_setup_bind_mysql_build_def_part(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i);
 
 void
 cbc_setup_bind_mysql_build_package(void **buffer, cbc_s *base, unsigned int i);
@@ -337,6 +352,10 @@ cbc_setup_bind_mysql_script(void **buffer, cbc_s *base, unsigned int i);
 
 void
 cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i);
+
+void
+cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -435,6 +454,9 @@ cbc_store_script_sqlite(sqlite3_stmt *state, cbc_s *base);
 void
 cbc_store_scripta_sqlite(sqlite3_stmt *state, cbc_s *base);
 
+void
+cbc_store_partopt_sqlite(sqlite3_stmt *state, cbc_s *base);
+
 int
 cbc_setup_bind_sqlite_build(sqlite3_stmt *state, cbc_build_s *build);
 
@@ -463,6 +485,9 @@ int
 cbc_setup_bind_sqlite_build_disk(sqlite3_stmt *state, cbc_disk_dev_s *disk);
 
 int
+cbc_setup_bind_sqlite_locale(sqlite3_stmt *state, cbc_locale_s *loc);
+
+int
 cbc_setup_bind_sqlite_syspack(sqlite3_stmt *state, cbc_syspack_s *spack);
 
 int
@@ -476,5 +501,9 @@ cbc_setup_bind_sqlite_script(sqlite3_stmt *state, cbc_script_s *scr);
 
 int
 cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg);
+
+int
+cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt);
+
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

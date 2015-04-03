@@ -42,53 +42,6 @@
 #include "cbc_base_sql.h"
 #include "cbc_common.h"
 
-unsigned long int
-cbc_get_varient_id(cbc_varient_s *vari, char *name)
-{
-	cbc_varient_s *list;
-
-	if (!vari)
-		return NONE;
-	else
-		list = vari;
-	while (list) {
-		if ((strncmp(name, list->varient, HOST_S) == 0) ||
-		    (strncmp(name, list->valias, MAC_S) == 0))
-			return list->varient_id;
-		list = list->next;
-	}
-	return NONE;
-}
-
-void
-cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
-{
-	int query = UP_VARIENT, retval;
-	dbdata_s *data;
-
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	data->args.number = (unsigned long int)getuid();
-	data->next->args.number = vid;
-	if ((retval = cbc_run_update(cbc, data, query)) == 1)
-		printf("Varient updated\n");
-	else if (retval == 0)
-		fprintf(stderr, "Unable to update varient\n");
-	else if (retval > 1)
-		fprintf(stderr, "Multiple varients updated??\n");
-	clean_dbdata_struct(data);
-		
-}
-
-unsigned long int
-search_for_vid(cbc_varient_s *vari, char *varient, char *valias)
-{
-	char *name;
-
-	if (!(name = cbc_get_varient_name(varient, valias)))
-		return NONE;
-	return cbc_get_varient_id(vari, name);
-}
-
 int
 check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
 {
@@ -132,61 +85,28 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 		freeaddrinfo(si);
 }
 
-void
-set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
+int
+get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id)
 {
-	int retval, query = UP_BDOM_MUSER;
+	int retval = 0, query = SERVER_ID_ON_SNAME;
+	unsigned int max;
 	dbdata_s *data;
-	
 
-	if (!(cbt) || (!(domain) && (id == 0)))
-		return;
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	if (id == 0) { // need to get build_domain id
-		snprintf(data->args.text, RBUFF_S, "%s", domain);
-		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
-			fprintf(stderr, "Cannot find build domain %s\n", domain);
-			clean_dbdata_struct(data);
-			return;
-		} else { 
-			data->next->args.number = data->fields.number;
-			memset(&(data->args.text), 0, RBUFF_S);
-		}
-	} else {
-		data->next->args.number = id;
+	if (!(cbc) || !(server))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, HOST_S, "%s", server);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find server %s\n", server);
+		clean_dbdata_struct(data);
+		return SERVER_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple servers found for %s\n", server);
 	}
-	data->args.number = (unsigned long int)getuid();
-	if ((retval = cbc_run_update(cbt, data, query)) == 0)
-		fprintf(stderr, "Build domain cannot be updated\n");
-	else if (retval == 1)
-		printf("Build domain set updated by uid %lu\n", data->args.number);
-	else
-		fprintf(stderr, "Multiple build domains??\n");
+	*id = data->fields.number;
 	clean_dbdata_struct(data);
-}
-
-char *
-cbc_get_varient_name(char *varient, char *valias)
-{
-	if ((!varient) && (!valias))
-		return NULL;
-	else if (varient && !valias) {
-		if (strncmp(varient, "NULL", COMM_S) != 0)
-			return varient;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return NULL;
-	} else if (!varient && valias) {
-		if (strncmp(valias, "NULL", COMM_S) != 0)
-			return valias;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return NULL;
-	} else {
-		if (strncmp(valias, "NULL", COMM_S) == 0)
-			return varient;
-		else if (strncmp(varient, "NULL", COMM_S) == 0)
-			return valias;
-	}
-	return varient;
+	return 0;
 }
 
 int
@@ -333,5 +253,302 @@ get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id)
 	*id = data->fields.number;
 	clean_dbdata_struct(data);
 	return 0;
+}
+
+int
+get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
+{
+	int retval = 0, query = DEFP_ID_ON_SCHEME_PART;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name) || !(mount))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", name);
+	snprintf(data->next->args.text, RBUFF_S, "%s", mount);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find partition %s in scheme %s\n",
+		 mount, name);
+		clean_dbdata_struct(data);
+		return PARTITIONS_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple partitions %s in scheme %s?\n",
+		 mount, name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id)
+{
+	int retval = 0, query = DEF_SCHEME_ID_FROM_BUILD;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || (server_id == 0))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = server_id;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find seed scheme for server_id %lu\n",
+		 server_id);
+		clean_dbdata_struct(data);
+		return SCHEME_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple schemes for server_id %lu\n",
+		 server_id);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
+{
+	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, RBUFF_S, "%s", name);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find scheme %s\n", name);
+		clean_dbdata_struct(data);
+		return SCHEME_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple schemes with name %s?\n", name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
+{
+	int retval = 0, query = SCHEME_NAME_ON_SERVER_ID;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = server_id;
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find scheme on server id %lu\n", server_id);
+		clean_dbdata_struct(data);
+		return SCHEME_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "FOund multiple schemes for server_id %lu\n", server_id);
+	}
+	snprintf(name, CONF_S, "%s", data->fields.text);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
+{
+	int retval = 0, query = PART_OPT_ID;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name) || !(part) || !(opt))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if ((retval = get_partition_id(cbc, name, part, &(data->args.number))) != 0)
+		return retval;
+	if ((retval = get_scheme_id(cbc, name, &(data->next->args.number))) != 0)
+		return retval;
+	snprintf(data->next->next->args.text, RBUFF_S, "%s", opt);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find option %s for part %s, scheme %s\n",
+		 opt, part, name);
+		clean_dbdata_struct(data);
+		return NO_OPTION;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple options %s for part %s, scheme %s?\n",
+		 opt, part, name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
+set_scheme_updated(cbc_config_s *cbc, char *scheme)
+{
+	int retval;
+	unsigned long int scheme_id;
+	dbdata_s *user;
+
+	if (!(cbc) || !(scheme))
+		return CBC_NO_DATA;
+	if ((retval = get_scheme_id(cbc, scheme, &(scheme_id))) != 0)
+		return retval;
+	init_multi_dbdata_struct(&user, cbc_update_args[UP_SEEDSCHEME]);
+	user->args.number = (unsigned long int)getuid();
+	user->next->args.number = scheme_id;
+	if ((retval = cbc_run_update(cbc, user, UP_SEEDSCHEME)) == 1) {
+		printf("Scheme marked as updated\n");
+		retval = 0;
+	} else if (retval == 0)
+		printf("Scheme not updated\n");
+	clean_dbdata_struct(user);
+	return retval;
+}
+// Should get rid of the uli_id *id in this function
+void
+set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
+{
+	int retval, query = UP_BDOM_MUSER;
+	dbdata_s *data;
+
+	if (!(cbt) || (!(domain) && (id == 0)))
+		return;
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	if (id == 0) { // need to get build_domain id
+		snprintf(data->args.text, RBUFF_S, "%s", domain);
+		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
+			fprintf(stderr, "Cannot find build domain %s\n", domain);
+			clean_dbdata_struct(data);
+			return;
+		} else {
+			data->next->args.number = data->fields.number;
+			memset(&(data->args.text), 0, RBUFF_S);
+		}
+	} else {
+		data->next->args.number = id;
+	}
+	data->args.number = (unsigned long int)getuid();
+	if ((retval = cbc_run_update(cbt, data, query)) == 0)
+		fprintf(stderr, "Build domain cannot be updated\n");
+	else if (retval == 1)
+		printf("Build domain set updated by uid %lu\n", data->args.number);
+	else
+		fprintf(stderr, "Multiple build domains??\n");
+	clean_dbdata_struct(data);
+}
+// Should be passing the varient name to this function
+void
+cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
+{
+	int query = UP_VARIENT, retval;
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, cbc_update_args[query]);
+	data->args.number = (unsigned long int)getuid();
+	data->next->args.number = vid;
+	if ((retval = cbc_run_update(cbc, data, query)) == 1)
+		printf("Varient updated\n");
+	else if (retval == 0)
+		fprintf(stderr, "Unable to update varient\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple varients updated??\n");
+	clean_dbdata_struct(data);
+}
+
+int
+get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id)
+{
+	int retval = NONE, type = OS_ID_ON_NAME;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (strncmp(os[0], "NULL", COMM_S) == 0) {
+		fprintf(stderr, "No architecture provided for OS\n");
+		return NO_ARCH;
+	}
+	if (strncmp(os[1], "NULL", COMM_S) == 0) {
+		fprintf(stderr, "No version or version alias provided\n");
+		return NO_OS_VERSION;
+	}
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	fill_dbdata_os_search(data, os);
+	if ((retval = cbc_run_search(cmc, data, OS_ID_ON_NAME)) == 1) {
+		*os_id = data->fields.number;
+		retval = NONE;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple OS's found!\n");
+		retval = MULTIPLE_OS;
+	} else {
+		if ((retval = cbc_run_search(cmc, data, OS_ID_ON_ALIAS)) == 1) {
+			*os_id = data->fields.number;
+			retval = NONE;
+		} else if (retval > 1) {
+			fprintf(stderr, "Multiple OS's found!\n");
+			retval = MULTIPLE_OS;
+		} else {
+			if ((retval = cbc_run_search
+			  (cmc, data, OS_ID_ON_NAME_VER_ALIAS)) == 1) {
+				*os_id = data->fields.number;
+				retval = NONE;
+			} else if (retval > 1) {
+				fprintf(stderr, "Multiple OS's found!\n");
+				retval = MULTIPLE_OS;
+			} else {
+				if ((retval = cbc_run_search
+				 (cmc, data, OS_ID_ON_ALIAS_VER_ALIAS)) == 1) {
+					 *os_id = data->fields.number;
+					 retval = NONE;
+				 } else if (retval > 1) {
+					fprintf(stderr,
+					 "Multiple OS's found!\n");
+					retval = MULTIPLE_OS;
+				} else {
+					fprintf(stderr,
+					 "No OS found!\n");
+					retval = OS_NOT_FOUND;
+				 }
+			}
+		}
+	}
+	clean_dbdata_struct(data);
+	return retval;
+}
+
+void
+fill_dbdata_os_search(dbdata_s *data, char *os[])
+{
+        snprintf(data->args.text, CONF_S, "%s", os[2]);
+        snprintf(data->next->args.text, MAC_S, "%s", os[1]);
+        snprintf(data->next->next->args.text, MAC_S, "%s", os[0]);
+}
+
+int
+get_os_alias(cbc_config_s *cbc, char *os, char *alias)
+{
+	int retval, type = OS_ALIAS_ON_OS;
+	unsigned int max;
+	dbdata_s *data;
+
+	if (!(cbc) || !(os) || !(alias))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, MAC_S, "%s", os);
+	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
+		clean_dbdata_struct(data);
+		return OS_NOT_FOUND;
+	}
+	snprintf(alias, MAC_S, "%s", data->fields.text);
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+void
+check_for_alias(char **what, char *name, char *alias)
+{
+	if (strncmp(name, "NULL", COMM_S) != 0)
+		*what = name;
+	else
+		*what = alias;
 }
 

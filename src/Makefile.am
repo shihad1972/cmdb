@@ -1,6 +1,6 @@
 bin_PROGRAMS = cmdb cpc
 
-combo_SOURCES = errors.c checks.c
+combo_SOURCES = errors.c checks.c cmdb_data.c
 
 cbc_combo_SOURCES = cbc_base_sql.c cbc_data.c cbc_common.c cbccom.c
 
