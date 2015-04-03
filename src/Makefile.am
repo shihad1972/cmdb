@@ -62,7 +62,6 @@ endif
 endif
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS =
-AM_LIBS = 
 
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)
@@ -71,7 +70,7 @@ endif
 
 if HAVE_PCRE
 AM_CFLAGS += $(PCRE_CFLAGS)
-LIBS += $(PCRE_LIBS)
+AM_LDFLAGS += $(PCRE_LIBS)
 endif
 
 if HAVE_SQLITE3
