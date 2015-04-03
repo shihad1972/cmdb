@@ -55,6 +55,7 @@ AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 
 AC_CONFIG_FILES([Makefile
+                 daemon/Makefile
                  man/Makefile
                  scripts/Makefile
                  sql/Makefile
