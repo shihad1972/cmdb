@@ -12,6 +12,8 @@ AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+AM_PROG_AR
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
@@ -39,7 +41,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
 AX_PATH_LIB_PCRE
-AM_PATH_LIBGCRYPT([1.5.0])
+AM_PATH_LIBGCRYPT([1.5.0], [], [AC_MSG_ERROR([libgcrypt needed for a password hashing])])
 
 # Check for packages to enable
 AX_USER_CHECKS
@@ -58,6 +60,7 @@ AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 
 AC_CONFIG_FILES([Makefile
                  daemon/Makefile
+                 lib/Makefile
                  man/Makefile
                  scripts/Makefile
                  sql/Makefile

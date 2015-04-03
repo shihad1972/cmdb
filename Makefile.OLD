@@ -12,7 +12,7 @@ SUBDIRS = src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
 sbin_PROGRAMS = cmdbd
 
-all:	$(bin_PROGRAMS)
+all:	$(bin_PROGRAMS) $(sbin_PROGRAMS)
 
 $(bin_PROGRAMS):
 	$(MAKE) -C $(DIR) $@
