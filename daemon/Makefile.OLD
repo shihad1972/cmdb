@@ -1,0 +1,25 @@
+#
+#
+# Makefile for CMDBD c programs
+#
+#
+
+CC = gcc
+RM = rm -f
+CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+CPPFLAGS = -I../src/
+sbin_PROGRAMS = cmdbd
+
+CDOBJECTS = cmdbd.c
+CDHEADERS = cmdbd.h
+
+all:	$(sbin_PROGRAMS)
+
+cmdbd:	$(CDOBJECTS) $(CDHEADERS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(CDOBJECTS) $(LDFLAGS) $(LIBS)
+
+.PHONY:	clean
+
+clean:
+	$(RM) *.o $(sbin_PROGRAMS)
+

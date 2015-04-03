@@ -6,13 +6,21 @@
 RM = rm -f
 ECHO = echo
 DIR = src
-SUBDIRS = src
+DAEMONDIR = daemon
+CLIENTDIR = client
+SUBDIRS = src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
+sbin_PROGRAMS = cmdbd
 
 all:	$(bin_PROGRAMS)
 
 $(bin_PROGRAMS):
 	$(MAKE) -C $(DIR) $@
 
+$(sbin_PROGRAMS):
+	$(MAKE) -C $(DAEMONDIR) $@
+
 clean :
-	cd $(DIR); $(MAKE) clean
+	for dir in $(SUBDIRS); do \
+	  $(MAKE) -C $$dir clean; \
+	done
