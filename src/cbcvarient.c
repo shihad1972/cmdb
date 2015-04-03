@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 	else if (cvcl->action == RM_CONFIG && cvcl->type == CPACKAGE)
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
-		printf("Cowardly refusal to modify varients\n");
+		fprintf(stderr, "Cowardly refusal to modify varients\n");
 	else
 		printf("Unknown action type\n");
 	if (retval != 0) {
