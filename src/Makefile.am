@@ -67,7 +67,6 @@ AM_LIBS =
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)
 AM_LDFLAGS += $(MYSQL_LDFLAGS)
-LIBS += -lmysqlclient
 endif
 
 if HAVE_PCRE
@@ -78,5 +77,4 @@ endif
 if HAVE_SQLITE3
 AM_CFLAGS += $(SQLITE3_CFLAGS)
 AM_LDFLAGS += $(SQLITE3_LDFLAGS)
-LIBS += -lsqlite3
 endif
