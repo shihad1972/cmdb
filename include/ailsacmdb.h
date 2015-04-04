@@ -1,5 +1,4 @@
-/* 
- *
+/*
  *  ailsacmdb: Ailsatech Configuration Management Database library
  *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
@@ -17,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  ailsacmdb.h: Main ailsacmdb library header file 
+ *  ailsacmdb.h: Main ailsacmdb library header file
  */
 
 #ifndef __AILSACMDB_H__

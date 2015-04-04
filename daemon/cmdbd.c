@@ -1,4 +1,4 @@
-/* 
+/*
  *
  *  cmdb: Configuration Management Database
  *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
