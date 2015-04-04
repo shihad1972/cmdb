@@ -35,21 +35,4 @@
 #define B64_LINE_SIZE_TO_MIN    5
 #define B64_SYNTAX_TOOMANYARGS  6
 
-/*
-** b64_message
-**
-** Gather text messages in one place.
-**
-*/
-#define B64_MAX_MESSAGES 7
-const char *b64_msgs[ B64_MAX_MESSAGES ] = {
-            "b64:000:Invalid Message Code.",
-            "b64:001:Syntax Error -- check help (-h) for usage.",
-            "b64:002:File Error Opening/Creating Files.",
-            "b64:003:File I/O Error -- Note: output file not removed.",
-            "b64:004:Error on output file close.",
-            "b64:005:linesize set to minimum.",
-            "b64:006:Syntax: Too many arguments."
-};
-
 #endif // __AILSACMDB_H__
