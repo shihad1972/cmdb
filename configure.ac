@@ -43,7 +43,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
 AX_PATH_LIB_PCRE
-AM_PATH_LIBGCRYPT([1.5.0], [], [AC_MSG_ERROR([libgcrypt needed for a password hashing])])
+AM_PATH_LIBGCRYPT([1.5.0],
+  [AC_DEFINE([HAVE_LIBGCRYPT], [], [libgcrypt library available for use])],
+  [AC_MSG_ERROR([libgcrypt needed for a password hashing])])
 
 # Check for packages to enable
 AX_USER_CHECKS
