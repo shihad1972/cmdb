@@ -8,16 +8,23 @@ ECHO = echo
 DIR = src
 DAEMONDIR = daemon
 CLIENTDIR = client
-SUBDIRS = src daemon
+LIBDIR = lib
+SUBDIRS = lib src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
 sbin_PROGRAMS = cmdbd
+lib_LIBRARIES = libailsacmdb.a
 
-all:	$(bin_PROGRAMS) $(sbin_PROGRAMS)
+all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
+
+libs:	$(lib_LIBRARIES)
+
+$(lib_LIBRARIES):
+	$(MAKE) -C $(LIBDIR) $@
 
 $(bin_PROGRAMS):
 	$(MAKE) -C $(DIR) $@
 
-$(sbin_PROGRAMS):
+$(sbin_PROGRAMS):	$(lib_LIBRARIES)
 	$(MAKE) -C $(DAEMONDIR) $@
 
 clean :

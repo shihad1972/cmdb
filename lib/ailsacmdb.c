@@ -1,6 +1,7 @@
 /*
- *  ailsacmdb: Ailsatech Configuration Management Database library
- *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *
+ *  alisacmdb: Alisatech Configuration Management Database library
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,27 +16,22 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  
+ *  ailsacmdb.c
  *
- *  ailsacmdb.h: Main ailsacmdb library header file
+ *  Contains generic functions for the ailsacmdb library
+ *
  */
 
-#ifndef __AILSACMDB_H__
-# define __AILSACMDB_H__
-
-/*
-** base64 returnable errors
-**
-** Error codes returned to the operating system.
-**
-*/
-#define B64_SYNTAX_ERROR        1
-#define B64_FILE_ERROR          2
-#define B64_FILE_IO_ERROR       3
-#define B64_ERROR_OUT_CLOSE     4
-#define B64_LINE_SIZE_TO_MIN    5
-#define B64_SYNTAX_TOOMANYARGS  6
+#include "../config.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ailsacmdb.h>
 
 void
-show_ailsacmdb_version();
+show_ailsacmdb_version()
+{
+	printf("libailsacmdb: Version %s\n", VERSION);
+}
 
-#endif // __AILSACMDB_H__

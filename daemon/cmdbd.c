@@ -34,6 +34,7 @@ int
 main(int agrc, char *argv[])
 {
 	int retval = 0;
+	show_ailsacmdb_version();
 
 	return retval;
 }
