@@ -1,0 +1,13 @@
+/00gnulib.m4
+/gnulib-common.m4
+/gnulib-comp.m4
+/gnulib-tool.m4
+/absolute-header.m4
+/extern-inline.m4
+/gl-openssl.m4
+/include_next.m4
+/longlong.m4
+/multiarch.m4
+/sha512.m4
+/stdalign.m4
+/stdint.m4
