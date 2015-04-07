@@ -10,16 +10,12 @@ AM_INIT_AUTOMAKE
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
-gl_EARLY
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AM_PROG_AR
 
 # Initialize libtool
 LT_INIT
-
-# Initialise gnulib modules
-gl_INIT
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
