@@ -267,24 +267,25 @@ display_rev_zone(char *domain, dnsa_config_s *dc)
 	}
 	rev = dnsa->rev_zones;
 	while (rev) {
-		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0) {
-			if ((strncmp(rev->type, "master", RANGE_S)) == 0) {
-				print_rev_zone(dnsa, domain);
-			} else {
-				create = (time_t)rev->ctime;
-				printf("This is a slave reverse zone. No records to display\n");
-				if (get_uname(rev->cuser))
-					printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
-				else
-					printf("Created by (unknown) on %s", ctime(&create));
-			}
+		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0)
 			break;
-		} else {
-			rev = rev->next;
-		}
+		rev = rev->next;
 	}
-	if (!(rev))
+	if (!(rev)) {
 		fprintf(stderr, "Reverse zone %s not found\n", domain);
+		dnsa_clean_list(dnsa);
+		return;
+	}
+	if ((strncmp(rev->type, "master", RANGE_S)) == 0) {
+		print_rev_zone(dnsa, domain);
+	} else {
+		create = (time_t)rev->ctime;
+		printf("This is a slave reverse zone. No records to display\n");
+		if (get_uname(rev->cuser))
+			printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
+		else
+			printf("Created by (unknown) on %s", ctime(&create));
+	}
 	dnsa_clean_list(dnsa);
 }
 
@@ -293,35 +294,30 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 {
 	char *in_addr;
 	time_t create, modify;
-	unsigned int i;
+	unsigned int i = 0;
 	rev_record_row_s *records = dnsa->rev_records;
 	rev_zone_info_s *zone = dnsa->rev_zones;
 	if (!(in_addr = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "in_addr in print rev zone");
-	i = 0;
 	while (zone) {
-		if (strncmp(zone->net_range, domain, RBUFF_S) == 0) {
-			printf("@\t%s\t%lu\n",zone->pri_dns, zone->serial);
+		if (strncmp(zone->net_range, domain, RBUFF_S) == 0)
 			break;
-		} else {
-			zone = zone->next;
-		}
+		zone = zone->next;
 	}
 	if (!(zone)) {
 		printf("Zone %s not found\n", domain);
 		return;
 	}
+	printf("@\t%s\t%lu\n",zone->pri_dns, zone->serial);
 	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
 	create = (time_t)zone->ctime;
 	modify = (time_t)zone->mtime;
 	while (records) {
 		if (records->rev_zone == zone->rev_zone_id) {
 			printf("%s.%s\t%s\n", records->host, in_addr, records->dest);
-			records = records->next;
 			i++;
-		} else {
-			records = records->next;
 		}
+		records = records->next;
 	}
 	printf("\n%u records\n", i);
 	if (get_uname(zone->cuser))
@@ -334,6 +330,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 		printf("Last updated by (unknown) at %s", ctime(&modify));
 	if (i == 0)
 		printf("No reverse records for range %s\n", zone->net_range);
+	free(in_addr);
 }
 
 int
