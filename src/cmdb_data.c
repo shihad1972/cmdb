@@ -52,6 +52,15 @@ cmdb_malloc(size_t len, const char *msg)
 }
 
 void
+cmdb_free(void **data, size_t len)
+{
+	if (!(*data))
+		return;
+	memset(*data, 0, len);
+	free(*data);
+}
+
+void
 initialise_string_array(char *list[], size_t quantity, size_t quality[])
 {
 	size_t i;
