@@ -557,8 +557,7 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	int retval;
 	zone_info_s *zone, *list;
 
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_mysql");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in dnsa_store_zone_mysql");
 	init_zone_struct(zone);
 	zone->id = strtoul(row[0], NULL, 10);
 	snprintf(zone->name, RBUFF_S, "%s", row[1]);
@@ -630,8 +629,7 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	int retval;
 	rev_zone_info_s *rev, *list;
 
-	if (!(rev = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_mysql");
+	rev = cmdb_malloc(sizeof(rev_zone_info_s), "rev in dnsa_store_rev_zone_mysql");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = strtoul(row[0], NULL, 10);
 	snprintf(rev->net_range, RANGE_S, "%s", row[1]);
@@ -1323,11 +1321,9 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	int retval;
 	zone_info_s *zone, *list;
 	
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_sqlite");
-	if (!(stime = calloc(MAC_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "stme in dnsa_store_zone_sqlite");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in dnsa_store_zone_sqlite");
 	init_zone_struct(zone);
+	stime = cmdb_malloc(MAC_S, "stime in dnsa_store_zone_sqlite");
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(zone->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 2));
@@ -1373,10 +1369,8 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	int retval;
 	rev_zone_info_s *rev, *list;
 	
-	if (!(rev = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_sqlite");
-	if (!(stime = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_zone_sqlite");
+	rev = cmdb_malloc(sizeof(rev_zone_info_s), "rev in dnsa_store_zone_sqlite");
+	stime = cmdb_malloc(MAC_S, "stime in dnsa_store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));

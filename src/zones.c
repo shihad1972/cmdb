@@ -1071,6 +1071,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	unsigned int f = dnsa_extended_search_fields[type];
 	unsigned int a = dnsa_extended_search_args[type];
 	unsigned int max = cmdb_get_max(a, f);
+	size_t len = sizeof(rev_zone_info_s);
 	dnsa_s *dnsa;
 	dbdata_s *start;
 	rev_zone_info_s *rzone;
@@ -1080,8 +1081,7 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	retval = 0;
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in disp_multi_a");
-	if (!(rzone = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "rzone in disp_multi_a");
+	rzone = cmdb_malloc(len, "rzone in display_multi_a_records");
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
 	dnsa->rev_zones = rzone;
@@ -1201,10 +1201,9 @@ mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	retval = 0;
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in mark_preferred_a_record");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in mark_preferred_a_record");
-	init_dnsa_struct(dnsa);
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in mark_preferred_a_record");
 	init_zone_struct(zone);
+	init_dnsa_struct(dnsa);
 	dnsa->zones = zone;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa,
 		 DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
@@ -1361,14 +1360,12 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_host");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_host");
 	if (!(record = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "record in add_host");
-
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_host");
+	init_zone_struct(zone);
 	init_dnsa_struct(dnsa);
 	init_record_struct(record);
-	init_zone_struct(zone);
 // **FIXME: Should probably just muti init here
 	init_dbdata_struct(&data);
 	init_dbdata_struct(&user);
@@ -1448,18 +1445,16 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 int
 add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	dbdata_s data, user;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
-	retval = 0;
-	init_dnsa_struct(dnsa);
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_fwd_zone");
 	init_zone_struct(zone);
+	init_dnsa_struct(dnsa);
 	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
 		snprintf(cm->ztype, RANGE_S, "master");
 	fill_fwd_zone_info(zone, cm, dc);
@@ -1581,16 +1576,14 @@ Please delete them and then try to delete the zone again.\n", cm->domain);
 int
 add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	rev_zone_info_s *zone;
 	dbdata_s data, user;
 	
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
-	if (!(zone = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_fwd_zone");
-	retval = 0;
+		report_error(MALLOC_FAIL, "dnsa in add_rev_zone");
+	zone = cmdb_malloc(sizeof(rev_zone_info_s), "zone in add_rev_zone");
 	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(zone);
 	init_dbdata_struct(&data);
@@ -2846,8 +2839,9 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 
 	if (!(glue = malloc(sizeof(glue_zone_info_s))))
 		report_error(MALLOC_FAIL, "glue in add_glue_zone");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_glue_zone");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_glue_zones");
+/*	if (!(zone = malloc(sizeof(zone_info_s))))
+		report_error(MALLOC_FAIL, "zone in add_glue_zone"); */
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_glue_zone");
 

@@ -284,8 +284,7 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_cbc_build_domain");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_cbc_build_domain");
 	if (!(user = malloc(sizeof(dbdata_s))))
 		report_error(MALLOC_FAIL, "user in add_cbc_build_domain");
 	dnsa_init_config_values(dc);

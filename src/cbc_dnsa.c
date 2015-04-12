@@ -162,12 +162,10 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 		report_error(MALLOC_FAIL, "dc in check_for_build_ip_in_dns");
 	if (!(dnsa = malloc(sizeof(dnsa_s))))
 		report_error(MALLOC_FAIL, "dnsa in check_for_build_ip_in_dns");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in check_for_build_ip_in_dns");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in check_for_build_ip_in_dns");
 	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in check_for_build_ip_in_dns");
 	setup_dnsa_build_ip_structs(zone, dnsa, dc, cbt, rec);
-//	dnsa_init_initial_dbdata(&data, RECORDS_ON_ZONE);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(zone->name, RBUFF_S, "%s", cml->build_domain);
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {

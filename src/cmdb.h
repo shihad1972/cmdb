@@ -518,7 +518,7 @@ clean_string_l(string_l *list);
 void *
 cmdb_malloc(size_t len, const char *msg);
 void
-cmdb_free(void **data, size_t len);
+cmdb_free(void *data, size_t len);
 void
 resize_string_buff(string_len_s *build);
 

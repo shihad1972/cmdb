@@ -48,16 +48,17 @@ cmdb_malloc(size_t len, const char *msg)
 		perror(msg);
 		exit(MALLOC_FAIL);
 	}
+	memset(data, 0, len);
 	return data;
 }
 
 void
-cmdb_free(void **data, size_t len)
+cmdb_free(void *data, size_t len)
 {
-	if (!(*data))
+	if (!(data))
 		return;
-	memset(*data, 0, len);
-	free(*data);
+	memset(data, 0, len);
+	free(data);
 }
 
 void

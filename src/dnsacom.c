@@ -435,8 +435,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 	ilen = strlen(regexps[IP_REGEX]);
 	if ((ilen + dlen + 4) > RBUFF_S)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
-	if (!(regex = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "regex in validate_glue_comm_line");
+	regex = cmdb_malloc(RBUFF_S, "regex in validate_glue_comm_line");
 	if (strchr(comm->glue_ip, ',')) {
 		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
@@ -462,7 +461,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue NS");
 	}
-	free(regex);
+	cmdb_free(regex, RBUFF_S);
 }
 
 void
@@ -505,7 +504,6 @@ dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 void
 dnsa_init_config_values(dnsa_config_s *dc)
 {
-	memset(dc, 0, sizeof(dnsa_config_s));
 	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
 	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
@@ -524,7 +522,6 @@ dnsa_init_config_values(dnsa_config_s *dc)
 void
 dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 {
-	memset(dcl, 0, sizeof(dnsa_comm_line_s));
 	strncpy(dcl->domain, "NULL", COMM_S);
 	strncpy(dcl->dest, "NULL", COMM_S);
 	strncpy(dcl->rtype, "NULL", COMM_S);
@@ -541,7 +538,6 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 void
 init_zone_struct(zone_info_s *zone)
 {
-	memset(zone, 0, sizeof(zone_info_s));
 	snprintf(zone->name, COMM_S, "NULL");
 	snprintf(zone->pri_dns, COMM_S, "NULL");
 	snprintf(zone->sec_dns, COMM_S, "NULL");
@@ -557,7 +553,6 @@ init_zone_struct(zone_info_s *zone)
 void
 init_rev_zone_struct(rev_zone_info_s *rev)
 {
-	memset(rev, 0, sizeof(rev_zone_info_s));
 	snprintf(rev->net_range, COMM_S, "NULL");
 	snprintf(rev->net_start, COMM_S, "NULL");
 	snprintf(rev->net_finish, COMM_S, "NULL");
@@ -630,7 +625,6 @@ void
 dnsa_clean_zones(zone_info_s *list)
 {
 	zone_info_s *zone, *next = NULL;
-	void *p;
 
 	if (list)
 		zone = list;
@@ -639,8 +633,7 @@ dnsa_clean_zones(zone_info_s *list)
 	if (zone->next)
 		next = zone->next;
 	while (zone) {
-		p = zone;
-		cmdb_free(&p, sizeof(zone_info_s));
+		cmdb_free(zone, sizeof(zone_info_s));
 		if (next)
 			zone = next;
 		else
@@ -653,7 +646,6 @@ void
 dnsa_clean_rev_zones(rev_zone_info_s *list)
 {
 	rev_zone_info_s *zone, *next = NULL;
-	void *p;
 
 	if (list)
 		zone = list;
@@ -662,8 +654,7 @@ dnsa_clean_rev_zones(rev_zone_info_s *list)
 	if (zone->next)
 		next = zone->next;
 	while (zone) {
-		p = zone;
-		cmdb_free(&p, sizeof(rev_zone_info_s));
+		cmdb_free(zone, sizeof(rev_zone_info_s));
 		if (next)
 			zone = next;
 		else
@@ -676,7 +667,6 @@ void
 dnsa_clean_records(record_row_s *list)
 {
 	record_row_s *rec, *next = NULL;
-	void *p;
 
 	if (list)
 		rec = list;
@@ -685,8 +675,7 @@ dnsa_clean_records(record_row_s *list)
 	if (rec->next)
 		next = rec->next;
 	while (rec) {
-		p = rec;
-		cmdb_free(&p, sizeof(record_row_s));
+		cmdb_free(rec, sizeof(record_row_s));
 		if (next)
 			rec = next;
 		else
@@ -699,7 +688,6 @@ void
 dnsa_clean_rev_records(rev_record_row_s *list)
 {
 	rev_record_row_s *rec, *next = NULL;
-	void *p;
 
 	if (list)
 		rec = list;
@@ -708,8 +696,7 @@ dnsa_clean_rev_records(rev_record_row_s *list)
 	if (rec->next)
 		next = rec->next;
 	while (rec) {
-		p = rec;
-		cmdb_free(&p, sizeof(rev_record_row_s));
+		cmdb_free(rec, sizeof(rev_record_row_s));
 		if (next)
 			rec = next;
 		else
@@ -722,7 +709,6 @@ void
 dnsa_clean_prefer(preferred_a_s *list)
 {
 	preferred_a_s *prefer, *next = NULL;
-	void *p;
 
 	if (list)
 		prefer = list;
@@ -731,8 +717,7 @@ dnsa_clean_prefer(preferred_a_s *list)
 	if (prefer->next)
 		next = prefer->next;
 	while (prefer) {
-		p = prefer;
-		cmdb_free(&p, sizeof(preferred_a_s));
+		cmdb_free(prefer, sizeof(preferred_a_s));
 		if (next)
 			prefer = next;
 		else
@@ -745,7 +730,6 @@ void
 dnsa_clean_glue(glue_zone_info_s *list)
 {
 	glue_zone_info_s *glu, *next = NULL;
-	void *p;
 
 	if (list)
 		glu = list;
@@ -754,8 +738,7 @@ dnsa_clean_glue(glue_zone_info_s *list)
 	if (glu->next)
 		next = glu->next;
 	while (glu) {
-		p = glu;
-		cmdb_free(&p, sizeof(glue_zone_info_s));
+		cmdb_free(glu, sizeof(glue_zone_info_s));
 		if (next)
 			glu = next;
 		else
