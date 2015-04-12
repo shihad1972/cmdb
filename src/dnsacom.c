@@ -629,7 +629,8 @@ dnsa_clean_list(dnsa_s *dnsa)
 void
 dnsa_clean_zones(zone_info_s *list)
 {
-	zone_info_s *zone, *next;
+	zone_info_s *zone, *next = NULL;
+	void *p;
 
 	if (list)
 		zone = list;
@@ -637,25 +638,22 @@ dnsa_clean_zones(zone_info_s *list)
 		return;
 	if (zone->next)
 		next = zone->next;
-	else
-		next = NULL;
 	while (zone) {
-		free(zone);
+		p = zone;
+		cmdb_free(&p, sizeof(zone_info_s));
 		if (next)
 			zone = next;
 		else
 			return;
-		if (zone->next)
-			next = zone->next;
-		else
-			next = NULL;
+		next = zone->next;
 	}
 }
 
 void
 dnsa_clean_rev_zones(rev_zone_info_s *list)
 {
-	rev_zone_info_s *zone, *next;
+	rev_zone_info_s *zone, *next = NULL;
+	void *p;
 
 	if (list)
 		zone = list;
@@ -663,25 +661,22 @@ dnsa_clean_rev_zones(rev_zone_info_s *list)
 		return;
 	if (zone->next)
 		next = zone->next;
-	else
-		next = NULL;
 	while (zone) {
-		free(zone);
+		p = zone;
+		cmdb_free(&p, sizeof(rev_zone_info_s));
 		if (next)
 			zone = next;
 		else
 			return;
-		if (zone->next)
-			next = zone->next;
-		else
-			next = NULL;
+		next = zone->next;
 	}
 }
 
 void
 dnsa_clean_records(record_row_s *list)
 {
-	record_row_s *rec, *next;
+	record_row_s *rec, *next = NULL;
+	void *p;
 
 	if (list)
 		rec = list;
@@ -689,25 +684,22 @@ dnsa_clean_records(record_row_s *list)
 		return;
 	if (rec->next)
 		next = rec->next;
-	else
-		next = NULL;
 	while (rec) {
-		free(rec);
+		p = rec;
+		cmdb_free(&p, sizeof(record_row_s));
 		if (next)
 			rec = next;
 		else
 			return;
-		if (rec->next)
-			next = rec->next;
-		else
-			next = NULL;
+		next = rec->next;
 	}
 }
 
 void
 dnsa_clean_rev_records(rev_record_row_s *list)
 {
-	rev_record_row_s *rec, *next;
+	rev_record_row_s *rec, *next = NULL;
+	void *p;
 
 	if (list)
 		rec = list;
@@ -715,25 +707,22 @@ dnsa_clean_rev_records(rev_record_row_s *list)
 		return;
 	if (rec->next)
 		next = rec->next;
-	else
-		next = NULL;
 	while (rec) {
-		free(rec);
+		p = rec;
+		cmdb_free(&p, sizeof(rev_record_row_s));
 		if (next)
 			rec = next;
 		else
 			return;
-		if (rec->next)
-			next = rec->next;
-		else
-			next = NULL;
+		next = rec->next;
 	}
 }
 
 void
 dnsa_clean_prefer(preferred_a_s *list)
 {
-	preferred_a_s *prefer, *next;
+	preferred_a_s *prefer, *next = NULL;
+	void *p;
 
 	if (list)
 		prefer = list;
@@ -741,25 +730,22 @@ dnsa_clean_prefer(preferred_a_s *list)
 		return;
 	if (prefer->next)
 		next = prefer->next;
-	else
-		next = NULL;
 	while (prefer) {
-		free(prefer);
+		p = prefer;
+		cmdb_free(&p, sizeof(preferred_a_s));
 		if (next)
 			prefer = next;
 		else
 			return;
-		if (prefer->next)
-			next = prefer->next;
-		else
-			next = NULL;
+		next = prefer->next;
 	}
 }
 
 void
 dnsa_clean_glue(glue_zone_info_s *list)
 {
-	glue_zone_info_s *glu, *next;
+	glue_zone_info_s *glu, *next = NULL;
+	void *p;
 
 	if (list)
 		glu = list;
@@ -767,18 +753,14 @@ dnsa_clean_glue(glue_zone_info_s *list)
 		return;
 	if (glu->next)
 		next = glu->next;
-	else
-		next = NULL;
 	while (glu) {
-		free(glu);
+		p = glu;
+		cmdb_free(&p, sizeof(glue_zone_info_s));
 		if (next)
 			glu = next;
 		else
 			return;
-		if (glu->next)
-			next = glu->next;
-		else
-			next = NULL;
+		next = glu->next;
 	}
 }
 
