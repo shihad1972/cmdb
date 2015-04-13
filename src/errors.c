@@ -1057,8 +1057,7 @@ init_string_len(string_len_s *string)
 {
 	string->len = BUFF_S;
 	string->size = NONE;
-	if (!(string->string = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "string->string in init_string_len");
+	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
 }
 
 void

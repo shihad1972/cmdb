@@ -54,9 +54,7 @@ list_zones(dnsa_config_s *dc)
 	zone_info_s *zone;
 	size_t len;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in list_zones");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in list_zones");
 	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
@@ -99,9 +97,7 @@ list_rev_zones(dnsa_config_s *dc)
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in list_zones");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in list_rev_zones");
 	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
@@ -127,14 +123,11 @@ rev->net_range, rev->prefix, rev->valid, rev->type);
 void
 display_zone(char *domain, dnsa_config_s *dc)
 {
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in display_zone");
-	retval = 0;
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in display_zone");
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
 		if (retval == 1)
 			printf("There are either no zones or records in the database\n");
@@ -252,15 +245,12 @@ srv, proto, zname, rec->pri, port, rec->dest);
 void
 display_rev_zone(char *domain, dnsa_config_s *dc)
 {
-	int retval;
+	int retval = 0;
 	time_t create;
 	dnsa_s *dnsa;
 	rev_zone_info_s *rev;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in display_rev_zone");
-	retval = 0;
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in display_rev_zone");
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
 		return;
@@ -297,8 +287,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 	unsigned int i = 0;
 	rev_record_row_s *records = dnsa->rev_records;
 	rev_zone_info_s *zone = dnsa->rev_zones;
-	if (!(in_addr = calloc(MAC_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "in_addr in print rev zone");
+	in_addr = cmdb_malloc(MAC_S, "in_addr in print_rev_zone");
 	while (zone) {
 		if (strncmp(zone->net_range, domain, RBUFF_S) == 0)
 			break;
@@ -330,7 +319,7 @@ print_rev_zone(dnsa_s *dnsa, char *domain)
 		printf("Last updated by (unknown) at %s", ctime(&modify));
 	if (i == 0)
 		printf("No reverse records for range %s\n", zone->net_range);
-	free(in_addr);
+	cmdb_free(in_addr, MAC_S);
 }
 
 int
@@ -357,14 +346,11 @@ commit_fwd_zones(dnsa_config_s *dc, char *name)
 	string_len_s *config;
 	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in commit_fwd_zones");
-	if (!(filename = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "filename in commit_fwd_zones");
 	if (!(config = malloc(sizeof(string_len_s))))
 		report_error(MALLOC_FAIL, "config in commit_fwd_zones");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in commit_fwd_zones");
+	filename = cmdb_malloc(TBUFF_S, "filename in commit_fwd_zones");
 	init_string_len(config);
-	init_dnsa_struct(dnsa);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0)
 		goto cleanup;
 	zone = dnsa->zones;
@@ -408,14 +394,13 @@ void
 create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, string_len_s *zonefile)
 {
 	char *buffer;
-	size_t len;
+	size_t len, blen = RBUFF_S + COMM_S;
 	unsigned long int id;
 	if (zone)
 		id = zone->id;
 	else
 		return;
-	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_fwd_zone_header");
+	buffer = cmdb_malloc(blen, "buffer in create_fwd_zone_header");
 	snprintf(zonefile->string, BUILD_S, "\
 $TTL %lu\n\
 @\tIN\tSOA\t%s\t%s (\n\
@@ -451,7 +436,7 @@ $TTL %lu\n\
 		}
 		record = record->next;
 	}
-	free(buffer);
+	cmdb_free(buffer, blen);
 }
 
 void
@@ -463,8 +448,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 	record_row_s *record = dnsa->records;
 	zone_info_s *zone = dnsa->zones;
 	
-	if (!(buffer = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
+	buffer = cmdb_malloc(BUFF_S, "buffer in add_records_to_fwd_zonefile");
 	while (record) {
 		if (record->zone != id)
 			record = record->next; // Skip if not in zone
@@ -515,7 +499,7 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			glue = glue->next;
 		}
 	}
-	free(buffer);
+	cmdb_free(buffer, BUFF_S);
 }
 
 void
@@ -525,8 +509,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	short int add = 0;
 	size_t len;
 	
-	if (!(buff = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buff in check_a_record_for_ns");
+	buff = cmdb_malloc(RBUFF_S, "buff in check_a_record_for_ns");
 	if (!(glue))
 		return;
 	pns = strdup(glue->pri_ns);
@@ -581,10 +564,10 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 			}
 		}
 	}
-	free(pns);
-	free(sns);
-	free(buff);
-	free(zone);
+	cmdb_free(pns, strlen(pns));
+	cmdb_free(sns, strlen(sns));
+	cmdb_free(buff, RBUFF_S);
+	cmdb_free(zone, strlen(parent));
 }
 
 int
@@ -616,10 +599,9 @@ void
 add_mx_record(string_len_s *zone, record_row_s *rec)
 {
 	char *buffer;
-	size_t len;
+	size_t len, blen = RBUFF_S + COMM_S;
 
-	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in add_mx_record");
+	buffer = cmdb_malloc(blen, "buffer in add_mx_record");
 	snprintf(buffer, RBUFF_S + COMM_S, "\
 \tIN\tMX %lu\t%s\n", rec->pri, rec->dest);
 	len = strlen(buffer);
@@ -627,24 +609,23 @@ add_mx_record(string_len_s *zone, record_row_s *rec)
 		resize_string_buff(zone);
 	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
 	zone->size += len;
-	free(buffer);
+	cmdb_free(buffer, blen);
 }
 
 void
 add_ns_record(string_len_s *zone, record_row_s *rec)
 {
 	char *buffer;
-	size_t len;
+	size_t len, blen = RBUFF_S + COMM_S;
 
-	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in add_ns_record");
+	buffer = cmdb_malloc(blen, "buffer in add_ns_record");
 	snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n", rec->dest);
 	len = strlen(buffer);
 	if ((len + zone->size) >= zone->len)
 		resize_string_buff(zone);
 	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
 	zone->size += len;
-	free(buffer);
+	cmdb_free(buffer, blen);
 }
 
 void
@@ -657,10 +638,8 @@ add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
 	struct addrinfo hints, *srvinfo;
 	struct sockaddr_in *ipv4;
 
-	if (!(buffer = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in add_srv_record");
-	if (!(host = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "host in add_srv_record");
+	buffer = cmdb_malloc(RBUFF_S, "buffer in add_srv_record");
+	host = cmdb_malloc(RBUFF_S, "host in add_srv_record");
 	len = strlen(rec->dest);
 	if (rec->dest[len - 1] == '.')
 		snprintf(host, RBUFF_S, "%s", rec->dest);
@@ -698,8 +677,8 @@ zinfo->ttl, rec->pri, port, host);
 		resize_string_buff(zone);
 	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
 	zone->size += len;
-	free(buffer);
-	free(host);
+	cmdb_free(buffer, RBUFF_S);
+	cmdb_free(host, RBUFF_S);
 }
 
 int
@@ -709,12 +688,9 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 	char *buffer, *filename;
 	string_len_s *zonefile;
 	
-	if (!(zonefile = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "zonefile in create_and_write_fwd_zone");
-	if (!(zonefile->string = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "zonefile->string in create_and_write_fwd_zone");
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_and_write_fwd_zone");
+	zonefile = cmdb_malloc(sizeof(string_len_s), "zonefile in create_and_write_fwd_zone");
+	zonefile->string = cmdb_malloc(BUFF_S, "zonefile->string in create_and_write_fwd_zone");
+	buffer = cmdb_malloc(TBUFF_S, "buffer in create_and_write_fwd_zone");
 	zonefile->len = BUFF_S;
 	filename = buffer;
 	retval = 0;
@@ -726,9 +702,9 @@ create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone)
 		printf("Unable to write %s zonefile\n",
 		       zone->name);
 	if (zonefile->string)
-		free(zonefile->string);
-	free(zonefile);
-	free(buffer);
+		cmdb_free(zonefile->string, zonefile->len);
+	cmdb_free(zonefile, sizeof(string_len_s));
+	cmdb_free(buffer, TBUFF_S);
 	return retval;
 }
 
@@ -739,10 +715,8 @@ create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config)
 	char *buffer, *buff, *host = NULL;
 	size_t len;
 	
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_fwd_config");
-	if (!(buff = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buff in create_fwd_config");
+	buffer = cmdb_malloc(TBUFF_S, "buffer in create_fwd_config");
+	buff = cmdb_malloc(RBUFF_S, "buff in create_fwd_config");
 	retval = 0;
 	if (strncmp(zone->type, "master", COMM_S) == 0) {
 		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
@@ -774,10 +748,10 @@ zone \"%s\" {\n\
 		resize_string_buff(config);
 	snprintf(config->string + config->size, len + 1, "%s%s", buffer, buff);
 	config->size += len;
-	free(buffer);
-	free(buff);
+	cmdb_free(buffer, TBUFF_S);
+	cmdb_free(buff, RBUFF_S);
 	if (host)
-		free(host);
+		cmdb_free(host, strlen(host));
 	return retval;
 }
 
@@ -821,12 +795,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	struct addrinfo hints, *srvnfo;
 	struct sockaddr_in *ipv4;
 
-	if (!(*ipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "ipstr in check_notify_ip");
-	if (!(dipstr = calloc(INET6_ADDRSTRLEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "dipstr in check_notify_ip");
-	if (!(host = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "host in check_notify_ip");
+	host = cmdb_malloc(RBUFF_S, "host in check_notidfy_ip");
 	dhost = strndup(zone->pri_dns, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -834,18 +803,23 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	hints.ai_flags = AI_PASSIVE;
 	if ((retval = gethostname(host, RBUFF_S)) != 0) {
 		fprintf(stderr, "%s", strerror(errno));
+		free(host);
+		free(dhost);
 		return retval;
 	}
+	*ipstr = cmdb_malloc(INET6_ADDRSTRLEN, "*ipstr in check_notify_ip");
+	dipstr = cmdb_malloc(INET6_ADDRSTRLEN, "dipstr in check_notify_ip");
 	if ((retval = getaddrinfo(dhost, "http", &hints, &srvnfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		return retval;
+		goto cleanup;
 	}
 	if (srvnfo->ai_family == AF_INET) {
 		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
 		addr = &(ipv4->sin_addr);
 		if (!(inet_ntop(AF_INET, addr, *ipstr, INET_ADDRSTRLEN))) {
 			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-			return CANNOT_CONVERT;
+			retval = CANNOT_CONVERT;
+			goto cleanup;
 		}
 	} else {
 		report_error(WRONG_PROTO, "check_notify_ip");
@@ -853,14 +827,15 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	freeaddrinfo(srvnfo);
 	if ((retval = getaddrinfo(host, "http", &hints, &srvnfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		return retval;
+		goto cleanup;
 	}
 	if (srvnfo->ai_family == AF_INET) {
 		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
 		addr = &(ipv4->sin_addr);
 		if (!(inet_ntop(AF_INET, addr, dipstr, INET_ADDRSTRLEN))) {
 			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-			return CANNOT_CONVERT;
+			retval =  CANNOT_CONVERT;
+			goto cleanup;
 		}
 	} else {
 		report_error(WRONG_PROTO, "check_notify_ip");
@@ -870,33 +845,31 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 		*ipstr = NULL;
 		retval = CANNOT_CONVERT;
 	}
-	free(host);
-	free(dipstr);
-	return retval;
+	cleanup:
+		free(dhost);
+		free(host);
+		free(dipstr);
+		freeaddrinfo(srvnfo);
+		return retval;
 }
 
 int
 commit_rev_zones(dnsa_config_s *dc, char *name)
 {
 	char *buffer, *filename;
-	int retval;
+	int retval = 0;
 	dnsa_s *dnsa;
 	string_len_s *config;
 	rev_zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in commit_rev_zones");
-	if (!(config = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "zonefile in commit_rev_zones");
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in commit_rev_zones");
+	config = cmdb_malloc(sizeof(string_len_s), "zonefile in commit_rev_zones");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in commit_rev_zones");
+	buffer = cmdb_malloc(TBUFF_S, "buffer in commit_rev_zones");
 	filename = buffer;
-	retval = 0;
-	init_dnsa_struct(dnsa);
 	init_string_len(config);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
-		dnsa_clean_list(dnsa);
-		return MY_QUERY_FAIL;
+		retval = MY_QUERY_FAIL;
+		goto cleanup;
 	}
 	zone = dnsa->rev_zones;
 	while (zone) {
@@ -908,10 +881,8 @@ commit_rev_zones(dnsa_config_s *dc, char *name)
 		}
 		if ((retval = create_rev_config(dc, zone, config)) != 0) {
 			fprintf(stderr, "Error creating reverse config\n");
-			free(buffer);
-			free(config);
-			dnsa_clean_list(dnsa);
-			return CREATE_FILE_FAIL;
+			retval =  CREATE_FILE_FAIL;
+			goto cleanup;
 		}
 		zone = zone->next;
 	}
@@ -921,10 +892,11 @@ commit_rev_zones(dnsa_config_s *dc, char *name)
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(buffer)) != 0)
 		fprintf(stderr, "%s failed with %d\n", buffer, retval);
-	free(buffer);
-	clean_string_len(config);
-	dnsa_clean_list(dnsa);
-	return retval;
+	cleanup:
+		cmdb_free(buffer, TBUFF_S);
+		clean_string_len(config);
+		dnsa_clean_list(dnsa);
+		return retval;
 }
 
 int
@@ -936,9 +908,8 @@ create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone
 	string_len_s  *zonefile;
 	
 	if (!(zonefile = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "zonefile in create_rev_zones");
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_rev_zones");
+		report_error(MALLOC_FAIL, "zonefile in create_and_write_rev_zone");
+	buffer = cmdb_malloc(TBUFF_S, "buffer in create_and_write_rev_zone");
 	init_string_len(zonefile);
 	filename = buffer;
 	retval = 0;
@@ -956,7 +927,7 @@ create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone
 			snprintf(zone->valid, COMM_S, "no");
 	}
 	clean_string_len(zonefile);
-	free(buffer);
+	cmdb_free(buffer, TBUFF_S);
 	return (retval);
 }
 
@@ -964,10 +935,9 @@ void
 create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile)
 {
 	char *buffer;
-	size_t len;
+	size_t len, blen = RBUFF_S + COMM_S;
 	
-	if (!(buffer = calloc(RBUFF_S + COMM_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer ins create_rev_zone_header");
+	buffer = cmdb_malloc(blen, "buffer in create_rev_zone_header");
 	rev_zone_info_s *zone = dnsa->rev_zones;
 	while (zone->rev_zone_id != id)
 		zone = zone->next;
@@ -993,7 +963,7 @@ $TTL %lu\n\
 		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
 		zonefile->size += len;
 	}
-	free(buffer);
+	cmdb_free(buffer, blen);
 }
 
 void
@@ -1004,8 +974,7 @@ add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 	rev_record_row_s *record = dnsa->rev_records;
 	len = NONE;
 
-	if (!(buffer = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in add_records_fwd");
+	buffer = cmdb_malloc(BUFF_S, "buffer in add_records_to_fwd_zonefile");
 	while (record) {
 		if (record->rev_zone != id) {
 			record = record->next;
@@ -1020,21 +989,18 @@ add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 			record = record->next;
 		}
 	}
-	free(buffer);
+	cmdb_free(buffer, BUFF_S);
 }
 
 int
 create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, string_len_s *config)
 {
-	int retval;
+	int retval = 0;
 	char *buffer, *in_addr;
 	size_t len = NONE;
 	
-	if (!(buffer = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buffer in create_rev_config");
-	if (!(in_addr = calloc(MAC_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "in_addr in create_rev_config");
-	retval = 0;
+	buffer = cmdb_malloc(TBUFF_S, "buffer in create_rev_config");
+	in_addr = cmdb_malloc(MAC_S, "in_addr in create_rev_config");
 	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
 	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
@@ -1059,15 +1025,15 @@ zone \"%s\" {\n\
 	} else {
 		fprintf(stderr, "Zone %s invalid\n", zone->net_range);
 	}
-	free(buffer);
-	free(in_addr);
+	cmdb_free(buffer, TBUFF_S);
+	cmdb_free(in_addr, MAC_S);
 	return retval;
 }
 
 int
 display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval, type = RECORDS_ON_DEST_AND_ID;
+	int retval = 0, type = RECORDS_ON_DEST_AND_ID;
 	unsigned int f = dnsa_extended_search_fields[type];
 	unsigned int a = dnsa_extended_search_args[type];
 	unsigned int max = cmdb_get_max(a, f);
@@ -1078,11 +1044,8 @@ display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	record_row_s *records;
 	preferred_a_s *prefer;
 
-	retval = 0;
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in disp_multi_a");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in display_multi_a_records");
 	rzone = cmdb_malloc(len, "rzone in display_multi_a_records");
-	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(rzone);
 	dnsa->rev_zones = rzone;
 	if ((retval = dnsa_run_multiple_query(
@@ -1191,19 +1154,16 @@ get_uname(mark->cuser), ctime(&create));
 int
 mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval;
+	int retval = 0;
 	uint32_t ip_addr;
 	unsigned long int ip;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	preferred_a_s *prefer;
 
-	retval = 0;
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in mark_preferred_a_record");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in mark_preferred_a_record");
 	zone = cmdb_malloc(sizeof(zone_info_s), "zone in mark_preferred_a_record");
 	init_zone_struct(zone);
-	init_dnsa_struct(dnsa);
 	dnsa->zones = zone;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa,
 		 DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
@@ -1316,9 +1276,7 @@ delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dbdata_s data;
 	preferred_a_s *prefer;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in delete_preferred_a");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_preferred_a");
 	init_dbdata_struct(&data);
 	if ((retval = dnsa_run_query(dc, dnsa, PREFERRED_A)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -1358,13 +1316,11 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	record_row_s *record;
 	dbdata_s data, user;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_host");
 	if (!(record = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "record in add_host");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_host");
 	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_host");
 	init_zone_struct(zone);
-	init_dnsa_struct(dnsa);
 	init_record_struct(record);
 // **FIXME: Should probably just muti init here
 	init_dbdata_struct(&data);
@@ -1403,9 +1359,8 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dbdata_s data, user;
 	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in delete_record");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_record");
+// **FIXME: Should probably just muti init here
 	init_dbdata_struct(&data);
 	init_dbdata_struct(&user);
 	user.next = &data;
@@ -1437,6 +1392,9 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return CANNOT_FIND_RECORD_ID;
 	}
 	printf("%d record(s) deleted\n", retval);
+/* The we do not return retval here is good, as this should return the 
+ * number of updates to the database. However, for mysql this always
+ * returns 0. For sqlite, this returns an error code! */
 	retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES);
 	dnsa_clean_list(dnsa);
 	return NONE;
@@ -1450,11 +1408,9 @@ add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	zone_info_s *zone;
 	dbdata_s data, user;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_fwd_zone");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_fwd_zone");
 	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_fwd_zone");
 	init_zone_struct(zone);
-	init_dnsa_struct(dnsa);
 	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
 		snprintf(cm->ztype, RANGE_S, "master");
 	fill_fwd_zone_info(zone, cm, dc);
@@ -1508,12 +1464,8 @@ delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	record_row_s *fwd, *other, *list;
 	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in delete_fwd_zone");
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in delete_fwd_zone");
-	init_dnsa_struct(dnsa);
-	init_dbdata_struct(data);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_fwd_zone");
+	init_multi_dbdata_struct(&data, 1);
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
 		printf("Database query for zones and records failed\n");
 		dnsa_clean_list(dnsa);
@@ -1581,18 +1533,15 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	rev_zone_info_s *zone;
 	dbdata_s data, user;
 	
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_rev_zone");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_rev_zone");
 	zone = cmdb_malloc(sizeof(rev_zone_info_s), "zone in add_rev_zone");
-	init_dnsa_struct(dnsa);
 	init_rev_zone_struct(zone);
 	init_dbdata_struct(&data);
 	dnsa->rev_zones = zone;
 	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0) {
 		snprintf(data.fields.text, RBUFF_S, "%s", dc->prins);
 		if ((retval = set_slave_name_servers(dc, cm, &data)) != 0) {
-			free(zone);
-			free(dnsa);
+			dnsa_clean_list(dnsa);
 			return retval;
 		}
 	}
@@ -1617,6 +1566,7 @@ add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	} else {
 		if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->net_range);
+		dnsa_clean_list(dnsa);
 		return ID_INVALID;
 		}
 	}
@@ -1644,12 +1594,8 @@ delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dbdata_s *data;
 	rev_zone_info_s *rev;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in delete_reverse_zone");
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in delete_reverse_zone");
-	init_dnsa_struct(dnsa);
-	init_dbdata_struct(data);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_reverse_zone");
+	init_multi_dbdata_struct(&data, 1);
 	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
 		printf("Query to get reverse zones from DB failed\n");
 		dnsa_clean_list(dnsa);
@@ -1668,7 +1614,8 @@ delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	printf("Deleting reverse zone %s\n", cm->domain);
 	retval = dnsa_run_delete(dc, data, REV_ZONES);
 	printf("%d zone(s) deleted\n", retval);
-
+	clean_dbdata_struct(data);
+	dnsa_clean_list(dnsa);
 	return NONE;
 }
 
@@ -1677,11 +1624,11 @@ create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	char *buffer, filename[NAME_S];
 	int retval;
+	size_t clen = sizeof(string_len_s);
 	string_len_s *config;
 	zone_info_s *zone;
 
-	if (!(config = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "config in create_and_write_fwd_config");
+	config = cmdb_malloc(clen, "config in create_and_write_fwd_config");
 	buffer = &filename[NONE];
 	retval = NONE;
 	init_string_len(config);
@@ -1703,8 +1650,8 @@ create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa)
 	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	free(config->string);
-	free(config);
+	cmdb_free(config->string, config->len);
+	cmdb_free(config, clen);
 	return retval;
 }
 
@@ -1712,14 +1659,12 @@ int
 create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 {
 	char *buffer, filename[NAME_S];
-	int retval;
+	int retval = 0;
 	string_len_s *config;
 	rev_zone_info_s *zone;
 
-	if (!(config = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "config in create_and_write_rev_config");
+	config = cmdb_malloc(sizeof(string_len_s), "config in create_and_write_rev_config");
 	buffer = &filename[0];
-	retval = 0;
 	init_string_len(config);
 	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0)
 		return retval;
@@ -1745,15 +1690,12 @@ create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa)
 int
 validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 {
-	int retval;
+	int retval = 0;
 	dbdata_s *data, user;
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in validate_fwd_zone");
-	init_dbdata_struct(data);
+	init_multi_dbdata_struct(&data, 1);
 	init_dbdata_struct(&user);
 	user.next = data;
-	retval = 0;
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
@@ -1761,11 +1703,13 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->name);
+		clean_dbdata_struct(data);
 		return ID_INVALID;
 	}
 	if ((retval = create_and_write_fwd_zone(dnsa, dc, zone)) != 0) {
 		fprintf(stderr, "Unable to write the zonefile for %s\n",
 			zone->name);
+		clean_dbdata_struct(data);
 		return FILE_O_FAIL;
 	}
 	if ((retval = check_zone(zone->name, dc)) != 0) {
@@ -1773,21 +1717,21 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 		data->args.number = zone->id;
 		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
 			fprintf(stderr, "Set zone not valid in DB failed\n");
-		free(data);
+		clean_dbdata_struct(data);
 		return CHKZONE_FAIL;
 	} else {
 		data->args.number = zone->id;
 		user.args.number = (unsigned long int)getuid();
 		if (strncmp(zone->valid, "yes", COMM_S) != 0) {
 			if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0) {
-				free(data);
 				fprintf(stderr, "Set zone valid in DB failed\n");
+				clean_dbdata_struct(data);
 				return retval;
 			}
 		snprintf(zone->valid, COMM_S, "yes");
 		}
-		free(data);
 	}
+	clean_dbdata_struct(data);
 	return retval;
 }
 
@@ -1795,9 +1739,8 @@ int
 validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 {
 	char command[NAME_S], *buffer;
-	int retval;
+	int retval = 0;
 	
-	retval = 0;
 	buffer = &command[0];
 	snprintf(zone->valid, COMM_S, "yes");
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
@@ -1855,22 +1798,16 @@ check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
 int
 build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval, a_rec;
+	int retval = 0, a_rec;
 	unsigned long int serial;
 	dnsa_s *dnsa;
 	dbdata_s serial_d, zone_info_d, user_d, *data;
 	record_row_s *rec;
-	rev_record_row_s *add, *delete, *list;
-
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in build_reverse_zone");
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in build_reverse_zone");
-	retval = 0;
 /* Set to NULL so we can check if there are no records to add / delete */
-	add = delete = NULL;
-	init_dnsa_struct(dnsa);
-	init_dbdata_struct(data);
+	rev_record_row_s *add = NULL, *delete = NULL, *list;
+
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in build_reverse_zone");
+	init_multi_dbdata_struct(&data, 1);
 	if ((retval = dnsa_run_multiple_query(
 	       dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A | REV_ZONE | ZONE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -2182,8 +2119,7 @@ insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev
 	rev_record_row_s *new, *list;
 	zone_info_s *zones = dnsa->zones;
 
-	if (!(new = malloc(sizeof(rev_record_row_s))))
-		report_error(MALLOC_FAIL, "new in insert_into_rev_add_list");
+	new = cmdb_malloc(sizeof(rev_record_row_s), "new in insert_into_rev_add_list");
 	list = *rev;
 	init_rev_record_struct(new);
 	new->rev_zone = dnsa->rev_zones->rev_zone_id;
@@ -2693,9 +2629,7 @@ get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm)
 	dbdata_s *data;
 	record_row_s *list;
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in get_record_id_and_delete");
-	init_dbdata_struct(data);
+	init_multi_dbdata_struct(&data, 1);
 	hname = hfqdn;
 	rname = rfqdn;
 	snprintf(hname, RBUFF_S, "%s.%s.", cm->host, cm->domain);
@@ -2840,11 +2774,7 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	if (!(glue = malloc(sizeof(glue_zone_info_s))))
 		report_error(MALLOC_FAIL, "glue in add_glue_zone");
 	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_glue_zones");
-/*	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_glue_zone"); */
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_glue_zone");
-
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_glue_zone");
 	init_dbdata_struct(&data);
 	init_dbdata_struct(&user);
 	setup_glue_struct(dnsa, zone, glue);
@@ -2898,9 +2828,7 @@ delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dbdata_s data, user;
 	glue_zone_info_s *glue;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in delete_glue_zone");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_glue_sone");
 	init_dbdata_struct(&data);
 	if ((retval = dnsa_run_query(dc, dnsa, GLUE)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -2950,9 +2878,7 @@ list_glue_zones(dnsa_config_s *dc)
 	glue_zone_info_s *glue;
 	zone_info_s *zone;
 
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in list_glue_zones");
-	init_dnsa_struct(dnsa);
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in list_glue_zones");
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | GLUE)) != 0) {
 		dnsa_clean_list(dnsa);
 		fprintf(stderr, "Cannot get list of zones and glue zones\n");
@@ -3004,7 +2930,6 @@ setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue)
 	if (zone)
 		init_zone_struct(zone);
 	if (dnsa) {
-		init_dnsa_struct(dnsa);
 		dnsa->glue = glue;
 		dnsa->zones = zone;
 	}

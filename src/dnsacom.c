@@ -489,12 +489,6 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 #endif /* HAVE_LIBPCRE */
 
 void
-init_dnsa_struct(dnsa_s *dnsa)
-{
-	memset(dnsa, 0, sizeof(dnsa_s));
-}
-
-void
 dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 {
 	dnsa_init_config_values(dc);
