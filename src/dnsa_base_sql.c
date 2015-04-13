@@ -908,10 +908,9 @@ dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_insert_fields[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i;
 
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_insert_fields[type]; i++)
 		if ((retval = dnsa_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
@@ -930,12 +929,11 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_update_args[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i, dbtype;
 	dbdata_s *list;
 
 	list = data;
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_update_args[type]; i++) {
 		dbtype = dnsa_update_arg_type[type][i];
@@ -955,12 +953,11 @@ dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_delete_args[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i, dbtype;
 	dbdata_s *list;
 
 	list = data;
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_delete_args[type]; i++) {
 		dbtype = dnsa_delete_arg_type[type][i];
