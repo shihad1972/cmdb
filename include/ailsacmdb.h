@@ -38,4 +38,7 @@
 void
 show_ailsacmdb_version();
 
+int
+cmdbd_parse_config(const char *file, void *data, size_t len);
+
 #endif // __AILSACMDB_H__

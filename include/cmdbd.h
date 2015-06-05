@@ -23,4 +23,43 @@
 #ifndef __CMDBD_H__
 # define __CMDBD_H__
 
+struct cmdbd_config {
+	char *dbtype;
+	char *db;
+	char *file;
+	char *user;
+	char *pass;
+	char *host;
+	char *dir;
+	char *bind;
+	char *dnsa;
+	char *rev;
+	char *rndc;
+	char *chkz;
+	char *chkc;
+	char *socket;
+	char *hostmaster;
+	char *prins;
+	char *secns;
+	char *pridns;
+	char *secdns;
+	char *toplevelos;
+	char *pxe;
+	char *tmpdir;
+	char *preseed;
+	char *tftpdir;
+	char *dhcpconf;
+	char *kickstart;
+	unsigned int port;
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
+};
+
+struct cmdbc_config {
+	char *host;
+	char *service;
+};
+
 #endif // __CMDBD_H__

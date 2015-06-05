@@ -29,12 +29,16 @@
 #include <string.h>
 #include <ailsacmdb.h>
 #include "cmdb.h"
+#include "cmdbd.h"
 
 int
 main(int agrc, char *argv[])
 {
 	int retval = 0;
-	show_ailsacmdb_version();
+	struct cmdbd_config data;
+	size_t len = sizeof data;
+
+	retval = cmdbd_parse_config("/etc/dnsa/dnsa.conf", &data, len);
 
 	return retval;
 }
