@@ -26,6 +26,8 @@
 # define __CBC_BASE_SQL_H
 # include "../config.h"
 # include "base_sql.h"
+# include "cmdb_cbc.h"
+# include "cbc_data.h"
 
 extern const char *cbc_sql_select[];
 extern const char *cbc_sql_insert[];

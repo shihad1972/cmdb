@@ -562,7 +562,7 @@ display_cbc_server(cbc_s *base);
 void
 display_varient(cbc_s *base);
 
-void
-display_vm_hosts(cbc_s *base);
+/* void
+display_vm_hosts(cbc_s *base); */
 
 #endif /* __CBC_DATA_H__ */
