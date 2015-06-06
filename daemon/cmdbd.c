@@ -29,7 +29,6 @@
 #include <string.h>
 #include <ailsacmdb.h>
 #include "cmdb.h"
-#include "cmdbd.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "cmdb_base_sql.h"

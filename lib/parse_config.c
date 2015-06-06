@@ -29,8 +29,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <syslog.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
-#include "cmdbd.h"
 
 struct nv_pair {
 	char *name;
@@ -90,13 +90,8 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 static char *
 get_line(FILE *f, char *line, int len)
 {
-	char *p;
-
 	if (fgets(line, len, f)) {
-		// Get rid of newline
-		p = strchr(line, '\n');
-		if (p)
-			*p = '\0';
+		ailsa_chomp(line);
 		return line;
 	}
 	return NULL;
