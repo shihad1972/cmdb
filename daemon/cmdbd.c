@@ -1,7 +1,7 @@
 /*
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,13 @@
 #include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdbd.h"
+#include "base_sql.h"
+#include "cbc_base_sql.h"
+#include "cmdb_base_sql.h"
+#include "dnsa_base_sql.h"
+#include "cmdb_cmdb.h"
+#include "cmdb_dnsa.h"
+#include "cmdb_cbc.h"
 
 int
 main(int agrc, char *argv[])
