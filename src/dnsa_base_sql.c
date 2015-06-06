@@ -36,6 +36,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include "cmdb.h"
+#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
 #include "dnsa_base_sql.h"

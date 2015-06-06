@@ -12,7 +12,7 @@ cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		base_sql.h
 
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
-		zones.c dnsa_net.c\
+		zones.c dnsa_net.c dnsa_data.c\
 		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
 		base_sql.h dnsa_net.h
 
@@ -52,11 +52,10 @@ endif
 if HAVE_DNSA
 bin_PROGRAMS += dnsa
 if HAVE_CBC
-cbc_SOURCES +=	cbc_dnsa.c dnsa_base_sql.c\
-		dnsacom.c zones.c dnsa_net.c\
-		dnsa_net.h
+cbc_SOURCES +=	cbc_dnsa.c dnsa_base_sql.c dnsacom.c zones.c dnsa_net.c\
+		dnsa_data.c dnsa_net.h
 cbcdomain_SOURCES += zones.c cbc_dnsa.c\
-		dnsa_base_sql.c dnsacom.c dnsa_net.c cbc_common.h\
+		dnsa_base_sql.c dnsacom.c dnsa_net.c dnsa_data.c cbc_common.h\
 		cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 endif
 endif
