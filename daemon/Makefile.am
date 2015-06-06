@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cmdbd
 
-cmdbd_SOURCES = cmdbd.c cmdbd.h
+cmdbd_SOURCES = cmdbd.c
 cmdbd_LDADD = ../lib/libalisacmdb.la
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700

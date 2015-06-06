@@ -7,20 +7,19 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-LDFLAGS = -L../lib/
+LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 CPPFLAGS =
 CFLAGS += `libgcrypt-config --cflags`
-LDFLAGS += `libgcrypt-config --libs` -lailsacmdb
-CPPFLAGS += -I../src/ -I../include/
-
+LIBS += `libgcrypt-config --libs` -lailsacmdb -lpcre -lmysqlclient -lsqlite3
+CPPFLAGS += -I../src/ -I../include/ -I/usr/include/mysql
 sbin_PROGRAMS = cmdbd
 
 CDOBJECTS = cmdbd.o
-CDHEADERS = cmdbd.h
+DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../src/cmdb_base_sql.o
 
 all:	$(sbin_PROGRAMS)
 
-cmdbd:	$(CDOBJECTS) $(CDHEADERS)
+cmdbd:	$(CDOBJECTS) $(DBOBJECTS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
 .PHONY:	clean
