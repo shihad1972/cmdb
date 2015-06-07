@@ -71,6 +71,7 @@ typedef struct dnsa_config_s { /* Hold DNSA configuration values */
 } dnsa_config_s;
 
 typedef struct record_row_s { /* Hold dns record */
+	struct record_row_s *next;
 	char dest[RBUFF_S];
 	char host[RBUFF_S];
 	char type[RANGE_S];
@@ -85,10 +86,10 @@ typedef struct record_row_s { /* Hold dns record */
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct record_row_s *next;
 } record_row_s;
 
 typedef struct rev_record_row_s { /* Hold dns record */
+	struct rev_record_row_s *next;
 	char host[RBUFF_S];
 	char dest[RBUFF_S];
 	char valid[RANGE_S];
@@ -99,10 +100,10 @@ typedef struct rev_record_row_s { /* Hold dns record */
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct rev_record_row_s *next;
 } rev_record_row_s;
 
 typedef struct zone_info_s { /* Hold DNS zone */
+	struct zone_info_s *next;
 	char name[RBUFF_S];
 	char pri_dns[RBUFF_S];
 	char sec_dns[RBUFF_S];
@@ -124,10 +125,10 @@ typedef struct zone_info_s { /* Hold DNS zone */
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct zone_info_s *next;
 } zone_info_s;
 
 typedef struct rev_zone_info_s { /* Hold DNS zone */
+	struct rev_zone_info_s *next;
 	char net_range[RANGE_S];
 	char net_start[RANGE_S];
 	char net_finish[RANGE_S];
@@ -152,10 +153,10 @@ typedef struct rev_zone_info_s { /* Hold DNS zone */
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct rev_zone_info_s *next;
 } rev_zone_info_s;
 
 typedef struct glue_zone_info_s {
+	struct glue_zone_info_s *next;
 	char name[RBUFF_S];
 	char pri_ns[RBUFF_S];
 	char sec_ns[RBUFF_S];
@@ -167,10 +168,10 @@ typedef struct glue_zone_info_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct glue_zone_info_s *next;
 } glue_zone_info_s;
 
 typedef struct preferred_a_s { /* Hold the preferred A records for reverse */
+	struct preferred_a_s *next;
 	unsigned long int prefa_id;
 	unsigned long int ip_addr;
 	unsigned long int record_id;
@@ -180,7 +181,6 @@ typedef struct preferred_a_s { /* Hold the preferred A records for reverse */
 	unsigned long int mtime;
 	char ip[RANGE_S];
 	char fqdn[RBUFF_S];
-	struct preferred_a_s *next;
 } preferred_a_s;
 
 typedef struct zone_file_s {
