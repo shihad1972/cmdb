@@ -157,14 +157,22 @@ write_servers(cmdb_config_s *cmdb)
 }
 
 int
-read_zones(dnsa_config_s *dnsa)
+read_zones(dnsa_config_s *dnsa, char *dir)
 {
 	int retval = 0;
+	size_t len = sizeof(dnsa_s);
 
 	if (!dnsa)
 		return CBC_NO_DATA;
 
-	return retval;
+	dnsa_s *d = ailsa_malloc(len, "d in read_zones");
+	memset(d, 0, len);
+	if ((retval = read_dnsa_records(&(d->records), dir)) != 0)
+		goto cleanup;
+
+	cleanup:
+		dnsa_clean_list(d);
+		return retval;
 }
 
 int
@@ -192,6 +200,7 @@ write_dnsa_records(record_row_s *rec, char *dir)
 {
 	char *n = NULL;
 	int retval = 0, fd = 0;
+	mode_t um;
 	int mode, flags;
 	record_row_s *r = rec;
 	size_t slen = sizeof(record_row_s);
@@ -200,8 +209,8 @@ write_dnsa_records(record_row_s *rec, char *dir)
 	n = ailsa_malloc(CONF_S, "n in write_dnsa_records");
 	snprintf(n, CONF_S, "%srecords", dir);
 	mode = O_CREAT | O_TRUNC | O_WRONLY;
-//	mode = O_TRUNC;
 	flags = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+	um = umask(0);
 	if ((fd = open(n, mode, flags)) < 0) {
 		perror("open() in write_dnsa_records");
 		goto cleanup;
@@ -219,6 +228,56 @@ write_dnsa_records(record_row_s *rec, char *dir)
 		if (fd != 0)
 			if (close(fd) < 0)
 				perror("close() in write_dnsa_records");
+		um = umask(um);
 		return retval;	
+}
+
+int
+read_dnsa_records(record_row_s **rec, char *dir)
+{
+	char *n;
+	int retval = 0, mode = O_RDONLY;
+	int fd;
+	ssize_t len = 1;
+	size_t slen = sizeof(record_row_s);
+	record_row_s *r, *prev;
+
+	n = ailsa_malloc(CONF_S, "n in read_dnsa_records");
+	snprintf(n, CONF_S, "%srecords", dir);
+	if ((fd = open(n, mode)) < 0) {
+		perror("open() in read_dnsa_records");
+		goto cleanup;
+	}
+	while (len) {
+		r = ailsa_malloc(slen, "r in read_dnsa_records");
+		if ((len = read(fd, r, slen)) < 0) {
+			perror("read() in read_dnsa_records");
+			goto cleanup;
+		}
+		if (len == 0) {
+			my_free(r);
+			prev->next = NULL;
+		} else {
+			if (!(*rec)) {
+				*rec = r;
+				prev = r;
+			} else {
+				prev->next = r;
+				prev = r;
+			}
+		}
+	}
+	r = *rec;
+	while (r) {
+		printf("IP / Dest: %s\tType: %s\tHost: %s\n", r->dest, r->type, r->host);
+		r = r->next;
+	}
+
+	cleanup:
+		my_free(n);
+		if (fd != 0)
+			if (close(fd) < 0)
+				perror("close() in read_dnsa_records");
+		return retval;
 }
 

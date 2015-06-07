@@ -110,7 +110,7 @@ main(int argc, char *argv[])
 		break;
 	case AIL_ZONE:
 		if (cl.action == AIL_INPUT)
-			retval = read_zones(dnsa);
+			retval = read_zones(dnsa, data.toplevelos);
 		else if (cl.action == AIL_OUTPUT)
 			retval = write_zones(dnsa, data.toplevelos);
 		else
