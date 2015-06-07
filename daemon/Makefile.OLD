@@ -22,7 +22,7 @@ DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../sr
 all:	$(sbin_PROGRAMS)
 
 cmdbd:	$(CDOBJECTS) $(DBOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
 ailsa:	$(AOBJECTS) $(DBOBJECTS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(AOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)

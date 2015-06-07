@@ -36,6 +36,7 @@
 #include "cmdb_cmdb.h"
 #include "cmdb_dnsa.h"
 #include "cmdb_cbc.h"
+#include "conversion.h"
 
 int
 main(int agrc, char *argv[])
@@ -44,7 +45,7 @@ main(int agrc, char *argv[])
 	struct cmdbd_config data;
 	size_t len = sizeof data;
 
-	retval = cmdbd_parse_config("/etc/dnsa/dnsa.conf", &data, len);
+	cmdbd_parse_config("/etc/dnsa/dnsa.conf", &data, len);
 
 	return retval;
 }
