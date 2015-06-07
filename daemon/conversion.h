@@ -54,10 +54,4 @@ read_dnsa(dnsa_config_s *dnsa, char *dir);
 int
 write_dnsa(dnsa_config_s *dnsa, char *dir);
 
-int
-write_dnsa_records(record_row_s *rec, char *dir);
-
-int
-read_dnsa_records(record_row_s **rec, char *dir);
-
 #endif // __CONVERSION_H__
