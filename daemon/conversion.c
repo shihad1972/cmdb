@@ -134,8 +134,9 @@ convert_all_config(struct all_config *c)
 	return retval;
 }
 
+// Read functions
 int
-read_servers(cmdb_config_s *cmdb)
+read_cmdb(cmdb_config_s *cmdb)
 {
 	int retval = 0;
 
@@ -146,18 +147,7 @@ read_servers(cmdb_config_s *cmdb)
 }
 
 int
-write_servers(cmdb_config_s *cmdb)
-{
-	int retval = 0;
-
-	if (!cmdb)
-		return CBC_NO_DATA;
-
-	return retval;
-}
-
-int
-read_zones(dnsa_config_s *dnsa, char *dir)
+read_dnsa(dnsa_config_s *dnsa, char *dir)
 {
 	int retval = 0;
 	size_t len = sizeof(dnsa_s);
@@ -173,63 +163,6 @@ read_zones(dnsa_config_s *dnsa, char *dir)
 	cleanup:
 		dnsa_clean_list(d);
 		return retval;
-}
-
-int
-write_zones(dnsa_config_s *dnsa, char *dir)
-{
-	int query, retval = 0;
-
-	if (!dnsa)
-		return CBC_NO_DATA;
-
-	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_zones");
-	query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
-	if ((retval = dnsa_run_multiple_query(dnsa, d, query)) != 0)
-		goto cleanup;
-	if ((retval = write_dnsa_records(d->records, dir)) != 0)
-		goto cleanup;
-
-	cleanup:
-		dnsa_clean_list(d);
-		return retval;
-}
-
-int
-write_dnsa_records(record_row_s *rec, char *dir)
-{
-	char *n = NULL;
-	int retval = 0, fd = 0;
-	mode_t um;
-	int mode, flags;
-	record_row_s *r = rec;
-	size_t slen = sizeof(record_row_s);
-	ssize_t len;
-
-	n = ailsa_malloc(CONF_S, "n in write_dnsa_records");
-	snprintf(n, CONF_S, "%srecords", dir);
-	mode = O_CREAT | O_TRUNC | O_WRONLY;
-	flags = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-	um = umask(0);
-	if ((fd = open(n, mode, flags)) < 0) {
-		perror("open() in write_dnsa_records");
-		goto cleanup;
-	}
-	while(r) {
-		if ((len = write(fd, r, slen)) < 0) {
-			perror("write() to records file");
-			goto cleanup;
-		}
-		r = r->next;
-	}
-	goto cleanup;
-	cleanup:
-		my_free(n);
-		if (fd != 0)
-			if (close(fd) < 0)
-				perror("close() in write_dnsa_records");
-		um = umask(um);
-		return retval;	
 }
 
 int
@@ -279,5 +212,74 @@ read_dnsa_records(record_row_s **rec, char *dir)
 			if (close(fd) < 0)
 				perror("close() in read_dnsa_records");
 		return retval;
+}
+
+// write functions
+int
+write_cmdb(cmdb_config_s *cmdb)
+{
+	int retval = 0;
+
+	if (!cmdb)
+		return CBC_NO_DATA;
+
+	return retval;
+}
+
+int
+write_dnsa(dnsa_config_s *dnsa, char *dir)
+{
+	int query, retval = 0;
+
+	if (!dnsa)
+		return CBC_NO_DATA;
+
+	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_zones");
+	query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
+	if ((retval = dnsa_run_multiple_query(dnsa, d, query)) != 0)
+		goto cleanup;
+	if ((retval = write_dnsa_records(d->records, dir)) != 0)
+		goto cleanup;
+
+	cleanup:
+		dnsa_clean_list(d);
+		return retval;
+}
+
+int
+write_dnsa_records(record_row_s *rec, char *dir)
+{
+	char *n = NULL;
+	int retval = 0, fd = 0;
+	int mode, flags;
+	size_t slen = sizeof(record_row_s);
+	ssize_t len;
+	mode_t um;
+	record_row_s *r = rec;
+
+	n = ailsa_malloc(CONF_S, "n in write_dnsa_records");
+	snprintf(n, CONF_S, "%srecords", dir);
+	mode = O_CREAT | O_TRUNC | O_WRONLY;
+	flags = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+	um = umask(0);
+	if ((fd = open(n, mode, flags)) < 0) {
+		perror("open() in write_dnsa_records");
+		goto cleanup;
+	}
+	while(r) {
+		if ((len = write(fd, r, slen)) < 0) {
+			perror("write() to records file");
+			goto cleanup;
+		}
+		r = r->next;
+	}
+	goto cleanup;
+	cleanup:
+		my_free(n);
+		if (fd != 0)
+			if (close(fd) < 0)
+				perror("close() in write_dnsa_records");
+		um = umask(um);
+		return retval;	
 }
 

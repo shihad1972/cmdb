@@ -43,16 +43,16 @@ int
 convert_all_config(struct all_config *all);
 
 int
-read_servers(cmdb_config_s *cmdb);
+read_cmdb(cmdb_config_s *cmdb);
 
 int
-write_servers(cmdb_config_s *cmdb);
+write_cmdb(cmdb_config_s *cmdb);
 
 int
-read_zones(dnsa_config_s *dnsa, char *dir);
+read_dnsa(dnsa_config_s *dnsa, char *dir);
 
 int
-write_zones(dnsa_config_s *dnsa, char *dir);
+write_dnsa(dnsa_config_s *dnsa, char *dir);
 
 int
 write_dnsa_records(record_row_s *rec, char *dir);

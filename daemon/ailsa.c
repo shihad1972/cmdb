@@ -102,17 +102,17 @@ main(int argc, char *argv[])
 	switch (cl.type) {
 	case AIL_SERVER:
 		if (cl.action == AIL_INPUT)
-			retval = read_servers(cmdb);
+			retval = read_cmdb(cmdb);
 		else if (cl.action == AIL_OUTPUT)
-			retval = write_servers(cmdb);
+			retval = write_cmdb(cmdb);
 		else
 			retval = 1;
 		break;
 	case AIL_ZONE:
 		if (cl.action == AIL_INPUT)
-			retval = read_zones(dnsa, data.toplevelos);
+			retval = read_dnsa(dnsa, data.toplevelos);
 		else if (cl.action == AIL_OUTPUT)
-			retval = write_zones(dnsa, data.toplevelos);
+			retval = write_dnsa(dnsa, data.toplevelos);
 		else
 			retval = 1;
 		break;
