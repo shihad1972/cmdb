@@ -12,18 +12,23 @@ CPPFLAGS =
 CFLAGS += `libgcrypt-config --cflags`
 LIBS += `libgcrypt-config --libs` -lailsacmdb -lpcre -lmysqlclient -lsqlite3
 CPPFLAGS += -I../src/ -I../include/ -I/usr/include/mysql
+bin_PROGRAMS = ailsa
 sbin_PROGRAMS = cmdbd
 
-CDOBJECTS = cmdbd.o
-DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../src/cmdb_base_sql.o
+CDOBJECTS = cmdbd.o conversion.o
+AOBJECTS = ailsa.o conversion.o
+DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../src/cmdb_base_sql.o ../src/dnsa_data.o ../src/cmdb_data.o ../src/cbc_data.o ../src/errors.o
 
 all:	$(sbin_PROGRAMS)
 
 cmdbd:	$(CDOBJECTS) $(DBOBJECTS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
+ailsa:	$(AOBJECTS) $(DBOBJECTS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(AOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+
 .PHONY:	clean
 
 clean:
-	$(RM) *.o $(sbin_PROGRAMS)
+	$(RM) *.o $(sbin_PROGRAMS) $(bin_PROGRAMS)
 

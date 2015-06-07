@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <ailsacmdb.h>
 
 void
@@ -45,3 +46,56 @@ ailsa_chomp(char *line)
 		*p = '\0';
 }
 
+void *
+ailsa_malloc(size_t len, const char *msg)
+{
+	void *p;
+
+	if (!(p = calloc(len, sizeof(char)))) {
+		perror( msg);
+		exit(errno);
+	}
+	return p;
+}
+/*
+int
+add_trailing_slash(char *member)
+{
+	size_t len;
+	int retval;
+	
+	retval = 0;
+	len = strlen(member);
+	if ((member[len - 1] != '/') && len < 127) {
+		member[len] = '/';
+		member[len + 1] = '\0';
+	} else if (member[len - 1] == '/') {
+		retval = 0;
+	} else {
+		retval = -1;
+	}
+	
+	return retval;
+}
+
+int
+add_trailing_dot(char *member)
+{
+// Maximum string size is 255 bytes 
+	size_t len;
+	int retval;
+	
+	retval = 0;
+	if ((len = strlen(member)) > 254)
+		return -1;
+	if (member[len - 1] != '.') {
+		member[len] = '.';
+		member[len +1] = '\0';
+	} else if (member[len - 1] == '.') {
+		retval = 0;
+	} else {
+		retval = -1;
+	}
+	return retval;
+}
+*/

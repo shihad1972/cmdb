@@ -11,7 +11,7 @@ CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
-sbin_PROGRAMS = cmdbd
+sbin_PROGRAMS = cmdbd ailsa
 lib_LIBRARIES = libailsacmdb.a
 
 all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)

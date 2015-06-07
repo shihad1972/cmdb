@@ -22,6 +22,10 @@
 #ifndef __AILSACMDB_H__
 # define __AILSACMDB_H__
 
+/** Useful macro to safely avoid double-free memory corruption
+ ** Shamelessly stolen from the nagios source. Thanks :) */
+#define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
+
 /*
 ** base64 returnable errors
 **
@@ -67,6 +71,7 @@ struct cmdbd_config {
 	unsigned long int retry;
 	unsigned long int expire;
 	unsigned long int ttl;
+	unsigned long int cliflag;
 };
 
 struct cmdbc_config {
@@ -80,7 +85,13 @@ show_ailsacmdb_version();
 void
 ailsa_chomp(char *line);
 
-int
+void *
+ailsa_malloc(size_t len, const char *msg);
+
+void
 cmdbd_parse_config(const char *file, void *data, size_t len);
+
+void
+cmdbd_clean_config(struct cmdbd_config *cmdbd);
 
 #endif // __AILSACMDB_H__

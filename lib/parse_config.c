@@ -49,13 +49,13 @@ nv_split(char *line);
 static void
 log_config_error(int retval, int lineno);
 
-static void
+static int
 cmdbd_fill_config(struct cmdbd_config *data);
 
 static void
 cmdbc_fill_config(struct cmdbc_config *data);
 
-int
+void
 cmdbd_parse_config(const char *file, void *data, size_t len)
 {
 	char *line = NULL;
@@ -67,7 +67,7 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 		exit(1);
 	}
 	if (!(f = fopen(file, "r"))) {
-		syslog(LOG_ALERT, "Cannot open config file %s\n", file);
+		syslog(LOG_ALERT, "Cannot open config file %s", file);
 		exit(1);
 	}
 	while (get_line(f, line, RBUFF_S)) {
@@ -77,14 +77,72 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 			continue;
 		}
 		if (len == sizeof(struct cmdbd_config))
-			cmdbd_fill_config((struct cmdbd_config *)data);
+			retval = cmdbd_fill_config((struct cmdbd_config *)data);
 		else if (len == sizeof(struct cmdbc_config))
 			cmdbc_fill_config((struct cmdbc_config *)data);
+		if (retval != 0)
+			syslog(LOG_ALERT, "Config directory %s too long", nv.value);
 		memset(line, 0, RBUFF_S);
 	}
 	fclose(f);
 	free(line);
-	return 0;
+}
+
+void
+cmdbd_clean_config(struct cmdbd_config *c)
+{
+	if (c->dbtype)
+		my_free(c->dbtype);
+	if (c->db)
+		my_free(c->db);
+	if (c->file)
+		my_free(c->file);
+	if (c->user)
+		my_free(c->user);
+	if (c->pass)
+		my_free(c->pass);
+	if (c->host)
+		my_free(c->host);
+	if (c->dir)
+		my_free(c->dir);
+	if (c->bind)
+		my_free(c->bind);
+	if (c->dnsa)
+		my_free(c->dnsa);
+	if (c->rev)
+		my_free(c->rev);
+	if (c->rndc)
+		my_free(c->rndc);
+	if (c->chkz)
+		my_free(c->chkz);
+	if (c->chkc)
+		my_free(c->chkc);
+	if (c->socket)
+		my_free(c->socket);
+	if (c->hostmaster)
+		my_free(c->hostmaster);
+	if (c->prins)
+		my_free(c->prins);
+	if (c->secns)
+		my_free(c->secns);
+	if (c->pridns)
+		my_free(c->pridns);
+	if (c->secdns)
+		my_free(c->secdns);
+	if (c->toplevelos)
+		my_free(c->toplevelos);
+	if (c->pxe)
+		my_free(c->pxe);
+	if (c->tmpdir)
+		my_free(c->tmpdir);
+	if (c->preseed)
+		my_free(c->preseed);
+	if (c->kickstart)
+		my_free(c->kickstart);
+	if (c->tftpdir)
+		my_free(c->tftpdir);
+	if (c->dhcpconf)
+		my_free(c->dhcpconf);
 }
 
 static char *
@@ -137,9 +195,10 @@ log_config_error(int retval, int lineno)
 	}
 }
 
-static void
+static int
 cmdbd_fill_config(struct cmdbd_config *conf)
 {
+	int retval = 0;
 	unsigned long int i;
 	switch(nv.total) {
 	case 134:
@@ -147,9 +206,15 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		break;
 	case 223:
 		conf->dir = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->dir);
 		break;
 	case 237:
-		conf->rev = strndup(nv.value, CONF_S - 1);
+		if (strncmp(nv.name, "REV", COMM_S) == 0) {
+			conf->rev = strndup(nv.value, CONF_S - 1);
+		} else if (strncmp(nv.name, "PXE", COMM_S) == 0) {
+			conf->pxe = strndup(nv.value, RBUFF_S - 1);
+			retval = add_trailing_slash(conf->pxe);
+		}
 		break;
 	case 244:
 		conf->ttl = strtoul(nv.value, NULL, 10);
@@ -159,6 +224,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		break;
 	case 285:
 		conf->bind = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->bind);
 		break;
 	case 288:
 		conf->file = strndup(nv.value, CONF_S - 1);
@@ -176,7 +242,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->pass = strndup(nv.value, CONF_S - 1);
 		break;
 	case 318:
-		conf->pass = strndup(nv.value, CONF_S - 1);
+		conf->host = strndup(nv.value, CONF_S - 1);
 		break;
 	case 319:
 		conf->user = strndup(nv.value, CONF_S - 1);
@@ -187,9 +253,6 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 			conf->port = 3306;
 		else
 			conf->port = (unsigned int)i;
-		break;
-	case 327:
-		conf->pxe = strndup(nv.value, RBUFF_S - 1);
 		break;
 	case 380:
 		conf->secns = strndup(nv.value, RBUFF_S - 1);
@@ -210,40 +273,50 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->expire = strtoul(nv.value, NULL, 10);
 		break;
 	case 464:
-		if (strncmp(nv.value, "PRIDNS", COMM_S) == 0)
+		if (strncmp(nv.name, "PRIDNS", COMM_S) == 0) {
 			conf->pridns = strndup(nv.value, RBUFF_S - 1);
-		else if (strncmp(nv.value, "TMPDIR", COMM_S) == 0)
+		} else if (strncmp(nv.name, "TMPDIR", COMM_S) == 0) {
 			conf->tmpdir = strndup(nv.value, CONF_S - 1);
+			retval = add_trailing_slash(conf->tmpdir);
+		}
 		break;
 	case 520:
 		conf->preseed = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->preseed);
 		break;
 	case 527:
 		conf->refresh = strtoul(nv.value, NULL, 10);
 		break;
 	case 541:
 		conf->tftpdir = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->tftpdir);
 		break;
 	case 581:
 		conf->dhcpconf = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->dhcpconf);
 		break;
 	case 688:
 		conf->kickstart = strndup(nv.value, CONF_S - 1);
+		retval = add_trailing_slash(conf->kickstart);
 		break;
 	case 778:
 		conf->hostmaster = strndup(nv.value, RBUFF_S - 1);
 		break;
 	case 781:
 		conf->toplevelos = strndup(nv.value, RBUFF_S - 1);
+		retval = add_trailing_slash(conf->toplevelos);
 		break;
 	default:
-		syslog(LOG_WARNING, "Unkown config type %s", nv.name);
+		syslog(LOG_WARNING, "Unknown config type %s", nv.name);	
 		break;
 	}
+	return retval;
 }
 
 static void
 cmdbc_fill_config(struct cmdbc_config *conf)
 {
+	if (!conf)
+		return;
 }
 
