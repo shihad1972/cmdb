@@ -199,9 +199,9 @@ typedef struct dnsa_s {
 	struct rev_zone_info_s *rev_zones;
 	struct record_row_s *records;
 	struct rev_record_row_s *rev_records;
+	struct glue_zone_info_s *glue;
 	struct preferred_a_s *prefer;
 	struct zone_file_s *file;
-	struct glue_zone_info_s *glue;
 } dnsa_s;
 
 void

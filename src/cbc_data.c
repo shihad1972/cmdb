@@ -294,8 +294,8 @@ clean_cbc_struct (cbc_s *cbc)
 {
 	if (!(cbc))
 		return;
-	if (cbc->bootl)
-		clean_boot_line(cbc->bootl);
+/*	if (cbc->bootl)
+		clean_boot_line(cbc->bootl); */
 	if (cbc->build)
 		clean_build_struct(cbc->build);
 	if (cbc->bdom)
@@ -314,8 +314,8 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_package(cbc->package);
 	if (cbc->dpart)
 		clean_pre_part(cbc->dpart);
-	if (cbc->spart)
-		clean_pre_part(cbc->spart);
+/*	if (cbc->spart)
+		clean_pre_part(cbc->spart); */
 	if (cbc->sscheme)
 		clean_seed_scheme(cbc->sscheme);
 	if (cbc->server)

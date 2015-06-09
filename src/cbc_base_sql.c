@@ -1147,12 +1147,12 @@ void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
-	if (type == BOOT_LINE) {
+/*	if (type == BOOT_LINE) {
 		required = cbc_select_fields[BOOT_LINES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_boot_line_mysql(row, base);
-	} else if (type == BUILD) {
+	} else*/ if (type == BUILD) {
 		required = cbc_select_fields[BUILDS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
@@ -1318,7 +1318,7 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_setup_insert_mysql_buffer");
 }
-
+/*
 void
 cbc_store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
 {
@@ -1340,7 +1340,7 @@ cbc_store_boot_line_mysql(MYSQL_ROW row, cbc_s *base)
 	} else {
 		base->bootl = boot;
 	}
-}
+} */
 
 void
 cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
@@ -1600,7 +1600,7 @@ cbc_store_dpart_mysql(MYSQL_ROW row, cbc_s *base)
 		base->dpart = part;
 	}
 }
-
+/*
 void
 cbc_store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 {
@@ -1629,7 +1629,7 @@ cbc_store_spart_mysql(MYSQL_ROW row, cbc_s *base)
 	} else {
 		base->spart = part;
 	}
-}
+} */
 
 void
 cbc_store_seed_scheme_mysql(MYSQL_ROW row, cbc_s *base)
@@ -2495,12 +2495,12 @@ void
 cbc_store_result_sqlite(sqlite3_stmt *state, cbc_s *base, int type, unsigned int fields)
 {
 	unsigned int required;
-	if (type == BOOT_LINE) {
+/*	if (type == BOOT_LINE) {
 		required = cbc_select_fields[BOOT_LINES];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
 		cbc_store_boot_line_sqlite(state, base);
-	} else if (type == BUILD) {
+	} else */ if (type == BUILD) {
 		required = cbc_select_fields[BUILDS];
 		if (fields != required)
 			cbc_query_mismatch(fields, required, type);
@@ -2641,7 +2641,7 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
 }
-
+/*
 void
 cbc_store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
@@ -2663,7 +2663,7 @@ cbc_store_boot_line_sqlite(sqlite3_stmt *state, cbc_s *base)
 	} else {
 		base->bootl = boot;
 	}
-}
+} */
 
 void
 cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
@@ -2964,7 +2964,7 @@ cbc_store_dpart_sqlite(sqlite3_stmt *state, cbc_s *base)
 	}
 	free(stime);
 }
-
+/*
 void
 cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 {
@@ -3004,7 +3004,7 @@ cbc_store_spart_sqlite(sqlite3_stmt *state, cbc_s *base)
 		base->spart = part;
 	}
 	free(stime);
-}
+} */
 
 void
 cbc_store_seed_scheme_sqlite(sqlite3_stmt *state, cbc_s *base)

@@ -36,6 +36,7 @@ typedef struct cmdb_config_s { /* Hold CMDB configuration values */
 } cmdb_config_s;
 
 typedef struct cmdb_server_s {
+	struct cmdb_server_s *next;
 	char vendor[CONF_S];
 	char make[CONF_S];
 	char model[CONF_S];
@@ -48,10 +49,10 @@ typedef struct cmdb_server_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_server_s *next;
 } cmdb_server_s;
 
 typedef struct cmdb_customer_s {
+	struct cmdb_customer_s *next;
 	char name[HOST_S];
 	char address[NAME_S];
 	char city[HOST_S];
@@ -63,10 +64,10 @@ typedef struct cmdb_customer_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_customer_s *next;
 } cmdb_customer_s;
 
 typedef struct cmdb_contact_s {
+	struct cmdb_contact_s *next;
 	char name[HOST_S];
 	char phone[MAC_S];
 	char email[HOST_S];
@@ -76,10 +77,11 @@ typedef struct cmdb_contact_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_contact_s *next;
 } cmdb_contact_s;
 
 typedef struct cmdb_service_s {
+	struct cmdb_service_s *next;
+	struct cmdb_service_type_s *servicetype;
 	char detail[HOST_S];
 	char url[RBUFF_S];
 	unsigned long int service_id;
@@ -90,18 +92,18 @@ typedef struct cmdb_service_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_service_s *next;
-	struct cmdb_service_type_s *servicetype;
 } cmdb_service_s;
 
 typedef struct cmdb_service_type_s {
+	struct cmdb_service_type_s *next;
 	char service[RANGE_S];
 	char detail[MAC_S];
 	unsigned long int service_id;
-	struct cmdb_service_type_s *next;
 } cmdb_service_type_s;
 
 typedef struct cmdb_hardware_s {
+	struct cmdb_hardware_s *next;
+	struct cmdb_hard_type_s *hardtype;
 	char detail[HOST_S];
 	char device[MAC_S];
 	unsigned long int hard_id;
@@ -111,18 +113,17 @@ typedef struct cmdb_hardware_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_hardware_s *next;
-	struct cmdb_hard_type_s *hardtype;
 } cmdb_hardware_s;
 
 typedef struct cmdb_hard_type_s {
+	struct cmdb_hard_type_s *next;
 	char type[MAC_S];
 	char hclass[MAC_S];
 	unsigned long int ht_id;
-	struct cmdb_hard_type_s *next;
 } cmdb_hard_type_s;
 
 typedef struct cmdb_vm_host_s {
+	struct cmdb_vm_host_s *next;
 	char name[RBUFF_S];
 	char type[MAC_S];
 	unsigned long int id;
@@ -131,7 +132,6 @@ typedef struct cmdb_vm_host_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cmdb_vm_host_s *next;
 } cmdb_vm_host_s;
 
 typedef struct cmdb_s {

@@ -94,7 +94,7 @@ create_cmdb_user() {
     mkdir /var/lib/cmdb
   fi
 
-  for i in web sql cmdb-bin logs scripts inc
+  for i in web sql cmdb-bin logs scripts inc data data/raw
     do if [ ! -d /var/lib/cmdb/${i} ]; then
       mkdir /var/lib/cmdb/${i}
      fi
