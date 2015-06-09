@@ -136,13 +136,13 @@ typedef struct cmdb_vm_host_s {
 
 typedef struct cmdb_s {
 	struct cmdb_server_s *server;
-	struct cmdb_vm_host_s *vmhost;
-	struct cmdb_hardware_s *hardware;
-	struct cmdb_hard_type_s *hardtype;
 	struct cmdb_customer_s *customer;
 	struct cmdb_contact_s *contact;
 	struct cmdb_service_s *service;
 	struct cmdb_service_type_s *servicetype;
+	struct cmdb_hardware_s *hardware;
+	struct cmdb_hard_type_s *hardtype;
+	struct cmdb_vm_host_s *vmhost;
 } cmdb_s;
 
 void
