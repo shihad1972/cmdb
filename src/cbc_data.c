@@ -332,6 +332,10 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_cbc_syspack_conf(cbc->sysconf);
 	if (cbc->part_opt)
 		clean_cbc_part_opt(cbc->part_opt);
+	if (cbc->scripts)
+		clean_cbc_scripts(cbc->scripts);
+	if (cbc->script_arg)
+		clean_cbc_script_args(cbc->script_arg);
 	free(cbc);
 }
 

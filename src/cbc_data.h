@@ -310,15 +310,15 @@ typedef struct cbc_s {
 	struct cbc_package_s *package;
 	struct cbc_pre_part_s *dpart;
 	struct cbc_seed_scheme_s *sscheme;
-	struct cbc_server_s *server;
 	struct cbc_varient_s *varient;
-	struct cbc_vm_server_hosts_s *vmhost;
 	struct cbc_syspack_s *syspack;
 	struct cbc_syspack_arg_s *sysarg;
 	struct cbc_syspack_conf_s *sysconf;
 	struct cbc_script_s *scripts;
 	struct cbc_script_arg_s *script_arg;
 	struct cbc_part_opt_s *part_opt;
+	struct cbc_server_s *server;
+	struct cbc_vm_server_hosts_s *vmhost;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network
