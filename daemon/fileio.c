@@ -140,11 +140,13 @@ static const size_t dnsa_sizes[] = {
 };
 
 static int
+setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
+
+static int
 write_bin_file(void *d, const char *file, size_t len);
 
 static int
 read_bin_file(void *d, const char *file, size_t len);
-
 
 // Read functions
 int
@@ -309,39 +311,20 @@ int
 write_cmdb(cmdb_config_s *cmdb, char *dir)
 {
 	int query, retval = 0;
+	size_t len;
 
 	if (!cmdb || !dir)
 		return CBC_NO_DATA;
 
 	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in write_cmdb");
 	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
+	len = sizeof cmdb_files / sizeof c;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	query = SERVER | CUSTOMER | CONTACT | SERVICE | HARDWARE | VM_HOST;
+
 	if ((retval = cmdb_run_multiple_query(cmdb, c, query)) != 0)
 		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/servers", dir);
-	if ((retval = write_bin_file(c->server, file, sizeof(cmdb_server_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/customers", dir);
-	if ((retval = write_bin_file(c->customer, file, sizeof(cmdb_customer_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/contacts", dir);
-	if ((retval = write_bin_file(c->contact, file, sizeof(cmdb_contact_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/services", dir);
-	if ((retval = write_bin_file(c->service, file, sizeof(cmdb_service_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/service-types", dir);
-	if ((retval = write_bin_file(c->servicetype, file, sizeof(cmdb_service_type_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/hardware", dir);
-	if ((retval = write_bin_file(c->hardware, file, sizeof(cmdb_hardware_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/hardware-types", dir);
-	if ((retval = write_bin_file(c->hardtype, file, sizeof(cmdb_hard_type_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/vmhosts", dir);
-	if ((retval = write_bin_file(c->vmhost, file, sizeof(cmdb_vm_host_s))) != 0)
-		goto cleanup;
+	retval = setup_write(c, cmdb_files, cmdb_sizes, len, file);
 
 	cleanup:
 		my_free(file);
@@ -353,33 +336,20 @@ int
 write_dnsa(dnsa_config_s *dnsa, char *dir)
 {
 	int query, retval = 0;
+	size_t len;
 
 	if (!dnsa || !dir)
 		return CBC_NO_DATA;
 
 	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_dnsa");
 	char *file = ailsa_malloc(CONF_S, "file in write_dnsa");
+	len = sizeof dnsa_files / sizeof d;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
+
 	if ((retval = dnsa_run_multiple_query(dnsa, d, query)) != 0)
 		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/zones", dir);
-	if ((retval = write_bin_file(d->zones, file, sizeof(zone_info_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/rev-zones", dir);
-	if ((retval = write_bin_file(d->rev_zones, file, sizeof(rev_zone_info_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/records", dir);
-	if ((retval = write_bin_file(d->records, file, sizeof(record_row_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/rev-records", dir);
-	if ((retval = write_bin_file(d->rev_records, file, sizeof(rev_record_row_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/glue-zones", dir);
-	if ((retval = write_bin_file(d->glue, file, sizeof(glue_zone_info_s))) != 0)
-		goto cleanup;
-	snprintf(file, CONF_S, "%sdata/raw/preferred-a-records", dir);
-	if ((retval = write_bin_file(d->prefer, file, sizeof(preferred_a_s))) != 0)
-		goto cleanup;
+	retval = setup_write(d, dnsa_files, dnsa_sizes, len, file);
 
 	cleanup:
 		my_free(file);
@@ -389,42 +359,53 @@ write_dnsa(dnsa_config_s *dnsa, char *dir)
 int
 write_cbc(cbc_config_s *cbc, char *dir)
 {
-	char *line;
 	int query, retval = 0;
-	size_t i, plen, alen;
-	void *ptr;
+	size_t len;
 
 	if (!cbc || !dir)
 		return CBC_NO_DATA;
 
 	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in write_cbc");
 	char *file = ailsa_malloc(CONF_S, "file in write_cbc");
-	alen = sizeof cbc_files;
-	plen = alen / sizeof c;
+	len = sizeof cbc_files / sizeof c;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
-	alen = strnlen(file, CONF_S);
-	line = (strrchr(file, '/')) + 1;
-	alen = CONF_S - (alen + 1);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_OS | BUILD_TYPE | 
                 DISK_DEV | LOCALE | BPACKAGE | DPART | SSCHEME | VARIENT |
 		SYSPACK | SYSARG | SYSCONF | SCRIPT | SCRIPTA | PARTOPT; // 17 elements
 
 	if ((retval = cbc_run_multiple_query(cbc, c, query)) != 0)
 		goto cleanup;
-	for (i = 0; i < plen; i++) {
-		ptr = *((char **)c + i);
-		if (!cbc_files[i])
-			break;
-		snprintf(line, alen, "%s", cbc_files[i]);
-		if ((retval = write_bin_file(ptr, file, cbc_sizes[i])) != 0)
-			goto cleanup;
-	}
+	retval = setup_write(c, cbc_files, cbc_sizes, len, file);
+
 	cleanup:
 		my_free(file);
 		clean_cbc_struct(c);
 		return retval;
 }
 
+static int
+setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
+{
+	char *file;
+	int retval = 0;
+	size_t i;
+	void *ptr;
+
+	file = ailsa_malloc(CONF_S, "file in setup_write");
+	for (i = 0; i < num; i++) {
+		ptr = *((char **)s + i);
+		if (!files[i])
+			break;
+		snprintf(file, CONF_S, "%s%s", dir, files[i]);
+		if ((retval = write_bin_file(ptr, file, sizes[i])) != 0) {
+			retval = 1;
+			break;
+		}
+	}
+	my_free(file);
+	return retval;
+}
+ 
 static int
 write_bin_file(void *data, const char *file, size_t len)
 {
@@ -448,7 +429,7 @@ write_bin_file(void *data, const char *file, size_t len)
 	}
 
 	cleanup:
-		if (fd != 0)
+		if (fd > 0)
 			if (close(fd) < 0)
 				perror("close() failure");
 		um = umask(um);
