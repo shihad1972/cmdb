@@ -17,30 +17,11 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  conversion.h: Main cmdb header file
+ *  fileio.h: Main cmdb header file
  */
 
-#ifndef __CONVERSION_H__
-# define __CONVERSION_H__
-
-struct all_config {
-	dnsa_config_s		*dnsa;
-	cmdb_config_s		*cmdb;
-	cbc_config_s		*cbc;
-	struct cmdbd_config	*cmdbd;
-};
-
-int
-convert_dnsa_config(dnsa_config_s *dcs, struct cmdbd_config *cdc);
-
-int
-convert_cmdb_config(cmdb_config_s *ccs, struct cmdbd_config *cdc);
-
-int
-convert_cbc_config(cbc_config_s *ccs, struct cmdbd_config *cdc);
-
-int
-convert_all_config(struct all_config *all);
+#ifndef __FILEIO_H__
+# define __FILEIO_H__
 
 int
 read_cmdb(cmdb_config_s *cmdb, char *dir);
@@ -60,4 +41,4 @@ write_dnsa(dnsa_config_s *dnsa, char *dir);
 int
 write_cbc(cbc_config_s *cbc, char *dir);
 
-#endif // __CONVERSION_H__
+#endif // __FILEIO_H__

@@ -37,10 +37,11 @@
 #include "cbc_base_sql.h"
 #include "cmdb_base_sql.h"
 #include "dnsa_base_sql.h"
-#include "cmdb_cmdb.h"
+#include "cmdb_data.h"
 #include "cmdb_dnsa.h"
 #include "cmdb_cbc.h"
 #include "conversion.h"
+#include "fileio.h"
 
 struct comm_line {
 	int action;
@@ -102,9 +103,9 @@ main(int argc, char *argv[])
 	switch (cl.type) {
 	case AIL_SERVER:
 		if (cl.action == AIL_INPUT)
-			retval = read_cmdb(cmdb);
+			retval = read_cmdb(cmdb, data.toplevelos);
 		else if (cl.action == AIL_OUTPUT)
-			retval = write_cmdb(cmdb);
+			retval = write_cmdb(cmdb, data.toplevelos);
 		else
 			retval = 1;
 		break;
@@ -113,6 +114,14 @@ main(int argc, char *argv[])
 			retval = read_dnsa(dnsa, data.toplevelos);
 		else if (cl.action == AIL_OUTPUT)
 			retval = write_dnsa(dnsa, data.toplevelos);
+		else
+			retval = 1;
+		break;
+	case AIL_BUILD:
+		if (cl.action == AIL_INPUT)
+			retval = read_cbc(cbc, data.toplevelos);
+		else if (cl.action == AIL_OUTPUT)
+			retval = write_cbc(cbc, data.toplevelos);
 		else
 			retval = 1;
 		break;
@@ -133,16 +142,16 @@ parse_command_line(struct comm_line *cm, int argc, char *argv[])
 	static const struct option longopts[] = {
 		{ "all",	no_argument,	0,	'a' },
 		{ "builds",	no_argument,	0,	'b' },
+		{ "cmdb",	no_argument,	0,	'c' },
+		{ "dnsa",	no_argument,	0,	'z' },
 		{ "help",	no_argument,	0,	'h' },
 		{ "input",	no_argument,	0,	'i' },
 		{ "output",	no_argument,	0,	'o' },
-		{ "servers",	no_argument,	0,	's' },
 		{ "version",	no_argument,	0,	'v' },
-		{ "zones",	no_argument,	0,	'z' },
 		{ NULL,		0, 0, 0 }
 	};
 
-	while ((c = getopt_long(argc, argv, "abhiosvz", longopts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "abcdhiov", longopts, NULL)) != -1) {
 		switch(c) {
 		case 'a':
 			if (cm->type == 0)
@@ -153,6 +162,18 @@ parse_command_line(struct comm_line *cm, int argc, char *argv[])
 		case 'b':
 			if (cm->type == 0)
 				cm->type = AIL_BUILD;
+			else
+				err = 1;
+			break;
+		case 'c':
+			if (cm->type == 0)
+				cm->type = AIL_SERVER;
+			else
+				err = 1;
+			break;
+		case 'd':
+			if (cm->type == 0)
+				cm->type = AIL_ZONE;
 			else
 				err = 1;
 			break;
@@ -174,21 +195,9 @@ parse_command_line(struct comm_line *cm, int argc, char *argv[])
 			else
 				err = 1;
 			break;
-		case 's':
-			if (cm->type == 0)
-				cm->type = AIL_SERVER;
-			else
-				err = 1;
-			break;
 		case 'v':
 			if (cm->option == 0)
 				cm->option = AIL_VERSION;
-			else
-				err = 1;
-			break;
-		case 'z':
-			if (cm->type == 0)
-				cm->type = AIL_ZONE;
 			else
 				err = 1;
 			break;
@@ -204,17 +213,17 @@ parse_command_line(struct comm_line *cm, int argc, char *argv[])
 		fprintf(stderr, "No action specified\n");
 		err = 1;
 	}
-	return err;
 	if (cm->option == AIL_HELP)
 		display_usage(argv[0]);
 	else if (cm->option == AIL_VERSION)
 		display_version(argv[0]);
+	return err;
 }
 
 static void
 display_usage(const char *prog)
 {
-	fprintf(stderr, "%s -a|-b|-s|-z -i|-o [-h|-v]\n", prog);
+	fprintf(stderr, "%s -a (--all)|-b (--builds)|-c (--cmdb)|-d (--dnsa) -i (--input) |-o (--output) [-h|-v]\n", prog);
 	exit(0);
 }
 
