@@ -44,26 +44,17 @@
 #include "cmdb_cbc.h"
 #include "fileio.h"
 
-/*
- * These are a list of file names; one for cbc, one for cmdb and one for dnsa
- * These will be used in the read / write functions
- * **NOTE**
- * These MUST follow the layout of the respcetive cmbd|dnsa|cbc_s structs so
- * we can use pointer arithmetic when passing these structs as a void data
- * type. The cmdb|cbc|dnsa_sizes are the sizes of the structs. The array
- * indexes MUST match up.
- */
+static int
+setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
-static const char *cmdb_files[] = {
-	"servers",
-	"customers",
-	"contacts",
-	"services",
-	"service-types",
-	"hardware",
-	"hardware-types",
-	"vmhosts"
-};
+static int
+write_bin_file(void *d, const char *file, size_t len);
+
+static int
+setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
+
+static int
+read_bin_file(void *d, const char *file, size_t len);
 
 static const char *cbc_files[] = {
 	"builds",
@@ -87,27 +78,6 @@ static const char *cbc_files[] = {
 	NULL
 };
 
-static const char *dnsa_files[] = {
-	"zones",
-	"rev-zones",
-	"records",
-	"rev-records",
-	"glue-zones",
-	"preferred-a-records",
-	NULL
-};
-
-static const size_t cmdb_sizes[] =  {
-	sizeof(cmdb_server_s), 
-	sizeof(cmdb_customer_s),
-	sizeof(cmdb_contact_s),
-	sizeof(cmdb_service_s),
-	sizeof(cmdb_service_type_s),
-	sizeof(cmdb_hardware_s),
-	sizeof(cmdb_hard_type_s),
-	sizeof(cmdb_vm_host_s)
-};
-
 static const size_t cbc_sizes[] = {
 	sizeof(cbc_build_s),
 	sizeof(cbc_build_domain_s),
@@ -129,26 +99,6 @@ static const size_t cbc_sizes[] = {
 	0, 0
 };
 
-static const size_t dnsa_sizes[] = {
-	sizeof(zone_info_s),
-	sizeof(rev_zone_info_s),
-	sizeof(record_row_s),
-	sizeof(rev_record_row_s),
-	sizeof(glue_zone_info_s),
-	sizeof(preferred_a_s),
-	0
-};
-
-static int
-setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
-
-static int
-write_bin_file(void *d, const char *file, size_t len);
-
-static int
-read_bin_file(void *d, const char *file, size_t len);
-
-// Read functions
 int
 read_cbc(cbc_config_s *cbc, char *dir)
 {
@@ -175,15 +125,114 @@ read_cbc(cbc_config_s *cbc, char *dir)
 }
 
 int
+write_cbc(cbc_config_s *cbc, char *dir)
+{
+	int query, retval = 0;
+	size_t len;
+
+	if (!cbc || !dir)
+		return CBC_NO_DATA;
+
+	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in write_cbc");
+	char *file = ailsa_malloc(CONF_S, "file in write_cbc");
+	len = sizeof cbc_files / sizeof c;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
+	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_OS | BUILD_TYPE | 
+                DISK_DEV | LOCALE | BPACKAGE | DPART | SSCHEME | VARIENT |
+		SYSPACK | SYSARG | SYSCONF | SCRIPT | SCRIPTA | PARTOPT; // 17 elements
+
+	if ((retval = cbc_run_multiple_query(cbc, c, query)) != 0)
+		goto cleanup;
+	retval = setup_write(c, cbc_files, cbc_sizes, len, file);
+
+	cleanup:
+		my_free(file);
+		clean_cbc_struct(c);
+		return retval;
+}
+
+static const char *cmdb_files[] = {
+	"servers",
+	"customers",
+	"contacts",
+	"services",
+	"service-types",
+	"hardware",
+	"hardware-types",
+	"vmhosts"
+};
+
+static const size_t cmdb_sizes[] =  {
+	sizeof(cmdb_server_s),
+	sizeof(cmdb_customer_s),
+	sizeof(cmdb_contact_s),
+	sizeof(cmdb_service_s),
+	sizeof(cmdb_service_type_s),
+	sizeof(cmdb_hardware_s),
+	sizeof(cmdb_hard_type_s),
+	sizeof(cmdb_vm_host_s)
+};
+
+int
 read_cmdb(cmdb_config_s *cmdb, char *dir)
 {
+	if (!cmdb || !dir)
+		return CBC_NO_DATA;
+
 	int retval = 0;
+	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in read_cmdb");
+	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
+	size_t len = sizeof cmdb_files / sizeof c;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
+	retval = setup_read(c, cmdb_files, cmdb_sizes, len, file);
+
+	return retval;
+}
+
+int
+write_cmdb(cmdb_config_s *cmdb, char *dir)
+{
+	int query, retval = 0;
+	size_t len;
 
 	if (!cmdb || !dir)
 		return CBC_NO_DATA;
 
-	return retval;
+	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in write_cmdb");
+	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
+	len = sizeof cmdb_files / sizeof c;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
+	query = SERVER | CUSTOMER | CONTACT | SERVICE | HARDWARE | VM_HOST;
+
+	if ((retval = cmdb_run_multiple_query(cmdb, c, query)) != 0)
+		goto cleanup;
+	retval = setup_write(c, cmdb_files, cmdb_sizes, len, file);
+
+	cleanup:
+		my_free(file);
+		cmdb_clean_list(c);
+		return retval;
 }
+
+static const char *dnsa_files[] = {
+	"zones",
+	"rev-zones",
+	"records",
+	"rev-records",
+	"glue-zones",
+	"preferred-a-records",
+	NULL
+};
+
+static const size_t dnsa_sizes[] = {
+	sizeof(zone_info_s),
+	sizeof(rev_zone_info_s),
+	sizeof(record_row_s),
+	sizeof(rev_record_row_s),
+	sizeof(glue_zone_info_s),
+	sizeof(preferred_a_s),
+	0
+};
 
 int
 read_dnsa(dnsa_config_s *dnsa, char *dir)
@@ -271,6 +320,31 @@ read_dnsa(dnsa_config_s *dnsa, char *dir)
 		return retval;
 }
 
+int
+write_dnsa(dnsa_config_s *dnsa, char *dir)
+{
+	int query, retval = 0;
+	size_t len;
+
+	if (!dnsa || !dir)
+		return CBC_NO_DATA;
+
+	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_dnsa");
+	char *file = ailsa_malloc(CONF_S, "file in write_dnsa");
+	len = sizeof dnsa_files / sizeof d;
+	snprintf(file, CONF_S, "%sdata/raw/", dir);
+	query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
+
+	if ((retval = dnsa_run_multiple_query(dnsa, d, query)) != 0)
+		goto cleanup;
+	retval = setup_write(d, dnsa_files, dnsa_sizes, len, file);
+
+	cleanup:
+		my_free(file);
+		dnsa_clean_list(d);
+		return retval;
+}
+
 static int
 read_bin_file(void *d, const char *file, size_t len)
 {
@@ -306,81 +380,28 @@ read_bin_file(void *d, const char *file, size_t len)
 	return retval;
 }
 
-// write functions
-int
-write_cmdb(cmdb_config_s *cmdb, char *dir)
+static int
+setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
-	int query, retval = 0;
-	size_t len;
+	char *file;
+	int retval = 0;
+	size_t i;
+	void *ptr;
 
-	if (!cmdb || !dir)
-		return CBC_NO_DATA;
-
-	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in write_cmdb");
-	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
-	len = sizeof cmdb_files / sizeof c;
-	snprintf(file, CONF_S, "%sdata/raw/", dir);
-	query = SERVER | CUSTOMER | CONTACT | SERVICE | HARDWARE | VM_HOST;
-
-	if ((retval = cmdb_run_multiple_query(cmdb, c, query)) != 0)
-		goto cleanup;
-	retval = setup_write(c, cmdb_files, cmdb_sizes, len, file);
-
-	cleanup:
-		my_free(file);
-		cmdb_clean_list(c);
-		return retval;
-}
-
-int
-write_dnsa(dnsa_config_s *dnsa, char *dir)
-{
-	int query, retval = 0;
-	size_t len;
-
-	if (!dnsa || !dir)
-		return CBC_NO_DATA;
-
-	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_dnsa");
-	char *file = ailsa_malloc(CONF_S, "file in write_dnsa");
-	len = sizeof dnsa_files / sizeof d;
-	snprintf(file, CONF_S, "%sdata/raw/", dir);
-	query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
-
-	if ((retval = dnsa_run_multiple_query(dnsa, d, query)) != 0)
-		goto cleanup;
-	retval = setup_write(d, dnsa_files, dnsa_sizes, len, file);
-
-	cleanup:
-		my_free(file);
-		dnsa_clean_list(d);
-		return retval;
-}
-int
-write_cbc(cbc_config_s *cbc, char *dir)
-{
-	int query, retval = 0;
-	size_t len;
-
-	if (!cbc || !dir)
-		return CBC_NO_DATA;
-
-	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in write_cbc");
-	char *file = ailsa_malloc(CONF_S, "file in write_cbc");
-	len = sizeof cbc_files / sizeof c;
-	snprintf(file, CONF_S, "%sdata/raw/", dir);
-	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_OS | BUILD_TYPE | 
-                DISK_DEV | LOCALE | BPACKAGE | DPART | SSCHEME | VARIENT |
-		SYSPACK | SYSARG | SYSCONF | SCRIPT | SCRIPTA | PARTOPT; // 17 elements
-
-	if ((retval = cbc_run_multiple_query(cbc, c, query)) != 0)
-		goto cleanup;
-	retval = setup_write(c, cbc_files, cbc_sizes, len, file);
-
-	cleanup:
-		my_free(file);
-		clean_cbc_struct(c);
-		return retval;
+	file = ailsa_malloc(CONF_S, "file in setup_read");
+	for(i = 0; i < num; i++) {
+		ptr = ailsa_malloc(sizes[i], "ptr in setup_read");
+		*((char **)s + i) = ptr;
+		if (!files[i])
+			break;
+		snprintf(file, CONF_S, "%s%s", dir, files[i]);
+		if ((retval = read_bin_file(ptr, file, sizes[i])) != 0) {
+			retval = 1;
+			break;
+		}
+	}
+	my_free(file);
+	return retval;
 }
 
 static int
