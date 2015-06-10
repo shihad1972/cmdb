@@ -24,7 +24,9 @@
 
 /** Useful macro to safely avoid double-free memory corruption
  ** Shamelessly stolen from the nagios source. Thanks :) */
-#define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
+# ifndef my_free
+#  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
+# endif // my_free
 
 /*
 ** base64 returnable errors
