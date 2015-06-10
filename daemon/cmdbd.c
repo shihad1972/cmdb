@@ -33,7 +33,7 @@
 #include "cbc_base_sql.h"
 #include "cmdb_base_sql.h"
 #include "dnsa_base_sql.h"
-#include "cmdb_cmdb.h"
+#include "cmdb_data.h"
 #include "cmdb_dnsa.h"
 #include "cmdb_cbc.h"
 #include "conversion.h"
