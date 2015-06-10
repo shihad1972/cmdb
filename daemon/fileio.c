@@ -102,26 +102,18 @@ static const size_t cbc_sizes[] = {
 int
 read_cbc(cbc_config_s *cbc, char *dir)
 {
-	int retval = 0;
-
 	if (!cbc || !dir)
 		return CBC_NO_DATA;
-	size_t len;
 
-	len = sizeof(cbc);
-	printf("%zu: sizeof(cbc)\n", len);
-	len = sizeof cbc;
-	printf("%zu: sizeof cbc \n", len);
-	len = sizeof(cbc_s);
-	printf("%zu: sizeof(cbc_s)\n", len);
-	len = sizeof(cbc_files);
-	printf("%zu: sizeof(cbc_files)\n", len);
-	len = sizeof cbc_files;
-	printf("%zu: sizeof cbc_files\n", len);
-	goto cleanup;
+	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in read_cbc");
+	char *f = ailsa_malloc(CONF_S, "f in read_cbc");
+	size_t len = sizeof cbc_files / sizeof c;
+	snprintf(f, CONF_S, "%sdata/raw/", dir);
+	int retval = setup_read(c, cbc_files, cbc_sizes, len, f);
 
-	cleanup:
-		return retval;
+	my_free(f);
+	clean_cbc_struct(c);
+	return retval;
 }
 
 int
@@ -186,6 +178,8 @@ read_cmdb(cmdb_config_s *cmdb, char *dir)
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	retval = setup_read(c, cmdb_files, cmdb_sizes, len, file);
 
+	my_free(file);
+	cmdb_clean_list(c);
 	return retval;
 }
 
@@ -239,7 +233,6 @@ read_dnsa(dnsa_config_s *dnsa, char *dir)
 {
 	char *f;
 	int retval = 0;
-	size_t len = sizeof(dnsa_s);
 	zone_info_s *z;
 	record_row_s *r;
 	rev_record_row_s *v;
@@ -250,37 +243,11 @@ read_dnsa(dnsa_config_s *dnsa, char *dir)
 	if (!dnsa)
 		return CBC_NO_DATA;
 
-	dnsa_s *d = ailsa_malloc(len, "d in read_dnsa");
+	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in read_dnsa");
 	f = ailsa_malloc(CONF_S, "f in read_dnsa");
-	snprintf(f, CONF_S, "%s/data/raw/records", dir);
-	len = sizeof(record_row_s);
-	d->records = ailsa_malloc(len, "d->records in read_dnsa");
-	if ((retval = read_bin_file(d->records, f, len)) != 0)
-		goto cleanup;
-	snprintf(f, CONF_S, "%s/data/raw/zones", dir);
-	len = sizeof(zone_info_s);
-	d->zones = ailsa_malloc(len, "r->zones in read_dnsa");
-	if ((retval = read_bin_file(d->zones, f, len)) != 0)
-		goto cleanup;
-	snprintf(f, CONF_S, "%s/data/raw/rev-records", dir);
-	len = sizeof(rev_record_row_s);
-	d->rev_records = ailsa_malloc(len, "r->rev_records in read_dnsa");
-	if ((retval = read_bin_file(d->rev_records, f, len)) != 0)
-		goto cleanup;
-	snprintf(f, CONF_S, "%s/data/raw/rev-zones", dir);
-	len = sizeof(rev_zone_info_s);
-	d->rev_zones = ailsa_malloc(len, "r->rev_zones in read_dnsa");
-	if ((retval = read_bin_file(d->rev_zones, f, len)) != 0)
-		goto cleanup;
-	snprintf(f, CONF_S, "%s/data/raw/glue-zones", dir);
-	len = sizeof(glue_zone_info_s);
-	d->glue = ailsa_malloc(len, "r->glue in read_dnsa");
-	if ((retval = read_bin_file(d->glue, f, len)) != 0)
-		goto cleanup;
-	snprintf(f, CONF_S, "%s/data/raw/preferred-a-records", dir);
-	len = sizeof(preferred_a_s);
-	d->prefer = ailsa_malloc(len, "r->prefer in read_dnsa");
-	if ((retval = read_bin_file(d->prefer, f, len)) != 0)
+	snprintf(f, CONF_S, "%s/data/raw/", dir);
+	size_t len = sizeof dnsa_files / sizeof d;
+	if ((retval = setup_read(d, dnsa_files, dnsa_sizes, len, f)) != 0)
 		goto cleanup;
 
 	z = d->zones;
