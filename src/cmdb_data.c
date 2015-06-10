@@ -46,7 +46,7 @@ void *
 cmdb_malloc(size_t len, const char *msg)
 {
 	void *data;
-	if (!(data = malloc(len))) {
+	if (!(data = calloc(len, sizeof(char)), sizeof(char))) {
 		perror(msg);
 		exit(MALLOC_FAIL);
 	}
