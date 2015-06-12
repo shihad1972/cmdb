@@ -306,6 +306,17 @@ write_dnsa(dnsa_config_s *dnsa, char *dir)
 		return retval;
 }
 
+/*
+ * When we pass the pointer into here, it is a struct contaning only pointers.
+ * In effect, we can think of this as an array of pointers. The num value
+ * tells us how many elements, whereas the sizes array tell us the size of
+ * the pointed to structs. The files array is the file names we use to
+ * read / write to. We then use this information to malloc() an area of RAM
+ * and read 1 record into it at a time. Because the next element in the
+ * struct is the top / first element, this is the value in the region of
+ * RAM that *ptr is pointing to. We can use this to setup the linked list.
+ */
+
 static int
 setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
