@@ -31,6 +31,25 @@
 # include "cmdb.h"
 # include "netinet/in.h"
 
+typedef struct cbc_config_s {		/* Hold CMDB configuration values */
+	char dbtype[RANGE_S];
+	char file[CONF_S];
+	char db[CONF_S];
+	char user[CONF_S];
+	char pass[CONF_S];
+	char host[CONF_S];
+	char socket[CONF_S];
+	char tmpdir[CONF_S];
+	char tftpdir[CONF_S];
+	char pxe[CONF_S];
+	char toplevelos[CONF_S];
+	char dhcpconf[CONF_S];
+	char kickstart[CONF_S];
+	char preseed[CONF_S];
+	unsigned int port;
+	unsigned long int cliflag;
+} cbc_config_s;
+
 typedef struct cbc_boot_line_s {
 	struct cbc_boot_line_s *next;
 	char os[MAC_S];
@@ -564,3 +583,4 @@ display_varient(cbc_s *base);
 display_vm_hosts(cbc_s *base); */
 
 #endif /* __CBC_DATA_H__ */
+
