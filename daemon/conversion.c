@@ -36,11 +36,6 @@
 #include "cmdb_data.h"
 #include "dnsa_data.h"
 #include "cbc_data.h"
-#include "cmdb_dnsa.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
-#include "cmdb_base_sql.h"
-#include "dnsa_base_sql.h"
 #include "cmdb_cbc.h"
 #include "conversion.h"
 
