@@ -370,7 +370,7 @@ read_bin_file(void *d, const char *file, size_t len)
 	my_free(p);
 
 	cleanup:
-		if (fd != 0)
+		if (fd > 0)
 			if (close(fd) < 0)
 				perror("close() failure");
 	return retval;
