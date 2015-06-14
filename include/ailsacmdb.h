@@ -91,6 +91,9 @@ void *
 ailsa_malloc(size_t len, const char *msg);
 
 void
+ailsa_start_syslog(const char *prog);
+
+void
 cmdbd_parse_config(const char *file, void *data, size_t len);
 
 void
