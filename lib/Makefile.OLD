@@ -3,7 +3,8 @@ CPPFLAGS += -I../src/ -I../include/
 lib_LIBRARIES = libailsacmdb.a
 
 #libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)
-libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) libailsacmdb.a(logging.o)
+libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
+		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -16,6 +17,10 @@ libailsacmdb.a(parse_config.o):	parse_config.o
 
 libailsacmdb.a(logging.o):	logging.o
 	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(networking.o):	networking.o
+	$(AR) $(ARFLAGS) $@ $<
+
 .PHONY:	clean
 
 clean:
