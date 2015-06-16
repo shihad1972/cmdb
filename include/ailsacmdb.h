@@ -41,6 +41,10 @@
 #define B64_LINE_SIZE_TO_MIN    5
 #define B64_SYNTAX_TOOMANYARGS  6
 
+// Temporary
+#define BASEDIR "/var/lib/cmdb/data/"
+#define AILSAVERSION "0.1"
+
 struct cmdbd_config {
 	char *dbtype;
 	char *db;
@@ -99,4 +103,18 @@ cmdbd_parse_config(const char *file, void *data, size_t len);
 void
 cmdbd_clean_config(struct cmdbd_config *cmdbd);
 
+// Networking Functions
+
+int
+ailsa_tcp_socket_bind(const char *node, const char *service);
+/* 
+int
+ailsa_tcp_socket(const char *node, const char *service);
+
+int
+ailsa_accept_tcp_connection(int sock); */
+
+int
+ailsa_accept_client(int sock);
+ 
 #endif // __AILSACMDB_H__
