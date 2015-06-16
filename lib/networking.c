@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <signal.h>
@@ -48,6 +49,15 @@ enum {
 	BUFF_S = 1024
 };
 
+enum {			// Client commands
+	CHECKIN = 1,
+	HOST = 2,
+	DATA = 3,
+	UPDATE = 4,
+	CLOSE = 5
+};
+	
+
 static int
 ailsa_tcp_socket(const char *node, const char *service);
 
@@ -66,11 +76,20 @@ ailsa_handle_send_error(int error);
 static int
 ailsa_handle_recv_error(int error);
 
+static int
+get_command(char *buffer);
+
 static char *
 get_uuid(char *buffer);
 
 static char *
 get_host(char *buffer);
+
+static int
+ailsa_send_response(int client, char *buf);
+
+static int
+ailsa_do_close(int client, char *buf);
 
 static const int MAXPENDING = 5; // Max outstanding connect requests
 
@@ -243,9 +262,9 @@ static void
 ailsa_handle_client(int client)
 {
 	char sbuf[BUFF_S];
-	char *host;
-	char *uuid;
-	int retval;
+	char *host = NULL;
+	char *uuid = NULL;
+	int retval, command;
 	size_t len;
 	ssize_t slen;
 
@@ -255,30 +274,65 @@ ailsa_handle_client(int client)
 		if ((retval = ailsa_handle_send_error(errno)) != 0)
 			goto cleanup;
 	}
-	memset(&sbuf, 0, BUFF_S);
-	if ((slen = recv(client, sbuf, HOST_S, 0)) < 0) {
-		if ((retval = ailsa_handle_recv_error(errno)) != 0)
+	while (1) {	// loop through getting client commands
+		memset(&sbuf, 0, TBUFF_S + 1);
+		if ((slen = recv(client, sbuf, TBUFF_S, 0)) < 0) {
+			if ((retval = ailsa_handle_recv_error(errno)) != 0)
+				goto cleanup;
+		} else {
+/* 
+ * Here we should retrieve the command the client has sent us, and deal
+ * with it. Need to define the MAX length of a command (probably 15 chars
+ * will be enough) with the entire command string a max of 64 chars.
+ * As we are using \r\n\r\n this in effect is 60 characters. If we want to
+ * use FQDN names this will not be enough!!
+ * We should up this to 512 characters (TBUFF_S). A good size.
+ */
+			if ((command = get_command(sbuf)) == 0)
+				goto cleanup;
+		}
+		switch (command) {
+		case CHECKIN:
+			if (!(uuid = get_uuid(sbuf)))
+				goto cleanup;
+			if ((retval = ailsa_send_response(client, sbuf)) < 0)
+				goto cleanup;
+			break;
+		case HOST:
+			if (!(host = get_host(sbuf)))
+				goto cleanup;
+			if ((retval = ailsa_send_response(client, sbuf)) < 0)
+				goto cleanup;
+			break;
+		case CLOSE:
+			retval = ailsa_do_close(client, sbuf);
 			goto cleanup;
-	} else {
-		if (!(uuid = get_uuid(sbuf)))
+			break;
+		default:
 			goto cleanup;
-	}
-	memset(&sbuf, 0, RBUFF_S);
-	snprintf(sbuf, COMM_S, "OK");
-	if ((slen = send(client, sbuf, 2, 0)) < 0) {
-		if ((retval = ailsa_handle_send_error(errno)) != 0)
-			goto cleanup;
-	}
-	if ((slen = recv(client, sbuf, BUFF_S, 0)) < 0) {
-		if ((retval = ailsa_handle_send_error(errno)) != 0)
-			goto cleanup;
-	} else {
-		if (!(host = get_host(sbuf)))
-			goto cleanup;
+			break;
+		}
 	}
 	cleanup:
 		close(client);
 		return;
+}
+
+static int
+get_command(char *buffer)
+{
+	if (strncasecmp("CHECKIN: ", buffer, 9) == 0)
+		return CHECKIN;
+	else if (strncasecmp("HOST: ", buffer, 6) == 0)
+		return HOST;
+	else if (strncasecmp("DATA: ", buffer, 6) == 0)
+		return DATA;
+	else if (strncasecmp("UPDATE: ", buffer, 8) == 0)
+		return UPDATE;
+	else if (strncasecmp("CLOSE: ", buffer, 7) == 0)
+		return CLOSE;
+	else
+		return 0;
 }
 
 static char *
@@ -326,9 +380,48 @@ get_host(char *buffer)
 }
 
 static int
-ailsa_handle_send_error(int error)
+ailsa_send_response(int c, char *b)
 {
 	int retval = 0;
+	ssize_t slen;
+	memset(b, 0, TBUFF_S);
+	snprintf(b, COMM_S, "OK\r\n\r\n");
+	size_t len = strlen(b);
+	if ((slen = send(c, b, len, 0)) < 0)
+                retval = ailsa_handle_send_error(errno);
+	return retval;
+}
+
+static int
+ailsa_do_close(int client, char *buf)
+{
+	int retval = 0;
+	ssize_t slen;
+	memset(buf, 0, TBUFF_S);
+	if ((shutdown(client, SHUT_RD)) < 0)
+		syslog(LOG_INFO, "shutdown on client socket failed: %s", strerror(errno));
+	snprintf(buf, RANGE_S, "SEEYA\r\n\r\n");
+	size_t len = strlen(buf);
+	if ((slen = send(client, buf, len, 0)) < 0)
+                retval = ailsa_handle_send_error(errno);
+	return retval;
+}
+
+static int
+ailsa_handle_send_error(int error)
+{
+	int retval = -1;
+
+	switch (error) {
+	case ECONNRESET: case EFAULT: case EINVAL: case EBADF: case ENOTSOCK:
+	case ENOTCONN: case EOPNOTSUPP: case EDESTADDRREQ: case EMSGSIZE:
+	case ENOBUFS: case ENOMEM: case EPIPE:
+		syslog(LOG_ALERT, "Sending to client failed: %s", strerror(error));
+		break;
+	default:
+		retval = 0;
+		break;
+	}
 
 	return retval;
 }
@@ -336,7 +429,18 @@ ailsa_handle_send_error(int error)
 static int
 ailsa_handle_recv_error(int error)
 {
-	int retval = 0;
+	int retval = -1;
+
+	switch (error) {
+	case ECONNRESET: case EFAULT: case EINVAL: case EBADF: case ENOTSOCK:
+	case ENOTCONN: case EOPNOTSUPP: case EDESTADDRREQ: case EMSGSIZE:
+	case ENOBUFS: case ENOMEM: case EPIPE:
+		syslog(LOG_ALERT, "Sending to client failed: %s", strerror(error));
+		break;
+	default:
+		retval = 0;
+		break;
+	}
 
 	return retval;
 }
