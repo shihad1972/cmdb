@@ -6,7 +6,7 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_GNU_SOURCE
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 CPPFLAGS =
 CFLAGS += `libgcrypt-config --cflags`
@@ -15,14 +15,14 @@ CPPFLAGS += -I../src/ -I../include/ -I/usr/include/mysql
 bin_PROGRAMS = ailsa
 sbin_PROGRAMS = cmdbd
 
-CDOBJECTS = cmdbd.o conversion.o
-AOBJECTS = ailsa.o conversion.o
+CDOBJECTS = cmdbd.o
+AOBJECTS = ailsa.o conversion.o fileio.o
 DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../src/cmdb_base_sql.o ../src/dnsa_data.o ../src/cmdb_data.o ../src/cbc_data.o ../src/errors.o
 
 all:	$(sbin_PROGRAMS)
 
-cmdbd:	$(CDOBJECTS) $(DBOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+cmdbd:	$(CDOBJECTS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
 ailsa:	$(AOBJECTS) $(DBOBJECTS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(AOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
