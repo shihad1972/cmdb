@@ -43,7 +43,17 @@ ailsa_chomp(char *line)
 
 	p = strchr(line, '\n');
 	if (p)
-		*p = '\0';
+		*p = NULL;
+}
+
+void
+ailsa_munch(char *line)
+{
+	char *p;
+
+	p = strstr(line, "\r\n");
+	if (p)
+		*p = NULL;
 }
 
 void *

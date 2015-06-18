@@ -43,16 +43,16 @@ int
 main(int argc, char *argv[])
 {
 	int retval = 0;
-	int s, err;
+	int s, err, wk;
 	struct cmdbc_config *cm = ailsa_malloc(sizeof(struct cmdbc_config), "cm in main");
 
 	ailsa_start_syslog(basename(argv[0]));
-	if (daemon(0, 0) < 0) {
+/*	if (daemon(0, 0) < 0) {
 		syslog(LOG_ALERT, "Failed to daemonise: %s", strerror(errno));
 		exit(1);
 	} else {
 		syslog(LOG_INFO, "Starting cmdb...");
-	}
+	} */
 	if (argc > 1)
 		parse_command_line(cm, argc, argv);
 	if (!(cm->service))
@@ -61,6 +61,8 @@ main(int argc, char *argv[])
 		s = ailsa_tcp_socket_bind(cm->host, cm->service);
 	if (s < 0)
 		exit(1);
+	else
+		wk = s + 1;
 	while(1) {	// run forever
 		fd_set sset;
 		struct timeval tmo;
@@ -68,7 +70,7 @@ main(int argc, char *argv[])
 		tmo.tv_usec = 0;
 		FD_ZERO(&sset);
 		FD_SET(s, &sset);
-		if ((retval = select(s + 1, &sset, NULL, NULL, &tmo) < 0)) {
+		if ((retval = select(wk, &sset, NULL, NULL, &tmo) < 0)) {
 			err = errno;
 			if (err != EINTR) {
 				syslog(LOG_ALERT, "Select() error: %s", strerror(err));
@@ -76,10 +78,14 @@ main(int argc, char *argv[])
 			}
 			// Should handle the signal interrupt here.
 			continue;
-		} else if (retval > 0) {
+/*		} else if (retval > 0) {
 			if (ailsa_accept_client(s) == 0)
 				retval = 0;
-			// Maybe do something else here if the client handle fails
+			// Maybe do something else here if the client handle fails */
+		}
+		if (FD_ISSET(s, &sset)) {
+			if (ailsa_accept_client(s) == 0)
+				retval = 0;
 		}
 		// Can do other tasks here.
 	}

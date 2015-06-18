@@ -91,6 +91,9 @@ show_ailsacmdb_version();
 void
 ailsa_chomp(char *line);
 
+void
+ailsa_munch(char *line);
+
 void *
 ailsa_malloc(size_t len, const char *msg);
 

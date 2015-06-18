@@ -101,7 +101,6 @@ ailsa_tcp_socket_bind(const char *node, const char *service)
 	acrit.ai_family = AF_UNSPEC;
 	acrit.ai_flags = AI_PASSIVE;
 	acrit.ai_socktype = SOCK_STREAM;
-	acrit.ai_protocol = IPPROTO_TCP;
 
 	struct addrinfo *saddr;
 	int retval = getaddrinfo(node, service, &acrit, &saddr);
@@ -141,7 +140,7 @@ ailsa_accept_client(int sock)
 	static unsigned int cc = 0;	// child count
 	if (c < 0)
 		return c;
-	pid_t proc_id = fork();
+/*	pid_t proc_id = fork();
 	if (proc_id < 0) {
 		syslog(LOG_ALERT, "forking failed: %s", strerror(errno));
 		return -1;
@@ -163,7 +162,8 @@ ailsa_accept_client(int sock)
 		} else {
 			cc--;
 		}
-	}
+	} */
+	ailsa_handle_client(c);
 	return 0;
 }
 
@@ -350,6 +350,7 @@ get_uuid(char *buffer)
 	if (!(ptr = strchr(buffer, ' ')))
 		return uuid;
 	ptr++;
+	ailsa_munch(ptr);
 	if ((len = strlen(ptr)) != 36)
 		return uuid;
 	// Should do a regex here - can base on checks.c|h
