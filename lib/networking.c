@@ -268,7 +268,7 @@ ailsa_handle_client(int client)
 	size_t len;
 	ssize_t slen;
 
-	snprintf(sbuf, BUFF_S, "AILCMDB: %s\r\n\r\n", AILSAVERSION);
+	snprintf(sbuf, BUFF_S, "AILCMDB: %s\r\n", AILSAVERSION);
 	len = strlen(sbuf);
 	if ((slen = send(client, sbuf, len, 0)) < 0) {
 		if ((retval = ailsa_handle_send_error(errno)) != 0)
@@ -385,7 +385,7 @@ ailsa_send_response(int c, char *b)
 	int retval = 0;
 	ssize_t slen;
 	memset(b, 0, TBUFF_S);
-	snprintf(b, COMM_S, "OK\r\n\r\n");
+	snprintf(b, COMM_S, "OK\r\n");
 	size_t len = strlen(b);
 	if ((slen = send(c, b, len, 0)) < 0)
                 retval = ailsa_handle_send_error(errno);
@@ -400,7 +400,7 @@ ailsa_do_close(int client, char *buf)
 	memset(buf, 0, TBUFF_S);
 	if ((shutdown(client, SHUT_RD)) < 0)
 		syslog(LOG_INFO, "shutdown on client socket failed: %s", strerror(errno));
-	snprintf(buf, RANGE_S, "SEEYA\r\n\r\n");
+	snprintf(buf, RANGE_S, "SEEYA\r\n");
 	size_t len = strlen(buf);
 	if ((slen = send(client, buf, len, 0)) < 0)
                 retval = ailsa_handle_send_error(errno);
