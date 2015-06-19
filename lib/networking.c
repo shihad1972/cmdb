@@ -276,6 +276,7 @@ ailsa_handle_client(int client)
 	}
 	while (1) {	// loop through getting client commands
 		memset(&sbuf, 0, TBUFF_S + 1);
+		// Could use select() here - write out data to disk etc if client is not communicating
 		if ((slen = recv(client, sbuf, TBUFF_S, 0)) < 0) {
 			if ((retval = ailsa_handle_recv_error(errno)) != 0)
 				goto cleanup;
@@ -284,7 +285,7 @@ ailsa_handle_client(int client)
  * Here we should retrieve the command the client has sent us, and deal
  * with it. Need to define the MAX length of a command (probably 15 chars
  * will be enough) with the entire command string a max of 64 chars.
- * As we are using \r\n\r\n this in effect is 60 characters. If we want to
+ * As we are using \r\n this in effect is 62 characters. If we want to
  * use FQDN names this will not be enough!!
  * We should up this to 512 characters (TBUFF_S). A good size.
  */
@@ -373,6 +374,7 @@ get_host(char *buffer)
 	if (!(ptr = strchr(buffer, ' ')))
 		return host;
 	ptr++;
+	ailsa_munch(ptr);
 	if ((len = strlen(ptr)) > RBUFF_S)
 		return host;
 	// should do a regex here
