@@ -88,6 +88,12 @@ struct cmdbc_config {
 void
 show_ailsacmdb_version();
 
+int
+ailsa_add_trailing_dot(char *string);
+
+int
+ailsa_add_trailing_slash(char *string);
+
 void
 ailsa_chomp(char *line);
 
@@ -105,6 +111,9 @@ cmdbd_parse_config(const char *file, void *data, size_t len);
 
 void
 cmdbd_clean_config(struct cmdbd_config *cmdbd);
+
+void
+cmdbc_clean_config(struct cmdbc_config *cmdbc);
 
 // Networking Functions
 

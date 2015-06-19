@@ -67,9 +67,9 @@ ailsa_malloc(size_t len, const char *msg)
 	}
 	return p;
 }
-/*
+
 int
-add_trailing_slash(char *member)
+ailsa_add_trailing_slash(char *member)
 {
 	size_t len;
 	int retval;
@@ -89,7 +89,7 @@ add_trailing_slash(char *member)
 }
 
 int
-add_trailing_dot(char *member)
+ailsa_add_trailing_dot(char *member)
 {
 // Maximum string size is 255 bytes 
 	size_t len;
@@ -108,4 +108,4 @@ add_trailing_dot(char *member)
 	}
 	return retval;
 }
-*/
+
