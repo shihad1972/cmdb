@@ -57,9 +57,9 @@ enum {			// Client commands
 	CLOSE = 5
 };
 	
-
+/*
 static int
-ailsa_tcp_socket(const char *node, const char *service);
+ailsa_tcp_socket(const char *node, const char *service); */
 
 static int
 ailsa_accept_tcp_connection(int ssock);
@@ -90,6 +90,15 @@ ailsa_send_response(int client, char *buf);
 
 static int
 ailsa_do_close(int client, char *buf);
+
+static int
+ailsa_do_client_checkin(int s, char *line, struct cmdb_client_config *c);
+
+static int
+ailsa_do_client_hostname(int s, char *line, struct cmdb_client_config *c);
+
+static int
+ailsa_do_client_finishup(int s, char *line);
 
 static const int MAXPENDING = 5; // Max outstanding connect requests
 
@@ -140,7 +149,7 @@ ailsa_accept_client(int sock)
 	static unsigned int cc = 0;	// child count
 	if (c < 0)
 		return c;
-/*	pid_t proc_id = fork();
+	pid_t proc_id = fork();
 	if (proc_id < 0) {
 		syslog(LOG_ALERT, "forking failed: %s", strerror(errno));
 		return -1;
@@ -162,9 +171,116 @@ ailsa_accept_client(int sock)
 		} else {
 			cc--;
 		}
-	} */
-	ailsa_handle_client(c);
+	}
+//	ailsa_handle_client(c);
 	return 0;
+}
+
+int
+ailsa_tcp_socket(const char *node, const char *service)
+{
+	struct addrinfo crit;
+	memset(&crit, 0, sizeof(crit));
+	crit.ai_family = AF_UNSPEC;
+	crit.ai_socktype = SOCK_STREAM;
+	crit.ai_protocol = IPPROTO_TCP;
+
+	struct addrinfo *saddr;
+	int retval = getaddrinfo(node, service, &crit, &saddr);
+	if (retval != 0) {
+		syslog(LOG_ALERT, "getaddrinfo() failure: %s", gai_strerror(retval));
+		return -1;
+	}
+	int sock = -1;
+	for (struct addrinfo *addr = saddr; addr != NULL; addr = addr->ai_next) {
+		sock = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+		if (sock < 0)
+			continue; // Try next one..
+		if (connect(sock, addr->ai_addr, addr->ai_addrlen) == 0)
+			break; // Got one!
+		close(sock); // conect failed, try next one
+		sock = -1;
+	}
+	freeaddrinfo(saddr);
+	return sock;
+}
+
+int
+ailsa_do_client_send(int s, struct cmdb_client_config *c)
+{
+	char line[BUFF_S], *p;
+	int retval;
+	ssize_t len;
+
+	memset(&line, 0, BUFF_S);
+	p = line;
+	if ((len = read(s, p, BUFF_S)) < 0) {
+		if ((retval = ailsa_handle_recv_error(errno)) < 0)
+			goto cleanup;
+		// need signal handler here
+	}
+// Here is where we should check for the protocol version of the server
+	memset(&line, 0, BUFF_S);
+	if ((retval = ailsa_do_client_checkin(s, line, c)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_do_client_hostname(s, line, c)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_do_client_finishup(s, line)) != 0)
+		goto cleanup;
+	cleanup:
+		close(s);
+		return retval;
+}
+
+int
+ailsa_get_fqdn(char *host, char *fqdn, char *ip)
+{
+	if (!(host) || !(fqdn) || !(ip)) {
+		syslog(LOG_ALERT, "Null pointer passed to ailsa_get_fqdn");
+		return -1;
+	}
+	int status, retval;
+	struct addrinfo hints, *res, *p;
+	socklen_t len = sizeof(struct sockaddr_in6);
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	if ((status = getaddrinfo(host, NULL, &hints, &res)) != 0) {
+		syslog(LOG_ALERT, "getaddrinfo failure: %s", gai_strerror(status));
+		return -1;
+	}
+	p = res;
+	status = 0;
+	while (p) {
+		if (p->ai_addr->sa_family == AF_INET) {
+			if (!(inet_ntop(AF_INET, p->ai_addr, ip, INET6_ADDRSTRLEN))) {
+				syslog(LOG_ALERT, "inet_ntop error: %s", strerror(errno));
+			} else {
+				status = 1;
+				if ((retval = getnameinfo(p->ai_addr, len, fqdn, RBUFF_S, NULL, 0, NI_NAMEREQD)) != 0) {
+					syslog(LOG_ALERT, "getnameinfo error: %s", gai_strerror(retval));
+					retval = -1;
+				}
+			}
+		} else if (p->ai_addr->sa_family == AF_INET6) {
+			if (!(inet_ntop(AF_INET6, p->ai_addr, ip, INET6_ADDRSTRLEN))) {
+				syslog(LOG_ALERT, "inet_ntop error: %s", strerror(errno));
+			} else {
+				status = 1;
+				if ((retval = getnameinfo(p->ai_addr, len, fqdn, RBUFF_S, NULL, 0, NI_NAMEREQD)) != 0) {
+					syslog(LOG_ALERT, "getnameinfo error: %s", gai_strerror(retval));
+					retval = -1;
+				}
+			}
+		}
+		p = p->ai_next;
+	}
+	if (status == 0) {
+		syslog(LOG_ALERT, "Unable to get IP address for name %s", host);
+		retval = -1;
+	}
+	return retval;
 }
 
 static char *
@@ -227,35 +343,6 @@ ailsa_accept_tcp_connection(int ssock)
 	}
 	syslog(LOG_NOTICE, "Accepting client %s", print_sock_addr((struct sockaddr *)&caddr));
 	return csock;
-}
-
-static int
-ailsa_tcp_socket(const char *node, const char *service)
-{
-	struct addrinfo crit;
-	memset(&crit, 0, sizeof(crit));
-	crit.ai_family = AF_UNSPEC;
-	crit.ai_socktype = SOCK_STREAM;
-	crit.ai_protocol = IPPROTO_TCP;
-
-	struct addrinfo *saddr;
-	int retval = getaddrinfo(node, service, &crit, &saddr);
-	if (retval != 0) {
-		syslog(LOG_ALERT, "getaddrinfo() failure: %s", gai_strerror(retval));
-		return -1;
-	}
-	int sock = -1;
-	for (struct addrinfo *addr = saddr; addr != NULL; addr = addr->ai_next) {
-		sock = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-		if (sock < 0)
-			continue; // Try next one..
-		if (connect(sock, addr->ai_addr, addr->ai_addrlen) == 0)
-			break; // Got one!
-		close(sock); // conect failed, try next one
-		sock = -1;
-	}
-	freeaddrinfo(saddr);
-	return sock;
 }
 
 static void
@@ -402,7 +489,7 @@ ailsa_do_close(int client, char *buf)
 	ssize_t slen;
 	memset(buf, 0, TBUFF_S);
 	if ((shutdown(client, SHUT_RD)) < 0)
-		syslog(LOG_INFO, "shutdown on client socket failed: %s", strerror(errno));
+		syslog(LOG_INFO, "shutdown on socket failed: %s", strerror(errno));
 	snprintf(buf, RANGE_S, "SEEYA\r\n");
 	size_t len = strlen(buf);
 	if ((slen = send(client, buf, len, 0)) < 0)
@@ -419,7 +506,7 @@ ailsa_handle_send_error(int error)
 	case ECONNRESET: case EFAULT: case EINVAL: case EBADF: case ENOTSOCK:
 	case ENOTCONN: case EOPNOTSUPP: case EDESTADDRREQ: case EMSGSIZE:
 	case ENOBUFS: case ENOMEM: case EPIPE:
-		syslog(LOG_ALERT, "Sending to client failed: %s", strerror(error));
+		syslog(LOG_ALERT, "Sending failed: %s", strerror(error));
 		break;
 	default:
 		retval = 0;
@@ -438,13 +525,69 @@ ailsa_handle_recv_error(int error)
 	case ECONNRESET: case EFAULT: case EINVAL: case EBADF: case ENOTSOCK:
 	case ENOTCONN: case EOPNOTSUPP: case EDESTADDRREQ: case EMSGSIZE:
 	case ENOBUFS: case ENOMEM: case EPIPE:
-		syslog(LOG_ALERT, "Sending to client failed: %s", strerror(error));
+		syslog(LOG_ALERT, "receiving failed: %s", strerror(error));
 		break;
 	default:
 		retval = 0;
 		break;
 	}
 
+	return retval;
+}
+
+static int
+ailsa_do_client_checkin(int s, char *line, struct cmdb_client_config *c)
+{
+	if (!(line))
+		return -1;
+	int retval = 0;
+	ssize_t size;
+	size_t len;
+
+	sprintf(line, "CHECKIN: %s\r\n", c->uuid);
+	len = strlen(line);
+	if ((size = send(s, line, len, 0)) < 0)
+		retval = ailsa_handle_send_error(errno);
+	memset(line, 0, len);
+	if ((size = recv(s, line, BUFF_S, 0)) < 0)
+		retval = ailsa_handle_recv_error(errno);
+// Should probably check the response is OK
+	return retval;
+}
+
+static int
+ailsa_do_client_hostname(int s, char *line, struct cmdb_client_config *c)
+{
+	int retval;
+	ssize_t size;
+	size_t len;
+
+	sprintf(line, "HOST: %s\r\n", c->fqdn);
+	len = strlen(line);
+	if ((size = send(s, line, len, 0)) < 0)
+		retval = ailsa_handle_send_error(errno);
+	memset(line, 0, len);
+	if ((size = recv(s, line, BUFF_S, 0)) < 0)
+		retval = ailsa_handle_recv_error(errno);
+// Should probably check the response is OK
+	return retval;
+}
+
+static int
+ailsa_do_client_finishup(int s, char *line)
+{
+	int retval;
+	ssize_t size;
+	size_t len;
+
+	sprintf(line, "CLOSE: \r\n");
+	len = strlen(line);
+	if ((size = send(s, line, len, 0)) < 0)
+		retval = ailsa_handle_send_error(errno);
+	memset(line, 0, len);
+	if ((size = recv(s, line, BUFF_S, 0)) < 0)
+		retval = ailsa_handle_recv_error(errno);
+// Should probably check the response is OK
 	return retval;
 }
 

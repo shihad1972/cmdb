@@ -28,6 +28,16 @@
 #  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 # endif // my_free
 
+# ifndef true
+#  define true 1
+# endif // true
+# ifndef false
+#  define false 0
+# endif // false
+
+# ifndef NI_MAXHOST
+#  define NI_MAXHOST 1025
+# endif /* NI_MAXHOST so I do not have to use __GNU_SOURCE. grrrr */
 /*
 ** base64 returnable errors
 **
@@ -85,6 +95,14 @@ struct cmdbc_config {
 	char *service;
 };
 
+struct cmdb_client_config {     // Ugly, but it will do for now :(
+	char *host;
+	char *uuid;
+	char *fqdn;
+	char *ip;
+};
+
+
 void
 show_ailsacmdb_version();
 
@@ -119,14 +137,35 @@ cmdbc_clean_config(struct cmdbc_config *cmdbc);
 
 int
 ailsa_tcp_socket_bind(const char *node, const char *service);
-/* 
+
 int
 ailsa_tcp_socket(const char *node, const char *service);
 
+/* 
 int
 ailsa_accept_tcp_connection(int sock); */
 
 int
 ailsa_accept_client(int sock);
+
+int
+ailsa_get_fqdn(char *host, char *fqdn, char *ip);
+
+int
+ailsa_do_client_send(int s, struct cmdb_client_config *c);
+
+// File / Directory IO helper functions
+
+int
+check_directory_access(const char *dir, int create);
+
+int
+ailsa_write_file(const char *name, void *data, size_t len);
+
+int
+ailsa_read_file(const char *name, void *data, size_t len);
+
+int
+ailsa_append_file(const char *name, void *data, size_t len);
  
 #endif // __AILSACMDB_H__

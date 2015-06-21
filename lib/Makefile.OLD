@@ -5,7 +5,7 @@ lib_LIBRARIES = libailsacmdb.a
 #libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)
 libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) \
-		libailsacmdb.a(regexp.o)
+		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -23,6 +23,9 @@ libailsacmdb.a(networking.o):	networking.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(regexp.o):	regexp.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(fileio.o):	fileio.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean
