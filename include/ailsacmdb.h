@@ -37,23 +37,39 @@
 
 # ifndef NI_MAXHOST
 #  define NI_MAXHOST 1025
-# endif /* NI_MAXHOST so I do not have to use __GNU_SOURCE. grrrr */
+# endif // NI_MAXHOST so I do not have to use __GNU_SOURCE. grrrr 
 /*
 ** base64 returnable errors
 **
 ** Error codes returned to the operating system.
 **
 */
-#define B64_SYNTAX_ERROR        1
-#define B64_FILE_ERROR          2
-#define B64_FILE_IO_ERROR       3
-#define B64_ERROR_OUT_CLOSE     4
-#define B64_LINE_SIZE_TO_MIN    5
-#define B64_SYNTAX_TOOMANYARGS  6
+# define B64_SYNTAX_ERROR        1
+# define B64_FILE_ERROR          2
+# define B64_FILE_IO_ERROR       3
+# define B64_ERROR_OUT_CLOSE     4
+# define B64_LINE_SIZE_TO_MIN    5
+# define B64_SYNTAX_TOOMANYARGS  6
 
 // Temporary
-#define BASEDIR "/var/lib/cmdb/data/"
-#define AILSAVERSION "0.1"
+# define BASEDIR "/var/lib/cmdb/data/"
+# define AILSAVERSION "0.1"
+
+// Data Definitions
+
+typedef struct ailsa_element_s {
+	struct ailsa_element_s *prev;
+	struct ailsa_element_s *next;
+	void *data;
+} AILELEM;
+
+typedef struct ailsa_list_s {
+	size_t total;
+	int (*cmd)(const void *key1, const void *key2);
+	void (*destroy)(void *data);
+	void *head;
+	void *tail;
+} AILLIST;
 
 struct cmdbd_config {
 	char *dbtype;
@@ -102,9 +118,27 @@ struct cmdb_client_config {     // Ugly, but it will do for now :(
 	char *ip;
 };
 
-
 void
 show_ailsacmdb_version();
+
+// AIL_ data functions;
+
+void
+ailsa_list_init(AILLIST *list, void (*destory)(void *data));
+
+void
+ailsa_list_destroy(AILLIST *list);
+
+int
+ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
+
+int
+ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
+
+int
+ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
+
+// Path and various string functions
 
 int
 ailsa_add_trailing_dot(char *string);
@@ -118,11 +152,17 @@ ailsa_chomp(char *line);
 void
 ailsa_munch(char *line);
 
+// Memory functions
+
 void *
 ailsa_malloc(size_t len, const char *msg);
 
+// Logging functions
+
 void
 ailsa_start_syslog(const char *prog);
+
+// Config parse and free functions
 
 void
 cmdbd_parse_config(const char *file, void *data, size_t len);

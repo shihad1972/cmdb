@@ -62,7 +62,7 @@ ailsa_malloc(size_t len, const char *msg)
 	void *p;
 
 	if (!(p = calloc(len, sizeof(char)))) {
-		perror( msg);
+		perror(msg);
 		exit(errno);
 	}
 	return p;
