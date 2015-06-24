@@ -78,10 +78,6 @@ main(int argc, char *argv[])
 			}
 			// Should handle the signal interrupt here.
 			continue;
-/*		} else if (retval > 0) {
-			if (ailsa_accept_client(s) == 0)
-				retval = 0;
-			// Maybe do something else here if the client handle fails */
 		}
 		if (FD_ISSET(s, &sset)) {
 			if (ailsa_accept_client(s) == 0)
