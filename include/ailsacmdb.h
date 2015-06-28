@@ -21,7 +21,6 @@
 
 #ifndef __AILSACMDB_H__
 # define __AILSACMDB_H__
-
 /** Useful macro to safely avoid double-free memory corruption
  ** Shamelessly stolen from the nagios source. Thanks :) */
 # ifndef my_free
@@ -57,19 +56,34 @@
 
 // Data Definitions
 
+// Linked List data types
+
 typedef struct ailsa_element_s {
-	struct ailsa_element_s *prev;
-	struct ailsa_element_s *next;
-	void *data;
+	struct	ailsa_element_s *prev;
+	struct	ailsa_element_s *next;
+	void	*data;
 } AILELEM;
 
 typedef struct ailsa_list_s {
-	size_t total;
-	int (*cmd)(const void *key1, const void *key2);
-	void (*destroy)(void *data);
-	void *head;
-	void *tail;
+	size_t 	total;
+	int 	(*cmd)(const void *key1, const void *key2);
+	void 	(*destroy)(void *data);
+	void 	*head;
+	void 	*tail;
 } AILLIST;
+
+// Hash table types
+
+typedef struct ailsa_hash_s {
+	unsigned int	buckets;
+	unsigned int	(*h)(const void *key);
+	int		(*match)(const void *key1, const void *key2);
+	void		(*destroy)(void *data);
+	unsigned int	size;
+	AILLIST		*table;
+} AILHASH;
+
+// Structs to hold configuration values
 
 struct cmdbd_config {
 	char *dbtype;
@@ -123,6 +137,7 @@ show_ailsacmdb_version();
 
 // AIL_ data functions;
 
+// Linked List
 void
 ailsa_list_init(AILLIST *list, void (*destory)(void *data));
 
@@ -137,6 +152,29 @@ ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
 
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
+
+// Hash Table
+
+unsigned int
+ailsa_hash(const void *key);
+
+int
+ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
+		unsigned int (*h)(const void *key),
+		int (*match)(const void *key1, const void *key2),
+		void (*destroy)(void *data));
+
+void
+ailsa_hash_destroy(AILHASH *htbl);
+
+int
+ailsa_hash_insert(AILHASH *htbl, void *data, const char *key);
+
+int
+ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
+
+int
+ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // Path and various string functions
 
