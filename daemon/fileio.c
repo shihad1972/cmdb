@@ -51,10 +51,13 @@ static int
 setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
 static int
+write_bin_file(void *d, const char *file, size_t len);
+/*
+static int
 setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
 static int
-write_bin_file(void *d, const char *file, size_t len);
+write_bin_file_new(AILLIST *d, const char *file, size_t len); */
 
 static int
 setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir);
@@ -413,17 +416,6 @@ write_dnsa(dnsa_config_s *dnsa, char *dir)
 		return retval;
 }
 
-/*
- * When we pass the pointer into here, it is a struct contaning only pointers.
- * In effect, we can think of this as an array of pointers. The num value
- * tells us how many elements, whereas the sizes array tell us the size of
- * the pointed to structs. The files array is the file names we use to
- * read / write to. We then use this information to malloc() an area of RAM
- * and read 1 record into it at a time. Because the next element in the
- * struct is the top / first element, this is the value in the region of
- * RAM that *ptr is pointing to. We can use this to setup the linked list.
- */
-
 static int
 setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
@@ -483,6 +475,17 @@ read_bin_file_new(AILLIST *d, const char *file, size_t len)
 		return retval;
 }
 
+/*
+ * When we pass the pointer into here, it is a struct contaning only pointers.
+ * In effect, we can think of this as an array of pointers. The num value
+ * tells us how many elements, whereas the sizes array tell us the size of
+ * the pointed to structs. The files array is the file names we use to
+ * read / write to. We then use this information to malloc() an area of RAM
+ * and read 1 record into it at a time. Because the next element in the
+ * struct is the top / first element, this is the value in the region of
+ * RAM that *ptr is pointing to. We can use this to setup the linked list.
+ */
+
 static int
 setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
@@ -505,14 +508,61 @@ setup_write(void *s, const char *files[], const size_t sizes[], size_t num, cons
 	my_free(file);
 	return retval;
 }
- 
+/*
 static int
 setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
 	int retval = 0;
+	char *file;
+	size_t i;
 
+	file = ailsa_malloc(CONF_S, "file in setup_write_new");
+	for (i = 0; i < num; i++) {
+		if (!(files[i]))
+			break;
+		snprintf(file, CONF_S, "%s%s", dir, files[i]);
+		if ((retval = write_bin_file_new(&list[i], file, sizes[i])) != 0) {
+			retval = 1;
+			break;
+		}
+	}
+	my_free(file);
 	return retval;
 }
+
+static int
+write_bin_file_new(AILLIST *d, const char *file, size_t len)
+{
+	int retval = 0;
+	int fd;
+	int mode = O_CREAT | O_TRUNC | O_WRONLY;
+	int flags = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+	ssize_t slen;
+	AILELEM *em;
+	mode_t um;
+
+	em = d->head;
+	um = umask(0);
+	if ((fd = open(file, mode, flags)) < 0) {
+		perror("open() in write_bin_file_new");
+		retval = 1;
+		goto cleanup;
+	}
+	while (em) {
+		if ((slen = write(fd, em->data, len)) < 0) {
+			perror("write() failure\n");
+			retval = 1;
+			goto cleanup;
+		}
+		em = em->next;
+	}
+	cleanup:
+		if (fd > 0)
+			if (close(fd) < 0)
+				perror("close() failure");
+		um = umask(um);
+		return retval;
+} */
 
 static int
 write_bin_file(void *data, const char *file, size_t len)
