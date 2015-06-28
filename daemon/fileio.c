@@ -31,6 +31,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_data.h"
@@ -54,19 +57,16 @@ static int
 write_bin_file(void *d, const char *file, size_t len);
 
 static int
-setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
-
-static int
 setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
 static int
 read_bin_file_new(AILLIST *d, const char *file, size_t len);
 
 static int
-read_bin_file(void *d, const char *file, size_t len);
+fill_hard_type(AILLIST *l, size_t len);
 
 static int
-fill_hard_type(AILLIST *l, size_t len);
+print_build_details(AILLIST *list, size_t len);
 
 static void
 clean_list(AILLIST *list, size_t len);
@@ -89,7 +89,7 @@ static const char *cbc_files[] = {
 	"system-scripts",
 	"system-script-arguments",
 	"partition-options",
-	NULL,
+	"build-servers",
 	NULL
 };
 
@@ -111,7 +111,8 @@ static const size_t cbc_sizes[] = {
 	sizeof(cbc_script_s),
 	sizeof(cbc_script_arg_s),
 	sizeof(cbc_part_opt_s),
-	0, 0
+	sizeof(cbc_server_s),
+	0
 };
 
 int
@@ -120,15 +121,20 @@ read_cbc(cbc_config_s *cbc, char *dir)
 	if (!cbc || !dir)
 		return CBC_NO_DATA;
 
-	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in read_cbc");
+	int retval;
 	char *f = ailsa_malloc(CONF_S, "f in read_cbc");
-	size_t len = sizeof cbc_files / sizeof c;
+	size_t len = sizeof cbc_files / sizeof f;
+	size_t i;
 	snprintf(f, CONF_S, "%sdata/raw/", dir);
-	int retval = setup_read(c, cbc_files, cbc_sizes, len, f);
-
-	my_free(f);
-	clean_cbc_struct(c);
-	return retval;
+	AILLIST list[len];
+	if ((retval = setup_read_new(list, cbc_files, cbc_sizes, len, f)) != 0)
+		goto cleanup;
+	retval = print_build_details(list, len);
+	cleanup:
+		my_free(f);
+		for (i = 0; i < len; i++)
+			ailsa_list_destroy(&list[i]);
+		return retval;
 }
 
 int
@@ -143,8 +149,8 @@ write_cbc(cbc_config_s *cbc, char *dir)
 	size_t len = sizeof cbc_files / sizeof c;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	int query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_OS | BUILD_TYPE | 
-                DISK_DEV | LOCALE | BPACKAGE | DPART | SSCHEME | VARIENT |
-		SYSPACK | SYSARG | SYSCONF | SCRIPT | SCRIPTA | PARTOPT; // 17 elements
+                DISK_DEV | LOCALE | BPACKAGE | DPART | SSCHEME | VARIENT | CSERVER |
+		SYSPACK | SYSARG | SYSCONF | SCRIPT | SCRIPTA | PARTOPT; // 18 elements
 
 	if ((retval = cbc_run_multiple_query(cbc, c, query)) != 0)
 		goto cleanup;
@@ -419,36 +425,11 @@ write_dnsa(dnsa_config_s *dnsa, char *dir)
  */
 
 static int
-setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
-{
-	char *file;
-	int retval = 0;
-	size_t i;
-	void *ptr;
-
-	file = ailsa_malloc(CONF_S, "file in setup_read");
-	for(i = 0; i < num; i++) {
-		ptr = ailsa_malloc(sizes[i], "ptr in setup_read");
-		*((char **)s + i) = ptr;
-		if (!files[i])
-			break;
-		snprintf(file, CONF_S, "%s%s", dir, files[i]);
-		if ((retval = read_bin_file(ptr, file, sizes[i])) != 0) {
-			retval = 1;
-			break;
-		}
-	}
-	my_free(file);
-	return retval;
-}
-
-static int
 setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
 	char *file;
 	int retval = 0;
 	size_t i;
-	void *ptr;
 
 	file = ailsa_malloc(CONF_S, "file in setup_read");
 	for (i = 0; i < num; i++)
@@ -472,7 +453,7 @@ read_bin_file_new(AILLIST *d, const char *file, size_t len)
 	int retval = 0, mode = O_RDONLY;
 	int fd;
 	ssize_t slen;
-	void *p, *prev;
+	void *p;
 
 	if ((fd = open(file, mode)) < 0) {
 		retval = 1;
@@ -503,41 +484,6 @@ read_bin_file_new(AILLIST *d, const char *file, size_t len)
 }
 
 static int
-read_bin_file(void *d, const char *file, size_t len)
-{
-	int retval = 0, mode = O_RDONLY;
-	int fd;
-	ssize_t slen = 1;
-	void *p, *prev;
-
-	if ((fd = open(file, mode)) < 0) {
-		retval = 1;
-		perror("open() in read_bin_file");
-		goto cleanup;
-	}
-	p = d;
-	prev = p;
-	while ((slen = read(fd, p, len)) > 0) {
-		prev = p;
-		p = ailsa_malloc(len, "p in read_bin_file");
-		*(char **)prev = p;
-	}
-	if (slen < 0) {
-		retval = 1;
-		perror("read() failure");
-		goto cleanup;
-	}
-	*(char **)prev = NULL;
-	my_free(p);
-
-	cleanup:
-		if (fd > 0)
-			if (close(fd) < 0)
-				perror("close() failure");
-	return retval;
-}
-
-static int
 setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
 	char *file;
@@ -563,6 +509,9 @@ setup_write(void *s, const char *files[], const size_t sizes[], size_t num, cons
 static int
 setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
 {
+	int retval = 0;
+
+	return retval;
 }
 
 static int
@@ -640,6 +589,128 @@ fill_hard_type(AILLIST *l, size_t len)
 		}
 		h = h->next;
 	}
+	return retval;
+}
+
+static int
+print_build_details(AILLIST *list, size_t len)
+{
+	if (len < 19) {
+		fprintf(stderr, "AILLIST array too short");
+		return -1;
+	}
+	if (!(list)) {
+		fprintf(stderr, "NULL pointer passed to print_build_details");
+		return -1;
+	}
+	char *server, *domain, *varient, *scheme, *osn, *osv, *osa;
+	int retval = 0;
+	struct in_addr ipn;
+	unsigned long int id, cmp, bdid, ipid, osid, dsid, vid;
+	cbc_server_s *se;
+	cbc_build_s *b;
+	cbc_build_ip_s *ip;
+	cbc_build_domain_s *dom;
+	cbc_build_os_s *os;
+	cbc_seed_scheme_s *sch;
+	cbc_varient_s *vari;
+	AILLIST *l;
+	AILELEM *el, *em;
+
+	printf("Server Builds\n\n");
+	l = &list[17];
+	el = l->head;
+	while (el) {
+		se = el->data;
+		server = se->name;
+		id = se->server_id;
+		l = list;
+		em = l->head;
+		do {
+			b = em->data;
+			cmp = b->server_id;
+			ipid = b->ip_id;
+			osid = b->os_id;
+			dsid = b->def_scheme_id;
+			vid = b->varient_id;
+			em = em->next;
+		} while (em && cmp != id);
+		if (cmp != id) {
+			fprintf(stderr, "Server %s has no build!\n", server);
+			goto carry;
+		}
+		l += 2;
+		em = l->head;
+		do {
+			ip = em->data;
+			cmp = ip->ip_id;
+			ipn.s_addr = htonl((uint32_t)ip->ip);
+			bdid = ip->bd_id;
+			em = em->next;
+		} while (em && ipid != cmp);
+		if (cmp != ipid) {
+			fprintf(stderr, "Server %s has no build IP!\n", server);
+			goto carry;
+		}
+		l--;
+		em = l->head;
+		do {
+			dom = em->data;
+			cmp = dom->bd_id;
+			domain = dom->domain;
+			em = em->next;
+		} while (em && cmp != bdid);
+		if (cmp != bdid) {
+			fprintf(stderr, "Server %s has no build domain!\n", server);
+			goto carry;;
+		}
+		l += 2;
+		em = l->head;
+		do {
+			os = em->data;
+			cmp = os->os_id;
+			osn = os->os;
+			osv = os->version;
+			osa = os->arch;
+			em = em->next;
+		} while (em && cmp != osid);
+		if (cmp != osid) {
+			fprintf(stderr, "Server %s has no build OS!", server);
+			goto carry;
+		}
+		l += 6;
+		em = l->head;
+		do {
+			sch = em->data;
+			cmp = sch->def_scheme_id;
+			scheme = sch->name;
+			em = em->next;
+		} while (em && cmp != dsid);
+		if (cmp != dsid) {
+			fprintf(stderr, "Server %s has no build partition scheme!\n", server);
+			goto carry;
+		}
+		l++;
+		em = l->head;
+		do {
+			vari = em->data;
+			cmp = vari->varient_id;
+			varient = vari->varient;
+			em = em->next;
+		} while (em && cmp != vid);
+		if (cmp != vid) {
+			fprintf(stderr, "Server %s has no build varient!\n", server);
+			goto carry;
+		}
+		printf("Server: %s\n", server);
+		printf("\tDomain: %s\tIP: %s\n", domain, inet_ntoa(ipn));
+		printf("\tOS: %s\tVersion: %s\tArch: %s\n", osn, osv, osa);
+		printf("Partition Scheme: %s\tVarient: %s\n", scheme, varient);
+
+		carry:
+			el = el->next;
+	}
+
 	return retval;
 }
 
