@@ -48,13 +48,28 @@ static int
 setup_write(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
 static int
+setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir);
+
+static int
 write_bin_file(void *d, const char *file, size_t len);
 
 static int
 setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const char *dir);
 
 static int
+setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir);
+
+static int
+read_bin_file_new(AILLIST *d, const char *file, size_t len);
+
+static int
 read_bin_file(void *d, const char *file, size_t len);
+
+static int
+fill_hard_type(AILLIST *l, size_t len);
+
+static void
+clean_list(AILLIST *list, size_t len);
 
 static const char *cbc_files[] = {
 	"builds",
@@ -166,18 +181,88 @@ static const size_t cmdb_sizes[] =  {
 int
 read_cmdb(cmdb_config_s *cmdb, char *dir)
 {
+	int retval;
+	char *server, *coid, *hdev, *hdet, *htype, *hclass, *vm; // Servers
+	unsigned long int id, cmp, cst, vmid;
+	AILELEM *el, *tel;
+	cmdb_server_s *ser;
+	cmdb_customer_s *cust;
+	cmdb_hardware_s *hard;
+	cmdb_vm_host_s *virt;
 	if (!cmdb || !dir)
 		return CBC_NO_DATA;
 
-	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in read_cmdb");
 	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
-	size_t len = sizeof cmdb_files / sizeof c;
+	size_t len = sizeof cmdb_files / sizeof file;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
-	int retval = setup_read(c, cmdb_files, cmdb_sizes, len, file);
+	AILLIST list[len], *l, *tmp;
+	if ((retval = setup_read_new(list, cmdb_files, cmdb_sizes, len, file)) != 0)
+		goto cleanup;
+	l = &list[0];
+	if ((retval = fill_hard_type(l, len)) != 0)
+		goto cleanup;
+	el = l->head;
+	while (el) {
+		// Get server info
+		ser = (cmdb_server_s *)el->data;
+		cmp = ser->server_id;
+		cst = ser->cust_id;
+		server = ser->name;
+		vmid = ser->vm_server_id;
+		// Get Customer info
+		tmp = &list[1];
+		tel = tmp->head;
+		do {
+			cust = (cmdb_customer_s *)tel->data;
+			coid = cust->coid;
+			id = cust->cust_id;
+			tel = tel->next;
+		} while (id != cst && tel);
+		if (id != cst)
+			coid = NULL;
+		// Get Vitual Machine info
+		tmp = &list[7];
+		tel = tmp->head;
+		do {
+			virt = (cmdb_vm_host_s *)tel->data;
+			vm = virt->name;
+			id = virt->server_id;
+			tel = tel->next;
+		} while (id != vmid && tel);
+		if (id != vmid)
+			vm = NULL;
+		// Output the fuckers
+		if (vm)
+			printf("Server: %s\tCOID: %s\tVM Host: %s\n", server, coid, vm);
+		else
+			printf("Server: %s\tCOID: %s\n", server, coid);
+		// Get hardware info
+		tmp = &list[5];
+		tel = tmp->head;
+		while (tel) {
+			hard = (cmdb_hardware_s *)tel->data;
+			id = hard->server_id;
+			if (id == cmp) {
+				hdev = hard->device;
+				hdet = hard->detail;
+				htype = hard->hardtype->type;
+				hclass = hard->hardtype->hclass;
+				if (strncmp(htype, "storage", MAC_S) == 0)
+					printf("\t%s\t/dev/%s\t%s\n", hclass, hdev, hdet);
+				else if (strncmp(htype, "network", MAC_S) == 0)
+					printf("\t%s\t%s\t%s\n", hclass, hdev, hdet);
+				else
+					printf("\t%s\t%s\n", hclass, hdet);
+			}
+			tel = tel->next;
+		}
+		el = el->next;
+	}
 
-	my_free(file);
-	cmdb_clean_list(c);
-	return retval;
+	cleanup:
+		my_free(file);
+		clean_list(list, len);
+		return retval;
 }
 
 int
@@ -234,51 +319,67 @@ read_dnsa(dnsa_config_s *dnsa, char *dir)
 	rev_zone_info_s *e;
 	glue_zone_info_s *g;
 	preferred_a_s *p;
+	AILELEM *el;
 
 	if (!dnsa)
 		return CBC_NO_DATA;
 
-	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in read_dnsa");
 	f = ailsa_malloc(CONF_S, "f in read_dnsa");
 	snprintf(f, CONF_S, "%s/data/raw/", dir);
-	size_t len = sizeof dnsa_files / sizeof d;
-	if ((retval = setup_read(d, dnsa_files, dnsa_sizes, len, f)) != 0)
+	size_t len = sizeof dnsa_files / sizeof f;
+	AILLIST list[len], *l;
+	if ((retval = setup_read_new(list, dnsa_files, dnsa_sizes, len, f)) != 0)
 		goto cleanup;
-
-	z = d->zones;
-	while (z) {
-		printf("Zone %s\n", z->name);
-		z = z->next;
+	l = &list[0];
+	el = l->head;
+	while (el) {
+		z = (zone_info_s *)el->data;
+		printf("zone %s\n", z->name);
+		el = el->next;
 	}
-	r = d->records;
-	while (r) {
-		printf("Record: %s\t%s\t%s\n", r->host, r->dest, r->type);
-		r = r->next;
+	printf("\n");
+	l = &list[2];
+	el = l->head;
+	while (el) {
+		r = (record_row_s *)el->data;
+		printf("%s\t%s\n", r->host, r->dest);
+		el = el->next;
 	}
-	e = d->rev_zones;
-	while (e) {
-		printf("Rev zone: %s\n", e->net_range);
-		e = e->next;
+	printf("\n");
+	l = &list[1];
+	el = l->head;
+	while (el) {
+		e = (rev_zone_info_s *)el->data;
+		printf("%s\n", e->net_range);
+		el = el->next;
 	}
-	v = d->rev_records;
-	while (v) {
-		printf("PTR: %s -> %s\n", v->host, v->dest);
-		v = v->next;
+	printf("\n");
+	l = &list[3];
+	el = l->head;
+	while (el) {
+		v = (rev_record_row_s *)el->data;
+		printf("%s\t%s\n", v->host, v->dest);
+		el = el->next;
 	}
-	g = d->glue;
-	while (g) {
-		printf("Glue zone: %s\n", g->name);
-		g = g->next;
+	printf("\n");
+	l = &list[4];
+	el = l->head;
+	while (el) {
+		g = (glue_zone_info_s *)el->data;
+		printf("%s\n", g->name);
+		el = el->next;
 	}
-	p = d->prefer;
-	while (p) {
-		printf("Prefer: %s for %s\n", p->fqdn, p->ip);
-		p = p->next;
+	printf("\n");
+	l = &list[5];
+	el = l->head;
+	while (el) {
+		p = (preferred_a_s *)el->data;
+		printf("%s\t%s\n", p->ip, p->fqdn);
+		el = el->next;
 	}
-
 	cleanup:
 		free(f);
-		dnsa_clean_list(d);
+		clean_list(list, len);
 		return retval;
 }
 
@@ -342,6 +443,66 @@ setup_read(void *s, const char *files[], const size_t sizes[], size_t num, const
 }
 
 static int
+setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
+{
+	char *file;
+	int retval = 0;
+	size_t i;
+	void *ptr;
+
+	file = ailsa_malloc(CONF_S, "file in setup_read");
+	for (i = 0; i < num; i++)
+		ailsa_list_init(&list[i], free);
+	for (i = 0; i < num; i++) {
+		if (!(files[i]))
+			break;
+		snprintf(file, CONF_S, "%s%s", dir, files[i]);
+		if ((retval = read_bin_file_new(&list[i], file, sizes[i])) != 0) {
+			retval = 1;
+			break;
+		}
+	}
+	my_free(file);
+	return retval;
+}
+
+static int
+read_bin_file_new(AILLIST *d, const char *file, size_t len)
+{
+	int retval = 0, mode = O_RDONLY;
+	int fd;
+	ssize_t slen;
+	void *p, *prev;
+
+	if ((fd = open(file, mode)) < 0) {
+		retval = 1;
+		perror("open() in read_bin_file_new");
+		goto cleanup;
+	}
+	p = ailsa_malloc(len, "p in read_bin_file_new");
+	while ((slen = read(fd, p, len)) > 0) {
+		if ((retval = ailsa_list_ins_next(d, (AILELEM *)d->tail, p)) != 0) {
+			retval = 1;
+			fprintf(stderr, "ailsa_list_ins_next failed\n");
+			goto cleanup;
+		}
+		p = ailsa_malloc(len, "p in read_bin_file_new loop");
+	}
+	if (slen < 0) {
+		retval = 1;
+		perror("read() failure");
+		goto cleanup;
+	}
+	my_free(p);
+
+	cleanup:
+		if (fd > 0)
+			if (close(fd) < 0)
+				perror("close() failure");
+		return retval;
+}
+
+static int
 read_bin_file(void *d, const char *file, size_t len)
 {
 	int retval = 0, mode = O_RDONLY;
@@ -351,7 +512,7 @@ read_bin_file(void *d, const char *file, size_t len)
 
 	if ((fd = open(file, mode)) < 0) {
 		retval = 1;
-		perror("open() int read_bin_file");
+		perror("open() in read_bin_file");
 		goto cleanup;
 	}
 	p = d;
@@ -400,6 +561,11 @@ setup_write(void *s, const char *files[], const size_t sizes[], size_t num, cons
 }
  
 static int
+setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t num, const char *dir)
+{
+}
+
+static int
 write_bin_file(void *data, const char *file, size_t len)
 {
 	int retval = 0, fd = 0;
@@ -427,5 +593,53 @@ write_bin_file(void *data, const char *file, size_t len)
 				perror("close() failure");
 		um = umask(um);
 		return retval;
+}
+
+static void
+clean_list(AILLIST *list, size_t len)
+{
+	size_t i;
+
+	for (i = 0; i < len; i++)
+		ailsa_list_destroy(&list[i]);
+}
+int
+fill_hard_type(AILLIST *l, size_t len)
+{
+	if (!(l)) {
+		fprintf(stderr, "NULL pointer passed to fill_hard_type\n");
+		return -1;
+	}
+	if (len < 8) {
+		fprintf(stderr, "AILLIST array to small\n");
+		return -1;
+	}
+	int retval = 0;
+	AILLIST *hard, *type;
+	AILELEM *h, *t;
+	cmdb_hardware_s *ch;
+	cmdb_hard_type_s *cht;
+	hard = &l[5];
+	type = &l[6];
+	unsigned long int hid, htid;
+	h = hard->head;
+	while (h) {
+		ch = h->data;
+		hid = ch->ht_id;
+		t = type->head;
+		do {
+			cht = t->data;
+			htid = cht->ht_id;
+			ch->hardtype = cht;
+			t = t->next;
+		} while (htid != hid && (t));
+		if (htid != hid) {
+			fprintf(stderr, "Hardware %s %s has no type?\n", ch->device, ch->detail);
+			retval = -1;
+			break;
+		}
+		h = h->next;
+	}
+	return retval;
 }
 
