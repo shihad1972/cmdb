@@ -56,6 +56,31 @@
 
 // Data Definitions
 
+enum {			/* regex search codes */
+	UUID_REGEX = 0,
+	NAME_REGEX,
+	ID_REGEX,
+	CUSTOMER_REGEX,
+	COID_REGEX,
+	MAC_REGEX,
+	IP_REGEX,
+	DOMAIN_REGEX,
+	PATH_REGEX,
+	LOGVOL_REGEX,
+	FS_REGEX,
+	ADDRESS_REGEX,
+	DEV_REGEX,
+	CAPACITY_REGEX,
+	OS_VER_REGEX,
+	POSTCODE_REGEX,
+	URL_REGEX,
+	PHONE_REGEX,
+	EMAIL_REGEX,
+	TXTRR_REGEX,
+	CN_REGEX,
+	DC_REGEX
+};
+
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -245,5 +270,10 @@ ailsa_read_file(const char *name, void *data, size_t len);
 
 int
 ailsa_append_file(const char *name, void *data, size_t len);
+
+// Input validation
  
+int
+ailsa_validate_input(char *input, int test);
+
 #endif // __AILSACMDB_H__
