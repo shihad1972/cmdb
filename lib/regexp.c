@@ -68,7 +68,7 @@ ailsa_validate_input(char *input, int test)
 
 	if ((retval = regcomp(&re, re_test, fl)) != 0) {
 		len = regerror(retval, &re, NULL, 0);
-		errstr = ailsa_malloc(len, "errstr in ailsa_validate_input");
+		errstr = ailsa_calloc(len, "errstr in ailsa_validate_input");
 		(void) regerror(retval, &re, errstr, len);
 		syslog(LOG_ALERT, "Regex compile failed: %s", errstr);
 		free(errstr);

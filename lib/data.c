@@ -69,7 +69,7 @@ ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data)
 
 	if (!(element) && list->total != 0)
 		return -1;
-	new = ailsa_malloc(size, "new in ailsa_list_ins_next");
+	new = ailsa_calloc(size, "new in ailsa_list_ins_next");
 	new->data = data;
 	if (list->total == 0) {
 		list->head = new;
@@ -97,7 +97,7 @@ ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data)
 
 	if (!(element) && list->total != 0)
 		return -1;
-	new = ailsa_malloc(size, "new in ailsa_list_ins_prev");
+	new = ailsa_calloc(size, "new in ailsa_list_ins_prev");
 	new->data = data;
 	if (list->total == 0) {
 		list->head = new;
@@ -171,7 +171,7 @@ ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
 {
 	unsigned int i;
 
-	htbl->table = ailsa_malloc(buckets * sizeof(AILLIST), "htbl->table in ailsa_hash_init");
+	htbl->table = ailsa_calloc(buckets * sizeof(AILLIST), "htbl->table in ailsa_hash_init");
 	htbl->buckets = buckets;
 	for (i = 0; i < buckets; i++)
 		ailsa_list_init(&htbl->table[i], destroy);

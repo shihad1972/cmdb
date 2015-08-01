@@ -214,7 +214,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->db = strndup(nv.value, CONF_S - 1);
 		break;
 	case 223:
-		conf->dir = ailsa_malloc(CONF_S, "conf->dir in cmdbd_fill_config");
+		conf->dir = ailsa_calloc(CONF_S, "conf->dir in cmdbd_fill_config");
 		snprintf(conf->dir, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->dir);
 		break;
@@ -222,7 +222,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		if (strncmp(nv.name, "REV", COMM_S) == 0) {
 			conf->rev = strndup(nv.value, CONF_S - 1);
 		} else if (strncmp(nv.name, "PXE", COMM_S) == 0) {
-			conf->pxe = ailsa_malloc(RBUFF_S, "conf->pxe in cmdbd_fill_config");
+			conf->pxe = ailsa_calloc(RBUFF_S, "conf->pxe in cmdbd_fill_config");
 			snprintf(conf->pxe, CONF_S, "%s", nv.value);
 			retval = ailsa_add_trailing_slash(conf->pxe);
 		}
@@ -234,7 +234,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->chkc = strndup(nv.value, CONF_S - 1);
 		break;
 	case 285:
-		conf->bind = ailsa_malloc(CONF_S, "conf->bind in cmdbd_fill_config");
+		conf->bind = ailsa_calloc(CONF_S, "conf->bind in cmdbd_fill_config");
 		snprintf(conf->bind, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->bind);
 		break;
@@ -288,13 +288,13 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		if (strncmp(nv.name, "PRIDNS", COMM_S) == 0) {
 			conf->pridns = strndup(nv.value, RBUFF_S - 1);
 		} else if (strncmp(nv.name, "TMPDIR", COMM_S) == 0) {
-			conf->tmpdir = ailsa_malloc(CONF_S, "conf->tmpdir in cmdbd_parse_config");
+			conf->tmpdir = ailsa_calloc(CONF_S, "conf->tmpdir in cmdbd_parse_config");
 			snprintf(conf->tmpdir, CONF_S, "%s", nv.value);
 			retval = ailsa_add_trailing_slash(conf->tmpdir);
 		}
 		break;
 	case 520:
-		conf->preseed = ailsa_malloc(CONF_S, "conf->preseed in cmdbd_parse_config");
+		conf->preseed = ailsa_calloc(CONF_S, "conf->preseed in cmdbd_parse_config");
 		snprintf(conf->preseed, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->preseed);
 		break;
@@ -302,17 +302,17 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->refresh = strtoul(nv.value, NULL, 10);
 		break;
 	case 541:
-		conf->tftpdir = ailsa_malloc(CONF_S, "conf->tftpdir in cmdbd_parse_config");
+		conf->tftpdir = ailsa_calloc(CONF_S, "conf->tftpdir in cmdbd_parse_config");
 		snprintf(conf->tftpdir, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->tftpdir);
 		break;
 	case 581:
-		conf->dhcpconf = ailsa_malloc(CONF_S, "conf->dhcpconf in cmdbd_parse_config");
+		conf->dhcpconf = ailsa_calloc(CONF_S, "conf->dhcpconf in cmdbd_parse_config");
 		snprintf(conf->dhcpconf, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->dhcpconf);
 		break;
 	case 688:
-		conf->kickstart = ailsa_malloc(CONF_S, "conf->kickstart in cmdbd_parse_config");
+		conf->kickstart = ailsa_calloc(CONF_S, "conf->kickstart in cmdbd_parse_config");
 		snprintf(conf->kickstart, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->kickstart);
 		break;
@@ -320,7 +320,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		conf->hostmaster = strndup(nv.value, RBUFF_S - 1);
 		break;
 	case 781:
-		conf->toplevelos = ailsa_malloc(CONF_S, "conf->toplevelos in cmdbd_parse_config");
+		conf->toplevelos = ailsa_calloc(CONF_S, "conf->toplevelos in cmdbd_parse_config");
 		snprintf(conf->toplevelos, CONF_S, "%s", nv.value);
 		retval = ailsa_add_trailing_slash(conf->toplevelos);
 		break;

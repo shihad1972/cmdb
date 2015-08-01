@@ -57,7 +57,7 @@ ailsa_munch(char *line)
 }
 
 void *
-ailsa_malloc(size_t len, const char *msg)
+ailsa_calloc(size_t len, const char *msg)
 {
 	void *p;
 

@@ -218,7 +218,7 @@ ailsa_munch(char *line);
 // Memory functions
 
 void *
-ailsa_malloc(size_t len, const char *msg);
+ailsa_calloc(size_t len, const char *msg);
 
 // Logging functions
 
