@@ -516,6 +516,7 @@ display_dnsa_usage(void)
 	printf("\n\t-h -n -i\n");
 	printf("-g: remove preferred A record\n\t -i\n");
 	printf("-l: list zones\n\t[ -F | -R ]\n");
+	printf("-m: add CNAME to root domain\n\t-h -n\n");
 	printf("-r: remove record\n\t-h -n\n");
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[ -F | -R ]\n");
@@ -1057,8 +1058,7 @@ init_string_len(string_len_s *string)
 {
 	string->len = BUFF_S;
 	string->size = NONE;
-	if (!(string->string = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "string->string in init_string_len");
+	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
 }
 
 void

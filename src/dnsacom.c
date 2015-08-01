@@ -45,7 +45,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -63,6 +63,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'l') {
 			comp->action = LIST_ZONES;
 			snprintf(comp->domain, COMM_S, "all");
+		} else if (opt == 'm') {
+			comp->action = ADD_CNAME_ON_ROOT;
+			comp->type = FORWARD_ZONE;
 		} else if (opt == 'r') {
 			comp->action = DELETE_RECORD;
 			comp->type = FORWARD_ZONE;
@@ -149,8 +152,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD))
-	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD) ||
+	      (comp->action == ADD_CNAME_ON_ROOT)) && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;
@@ -403,6 +406,11 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		if ((validate_user_input(comm->host, DOMAIN_REGEX) < 0) &&
 		    (validate_user_input(comm->host, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "CNAME host");
+	} else if (comm->action == ADD_CNAME_ON_ROOT) {
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "hostname");
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
@@ -437,8 +445,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 	ilen = strlen(regexps[IP_REGEX]);
 	if ((ilen + dlen + 4) > RBUFF_S)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
-	if (!(regex = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "regex in validate_glue_comm_line");
+	regex = cmdb_malloc(RBUFF_S, "regex in validate_glue_comm_line");
 	if (strchr(comm->glue_ip, ',')) {
 		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
@@ -464,7 +471,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue NS");
 	}
-	free(regex);
+	cmdb_free(regex, RBUFF_S);
 }
 
 void

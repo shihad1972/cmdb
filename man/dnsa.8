@@ -1,4 +1,4 @@
-.TH DNSA 8 "Version 0.2: 18 July 2014" "CMDB suite manuals"
+.TH DNSA 8 "Version 0.2: 1 August 2015" "CMDB suite manuals"
 .SH NAME
 dnsa \- Domain Name System Administration
 .SH SYNOPSIS
@@ -13,7 +13,7 @@ dnsa \- Domain Name System Administration
 
 .B dnsa
 [
-.B -abdeglruwxvz
+.B -abdeglmruwxvz
 ] [
 .B -FRSG
 ] [
@@ -46,6 +46,8 @@ add a preferred forward record for the PTR
 delete a preferred forward record
 .IP -l
 list zones
+.IP -m
+add CNAME record to the root domain
 .IP -r
 delete a record
 .IP -u
@@ -92,7 +94,7 @@ This is the ip address of the master name server.
 .PP
 .B Delegate zones (a.k.a. glue zones)
 
-It can be useful to delegate control of a subdomain to other servers, and this
+It can be useful to delegate control of a sub-domain to other servers, and this
 options allows you to do so.
 You need to use the \fB-I\fP and, optionally, the \fB-N\fP options described
 below to create the \fBglue records\fP that control the delegation of the
@@ -108,13 +110,13 @@ If you do not then you may get errors from bind about "out of zone" records.
 .B Options for adding a delegated zone and glue records
 .IP "-I pri_ns_ip,sec_ns_ip"
 These are the IP addresses of the primary, and optionally, secondary name
-servers that you are delegating the subdomain to, and will be used in the
+servers that you are delegating the sub-domain to, and will be used in the
 creation of the \fBglue records\fP.
 .PP
 .IP "-N pri_ns_name,sec_ns_name"
 The name of the primary, and optionally, the secondary name server(s) that will
 create the \fBglue records\fP.
-These will prefix the subdomain to get the FQDN of the name server.
+These will prefix the sub-domain to get the FQDN of the name server.
 If these are not supplied, then the standards \fBn1\fP and \fBns2\fP will be
 used.
 .PP
@@ -136,6 +138,16 @@ When adding an MX record this is the priority of the MX record.
 This is either \fBtcp\fP or \fBudp\fP when creating an SRV record
 .IP "-s service"
 This is the name listed in \fB/etc/services\fP for creating an SRV record.
+.PP
+.B Options for adding a CNAME to the root domain
+
+If you have multiple sub-domains on the server, it can be useful to cname a
+record into the root domain, to cut down on the number of search domains.
+This option enables this. Specify the host and the sub-domain.
+.IP "-h host"
+The hostname you wish to cname
+.IP "-n domain"
+The sub-domain that contains the host record
 .PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf

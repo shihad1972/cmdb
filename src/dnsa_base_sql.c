@@ -558,8 +558,7 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	int retval;
 	zone_info_s *zone, *list;
 
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_mysql");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in dnsa_store_zone_mysql");
 	init_zone_struct(zone);
 	zone->id = strtoul(row[0], NULL, 10);
 	snprintf(zone->name, RBUFF_S, "%s", row[1]);
@@ -631,8 +630,7 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	int retval;
 	rev_zone_info_s *rev, *list;
 
-	if (!(rev = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_mysql");
+	rev = cmdb_malloc(sizeof(rev_zone_info_s), "rev in dnsa_store_rev_zone_mysql");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = strtoul(row[0], NULL, 10);
 	snprintf(rev->net_range, RANGE_S, "%s", row[1]);
@@ -911,10 +909,9 @@ dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_insert_fields[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i;
 
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_insert_fields[type]; i++)
 		if ((retval = dnsa_setup_insert_mysql_bind(&my_bind[i], i, type, base)) != 0)
@@ -933,12 +930,11 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_update_args[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i, dbtype;
 	dbdata_s *list;
 
 	list = data;
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_update_args[type]; i++) {
 		dbtype = dnsa_update_arg_type[type][i];
@@ -958,12 +954,11 @@ dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_delete_args[type]];
 	const char *query;
-	int retval;
+	int retval = 0;
 	unsigned int i, dbtype;
 	dbdata_s *list;
 
 	list = data;
-	retval = 0;
 	memset(my_bind, 0, sizeof(my_bind));
 	for (i = 0; i < dnsa_delete_args[type]; i++) {
 		dbtype = dnsa_delete_arg_type[type][i];
@@ -1324,11 +1319,9 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	int retval;
 	zone_info_s *zone, *list;
 	
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in dnsa_store_zone_sqlite");
-	if (!(stime = calloc(MAC_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "stme in dnsa_store_zone_sqlite");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in dnsa_store_zone_sqlite");
 	init_zone_struct(zone);
+	stime = cmdb_malloc(MAC_S, "stime in dnsa_store_zone_sqlite");
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(zone->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 2));
@@ -1374,10 +1367,8 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	int retval;
 	rev_zone_info_s *rev, *list;
 	
-	if (!(rev = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "rev in dnsa_store_rev_zone_sqlite");
-	if (!(stime = malloc(sizeof(rev_zone_info_s))))
-		report_error(MALLOC_FAIL, "stime in dnsa_store_rev_zone_sqlite");
+	rev = cmdb_malloc(sizeof(rev_zone_info_s), "rev in dnsa_store_zone_sqlite");
+	stime = cmdb_malloc(MAC_S, "stime in dnsa_store_rev_zone_sqlite");
 	init_rev_zone_struct(rev);
 	rev->rev_zone_id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(rev->net_range, RANGE_S, "%s", sqlite3_column_text(state, 1));
