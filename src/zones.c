@@ -569,7 +569,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	cmdb_free(buff, RBUFF_S);
 	cmdb_free(zone, strlen(parent));
 }
-
+// **FIXME: This should probably return 1 if found rather than 0
 int
 check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 {
@@ -1330,6 +1330,7 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa->records = record;
 	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
 	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
+// **FIXME: Need to search zone to see if record already exists
 	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
 	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
 	snprintf(record->host, RBUFF_S, "%s", cm->host);
@@ -1351,6 +1352,95 @@ add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 }
 
 int
+add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
+{
+	char domain[RBUFF_S], *tmp, *tld;
+	int retval;
+	unsigned long int zid = 0;
+	dnsa_s *dnsa;
+	dbdata_s *data;
+	zone_info_s *zone, *z;
+	record_row_s *rec, *r;
+
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_cname_to_root_domain");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_cname_to_root_domain");
+	rec = cmdb_malloc(sizeof(record_row_s), "zone in add_cname_to_root_domain");
+	init_dnsa_struct(dnsa);
+	init_zone_struct(zone);
+	init_record_struct(rec);
+	init_multi_dbdata_struct(&data, 2);
+/*	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
+		snprintf(cm->ztype, RANGE_S, "master"); */
+	fill_fwd_zone_info(zone, cm, dc);
+	dnsa->zones = zone;
+	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) == 0) {
+		retval = NO_DOMAIN;
+		printf("Zone %s not in database\n", zone->name);
+		goto cleanup;
+	}
+	dnsa->zones = NULL;
+	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0)
+		goto cleanup;
+	if (check_parent_for_a_record(cm->host, cm->domain, dnsa)) {
+		fprintf(stderr, "Host %s not found in domain %s\n", cm->host, cm->domain);
+		goto cleanup;
+	}
+	snprintf(domain, RBUFF_S, "%s", cm->domain);
+	tmp = domain;
+	while ((tmp = strchr(tmp, '.'))) {
+		tmp++;
+		z = dnsa->zones;
+		while (z) {
+			if (strncmp(tmp, z->name, RBUFF_S) == 0) {
+				zid = z->id;
+				tld = z->name;
+				break;
+			}
+			z = z->next;
+		}
+	}
+	if (zid == 0) {
+		fprintf(stderr, "Cannot find top level domain for %s\n", cm->domain);
+		retval = NO_DOMAIN;
+		goto cleanup;
+/*	} else {
+		z = dnsa->zones;
+		while (z) {
+			if (zone->id == zid)
+				tld = z->name;
+			z = z->next;
+		} */
+	}
+	zone->next = dnsa->zones;
+	dnsa->zones = NULL;
+	r = dnsa->records;
+	snprintf(rec->dest, RBUFF_S, "%s.%s.", cm->host, cm->domain);
+	snprintf(rec->host, HOST_S, "%s", cm->host);
+	snprintf(rec->type, COMM_S, "CNAME");
+	rec->zone = zid;
+	rec->cuser = rec->muser = (unsigned long int)getuid();
+	dnsa->records = rec;
+	data->args.number = rec->cuser;
+	data->next->args.number = zid;
+	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0) {
+		fprintf(stderr, "Cannot insert into database");
+		retval = CANNOT_INSERT_RECORD;
+		rec->next = r;
+		dnsa->zones = zone;
+		goto cleanup;
+	} else {
+		printf("Host added as cname into zone %s\n", tld);
+		if ((retval = dnsa_run_update(dc, data, ZONE_UPDATED_YES)) != 0)
+			fprintf(stderr, "Cannot set zone as update\n");
+	}
+
+	cleanup:
+		dnsa_clean_list(dnsa);
+		clean_dbdata_struct(data);
+		return retval;
+}
+
+int
 delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	char fqdn[RBUFF_S], *name;
@@ -1360,7 +1450,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	zone_info_s *zone;
 
 	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in delete_record");
-// **FIXME: Should probably just muti init here
+// **FIXME: Should probably just multi init here
 	init_dbdata_struct(&data);
 	init_dbdata_struct(&user);
 	user.next = &data;
@@ -1392,7 +1482,7 @@ delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		return CANNOT_FIND_RECORD_ID;
 	}
 	printf("%d record(s) deleted\n", retval);
-/* The we do not return retval here is good, as this should return the 
+/* That we do not return retval here is good, as this should return the 
  * number of updates to the database. However, for mysql this always
  * returns 0. For sqlite, this returns an error code! */
 	retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES);

@@ -437,6 +437,8 @@ int
 rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev);
 void
 insert_into_rev_del_list(rev_record_row_s *record, rev_record_row_s **rev);
+int
+add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm);
 /* Updated / modified functions */
 int
 rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev);
@@ -464,4 +466,5 @@ char *
 get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);
 void
 glue_sort_fqdn(glue_zone_info_s *glue);
+
 #endif /* __CMDB_DNSA_H__ */

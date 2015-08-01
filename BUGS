@@ -1,3 +1,6 @@
+01/08/2015
+check_parent_for_a_record() in zones.c should return 1 if record found not 0
+
 15/01/2015
 Foreign keys are not working in sqlite. This is due to the fact that they need
 to be specifically enabled. In cbcsysp I have turned them on for the delete. I

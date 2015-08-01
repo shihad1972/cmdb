@@ -44,7 +44,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
 	int opt, retval = 0;
 
-	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -62,6 +62,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'l') {
 			comp->action = LIST_ZONES;
 			snprintf(comp->domain, COMM_S, "all");
+		} else if (opt == 'm') {
+			comp->action = ADD_CNAME_ON_ROOT;
+			comp->type = FORWARD_ZONE;
 		} else if (opt == 'r') {
 			comp->action = DELETE_RECORD;
 			comp->type = FORWARD_ZONE;
@@ -148,8 +151,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD))
-	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD) ||
+	      (comp->action == ADD_CNAME_ON_ROOT)) && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;
@@ -402,6 +405,11 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		if ((validate_user_input(comm->host, DOMAIN_REGEX) < 0) &&
 		    (validate_user_input(comm->host, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "CNAME host");
+	} else if (comm->action == ADD_CNAME_ON_ROOT) {
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "hostname");
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
@@ -512,6 +520,12 @@ dnsa_init_config_values(dnsa_config_s *dc)
 	sprintf(dc->rndc, "/usr/sbin/rndc");
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
+}
+
+void
+init_dnsa_struct(dnsa_s *dnsa)
+{
+	memset(dnsa, 0, sizeof(dnsa_s));
 }
 
 void
