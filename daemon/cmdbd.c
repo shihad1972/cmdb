@@ -44,7 +44,7 @@ main(int argc, char *argv[])
 {
 	int retval = 0;
 	int s, err, wk;
-	struct cmdbc_config *cm = ailsa_malloc(sizeof(struct cmdbc_config), "cm in main");
+	struct cmdbc_config *cm = ailsa_calloc(sizeof(struct cmdbc_config), "cm in main");
 
 	ailsa_start_syslog(basename(argv[0]));
 /*	if (daemon(0, 0) < 0) {

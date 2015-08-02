@@ -92,9 +92,9 @@ main(int argc, char *argv[])
 		display_usage(argv[0]);
 	}
 
-	cmdb_config_s *cmdb = ailsa_malloc(sizeof(cmdb_config_s), "cmdb in main");
-	dnsa_config_s *dnsa = ailsa_malloc(sizeof(dnsa_config_s), "dnsa in main");
-	cbc_config_s *cbc = ailsa_malloc(sizeof(cbc_config_s), "cbc in main");
+	cmdb_config_s *cmdb = ailsa_calloc(sizeof(cmdb_config_s), "cmdb in main");
+	dnsa_config_s *dnsa = ailsa_calloc(sizeof(dnsa_config_s), "dnsa in main");
+	cbc_config_s *cbc = ailsa_calloc(sizeof(cbc_config_s), "cbc in main");
 	struct all_config all =  { .cmdb = cmdb, .dnsa = dnsa, .cbc = cbc, .cmdbd = &data };
 	memset(&data, 0, len);
 	cmdbd_parse_config(config_file, &data, len);

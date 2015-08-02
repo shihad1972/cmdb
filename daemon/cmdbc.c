@@ -65,7 +65,7 @@ main(int argc, char *argv[])
 	const char *basedir = "/var/lib/cmdb/client/";
 	int retval = 0;
 	int s;
-	struct cmdbc_config *cm = ailsa_malloc(sizeof(struct cmdbc_config), "cm in main");
+	struct cmdbc_config *cm = ailsa_calloc(sizeof(struct cmdbc_config), "cm in main");
 
 	ailsa_start_syslog(basename(argv[0]));
 	if (argc > 1)
@@ -133,13 +133,13 @@ cmdbc_init_client(const char *basedir)
 		return retval;
 	if ((retval = get_client_uuid(basedir)) != 0)
 		return retval;
-	ccc.host = ailsa_malloc(NI_MAXHOST, "ccc.host in cmdbc_init_client");
+	ccc.host = ailsa_calloc(NI_MAXHOST, "ccc.host in cmdbc_init_client");
 	if ((retval = gethostname(ccc.host, NI_MAXHOST)) != 0) {
 		syslog(LOG_ALERT, "gethostname() error: %s", strerror(errno));
 		return retval;
 	}
-	ccc.fqdn = ailsa_malloc(RBUFF_S, "ccc.fqdn in cmdbc_init_clinet");
-	ccc.ip = ailsa_malloc(INET6_ADDRSTRLEN, "ccc.ip in cmdbc_init_client");
+	ccc.fqdn = ailsa_calloc(RBUFF_S, "ccc.fqdn in cmdbc_init_clinet");
+	ccc.ip = ailsa_calloc(INET6_ADDRSTRLEN, "ccc.ip in cmdbc_init_client");
 	retval = ailsa_get_fqdn(ccc.host, ccc.fqdn, ccc.ip);
 	if (strnlen(ccc.fqdn, RBUFF_S) == 0)
 		my_free(ccc.fqdn);
@@ -157,7 +157,7 @@ get_client_uuid(const char *basedir)
 	size_t len = sizeof(uuid_t);
 	uuid_t cli_uuid;
 
-	file = ailsa_malloc(CONF_S, "file in get_client_uuid");
+	file = ailsa_calloc(CONF_S, "file in get_client_uuid");
 	snprintf(file, CONF_S, "%s%s", basedir, "uuid");
 	if ((retval = stat(file, &st)) != 0) {	// no uuid file
 		uuid_generate(cli_uuid);
@@ -167,7 +167,7 @@ get_client_uuid(const char *basedir)
 		if ((retval = ailsa_read_file(file, &cli_uuid, len)) != 0)
 			return retval;
 	}
-	ccc.uuid = ailsa_malloc(HOST_S, "ccc.uuid in get_client_uuid");
+	ccc.uuid = ailsa_calloc(HOST_S, "ccc.uuid in get_client_uuid");
 	uuid_unparse_upper(cli_uuid, ccc.uuid);
 	return retval;
 }

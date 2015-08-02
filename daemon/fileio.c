@@ -125,7 +125,7 @@ read_cbc(cbc_config_s *cbc, char *dir)
 		return CBC_NO_DATA;
 
 	int retval;
-	char *f = ailsa_malloc(CONF_S, "f in read_cbc");
+	char *f = ailsa_calloc(CONF_S, "f in read_cbc");
 	size_t len = sizeof cbc_files / sizeof f;
 	size_t i;
 	snprintf(f, CONF_S, "%sdata/raw/", dir);
@@ -147,8 +147,8 @@ write_cbc(cbc_config_s *cbc, char *dir)
 		return CBC_NO_DATA;
 
 	int retval = 0;
-	cbc_s *c = ailsa_malloc(sizeof(cbc_s), "c in write_cbc");
-	char *file = ailsa_malloc(CONF_S, "file in write_cbc");
+	cbc_s *c = ailsa_calloc(sizeof(cbc_s), "c in write_cbc");
+	char *file = ailsa_calloc(CONF_S, "file in write_cbc");
 	size_t len = sizeof cbc_files / sizeof c;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	int query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_OS | BUILD_TYPE | 
@@ -201,7 +201,7 @@ read_cmdb(cmdb_config_s *cmdb, char *dir)
 	if (!cmdb || !dir)
 		return CBC_NO_DATA;
 
-	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
+	char *file = ailsa_calloc(CONF_S, "file in write_cmdb");
 	size_t len = sizeof cmdb_files / sizeof file;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	AILLIST list[len], *l, *tmp;
@@ -281,8 +281,8 @@ write_cmdb(cmdb_config_s *cmdb, char *dir)
 		return CBC_NO_DATA;
 
 	int retval = 0;
-	cmdb_s *c = ailsa_malloc(sizeof(cmdb_s), "c in write_cmdb");
-	char *file = ailsa_malloc(CONF_S, "file in write_cmdb");
+	cmdb_s *c = ailsa_calloc(sizeof(cmdb_s), "c in write_cmdb");
+	char *file = ailsa_calloc(CONF_S, "file in write_cmdb");
 	size_t len = sizeof cmdb_files / sizeof c;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	int query = SERVER | CUSTOMER | CONTACT | SERVICE | HARDWARE | VM_HOST;
@@ -333,7 +333,7 @@ read_dnsa(dnsa_config_s *dnsa, char *dir)
 	if (!dnsa)
 		return CBC_NO_DATA;
 
-	f = ailsa_malloc(CONF_S, "f in read_dnsa");
+	f = ailsa_calloc(CONF_S, "f in read_dnsa");
 	snprintf(f, CONF_S, "%s/data/raw/", dir);
 	size_t len = sizeof dnsa_files / sizeof f;
 	AILLIST list[len], *l;
@@ -400,8 +400,8 @@ write_dnsa(dnsa_config_s *dnsa, char *dir)
 	if (!dnsa || !dir)
 		return CBC_NO_DATA;
 
-	dnsa_s *d = ailsa_malloc(sizeof(dnsa_s), "d in write_dnsa");
-	char *file = ailsa_malloc(CONF_S, "file in write_dnsa");
+	dnsa_s *d = ailsa_calloc(sizeof(dnsa_s), "d in write_dnsa");
+	char *file = ailsa_calloc(CONF_S, "file in write_dnsa");
 	size_t len = sizeof dnsa_files / sizeof d;
 	snprintf(file, CONF_S, "%sdata/raw/", dir);
 	int query = ZONE | REV_ZONE | RECORD | REV_RECORD | GLUE | PREFERRED_A;
@@ -423,7 +423,7 @@ setup_read_new(AILLIST *list, const char *files[], const size_t sizes[], size_t 
 	int retval = 0;
 	size_t i;
 
-	file = ailsa_malloc(CONF_S, "file in setup_read");
+	file = ailsa_calloc(CONF_S, "file in setup_read");
 	for (i = 0; i < num; i++)
 		ailsa_list_init(&list[i], free);
 	for (i = 0; i < num; i++) {
@@ -452,14 +452,14 @@ read_bin_file_new(AILLIST *d, const char *file, size_t len)
 		perror("open() in read_bin_file_new");
 		goto cleanup;
 	}
-	p = ailsa_malloc(len, "p in read_bin_file_new");
+	p = ailsa_calloc(len, "p in read_bin_file_new");
 	while ((slen = read(fd, p, len)) > 0) {
 		if ((retval = ailsa_list_ins_next(d, (AILELEM *)d->tail, p)) != 0) {
 			retval = 1;
 			fprintf(stderr, "ailsa_list_ins_next failed\n");
 			goto cleanup;
 		}
-		p = ailsa_malloc(len, "p in read_bin_file_new loop");
+		p = ailsa_calloc(len, "p in read_bin_file_new loop");
 	}
 	if (slen < 0) {
 		retval = 1;
@@ -494,7 +494,7 @@ setup_write(void *s, const char *files[], const size_t sizes[], size_t num, cons
 	size_t i;
 	void *ptr;
 
-	file = ailsa_malloc(CONF_S, "file in setup_write");
+	file = ailsa_calloc(CONF_S, "file in setup_write");
 	for (i = 0; i < num; i++) {
 		ptr = *((char **)s + i);
 		if (!files[i])
@@ -516,7 +516,7 @@ setup_write_new(AILLIST *list, const char *files[], const size_t sizes[], size_t
 	char *file;
 	size_t i;
 
-	file = ailsa_malloc(CONF_S, "file in setup_write_new");
+	file = ailsa_calloc(CONF_S, "file in setup_write_new");
 	for (i = 0; i < num; i++) {
 		if (!(files[i]))
 			break;
