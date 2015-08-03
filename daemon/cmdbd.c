@@ -35,6 +35,7 @@
 #include <sys/time.h>
 #include <ailsacmdb.h>
 #include "cmdb.h"
+#include "client_info.h"
 
 static void
 parse_command_line(struct cmdbc_config *cm, int argc, char *argv[]);

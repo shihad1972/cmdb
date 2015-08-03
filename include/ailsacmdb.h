@@ -21,6 +21,8 @@
 
 #ifndef __AILSACMDB_H__
 # define __AILSACMDB_H__
+# include <stdlib.h>
+# include <time.h>
 /** Useful macro to safely avoid double-free memory corruption
  ** Shamelessly stolen from the nagios source. Thanks :) */
 # ifndef my_free
@@ -81,6 +83,15 @@ enum {			/* regex search codes */
 	DC_REGEX
 };
 
+enum {			// Client commands
+	CHECKIN = 1,
+	HOST = 2,
+	DATA = 3,
+	UPDATE = 4,
+	CLOSE = 5
+};
+
+
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -107,6 +118,57 @@ typedef struct ailsa_hash_s {
 	unsigned int	size;
 	AILLIST		*table;
 } AILHASH;
+
+// Various client information data structs
+
+typedef struct CMDBHARD {
+	char *name;
+	char *type;
+	char *detail;
+} CMDBHARD;
+
+typedef struct CMDBIFACE {
+	char *name;
+	char *type;
+	char *ip;
+	char *nm;
+	char *mac;
+} CMDBIFACE;
+
+typedef struct CMDBROUTE {
+	char *dest;
+	char *gw;
+	char *nm;
+	char *iface;
+} CMDBROUTE;
+
+typedef struct CMDBFILE {
+	char *name;
+	void *data;
+} CMDBFILE;
+
+typedef struct CMDBPKG {
+	char *name;
+	char *version;
+} CMDBPKG;
+
+// Struct to hold info on one client
+
+struct client_info {
+	char *uuid;
+	char *fqdn;
+	char *hostname;
+	char *os;
+	char *distro;
+	time_t ctime;
+	time_t mtime;
+	AILLIST *hard;
+	AILLIST *iface;
+	AILLIST *route;
+	AILLIST *file;
+	AILLIST *pkg;
+// We could also do with local users and mounted / configured file systems
+};
 
 // Structs to hold configuration values
 
@@ -243,19 +305,27 @@ ailsa_tcp_socket_bind(const char *node, const char *service);
 
 int
 ailsa_tcp_socket(const char *node, const char *service);
-
-/* 
+ 
 int
-ailsa_accept_tcp_connection(int sock); */
-
-int
-ailsa_accept_client(int sock);
+ailsa_accept_tcp_connection(int sock);
 
 int
 ailsa_get_fqdn(char *host, char *fqdn, char *ip);
 
 int
 ailsa_do_client_send(int s, struct cmdb_client_config *c);
+
+int
+ailsa_handle_send_error(int error);
+
+int
+ailsa_handle_recv_error(int error);
+
+int
+ailsa_send_response(int client, char *buf);
+
+int
+ailsa_do_close(int client, char *buf);
 
 // File / Directory IO helper functions
 
@@ -275,5 +345,34 @@ ailsa_append_file(const char *name, void *data, size_t len);
  
 int
 ailsa_validate_input(char *input, int test);
+
+// Various struct data functions
+
+// struct data init functions
+
+int
+ailsa_init_client_info(struct client_info *ci);
+
+// Struct data clean functions to be used with AILLIST destroy()
+
+void
+ailsa_clean_hard(void *hard);
+
+void
+ailsa_clean_iface(void *iface);
+
+void
+ailsa_clean_route(void *route);
+
+void
+ailsa_clean_file(void *file);
+
+void
+ailsa_clean_pkg(void *pkg);
+
+// client_info clean
+
+void
+ailsa_clean_client_info(struct client_info *ci);
 
 #endif // __AILSACMDB_H__

@@ -49,47 +49,12 @@ enum {
 	BUFF_S = 1024
 };
 
-enum {			// Client commands
-	CHECKIN = 1,
-	HOST = 2,
-	DATA = 3,
-	UPDATE = 4,
-	CLOSE = 5
-};
-	
 /*
 static int
 ailsa_tcp_socket(const char *node, const char *service); */
 
-static int
-ailsa_accept_tcp_connection(int ssock);
-
-static void
-ailsa_handle_client(int client);
-
 static char *
 print_sock_addr(const struct sockaddr *addr);
-
-static int
-ailsa_handle_send_error(int error);
-
-static int
-ailsa_handle_recv_error(int error);
-
-static int
-get_command(char *buffer);
-
-static char *
-get_uuid(char *buffer);
-
-static char *
-get_host(char *buffer);
-
-static int
-ailsa_send_response(int client, char *buf);
-
-static int
-ailsa_do_close(int client, char *buf);
 
 static int
 ailsa_do_client_checkin(int s, char *line, struct cmdb_client_config *c);
@@ -140,40 +105,6 @@ ailsa_tcp_socket_bind(const char *node, const char *service)
 	}
 	freeaddrinfo(saddr);
 	return ssock;
-}
-
-int
-ailsa_accept_client(int sock)
-{
-	int c = ailsa_accept_tcp_connection(sock);
-	static unsigned int cc = 0;	// child count
-	if (c < 0)
-		return c;
-	pid_t proc_id = fork();
-	if (proc_id < 0) {
-		syslog(LOG_ALERT, "forking failed: %s", strerror(errno));
-		return -1;
-	} else if (proc_id == 0) {
-		close(sock);	// Child does not need this socket
-		ailsa_handle_client(c);
-		exit(0);
-	}
-	syslog(LOG_INFO, "Spawned child process %d", proc_id);
-	close(c);
-	cc++;
-	while (cc) {
-		proc_id = waitpid(-1, NULL, WNOHANG);
-		if (proc_id < 0) {
-			syslog(LOG_ALERT, "waitpid() failure: %s", strerror(errno));
-			exit(1);	// Should probably be more clever here 
-		} else if (proc_id == 0) {
-			break;
-		} else {
-			cc--;
-		}
-	}
-//	ailsa_handle_client(c);
-	return 0;
 }
 
 int
@@ -330,7 +261,7 @@ sock_addrs_eq(const struct sockaddr *addr1, const struct sockaddr *addr2)
 		return false;
 }
 
-static int
+int
 ailsa_accept_tcp_connection(int ssock)
 {
 	struct sockaddr_storage caddr; // Client address
@@ -345,131 +276,7 @@ ailsa_accept_tcp_connection(int ssock)
 	return csock;
 }
 
-static void
-ailsa_handle_client(int client)
-{
-	char sbuf[BUFF_S];
-	char *host = NULL;
-	char *uuid = NULL;
-	int retval, command;
-	size_t len;
-	ssize_t slen;
-
-	snprintf(sbuf, BUFF_S, "AILCMDB: %s\r\n", AILSAVERSION);
-	len = strlen(sbuf);
-	if ((slen = send(client, sbuf, len, 0)) < 0) {
-		if ((retval = ailsa_handle_send_error(errno)) != 0)
-			goto cleanup;
-	}
-	while (1) {	// loop through getting client commands
-		memset(&sbuf, 0, TBUFF_S + 1);
-		// Could use select() here - write out data to disk etc if client is not communicating
-		if ((slen = recv(client, sbuf, TBUFF_S, 0)) < 0) {
-			if ((retval = ailsa_handle_recv_error(errno)) != 0)
-				goto cleanup;
-		} else {
-/* 
- * Here we should retrieve the command the client has sent us, and deal
- * with it. Need to define the MAX length of a command (probably 15 chars
- * will be enough) with the entire command string a max of 64 chars.
- * As we are using \r\n this in effect is 62 characters. If we want to
- * use FQDN names this will not be enough!!
- * We should up this to 512 characters (TBUFF_S). A good size.
- */
-			if ((command = get_command(sbuf)) == 0)
-				goto cleanup;
-		}
-		switch (command) {
-		case CHECKIN:
-			if (!(uuid = get_uuid(sbuf)))
-				goto cleanup;
-			if ((retval = ailsa_send_response(client, sbuf)) < 0)
-				goto cleanup;
-			break;
-		case HOST:
-			if (!(host = get_host(sbuf)))
-				goto cleanup;
-			if ((retval = ailsa_send_response(client, sbuf)) < 0)
-				goto cleanup;
-			break;
-		case CLOSE:
-			retval = ailsa_do_close(client, sbuf);
-			goto cleanup;
-			break;
-		default:
-			goto cleanup;
-			break;
-		}
-	}
-	cleanup:
-		close(client);
-		return;
-}
-
-static int
-get_command(char *buffer)
-{
-	if (strncasecmp("CHECKIN: ", buffer, 9) == 0)
-		return CHECKIN;
-	else if (strncasecmp("HOST: ", buffer, 6) == 0)
-		return HOST;
-	else if (strncasecmp("DATA: ", buffer, 6) == 0)
-		return DATA;
-	else if (strncasecmp("UPDATE: ", buffer, 8) == 0)
-		return UPDATE;
-	else if (strncasecmp("CLOSE: ", buffer, 7) == 0)
-		return CLOSE;
-	else
-		return 0;
-}
-
-static char *
-get_uuid(char *buffer)
-{
-	char *uuid = NULL;
-	char *ptr;
-	int retval;
-	size_t len;
-
-	if ((len = strnlen(buffer, HOST_S)) == HOST_S)
-		return uuid;
-	if ((retval = strncmp(buffer, "CHECKIN: ", COMM_S + 1)) != 0)
-		return uuid;
-	if (!(ptr = strchr(buffer, ' ')))
-		return uuid;
-	ptr++;
-	ailsa_munch(ptr);
-	if ((len = strlen(ptr)) != 36)
-		return uuid;
-	// Should do a regex here - can base on checks.c|h
-	uuid = strndup(ptr, 36);
-	return uuid;
-}
-
-static char *
-get_host(char *buffer)
-{
-	char *host = NULL;
-	char *ptr;
-	int retval;
-	size_t len;
-
-	if ((len = strnlen(buffer, TBUFF_S)) == TBUFF_S)
-		return host;
-	if ((retval = strncmp(buffer, "HOST: ", 6)) != 0)
-		return host;
-	if (!(ptr = strchr(buffer, ' ')))
-		return host;
-	ptr++;
-	ailsa_munch(ptr);
-	if ((len = strlen(ptr)) > RBUFF_S)
-		return host;
-	// should do a regex here
-	host = strndup(ptr, RBUFF_S);
-	return host;
-}
-
-static int
+int
 ailsa_send_response(int c, char *b)
 {
 	int retval = 0;
@@ -482,7 +289,7 @@ ailsa_send_response(int c, char *b)
 	return retval;
 }
 
-static int
+int
 ailsa_do_close(int client, char *buf)
 {
 	int retval = 0;
@@ -497,7 +304,7 @@ ailsa_do_close(int client, char *buf)
 	return retval;
 }
 
-static int
+int
 ailsa_handle_send_error(int error)
 {
 	int retval = -1;
@@ -516,7 +323,7 @@ ailsa_handle_send_error(int error)
 	return retval;
 }
 
-static int
+int
 ailsa_handle_recv_error(int error)
 {
 	int retval = -1;

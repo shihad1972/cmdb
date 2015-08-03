@@ -15,6 +15,7 @@ CPPFLAGS += -I../src/ -I../include/ -I/usr/include/mysql -I/usr/include/uuid
 bin_PROGRAMS = ailsa cmdbc
 sbin_PROGRAMS = cmdbd
 
+SOBJECTS = client_info.o
 CDOBJECTS = cmdbd.o
 COBJECTS = cmdbc.o
 AOBJECTS = ailsa.o conversion.o fileio.o
@@ -22,11 +23,11 @@ DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../sr
 
 all:	$(sbin_PROGRAMS)
 
-cmdbd:	$(CDOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+cmdbd:	$(CDOBJECTS) $(SOBJECTS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) $(SOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
-cmdbc:	$(COBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(COBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+cmdbc:	$(COBJECTS) $(SOBJECTS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(COBJECTS) $(SOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
 ailsa:	$(AOBJECTS) $(DBOBJECTS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(AOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)

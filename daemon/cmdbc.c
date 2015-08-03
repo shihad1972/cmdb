@@ -44,6 +44,7 @@
 #include <netinet/in.h>
 #include <ailsacmdb.h>
 #include "cmdb.h"
+#include "client_info.h"
 
 static struct cmdb_client_config ccc;
 

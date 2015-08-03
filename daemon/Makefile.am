@@ -1,7 +1,12 @@
-sbin_PROGRAMS = cmdbd
+sbin_PROGRAMS = cmdbd cmdbc
 
-cmdbd_SOURCES = cmdbd.c
+shar_SOURCES = client_info.c
+
+cmdbd_SOURCES = cmdbd.c $(shar_SOURCES)
 cmdbd_LDADD = ../lib/libalisacmdb.la
+
+cmdbc_SOURCES = cmdbc.c $(shar_SOURCES)
+cmdbc_LDADD = ../lib/libailsacmdb.la
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_CPPFLAGS = -I../src/ -I../include/

@@ -17,49 +17,28 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  cmdbd.h: Main cmdb header file
+ *  client_info.h: Function prototypes for client data manipulation
  */
 
-#ifndef __CMDBD_H__
-# define __CMDBD_H__
+#ifndef __CLIENT_INFO_H_
+# define __CLIENT_INFO_H_
 
-struct cmdbd_config {
-	char *dbtype;
-	char *db;
-	char *file;
-	char *user;
-	char *pass;
-	char *host;
-	char *dir;
-	char *bind;
-	char *dnsa;
-	char *rev;
-	char *rndc;
-	char *chkz;
-	char *chkc;
-	char *socket;
-	char *hostmaster;
-	char *prins;
-	char *secns;
-	char *pridns;
-	char *secdns;
-	char *toplevelos;
-	char *pxe;
-	char *tmpdir;
-	char *preseed;
-	char *tftpdir;
-	char *dhcpconf;
-	char *kickstart;
-	unsigned int port;
-	unsigned long int refresh;
-	unsigned long int retry;
-	unsigned long int expire;
-	unsigned long int ttl;
-};
+int
+ailsa_accept_client(int sock);
 
-struct cmdbc_config {
-	char *host;
-	char *service;
-};
+void
+ailsa_handle_client(int client);
 
-#endif // __CMDBD_H__
+int
+get_command(char *buffer);
+
+char *
+get_uuid(char *buffer);
+
+char *
+get_host(char *buffer);
+
+int
+get_client_info(int client, int command, char *buf, struct client_info *ci);
+
+#endif // __CLIENT_INFO_H_
