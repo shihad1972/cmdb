@@ -104,7 +104,8 @@ enum {			/* dnsa error codes */
 	BUFFER_TOO_SMALL = 55,
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61,
-	CANNOT_UPDATE = 62
+	CANNOT_UPDATE = 62,
+	RECORD_EXISTS = 63
 };
 
 enum {			/* Database Type errors */
@@ -356,7 +357,8 @@ enum {			/* dnsa action codes */
 	ADD_PREFER_A = 28,
 	DELETE_ZONE = 29,
 	DELETE_RECORD = 30,
-	DELETE_PREFERRED = 31
+	DELETE_PREFERRED = 31,
+	ADD_CNAME_ON_ROOT = 32
 };
 
 enum {			/* cbc values for build type */
