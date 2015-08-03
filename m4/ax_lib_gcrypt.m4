@@ -58,7 +58,7 @@ AC_DEFUN([AX_LIB_GCRYPT],[
     ac_with_gcrypt=$1
   ])
   if test "$ac_with_gcrypt" = "yes" -o "$ac_with_gcrypt" = "auto" ; then
-    AM_PATH_LIBGCRYPT([1.2.0],[
+    AM_PATH_LIBGCRYPT([1.5.0],[
       AC_DEFINE([HAVE_GCRYPT],[1],[Gcrypt library is available])
       HAVE_GCRYPT=1
       # checking for available algorithms...
