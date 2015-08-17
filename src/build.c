@@ -1027,13 +1027,18 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 d-i partman-auto/expert_recipe string \\\n\
       monkey :: \\\n");
 	PRINT_STRING_WITH_LENGTH_CHECK
-	clean_dbdata_struct(data);
 
 	if (lvm > 0)
 		add_pre_volume_group(cml, build);
-	if ((retval = add_pre_parts(cmc, cml, build, lvm)) != 0)
-		return retval;
-	return NONE;
+	retval = add_pre_parts(cmc, cml, build, lvm);
+	memset(line, 0, FILE_S);
+	snprintf(line, FILE_S, "\
+\n\n\
+d-i grub-installer/only_debian boolean true\n\
+d-i grub-installer/bootdev  string %s\n", data->fields.text);
+	PRINT_STRING_WITH_LENGTH_CHECK
+	clean_dbdata_struct(data);
+	return retval;
 }
 
 int
