@@ -115,7 +115,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 /* Check if user has specified destination with -h and act accordingly */
 		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
 		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
-			snprintf(comp->dest, RANGE_S, "%s", comp->host);
+			snprintf(comp->dest, RBUFF_S, "%s", comp->host);
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
 		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
