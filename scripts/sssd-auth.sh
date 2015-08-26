@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Script to build an ssd configuration file
 #
@@ -15,7 +15,7 @@
 # SRV records are required for ldap and kerberos related services in the domain
 #
 
-WGET=`which wget`
+WGET=`/usr/bin/wget`
 while getopts "b:d:kr:u:" opt; do
   case $opt in 
     b)	BASE_DN=$OPTARG
@@ -34,12 +34,12 @@ while getopts "b:d:kr:u:" opt; do
 done
 
 # Sanity checks
-if [ -z "$DOMAIN" ]
+if [ -z "$DOMAIN" ]; then
   echo "Must provide DNS domain"
   exit 1
 fi
 
-if [ -z "$BASE_DN" ]
+if [ -z "$BASE_DN" ]; then
   echo "Must provide a base DN"
   exit 1
 fi
@@ -79,7 +79,7 @@ rkb5_realm = $REALM
 EOF
 
 if [ -n "$URL" ] && [ -n "$WGET" ]; then
-  $WGET $URL -O ${TGT}/etc/ssl/certs/Root-CA.pem
+  $WGET -O ${TGT}/etc/ssl/certs/Root-CA.pem $URL
   if [ -n $TGT ]; then
     cat >> ${TGT}/usr/share/firstboot/001-rehash.sh <<EOF
 #!/bin/sh
