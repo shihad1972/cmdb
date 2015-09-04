@@ -15,7 +15,7 @@
 # SRV records are required for ldap and kerberos related services in the domain
 #
 
-WGET=`/usr/bin/wget`
+WGET=/usr/bin/wget
 while getopts "b:d:kr:u:" opt; do
   case $opt in 
     b)	BASE_DN=$OPTARG
@@ -44,10 +44,11 @@ if [ -z "$BASE_DN" ]; then
   exit 1
 fi
 
-if [ -z "$REALM" ]; then
-  REALM=`echo $DOMAIN | tr '[:lower:]' '[:upper:]'`
-  echo "Used domain $DOMAIN to create kerberos realm $REALM"
-fi
+# This does not work as tr in busybox does not recognise these options.
+#if [ -z "$REALM" ]; then
+#  REALM=`echo $DOMAIN | tr '[:lower:]' '[:upper:]'`
+#  echo "Used domain $DOMAIN to create kerberos realm $REALM"
+#fi
 
 # Check to see if we are running in a preseed install
 if [ -d /target ]; then
@@ -75,10 +76,24 @@ auth_provider = krb5
 ldap_schema = rfc2307
 ldap_search_base = $BASE_DN
 dns_discovery_domain = $DOMAIN
-rkb5_realm = $REALM
 EOF
 
+if [ -z "$REALM" ]; then
+  cat >> ${TGT}/usr/share/firstboot/001-sssd.sh <<EOF
+#!/bin/sh
+DOMAIN=$DOMAIN
+REALM=\`echo \$DOMAIN | tr '[:lower:]' '[:upper:]'\`
+echo "krb5_realm = \$REALM" >> /etc/sssd/sssd.conf
+EOF
+  chmod 755 ${TGT}/usr/share/firstboot/001-sssd.sh
+else
+  echo "rkb5_realm = $REALM" >> $TARGET
+fi
+
+echo "Updating permissions on $TARGET"
+chmod 600 $TARGET
 if [ -n "$URL" ] && [ -n "$WGET" ]; then
+  echo "Command: $WGET -O ${TGT}/etc/ssl/certs/Root-CA.pem $URL"
   $WGET -O ${TGT}/etc/ssl/certs/Root-CA.pem $URL
   if [ -n $TGT ]; then
     cat >> ${TGT}/usr/share/firstboot/001-rehash.sh <<EOF
