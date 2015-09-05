@@ -40,7 +40,57 @@
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
-#include "cbcos.h"
+
+typedef struct cbcos_comm_line_s {
+	char alias[MAC_S];
+	char arch[RANGE_S];
+	char os[MAC_S];
+	char ver_alias[MAC_S];
+	char version[MAC_S];
+	short int action;
+} cbcos_comm_line_s;
+
+static void
+init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static void
+init_cbcos_comm_line(cbcos_comm_line_s *col);
+
+static int
+parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col);
+
+static int
+list_cbc_build_os(cbc_config_s *cmc);
+
+static int
+display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+/*
+static int
+check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data); */
+
+static int
+check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id);
+
+static void
+copy_new_os_profile(cbc_config_s *cmc, char *oss[]);
+
+static int
+cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[]);
+
+static void
+copy_new_build_os(cbc_config_s *cbc, uli_t *id);
+
+static void
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id);
+
+static void
+copy_packages_for_os(cbc_config_s *cbc, uli_t *id);
 
 int
 main (int argc, char *argv[])
@@ -90,14 +140,14 @@ main (int argc, char *argv[])
 	exit(retval);
 }
 
-void
+static void
 init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	init_cbc_config_values(cmc);
 	init_cbcos_comm_line(col);
 }
 
-void
+static void
 init_cbcos_comm_line(cbcos_comm_line_s *col)
 {
 	col->action = 0;
@@ -108,7 +158,7 @@ init_cbcos_comm_line(cbcos_comm_line_s *col)
 	snprintf(col->version, MAC_S, "NULL");
 }
 
-int
+static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
 	int opt;
@@ -163,7 +213,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 	return NONE;
 }
 
-int
+static int
 list_cbc_build_os(cbc_config_s *cmc)
 {
 	char *oalias, *talias;
@@ -201,7 +251,7 @@ list_cbc_build_os(cbc_config_s *cmc)
 	return retval;
 }
 
-int
+static int
 display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os;
@@ -251,7 +301,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	return retval;
 }
 
-int
+static int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *oss[3];
@@ -301,7 +351,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	return retval;
 }
 
-int
+static int
 remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
@@ -335,8 +385,8 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	clean_dbdata_struct(data);
 	return retval;
 }
-
-int
+/*
+static int
 check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
 {
 	char *version = col->version, *arch = col->arch;
@@ -354,9 +404,9 @@ check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
 		}
 	}
 	return NONE;
-}
+} */
 
-int
+static int
 check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 {
 	int retval, query = BUILD_ID_ON_OS_ID, i;
@@ -391,7 +441,7 @@ check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 	return retval;
 }
 
-void
+static void
 copy_new_os_profile(cbc_config_s *cmc, char *oss[])
 {
 	char alias[RANGE_S];
@@ -419,7 +469,7 @@ copy_new_os_profile(cbc_config_s *cmc, char *oss[])
 	return;
 }
 
-int
+static int
 cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 {
 	if (!(cbc) || !(oss) || !(id))
@@ -461,7 +511,7 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 		return 0;
 }
 
-void
+static void
 copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 {
 	if (!(cbc) || !(id)) {
@@ -472,7 +522,7 @@ copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 	copy_packages_for_os(cbc, id);
 }
 
-void
+static void
 copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 {
 	int retval = 0, query = LOCALE_DETAILS_ON_OS_ID, i = 0;
@@ -532,7 +582,7 @@ copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 	clean_cbc_struct(base);
 }
 
-void
+static void
 copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
 {
 	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
@@ -588,4 +638,3 @@ copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
 	base->package = plist;
 	clean_cbc_struct(base);
 }
-
