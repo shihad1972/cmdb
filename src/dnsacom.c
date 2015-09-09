@@ -413,7 +413,8 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
-		if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) ||
+		    (strncmp(comm->rtype, "NULL", COMM_S) == 0)) {
 			if (host[0] == '_') {
 				if (validate_user_input(host + 1, NAME_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");
