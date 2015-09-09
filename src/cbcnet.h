@@ -47,5 +47,8 @@ remove_from_dhcp_list(cbc_dhcp_s **list);
 int
 fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh);
 
+int
+decode_http_header(FILE *rx, unsigned long int *len);
+
 #endif /* __CBC_NET_H */
 

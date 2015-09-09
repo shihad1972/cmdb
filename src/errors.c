@@ -808,6 +808,8 @@ display_action_error(short int action)
 		fprintf(stderr, "Listing failed\n");
 	else if (action == ADD_TO_DB)
 		fprintf(stderr, "Adding to DB failed\n");
+	else if (action == RM_FROM_DB)
+		fprintf(stderr, "Removing from DB failed\n");
 	else
 		fprintf(stderr, "Unknown error code %d failed\n", action);
 }

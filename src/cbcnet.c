@@ -223,3 +223,67 @@ fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *list)
 	return retval;
 }
 
+int
+decode_http_header(FILE *rx, unsigned long int *len)
+{
+	char *buf, *t;
+	int retval = 1;
+	unsigned long int code;
+
+	if (!(buf = malloc(MAXDATASIZE))) {
+		perror("malloc in decode_header");
+		return retval;
+	}
+	if (!(fgets(buf, MAXDATASIZE, rx))) {
+		fprintf(stderr, "Cannot read HTTP line\n");
+		goto cleanup;
+	}
+	if (!(t = strtok(buf, " "))) {
+		fprintf(stderr, "Cannot tokenise response string\n");
+		goto cleanup;
+	}
+	if (!(t = strtok(NULL, " "))) {
+		fprintf(stderr, "Only 1 space in response??\n");
+		goto cleanup;
+	}
+	code = strtoul(t, NULL, 10);
+	if (code != 200) {
+		fprintf(stderr, "Server response code: %lu\n", code);
+		goto cleanup;
+	}
+	while (fgets(buf, MAXDATASIZE, rx)) {
+		if (strncmp(buf, "\r\n", 2) == 0) {
+			retval = 0;
+			goto cleanup;
+		}
+		t = strtok(buf, " ");
+/*
+ * The following does not necessarily have to be provided. The content could
+ * be dynamic. Since we are requesting a binary file with a fixed length
+ * this should be safe enough. If the file you are requesting is text
+ * there is a chance that it could be classified as dynamic and no
+ * content length will be provided. In that case you should look for the
+ * header:
+ *  Transfer-Encoding: chunked
+ * In this case, from nginx testing, it seems that after the final '\r\n'
+ * of the header, there is the content length of the chunk, on a single line,
+ * and encoded in hexadecimal.
+ *
+ * Full http protocol specification at:
+ *
+ * http://www.w3.org/Protocols/rfc2616/rfc2616.html
+ */
+		if (strncmp(t, "Content-Length:", RANGE_S) == 0) {
+			if (!(t = strtok(NULL, " "))) {
+				fprintf(stderr, "Cannot get length\n");
+				goto cleanup;
+			}
+			*len = strtoul(t, NULL, 10);
+		}
+	}
+
+	cleanup:
+		free(buf);
+		return retval;
+}
+
