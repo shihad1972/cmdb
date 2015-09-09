@@ -1373,6 +1373,7 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		snprintf(cm->ztype, RANGE_S, "master"); */
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
+// **FIXME: Why not just check the host exists, rather than on this server?
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) == 0) {
 		retval = NO_DOMAIN;
 		printf("Zone %s not in database\n", zone->name);
@@ -1907,13 +1908,13 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	} else if (retval < 0) {
-/* No Duplicate records. Just convert all A records */
+// No Duplicate records. Just convert all A records
 		dnsa_clean_records(dnsa->records);
 		dnsa_clean_prefer(dnsa->prefer);
 		dnsa->records = NULL;
 		dnsa->prefer = NULL;
 	}
-	rec = dnsa->records; /* Holds duplicate A records */
+	rec = dnsa->records; // Holds duplicate A records
 	dnsa->records = NULL;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
 		dnsa_clean_records(rec);
