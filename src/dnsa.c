@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
 		parse_dnsa_config_error(retval);
 		goto cleanup;
 	}
-	retval = 0;
-	strncpy(domain, cm->domain, CONF_S);
+	if (!(strncpy(domain, cm->domain, CONF_S)))
+		goto cleanup;
 	if (cm->type == FORWARD_ZONE) {
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
