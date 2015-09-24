@@ -25,6 +25,22 @@
 # include "../config.h"
 # include "cbc_data.h"
 # include "ifaddrs.h"
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netdb.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# define MAXDATASIZE     1048576    // Maximum buffer length
+
+extern const char *fed_tld;
+extern const char *fed_boot;
+extern const char *deb_i386_boot;
+extern const char *deb_amd64_boot;
+extern const char *ubu_i386_boot;
+extern const char *ubu_amd64_boot;
+
+void
+fill_addrtcp(struct addrinfo *c);
 
 int
 get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh);
@@ -49,6 +65,9 @@ fill_dhcp_server(cbc_build_domain_s *bd, cbc_iface_s *i, cbc_dhcp_s *dh);
 
 int
 decode_http_header(FILE *rx, unsigned long int *len);
+
+int
+cbc_get_boot_files(cbc_config_s *cbc, char *os, char *ver, char *arch, char *vail);
 
 #endif /* __CBC_NET_H */
 

@@ -40,6 +40,7 @@
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "checks.h"
+#include "cbcnet.h"
 
 typedef struct cbcos_comm_line_s {
 	char alias[MAC_S];
@@ -346,6 +347,8 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	else
 		printf("Build os added to database\n");
 	copy_new_os_profile(cmc, oss);
+	if ((retval = cbc_get_boot_files(cmc, col->alias, col->version, col->arch, col->ver_alias)) != 0)
+		fprintf(stderr, "Unable to download boot files\n");
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
 	return retval;

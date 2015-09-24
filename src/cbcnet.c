@@ -36,8 +36,31 @@
 #include <ifaddrs.h>
 #include <errno.h>
 #include "cmdb.h"
+#include "cmdb_cbc.h"
 #include "cbcnet.h"
 #include "cbc_data.h"
+#include "cbc_base_sql.h"
+
+/*
+ * Temporary variables while I work out how to define these in the
+ * database
+ */
+
+const char *fed_tld = "/sites/dl.fedoraproject.org/pub/fedora/linux";
+const char *fed_boot = "/isolinux";
+const char *deb_i386_boot = "/main/installer-i386/current/images/netboot/debian-installer/i386";
+const char *deb_amd64_boot = "/main/installer-amd64/current/images/netboot/debian-installer/amd64";
+const char *ubu_i386_boot = "/main/installer-i386/current/images/netboot/ubuntu-installer/i386";
+const char *ubu_amd64_boot = "/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64";
+
+void
+fill_addrtcp(struct addrinfo *c)
+{
+	memset(c, 0, sizeof(struct addrinfo));
+	c->ai_family = AF_UNSPEC;
+	c->ai_socktype = SOCK_STREAM;
+	c->ai_flags = AI_PASSIVE;
+}
 
 int
 get_net_list_for_dhcp(cbc_build_domain_s *bd, cbc_dhcp_s **dh)
@@ -284,6 +307,170 @@ decode_http_header(FILE *rx, unsigned long int *len)
 
 	cleanup:
 		free(buf);
+		return retval;
+}
+
+int
+cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vail)
+{
+	int retval = 0;
+	int type = BOOT_FILES_MIRROR_DETAILS;
+	int s;
+	unsigned int max;
+	unsigned long int size;
+	size_t len;
+	FILE *tx = NULL, *rx = NULL, *krn = NULL, *intrd = NULL;
+	char kfile[BUFF_S], infile[BUFF_S];
+	char *buff = NULL, *kernel = NULL, *initrd = NULL;
+	char *host;
+	dbdata_s *data = NULL;
+	struct addrinfo h, *r, *p;
+
+	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	init_multi_dbdata_struct(&data, max);
+	if (!(kernel = calloc(RBUFF_S, 1)))
+		goto cleanup;
+	if (!(initrd = calloc(RBUFF_S, 1)))
+		goto cleanup;
+	snprintf(data->args.text, RBUFF_S, "%s", os);
+	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
+		fprintf(stderr, "No build type for os %s\n", os);
+		retval = 1;
+		goto cleanup;
+	} else if (retval > 1) {
+		fprintf(stderr, "More than 1 build type for os %s?\n", os);
+		retval = 2;
+		goto cleanup;
+	}
+	host = data->fields.text;
+	if (strncmp(os, "debian", COMM_S) == 0) {
+		if (strncmp(arch, "i386", COMM_S) == 0) {
+			snprintf(kernel, BUFF_S, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, deb_i386_boot, host);
+			snprintf(initrd, BUFF_S, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, deb_i386_boot, host);
+		} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
+			snprintf(kernel, BUFF_S, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, deb_amd64_boot, host);
+			snprintf(initrd, BUFF_S, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, deb_amd64_boot, host);
+		}
+	} else if (strncmp(os, "ubuntu", COMM_S) == 0) {
+		if (strncmp(arch, "i386", COMM_S) == 0) {
+			snprintf(kernel, BUFF_S, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, ubu_i386_boot, host);
+			snprintf(initrd, BUFF_S, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, ubu_i386_boot, host);
+		} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
+			snprintf(kernel, BUFF_S, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, ubu_amd64_boot, host);
+			snprintf(initrd, BUFF_S, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			 vail, ubu_amd64_boot, host);
+		}
+	} else if (strncmp(os, "centos", COMM_S) == 0) {
+		snprintf(kernel, BUFF_S, "GET /centos/%s/os/%s/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+		 ver, arch, host);
+		snprintf(initrd, BUFF_S, "GET /centos/%s/os/%s/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n\r\n",
+		 ver, arch, host);
+	} else if (strncmp(os, "fedora", COMM_S) == 0) {
+		snprintf(kernel, BUFF_S, "GET %s/releases/%s/Server/%s/os/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n",
+		 fed_tld, ver, arch, host);
+		snprintf(initrd, BUFF_S, "GET %s/releases/%s/Server/%s/os/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n",
+		 fed_tld, ver, arch, host);
+	}
+	fill_addrtcp(&h);
+	if ((retval = getaddrinfo(host, "http", &h, &r)) != 0) {
+		fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(retval));
+		goto cleanup;
+	}
+	for (p = r; p != NULL; p = p->ai_next) {
+		if ((s = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+			continue;
+		if (connect(s, p->ai_addr, p->ai_addrlen) == -1)
+			continue;
+		break;
+	}
+	if (!(p)) {
+		fprintf(stderr, "Cannot connect to host %s\n", data->fields.text);
+		retval = 1;
+		goto cleanup;
+	}
+	if (!(rx = fdopen(s, "r"))) {
+		fprintf(stderr, "fdopen(rx): %s\n", strerror(errno));
+		goto cleanup;
+	}
+	if (!(tx = fdopen(dup(s), "w"))) {
+		fprintf(stderr, "fdopen(tx): %s\n", strerror(errno));
+		goto cleanup;
+	}
+	snprintf(kfile, RBUFF_S, "%s/vmlinuz-%s-%s-%s", cmc->tftpdir, os, ver, arch);
+	snprintf(infile, RBUFF_S, "%s/initrd-%s-%s-%s.img", cmc->tftpdir, os, ver, arch);
+	if (!(krn = fopen(kfile, "w"))) {
+		fprintf(stderr, "fdopen(kfile): %s\n", strerror(errno));
+		goto cleanup;
+	}
+	if (!(intrd = fopen(infile, "w"))) {
+		fprintf(stderr, "fdopen(intrd): %s\n", strerror(errno));
+		goto cleanup;
+	}
+	if ((retval = setvbuf(rx, NULL, _IOLBF, MAXDATASIZE)) != 0) {
+		perror("setvbuf: ");
+		goto cleanup;
+	}
+	fprintf(tx, "%s", kernel);
+	fflush(tx);
+	if ((retval = decode_http_header(rx, &size)) != 0)
+		goto cleanup;
+	if (size == 0) {
+		fprintf(stderr, "Cannot determine incoming file size\n");
+		goto cleanup;
+	}
+	buff = calloc(size, 1);
+	if ((len = fread(buff, 1, size, rx)) != size)
+		fprintf(stderr, "Only read %lu bytes of %lu\n", len, size);
+	fprintf(stderr, "Grabbing Kernel. Size: %lu...\n", size);
+	if ((size = fwrite(buff, 1, len, krn)) != len)
+		fprintf(stderr, "Only wrote %lu bytes of %lu\n", size, len);
+	fprintf(stderr, "Got it\n");
+	free(buff);
+	buff = NULL;
+	fprintf(tx, "%s", initrd);
+	fflush(tx);
+	size = 0;
+	if ((retval = decode_http_header(rx, &size)) != 0)
+		goto cleanup;
+	if (size == 0) {
+		fprintf(stderr, "Cannot determine incoming file size\n");
+		goto cleanup;
+	}
+	buff = calloc(size, 1);
+	fprintf(stderr, "Grabbing initrd. Size %lu...\n", size);
+	if ((len = fread(buff, 1, size, rx)) != size)
+		fprintf(stderr, "Only read %lu bytes of %lu\n", len, size);
+	fprintf(stderr, "Got it\n");
+	if ((size = fwrite(buff, 1, len, intrd)) != len)
+		fprintf(stderr, "Only wrote %lu bytes of %lu\n", size, len);
+	goto cleanup;
+
+	cleanup:
+		if (tx) {
+			fclose(tx);
+			shutdown(fileno(tx), SHUT_RDWR);
+		}
+		if (rx)
+			fclose(rx);
+		if (krn)
+			fclose(krn);
+		if (intrd)
+			fclose(intrd);
+		if (buff)
+			free(buff);
+		if (kernel)
+			free(kernel);
+		if (initrd)
+			free(initrd);
+		freeaddrinfo(r);
+		clean_dbdata_struct(data);
 		return retval;
 }
 

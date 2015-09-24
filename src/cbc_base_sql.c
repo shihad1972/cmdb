@@ -376,7 +376,8 @@ SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
 SELECT package, os_id FROM packages WHERE varient_id = ?","\
 SELECT os_id, ctime, arch FROM build_os WHERE bt_id = ?","\
 SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?","\
-SELECT package, varient_id FROM packages WHERE os_id = ?"
+SELECT package, varient_id FROM packages WHERE os_id = ?","\
+SELECT mirror from build_type where alias = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -398,13 +399,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -582,7 +583,8 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
-	{ DBINT, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -663,7 +665,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
