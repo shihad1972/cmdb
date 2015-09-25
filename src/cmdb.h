@@ -331,7 +331,8 @@ enum {			/* cmdb Action codes */
 	ADD_TO_DB = 3,
 	RM_FROM_DB = 4,
 	CVERSION = 5,
-	MODIFY = 6
+	MODIFY = 6,
+	DOWNLOAD = 7
 };
 
 enum {			/* cbc action codes */

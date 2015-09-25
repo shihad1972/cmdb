@@ -11,7 +11,7 @@ cbcos \- Create Build Config Operating System
 
 .B cbcos
 [
-.B -adlrv
+.B -adglrv
 ] [
 .B -n <name> -e <version alias> -o <version> -s <os alias> -t <arch>
 ]
@@ -30,6 +30,9 @@ You are able to add, display, list and remove build operating systems.
 Currently the \fBcbc\fP system supports the following operating systems:
 \fIdebian, ubuntu\fP and \fIcentos\fP. Soon there will be support for
 \fIredhat\fP.
+\fBcbcos\fP will also download the boot files for the OS from the mirror
+server. You can refresh these boot files using the \fI-g\fP option. You can
+specify a specific OS version if you wish, but you do not have to.
 
 .SH OPTIONS
 .B Actions
@@ -37,6 +40,8 @@ Currently the \fBcbc\fP system supports the following operating systems:
 add
 .IP -d
 display
+.IP -g
+grab boot files
 .IP -l
 list
 .IP -r
