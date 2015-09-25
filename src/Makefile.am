@@ -18,6 +18,7 @@ dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
 
 cbcos_SOURCES = \
 		cbcos.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
+		cbcnet.c\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h \
 		cbc_common.h
 cbcvarient_SOURCES = \
