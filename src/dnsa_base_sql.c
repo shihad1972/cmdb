@@ -111,8 +111,10 @@ SELECT r.host, z.name, r.id FROM records r, zones z \
 WHERE r.destination = ? AND r.zone = z.id","\
 SELECT id, host, type, pri, destination FROM records WHERE zone = ?","\
 SELECT DISTINCT destination from records \
-WHERE destination > ? AND destination < ?" /*,"\
-SELECT fqdn FROM preferred_a WHERE ip = ?" */
+WHERE destination > ? AND destination < ?","\
+SELECT id FROM records WHERE destination = ? AND zone = ? AND host = ?","\
+SELECT id FROM zones WHERE name = ?","\
+SELECT domainname FROM build_ip WHERE server_id = ?"
 };
 
 const char *dnsa_sql_insert[] = {"\
@@ -171,9 +173,9 @@ const unsigned int dnsa_delete_args[] = { 1, 1, 1, 1, 0, 0, 1, 1, 1, 1 };
 
 const unsigned int dnsa_update_args[] = { 2, 2, 1, 3, 2, 3, 1 };
 
-const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1 /*, 1*/ };
+const unsigned int dnsa_extended_search_fields[] = { 3, 5, 1, 1, 1, 1 };
 
-const unsigned int dnsa_extended_search_args[] = { 1, 1, 2/* , 1 */ };
+const unsigned int dnsa_extended_search_args[] = { 1, 1, 2, 3, 1, 1 };
 
 const unsigned int dnsa_inserts[][17] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBTEXT,
@@ -195,15 +197,19 @@ const unsigned int dnsa_inserts[][17] = {
 const unsigned int dnsa_ext_search_field_type[][5] = { /* What we are selecting */
 	{ DBTEXT, DBTEXT, DBINT, NONE, NONE } ,
 	{ DBINT, DBTEXT, DBTEXT, DBINT, DBTEXT },
-	{ DBTEXT, NONE, NONE, NONE, NONE }/* ,
-	{ DBTEXT, NONE, NONE } */
+	{ DBTEXT, NONE, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE, NONE }
 };
 
-const unsigned int dnsa_ext_search_arg_type[][2] = { /* What we are searching on */
-	{ DBTEXT, NONE } ,
-	{ DBINT, NONE } ,
-	{ DBTEXT, DBTEXT } /*,
-	{ DBTEXT } */
+const unsigned int dnsa_ext_search_arg_type[][3] = { /* What we are searching on */
+	{ DBTEXT, NONE, NONE } ,
+	{ DBINT, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE },
+	{ DBTEXT, DBINT, DBTEXT },
+	{ DBTEXT, NONE, NONE },
+	{ DBINT, NONE, NONE }
 };
 
 const unsigned int dnsa_update_arg_type[][3] = {
@@ -1016,11 +1022,17 @@ void
 dnsa_setup_bind_ext_mysql_fields(MYSQL_BIND *mybind, unsigned int i, int k, int type, dbdata_s *base)
 {
 	int j;
-	static int m = 0;
+	static int m = 0, stype = 0;
 	unsigned int dbtype = dnsa_ext_search_field_type[type][i];
 	dbdata_s *list, *new;
 	list = base;
-	
+
+	if (stype == 0) {
+		stype = type;
+	} else if (stype != type) {
+		stype = type;
+		m = 0;
+	}
 	if (k > 0) {
 		if (!(new = malloc(sizeof(dbdata_s))))
 			report_error(MALLOC_FAIL, "new in dnsa_setup_bind_ext_mysql_fields");
