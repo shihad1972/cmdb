@@ -554,8 +554,11 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		os[0] = strndup(cml->arch, MAC_S);
 		os[1] = strndup(cml->os_version, MAC_S);
 		os[2] = strndup(cml->os, CONF_S);
-		if ((retval = get_os_id(cbt, os, &osid)) != 0)
+		if ((retval = get_os_id(cbt, os, &osid)) != 0) {
+			if (retval == OS_NOT_FOUND)
+				fprintf(stderr, "Build os not found\n");
 			return retval;
+		}
 	}
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
 		if ((retval = get_scheme_id(cbt, cml->partition, &dsid)) != 0)
