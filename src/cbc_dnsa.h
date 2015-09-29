@@ -67,6 +67,9 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
 void
 write_zone_and_reload_nameserver(cbc_comm_line_s *cml);
 
+void
+remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data);
+
 # endif /* HAVE_DNSA */
 
 #endif /* __CBC_DNSA_H__ */

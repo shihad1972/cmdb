@@ -631,6 +631,9 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		printf("If this server is still online, this IP will be reused\n");
 		printf("Duplicate IP addresses are a bad thing!\n");
 		printf("Remember to delete from DNS too.\n");
+#ifdef HAVE_DNSA
+		remove_ip_from_dns(cbt, cml, data);
+#endif // HAVE_DNSA
 		if ((retval = cbc_run_delete(cbt, data, BUILD_IP_ON_SER_ID)) == 1)
 			printf("Delete 1 IP as requested\n");
 		else if (retval == 0)
@@ -644,3 +647,4 @@ remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	CLEAN_REMOVE_BUILD_CONFIG(retval);
 #undef CLEAN_REMOVE_BUILD_CONFIG
 }
+
