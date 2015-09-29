@@ -151,7 +151,10 @@ enum {			/* Delete indexes that diverge from SELECT */
 enum {			/* Extended searches */
 	RECORDS_ON_DEST_AND_ID = 0,
 	RECORDS_ON_ZONE,
-	DEST_IN_RANGE
+	DEST_IN_RANGE,
+	RECORD_ID_ON_IP_DEST_DOM,
+	FWD_ZONE_ID_ON_NAME,
+	BUILD_DOM_ON_SERVER_ID
 };
 
 enum {			/* Search indexes and queries */
