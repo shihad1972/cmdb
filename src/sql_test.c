@@ -42,37 +42,35 @@ build_sql_query(unsigned int prog, unsigned int no)
 	for (i = 0, cno = 0; i < qno; i++)
 		cno += select_fields[i];
 	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
-	tot = BUFF_S;
+	tot = HOST_S;
 	pos = 0;
 	query = cmdb_malloc(tot, "query in build_sql_query");
 	pos = strlen("SELECT ");
 	snprintf(query, RANGE_S, "SELECT ");
 	for (i = 0; i < select_fields[qno]; i++) {
 		size = strlen(sql_columns[cno + i]);
-		if (tot <= (pos + size + 1)) {
-			tot *= 2;
-			query = realloc(query, tot);
-		}
-		snprintf(query + pos, HOST_S, "%s, ", sql_columns[cno + i]);
+		if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+			report_error(MALLOC_FAIL, "query in build_sql_query");
+		snprintf(query + pos, size + 3, "%s, ", sql_columns[cno + i]);
 		pos += size + 2;
 	}
-	pos -=2;
+	pos -= 2;
 	size = strlen(" FROM ");
-	if (tot <= (pos + size + 1)) {
-		tot *= 2;
-		query = realloc(query, tot);
-	}
-	snprintf(query + pos, size + 1, " FROM ");
+	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+		report_error(MALLOC_FAIL, "query in build_sql_query");
+	snprintf(query + pos, size + 3, " FROM ");
 	pos += size;
 	size = strlen(sql_table_list[qno]);
-	if (tot <= (pos + size + 1)) {
-		tot *= 2;
-		query = realloc(query, tot);
-	}
-	snprintf(query + pos, size + 1, "%s", sql_table_list[qno]);
+	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+		report_error(MALLOC_FAIL, "query in build_sql_query");
+	snprintf(query + pos, size + 3, "%s", sql_table_list[qno]);
 	return query;
 }
 
+static char *
+build_sql_insert(unsigned int prog, unsigned int no)
+{
+}
 
 int
 main(int argc, char *argv[])
@@ -82,7 +80,6 @@ main(int argc, char *argv[])
 	char *query;
 
 	if (argc < 2) {
-		printf("Doing cbc\n");
 		prog = CBC;
 	} else if (argc > 2) {
 		fprintf(stderr, "Usage: %s <prog>)\n", argv[0]);
@@ -99,7 +96,10 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 	}
-	printf("SQL Queries for program %s\n\n", argv[1]);
+	if (argc > 1)
+		printf("SQL Queries for program %s\n\n", argv[1]);
+	else
+		printf("SQL Queries for program cbc\n\n");
 	for (i = 0; i < select_queries[prog]; i++) {
 		query = build_sql_query(prog, i);
 		printf("%s\n", query);

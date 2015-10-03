@@ -141,3 +141,13 @@ resize_string_buff(string_len_s *build)
 		build->string = tmp;
 }
 
+void *
+check_for_resize(void *ptr, size_t *size, size_t len)
+{
+	if (len >= *size) {
+		*size *= 2;
+		ptr = realloc(ptr, *size);
+	}
+	return ptr;
+}
+

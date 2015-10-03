@@ -524,7 +524,8 @@ void
 cmdb_free(void *data, size_t len);
 void
 resize_string_buff(string_len_s *build);
-
+void *
+check_for_resize(void *ptr, size_t *size, size_t len);
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *

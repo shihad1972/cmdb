@@ -155,78 +155,15 @@ const char *sql_columns[] = {
 	"varient_id", "varient", "valias", "cuser", "muser", "ctime", "mtime"
 };
 
-const char *sql_select[] = { 
-// cmdb queries
+// hangover dnsa queries. Will need to make them searches..
+/*const char *sql_select[] = {
 "\
-SELECT cont_id, name, phone, email, cust_id, cuser, muser, ctime, mtime\
- FROM contacts","\
-SELECT cust_id, name, address, city, county, postcode, coid, cuser, muser,\
- ctime, mtime FROM customer ORDER BY coid","\
-SELECT hard_type_id, type, class FROM hard_type","\
-SELECT hard_id, detail, device, server_id, hard_type_id, cuser, muser, ctime,\
- mtime FROM hardware ORDER BY device DESC, hard_type_id","\
-SELECT service_type_id, service, detail FROM service_type","\
-SELECT service_id, server_id, cust_id, service_type_id, detail, url, cuser,\
- muser, ctime, mtime FROM services ORDER BY service_type_id","\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name,\
- cuser, muser, ctime, mtime FROM server ORDER BY cust_id","\
-SELECT vm_server_id, vm_server, type, server_id, cuser, muser, ctime, mtime\
- FROM vm_server_hosts",
-// dnsa queries
-"\
-SELECT id, name, zone_id, pri_dns, sec_dns, pri_ns, sec_ns, cuser, muser,\
- ctime, mtime FROM glue_zones","\
-SELECT prefa_id, ip, ip_addr, record_id, fqdn, cuser, muser, ctime, mtime\
- FROM preferred_a","\
-SELECT id, zone, host, type, protocol, service, pri, destination, valid,\
- cuser, muser, ctime, mtime FROM records ORDER BY zone, type, host","\
-SELECT rev_record_id, rev_zone, host, destination, valid, cuser, muser,\
- ctime, mtime FROM rev_records","\
-SELECT rev_zone_id, net_range, prefix, net_start, net_finish, start_ip,\
- finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, valid,\
- owner, updated, type, master, cuser, muser, ctime, mtime FROM rev_zones\
- ORDER BY start_ip","\
-SELECT id, name, pri_dns, sec_dns, serial, refresh, retry, expire, ttl,\
- valid, owner, updated, type, master, cuser, muser, ctime, mtime FROM\
- zones ORDER BY name", /*"\
 SELECT name, host, destination, r.id, zone FROM records r, zones z\
  WHERE z.id = r.zone AND r.type = 'A' ORDER BY destination","\
 SELECT destination, COUNT(*) c FROM records\
  WHERE type = 'A' GROUP BY destination HAVING c > 1","\
-SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'" */
-// cbc queries
-"\
-SELECT build_id, mac_addr, varient_id, net_inst_int, server_id, os_id,\
- ip_id, locale_id, def_scheme_id, cuser, muser, ctime, mtime FROM build","\
-SELECT bd_id, start_ip, end_ip, netmask, gateway, ns, domain,\
- ntp_server, config_ntp, cuser, muser, ctime, mtime FROM build_domain","\
-SELECT ip_id, ip, hostname, domainname, bd_id, server_id, cuser, muser, \
- ctime, mtime FROM build_ip","\
-SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
- ctime, mtime FROM build_os ORDER BY alias, os_version","\
-SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
- ORDER BY alias","\
-SELECT def_part_id, minimum, maximum, priority, mount_point, filesystem,\
- def_scheme_id, logical_volume, cuser, muser, ctime, mtime FROM default_part","\
-SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone, \
- cuser, muser, ctime, mtime FROM locale","\
-SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
- packages","\
-SELECT part_options_id, def_part_id, def_scheme_id, poption, cuser, muser, \
- ctime, mtime FROM part_options ORDER BY def_scheme_id, def_part_id","\
-SELECT def_scheme_id, scheme_name, lvm, cuser, muser, ctime, mtime FROM \
- seed_schemes","\
-SELECT syspack_id, name, cuser, muser, ctime, mtime FROM system_packages","\
-SELECT syspack_arg_id, syspack_id, field, type, cuser, muser, ctime, mtime \
- FROM system_package_args","\
-SELECT syspack_conf_id, syspack_arg_id, syspack_id, bd_id, arg, cuser, \
- muser, ctime, mtime FROM system_package_conf","\
-SELECT systscr_id, name, cuser, muser, ctime, mtime FROM system_scripts","\
-SELECT systscr_arg_id, systscr_id, bd_id, bt_id, arg, no, cuser, muser, ctime, \
- mtime FROM system_scripts_args ORDER BY bd_id, bt_id, systscr_id, no","\
-SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient"
-};
+SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
+};*/
 
 /*
  * SQL INSERT statements and associated data types
@@ -235,12 +172,8 @@ SELECT varient_id, varient, valias, cuser, muser, ctime, mtime FROM varient"
  * args (data to be inserted) and their types
  *
  */
-
-const unsigned int insert_args[] = {
-// cmdb insert args
-// dnsa insert args
-// cbc insert args
-	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
+unsigned int short_inserts[] = {
+	4, 2, 4, 18, 20
 };
 
 const char *sql_insert[] = {
