@@ -23,6 +23,7 @@
 
 #ifndef __HAVE_SQL_H_
 # define __HAVE_SQL_H_
+# define THIS_SQL_MAX 524288
 
 enum {
 	CMDB = 0,
@@ -67,12 +68,12 @@ const unsigned int search_fields[] = {
 
 const unsigned int select_queries[] = { 8, 6, 17 };	// No of queries
 
-const unsigned int select_fields[] = {
-// cmdb select fields
+const unsigned int table_fields[] = {
+// cmdb table fields
 	9, 11, 3, 9, 3, 10, 12, 8,
-// dnsa select fields
+// dnsa table fields
 	11, 9, 13, 9, 23, 18, //9, 4, 11,
-// cbc select fields;
+// cbc table fields;
 	13, 13, 10, 11, 7, 12, 4, 12, 8, 8, 7, 6, 8, 9, 6, 10, 7
 };
 

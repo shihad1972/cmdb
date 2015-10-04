@@ -30,24 +30,39 @@
 #include "cmdb.h"
 #include "sql.h"
 
+static size_t
+get_size_from_len(size_t len)
+{
+/* Nicked from stack overflow:
+ * http://stackoverflow.com/questions/53161/find-the-highest-order-bit-in-c
+ */
+	size_t size = 1;
+
+	if (!len)
+		return len;
+	while (len >>= 1)
+		size <<= 1;
+	return size * 2;
+}
+
 static char *
 build_sql_query(unsigned int prog, unsigned int no)
 {
 	char *query;
-	unsigned int qno, i, cno;
+	unsigned int qno, cno, i;
 	size_t tot, pos, size;
 	for (i = 0, qno = 0; i < prog; i++)
 		qno += select_queries[i];
 	qno += no;
 	for (i = 0, cno = 0; i < qno; i++)
-		cno += select_fields[i];
-	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
+		cno += table_fields[i];
+//	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
 	tot = HOST_S;
 	pos = 0;
 	query = cmdb_malloc(tot, "query in build_sql_query");
 	pos = strlen("SELECT ");
 	snprintf(query, RANGE_S, "SELECT ");
-	for (i = 0; i < select_fields[qno]; i++) {
+	for (i = 0; i < table_fields[qno]; i++) {
 		size = strlen(sql_columns[cno + i]);
 		if (!(query = check_for_resize(query, &tot, pos + size + 3)))
 			report_error(MALLOC_FAIL, "query in build_sql_query");
@@ -68,8 +83,87 @@ build_sql_query(unsigned int prog, unsigned int no)
 }
 
 static char *
-build_sql_insert(unsigned int prog, unsigned int no)
+add_sql_insert_values(char *insert, unsigned int no, unsigned int count)
 {
+	size_t size, pos;
+	unsigned int i, j;
+
+	pos = strlen(insert);
+	size = get_size_from_len(pos);
+	if (size == 0)
+		return NULL;
+	for (i = 0; i < count; i++) {
+		for (j = 0; j < no; j++) {
+			if (j == 0) {
+				if (!(insert = check_for_resize(insert, &size, pos + 2)))
+					report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+				snprintf(insert + pos, 2, "(");
+				pos += 1;
+			}
+			if (!(insert = check_for_resize(insert, &size, pos + 4)))
+				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+			snprintf(insert + pos, 4, "?, ");
+			pos += 3;
+		}
+		pos -= 2;
+		if (!(insert = check_for_resize(insert, &size, pos + 4)))
+				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+		snprintf(insert + pos, 4, "), ");
+		pos += 3;
+	}
+	pos -= 2;
+	if (!(insert = check_for_resize(insert, &size, pos + 2)))
+			report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+	insert[pos] = '\0';
+	return insert;
+}
+
+static char *
+build_sql_insert(unsigned int prog, unsigned int no, unsigned int count)
+{
+	char *insert;
+	unsigned int ino, cno, fno, i;
+	size_t tot, pos, len;
+	for (i = 0, ino = 0; i < prog; i++)
+		ino += select_queries[i];
+	ino += no;
+	for (i = 0, cno = 0; i < ino; i++)
+		cno += table_fields[i];
+//	fprintf(stderr, "For insert no %u, we start at %u\n", ino, cno);
+	tot = HOST_S;
+	pos = 0;
+	insert = cmdb_malloc(tot, "insert in build_sql_insert");
+	pos = strlen("INSERT INTO ");
+	snprintf(insert, pos + 1, "INSERT INTO ");
+	len = strlen(sql_table_list[ino]);
+	if (!(insert = check_for_resize(insert, &tot, pos + len + 3)))
+		report_error(MALLOC_FAIL, "insert in build_sql_insert");
+	snprintf(insert + pos, len + 3, "%s (", sql_table_list[ino]);
+	pos += len + 2;
+	for (i = 1;  i <= short_inserts[0]; i++)
+		if (ino == short_inserts[i])
+			break;
+	if (i > short_inserts[0])
+		fno = table_fields[ino] - 3;
+	else
+		fno = table_fields[ino] - 1;
+	for (i = 1; i <= fno; i++) {
+		len = strlen(sql_columns[cno + i]);
+		if (!(insert = check_for_resize(insert, &tot, pos + len + 3)))
+			report_error(MALLOC_FAIL, "insert in build_sql_insert");
+		snprintf(insert + pos, len + 3, "%s, ", sql_columns[cno + i]);
+		pos += len + 2;
+	}
+	pos -= 2;
+	len = strlen(") VALUES ");
+	if (!(insert = check_for_resize(insert, &tot, pos + len + 1)))
+		report_error(MALLOC_FAIL, "insert in build_sql_insert");
+	snprintf(insert + pos, len + 1, ") VALUES ");
+	if (!(insert = add_sql_insert_values(insert, fno, count))) {
+		free (insert);
+		return NULL;
+	}
+	return insert;
 }
 
 int
@@ -102,6 +196,16 @@ main(int argc, char *argv[])
 		printf("SQL Queries for program cbc\n\n");
 	for (i = 0; i < select_queries[prog]; i++) {
 		query = build_sql_query(prog, i);
+		printf("%s\n", query);
+		free(query);
+	}
+	printf("\nSQL Inserts\n");
+	for (i = 0; i < select_queries[prog]; i++) {
+		if (!(query = build_sql_insert(prog, i, 3))) {
+// Does not happen. Need to add checks into the called function
+			printf("Overflow detected! Quitting\n");
+			exit(1);
+		}
 		printf("%s\n", query);
 		free(query);
 	}
