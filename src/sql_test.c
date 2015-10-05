@@ -90,8 +90,11 @@ add_sql_insert_values(char *insert, unsigned int no, unsigned int count)
 
 	pos = strlen(insert);
 	size = get_size_from_len(pos);
-	if (size == 0)
+	if ((size == 0) || (size > THIS_SQL_MAX)) {	// Neither should ever happen...
+		if (insert)
+			free (insert);
 		return NULL;
+	}
 	for (i = 0; i < count; i++) {
 		for (j = 0; j < no; j++) {
 			if (j == 0) {
@@ -160,7 +163,6 @@ build_sql_insert(unsigned int prog, unsigned int no, unsigned int count)
 		report_error(MALLOC_FAIL, "insert in build_sql_insert");
 	snprintf(insert + pos, len + 1, ") VALUES ");
 	if (!(insert = add_sql_insert_values(insert, fno, count))) {
-		free (insert);
 		return NULL;
 	}
 	return insert;

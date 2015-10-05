@@ -23,7 +23,7 @@
 
 #ifndef __HAVE_SQL_H_
 # define __HAVE_SQL_H_
-# define THIS_SQL_MAX 524288
+# define THIS_SQL_MAX 2097152	// 2MegaBytes
 
 enum {
 	CMDB = 0,
@@ -32,31 +32,6 @@ enum {
 };
 
 const unsigned int sql_tables[] = { 8, 9, 20 };
-
-const unsigned int delete_args[] = {
-// cbc delete args 
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-};
-const unsigned int update_args[] = {
-// cbc update args
-	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
-	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
-};
-
-const unsigned int search_args[] = {
-// cbc search args
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1
-};
-const unsigned int search_fields[] = {
-// cbc search fields
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
-};
 
 /*
  * SQL SELECT Statements and associated data definitions
@@ -175,6 +150,36 @@ SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
  */
 unsigned int short_inserts[] = {
 	4, 2, 4, 18, 20
+};
+
+const unsigned int delete_args[] = {
+// cbc delete args
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+};
+
+const unsigned int update_args[] = {
+// cmdb update args
+	2, 2, 2, 2, 2, 2, 2,
+// dnsa update args
+	2, 2, 1, 3, 2, 3, 1,
+// cbc update args
+	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
+	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
+};
+
+const unsigned int search_args[] = {
+// cbc search args
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
+	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1
+};
+const unsigned int search_fields[] = {
+// cbc search fields
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
+	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
+	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
 };
 
 const char *sql_insert[] = {
