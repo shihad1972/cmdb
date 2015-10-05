@@ -52,17 +52,17 @@ build_sql_query(unsigned int prog, unsigned int no)
 	unsigned int qno, cno, i;
 	size_t tot, pos, size;
 	for (i = 0, qno = 0; i < prog; i++)
-		qno += select_queries[i];
+		qno += sql_tables[i];
 	qno += no;
 	for (i = 0, cno = 0; i < qno; i++)
-		cno += table_fields[i];
+		cno += table_columns[i];
 //	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
 	tot = HOST_S;
 	pos = 0;
 	query = cmdb_malloc(tot, "query in build_sql_query");
 	pos = strlen("SELECT ");
 	snprintf(query, RANGE_S, "SELECT ");
-	for (i = 0; i < table_fields[qno]; i++) {
+	for (i = 0; i < table_columns[qno]; i++) {
 		size = strlen(sql_columns[cno + i]);
 		if (!(query = check_for_resize(query, &tot, pos + size + 3)))
 			report_error(MALLOC_FAIL, "query in build_sql_query");
@@ -128,10 +128,10 @@ build_sql_insert(unsigned int prog, unsigned int no, unsigned int count)
 	unsigned int ino, cno, fno, i;
 	size_t tot, pos, len;
 	for (i = 0, ino = 0; i < prog; i++)
-		ino += select_queries[i];
+		ino += sql_tables[i];
 	ino += no;
 	for (i = 0, cno = 0; i < ino; i++)
-		cno += table_fields[i];
+		cno += table_columns[i];
 //	fprintf(stderr, "For insert no %u, we start at %u\n", ino, cno);
 	tot = HOST_S;
 	pos = 0;
@@ -147,9 +147,9 @@ build_sql_insert(unsigned int prog, unsigned int no, unsigned int count)
 		if (ino == short_inserts[i])
 			break;
 	if (i > short_inserts[0])
-		fno = table_fields[ino] - 3;
+		fno = table_columns[ino] - 3;
 	else
-		fno = table_fields[ino] - 1;
+		fno = table_columns[ino] - 1;
 	for (i = 1; i <= fno; i++) {
 		len = strlen(sql_columns[cno + i]);
 		if (!(insert = check_for_resize(insert, &tot, pos + len + 3)))
@@ -166,6 +166,72 @@ build_sql_insert(unsigned int prog, unsigned int no, unsigned int count)
 		return NULL;
 	}
 	return insert;
+}
+
+static char *
+build_sql_update(unsigned int prog, unsigned int no)
+{
+	char *update;
+	const char *table, *sf, *sv, *col_id;
+	unsigned int uno, fields, statics, i, id;
+	size_t tot, pos, len;
+
+	for (i = 0, uno = 0; i < prog; i++)
+		uno += sql_updates[i];
+	uno += no;
+	fields = update_fields[uno];
+	statics = static_update_fields[uno];
+	tot = HOST_S;
+	pos = 0;
+	update = cmdb_malloc(tot, "update in build_sql_update");
+	pos = strlen("UPDATE ");
+	snprintf(update, pos + 1, "UPDATE ");
+	table = update_tables[uno];
+	len = strlen(table);
+	if (!(update = check_for_resize(update, &tot, pos + len + 2)))
+		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+	snprintf(update + pos, len + 2, "%s ", table);
+	pos += len + 1;
+	len = strlen("SET ");
+	if (!(update = check_for_resize(update, &tot, pos + len + 1)))
+		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+	snprintf(update + pos, len + 1, "SET ");
+	pos += len;
+	for (i = 0; i < fields; i++) {
+// check this exists first
+		len = strlen(update_field_columns[uno][i]);
+		if (!(update = check_for_resize(update, &tot, pos + len + 7)))
+			report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+		snprintf(update + pos, len + 7, "%s = ?, ", update_field_columns[uno][i]);
+		pos += len + 6;
+	}
+	for (i = 0; i < statics; i++) {
+// check this exists first
+		sf = static_update_columns[uno][i];
+		sv = static_update_values[uno][i];
+		len = strlen(sv) + strlen(sf);
+		if (!(update = check_for_resize(update, &tot, pos + len + 8)))
+			report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+		snprintf(update + pos, len + 8, "%s = '%s', ", sf, sv);
+		pos += len + 7;
+	}
+	pos -= 2;
+	len = strlen(" WHERE ");
+	if (!(update = check_for_resize(update, &tot, pos + len + 1)))
+		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+	snprintf(update + pos, len + 1, " WHERE ");
+	pos += len;
+	i = 0;
+	while (strncmp(table, sql_table_list[i], HOST_S) != 0)
+		i++;
+	for (fields = 0, id = 0; fields < i; fields++)
+		id += table_columns[fields];
+	col_id = sql_columns[id];
+	len = strlen(col_id);
+	if (!(update = check_for_resize(update, &tot, pos + len + 5)))
+		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
+	snprintf(update + pos, len + 5, "%s = ?", col_id);
+	return update;
 }
 
 int
@@ -196,18 +262,24 @@ main(int argc, char *argv[])
 		printf("SQL Queries for program %s\n\n", argv[1]);
 	else
 		printf("SQL Queries for program cbc\n\n");
-	for (i = 0; i < select_queries[prog]; i++) {
+	for (i = 0; i < sql_tables[prog]; i++) {
 		query = build_sql_query(prog, i);
 		printf("%s\n", query);
 		free(query);
 	}
-	printf("\nSQL Inserts\n");
-	for (i = 0; i < select_queries[prog]; i++) {
+	printf("\nSQL Inserts\n\n");
+	for (i = 0; i < sql_tables[prog]; i++) {
 		if (!(query = build_sql_insert(prog, i, 3))) {
 // Does not happen. Need to add checks into the called function
 			printf("Overflow detected! Quitting\n");
 			exit(1);
 		}
+		printf("%s\n", query);
+		free(query);
+	}
+	printf("\nSQL Updates\n\n");
+	for (i = 0; i < sql_updates[prog]; i++) {
+		query = build_sql_update(prog, i);
 		printf("%s\n", query);
 		free(query);
 	}
