@@ -494,6 +494,7 @@ const unsigned int sql_searches[] = {
  * for easy calculation.
  */
 enum {
+	SQL_MODS = 2,
 	DISTINCT = 1,
 	COUNT = 2
 };
