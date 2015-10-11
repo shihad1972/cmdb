@@ -368,19 +368,11 @@ const char *static_update_values[][2] = {
 /*
  * SQL Searches
  *
- * We have variables for the following
- *
- * Name of search
- * No of searches in each program
- * Tables of searches
- * Joins
- * No of args in search
- * No of fields returned by database
- * Names of arg column
- * Names of field column
+ * First, the Name of search. The program is important as we
+ * will use it as an index to find the tables and columns
  */
 
-enum {                  /* Search Names */
+enum {
 // cmdb searches
         SERVER_ID_ON_NAME = 0,
         CUST_ID_ON_COID,
@@ -491,7 +483,43 @@ enum {                  /* Search Names */
 };
 
 const unsigned int sql_searches[] = {
-	15, 9, 80
+	15, 12, 80
+};
+
+/*
+ * We want to be able to modify SQL statements.
+ * Here we define the modifiers and which queries have them.
+ *
+ * The sql_modifiers[][] array contains the program search index
+ * for easy calculation.
+ */
+enum {
+	DISTINCT = 1,
+	COUNT = 2
+};
+
+const unsigned int sql_modifiers[][3] = {
+	{ 1, 5, DISTINCT },
+	{ 1, 10, COUNT }
+};
+
+/*
+ * These arrays describe the SQL query.
+ * We have the fields we are searching on, the arguments the query
+ * will return, and the number of tables we need to join to perform
+ * the query.
+ */
+
+const unsigned int search_fields[] = {
+// cmdb search fields
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+// dnsa search fields
+	1, 1, 1, 3, 5, 1, 1, 1, 1,
+// cbc search fields
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1,
+	1, 10, 10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+	3, 11, 1, 2, 2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4,
+	1, 4, 4, 1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
 };
 
 const unsigned int search_args[] = {
@@ -504,18 +532,6 @@ const unsigned int search_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, // 20
 	1, 1, 1, 1, 1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, // 20
 	2, 2, 1, 1, 1, 1, 3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1  // 20
-};
-
-const unsigned int search_fields[] = {
-// cmdb search fields
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-// dnsa search fields
-	1, 1, 1, 3, 5, 1, 1, 1, 1,
-// cbc search fields
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1,
-	1, 10, 10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
-	3, 11, 1, 2, 2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4,
-	1, 4, 4, 1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
 };
 
 const unsigned int search_table_count[] = {
@@ -537,6 +553,7 @@ const unsigned int search_table_count[] = {
  *
  * The matrix is based on { table, column }
  */
+
 const unsigned int search_field_columns[][11][2] = {
 // cmdb search field columns
 	{ { 6, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
