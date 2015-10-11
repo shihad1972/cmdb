@@ -387,3 +387,13 @@ clean_vmhost_list(cmdb_vm_host_s *list)
 	}
 }
 
+void *
+check_for_resize(void *ptr, size_t *size, size_t len)
+{
+	if (len >= *size) {
+		*size *= 2;
+		ptr = realloc(ptr, *size);
+	}
+	return ptr;
+}
+

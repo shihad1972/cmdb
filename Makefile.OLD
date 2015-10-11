@@ -24,6 +24,9 @@ $(lib_LIBRARIES):
 $(bin_PROGRAMS):
 	$(MAKE) -C $(DIR) $@
 
+sqlt:
+	$(MAKE) -C $(DIR) $@
+
 $(sbin_PROGRAMS):	$(lib_LIBRARIES)
 	$(MAKE) -C $(DAEMONDIR) $@
 

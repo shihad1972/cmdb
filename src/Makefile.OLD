@@ -27,6 +27,7 @@ CKOBJECTS = cbcpart.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 POBJECTS = cpc.c $(SOBJECTS)
 SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
+TOBJECTS = sql_test.o $(SOBJECTS)
 
 COMHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbc_common.h
 DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
@@ -36,6 +37,7 @@ CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 CVHEADERS = $(COMHEADERS) cbcvarient.h
 CKHEADERS = $(COMHEADERS) cbcpart.h
 PHEADERS = cmdb.h cmdb_cpc.h
+THEADERS = sql.h
 
 all:	$(bin_programs)
 
@@ -68,6 +70,9 @@ cbcsysp:	$(SPOBJECTS)
 
 cbcscript:	$(SSOBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(SSOBJECTS) $(LDFLAGS) $(LIBS)
+
+sqlt:	$(TOBJECTS) $(THEADERS)
+	$(CC) $(CFLAGS) -o $@ $(TOBJECTS) $(LDFLAGS) $(LIBS)
 
 .PHONY :	clean
 clean :
