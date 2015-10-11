@@ -137,16 +137,14 @@ static char *
 get_first_search_column_table(unsigned int sno)
 {
 	char *search;
-	unsigned int col, ind, i, tmp, tab;
+	unsigned int col, ind, tab;
 
-	i = ind = col = tab = 0;
-	tmp = sql_searches[0];
-	while (sno >= tmp) 
-		ind += sql_tables[i];
+	ind = col = tab = 0;
 	search = cmdb_malloc(HOST_S, "search in get_first_search_column");
-	for (tmp = 0; tmp < search_field_columns[sno][0][0]; tmp++)
-		col += table_columns[tmp + ind];
-	tab = ind + tmp;
+	get_search_table_index(sno, &ind);
+	tab = ind + search_field_columns[sno][0][0];
+	get_search_column_index(tab, &col);
+	col += search_field_columns[sno][0][1];
 	if (search_table_count[sno] > 1)
 		snprintf(search, HOST_S, "%s.%s FROM %s %s ",
 		 sql_table_alias[tab], sql_columns[col], sql_table_list[tab], sql_table_alias[tab]);
