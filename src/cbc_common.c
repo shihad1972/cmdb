@@ -503,8 +503,6 @@ get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id)
 					 "Multiple OS's found!\n");
 					retval = MULTIPLE_OS;
 				} else {
-					fprintf(stderr,
-					 "No OS found!\n");
 					retval = OS_NOT_FOUND;
 				 }
 			}

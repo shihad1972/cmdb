@@ -8,6 +8,6 @@ endif
 
 if HAVE_CBC
 
-man_MANS += cbc.8 cbcdomain.8 cbcos.8 cbcpart.8 cbcvarient.8
+man_MANS += cbc.8 cbcdomain.8 cbcos.8 cbcpart.8 cbcvarient.8 cbcsysp.8 cbcscript.8
 
 endif

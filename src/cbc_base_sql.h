@@ -149,7 +149,8 @@ enum {			/* cbc search SQL statements */
 	PACKAGE_OS_ID_ON_VID = 75,
 	OS_DETAIL_ON_BT_ID = 76,
 	LOCALE_DETAILS_ON_OS_ID = 77,
-	PACKAGE_VID_ON_OS_ID = 78
+	PACKAGE_VID_ON_OS_ID = 78,
+	BOOT_FILES_MIRROR_DETAILS = 79
 };
 
 enum {			/* cbc update SQL statements */

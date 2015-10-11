@@ -121,10 +121,11 @@ If these are not supplied, then the standards \fBn1\fP and \fBns2\fP will be
 used.
 .PP
 .B Options for adding a forward host
-.IP "-i IP address"
+.IP "-i destination"
 This is the destination of the record.
 If this is an A record type, then this will be the IP address of the host.
-If this is a CNAME then this will be the FQDN of the destination of the CNAME.
+If this is a TXT record type, this will be the text of the record.
+If this is a CNAME record type then this will be the FQDN of the destination of the CNAME.
 Use the FQDN even if the CNAME points to an A record in the same domain.
 .IP "-t record type"
 This is the record type (A, MX, CNAME etc)

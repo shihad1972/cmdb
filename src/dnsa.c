@@ -36,26 +36,24 @@ int main(int argc, char *argv[])
 {
 	dnsa_comm_line_s *cm;
 	dnsa_config_s *dc;
-	char *domain;
+	char *domain = NULL;
 	int retval;
 
-	domain = cmdb_malloc(CONF_S, "domain in main");
-	dc = cmdb_malloc(sizeof(dnsa_config_s), "dc in main");
 	cm = cmdb_malloc(sizeof(dnsa_comm_line_s), "cm in main");
-	dnsa_init_all_config(dc, cm);
+	dnsa_init_comm_line_struct(cm);
 	if ((retval = parse_dnsa_command_line(argc, argv, cm)) != 0) {
-		cmdb_free(domain, CONF_S);
-		cmdb_free(dc, sizeof(dnsa_config_s));
 		cmdb_free(cm, sizeof(dnsa_comm_line_s));
 		display_command_line_error(retval, argv[0]);
 	}
-	/* Get config values from config file */
+	dc = cmdb_malloc(sizeof(dnsa_config_s), "dc in main");
+	dnsa_init_config_values(dc);
 	if ((retval = parse_dnsa_config_file(dc, cm->config)) != 0) {
 		parse_dnsa_config_error(retval);
 		goto cleanup;
 	}
-	retval = 0;
-	strncpy(domain, cm->domain, CONF_S);
+	domain = cmdb_malloc(CONF_S, "domain in main");
+	if (!(strncpy(domain, cm->domain, CONF_S - 1)))
+		goto cleanup;
 	if (cm->type == FORWARD_ZONE) {
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
@@ -114,7 +112,8 @@ int main(int argc, char *argv[])
 	}
 
 	cleanup:
-		cmdb_free(domain, CONF_S);
+		if (domain)
+			cmdb_free(domain, CONF_S);
 		cmdb_free(cm, sizeof(dnsa_comm_line_s));
 		cmdb_free(dc, sizeof(dnsa_config_s));
 		exit(retval);

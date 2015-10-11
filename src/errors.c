@@ -230,6 +230,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "dbdata count is wrong in %s\n", errstr);
 	} else if (error == NO_SYSPACK_CONF) {
 		;
+	} else if (error == NO_ARG) {
+		fprintf(stderr, "Argument does not exist\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -449,8 +451,9 @@ display_cbcos_usage(void)
 	printf("cbcos: Program to manipulate build operating systems\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
-	printf("All actions apart from -l need -n <OS name>\n\n");
+	printf("-a: add OS\n-d: display OS\n-g: grab boot files\n-l: list OS\n");
+	printf("-r: remove OS\n");
+	printf("All actions apart from -l and -g need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <alias>\n-t: <os architecture\n\n");
@@ -806,6 +809,8 @@ display_action_error(short int action)
 		fprintf(stderr, "Listing failed\n");
 	else if (action == ADD_TO_DB)
 		fprintf(stderr, "Adding to DB failed\n");
+	else if (action == RM_FROM_DB)
+		fprintf(stderr, "Removing from DB failed\n");
 	else
 		fprintf(stderr, "Unknown error code %d failed\n", action);
 }

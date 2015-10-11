@@ -116,7 +116,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 /* Check if user has specified destination with -h and act accordingly */
 		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
 		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
-			snprintf(comp->dest, RANGE_S, "%s", comp->host);
+			snprintf(comp->dest, RBUFF_S, "%s", comp->host);
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
 		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
@@ -414,7 +414,8 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
-		if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) ||
+		    (strncmp(comm->rtype, "NULL", COMM_S) == 0)) {
 			if (host[0] == '_') {
 				if (validate_user_input(host + 1, NAME_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");

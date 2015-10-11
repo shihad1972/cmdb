@@ -42,6 +42,7 @@
 #include "cbc_data.h"
 #include "cmdb.h"
 #include "cmdb_cbc.h"
+#include "cbc_base_sql.h"
 
 #ifdef HAVE_LIBPCRE
 
@@ -310,4 +311,64 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 		return;
 }
 
+void
+remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
+{
+	int retval, type;
+	unsigned long int bip, server_id;
+	unsigned int max;
+	uint32_t ip_addr;
+	dnsa_config_s *dnsa = NULL;
+	dbdata_s *dns = NULL;
+
+	server_id = data->args.number;	// save server_id so we can use this data struct.
+	dnsa = cmdb_malloc(sizeof(dnsa_config_s), "dnsa in remove_ip_from_dns");
+	type = RECORD_ID_ON_IP_DEST_DOM;
+	max = cmdb_get_max(dnsa_extended_search_fields[type], dnsa_extended_search_args[type]);
+	init_multi_dbdata_struct(&dns, max);
+	copy_cbc_into_dnsa(dnsa, cbc);
+	if ((retval = cbc_run_search(cbc, data, BUILD_IP_ON_SERVER_ID)) <= 0) {
+		fprintf(stderr, "Cannot find build ip for server %s\n", cml->name);
+	} else {
+		if (retval > 1)
+			fprintf(stderr, "Multiple build IP's found. Using first one\n");
+		bip = data->fields.number;
+		ip_addr = htonl((uint32_t)bip);
+		if (!(inet_ntop(AF_INET, &ip_addr, dns->args.text, INET6_ADDRSTRLEN))) {
+			fprintf(stderr, "Cannot convert IP into dotted quad\n");
+			goto cleanup;
+		}
+		data->args.number = server_id;
+		memset(data->fields.text, 0, RBUFF_S);
+		if ((retval = dnsa_run_extended_search(dnsa, data, BUILD_DOM_ON_SERVER_ID)) <= 0) {
+			fprintf(stderr, "Cannot find build domain from server in build_ip table\n");
+			goto cleanup;
+		} else if (retval > 1) {
+			fprintf(stderr, "Multiple IP's. Using first one!\n");
+		}
+		snprintf(data->args.text, RBUFF_S, "%s", data->fields.text);
+		if ((retval = dnsa_run_extended_search(dnsa, data, FWD_ZONE_ID_ON_NAME)) <= 0) {
+			fprintf(stderr, "Cannot find build domain %s\n", data->args.text);
+			goto cleanup;
+		} else if (retval > 1) {
+			fprintf(stderr, "More than one build domain for %s. Using first one\n", data->args.text);
+		}
+		dns->next->args.number = data->fields.number;
+		snprintf(dns->next->next->args.text, HOST_S, "%s", cml->name);
+		if ((retval = dnsa_run_extended_search(dnsa, dns, type)) <= 0) {
+			fprintf(stderr, "Cannot find any dns entry for %s.%s @ %s\n", cml->name, cml->build_domain, dns->args.text);
+			goto cleanup;
+		}
+		data->args.number = dns->fields.number;
+		if ((retval = dnsa_run_delete(dnsa, data, RECORDS)) <= 0)
+			fprintf(stderr, "No records deleted\n");
+		else
+			printf("%d records deleted\n", retval);
+	}
+	cleanup:
+		free(dnsa);
+		clean_dbdata_struct(dns);
+		data->args.number = server_id;
+}
 #endif /* HAVE_DNSA */
+

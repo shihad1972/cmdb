@@ -1374,6 +1374,7 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		snprintf(cm->ztype, RANGE_S, "master"); */
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
+// **FIXME: Why not just check the host exists, rather than on this server?
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) == 0) {
 		retval = NO_DOMAIN;
 		printf("Zone %s not in database\n", zone->name);
@@ -1894,7 +1895,7 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa_s *dnsa;
 	dbdata_s serial_d, zone_info_d, user_d, *data;
 	record_row_s *rec;
-/* Set to NULL so we can check if there are no records to add / delete */
+// Set to NULL so we can check if there are no records to add / delete
 	rev_record_row_s *add = NULL, *delete = NULL, *list;
 
 	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in build_reverse_zone");
@@ -1908,13 +1909,13 @@ build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		dnsa_clean_list(dnsa);
 		return retval;
 	} else if (retval < 0) {
-/* No Duplicate records. Just convert all A records */
+// No Duplicate records. Just convert all A records
 		dnsa_clean_records(dnsa->records);
 		dnsa_clean_prefer(dnsa->prefer);
 		dnsa->records = NULL;
 		dnsa->prefer = NULL;
 	}
-	rec = dnsa->records; /* Holds duplicate A records */
+	rec = dnsa->records; // Holds duplicate A records
 	dnsa->records = NULL;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ALL_A_RECORD | REV_RECORD)) != 0) {
 		dnsa_clean_records(rec);
@@ -2098,11 +2099,11 @@ trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec)
 {
 	char host[RBUFF_S], *newhost;
 	int retval;
-	record_row_s *fwd = dnsa->records; /* List of A records */
+	record_row_s *fwd = dnsa->records; // List of A records
 	record_row_s *list, *tmp, *fwd_list, *prev;
 	fwd_list = prev = fwd;
 	while (fwd) {
-/* Get rid of @. in the start of these types of A records */
+// Get rid of @. in the start of these types of A records
 		newhost = host;
 		snprintf(newhost, RBUFF_S, "%s", fwd->host);
 		if (host[0] == '@') {
@@ -2110,9 +2111,9 @@ trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec)
 			newhost++;
 			snprintf(fwd->host, RBUFF_S, "%s", newhost);
 		}
-		list = rec; /* List of duplicate IP address in the net range */
+		list = rec; // List of duplicate IP address in the net range
 		tmp = fwd->next;
-/* Check if in duplicate and prefer list */
+// Check if in duplicate and prefer list
 		if ((retval = check_dup_and_pref_list(list, fwd, dnsa)) > 0) {
 			if (fwd_list == fwd) {
 				fwd_list = prev = tmp;
@@ -2136,17 +2137,17 @@ trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec)
 		dnsa->records = fwd_list;
 }
 
-/* Build a list of the reverse records we need to add to the database. */
+// Build a list of the reverse records we need to add to the database.
 int
 rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev)
 {
 	int i;
 	size_t len;
-	record_row_s *fwd = dnsa->records; /* List of A records */
+	record_row_s *fwd = dnsa->records; // List of A records
 	rev_record_row_s *rev_list;
 
 	while (fwd) {
-/* Now check if the forward record is in the reverse list */
+// Now check if the forward record is in the reverse list
 		i = 0;
 		rev_list = dnsa->rev_records;
 		while (rev_list) {
@@ -2173,11 +2174,11 @@ check_dup_and_pref_list(record_row_s *list, record_row_s *fwd, dnsa_s *dnsa)
 	preferred_a_s *prefer;
 	while (list) {
 		prefer = dnsa->prefer;
-/* Check if this is IP is in the duplicate list */
+// Check if this is IP is in the duplicate list
 		if (strncmp(list->dest, fwd->dest, RANGE_S) == 0) {
-/* Yes is is, so check if this has a preferred A record */
+// Yes is is, so check if this has a preferred A record
 			while (prefer) {
-/* Move preferred list to correct IP address for forward A record */
+// Move preferred list to correct IP address for forward A record
 				if (fwd->ip_addr != prefer->ip_addr) {
 					prefer = prefer->next;
 					continue;
@@ -2199,7 +2200,7 @@ check_dup_and_pref_list(record_row_s *list, record_row_s *fwd, dnsa_s *dnsa)
 		}
 		list = list->next;
 	}
-/* Not in the duplicate list, so return NONE and use this A record */
+// Not in the duplicate list, so return NONE and use this A record
 	return NONE;
 }
 
@@ -2219,7 +2220,7 @@ insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev
 			break;
 		zones = zones->next;
 	}
-	if (!zones) { /* fwd record belongs to non-existent zone */
+	if (!zones) { // fwd record belongs to non-existent zone
 		free(new);
 		return 0;
 	}
@@ -2268,7 +2269,7 @@ If this is not what you want, please set up a preferred record for this PTR\n",
 	fprintf(stderr, "***\n");
 }
 
-/* Build list of the reverse records we need to delete from the database */
+// Build list of the reverse records we need to delete from the database
 int
 rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 {
@@ -2276,7 +2277,7 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 	size_t len;
 	rev_record_row_s *list = dnsa->rev_records;
 	record_row_s *fwd;
-/* Check for new preferred A records */
+// Check for new preferred A records
 	while (list) {
 		fwd = dnsa->records;
 		while (fwd) {
@@ -2291,7 +2292,7 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev)
 		}
 		list = list->next;
 	}
-/* Check for deleted A records */
+// Check for deleted A records
 	list = dnsa->rev_records;
 	while (list) {
 		fwd = dnsa->records;
