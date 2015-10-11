@@ -45,41 +45,53 @@ get_size_from_len(size_t len)
 	return size * 2;
 }
 
-static char *
-build_sql_query(unsigned int prog, unsigned int no)
+static void
+get_search_table_index(unsigned int sno, unsigned int *tab)
 {
-	char *query;
-	unsigned int qno, cno, i;
-	size_t tot, pos, size;
-	for (i = 0, qno = 0; i < prog; i++)
-		qno += sql_tables[i];
-	qno += no;
-	for (i = 0, cno = 0; i < qno; i++)
-		cno += table_columns[i];
-//	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
-	tot = HOST_S;
-	pos = 0;
-	query = cmdb_malloc(tot, "query in build_sql_query");
-	pos = strlen("SELECT ");
-	snprintf(query, RANGE_S, "SELECT ");
-	for (i = 0; i < table_columns[qno]; i++) {
-		size = strlen(sql_columns[cno + i]);
-		if (!(query = check_for_resize(query, &tot, pos + size + 3)))
-			report_error(MALLOC_FAIL, "query in build_sql_query");
-		snprintf(query + pos, size + 3, "%s, ", sql_columns[cno + i]);
-		pos += size + 2;
+	unsigned int index, tmp, i;
+
+	for (i = 0, index = 0, tmp = 0; i < NOPROGS; i++) {
+		if ((index + sql_searches[i]) < sno) {
+			index += sql_searches[i];
+			tmp += sql_tables[i];
+		} else {
+			break;
+		}
 	}
-	pos -= 2;
-	size = strlen(" FROM ");
-	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
-		report_error(MALLOC_FAIL, "query in build_sql_query");
-	snprintf(query + pos, size + 3, " FROM ");
-	pos += size;
-	size = strlen(sql_table_list[qno]);
-	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
-		report_error(MALLOC_FAIL, "query in build_sql_query");
-	snprintf(query + pos, size + 3, "%s", sql_table_list[qno]);
-	return query;
+	*tab = tmp;
+}
+
+static void
+get_search_column_index(unsigned int tab, unsigned int *col)
+{
+	unsigned int index, i;
+
+	for (i = 0, index = 0; i < tab; i++)
+		index += table_columns[i];
+	*col = index;
+}
+
+static int
+get_join_table_column(int tabno, unsigned int jno, unsigned int sno, unsigned int *tab, unsigned int *col)
+{
+	int retval = 0;
+	unsigned int tindex, i, cindex;
+
+	get_search_table_index(sno, &tindex);
+	if (tabno == 0) {
+		*tab = search_join_columns[sno][jno][0] + tindex;
+		for (i = 0, cindex = 0; i < *tab; i++)
+			cindex += table_columns[i];
+		*col = search_join_columns[sno][jno][1] + cindex;
+	} else if (tabno == 1) {
+		*tab = search_join_columns[sno][jno][2] + tindex;
+		for (i = 0, cindex = 0; i < *tab; i++)
+			cindex += table_columns[i];
+		*col = search_join_columns[sno][jno][3] + cindex;
+	} else {
+		retval = -1;
+	}
+	return retval;
 }
 
 static char *
@@ -119,6 +131,163 @@ add_sql_insert_values(char *insert, unsigned int no, unsigned int count)
 			report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
 	insert[pos] = '\0';
 	return insert;
+}
+
+static char *
+get_first_search_column_table(unsigned int sno)
+{
+	char *search;
+	unsigned int col, ind, i, tmp, tab;
+
+	i = ind = col = tab = 0;
+	tmp = sql_searches[0];
+	while (sno >= tmp) 
+		ind += sql_tables[i];
+	search = cmdb_malloc(HOST_S, "search in get_first_search_column");
+	for (tmp = 0; tmp < search_field_columns[sno][0][0]; tmp++)
+		col += table_columns[tmp + ind];
+	tab = ind + tmp;
+	if (search_table_count[sno] > 1)
+		snprintf(search, HOST_S, "%s.%s FROM %s %s ",
+		 sql_table_alias[tab], sql_columns[col], sql_table_list[tab], sql_table_alias[tab]);
+	else
+		snprintf(search, HOST_S, "%s FROM %s ", sql_columns[col], sql_table_list[tab]);
+	return search;
+}
+
+static char *
+get_search_joins(unsigned int sno)
+{
+	char *join, *buff;
+	int retval;
+	unsigned int tab, col, i, jns;
+	size_t len, tot, jtot, pos, jpos;
+
+	jns = search_table_count[sno] - 1;
+	tot = jtot = NAME_S;
+	join = cmdb_malloc(tot, "join in get_search_joins");
+	pos = jpos = 0;
+	for (i = 0; i < jns; i++) {
+		buff = cmdb_malloc(tot, "buff in get_search_joins");
+		snprintf(buff, RANGE_S, "LEFT JOIN ");
+		pos = strlen(buff);
+		if ((retval = get_join_table_column(1, i, sno, &tab, &col)) < 0)
+			goto cleanup;
+		len = strlen(sql_table_list[tab]) + strlen(sql_table_alias[tab]) + 3;
+		if (!(buff = check_for_resize(buff, &tot, len + pos)))
+			report_error(MALLOC_FAIL, "buff in get_search_joins");
+		snprintf(buff + pos, len, "%s %s ", sql_table_list[tab], sql_table_alias[tab]);
+		pos += len - 1;
+		if ((retval = get_join_table_column(0, i, sno, &tab, &col)) < 0)
+			goto cleanup;
+		len = strlen(sql_table_alias[tab]) + strlen(sql_columns[col]) + 6;
+		if (!(buff = check_for_resize(buff, &tot, len + pos)))
+			report_error(MALLOC_FAIL, "buff in get_search_joins");
+		snprintf(buff + pos, len, "ON %s.%s=", sql_table_alias[tab], sql_columns[col]);
+		pos += len - 1;
+		if ((retval = get_join_table_column(1, i, sno, &tab, &col)) < 0)
+			goto cleanup;
+		len = strlen(sql_table_alias[tab]) + strlen(sql_columns[col]) + 3;
+		if (!(buff = check_for_resize(buff, &tot, len + pos)))
+			report_error(MALLOC_FAIL, "buff in get_search_joins");
+		snprintf(buff + pos, len, "%s.%s ", sql_table_alias[tab], sql_columns[col]);
+		len = strlen(buff);
+		if (!(join = check_for_resize(join, &jtot, len + pos)))
+			report_error(MALLOC_FAIL, "join in get_search_joins");
+		snprintf(join + jpos, len + 1, "%s", buff);
+		pos += len;
+		free(buff);
+	}
+	return join;
+	cleanup:
+		free(buff);
+		free(join);
+		join = NULL;
+		return join;
+}
+
+static char *
+get_search_args(unsigned int sno)
+{
+	char *args, *buff;
+	const char *table, *column;
+	unsigned int jns, i, tindex, cindex, tab, col;
+	size_t len, tot, atot, pos, apos;
+
+	jns = search_table_count[sno] - 1;
+	tot = atot = NAME_S;
+	args = cmdb_malloc(atot, "args in get_search_args");
+	pos = 0;
+	get_search_table_index(sno, &tindex);
+	snprintf(args, COMM_S, "WHERE ");
+	apos = strlen(args);
+	for (i = 0; i < search_args[sno]; i++) {
+		buff = cmdb_malloc(tot, "buff in get_search_args");
+		tab = tindex + search_arg_columns[sno][i][0];
+		get_search_column_index(tab, &cindex);
+		col = cindex + search_arg_columns[sno][i][1];
+		table = sql_table_alias[tab];
+		column = sql_columns[col];
+		if (jns > 0) {
+			len = strlen(table) + strlen(column) + 11;
+			if (!(buff = check_for_resize(buff, &tot, len + pos)))
+				report_error(MALLOC_FAIL, "buff in get_search_args");
+			snprintf(buff, len, "%s.%s = ? AND ", table, column);
+			pos += len - 1;
+		} else {
+			len = strlen(column) + 10;
+			if (!(buff = check_for_resize(buff, &tot, len + pos)))
+				report_error(MALLOC_FAIL, "buff in get_search_args");
+			snprintf(buff, len, "%s = ? AND ", column);
+			pos += len - 1;
+		}
+		len = strlen(buff) + 1;
+		if (!(args = check_for_resize(args, &atot, len + apos )))
+			report_error(MALLOC_FAIL, "args in get_search_args");
+		snprintf(args + apos, len, "%s", buff);
+		apos += len - 1;
+		free(buff);
+	}
+	len = strlen(args) - 5;
+	args[len] = '\0';
+	return args;
+}
+
+static char *
+build_sql_query(unsigned int prog, unsigned int no)
+{
+	char *query;
+	unsigned int qno, cno, i;
+	size_t tot, pos, size;
+	for (i = 0, qno = 0; i < prog; i++)
+		qno += sql_tables[i];
+	qno += no;
+	for (i = 0, cno = 0; i < qno; i++)
+		cno += table_columns[i];
+//	fprintf(stderr, "For query no %u, we start at %u\n", qno, cno);
+	tot = HOST_S;
+	pos = 0;
+	query = cmdb_malloc(tot, "query in build_sql_query");
+	pos = strlen("SELECT ");
+	snprintf(query, RANGE_S, "SELECT ");
+	for (i = 0; i < table_columns[qno]; i++) {
+		size = strlen(sql_columns[cno + i]);
+		if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+			report_error(MALLOC_FAIL, "query in build_sql_query");
+		snprintf(query + pos, size + 3, "%s, ", sql_columns[cno + i]);
+		pos += size + 2;
+	}
+	pos -= 2;
+	size = strlen(" FROM ");
+	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+		report_error(MALLOC_FAIL, "query in build_sql_query");
+	snprintf(query + pos, size + 3, " FROM ");
+	pos += size;
+	size = strlen(sql_table_list[qno]);
+	if (!(query = check_for_resize(query, &tot, pos + size + 3)))
+		report_error(MALLOC_FAIL, "query in build_sql_query");
+	snprintf(query + pos, size + 3, "%s", sql_table_list[qno]);
+	return query;
 }
 
 static char *
@@ -234,6 +403,70 @@ build_sql_update(unsigned int prog, unsigned int no)
 	return update;
 }
 
+static char *
+build_sql_delete(unsigned int prog, unsigned int no)
+{
+	char *delete;
+	const char *table, *tid;
+	unsigned int dno, i, id;
+	size_t len;
+
+	for (i = 0, dno = 0; i < prog; i++)
+		dno += sql_updates[i];
+	dno += no;
+	table = sql_table_list[dno];
+	for (i = 0, id = 0; i < dno; i++)
+		id += table_columns[i];
+	tid = sql_columns[id];
+	len = strlen(table) + strlen(tid);
+	len += strlen("DELETE FROM  WHERE  = ?");
+	delete = cmdb_malloc(len + 1, "delete in build_sql_delete");
+	snprintf(delete, len + 1, "DELETE FROM %s WHERE %s = ?", table, tid);
+	return delete;
+}
+
+static char *
+build_sql_search(unsigned int prog, unsigned int no)
+{
+	char *search, *buff;
+	unsigned int sno, i;
+	size_t tot, pos, len;
+
+	for (i = 0, sno = 0; i < prog; i++)
+		sno += sql_searches[i];
+	sno += no;
+	tot = HOST_S;
+	search = cmdb_malloc(tot, "search in build_sql_search");
+	snprintf(search, COMM_S, "SELECT ");
+	pos = strlen(search);
+	if (!(buff = get_first_search_column_table(sno)))
+		exit(1);
+	len = strlen(buff);
+	snprintf(search + pos, len + 1, "%s", buff);
+	pos += len;
+	free(buff);
+	if (!(buff = get_search_joins(sno)))
+		goto cleanup;
+	len = strlen(buff);
+	if (!(search = check_for_resize(search, &tot, pos + len)))
+		report_error(MALLOC_FAIL, "search in build_sql_search");
+	snprintf(search + pos, len + 1, "%s", buff);
+	free(buff);
+	pos += len;
+	if (!(buff = get_search_args(sno)))
+		goto cleanup;
+	len = strlen(buff);
+	if (!(search = check_for_resize(search, &tot, pos + len)))
+		report_error(MALLOC_FAIL, "search in build_sql_search");
+	snprintf(search + pos, len + 1, "%s", buff);
+	free(buff);
+	return search;
+	cleanup:
+		free(search);
+		search = NULL;
+		return search;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -242,7 +475,7 @@ main(int argc, char *argv[])
 	char *query;
 
 	if (argc < 2) {
-		prog = CBC;
+		prog = CMDB;
 	} else if (argc > 2) {
 		fprintf(stderr, "Usage: %s <prog>)\n", argv[0]);
 		exit(1);
@@ -280,6 +513,18 @@ main(int argc, char *argv[])
 	printf("\nSQL Updates\n\n");
 	for (i = 0; i < sql_updates[prog]; i++) {
 		query = build_sql_update(prog, i);
+		printf("%s\n", query);
+		free(query);
+	}
+	printf("\nSQL Deletes\n\n");
+	for (i = 0; i < sql_tables[prog]; i++) {
+		query = build_sql_delete(prog, i);
+		printf("%s\n", query);
+		free(query);
+	}
+	printf("\nSQL Searches\n\n");
+	for (i = 0; i < sql_searches[prog]; i++) {
+		query = build_sql_search(prog, i);
 		printf("%s\n", query);
 		free(query);
 	}

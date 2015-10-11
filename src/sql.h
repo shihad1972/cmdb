@@ -41,6 +41,10 @@ enum {
 	CBC = 2
 };
 
+enum {
+	NOPROGS = 3
+};
+
 // Various table variable definitions
 const unsigned int sql_tables[] = { 8, 6, 17 };	// No of tables for each program
 
@@ -48,7 +52,7 @@ const unsigned int table_columns[] = {
 // cmdb table columns
 	9, 11, 3, 9, 3, 10, 12, 8,
 // dnsa table columns
-	11, 9, 13, 9, 23, 18, //9, 4, 11,
+	11, 9, 13, 9, 23, 18,
 // cbc table columns;
 	13, 13, 10, 11, 7, 12, 4, 12, 8, 8, 7, 6, 8, 9, 6, 10, 7
 };
@@ -89,6 +93,44 @@ const char *sql_table_list[] = {
 	"system_scripts_args",
 	"varient"
 };
+
+const char *sql_table_alias[] = {
+// cmdb tables
+	"con",
+	"cus",
+	"hdt",
+	"hrd",
+	"srt",
+	"svc",
+	"ser",
+	"vsh",
+// dnsa tables
+	"glu",
+	"pfa",
+	"rec",
+	"rrc",
+	"rev",
+	"zon",
+// cbc tables
+	"bld",
+	"bdd",
+	"bip",
+	"bos",
+	"bty",
+	"dfp",
+	"did",
+	"loc",
+	"pak",
+	"prt",
+	"sch",
+	"spa",
+	"spc",
+	"syp",
+	"sys",
+	"sca",
+	"var"
+};
+
 const char *sql_columns[] = {
 // cmdb table columns
 	"cont_id", "name", "phone", "email", "cust_id", "cuser", "muser", "ctime", "mtime",
@@ -154,7 +196,7 @@ SELECT id, zone, pri, destination FROM records WHERE TYPE = 'CNAME'"
  * with no [c|m]user columns.
  */
 
-unsigned int short_inserts[] = {
+const unsigned int short_inserts[] = {
 	4, 2, 4, 18, 20
 };
 
@@ -173,7 +215,7 @@ unsigned int short_inserts[] = {
  *  table which will be the first column name.
  */
 
-unsigned int sql_updates[] = {
+const unsigned int sql_updates[] = {
 	7, 7, 12
 };
 
@@ -323,264 +365,247 @@ const char *static_update_values[][2] = {
 	{ NULL, NULL }
 };
 
-const unsigned int search_args[] = {
-// cbc search args
-	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
-	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1
-};
-const unsigned int search_fields[] = {
-// cbc search fields
-	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
-	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
-	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
+/*
+ * SQL Searches
+ *
+ * We have variables for the following
+ *
+ * Name of search
+ * No of searches in each program
+ * Tables of searches
+ * Joins
+ * No of args in search
+ * No of fields returned by database
+ * Names of arg column
+ * Names of field column
+ */
+
+enum {                  /* Search Names */
+// cmdb searches
+        SERVER_ID_ON_NAME = 0,
+        CUST_ID_ON_COID,
+        SERV_TYPE_ID_ON_SERVICE,
+        HARD_TYPE_ID_ON_HCLASS,
+        VM_ID_ON_NAME,
+        HCLASS_ON_HARD_TYPE_ID,
+        CUST_ID_ON_NAME,
+        CONTACT_ID_ON_COID_NAME,
+        SERVICE_ID_ON_URL,
+        SERVICE_ID_ON_SERVICE,
+        SERVICE_ID_ON_URL_SERVICE,
+        SERVICE_ID_ON_SERVER_ID,
+        SERVICE_ID_ON_CUST_ID,
+        SERVICE_ID_ON_SERVER_ID_SERVICE,
+        SERVICE_ID_ON_CUST_ID_SERVICE,
+// dnsa searches
+        ZONE_ID_ON_NAME,
+        REV_ZONE_ID_ON_NET_RANGE,
+        REV_ZONE_PREFIX,
+        RECORDS_ON_DEST_AND_ID,
+        RECORDS_ON_ZONE,
+        DEST_IN_RANGE,
+        RECORD_ID_ON_IP_DEST_DOM,
+        FWD_ZONE_ID_ON_NAME,
+        BUILD_DOM_ON_SERVER_ID,
+// cbc searches
+        LDAP_CONFIG_ON_DOM,
+        LDAP_CONFIG_ON_ID,
+        BUILD_DOMAIN_COUNT,
+        BUILD_OS_ON_NAME,
+        OS_ALIAS_ON_OS,
+        BUILD_TYPE_ID_ON_ALIAS,
+        OS_ID_ON_NAME,
+        OS_ID_ON_ALIAS,
+        BUILD_ID_ON_OS_ID,
+        SERVERS_USING_BUILD_OS,
+        VARIENT_ID_ON_VARIENT,
+        VARIENT_ID_ON_VALIAS,
+        OS_ID_ON_NAME_SHORT,
+        OS_ID_ON_ALIAS_SHORT,
+        OS_ID_ON_NAME_AND_VERSION,
+        OS_VARIENT_ID_ON_PACKAGE,
+        SERVERS_WITH_BUILD,
+        DHCP_DETAILS,
+        SERVER_ID_ON_UUID,
+        SERVER_ID_ON_SNAME,
+        SERVER_NAME_ON_ID,
+        TFTP_DETAILS,
+        NET_BUILD_DETAILS,
+        BUILD_MIRROR,
+        BASIC_PART,
+        FULL_PART,
+        BUILD_PACKAGES,
+        LDAP_CONFIG,
+        XYMON_CONFIG,
+        SMTP_CONFIG,
+        IP_ON_BD_ID,
+        NETWORK_CARD,
+        HARD_DISK_DEV,
+        BUILD_IP_ON_SERVER_ID,
+        BUILD_ID_ON_SERVER_ID,
+        OS_ID_ON_NAME_VER_ALIAS,
+        OS_ID_ON_ALIAS_VER_ALIAS,
+        DEF_SCHEME_ID_ON_SCH_NAME,
+        BD_ID_ON_DOMAIN,
+        CONFIG_LDAP_BUILD_DOM,
+        KICK_BASE,
+        KICK_NET_DETAILS,
+        BUILD_TYPE_URL,
+        NTP_CONFIG,
+        LOG_CONFIG,
+        ALL_CONFIG,
+        NFS_DOMAIN,
+        BUILD_DOM_SERVERS,
+        PACK_ID_ON_DETAILS,
+        DEFP_ID_ON_SCHEME_PART,
+        IP_ID_ON_HOST_DOMAIN,
+        IP_ID_ON_IP,
+        MAC_ON_SERVER_ID_DEV,
+        LOCALE_ID_ON_OS_ID,
+        IP_ID_ON_SERVER_ID,
+        BUILD_DOM_IP_RANGE,
+        DISK_DEV_ON_SERVER_ID_DEV,
+        LVM_ON_DEF_SCHEME_ID,
+        SYSPACK_ID_ON_NAME,
+        SYSP_INFO_SYS_AND_BD_ID,
+        SPARG_ON_SPID_AND_FIELD,
+        SYSP_INFO_ARG_AND_BD_ID,
+        SYSP_INFO_ON_BD_ID,
+        BDOM_NAME_ON_SERVER_ID,
+        NAME_DOM_ON_SERVER_ID,
+        BD_ID_ON_SERVER_ID,
+        SYS_PACK_CONF_ID,
+        SCR_ID_ON_NAME,
+        SCRIPT_CONFIG,
+        BUILD_TYPE_ON_ALIAS,
+        SCR_ARG_ID,
+        PART_OPT_ON_SCHEME_ID,
+        PART_OPT_ID,
+        DEF_SCHEME_ID_FROM_BUILD,
+        SCHEME_NAME_ON_SERVER_ID,
+        PACKAGE_OS_ID_ON_VID,
+        OS_DETAIL_ON_BT_ID,
+        LOCALE_DETAILS_ON_OS_ID,
+        PACKAGE_VID_ON_OS_ID,
+        BOOT_FILES_MIRROR_DETAILS
 };
 
-const char *sql_search[] = { 
-// cbc searches
-/* Start at 0 */ "\
-SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
- build_domain WHERE domain = ?","\
-SELECT config_ldap, ldap_ssl, ldap_server, ldap_dn, ldap_bind FROM\
- build_domain WHERE bd_id = ?","\
-SELECT COUNT(*) c FROM build_domain WHERE domain = ?","\
-SELECT alias, ver_alias, os_version, arch FROM build_os WHERE os = ?","\
-SELECT DISTINCT alias FROM build_os WHERE os = ?","\
-SELECT bt_id FROM build_type WHERE alias = ?","\
-SELECT os_id FROM build_os WHERE os = ? AND os_version = ? AND arch = ?","\
-SELECT os_id FROM build_os WHERE alias = ? AND os_version = ? AND arch = ?","\
-SELECT build_id FROM build WHERE os_id = ?","\
-SELECT name FROM server s, build b WHERE b.os_id = ?\
- AND b.server_id = s.server_id"
-/* 10 */,"\
-SELECT varient_id FROM varient WHERE varient = ?","\
-SELECT varient_id FROM varient WHERE valias = ?","\
-SELECT os_id FROM build_os WHERE os = ?","\
-SELECT os_id FROM build_os WHERE alias = ?","\
-SELECT os_id FROM build_os WHERE os = ? AND version = ?","\
-SELECT os_id, varient_id FROM packages WHERE package = ?","\
-SELECT name from server s, build b WHERE s.server_id = b.server_id","\
-SELECT b.mac_addr, bi.ip, bd.domain FROM server s \
-  LEFT JOIN build b ON b.server_id = s.server_id \
-  LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
-  LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE s.server_id = ?","\
-SELECT server_id FROM server WHERE uuid = ?","\
-SELECT server_id FROM server WHERE name = ?"
-/* 20 */,"\
-SELECT name FROM server WHERE server_id = ?","\
-SELECT bt.boot_line, bo.alias, bo.os_version, l.country, l.locale, l.keymap, \
-  bt.arg, bt.url, bo.arch, b.net_inst_int FROM build_type bt \
-  LEFT JOIN build_os bo ON bo.alias=bt.alias \
-  LEFT JOIN build b ON b.os_id = bo.os_id \
-  LEFT JOIN locale l ON l.locale_id = b.locale_id WHERE b.server_id = ?","\
-SELECT l.locale, l.keymap, b.net_inst_int, bi.ip, bd.ns, \
-  bd.netmask, bd.gateway, bi.hostname, bd.domain, l.language FROM build b \
-  LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
-  LEFT JOIN build_os bo ON b.os_id = bo.os_id \
-  LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
-  LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?","\
-SELECT mirror, bo.ver_alias, bo.alias, l.country, bd.config_ntp, bd.ntp_server\
-  , bo.arch FROM build_type bt LEFT JOIN build_os bo ON bo.alias = bt.alias \
-  LEFT JOIN build b ON b.os_id = bo.os_id \
-  LEFT JOIN locale l ON l.locale_id = b.locale_id \
-  LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
-  LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE b.server_id = ?","\
-SELECT d.device, ss.lvm FROM disk_dev d LEFT JOIN build b on b.server_id = d.server_id \
-  LEFT JOIN seed_schemes ss ON ss.def_scheme_id = b.def_scheme_id WHERE d.server_id = ?","\
-SELECT priority, minimum, maximum, filesystem, logical_volume, mount_point \
-  FROM default_part dp LEFT JOIN build b ON b.def_scheme_id=dp.def_scheme_id \
-  WHERE b.server_id = ?","\
-SELECT package FROM packages p \
-  LEFT JOIN build b ON b.varient_id = p.varient_id \
-  AND b.os_id = p.os_id WHERE server_id = ?","\
-SELECT bd.config_ldap, bd.ldap_server, bd.ldap_ssl, bd.ldap_dn, bd.ldap_bind \
-  FROM build_domain bd LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
-  LEFT JOIN build b ON b.ip_id = bi.ip_id \
-  WHERE b.server_id = ?","\
-SELECT bd.config_xymon, bd.xymon_server, bd.domain FROM build_domain bd \
-  LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
-  LEFT JOIN build b ON b.ip_id = bi.ip_id \
-  WHERE b.server_id = ?","\
-SELECT bd.config_email, bd.smtp_server, bd.domain, bi.ip FROM build_domain bd \
-  LEFT JOIN build_ip bi on bi.bd_id = bd.bd_id \
-  LEFT JOIN build b ON b.ip_id = bi.ip_id \
-  WHERE b.server_id = ?"
-/* 30 */,"\
-SELECT ip FROM build_ip WHERE bd_id = ?"
-/* This hard codes the network device to be hard_type_id 1
- * and disk device to be 2 */,"\
-SELECT detail, device FROM hardware WHERE server_id = ? AND hard_type_id = 1 \
-  ORDER BY device","\
-SELECT device FROM hardware WHERE server_id = ? AND hard_type_id = 2 \
-  ORDER BY device","\
-SELECT ip FROM build_ip WHERE server_id = ?","\
-SELECT build_id FROM build WHERE server_id = ?","\
-SELECT os_id FROM build_os WHERE os = ? AND ver_alias = ? AND arch = ?","\
-SELECT os_id FROM build_os WHERE alias = ? AND ver_alias = ? AND arch = ?","\
-SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?","\
-SELECT bd_id FROM build_domain WHERE domain = ?","\
-SELECT config_ldap FROM build_domain WHERE domain = ?"
-/* 40 */,"\
-SELECT l.keymap, l.locale, l.timezone FROM build b \
-  LEFT JOIN locale l ON b.locale_id = l.locale_id WHERE b.server_id = ?","\
-SELECT bt.mirror, bt.alias, bo.arch, bo.os_version, b.net_inst_int, bi.ip, \
-  bd.netmask, bd.gateway, bd.ns, bi.hostname, bi.domainname FROM build b \
-  LEFT JOIN build_ip bi ON bi.ip_id = b.ip_id LEFT JOIN build_domain bd ON \
-  bi.bd_id = bd.bd_id LEFT JOIN build_os bo ON b.os_id = bo.os_id LEFT JOIN \
-  build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?","\
-SELECT url FROM build_type bt LEFT JOIN build_os bo ON bt.bt_id = bo.bt_id \
-  LEFT JOIN build b ON b.os_id = bo.os_id WHERE b.server_id = ?","\
-SELECT bd.config_ntp, bd.ntp_server FROM build_domain bd \
-  LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
-SELECT bd.config_log, bd.log_server FROM build_domain bd \
-  LEFT JOIN build_ip bi ON bd.bd_id = bi.bd_id WHERE bi.server_id =?","\
-SELECT config_ntp, config_ldap, ldap_ssl, config_log, config_xymon, config_email \
-  FROM build_domain bd LEFT JOIN build_ip bi ON bi.bd_id = bd.bd_id WHERE bi.server_id = ?","\
-SELECT nfs_domain FROM build_domain bd NATURAL JOIN build_ip bi WHERE \
-  bi.server_id = ?","\
-SELECT s.name, bi.ip FROM build_ip bi LEFT JOIN server s ON \
-  s.server_id = bi.server_id WHERE bi.bd_id = ? ORDER BY bi.ip","\
-SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? \
-AND os_id = ?","\
-SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss ON \
-  dp.def_scheme_id = ss.def_scheme_id WHERE ss.scheme_name = ? AND \
-  dp.mount_point = ?"
-/* 50 */ ,"\
-SELECT ip_id FROM build_ip WHERE hostname = ? AND domainname = ?","\
-SELECT ip_id FROM build_ip WHERE ip = ?","\
-SELECT detail FROM hardware where server_id = ? and device = ?","\
-SELECT locale_id FROM locale WHERE os_id = ?","\
-SELECT ip_id FROM build_ip WHERE server_id = ?","\
-SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?","\
-SELECT hard_id FROM hardware WHERE server_id = ? and device = ?","\
-SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?","\
-SELECT syspack_id FROM system_packages WHERE name = ?","\
-SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
-  LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ?  AND spc.syspack_id = ? AND spc.syspack_arg_id = ? \
-  ORDER BY sp.name, spa.field"
-/* 60 */,"\
-SELECT syspack_arg_id FROM system_package_args WHERE \
-  syspack_id = ?  AND field = ?","\
-SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
-  LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ? AND spc.syspack_id = ? ORDER BY sp.name, spa.field","\
-SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
-  LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
-  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  WHERE spc.bd_id = ? ORDER BY sp.name, spa.field","\
-SELECT bd.domain FROM build_domain bd \
-  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
-SELECT s.name, bd.domain from server s \
-  LEFT JOIN build_ip ip ON ip.server_id = s.server_id \
-  LEFT JOIN build_domain bd ON ip.bd_id = bd.bd_id where s.server_id = ?","\
-SELECT bd.bd_id FROM build_domain bd \
-  LEFT JOIN build_ip ip ON ip.bd_id = bd.bd_id WHERE ip.server_id = ?","\
-SELECT syspack_conf_id FROM system_package_conf spc \
-  JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
-  JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id \
-  JOIN build_domain bd ON bd.bd_id = spc.bd_id \
-  WHERE bd.domain = ? AND sp.name = ? AND spa.field =?","\
-SELECT systscr_id FROM system_scripts WHERE name = ?","\
-SELECT ss.name, sa.arg, sa.no FROM system_scripts ss\
-  JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id\
-  JOIN build_type bt ON sa.bt_id = bt.bt_id \
-  WHERE bd_id = ? AND bt.alias = ? ORDER BY ss.name, sa.no","\
-SELECT build_type FROM build_type WHERE alias = ?"
-/* 70 */,"\
-SELECT systscr_arg_id from system_scripts_args WHERE bd_id = ? AND bt_id = ?\
-  AND systscr_id = ? AND no = ?","\
-SELECT poption FROM part_options WHERE def_part_id = ? AND def_scheme_id = ?","\
-SELECT part_options_id FROM part_options WHERE def_part_id = ? AND \
-  def_scheme_id = ? and poption = ?","\
-SELECT def_scheme_id FROM build WHERE server_id = ?","\
-SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
-  ss.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?","\
-SELECT package, os_id FROM packages WHERE varient_id = ?","\
-SELECT os_id, ctime, arch FROM build_os WHERE bt_id = ?","\
-SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?","\
-SELECT package, varient_id FROM packages WHERE os_id = ?","\
-SELECT mirror from build_type where alias = ?"
+const unsigned int sql_searches[] = {
+	15, 9, 80
+};
+
+const unsigned int search_args[] = {
+// cmdb search args
+	1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2,
+// dnsa search args
+	1, 1, 1, 1, 1, 2, 3, 1, 1,
+// cbc search args
+	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, // 20
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, // 20
+	1, 1, 1, 1, 1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, // 20
+	2, 2, 1, 1, 1, 1, 3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1  // 20
+};
+
+const unsigned int search_fields[] = {
+// cmdb search fields
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+// dnsa search fields
+	1, 1, 1, 3, 5, 1, 1, 1, 1,
+// cbc search fields
+	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1,
+	1, 10, 10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+	3, 11, 1, 2, 2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4,
+	1, 4, 4, 1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
+};
+
+const unsigned int search_table_count[] = {
+// cmdb search table number
+	1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 1, 1, 2, 2,
+// dnsa search table number
+	1, 1, 1, 2, 1, 1, 1, 1, 1,
+// cbc search table number
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 4, 2, 2,
+	1, 4, 5, 5, 3, 2, 2, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1
+};
+
+/*
+ * This is a maxrix of all the search fields in a query. The index
+ * is based on which program we are dealing with, so for the higher
+ * number programs, you have to add the number of tables in all 
+ * the previous programs to the number in the matrix to get the
+ * correct table number. 
+ *
+ * The matrix is based on { table, column }
+ */
+const unsigned int search_field_columns[][11][2] = {
+// cmdb search field columns
+	{ { 6, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 1, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 7, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 1, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
+};
+
+const unsigned int search_arg_columns[][5][2] = {
+	{ { 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 0, 6 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 7, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 1, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 0, 1 }, { 1, 6 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 5 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 5 }, { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 1 }, { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 2 }, { 4, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
+};
+
+const unsigned int search_join_columns[][4][4] = {
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 4, 1, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 };
 
 #endif // __HAVE_SQL_H_
-
-const char *cbc_sql_update[] = { "\
-UPDATE build_domain SET ntp_server = ? WHERE domain = ?","\
-UPDATE build_domain SET ntp_server = ? WHERE bd_id = ?","\
-UPDATE build SET varient_id = ? WHERE server_id = ?","\
-UPDATE build SET os_id = ? WHERE server_id = ?","\
-UPDATE build SET def_scheme_id = ? WHERE server_id = ?","\
-UPDATE build SET varient_id = ?, os_id = ? WHERE server_id = ?","\
-UPDATE build SET varient_id = ?, def_scheme_id = ? WHERE server_id = ?","\
-UPDATE build SET os_id = ?, def_scheme_id = ? WHERE server_id = ?","\
-UPDATE build SET varient_id = ?, os_id = ?, def_scheme_id = ? WHERE server_id\
-  = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_ssl = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, muser = ? \
-  WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
-  muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_ssl = ?, muser = ? \
-  WHERE  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
-  muser = ? WHERE  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_ssl = ?, \
-  muser = ? WHERE  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_server = ?, ldap_ssl = ?, \
-  muser = ? WHERE  bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_server = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_server = ?, \
-  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_bind = ?, ldap_server = ?, \
-  ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ldap = 1, ldap_dn = ?, ldap_bind = ?, \
-  ldap_server = ?, ldap_ssl = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET nfs_domain = ?, muser = ? WHERE bd_id = ?","\
-UPDATE build_domain SET config_ntp = 1, ntp_server = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_email = 1, smtp_server = ?, muser = ? \
-  WHERE bd_id = ?","\
-UPDATE build_domain SET config_log = 1, log_server = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
-  bd_id = ?","\
-UPDATE varient SET muser = ? WHERE varient_id = ?","\
-UPDATE seed_schemes SET muser = ? WHERE def_scheme_id = ?","\
-UPDATE build_domain SET muser = ? WHERE bd_id = ?"
-};
-
-const char *cbc_sql_delete[] = { "\
-DELETE FROM build_domain WHERE domain = ?","\
-DELETE FROM build_domain WHERE bd_id = ?","\
-DELETE FROM build_os WHERE os_id = ?","\
-DELETE FROM varient WHERE varient_id = ?","\
-DELETE FROM packages WHERE pack_id = ?","\
-DELETE FROM build_ip WHERE server_id = ?","\
-DELETE FROM build WHERE server_id = ?","\
-DELETE FROM disk_dev WHERE server_id = ?","\
-DELETE FROM seed_schemes WHERE def_scheme_id = ?","\
-DELETE FROM default_part WHERE def_part_id = ?","\
-DELETE FROM default_part WHERE def_scheme_id = ?","\
-DELETE FROM system_packages WHERE syspack_id = ?","\
-DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
-DELETE FROM system_package_conf WHERE syspack_conf_id = ?","\
-DELETE FROM system_scripts WHERE systscr_id = ?","\
-DELETE FROM system_scripts_args WHERE systscr_arg_id = ?","\
-DELETE FROM part_options WHERE part_options_id = ?"
-};
 
