@@ -71,6 +71,34 @@ get_search_column_index(unsigned int tab, unsigned int *col)
 	*col = index;
 }
 
+static void
+get_search_query_index(unsigned int sno, unsigned int *index)
+{
+	unsigned int ind, i;
+
+	for (i = 0, ind = 0; i < NOPROGS; i++) {
+		if ((ind + sql_searches[i]) < sno)
+			ind += sql_searches[i];
+		else
+			break;
+	}
+	*index = ind;
+}
+
+static void
+get_search_prog(unsigned int sno, unsigned int *prog)
+{
+	unsigned int pg, i;
+
+	for (i = 0, pg = 0; i < NOPROGS; i++) {
+		if ((pg + sql_searches[i]) < sno)
+			pg += sql_searches[i];
+		else
+			break;
+	}
+	*prog = i;
+}
+
 static int
 get_join_table_column(int tabno, unsigned int jno, unsigned int sno, unsigned int *tab, unsigned int *col)
 {
@@ -92,6 +120,26 @@ get_join_table_column(int tabno, unsigned int jno, unsigned int sno, unsigned in
 		retval = -1;
 	}
 	return retval;
+}
+
+static char *
+get_sql_modifier(unsigned int sno)
+{
+	char *mod = NULL;
+	unsigned int index, i, mods, query;
+	size_t tot = MAC_S;
+
+	for (i = 0, index = 0; index < sno; i++)
+		index += sql_searches[i];
+	query = sno - index - sql_searches[i];
+	for (mods = 0; mods < SQL_MODS; mods++) {
+		if (query == sql_modifiers[mods][1] && i == sql_modifiers[mods][0]) {
+			mod = cmdb_malloc(tot, "mod in get_sql_modifier");
+			if (sql_modifiers[mods][2] == DISTINCT)
+				snprintf(mod, tot, "DISTINCT ");
+		}
+	}
+	return mod;
 }
 
 static char *
@@ -137,7 +185,8 @@ static char *
 get_first_search_column_table(unsigned int sno)
 {
 	char *search;
-	unsigned int col, ind, tab;
+	unsigned int col, tab, prog, ser, ind, i;
+	size_t len, pos;
 
 	ind = col = tab = 0;
 	search = cmdb_malloc(HOST_S, "search in get_first_search_column");
@@ -150,6 +199,19 @@ get_first_search_column_table(unsigned int sno)
 		 sql_table_alias[tab], sql_columns[col], sql_table_list[tab], sql_table_alias[tab]);
 	else
 		snprintf(search, HOST_S, "%s FROM %s ", sql_columns[col], sql_table_list[tab]);
+	pos = strlen(search);
+	get_search_prog(sno, &prog);
+	get_search_query_index(sno, &ind);
+	ser = sno - ind;
+	for (i = 0; i < SQL_MODS; i++) {
+		if ((sql_modifiers[i][0] == prog) && (sql_modifiers[i][1] == ser)) {
+			if (sql_modifiers[i][2] == COUNT) {
+				pos = strlen(search);
+				len = strlen("COUNT (*) C ");
+				snprintf(search + pos, len + 1, "COUNT (*) C ");
+			}
+		}
+	}
 	return search;
 }
 
@@ -437,8 +499,14 @@ build_sql_search(unsigned int prog, unsigned int no)
 	search = cmdb_malloc(tot, "search in build_sql_search");
 	snprintf(search, COMM_S, "SELECT ");
 	pos = strlen(search);
+	if ((buff = get_sql_modifier(sno))) {
+		len = strlen(buff);
+		snprintf(search + pos, len + 1, "%s", buff);
+		pos += len;
+		free(buff);
+	}
 	if (!(buff = get_first_search_column_table(sno)))
-		exit(1);
+		report_error(MALLOC_FAIL, "get_first_search_column_table");
 	len = strlen(buff);
 	snprintf(search + pos, len + 1, "%s", buff);
 	pos += len;
