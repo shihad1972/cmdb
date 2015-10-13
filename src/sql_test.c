@@ -51,7 +51,7 @@ get_search_table_index(unsigned int sno, unsigned int *tab)
 	unsigned int index, tmp, i;
 
 	for (i = 0, index = 0, tmp = 0; i < NOPROGS; i++) {
-		if ((index + sql_searches[i]) < sno) {
+		if ((index + sql_searches[i]) <= sno) {
 			index += sql_searches[i];
 			tmp += sql_tables[i];
 		} else {
