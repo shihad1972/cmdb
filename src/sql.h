@@ -34,6 +34,14 @@
  * DELETE (delete row(s) based on id)
  */
 
+enum {
+	AIL_SELECT = 0,
+	AIL_INSERT = 1,
+	AIL_UPDATE = 2,
+	AIL_DELETE = 3,
+	AIL_SEARCH = 4
+};
+
 // Programs
 enum {
 	CMDB = 0,
@@ -58,7 +66,7 @@ const unsigned int table_columns[] = {
 };
 
 const char *sql_table_list[] = {
-// cmdb tables
+// cmdb tables 0 - 7
 	"contacts",
 	"customer",
 	"hard_type",
@@ -67,21 +75,21 @@ const char *sql_table_list[] = {
 	"services",
 	"server",
 	"vm_server_hosts",
-// dnsa tables
+// dnsa tables 8 - 13
 	"glue_zones",
 	"preferred_a",
-	"records",
+	"records",	// 10
 	"rev_records",
 	"rev_zones",
 	"zones",
-// cbc tables
+// cbc tables 14 - 30
 	"build",
 	"build_domain",
 	"build_ip",
 	"build_os",
 	"build_type",
 	"default_part",
-	"disk_dev",
+	"disk_dev",	// 20
 	"locale",
 	"packages",
 	"part_options",
@@ -91,7 +99,7 @@ const char *sql_table_list[] = {
 	"system_packages",
 	"system_scrips",
 	"system_scripts_args",
-	"varient"
+	"varient"	// 30
 };
 
 const char *sql_table_alias[] = {
@@ -132,26 +140,29 @@ const char *sql_table_alias[] = {
 };
 
 const char *sql_columns[] = {
-// cmdb table columns
+// cmdb table columns : Starts at 0 :
 	"cont_id", "name", "phone", "email", "cust_id", "cuser", "muser", "ctime", "mtime",
 	"cust_id", "name", "address", "city", "county", "postcode", "coid", "cuser", "muser", "ctime", "mtime",
 	"hard_type_id", "type", "class",
 	"hard_id", "detail", "device", "server_id", "hard_type_id", "cuser", "muser", "ctime", "mtime",
 	"service_type_id", "service", "detail",
-	"service_id", "server_id", "cust_id", "service_type_id", "detail", "url", "cuser", "muser", "ctime", "mtime",
-	"server_id", "vendor", "make", "model", "uuid", "cust_id", "vm_server_id", "name", "cuser", "muser", "ctime", "mtime",
+	"service_id", "server_id", "cust_id", "service_type_id", "detail", "url",
+	  "cuser", "muser", "ctime", "mtime",
+	"server_id", "vendor", "make", "model", "uuid", "cust_id", "vm_server_id",
+	  "name", "cuser", "muser", "ctime", "mtime",
 	"vm_server_id", "vm_server", "type", "server_id", "cuser", "muser", "ctime", "mtime",
-// dnsa table columns
+// dnsa table columns : Starts at 8 :
 	"id", "name", "zone_id", "pri_dns", "sec_dns", "pri_ns", "sec_ns", "cuser", "muser", "ctime", "mtime",
 	"prefa_id", "ip", "ip_addr", "record_id", "fqdn", "cuser", "muser", "ctime", "mtime",
-	"id", "zone", "host", "type", "protocol", "service", "pri", "destination", "valid", "cuser", "muser", "ctime", "mtime",
+	"id", "zone", "host", "type", "protocol", "service", "pri", "destination",
+	  "valid", "cuser", "muser", "ctime", "mtime",		//10
 	"rev_record_id", "rev_zone", "host", "destination", "valid", "cuser", "muser", "ctime", "mtime",
 	"rev_zone_id", "net_range", "prefix", "net_start", "net_finish", "start_ip", "finish_ip", "pri_dns", 
 	  "sec_dns", "serial", "refresh", "retry", "expire", "ttl", "valid", "owner", "updated", "type",
 	  "master", "cuser", "muser", "ctime", "mtime",
 	"id", "name", "pri_dns", "sec_dns", "serial", "refresh", "retry", "expire", "ttl", "valid", "owner",
 	  "updated", "type", "master", "cuser", "muser", "ctime", "mtime",
-// cbc table colums
+// cbc table colums : Starts at 14 :
 	"build_id", "mac_addr", "varient_id", "net_inst_int", "server_id", "os_id", "ip_id", "locale_id",
 	  "def_scheme_id", "cuser", "muser", "ctime", "mtime",
 	"bd_id", "start_ip", "end_ip", "netmask", "gateway", "ns", "domain", "ntp_server", "config_ntp",
@@ -161,8 +172,9 @@ const char *sql_columns[] = {
 	"bt_id", "alias", "build_type", "arg", "url", "mirror", "boot_line",
 	"def_part_id", "minimum", "maximum", "priority", "mount_point", "filesystem", "def_scheme_id",
 	  "logical_volume", "cuser", "muser", "ctime", "mtime",
-	"disk_id", "server_id", "device", "lvm",
-	"locale_id", "locale", "country", "language", "keymap", "os_id", "bt_id", "timezone", "cuser", "muser", "ctime", "mtime",
+	"disk_id", "server_id", "device", "lvm",		// 20
+	"locale_id", "locale", "country", "language", "keymap", "os_id",
+	  "bt_id", "timezone", "cuser", "muser", "ctime", "mtime",
 	"pack_id", "package", "varient_id", "os_id", "cuser", "muser", "ctime", "mtime",
 	"part_options_id", "def_part_id", "def_scheme_id", "poption", "cuser", "muser", "ctime", "mtime",
 	"def_scheme_id", "scheme_name", "lvm", "cuser", "muser", "ctime", "mtime",
@@ -171,7 +183,8 @@ const char *sql_columns[] = {
 	"syspack_conf_id", "syspack_arg_id", "syspack_id", "bd_id", "arg", "cuser", "muser", "ctime", "mtime",
 	"systscr_id", "name", "cuser", "muser", "ctime", "mtime",
 	"systscr_arg_id", "systscr_id", "bd_id", "bt_id", "arg", "no", "cuser", "muser", "ctime", "mtime",
-	"varient_id", "varient", "valias", "cuser", "muser", "ctime", "mtime"
+	"varient_id", "varient", "valias", "cuser", "muser", "ctime",
+	  "mtime"						// 30
 };
 
 // hangover dnsa queries. Will need to make them searches..
@@ -219,37 +232,14 @@ const unsigned int sql_updates[] = {
 	7, 7, 12
 };
 
-const char *update_tables[] = {
-// cmdb update tables
-	"server",
-	"customer",
-	"server",
-	"server",
-	"server",
-	"server",
-	"server",
-// dnsa update tables
-	"zones",
-	"zones",
-	"zones",
-	"zones",
-	"rev_zones",
-	"rev_zones",
-	"zones",
-// cbc update tables
-	"build_domain",
-	"build",
-	"build",
-	"build",
-	"build",
-	"build",
-	"build",
-	"build",
-	"build_domain",
-	"varient",
-	"seed_schemes",
-	"build_domain"
+const unsigned int update_tables[] = {
+	6, 1, 6, 6, 6, 6, 6,
+	13, 13, 13, 13, 12, 12, 13,
+	15, 14, 14, 14, 14, 14, 14, 14, 15, 30, 24, 15
 };
+
+const unsigned int sql_static = 6;	// length of the below array
+const unsigned int sql_statics[] =  { 7, 8, 9, 11, 13, 22 };
 
 const unsigned int update_fields[] = {
 // cmdb update fields
@@ -258,6 +248,13 @@ const unsigned int update_fields[] = {
 	1, 1, 0, 2, 1, 2, 0,
 // cbc update fields
 	1, 1, 1, 1, 2, 2, 2, 3, 2, 1, 1, 1
+};
+
+// Only expect 1 argument
+const unsigned int update_arg_column[] = {
+	0, 0, 0, 0, 0, 0, 0,
+	0 ,0 ,0 ,0 ,0, 0, 0,
+	0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0
 };
 
 const unsigned int static_update_fields[] = {
@@ -269,101 +266,56 @@ const unsigned int static_update_fields[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0
 };
 
-const char *update_field_columns[][5] = {
-// cmdb update field columns
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "uuid", NULL, NULL, NULL, NULL },
-	{ "make", NULL, NULL, NULL, NULL },
-	{ "model", NULL, NULL, NULL, NULL },
-	{ "vendor", NULL, NULL, NULL, NULL },
-	{ "cust_id", NULL, NULL, NULL, NULL },
-// dnsa update field columns
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "id", NULL, NULL, NULL, NULL },
-	{ NULL, NULL, NULL, NULL, NULL },
-	{ "serial", "muser", NULL, NULL, NULL },
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "serial", "muser", NULL, NULL, NULL },
-	{ NULL, NULL, NULL, NULL, NULL },
-// cbc update field columns
-	{ "ntp_server", NULL, NULL, NULL, NULL },
-	{ "varient_id", NULL, NULL, NULL, NULL },
-	{ "os_id", NULL, NULL, NULL, NULL },
-	{ "def_scheme_id", NULL, NULL, NULL, NULL },
-	{ "varient_id", "os_id", NULL, NULL, NULL },
-	{ "varient_id", "def_scheme_id", NULL, NULL, NULL },
-	{ "os_id", "def_scheme_id", NULL, NULL, NULL },
-	{ "varient_id", "os_id", "def_scheme_id", NULL, NULL },
-	{ "config_ntp", "ntp_server", "muser", NULL, NULL },
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "muser", NULL, NULL, NULL, NULL },
-	{ "muser", NULL, NULL, NULL, NULL }
+const unsigned int update_field_columns[][5] = {
+// cmdb
+	{ 9, 0, 0, 0, 0 },
+	{ 6, 0, 0, 0, 0 },
+	{ 4, 0, 0, 0, 0 },
+	{ 2, 0, 0, 0, 0 },
+	{ 3, 0, 0, 0, 0 },
+	{ 1, 0, 0, 0, 0 },
+	{ 5, 0, 0, 0, 0 },
+// dnsa
+	{ 15, 0, 0, 0, 0 },
+	{ 15, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0 },
+	{ 4, 15, 0, 0, 0 },
+	{ 20, 0, 0, 0, 0 },
+	{ 9, 20, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0 },
+// cbc
+	{ 7, 0, 0, 0, 0 },
+	{ 2, 0, 0, 0, 0 },
+	{ 5, 0, 0, 0, 0 },
+	{ 8, 0, 0, 0, 0 },
+	{ 2, 5, 0, 0, 0 },
+	{ 2, 8, 0, 0, 0 },
+	{ 5, 8, 0, 0, 0 },
+	{ 2, 5, 8, 0, 0 },
+	{ 7, 10, 0, 0, 0 },
+	{ 4, 0, 0, 0, 0 },
+	{ 4, 0, 0, 0, 0 },
+	{ 10, 0, 0, 0, 0 }
 };
 
-const char *static_update_columns[][2] = {
-// cmdb static columns
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-// dnsa static columns
-	{ "valid", "updated" },
-	{ "valid", "updated" },
-	{ "updated", NULL },
-	{ NULL, NULL },
-	{ "valid", "updated" },
-	{ NULL, NULL },
-	{ "valid", NULL },
-// cbc static columns
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ "config_ntp", NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL }
+const unsigned int static_update_columns[][2] = {
+	{ 9, 11 },
+	{ 9, 11 },
+	{ 11, 0 },
+	{ 14, 16 },
+	{ 9, 0 },
+	{ 8, 0 }
 };
 
 const char *static_update_values[][2] = {
-// cmdb static values
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-// dnsa static values
 	{ "yes", "no" },
 	{ "unknown", "yes" },
 	{ "no", NULL },
-	{ NULL, NULL },
 	{ "yes", "no" },
-	{ NULL, NULL },
 	{ "no", NULL },
-// cbc static values
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ "1", NULL },
-	{ NULL, NULL },
-	{ NULL, NULL },
-	{ NULL, NULL }
+	{ "1", NULL }
 };
+
 
 /*
  * SQL Searches
@@ -395,10 +347,13 @@ enum {
         REV_ZONE_PREFIX,
         RECORDS_ON_DEST_AND_ID,
         RECORDS_ON_ZONE,
-        DEST_IN_RANGE,
+        DEST_IN_RANGE,			// No longer used
         RECORD_ID_ON_IP_DEST_DOM,
-        FWD_ZONE_ID_ON_NAME,
+        FWD_ZONE_ID_ON_NAME,		// Duplicate
         BUILD_DOM_ON_SERVER_ID,
+	ALL_A_RECORDS,
+	DUPLICATE_A_RECORDS,
+	RECORDS_ON_CNAME_TYPES,
 // cbc searches
         LDAP_CONFIG_ON_DOM,
         LDAP_CONFIG_ON_ID,
@@ -586,10 +541,36 @@ const unsigned int search_field_columns[][11][2] = {
 	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
 	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
 	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+// dnsa search field columns
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 2 }, { 5, 1 }, { 2, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 0 }, { 2, 2 }, { 2, 3 }, { 2, 6 }, { 2, 7 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 7 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, // Duplicate
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 8, 3 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, // This is a cbc table!!
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 1 }, { 2, 2 }, { 2, 7 }, { 2, 0 }, { 2, 1 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 7 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },
+	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 0 }, { 2, 1 }, { 2, 6 }, { 2, 7 }, { 0, 0 }, { 0, 0 },
 	  { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
 };
 
 const unsigned int search_arg_columns[][5][2] = {
+// cmdb arg columns
 	{ { 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
 	{ { 1, 6 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
 	{ { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
@@ -604,10 +585,24 @@ const unsigned int search_arg_columns[][5][2] = {
 	{ { 5, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
 	{ { 5, 2 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
 	{ { 5, 1 }, { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
-	{ { 5, 2 }, { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
+	{ { 5, 2 }, { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+// dnsa arg columns
+	{ { 5, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 4, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 7 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 7 }, { 2, 7 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 7 }, { 2, 1 }, { 2, 2 }, { 0, 0 }, { 0, 0 } },
+	{ { 5, 1 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }, // Dupliacte
+	{ { 8, 5 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 3 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 3 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
+	{ { 2, 3 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
 };
 
 const unsigned int search_join_columns[][4][4] = {
+// cmdb search joins
 	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
@@ -623,6 +618,19 @@ const unsigned int search_join_columns[][4][4] = {
 	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 	{ { 5, 3, 4, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+// dnsa search joins
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 2, 1, 5, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 2, 1, 5, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+	{ { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } }
 };
 
 #endif // __HAVE_SQL_H_

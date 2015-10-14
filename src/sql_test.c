@@ -45,6 +45,65 @@ get_size_from_len(size_t len)
 	return size * 2;
 }
 
+static unsigned int
+get_column(unsigned int table, const unsigned int col)
+{
+	unsigned int retval, i, sanity;
+	sanity = 0;
+	for (i = 0; i < NOPROGS; i++)
+		sanity += sql_tables[i];
+	if (table > sanity)
+		return 0;
+	for (i = 0, retval = 0; i < table; i++)
+		retval +=table_columns[i];
+	retval += col;
+	return retval;
+}
+
+static char *
+add_sql_insert_values(char *insert, unsigned int no, unsigned int count)
+{
+	size_t size, pos;
+	unsigned int i, j;
+
+	pos = strlen(insert);
+	size = get_size_from_len(pos);
+	if ((size == 0) || (size > THIS_SQL_MAX)) {	// Neither should ever happen...
+		if (insert)
+			free (insert);
+		return NULL;
+	}
+	for (i = 0; i < count; i++) {
+		for (j = 0; j < no; j++) {
+			if (j == 0) {
+				if (!(insert = check_for_resize(insert, &size, pos + 2)))
+					report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+				snprintf(insert + pos, 2, "(");
+				pos += 1;
+			}
+			if (!(insert = check_for_resize(insert, &size, pos + 4)))
+				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+			snprintf(insert + pos, 4, "?, ");
+			pos += 3;
+		}
+		pos -= 2;
+		if (!(insert = check_for_resize(insert, &size, pos + 4)))
+				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+		snprintf(insert + pos, 4, "), ");
+		pos += 3;
+	}
+	pos -= 2;
+	if (!(insert = check_for_resize(insert, &size, pos + 2)))
+			report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
+	insert[pos] = '\0';
+	return insert;
+}
+
+/*
+ * Get various indeces for table, column and search
+ *
+ */
+
 static void
 get_search_table_index(unsigned int sno, unsigned int *tab)
 {
@@ -122,6 +181,11 @@ get_join_table_column(int tabno, unsigned int jno, unsigned int sno, unsigned in
 	return retval;
 }
 
+/*
+ * Main helper functions for build_sql_search
+ * Each one returns a specific part of the search query
+ */
+
 static char *
 get_sql_modifier(unsigned int sno)
 {
@@ -140,45 +204,6 @@ get_sql_modifier(unsigned int sno)
 		}
 	}
 	return mod;
-}
-
-static char *
-add_sql_insert_values(char *insert, unsigned int no, unsigned int count)
-{
-	size_t size, pos;
-	unsigned int i, j;
-
-	pos = strlen(insert);
-	size = get_size_from_len(pos);
-	if ((size == 0) || (size > THIS_SQL_MAX)) {	// Neither should ever happen...
-		if (insert)
-			free (insert);
-		return NULL;
-	}
-	for (i = 0; i < count; i++) {
-		for (j = 0; j < no; j++) {
-			if (j == 0) {
-				if (!(insert = check_for_resize(insert, &size, pos + 2)))
-					report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
-				snprintf(insert + pos, 2, "(");
-				pos += 1;
-			}
-			if (!(insert = check_for_resize(insert, &size, pos + 4)))
-				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
-			snprintf(insert + pos, 4, "?, ");
-			pos += 3;
-		}
-		pos -= 2;
-		if (!(insert = check_for_resize(insert, &size, pos + 4)))
-				report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
-		snprintf(insert + pos, 4, "), ");
-		pos += 3;
-	}
-	pos -= 2;
-	if (!(insert = check_for_resize(insert, &size, pos + 2)))
-			report_error(MALLOC_FAIL, "insert in add_sql_insert_values");
-	insert[pos] = '\0';
-	return insert;
 }
 
 static char *
@@ -401,8 +426,8 @@ static char *
 build_sql_update(unsigned int prog, unsigned int no)
 {
 	char *update;
-	const char *table, *sf, *sv, *col_id;
-	unsigned int uno, fields, statics, i, id;
+	const char *table, *column, *sf, *sv;
+	unsigned int uno, fields, statics, tab, col, id, i;
 	size_t tot, pos, len;
 
 	for (i = 0, uno = 0; i < prog; i++)
@@ -411,33 +436,37 @@ build_sql_update(unsigned int prog, unsigned int no)
 	fields = update_fields[uno];
 	statics = static_update_fields[uno];
 	tot = HOST_S;
-	pos = 0;
 	update = cmdb_malloc(tot, "update in build_sql_update");
 	pos = strlen("UPDATE ");
 	snprintf(update, pos + 1, "UPDATE ");
-	table = update_tables[uno];
-	len = strlen(table);
-	if (!(update = check_for_resize(update, &tot, pos + len + 2)))
+	tab = update_tables[uno];
+	table = sql_table_list[tab];
+	len = strlen(table) + 1;
+	if (!(update = check_for_resize(update, &tot, pos + len + 1)))
 		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
-	snprintf(update + pos, len + 2, "%s ", table);
-	pos += len + 1;
+	snprintf(update + pos, len + 1, "%s ", table);
+	pos += len;
 	len = strlen("SET ");
 	if (!(update = check_for_resize(update, &tot, pos + len + 1)))
 		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
 	snprintf(update + pos, len + 1, "SET ");
 	pos += len;
 	for (i = 0; i < fields; i++) {
-// check this exists first
-		len = strlen(update_field_columns[uno][i]);
+		col = get_column(tab, update_field_columns[uno][i]);
+		column = sql_columns[col];
+		len = strlen(column);
 		if (!(update = check_for_resize(update, &tot, pos + len + 7)))
 			report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
-		snprintf(update + pos, len + 7, "%s = ?, ", update_field_columns[uno][i]);
+		snprintf(update + pos, len + 7, "%s = ?, ", column);
 		pos += len + 6;
 	}
 	for (i = 0; i < statics; i++) {
-// check this exists first
-		sf = static_update_columns[uno][i];
-		sv = static_update_values[uno][i];
+		for (id = 0; id <= sql_static; id++)
+			if (uno == sql_statics[id])
+				break;
+		col = get_column(tab, static_update_columns[id][i]);
+		sf = sql_columns[col];
+		sv = static_update_values[id][i];
 		len = strlen(sv) + strlen(sf);
 		if (!(update = check_for_resize(update, &tot, pos + len + 8)))
 			report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
@@ -450,16 +479,12 @@ build_sql_update(unsigned int prog, unsigned int no)
 		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
 	snprintf(update + pos, len + 1, " WHERE ");
 	pos += len;
-	i = 0;
-	while (strncmp(table, sql_table_list[i], HOST_S) != 0)
-		i++;
-	for (fields = 0, id = 0; fields < i; fields++)
-		id += table_columns[fields];
-	col_id = sql_columns[id];
-	len = strlen(col_id);
-	if (!(update = check_for_resize(update, &tot, pos + len + 5)))
+	col = get_column(tab, update_arg_column[uno]);
+	column = sql_columns[col];
+	len = strlen(column) + 4;
+	if (!(update = check_for_resize(update, &tot, pos + len + 1)))
 		report_error(MALLOC_FAIL, "reallocating update in build_sql_update");
-	snprintf(update + pos, len + 5, "%s = ?", col_id);
+	snprintf(update + pos, len + 1, "%s = ?", column);
 	return update;
 }
 
@@ -484,7 +509,7 @@ build_sql_delete(unsigned int prog, unsigned int no)
 	snprintf(delete, len + 1, "DELETE FROM %s WHERE %s = ?", table, tid);
 	return delete;
 }
-
+/*
 static char *
 build_sql_search(unsigned int prog, unsigned int no)
 {
@@ -531,7 +556,7 @@ build_sql_search(unsigned int prog, unsigned int no)
 		free(search);
 		search = NULL;
 		return search;
-}
+} */
 
 int
 main(int argc, char *argv[])
@@ -588,12 +613,12 @@ main(int argc, char *argv[])
 		printf("%s\n", query);
 		free(query);
 	}
-	printf("\nSQL Searches\n\n");
+/*	printf("\nSQL Searches\n\n");
 	for (i = 0; i < sql_searches[prog]; i++) {
 		query = build_sql_search(prog, i);
 		printf("%s\n", query);
 		free(query);
-	}
+	} */
 	return retval;
 }
 
