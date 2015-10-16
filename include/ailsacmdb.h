@@ -376,6 +376,7 @@ void
 ailsa_clean_client_info(struct client_info *ci);
 
 // SQL functions
+
 char *
 build_sql_query(unsigned int prog, unsigned int no);
 
