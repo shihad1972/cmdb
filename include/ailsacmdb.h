@@ -375,4 +375,17 @@ ailsa_clean_pkg(void *pkg);
 void
 ailsa_clean_client_info(struct client_info *ci);
 
+// SQL functions
+char *
+build_sql_query(unsigned int prog, unsigned int no);
+
+char *
+build_sql_insert(unsigned int prog, unsigned int no, unsigned int count);
+
+char *
+build_sql_update(unsigned int prog, unsigned int no);
+
+char *
+build_sql_delete(unsigned int prog, unsigned int no);
+
 #endif // __AILSACMDB_H__
