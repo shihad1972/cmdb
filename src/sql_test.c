@@ -269,7 +269,7 @@ build_sql_delete(unsigned int prog, unsigned int no)
 	snprintf(delete, len + 1, "DELETE FROM %s WHERE %s = ?", table, tid);
 	return delete;
 }
-
+/*
 int
 main(int argc, char *argv[])
 {
@@ -326,5 +326,5 @@ main(int argc, char *argv[])
 		free(query);
 	}
 	return retval;
-}
+} */
 

@@ -71,9 +71,6 @@ cbcsysp:	$(SPOBJECTS)
 cbcscript:	$(SSOBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(SSOBJECTS) $(LDFLAGS) $(LIBS)
 
-sqlt:	$(TOBJECTS) $(THEADERS)
-	$(CC) $(CFLAGS) -o $@ $(TOBJECTS) $(LDFLAGS) $(LIBS)
-
 .PHONY :	clean
 clean :
 	$(RM) *.o $(bin_programs)
