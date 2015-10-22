@@ -16,6 +16,7 @@
 #
 
 WGET=/usr/bin/wget
+AUTOD=/etc/default/autodir
 while getopts "b:d:kr:u:" opt; do
   case $opt in 
     b)	BASE_DN=$OPTARG
@@ -106,4 +107,12 @@ EOF
     /usr/bin/c_rehash /etc/ssl/certs/
   fi
 fi
+
+if [ -f ${TGT}${AUTOD} ]; then
+  echo "Updating autodir default file ${TGT}${AUTOD}"
+  sed -i 's/^RUN_AUTOHOME="no"/RUN_AUTOHOME="yes"/' ${TGT}${AUTOD}
+else
+  echo "No file ${TGT}${AUTOD}"
+fi
+
 
