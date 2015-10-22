@@ -87,7 +87,7 @@ echo "krb5_realm = \$REALM" >> /etc/sssd/sssd.conf
 EOF
   chmod 755 ${TGT}/usr/share/firstboot/001-sssd.sh
 else
-  echo "rkb5_realm = $REALM" >> $TARGET
+  echo "krb5_realm = $REALM" >> $TARGET
 fi
 
 echo "Updating permissions on $TARGET"
