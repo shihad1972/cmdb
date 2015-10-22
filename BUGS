@@ -1,3 +1,8 @@
+22/10/2015
+When removing config for a package in a domain, I should be able to remove
+all configs instead of having to identfy each field. Perhaps have another
+command line argument to show I want to delete all the configs
+
 01/08/2015
 check_parent_for_a_record() in zones.c should return 1 if record found not 0
 
