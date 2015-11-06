@@ -212,6 +212,9 @@ Should have the root password for the machine in the database and
 add this to the build file. Need to work out how to get hash
 
 Also need to add an email alias for root in smtp configuration
+	06/11/2015 **UPDATE**
+	The package configuration for postfix is supposed to do this, but
+	only seems to work in stretch (and not jessie nor wheezy)
 
 23/05/2013
 Still need to write cbclocale

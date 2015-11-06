@@ -1,3 +1,7 @@
+06/11/2015
+security.ubuntu.org does not exist, so we should not add this to the
+sources.list file for anything apart from a debian build.
+
 22/10/2015
 When removing config for a package in a domain, I should be able to remove
 all configs instead of having to identfy each field. Perhaps have another
