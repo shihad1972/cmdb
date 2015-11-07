@@ -3,7 +3,7 @@
 cpc \- Create Preseed Config
 .SH SYNOPSIS
 .B cpc
-.B ( -d -e -f -i -k -l -m -n -p -s -t -u -v )
+.B ( -d -e -f -h i -k -l -m -n -p -s -t -u -v -y )
 .PP
 .SH DESCRIPTION
 \fBcpc\fP will create a preseed configuratioin file to allow you to automate the
@@ -19,7 +19,7 @@ Specifies the DNS domain of the server to be built.
 Specifies the NTP server used to synchronise the time.
 .IP "-f filename"
 Output the preseed configuration to the named file.
-.IP "-k country"
+.IP "-y country"
 Specify the country keybourd layout.
 .IP "-l locale"
 Specify the locale to configure in preseed.
@@ -33,7 +33,7 @@ Specify the suite to use e.g. stable, testing etc.
 Specify the timezone to be configured in preseed.
 .IP "-u url"
 Specify the url to add at the end of the mirror e.g. /debian.
-.IP "-v hard disk drive"
+.IP "-k hard disk drive"
 Specify the hard disk to install onto e.g. sda, hda. Do NOT use a preceeding /dev/
 .PP
 .SH FILES

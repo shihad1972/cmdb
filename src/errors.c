@@ -590,6 +590,10 @@ display_cbcscript_usage(void)
 void
 display_version(char *prog)
 {
+	if (strrchr(prog, '/')) {
+		prog = strrchr(prog, '/');
+		prog++;
+	}
 	printf("%s: %s\n", prog, VERSION);
 }
 

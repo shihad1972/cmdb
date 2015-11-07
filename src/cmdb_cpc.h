@@ -57,6 +57,7 @@ typedef struct cpc_config_s {
 	short int ntp;
 	short int recommends;
 	short int utc;
+	short int action;
 } cpc_config_s;
 
 int
