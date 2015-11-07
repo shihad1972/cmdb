@@ -588,6 +588,12 @@ display_cbcscript_usage(void)
 }
 
 void
+display_version(char *prog)
+{
+	printf("%s: %s\n", prog, VERSION);
+}
+
+void
 get_error_string(int error, char *errstr)
 {
 	if (error == SERVER_NOT_FOUND)

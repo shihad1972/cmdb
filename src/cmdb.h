@@ -332,7 +332,9 @@ enum {			/* cmdb Action codes */
 	RM_FROM_DB = 4,
 	CVERSION = 5,
 	MODIFY = 6,
-	DOWNLOAD = 7
+	DOWNLOAD = 7,
+	HELP = 8,
+	VERS = 9
 };
 
 enum {			/* cbc action codes */
@@ -454,6 +456,8 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
+void
+display_version(char *prog);
 
 // Database fields query mismatch error functions
 
