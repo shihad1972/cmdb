@@ -11,7 +11,7 @@ CPPFLAGS = -I/usr/include/mysql
 LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
 LIBS = -lmysqlclient $(PCLIBS) -lsqlite3
-bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
+bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc
 
 SOBJECTS = errors.o checks.o cmdb_data.o
 COMOBJECTS = cbc_data.o cbc_base_sql.o cbc_common.o cbccom.o
@@ -24,6 +24,7 @@ COOBJECTS = cbcos.o $(SOBJECTS) $(COMOBJECTS) base_sql.o cbcnet.o
 CVOBJECTS = cbcvarient.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 CKOBJECTS = cbcpart.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 POBJECTS = cpc.c $(SOBJECTS)
+KOBJECTS = ckc.c $(SOBJECTS)
 SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 
@@ -35,6 +36,7 @@ CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 CVHEADERS = $(COMHEADERS) cbcvarient.h
 CKHEADERS = $(COMHEADERS) cbcpart.h
 PHEADERS = cmdb.h cmdb_cpc.h
+KHEADERS = cmdb.h cmdb_ckc.h
 
 all:	$(bin_programs)
 
@@ -61,6 +63,9 @@ cbcpart:	$(CKOBJECTS) $(CKHEADERS)
 
 cpc:	$(POBJECTS) $(PHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
+
+ckc:	$(KOBJECTS) $(KHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
 
 cbcsysp:	$(SPOBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(SPOBJECTS) $(LDFLAGS) $(LIBS)

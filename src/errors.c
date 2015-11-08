@@ -543,7 +543,7 @@ display_cpc_usage(void)
 	printf("-d <domain>\tDNS domain name\n");
 	printf("-e <ntp-server>\n");
 	printf("-f <filename>\tOutput to the named file\n");
-	printf("-k <keyboard county layout>\n");
+	printf("-y <keyboard county layout>\n");
 	printf("-l <locale>\n");
 	printf("-i <interface>\n");
 	printf("-n <hostname>\tHost name\n");
@@ -552,7 +552,23 @@ display_cpc_usage(void)
 	printf("-s <suite>\n");
 	printf("-t <timezone>\n");
 	printf("-u <url>\n");
-	printf("-v <disk drive id>\n");
+	printf("-k <disk drive id>\n");
+}
+
+void
+display_ckc_usage(void)
+{
+	printf("ckc: create kickstart config %s\n", VERSION);
+	printf("Usage\n");
+	printf("-d <domain>\tDNS domain name\n");
+	printf("-k <disk>\tDisk to install on (no /dev/ needed)\n");
+	printf("-l <language>\tDefault language for system\n");
+	printf("-p <packages>\tComma separated list of extra packages\n");
+	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-y <country>\tCountry keyboard mapping\n");
+	printf("\n");
+	printf("-h\tDisplay this help message\n");
+	printf("-v\tDisplay cpc version number\n");
 }
 
 void
