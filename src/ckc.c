@@ -342,10 +342,10 @@ keyboard %s\n", ckc->country);
 keyboard uk\n");
 	if (ckc->language)
 		fprintf(output, "\
-language %s\n", ckc->language);
+lang %s\n", ckc->language);
 	else
 		fprintf(output, "\
-language en_GB\n");
+lang en_GB\n");
 	fprintf(output, "\
 logging --level=info\n\
 reboot\n");
@@ -369,6 +369,7 @@ zerombr\n\
 clearpart --all --initlabel\n");
 	fprintf(output, "\
 part /boot --asprimary --fstype \"ext4\" --size=512\n\
+part swap --asprimary --fstype \"swap\" --size=1024\n\
 part / --asprimary --fstype \"ext4\" --size=10 --grow\n");
 	if (ckc->url)
 		fprintf(output, "\
@@ -403,6 +404,10 @@ postfix\n");
 		fprintf(output, "%s\n", list->package);
 		list = list->next;
 	}
+	fprintf(output, "\
+\n\
+%%end\n\
+\n");
 	if (output != stdout)
 		if (fclose(output) != 0)
 			fprintf(stderr, "\
