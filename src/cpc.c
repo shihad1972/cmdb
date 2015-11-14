@@ -59,7 +59,14 @@ main (int argc, char *argv[])
 		display_cpc_usage();
 		exit(1);
 	}
-	build_preseed(cpc);
+	if (cpc->action) {
+		if (cpc->action == HELP)
+			display_cpc_usage();
+		else if (cpc->action == VERS)
+			display_version(argv[0]);
+	} else {
+		build_preseed(cpc);
+	}
 	clean_cpc_config(cpc);
 	return retval;
 }
@@ -69,7 +76,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
 	int opt, retval = NONE;
 
-	while ((opt = getopt(argc, argv, "d:e:f:i:k:l:m:n:p:t:u:v:")) != -1) {
+	while ((opt = getopt(argc, argv, "d:e:f:hi:k:l:m:n:p:t:u:vy:")) != -1) {
 		if (opt == 'd') {
 			snprintf(cl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
@@ -78,7 +85,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			snprintf(cl->file, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
 			snprintf(cl->interface, RBUFF_S, "%s", optarg);
-		} else if (opt == 'k') {
+		} else if (opt == 'y') {
 			snprintf(cl->kbd, RBUFF_S, "%s", optarg);
 		} else if (opt == 'l') {
 			snprintf(cl->locale, RBUFF_S, "%s", optarg);
@@ -95,8 +102,12 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			snprintf(cl->tzone, RBUFF_S, "%s", optarg);
 		} else if (opt == 'u') {
 			snprintf(cl->url, RBUFF_S, "%s", optarg);
-		} else if (opt == 'v') {
+		} else if (opt == 'k') {
 			snprintf(cl->disk, RBUFF_S, "/dev/%s\n", optarg);
+		} else if (opt == 'h') {
+			cl->action = HELP;
+		} else if (opt == 'v') {
+			cl->action = VERS;
 		} else {
 			fprintf(stderr, "Unknown option %c\n", opt);
 			retval = DISPLAY_USAGE;
