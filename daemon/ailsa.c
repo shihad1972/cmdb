@@ -69,9 +69,6 @@ enum {
 static void
 display_usage(const char *prog);
 
-static void
-display_version(const char *prog);
-
 static int
 parse_command_line(struct comm_line *cm, int argc, char *argv[]);
 
@@ -224,13 +221,6 @@ static void
 display_usage(const char *prog)
 {
 	fprintf(stderr, "%s -a (--all)|-b (--builds)|-c (--cmdb)|-d (--dnsa) -i (--input) |-o (--output) [-h|-v]\n", prog);
-	exit(0);
-}
-
-static void
-display_version(const char *prog)
-{
-	fprintf(stderr, "%s: %s\n", prog, VERSION);
 	exit(0);
 }
 
