@@ -304,18 +304,18 @@ d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string %s\n\
 d-i mirror/suite string %s\n\
-\n", cpc->mirror, cpc->url, cpc->suite)) == -1) 
+", cpc->mirror, cpc->url, cpc->suite)) == -1) 
 		report_error(MALLOC_FAIL, "buffer in add_mirror");
 	size = strlen(buffer);
 	if (strlen(cpc->proxy) > 0) {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string %s\n\
+d-i mirror/http/proxy string %s\n\n\
 ", cpc->proxy)) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
 	} else {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string\n\
+d-i mirror/http/proxy string\n\n\
 ")) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
@@ -528,6 +528,7 @@ d-i partman/choose_partition select finish\n\
 d-i partman/confirm boolean true\n\
 d-i partman/confirm_nooverwrite boolean true\n\
 d-i partman/mount_style select uuid\n\
+d-i grub-installer/only_debian boolean true\n\
 \n", cpc->disk)) == -1)
 		report_error(MALLOC_FAIL, "part in add_partitions");
 	psize = strlen(part);
