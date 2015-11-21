@@ -228,11 +228,11 @@ print_sock_addr(const struct sockaddr *addr)
 		num_addr = &((const struct sockaddr_in6 *) addr)->sin6_addr;
 		break;
 	default:
-		syslog(LOG_WARNING, "unkown AF_FAMILY type");
+		syslog(LOG_WARNING, "Unkown AF_FAMILY type");
 		return NULL;
 	}
 	if (inet_ntop(addr->sa_family, num_addr, addr_buff, sizeof(addr_buff)) == NULL) {
-		syslog(LOG_WARNING, "invalid IP address");
+		syslog(LOG_WARNING, "Invalid IP address");
 	} else {
 		return retval;
 	}
@@ -296,7 +296,7 @@ ailsa_do_close(int client, char *buf)
 	ssize_t slen;
 	memset(buf, 0, TBUFF_S);
 	if ((shutdown(client, SHUT_RD)) < 0)
-		syslog(LOG_INFO, "shutdown on socket failed: %s", strerror(errno));
+		syslog(LOG_INFO, "Shutdown on socket failed: %s", strerror(errno));
 	snprintf(buf, RANGE_S, "SEEYA\r\n");
 	size_t len = strlen(buf);
 	if ((slen = send(client, buf, len, 0)) < 0)
@@ -332,7 +332,7 @@ ailsa_handle_recv_error(int error)
 	case ECONNRESET: case EFAULT: case EINVAL: case EBADF: case ENOTSOCK:
 	case ENOTCONN: case EOPNOTSUPP: case EDESTADDRREQ: case EMSGSIZE:
 	case ENOBUFS: case ENOMEM: case EPIPE:
-		syslog(LOG_ALERT, "receiving failed: %s", strerror(error));
+		syslog(LOG_ALERT, "Receiving failed: %s", strerror(error));
 		break;
 	default:
 		retval = 0;
