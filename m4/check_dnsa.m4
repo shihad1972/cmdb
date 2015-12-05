@@ -10,10 +10,12 @@ AC_DEFUN([AX_CHECK_DNSA],[dnl
   if test ".$enable_dnsa" = ".no" ; then
     AC_MSG_RESULT([disabled])
     m4_ifval($2,$2)
+    HAVE_DNSA="false"
   else
     AC_DEFINE([HAVE_DNSA], [1], [Compile the dnsa module])
     AC_MSG_RESULT([yes])
     m4_ifval($1,$1)
+    HAVE_DNSA="true"
   fi
 ])
 #
