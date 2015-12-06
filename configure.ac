@@ -43,7 +43,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
 AX_PATH_LIB_PCRE
-AX_LIB_GCRYPT([yes])
+AX_LIB_GCRYPT([auto])
 
 # Check for packages to enable
 AX_USER_CHECKS
