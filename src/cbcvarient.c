@@ -229,22 +229,23 @@ list_cbc_build_varient(cbc_config_s *cmc)
 		clean_cbc_struct(base);
 		return VARIENT_NOT_FOUND;
 	}
-	printf("Build Varients\n");
-	printf("Name\t\tAlias\t\tUser\t\tLast Modified\n");
+	printf("Alias\t\tName\t\t\tUser\t\tLast Modified\n");
 	while (list) {
 		create = (time_t)list->mtime;
-		if (strlen(list->varient) < 8)
-			printf("%s\t\t", list->varient);
-		else if (strlen(list->varient) < 16)
-			printf("%s\t", list->varient);
-		else
-			printf("%s\n\t\t", list->varient);
 		if (strlen(list->valias) < 8)
 			printf("%s\t\t", list->valias);
 		else if (strlen(list->valias) < 16)
 			printf("%s\t", list->valias);
 		else
 			printf("%s\n\t\t\t\t", list->valias);
+		if (strlen(list->varient) < 8)
+			printf("%s\t\t\t", list->varient);
+		else if (strlen(list->varient) < 16)
+			printf("%s\t\t", list->varient);
+		else if (strlen(list->varient) < 24)
+			printf("%s\t", list->varient);
+		else
+			printf("%s\n\t\t\t\t\t", list->varient);
 		if (strlen(get_uname(list->cuser)) < 8)
 			printf("%s\t\t", get_uname(list->cuser));
 		else if (strlen(get_uname(list->cuser)) < 16)
