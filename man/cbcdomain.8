@@ -1,4 +1,4 @@
-.TH cbcdomain 8 "Version 0.2: 31 January 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcdomain 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcdomain \- Create Build Config Domain
 .SH SYNOPSIS
@@ -35,33 +35,36 @@ please consult the \fBcbc(7)\fP man page.
 .SH OPTIONS
 .B Actions
 .IP "Action options require no addition parameter."
-.IP -a
+.IP "-a,  --add"
 Use this to add a build domain.
-.IP -d display
+.IP "-d,  --display"
 Use this to display a build domain, using -n to specify
-.IP -l
+.IP "-l,  --list"
 Use this to list the build domains. 
-.IP -m
+.IP "-m,  --modify"
 Use this to modify a build domain, using -n to specify
-.IP -r
+.IP "-r,  --remove, --delete"
 Use this to remove a build domain, using -n to specify
-.IP -w
+.IP "-w,  --write, --commit"
 Use this to write out the dhcpd.networks configuration file
-.IP -v
+.IP "-v,  --version"
 Display version information
+.IP "-h,  --help"
+Output a short help message
 .PP
 .B Naming
-.IP "-n <domain name>
+.IP "-n,  --domain-name, --domain \fBdomain name\fP
 .PP
 .B Network Information
-.IP "-k start_ip,end_ip,gateway,netmask,nameserver
+.IP "-k,  --network-info \fBstart_ip,end_ip,gateway,netmask,nameserver\fP
 .PP
-.IP "-t <ntp server>"
+.IP "-t,  --ntp-server \fBntp server\fP"
 .PP
 .B Options to use together
 .IP "Only one action option should be used"
 .IP "All actions apart from -l need a -n name"
 .IP "Network information required for -a; not applicable for -m"
+.SH FILES
 .I /etc/dnsa/dnsa.conf
 .RS
 The system wide configuration file for the cmdb / dnsa / cbc suite of
