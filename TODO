@@ -8,6 +8,7 @@ existing one. This will make the adding of a varient / OS much easier
 Looks like I now need to add a grub part to preseed:
 d-i grub-installer/only_debian boolean true
 Need to add this to cbc and cpc
+*** Fixed *** Version: 0.2.24.7
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before

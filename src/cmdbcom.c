@@ -33,22 +33,72 @@
 #include <stdlib.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
-#endif /* HAVE_WORDEXP_H */
+#endif // HAVE_WORDEXP_H
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
 {
-	int opt, retval = NONE;
-
+	const char *optstr = "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvwx";
+	int opt, retval;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument, 		NULL,	'd'},
+		{"service",		no_argument,		NULL,	'e'},
+		{"force",		no_argument,		NULL,	'f'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"identity",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"vm",			no_argument,		NULL,	'o'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"server",		no_argument,		NULL,	's'},
+		{"contact",		no_argument,		NULL,	't'},
+		{"customer",		no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"hardware",		no_argument,		NULL,	'w'},
+		{"virtmachine",		required_argument,	NULL,	'x'},
+		{"address",		required_argument,	NULL,	'A'},
+		{"device",		required_argument,	NULL,	'B'},
+		{"coid",		required_argument,	NULL,	'C'},
+		{"detail",		required_argument,	NULL,	'D'},
+		{"description",		required_argument,	NULL,	'D'},
+		{"email",		required_argument,	NULL,	'E'},
+		{"id",			required_argument,	NULL,	'I'},
+		{"url",			required_argument,	NULL,	'L'},
+		{"make",		required_argument,	NULL,	'M'},
+		{"full-name",		required_argument,	NULL,	'N'},
+		{"model",		required_argument,	NULL,	'O'},
+		{"phone",		required_argument,	NULL,	'P'},
+		{"service-name",	required_argument,	NULL,	'S'},
+		{"city",		required_argument,	NULL,	'T'},
+		{"uuid",		required_argument,	NULL,	'U'},
+		{"vendor",		required_argument,	NULL,	'V'},
+		{"county",		required_argument,	NULL,	'Y'},
+		{"postcode",		required_argument,	NULL,	'Z'},
+		{NULL, 0, NULL, 0}
+	};
+#endif // HAVE_GETOPT_H
+	retval = 0;
 	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
-	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvx")) != -1) {
+#ifdef HAVE_GETOPT_H
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -57,7 +107,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->type = CONTACT;
 		} else if (opt == 'e') {
 			comp->type = SERVICE;
-		} else if (opt == 'h') {
+		} else if (opt == 'w') {
 			comp->type = HARDWARE;
 		} else if (opt == 'o') {
 			comp->type = VM_HOST;
@@ -71,15 +121,17 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = ADD_TO_DB;
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
-		} else if (opt == 'x') {
+		} else if (opt == 'm') {
 			comp->action = MODIFY;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else if (opt == 'f') {
 			comp->force = 1;
 		} else if (opt == 'n') {
 			comp->name = strndup(optarg, HOST_S);
 		} else if (opt == 'i') {
 			comp->id = strndup(optarg, CONF_S);
-		} else if (opt == 'm') {
+		} else if (opt == 'x') {
 			comp->vmhost = strndup(optarg, HOST_S);
 		} else if (opt == 'V') {
 			comp->vendor = strndup(optarg, CONF_S);

@@ -19,7 +19,7 @@ LT_INIT
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
-                  sys/socket.h unistd.h wordexp.h errno.h])
+                  sys/socket.h unistd.h wordexp.h errno.h getopt.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
