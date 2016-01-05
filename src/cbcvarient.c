@@ -24,12 +24,16 @@
  *  part of the cbcvarient program
  * 
  */
+#include "../config.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -131,9 +135,38 @@ init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
+	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:";
 	int opt;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"version-alias",	required_argument,	NULL,	'e'},
+		{"package",		no_argument,		NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"varient",		no_argument,		NULL,	'j'},
+		{"varient-alias",	required_argument,	NULL,	'k'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"os-name",		required_argument,	NULL,	'n'},
+		{"os-version",		required_argument,	NULL,	'o'},
+		{"package-name",	required_argument,	NULL,	'p'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"os-alias",		required_argument,	NULL,	's'},
+		{"architecture",	required_argument,	NULL,	't'},
+		{"os-arch",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"varient-name",	required_argument,	NULL,	'x'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ade:gjk:lmn:o:p:rs:t:vx:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			cvl->action = ADD_CONFIG;
 		else if (opt == 'd') {
@@ -147,6 +180,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->action = MOD_CONFIG;
 		else if (opt == 'v')
 			cvl->action = CVERSION;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
 		else if (opt == 'g')
 			cvl->type = CPACKAGE;
 		else if (opt == 'j')
