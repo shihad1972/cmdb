@@ -1,3 +1,8 @@
+05/01/2016
+cbcvarient.h header file is probably unecessary. I can add the struct
+definition to cbcvarient.c and also define the functions as static
+at the start of that file.
+
 09/03/2015
 I want to be able to add copy functionality to cbcos and cbcvarient so that
 when a new OS or varient is created, it will copy the settings from an
