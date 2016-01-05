@@ -26,6 +26,7 @@
  * 
  */
 #define _GNU_SOURCE
+#include "../config.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -35,6 +36,9 @@
 #include <pwd.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cpc.h"
 #include "cbc_data.h"
@@ -74,9 +78,35 @@ main (int argc, char *argv[])
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
-	int opt, retval = NONE;
+	const char *optstr = "d:e:f:hi:k:l:m:n:p:s:t:u:vy:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"domain",		required_argument,	NULL,	'd'},
+		{"ntp-server",		required_argument,	NULL,	'e'},
+		{"file",		required_argument,	NULL,	'f'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"interface",		required_argument,	NULL,	'i'},
+		{"disk",		required_argument,	NULL,	'k'},
+		{"locale",		required_argument,	NULL,	'l'},
+		{"mirror",		required_argument,	NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"packages",		required_argument,	NULL,	'p'},
+		{"suite",		required_argument,	NULL,	's'},
+		{"timezone",		required_argument,	NULL,	't'},
+		{"url",			required_argument,	NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"keyboard",		required_argument,	NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "d:e:f:hi:k:l:m:n:p:t:u:vy:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'd') {
 			snprintf(cl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
