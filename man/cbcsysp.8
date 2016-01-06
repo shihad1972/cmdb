@@ -34,19 +34,19 @@ name and also the field you wish to configure.
 
 .SH OPTIONS
 .B actions (these do not take arguments; only 1 can be used)
-.IP -a
+.IP "-a,  --add"
 add
-.IP -l
+.IP "-l,  --list"
 list
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
 .PP
 .B type
-.IP -p
+.IP "-p,  --package"
 package
-.IP -o
+.IP "-o,  --package-config"
 configuration
-.IP -y
+.IP "-y,  --package-arg"
 argument
 .PP
 These types specify what you wish to act upon. After adding a package, you will
@@ -55,29 +55,29 @@ add configuration for these package arguments for a specific build domain. In
 this way, you can tailor your build for specific build domains.
 .PP
 .B specifier (these will all take an argument)
-.IP -b
-<build-domain>
-.IP -f
-<field>
-.IP -g
-<argument>
-.IP -n
-<package-name>
-.IP -t
-<type>
+.IP "-b,  --domain, --build-domain \fBbuild-domain\fP"
+build domain 
+.IP "-f,  --field \fBfield\fP"
+field name
+.IP "-g,  --package-arg \fBargument\fP"
+argument for the package
+.IP "-n,  --name \fBpackage-name\fP"
+package name
+.IP "-t,  --type \fBtype\fP
+field type. Examples are \fBstring\fP are \fBboolean\fP.
 .PP
 .SH EXAMPLES
 .B To add a package
 .IP
-\fBcbcsysp -a -p -n <package-name>\fP
+\fBcbcsysp -a -p -n \fIpackage-name\fR\fP
 .PP
 .B To add the arguments for that package
 .IP
-\fBcbcsysp -a -y -f <field> -t <type> -n <package-name>\fP
+\fBcbcsysp -a -y -f \fIfield\fP -t \fItype\fP -n \fIpackage-name>\fR
 .PP
 .B To add a configuration for the package
 .IP
-\fBcbcsysp -a -o -f <field> -g <argument> -b <build-domain> -n <package-name>\fP
+\fBcbcsysp -a -o -f \fIfield\fP -g \fIargument\fP -b \fIbuild-domain\fP -n \fIpackage-name\fR
 .PP
 You will need to be this specific for removing.
 .SH FILES

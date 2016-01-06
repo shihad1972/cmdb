@@ -25,19 +25,25 @@
  *
  */
 #define _GNU_SOURCE
+#include "../config.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcsysp.h"
 
 int
@@ -54,14 +60,10 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cbs in main");
 	init_cbcsysp_s(cbs);
 	init_cbc_config_values(cbc);
-	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) == DISPLAY_USAGE) {
+	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
-	} else if (retval != 0) {
-		clean_cbcsysp_s(cbs);
-		free(cbc);
-		exit (retval);
 	}
 	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
 		clean_cbcsysp_s(cbs);
@@ -109,9 +111,36 @@ main(int argc, char *argv[])
 int
 parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 {
-	int retval = 0, opt;
+	const char *optstr = "ab:df:g:hlmn:oprt:vy";
+	int retval, opt;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"field-no",		required_argument,	NULL,	'f'},
+		{"argument",		required_argument,	NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"package-config",	no_argument,		NULL,	'o'},
+		{"package",		no_argument,		NULL,	'p'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"type",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"package-arg",		no_argument,		NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ab:df:g:lmn:oprt:vy")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
 		else if (opt == 'l')
@@ -126,6 +155,8 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 			cbcs->what = SPACKAGE;
 		else if (opt == 'y')
 			cbcs->what = SPACKARG;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
 		else if (opt == 'v') {
 			cbcs->action = CVERSION;
 			retval = CVERSION;
