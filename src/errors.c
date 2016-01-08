@@ -561,10 +561,14 @@ display_ckc_usage(void)
 	printf("ckc: create kickstart config %s\n", VERSION);
 	printf("Usage\n");
 	printf("-d <domain>\tDNS domain name\n");
+	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-i <ip address>\tIP address for the server\n");
 	printf("-k <disk>\tDisk to install on (no /dev/ needed)\n");
 	printf("-l <language>\tDefault language for system\n");
+	printf("-n <name>\tHostname for the server\n");
 	printf("-p <packages>\tComma separated list of extra packages\n");
-	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-t <timezone>\tTimezone for the server\n");
+	printf("-u <url>\tUrl location of kickstart file\n");
 	printf("-y <country>\tCountry keyboard mapping\n");
 	printf("\n");
 	printf("-h\tDisplay this help message\n");
