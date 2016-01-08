@@ -73,6 +73,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		{"write",		no_argument,		NULL,	'w'},
 		{"commit",		no_argument,		NULL,	'w'},
 		{"delete-zone",		no_argument,		NULL,	'x'},
+		{"exterminate",		no_argument,		NULL,	'x'},
 		{"add-zone",		no_argument,		NULL,	'z'},
 		{"forward-zone",	no_argument,		NULL,	'F'},
 		{"glue-zone",		no_argument,		NULL,	'G'},

@@ -1,3 +1,37 @@
+08/01/2016
+Possibilities to add to the long options.
+cmdb:
+	-i ident
+	-r delete
+	-E email-address
+	-x virtual-machine
+dnsa:
+	-e add-pref-a
+	-g del-pref-a
+	-n zn
+	-r del-rec
+	-r remove
+	-r delete
+	-t rt
+	-F fzone
+	-R rzone
+	-G gzone
+	-S szone
+	-I nsip
+cbc:
+	-r delete
+	-q ask
+	-b domain
+cbcdomain:
+	-n build-domain
+cbcvarient:
+	-t arch
+cbcpart:
+	-g logvol
+
+In fact, I also need to change cbcdomain to use -b for build-domain for
+consistency
+
 05/01/2016
 cbcvarient.h header file is probably unecessary. I can add the struct
 definition to cbcvarient.c and also define the functions as static
