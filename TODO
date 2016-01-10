@@ -5,6 +5,7 @@ cmdb:
 	-r delete
 	-E email-address
 	-x virtual-machine
+*** Added -r delete ***
 dnsa:
 	-e add-pref-a
 	-g del-pref-a
@@ -18,12 +19,15 @@ dnsa:
 	-G gzone
 	-S szone
 	-I nsip
+*** Added -r delete and -r remove ***
 cbc:
 	-r delete
 	-q ask
 	-b domain
+*** Added -r delete and -b domain ***
 cbcdomain:
 	-n build-domain
+*** Added -b build-domain ***
 cbcvarient:
 	-t arch
 cbcpart:

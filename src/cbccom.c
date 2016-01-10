@@ -56,6 +56,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
 		{"build-domain",	required_argument,	NULL,	'b'},
+		{"domain",		required_argument,	NULL,	'b'},
 		{"locale",		required_argument,	NULL,	'e'},
 		{"display",		no_argument,		NULL,	'd'},
 		{"remove-ip",		no_argument,		NULL,	'g'},
@@ -72,6 +73,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		{"architecture",	required_argument,	NULL,	't'},
 		{"query",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
 		{"uuid",		required_argument,	NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"write",		no_argument,		NULL,	'w'},

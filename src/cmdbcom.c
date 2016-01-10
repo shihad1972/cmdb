@@ -64,6 +64,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		{"name",		required_argument,	NULL,	'n'},
 		{"vm",			no_argument,		NULL,	'o'},
 		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
 		{"server",		no_argument,		NULL,	's'},
 		{"contact",		no_argument,		NULL,	't'},
 		{"customer",		no_argument,		NULL,	'u'},

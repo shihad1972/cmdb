@@ -66,6 +66,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		{"prefix",		required_argument,	NULL,	'p'},
 		{"priority",		required_argument,	NULL,	'p'},
 		{"delete-record",	no_argument,		NULL,	'r'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
 		{"service",		required_argument,	NULL,	's'},
 		{"record-type",		required_argument,	NULL,	't'},
 		{"display-multi-a",	no_argument,		NULL,	'u'},
