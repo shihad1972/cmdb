@@ -1,3 +1,47 @@
+08/01/2016
+Possibilities to add to the long options.
+cmdb:
+	-i ident
+	-r delete
+	-E email-address
+	-x virtual-machine
+*** Added -r delete ***
+dnsa:
+	-e add-pref-a
+	-g del-pref-a
+	-n zn
+	-r del-rec
+	-r remove
+	-r delete
+	-t rt
+	-F fzone
+	-R rzone
+	-G gzone
+	-S szone
+	-I nsip
+*** Added -r delete and -r remove ***
+cbc:
+	-r delete
+	-q ask
+	-b domain
+*** Added -r delete and -b domain ***
+cbcdomain:
+	-n build-domain
+*** Added -b build-domain ***
+cbcvarient:
+	-t arch
+cbcpart:
+	-g logvol
+
+In fact, I also need to change cbcdomain to use -b for build-domain for
+consistency
+*** Fixed. cbcdomain now uses -b build-domain ***
+
+05/01/2016
+cbcvarient.h header file is probably unecessary. I can add the struct
+definition to cbcvarient.c and also define the functions as static
+at the start of that file.
+
 09/03/2015
 I want to be able to add copy functionality to cbcos and cbcvarient so that
 when a new OS or varient is created, it will copy the settings from an
@@ -8,6 +52,7 @@ existing one. This will make the adding of a varient / OS much easier
 Looks like I now need to add a grub part to preseed:
 d-i grub-installer/only_debian boolean true
 Need to add this to cbc and cpc
+*** Fixed *** Version: 0.2.24.7
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before

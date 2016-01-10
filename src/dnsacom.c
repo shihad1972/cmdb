@@ -32,20 +32,67 @@
 #include <stdlib.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
-#endif /* HAVE_WORDEXP_H */
+#endif // HAVE_WORDEXP_H
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
-	int opt, retval = 0;
+	const char *optstr = "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"build",		no_argument,		NULL,	'b'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"add-preferred-a",	no_argument,		NULL,	'e'},
+		{"delete-preferred-a",	no_argument,		NULL,	'g'},
+		{"host",		required_argument,	NULL,	'h'},
+		{"destination",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"add-cname",		no_argument,		NULL,	'm'},
+		{"zone-name",		required_argument,	NULL,	'n'},
+		{"protocol",		required_argument,	NULL,	'o'},
+		{"prefix",		required_argument,	NULL,	'p'},
+		{"priority",		required_argument,	NULL,	'p'},
+		{"delete-record",	no_argument,		NULL,	'r'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"service",		required_argument,	NULL,	's'},
+		{"record-type",		required_argument,	NULL,	't'},
+		{"display-multi-a",	no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"write",		no_argument,		NULL,	'w'},
+		{"commit",		no_argument,		NULL,	'w'},
+		{"delete-zone",		no_argument,		NULL,	'x'},
+		{"exterminate",		no_argument,		NULL,	'x'},
+		{"add-zone",		no_argument,		NULL,	'z'},
+		{"forward-zone",	no_argument,		NULL,	'F'},
+		{"glue-zone",		no_argument,		NULL,	'G'},
+		{"name-server-ip",	required_argument,	NULL,	'I'},
+		{"master-ip",		required_argument,	NULL,	'M'},
+		{"name-servers",	required_argument,	NULL,	'N'},
+		{"reverse-zone",	no_argument,		NULL,	'R'},
+		{"slave-zone",		no_argument,		NULL,	'S'},
+		{NULL, 0, NULL, 0}
+	};
 
-	while ((opt = getopt(argc, argv, "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;

@@ -1,4 +1,4 @@
-.TH cpc 8 "Version 0.2: 06 October 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cpc 8 "Version 0.2: 05 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cpc \- Create Preseed Config
 .SH SYNOPSIS
@@ -13,27 +13,27 @@ the build to create a user based on the username of the user running the program
 getting username, uid and gecos fields.
 .PP
 .SH OPTIONS
-.IP "-d domain"
+.IP "-d,  --domain \fBdomain\fP"
 Specifies the DNS domain of the server to be built.
-.IP "-e ntp-server"
+.IP "-e,  --ntp-server \fBntp-server\fP"
 Specifies the NTP server used to synchronise the time.
-.IP "-f filename"
+.IP "-f,  --file \fBfilename\fP"
 Output the preseed configuration to the named file.
-.IP "-y country"
+.IP "-y, --keyboard \fBcountry\fP"
 Specify the country keybourd layout.
-.IP "-l locale"
+.IP "-l,  --locale \fBlocale\fP"
 Specify the locale to configure in preseed.
-.IP "-m mirror"
+.IP "-m,  --mirror \fBmirror\fP"
 Specify the name of the mirror server to use for installation.
-.IP "-n name"
+.IP "-n,  --name \fBname\fP"
 Specify the hostname of the server.
-.IP "-s suite"
+.IP "-s,  --suite \fBsuite\fP"
 Specify the suite to use e.g. stable, testing etc.
-.IP "-t timezone"
+.IP "-t,  --timezone \fBtimezone\fP"
 Specify the timezone to be configured in preseed.
-.IP "-u url"
+.IP "-u,  --url \fBurl\fP"
 Specify the url to add at the end of the mirror e.g. /debian.
-.IP "-k hard disk drive"
+.IP "-k,  --disk \fBhard disk drive\fP"
 Specify the hard disk to install onto e.g. sda, hda. Do NOT use a preceeding /dev/
 .PP
 .SH FILES

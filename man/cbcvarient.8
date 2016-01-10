@@ -1,4 +1,4 @@
-.TH cbcvarient 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcvarient 8 "Version 0.2: 05 January 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcvarient \- Create Build Config Varient.
 .SH SYNOPSIS
@@ -40,39 +40,41 @@ or a package (-g)
 
 .SH OPTIONS
 .B actions
-.IP -a
+.IP "-a,  --add"
 add
-.IP -d
+.IP "-d,  --display"
 display
-.IP -l
+.IP "-l,  --list"
 list
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
-.IP -v
+.IP "-v,  --version"
 version (no other argument needed)
+.IP "-h,  --help"
+display a short help message
 .PP
 .B name
-.IP "-k <varient alias>"
+.IP "-k,  --varient-alias \fBvarient alias\fP"
 Useful to have a short alias to the more formal varient name, e.g. web
-.IP "-x <varient">
+.IP "-x,  --varient \fBvarient\fP"
 Use this for a long formal name of the varient, such as Web Server
 .PP
 .B type
-.IP "-g"
+.IP "-g,  --package"
 package
-.IP "-j"
+.IP "-j,  --varient"
 varient
 .PP
 .B os definitions
-.IP "-e <version alias>"
+.IP "-e,  --version-alias \fBversion alias\fP"
 Used by debian based distros as a code name for a particular version
-.IP "-n <os name>"
+.IP "-n,  --os-name \fBos name\fP"
 A formal name for the OS, such as Debian
-.IP "-o <os version>"
+.IP "-o,  --os-version \fBos version\fP"
 The version number for the OS
-.IP "-s <os alias>"
+.IP "-s,  --os-alias \fBos alias\fP"
 A shorthand name for the os, such as debian
-.IP "-t <architecture>"
+.IP "-t, --architecture, --os-arch \fBarchitecture\fP"
 The architecture of the operating system. At present only \fIi386\fP and
 \fIx86_64\fP are available.
 .PP

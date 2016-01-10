@@ -1,4 +1,4 @@
-.TH cbc 8 "Version 0.2: 30 March 2014" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbc 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbc \- Create Build Config
 .SH SYNOPSIS
@@ -30,56 +30,56 @@ options.
 
 .SH OPTIONS
 .B Actions (these do not take arguments, only one can be used)
-.IP -a
+.IP "-a,  --add"
 add
-.IP -d
+.IP "-d,  --display"
 display
-.IP -l
+.IP "-l,  --list"
 list
-.IP -m
+.IP "-m,  --modify"
 modify
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
-.IP -w
+.IP "-w,  --write, --commit"
 write
-.IP -v
+.IP "-v,  --version"
 version (no other argsument needed)
 .PP
 .B Server Specifier (only one can be used)
-.IP "-n name"
+.IP "-n,  --name \fBname\fP"
 This is the name of the server.
-.IP "-i server_id"
+.IP "-i,  --id \fBserver_id\fP"
 This is the server_id from the database.
-.IP "-u UUID"
+.IP "-u,  --uuid \fBUUID\fp"
 This is the Universal Unique Identifier of the server .
 .PP
 .B Build Options
-.IP "-o <Operating System>"
+.IP "-o,  --operating-system \fBOperating System\fP"
 This is the name of the operating system you want to install on the server.
-.IP "-o <version>"
+.IP "-s,  --os-version \fBversion\fP"
 This is the version number of the operating system you want to install.
-.IP "-t <architecture>"
+.IP "-t,  --architecture \fBarchitecture\fP"
 This is the artitechture of the operating system to be installed. Currently
 only \fIi386\fP and \fIx86_64\fP (amd64) are supported.
-.IP "-b <build domain>"
+.IP "-b,  --build-domain, --domain \fBbuild domain\fP"
 This is the name of the build domain the server build is to be a part of.
-.IP "-x <varient>"
+.IP "-x,  --varient \fBvarient\fP"
 This is the build varient. This will contain a list of packages to install
 so it makes sense to use this as a functional name of the server, e.g. web,
 mysql, ldap etc.
-.IP "-e <locale_id>"
+.IP "-e,  --locale \fBlocale_id\fP"
 This is the database locale_id of the locale you wish to have enabled on the
 server.
 This provides the information for the locale setting, as well as the
 timezone and keyboard mappings.
 You can create multiple combinations of these such as AU keymap but CEST
 timezone and PL locale, for example.
-.IP "-p <partition scheme>"
+.IP "-p,  --partition \fBpartition scheme\fP"
 This is the name of the partition scheme you wish to use for this installation.
-.IP "-k <network device>"
+.IP "-k,  --network-card \fBnetwork device\fP"
 This is the name of the network device used for the installation, such as 
 \fBeth0\fP
-.IP " -j <hard disk device>"
+.IP "-j,  --hard-disk \fBhard disk device\fP"
 This is the device name of the hard disk to install onto, such as \fBsda\fP or
 \fBvda\fP for a kvm virtual machine. If the disk is not specified the first
 hard disk found in the database will be used

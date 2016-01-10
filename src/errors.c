@@ -437,12 +437,12 @@ display_cbcdomain_usage(void)
 	printf("-a: add build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
-	printf("All actions apart from -l and -w need -n <domain name>\n\n");
+	printf("All actions apart from -l and -w need -b <domain name>\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("NTP server configuration:\n");
 	printf("-t ntp_server\n\n");
-	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
+	printf("cbcdomain ( action ) [ -b build-domain ] ( app options )\n\n");
 }
 
 void
@@ -561,10 +561,14 @@ display_ckc_usage(void)
 	printf("ckc: create kickstart config %s\n", VERSION);
 	printf("Usage\n");
 	printf("-d <domain>\tDNS domain name\n");
+	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-i <ip address>\tIP address for the server\n");
 	printf("-k <disk>\tDisk to install on (no /dev/ needed)\n");
 	printf("-l <language>\tDefault language for system\n");
+	printf("-n <name>\tHostname for the server\n");
 	printf("-p <packages>\tComma separated list of extra packages\n");
-	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-t <timezone>\tTimezone for the server\n");
+	printf("-u <url>\tUrl location of kickstart file\n");
 	printf("-y <country>\tCountry keyboard mapping\n");
 	printf("\n");
 	printf("-h\tDisplay this help message\n");

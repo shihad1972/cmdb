@@ -33,13 +33,18 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcnet.h"
 
 typedef struct cbcos_comm_line_s {
@@ -170,9 +175,36 @@ init_cbcos_comm_line(cbcos_comm_line_s *col)
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
+	const char *optstr = "ade:ghlmn:o:rs:t:v";
 	int opt;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"version-alias",	required_argument,	NULL,	'e'},
+		{"download",		no_argument,		NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"os",			required_argument,	NULL,	'n'},
+		{"os-version",		required_argument,	NULL,	'o'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"alias",		required_argument,	NULL,	's'},
+		{"os-alias",		required_argument,	NULL,	's'},
+		{"architecture",	required_argument,	NULL,	't'},
+		{"os-arch",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ade:glmn:o:rs:t:v")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -187,6 +219,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = CVERSION;
 		else if (opt == 'g')
 			col->action = DOWNLOAD;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
 		else if (opt == 'e')
 			snprintf(col->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'n')

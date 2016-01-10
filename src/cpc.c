@@ -26,6 +26,7 @@
  * 
  */
 #define _GNU_SOURCE
+#include "../config.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -35,6 +36,9 @@
 #include <pwd.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cpc.h"
 #include "cbc_data.h"
@@ -74,9 +78,35 @@ main (int argc, char *argv[])
 int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
-	int opt, retval = NONE;
+	const char *optstr = "d:e:f:hi:k:l:m:n:p:s:t:u:vy:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"domain",		required_argument,	NULL,	'd'},
+		{"ntp-server",		required_argument,	NULL,	'e'},
+		{"file",		required_argument,	NULL,	'f'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"interface",		required_argument,	NULL,	'i'},
+		{"disk",		required_argument,	NULL,	'k'},
+		{"locale",		required_argument,	NULL,	'l'},
+		{"mirror",		required_argument,	NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"packages",		required_argument,	NULL,	'p'},
+		{"suite",		required_argument,	NULL,	's'},
+		{"timezone",		required_argument,	NULL,	't'},
+		{"url",			required_argument,	NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"keyboard",		required_argument,	NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "d:e:f:hi:k:l:m:n:p:t:u:vy:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'd') {
 			snprintf(cl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
@@ -304,18 +334,18 @@ d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string %s\n\
 d-i mirror/suite string %s\n\
-\n", cpc->mirror, cpc->url, cpc->suite)) == -1) 
+", cpc->mirror, cpc->url, cpc->suite)) == -1) 
 		report_error(MALLOC_FAIL, "buffer in add_mirror");
 	size = strlen(buffer);
 	if (strlen(cpc->proxy) > 0) {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string %s\n\
+d-i mirror/http/proxy string %s\n\n\
 ", cpc->proxy)) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
 	} else {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string\n\
+d-i mirror/http/proxy string\n\n\
 ")) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
@@ -528,6 +558,7 @@ d-i partman/choose_partition select finish\n\
 d-i partman/confirm boolean true\n\
 d-i partman/confirm_nooverwrite boolean true\n\
 d-i partman/mount_style select uuid\n\
+d-i grub-installer/only_debian boolean true\n\
 \n", cpc->disk)) == -1)
 		report_error(MALLOC_FAIL, "part in add_partitions");
 	psize = strlen(part);

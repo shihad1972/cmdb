@@ -25,19 +25,25 @@
  *
  */
 #define _GNU_SOURCE
+#include "../config.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcscript.h"
 
 int
@@ -129,15 +135,44 @@ clean_cbc_syss_s(cbc_syss_s *scr)
 int
 parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 {
-	int retval = 0, opt;
+	const char *optstr = "ab:fgh:ln:o:rst:v";
+	int retval, opt;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"script-arg",		no_argument,		NULL,	'f'},
+		{"argument",		required_argument,	NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"number",		required_argument,	NULL,	'o'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"script",		no_argument,		NULL,	's'},
+		{"type",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ab:fg:ln:o:rst:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
 		else if (opt == 'l')
 			cbcs->action = LIST_CONFIG;
 		else if (opt == 'r')
 			cbcs->action = RM_CONFIG;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
+		else if (opt == 'v')
+			return CVERSION;
 		else if (opt == 's')
 			cbcs->what = CBCSCRIPT;
 		else if (opt == 'f')

@@ -19,7 +19,7 @@ LT_INIT
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
-                  sys/socket.h unistd.h wordexp.h errno.h])
+                  sys/socket.h unistd.h wordexp.h errno.h getopt.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -43,7 +43,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
 AX_PATH_LIB_PCRE
-AX_LIB_GCRYPT([yes])
+AX_LIB_GCRYPT([auto])
 
 # Check for packages to enable
 AX_USER_CHECKS

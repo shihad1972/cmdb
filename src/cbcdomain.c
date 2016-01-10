@@ -24,6 +24,7 @@
  *  part of the cbcdomain program
  * 
  */
+#include "../config.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,15 +35,20 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "cbcnet.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcdomain.h"
-
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 # include "dnsa_base_sql.h"
@@ -118,14 +124,37 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 			if (validate_user_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
 }
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
+	const char *optstr = "ak:lmn:rt:vw";
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ak:lmn:rt:vw")) != -1) {
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"network-info",	required_argument,	NULL,	'k'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"ntp-server",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"write",		no_argument,		NULL,	'w'},
+		{"commit",		no_argument,		NULL,	'w'},
+		{NULL,			0,			NULL,	0}
+	};
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'l') {
@@ -138,13 +167,15 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'n') {
+		} else if (opt == 'b') {
 			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
 			cdl->confntp = 1;
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;

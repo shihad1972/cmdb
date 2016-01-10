@@ -11,11 +11,16 @@ AC_DEFUN([AX_CHECK_CBC], [dnl
   AC_ARG_ENABLE([cbc],
     [  --enable-cbc            enable cbc and associated programs],,
         [enable_cbc="yes"])
-  AS_IF([test ".$enable_cbc" = ".no"],
-   [AC_MSG_RESULT([disabled]) m4_ifval($2,$2)],
-   [AC_DEFINE([HAVE_CBC], [1], [Compile cbc and associated programs])
-     AC_MSG_RESULT([yes])
-     m4_ifval($1, $1)])
+  if test ".$enable_cbc" = ".no" ; then
+    AC_MSG_RESULT([disabled])
+    m4_ifval($2,$2)
+    HAVE_CBC="false"
+  else
+    AC_DEFINE([HAVE_CBC], [1], [Compile cbc and associated programs])
+    AC_MSG_RESULT([yes])
+    m4_ifval($1, $1)
+    HAVE_CBC="true"
+  fi
 ])
 
 #===============================================

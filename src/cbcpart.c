@@ -26,12 +26,16 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
+#include "../config.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -121,10 +125,41 @@ clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
-	int opt, retval = 0;
 	const char *errmsg = "parse_cbcpart_comm_line";
+	const char *optstr = "ab:df:g:hi:lmn:oprst:uvx:y:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"partition-option",	required_argument,	NULL,	'b'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"file-system",		required_argument,	NULL,	'f'},
+		{"logical-volume",	required_argument,	NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"min-size",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"scheme-name",		required_argument,	NULL,	'n'},
+		{"option",		no_argument,		NULL,	'o'},
+		{"partition",		no_argument,		NULL,	'p'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"scheme",		no_argument,		NULL,	's'},
+		{"mount-point",		required_argument,	NULL,	't'},
+		{"lvm",			no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"max-size",		required_argument,	NULL,	'x'},
+		{"priority",		required_argument,	NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ab:df:g:i:lmn:oprst:uvx:y:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			cpl->action = ADD_CONFIG;
 		} else if (opt == 'd') {
@@ -139,6 +174,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
 			cpl->action = CVERSION;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else if (opt == 'p') {
 			cpl->type = PARTITION;
 		} else if (opt == 's') {
