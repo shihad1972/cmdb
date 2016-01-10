@@ -136,12 +136,12 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int index;
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"domain",		required_argument,	NULL,	'b'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"network-info",	required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"modify",		no_argument,		NULL,	'm'},
-		{"domain-name",		required_argument,	NULL,	'n'},
-		{"domain",		required_argument,	NULL,	'n'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"ntp-server",		required_argument,	NULL,	't'},
@@ -167,7 +167,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'n') {
+		} else if (opt == 'b') {
 			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
