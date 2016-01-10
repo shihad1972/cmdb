@@ -31,6 +31,7 @@ cbcpart:
 
 In fact, I also need to change cbcdomain to use -b for build-domain for
 consistency
+*** Fixed. cbcdomain now uses -b build-domain ***
 
 05/01/2016
 cbcvarient.h header file is probably unecessary. I can add the struct
