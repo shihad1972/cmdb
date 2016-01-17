@@ -1,3 +1,7 @@
+17/01/2016
+Unable to remove SRV record - hostname invalid (probably due to _tcp in the
+name)
+
 05/01/2016
 When displaying specific OS, if it is not found then the top of the
 table is still printed. This should wait until we have found an
