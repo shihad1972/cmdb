@@ -48,13 +48,16 @@ enum {
 	BUFF_S = 1024
 };
 
+static void
+ailsa_handle_client(int client);
+
 int
 ailsa_accept_client(int sock)
 {
 	int c = ailsa_accept_tcp_connection(sock);
-	static unsigned int cc = 0;	// child count
 	if (c < 0)
 		return c;
+	static unsigned int cc = 0;	// child count
 	pid_t proc_id = fork();
 	if (proc_id < 0) {
 		syslog(LOG_ALERT, "forking failed: %s", strerror(errno));
@@ -78,11 +81,10 @@ ailsa_accept_client(int sock)
 			cc--;
 		}
 	}
-//	ailsa_handle_client(c);
 	return 0;
 }
 
-void
+static void
 ailsa_handle_client(int client)
 {
 	char sbuf[BUFF_S];

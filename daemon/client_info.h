@@ -26,9 +26,6 @@
 int
 ailsa_accept_client(int sock);
 
-void
-ailsa_handle_client(int client);
-
 int
 get_command(char *buffer);
 
