@@ -101,7 +101,7 @@ ailsa_tcp_socket_bind(const char *node, const char *service)
 		}
 		close(ssock);
 		ssock = -1;
-		syslog(LOG_WARNING, "Cannot bind");
+		syslog(LOG_WARNING, "Cannot bind to %s:%s", node, service);
 	}
 	freeaddrinfo(saddr);
 	return ssock;
