@@ -29,8 +29,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include <errno.h>
+// Needed for basename()
 #include <libgen.h>
 // Linux only - need autoconf test
 #include <uuid.h>
@@ -104,14 +107,20 @@ cmdbc_check_config(struct cmdbc_config *c)
 static void
 parse_command_line(struct cmdbc_config *cm, int argc, char *argv[])
 {
+	const char *optstr = "h:s:";
 	int c;
-
+#ifdef HAVE_GETOPT_H
+	int index;
 	static const struct option longopts[] = {
 		{ "host", required_argument,	0, 'h' },
 		{ "service", required_argument,	0, 's' },
 		{ NULL, 0, 0, 0 }
 	};
-	while ((c = getopt_long(argc, argv, "h:s:", longopts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, optstr, longopts, &index)) != -1)
+#else
+	while ((c = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		switch (c) {
 		case 'h':
 			cm->host = strndup(optarg, RBUFF_S);
