@@ -1,10 +1,12 @@
-bin_PROGRAMS = cmdb cpc
+bin_PROGRAMS = cmdb cpc ckc
 
 combo_SOURCES = errors.c checks.c cmdb_data.c
 
 cbc_combo_SOURCES = cbc_base_sql.c cbc_data.c cbc_common.c cbccom.c
 
 cpc_SOURCES = cpc.c $(combo_SOURCES) cmdb_cpc.h
+
+ckc_SOURCES = ckc.c $(combo_SOURCES) cmdb_ckc.h
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
