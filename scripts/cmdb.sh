@@ -49,7 +49,7 @@ DBNAME="cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
-DEBDIST="wheezy"
+DEBDIST="wheezy jessie"
 DEBARCH="amd64 i386"
 DEBFILES="linux initrd.gz"
 
@@ -60,7 +60,7 @@ CENTFILE="vmlinuz initrd.img"
 
 UBUBASE="/current/images/netboot/ubuntu-installer/"
 UBUINST="/main/installer-"
-UBUDIST="precise quantal raring"
+UBUDIST="precise quantal raring trusty"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
@@ -75,7 +75,7 @@ UBUFILE="linux initrd.gz"
 
 create_cmdb_user() {
 
-  getent group | awk -F ':' '{print $1}'|grep cmdb >/dev/null
+  getent group cmdb >/dev/null 2>&1
 
   if [ $? -eq 0 ]; then
     echo "cmdb group exists. Not adding"
@@ -83,7 +83,7 @@ create_cmdb_user() {
     groupadd -r cmdb
   fi
 
-  id cmdb >/dev/null 2>&1
+  getent passwd cmdb >/dev/null 2>&1
   if [ $? -eq 0 ]; then
     echo "cmdb user exists. Not adding"
   else
