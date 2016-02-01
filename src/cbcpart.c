@@ -137,6 +137,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		{"display",		no_argument,		NULL,	'd'},
 		{"file-system",		required_argument,	NULL,	'f'},
 		{"logical-volume",	required_argument,	NULL,	'g'},
+		{"logvol",		required_argument,	NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"min-size",		required_argument,	NULL,	'i'},
 		{"list",		no_argument,		NULL,	'l'},
