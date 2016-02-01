@@ -1,3 +1,10 @@
+01/02/2016
+Still seeing issues with locale and adding a new OS version.
+
+Also, need to think about returning an error when no records
+exist in one of the tables. If I am doing a multiple_query it
+will be hard to know which one.
+
 17/01/2016
 Unable to remove SRV record - hostname invalid (probably due to _tcp in the
 name)
