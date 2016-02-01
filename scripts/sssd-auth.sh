@@ -108,11 +108,17 @@ EOF
   fi
 fi
 
-if [ -f ${TGT}${AUTOD} ]; then
-  echo "Updating autodir default file ${TGT}${AUTOD}"
-  sed -i 's/^RUN_AUTOHOME="no"/RUN_AUTOHOME="yes"/' ${TGT}${AUTOD}
-else
-  echo "No file ${TGT}${AUTOD}"
+cat > $TGT/usr/share/firstboot/001-autodir.sh <<EOF
+#!/bin/sh
+#
+if [ ! -f ${AUTOD} ]; then
+    apt-get install -y autodir
 fi
+sed -i s/RUN_AUTOHOME=\"no\"/RUN_AUTOHOME=\"yes\"/g ${AUTOD}
+/usr/sbin/service autodir restart
+
+EOF
+
+chmod 755 ${TGT}/usr/share/firstboot/001-autodir.sh
 
 
