@@ -43,7 +43,84 @@
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif /* HAVE_LIBPCRE */
-#include "cbcvarient.h"
+
+
+enum {
+	CVARIENT = 1,
+	CPACKAGE = 2
+};
+typedef struct cbcvari_comm_line_s {
+	char alias[MAC_S];
+	char arch[RANGE_S];
+	char os[MAC_S];
+	char ver_alias[MAC_S];
+	char version[MAC_S];
+	char varient[HOST_S];
+	char valias[MAC_S];
+	char package[HOST_S];
+	short int action;
+	short int type;
+} cbcvari_comm_line_s;
+
+static void
+init_cbcvari_config(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+
+static void
+init_cbcvari_comm_line(cbcvari_comm_line_s *cvl);
+
+static int
+parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl);
+
+static int
+list_cbc_build_varient(cbc_config_s *cmc);
+
+static int
+display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+
+static int
+add_cbc_build_varient(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+
+static int
+add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+
+static int
+remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+
+static int
+remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+
+static int
+display_all_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
+
+static int
+display_one_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
+
+static int
+display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid);
+
+static unsigned long int
+get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl);
+
+static int
+cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id);
+
+static int
+cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id);
+
+static cbc_package_s *
+build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack);
+
+static dbdata_s *
+build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack);
+
+static void
+copy_packages_from_base_varient(cbc_config_s *cbc, char *varient);
+
+static int
+build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id);
+
+static void
+add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
 
 int
 main(int argc, char *argv[])
@@ -111,14 +188,14 @@ main(int argc, char *argv[])
 	exit (retval);
 }
 
-void
+static void
 init_cbcvari_config(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	init_cbc_config_values(cmc);
 	init_cbcvari_comm_line(cvl);
 }
 
-void
+static void
 init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 {
 	memset(cvl, 0, sizeof(cbcvari_comm_line_s));
@@ -132,7 +209,7 @@ init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
 	snprintf(cvl->package, HOST_S, "NULL");
 }
 
-int
+static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
 	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:";
@@ -240,7 +317,7 @@ You need to supply both a varient name and valias when adding\n");
 	return NONE;
 }
 
-int
+static int
 list_cbc_build_varient(cbc_config_s *cmc)
 {
 	int retval = NONE;
@@ -294,7 +371,7 @@ list_cbc_build_varient(cbc_config_s *cmc)
 	return retval;
 }
 
-int
+static int
 display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
@@ -327,7 +404,7 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	return retval;
 }
 
-int
+static int
 add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
@@ -374,7 +451,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	return retval;
 }
 
-int
+static int
 remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	char varient[HOST_S];
@@ -413,7 +490,7 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 	return retval;
 }
 
-int
+static int
 display_all_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
 	cbc_build_os_s *bos = base->bos;
@@ -431,7 +508,7 @@ display_all_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cb
 	return NONE;
 }
 
-int
+static int
 display_one_os_packages(cbc_config_s *cbc, cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
@@ -495,7 +572,7 @@ Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
 	return retval;
 }
 
-int
+static int
 display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid)
 {
 	int i = 0;
@@ -514,7 +591,7 @@ display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long in
 	return NONE;
 }
 
-unsigned long int
+static unsigned long int
 get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 {
 	cbc_build_os_s *bos = base->bos;
@@ -530,7 +607,7 @@ get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 	return NONE;
 }
 
-void
+static void
 copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
 {
 	char *bvar; 
@@ -568,7 +645,7 @@ copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
 	clean_cbc_struct(base);
 }
 
-int
+static int
 add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 {
 	char *varient;
@@ -612,7 +689,7 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	return retval;
 }
 
-int
+static int
 remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 {
 	char *varient;
@@ -665,7 +742,7 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	return 0;
 }
 
-int
+static int
 cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id)
 {
 	int retval = NONE;
@@ -680,7 +757,7 @@ cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, u
 	return retval;
 }
 
-int
+static int
 cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id)
 {
 	int retval = NONE;
@@ -737,7 +814,7 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 	return retval;
 }
 
-cbc_package_s *
+static cbc_package_s *
 build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack)
 {
 	int i;
@@ -774,7 +851,7 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 	return list;
 }
 
-dbdata_s *
+static dbdata_s *
 build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack)
 {
 	int retval, i, query = PACK_ID_ON_DETAILS;
@@ -819,7 +896,7 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 	return list;
 }
 
-int
+static int
 build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id)
 {
 	int retval, query = PACKAGE_OS_ID_ON_VID;
@@ -843,7 +920,7 @@ build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id)
 		return 1;
 }
 
-void
+static void
 add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id)
 {
 	cbc_package_s *pack, *list;
@@ -862,4 +939,3 @@ add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id)
 		list->next = pack;
 	}
 }
-

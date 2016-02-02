@@ -26,7 +26,7 @@ cbcos_SOURCES = \
 cbcvarient_SOURCES = \
 		cbcvarient.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h\
-		cbcvarient.h cbc_common.h
+		cbc_common.h
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h \
