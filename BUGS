@@ -30,6 +30,7 @@ command line argument to show I want to delete all the configs
 
 01/08/2015
 check_parent_for_a_record() in zones.c should return 1 if record found not 0
+ *** FIXED: 02/02/2016 22:40 ***
 
 15/01/2015
 Foreign keys are not working in sqlite. This is due to the fact that they need

@@ -527,7 +527,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	}
 	if (add == 1) {
 		add = 0;
-		if (check_parent_for_a_record(glue->pri_ns, parent, dnsa)) {
+		if (check_parent_for_a_record(glue->pri_ns, parent, dnsa) == 0) {
 			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
 			len = strlen(buff);
 			if (zonefile) {
@@ -551,7 +551,7 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 			add = 1;
 	}
 	if (add == 1) {
-		if (check_parent_for_a_record(glue->sec_ns, parent, dnsa)) {
+		if (check_parent_for_a_record(glue->sec_ns, parent, dnsa) == 0) {
 			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
 			len = strlen(buff);
 			if (zonefile) {
@@ -569,11 +569,11 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	cmdb_free(buff, RBUFF_S);
 	cmdb_free(zone, strlen(parent));
 }
-// **FIXME: This should probably return 1 if found rather than 0
+
 int
 check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 {
-	int retval = 1;
+	int retval = 0;
 	unsigned long int zid = NONE;
 
 	if (!(dnsa) || !(dns) || !(parent))
@@ -588,7 +588,7 @@ check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 	if (zid) {
 		while (rec) {
 			if ((zid == rec->zone) && (strncmp(dns, rec->host, RBUFF_S) == 0))
-				retval = NONE;
+				retval = 1;
 			rec = rec->next;
 		}
 	}
@@ -1382,7 +1382,7 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	dnsa->zones = NULL;
 	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0)
 		goto cleanup;
-	if (check_parent_for_a_record(cm->host, cm->domain, dnsa)) {
+	if ((check_parent_for_a_record(cm->host, cm->domain, dnsa)) == 0) {
 		fprintf(stderr, "Host %s not found in domain %s\n", cm->host, cm->domain);
 		goto cleanup;
 	}
