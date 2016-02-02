@@ -40,9 +40,107 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include "cmdb.h"
-#include "cmdb_cpc.h"
 #include "cbc_data.h"
 #include "checks.h"
+
+typedef struct cpc_config_s {
+	char *disk;
+	char *domain;
+	char *interface;
+	char *file;
+	char *kbd;
+	char *locale;
+	char *mirror;
+	char *name;
+	char *ntp_server;
+	char *packages;
+	char *pinstall;
+	char *proxy;
+	char *rpass;
+	char *suite;
+	char *tzone;
+	char *ugroups;
+	char *uid;
+	char *uname;
+	char *upass;
+	char *url;
+	char *user;
+	short int add_root;
+	short int add_user;
+	short int encrypt_rpass;
+	short int encrypt_upass;
+	short int post;
+	short int ntp;
+	short int recommends;
+	short int utc;
+	short int action;
+} cpc_config_s;
+
+static int
+parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl);
+
+static int
+parse_cpc_config_file(cpc_config_s *cpc);
+
+static int
+parse_cpc_environment(cpc_config_s *cpc);
+
+static void
+fill_default_cpc_config_values(cpc_config_s *cpc);
+
+static void
+add_header(string_len_s *preseed);
+
+static void
+add_locale(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_network(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_mirror(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_root_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_no_root_account(string_len_s *pre);
+
+static void
+add_user_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_partitions(string_len_s *pre, cpc_config_s *cpc);
+/*
+static void
+add_no_recommends(string_len_s *pre, cpc_config_s *cpc); */
+
+static void
+add_apt(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_final(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+build_preseed(cpc_config_s *cpc);
+
+static void
+init_cpc_config(cpc_config_s *cpc);
+
+static void
+fill_default_cpc_config_values(cpc_config_s *cpc);
+
+static void
+clean_cpc_config(cpc_config_s *cpc);
+
+static void
+replace_space(char *packages);
 
 int
 main (int argc, char *argv[])
@@ -75,7 +173,7 @@ main (int argc, char *argv[])
 	return retval;
 }
 
-int
+static int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
 	const char *optstr = "d:e:f:hi:k:l:m:n:p:s:t:u:vy:";
@@ -146,7 +244,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 	return retval;
 }
 
-int
+static int
 parse_cpc_config_file(cpc_config_s *cpc)
 {
 	char *file, *home, buff[CONF_S];
@@ -187,7 +285,7 @@ parse_cpc_config_file(cpc_config_s *cpc)
 #undef CPC_GET_CONFIG_FILE
 }
 
-int
+static int
 parse_cpc_environment(cpc_config_s *cpc)
 {
 	char *envar;
@@ -218,7 +316,7 @@ parse_cpc_environment(cpc_config_s *cpc)
 #undef CPC_GET_ENVIRON
 }
 
-void
+static void
 fill_default_cpc_config_values(cpc_config_s *cpc)
 {
 	uid_t uid;
@@ -253,7 +351,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	cpc->add_root = cpc->add_user = cpc->utc = cpc->ntp = 1;
 }
 
-void
+static void
 build_preseed(cpc_config_s *cpc)
 {
 	string_len_s *output;
@@ -274,7 +372,7 @@ build_preseed(cpc_config_s *cpc)
 	clean_string_len(output);
 }
 
-void
+static void
 add_header(string_len_s *pre)
 {
 	snprintf(pre->string, BUFF_S, "\
@@ -285,7 +383,7 @@ add_header(string_len_s *pre)
 	pre->size = strlen(pre->string);
 }
 
-void
+static void
 add_locale(string_len_s *pre, cpc_config_s *cpc)
 {
 	snprintf(pre->string + pre->size, RBUFF_S, "\
@@ -297,7 +395,7 @@ d-i keyboard-configuration/xkb-keymap select %s\n\
 	pre->size = strlen(pre->string);
 }
 
-void
+static void
 add_network(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer;
@@ -322,7 +420,7 @@ d-i hw-detect/load_firmware boolean true\n\
 	free(buffer);
 }
 
-void
+static void
 add_mirror(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer, *proxy = NULL;
@@ -360,7 +458,7 @@ d-i mirror/http/proxy string\n\n\
 	free(proxy);
 }
 
-void
+static void
 add_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	if (cpc->add_root > 0) {
@@ -379,7 +477,7 @@ You must create either a root account or user account!\n");
 		add_user_account(pre, cpc);
 }
 
-void
+static void
 add_root_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer;
@@ -405,7 +503,7 @@ d-i passwd/root-password-again password %s\n\
 	free(buffer);
 }
 
-void
+static void
 add_no_root_account(string_len_s *pre)
 {
 	char *buffer;
@@ -424,7 +522,7 @@ d-i passwd/root-login boolean false\n\
 	free(buffer);
 }
 
-void
+static void
 add_user_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer = NULL, *pass = NULL, *uid = NULL, *groups = NULL;
@@ -487,7 +585,7 @@ d-i passwd/user-default-groups string %s\n\
 	free(buffer);
 }
 
-void
+static void
 add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *ntp = NULL, *tzone, *utc;
@@ -536,7 +634,7 @@ d-i clock-setup/ntp boolean false\n\
 	free(utc);
 }
 
-void
+static void
 add_partitions(string_len_s *pre, cpc_config_s *cpc)
 {
 /* Starting with the most simeple partition structure we can get away with
@@ -568,8 +666,8 @@ d-i grub-installer/only_debian boolean true\n\
 	pre->size += psize;
 	free(part);
 }
-
-void
+/*
+static void
 add_no_recommends(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *rec;
@@ -586,9 +684,9 @@ d-i base-installer/install-recommends boolean false\n\
 	snprintf(pre->string + pre->size, rsize + 1, "%s", rec);
 	pre->size += rsize;
 	free(rec);
-}
+} */
 
-void
+static void
 add_apt(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *apt, *pack;
@@ -629,7 +727,7 @@ d-i pkgsel/include string %s\n\
 	}
 }
 
-void
+static void
 add_final(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *final, *post;
@@ -660,7 +758,7 @@ d-i preseed/late_command string %s\n\
 	}
 }
 
-void
+static void
 init_cpc_config(cpc_config_s *cpc)
 {
 	memset(cpc, 0, sizeof(cpc_config_s));
@@ -708,7 +806,7 @@ init_cpc_config(cpc_config_s *cpc)
 		report_error(MALLOC_FAIL, "cpc->user init");
 }
 
-void
+static void
 clean_cpc_config(cpc_config_s *cpc)
 {
 	if (cpc) {
@@ -760,7 +858,7 @@ clean_cpc_config(cpc_config_s *cpc)
 	free(cpc);
 }
 
-void
+static void
 replace_space(char *packages)
 {
 	char *s = NULL;
