@@ -1,3 +1,6 @@
+02/02/2016
+Modifying the OS in cbc does not update the locale so still used the old locale
+
 01/02/2016
 Still seeing issues with locale and adding a new OS version.
 
