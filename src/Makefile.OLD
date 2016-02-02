@@ -35,7 +35,6 @@ BHEADERS = $(COMHEADERS) checks.h build.h
 CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 CVHEADERS = $(COMHEADERS)
 PHEADERS = cmdb.h
-KHEADERS = cmdb.h cmdb_ckc.h
 
 all:	$(bin_programs)
 
@@ -63,7 +62,7 @@ cbcpart:	$(CKOBJECTS) $(CVHEADERS)
 cpc:	$(POBJECTS) $(PHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
 
-ckc:	$(KOBJECTS) $(KHEADERS)
+ckc:	$(KOBJECTS) $(PHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
 
 cbcsysp:	$(SPOBJECTS)
