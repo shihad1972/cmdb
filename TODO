@@ -32,6 +32,7 @@ cbcvarient:
 	-t arch
 cbcpart:
 	-g logvol
+*** Added -g logvol ***
 
 In fact, I also need to change cbcdomain to use -b for build-domain for
 consistency
@@ -41,6 +42,7 @@ consistency
 cbcvarient.h header file is probably unecessary. I can add the struct
 definition to cbcvarient.c and also define the functions as static
 at the start of that file.
+*** Fixed 02/02/2016. Also removed cmdb_ckc.h, cmdb_cpc.h and cbcpart.h ***
 
 09/03/2015
 I want to be able to add copy functionality to cbcos and cbcvarient so that

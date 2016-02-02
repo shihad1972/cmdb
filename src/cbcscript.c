@@ -135,7 +135,7 @@ clean_cbc_syss_s(cbc_syss_s *scr)
 int
 parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 {
-	const char *optstr = "ab:fgh:ln:o:rst:v";
+	const char *optstr = "ab:fg:h:ln:o:rst:v";
 	int retval, opt;
 	retval = 0;
 #ifdef HAVE_GETOPT_H

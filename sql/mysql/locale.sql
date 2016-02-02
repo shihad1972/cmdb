@@ -27,7 +27,7 @@ CREATE TABLE `locale` (
   `locale` varchar(31) NOT NULL DEFAULT 'en_GB',
   `country` varchar(15) NOT NULL DEFAULT 'GB',
   `language` varchar(15) NOT NULL DEFAULT 'en',
-  `keymap` varchar(15) NOT NULL DEFAULT 'uk',
+  `keymap` varchar(15) NOT NULL DEFAULT 'gb',
   `os_id` int(7) NOT NULL,
   `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',

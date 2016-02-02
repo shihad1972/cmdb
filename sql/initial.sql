@@ -3,6 +3,8 @@
 -- Create build_os entries for the above OS's
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Debian", "7", alias, "wheezy", "i386", bt_id FROM build_type WHERE alias = "debian";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Debian", "7", alias, "wheezy", "x86_64", bt_id FROM build_type WHERE alias = "debian";
+INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Debian", "8", alias, "jessie", "i386", bt_id FROM build_type WHERE alias = "debian";
+INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Debian", "8", alias, "jessie", "x86_64", bt_id FROM build_type WHERE alias = "debian";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Centos", "5", alias, "none", "i386", bt_id FROM build_type WHERE alias = "centos";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Centos", "5", alias, "none", "x86_64", bt_id FROM build_type WHERE alias = "centos";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Centos", "6", alias, "none", "i386", bt_id FROM build_type WHERE alias = "centos";
@@ -13,6 +15,8 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubu
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "12.10", alias, "quantal", "x86_64", bt_id FROM build_type WHERE alias = "ubuntu";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "13.04", alias, "raring", "i386", bt_id FROM build_type WHERE alias = "ubuntu";
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "13.04", alias, "raring", "x86_64", bt_id FROM build_type WHERE alias = "ubuntu";
+INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "14.04", alias, "trusty", "i386", bt_id FROM build_type WHERE alias = "ubuntu";
+INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "14.04", alias, "trusty", "x86_64", bt_id FROM build_type WHERE alias = "ubuntu";
 --
 -- Create default locales
 INSERT INTO locale (os_id, bt_id) SELECT os_id, bt_id FROM build_os;

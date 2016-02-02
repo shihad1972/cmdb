@@ -80,7 +80,11 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME | PARTOPT;
+	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME; // | PARTOPT;
+/*
+ * Removed PARTOPT from the query - if there are no partition options, then
+ * this all fails :( The display function is not using it anyway.
+ */
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);

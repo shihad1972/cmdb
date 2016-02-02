@@ -1,10 +1,12 @@
-bin_PROGRAMS = cmdb cpc
+bin_PROGRAMS = cmdb cpc ckc
 
 combo_SOURCES = errors.c checks.c cmdb_data.c
 
 cbc_combo_SOURCES = cbc_base_sql.c cbc_data.c cbc_common.c cbccom.c
 
-cpc_SOURCES = cpc.c $(combo_SOURCES) cmdb_cpc.h
+cpc_SOURCES = cpc.c $(combo_SOURCES)
+
+ckc_SOURCES = ckc.c $(combo_SOURCES)
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
@@ -24,11 +26,11 @@ cbcos_SOURCES = \
 cbcvarient_SOURCES = \
 		cbcvarient.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h\
-		cbcvarient.h cbc_common.h
+		cbc_common.h
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h \
-		cbcpart.h cbc_common.h
+		cbc_common.h
 cbc_SOURCES =	cbc.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		build.c createbuild.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h cbc_common.h \

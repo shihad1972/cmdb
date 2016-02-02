@@ -30,7 +30,25 @@
 #include <sys/types.h>
 #include <getopt.h>
 #include "cmdb.h"
-#include "cmdb_ckc.h"
+
+typedef struct ckc_config_s {
+	char *country;
+	char *disk;
+	char *domain;
+	char *file;
+	char *host;
+	char *ip;
+	char *language;
+	char *packages;
+	char *timezone;
+	char *url;
+	int action;
+} ckc_config_s;
+
+typedef struct ckc_package_s {
+	char *package;
+	struct ckc_package_s *next;
+} ckc_package_s;
 
 static int
 parse_ckc_command_line(ckc_config_s *ckc, int argc, char *argv[]);
