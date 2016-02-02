@@ -34,7 +34,6 @@ CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h
 BHEADERS = $(COMHEADERS) checks.h build.h
 CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
 CVHEADERS = $(COMHEADERS)
-CKHEADERS = $(COMHEADERS) cbcpart.h
 PHEADERS = cmdb.h cmdb_cpc.h
 KHEADERS = cmdb.h cmdb_ckc.h
 
@@ -58,7 +57,7 @@ cbcos:	$(COOBJECTS) $(COMMHEADERS)
 cbcvarient:	$(CVOBJECTS) $(CVHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CVOBJECTS) $(LDFLAGS) $(LIBS)
 
-cbcpart:	$(CKOBJECTS) $(CKHEADERS)
+cbcpart:	$(CKOBJECTS) $(CVHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LIBS)
 
 cpc:	$(POBJECTS) $(PHEADERS)

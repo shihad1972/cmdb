@@ -30,7 +30,7 @@ cbcvarient_SOURCES = \
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h \
-		cbcpart.h cbc_common.h
+		cbc_common.h
 cbc_SOURCES =	cbc.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
 		build.c createbuild.c\
 		cmdb_cbc.h cbc_base_sql.h cmdb.h checks.h cbc_common.h \
