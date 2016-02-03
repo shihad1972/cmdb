@@ -1369,8 +1369,6 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	init_zone_struct(zone);
 	init_record_struct(rec);
 	init_multi_dbdata_struct(&data, 2);
-/*	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
-		snprintf(cm->ztype, RANGE_S, "master"); */
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
 // **FIXME: Why not just check the host exists, rather than on this server?
@@ -1388,6 +1386,7 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 	}
 	snprintf(domain, RBUFF_S, "%s", cm->domain);
 	tmp = domain;
+// **FIXME: This will NOT find the most top level domain. Perhaps test with strrchr
 	while ((tmp = strchr(tmp, '.'))) {
 		tmp++;
 		z = dnsa->zones;
@@ -1404,13 +1403,6 @@ add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 		fprintf(stderr, "Cannot find top level domain for %s\n", cm->domain);
 		retval = NO_DOMAIN;
 		goto cleanup;
-/*	} else {
-		z = dnsa->zones;
-		while (z) {
-			if (zone->id == zid)
-				tld = z->name;
-			z = z->next;
-		} */
 	}
 	zone->next = dnsa->zones;
 	dnsa->zones = NULL;
