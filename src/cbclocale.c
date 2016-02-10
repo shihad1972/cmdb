@@ -250,10 +250,8 @@ print_locales(cbc_locale_s *locale)
 
 	if (!(loc))
 		return;
-	printf("Language\tKeymap\tLocale\tCountry\tName\tTimezone\n");
 	while (loc) {
-		printf("%s\t\t%s\t%s\t%s\t%s\t%s\n", loc->language, loc->keymap,
-		  loc->locale, loc->country, loc->name, loc->timezone);
+		printf("%s\n", loc->name);
 		loc = loc->next;
 	}
 }
