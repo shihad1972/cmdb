@@ -128,9 +128,8 @@ typedef struct cbc_locale_s {
 	char language[RANGE_S];
 	char keymap[RANGE_S];
 	char timezone[HOST_S];
+	char name[HOST_S];
 	unsigned long int locale_id;
-	unsigned long int os_id;
-	unsigned long int bt_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;

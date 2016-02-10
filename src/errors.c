@@ -366,6 +366,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcsysp_usage();
 		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
 			display_cbcscript_usage();
+		else if (strncmp(program, "cbclocale", CONF_S) == 0)
+			display_cbclocale_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -605,6 +607,21 @@ display_cbcscript_usage(void)
 	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
 	printf("-t <build os>\n");
 	printf("See man page for full details\n");
+}
+
+void
+display_cbclocale_usage(void)
+{
+	printf("cbclocale: create build config locale %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbclocale <action> <options>\n");
+	printf("Action options\n");
+	printf("-a: add\t-d display\t-l: list\t-r: remove\n");
+	printf("Options\n");
+	printf("-g language\t-k keymap\t-o locale\t-n name\n");
+	printf("-t timezone\t-u country\n");
+	printf("See man page for full details\n");
+	
 }
 
 void

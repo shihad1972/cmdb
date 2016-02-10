@@ -188,17 +188,12 @@ CREATE TABLE `locale` (
   `country` varchar(15) NOT NULL DEFAULT 'GB',
   `language` varchar(15) NOT NULL DEFAULT 'en',
   `keymap` varchar(15) NOT NULL DEFAULT 'gb',
-  `os_id` int(7) NOT NULL,
-  `bt_id` int(7) NOT NULL,
-  `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London', `cuser` int(11) NOT NULL DEFAULT 0, `muser` int(11) NOT NULL DEFAULT 0, `ctime` timestamp NOT NULL DEFAULT 0, `mtime` timestamp NOT NULL DEFAULT 0,
-
-  FOREIGN KEY(`os_id`)
-    REFERENCES `build_os`(`os_id`)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-
-  FOREIGN KEY(`bt_id`)
-    REFERENCES `build_type`(`bt_id`)
-    ON UPDATE CASCADE ON DELETE CASCADE
+  `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
+  `name` varchar(127) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT 0,
+  `muser` int(11) NOT NULL DEFAULT 0,
+  `ctime` timestamp NOT NULL DEFAULT 0,
+  `mtime` timestamp NOT NULL DEFAULT 0,
 
 );
 CREATE TABLE `packages` (

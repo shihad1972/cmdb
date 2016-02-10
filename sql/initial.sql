@@ -19,7 +19,7 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubu
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubuntu", "14.04", alias, "trusty", "x86_64", bt_id FROM build_type WHERE alias = "ubuntu";
 --
 -- Create default locales
-INSERT INTO locale (os_id, bt_id) SELECT os_id, bt_id FROM build_os;
+INSERT INTO locale (locale, country, language, keymap) VALUES ("en_GB", "GB", "en", "gb");
 --
 -- Create build varients
 INSERT INTO varient (varient, valias) VALUES ("Base Build", "base");

@@ -71,7 +71,7 @@ SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone, \
+SELECT locale_id, locale, country, language, keymap, timezone, name, \
  cuser, muser, ctime, mtime FROM locale","\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
@@ -98,7 +98,7 @@ SELECT part_options_id, def_part_id, def_scheme_id, poption, cuser, muser, \
 
 const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
- ?, ?, ?)","\
+ ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -110,10 +110,10 @@ INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
- (?, ?, ?, ?, ?, ?, ?)","\
+ (?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
-INSERT INTO locale (locale, country, language, keymap, os_id,\
- bt_id, timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO locale (locale, country, language, keymap, name, \
+ timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
  (?, ?, ?, ?, ?)","\
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
@@ -381,11 +381,11 @@ SELECT mirror from build_type where alias = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
+	5, 13, 13, 10, 11, 7, 4, 11, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
+	4, 10, 10, 7, 8, 6, 3, 8, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
 };
 
 const unsigned int cbc_update_args[] = {
@@ -423,7 +423,7 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
@@ -1358,14 +1358,12 @@ cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	build->varient_id = strtoul(row[2], NULL, 10);
 	snprintf(build->net_int, RANGE_S, "%s", row[3]);
 	build->server_id = strtoul(row[4], NULL, 10);
-	build->os_id = strtoul(row[5], NULL, 10);
-	build->ip_id = strtoul(row[6], NULL, 10);
-	build->locale_id = strtoul(row[7], NULL, 10);
-	build->def_scheme_id = strtoul(row[8], NULL, 10);
-	build->cuser = strtoul(row[9], NULL, 10);
-	build->muser = strtoul(row[10], NULL, 10);
-	convert_time(row[11], &(build->ctime));
-	convert_time(row[12], &(build->mtime));
+	build->locale_id = strtoul(row[5], NULL, 10);
+	build->def_scheme_id = strtoul(row[6], NULL, 10);
+	build->cuser = strtoul(row[7], NULL, 10);
+	build->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(build->ctime));
+	convert_time(row[10], &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
@@ -1531,13 +1529,12 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(loc->country, RANGE_S, "%s", row[2]);
 	snprintf(loc->language, RANGE_S, "%s", row[3]);
 	snprintf(loc->keymap, RANGE_S, "%s", row[4]);
-	loc->os_id = strtoul(row[5], NULL, 10);
-	loc->bt_id = strtoul(row[6], NULL, 10);
-	snprintf(loc->timezone, HOST_S, "%s", row[7]);
-	loc->cuser = strtoul(row[8], NULL, 10);
-	loc->muser = strtoul(row[9], NULL, 10);
-	convert_time(row[10], &(loc->ctime));
-	convert_time(row[11], &(loc->mtime));
+	snprintf(loc->timezone, HOST_S, "%s", row[5]);
+	snprintf(loc->name, HOST_S, "%s", row[6]);
+	loc->cuser = strtoul(row[7], NULL, 10);
+	loc->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(loc->ctime));
+	convert_time(row[10], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -2000,14 +1997,12 @@ cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 3)
 		*buffer = &(base->locale->keymap);
 	else if (i == 4)
-		*buffer = &(base->locale->os_id);
-	else if (i == 5)
-		*buffer = &(base->locale->bt_id);
-	else if (i == 6)
 		*buffer = &(base->locale->timezone);
-	else if (i == 7)
+	else if (i == 5)
+		*buffer = &(base->locale->name);
+	else if (i == 5)
 		*buffer = &(base->locale->cuser);
-	else if (i == 8)
+	else if (i == 6)
 		*buffer = &(base->locale->muser);
 }
 
@@ -2684,15 +2679,13 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->varient_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	snprintf(build->net_int, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	build->server_id = (unsigned long int) sqlite3_column_int64(state, 4);
-	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
-	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
-	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 8);
-	build->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
-	build->muser = (unsigned long int) sqlite3_column_int64(state, 10);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	build->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	build->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
 	convert_time(stime, &(build->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
 	convert_time(stime, &(build->mtime));
 	list = base->build;
 	if (list) {
@@ -2875,14 +2868,13 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(loc->country, RANGE_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(loc->language, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(loc->keymap, RANGE_S, "%s", sqlite3_column_text(state, 4));
-	loc->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
-	loc->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 7));
-	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
-	loc->muser = (unsigned long int) sqlite3_column_int64(state, 9);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(loc->name, HOST_S, "%s", sqlite3_column_text(state, 6));
+	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	loc->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
 	convert_time(stime, &(loc->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
 	convert_time(stime, &(loc->mtime));
 	list = base->locale;
 	if (list) {
@@ -3354,32 +3346,22 @@ state, 4, (sqlite3_int64)build->server_id)) > 0) {
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 5, (sqlite3_int64)build->os_id)) > 0) {
-		fprintf(stderr, "Cannot bind os_id\n");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 6, (sqlite3_int64)build->ip_id)) > 0) {
-		fprintf(stderr, "Cannot bind ip_id\n");
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 7, (sqlite3_int64)build->locale_id)) > 0) {
+state, 5, (sqlite3_int64)build->locale_id)) > 0) {
 		fprintf(stderr, "Cannot bind locale_id\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 8, (sqlite3_int64)build->def_scheme_id)) > 0) {
+state, 6, (sqlite3_int64)build->def_scheme_id)) > 0) {
 		fprintf(stderr, "Cannot bind def_scheme_id\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 9, (sqlite3_int64)build->cuser)) > 0) {
+state, 7, (sqlite3_int64)build->cuser)) > 0) {
 		fprintf(stderr, "Cannot bind cuser\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 10, (sqlite3_int64)build->muser)) > 0) {
+state, 8, (sqlite3_int64)build->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser\n");
 		return retval;
 	}
@@ -3720,28 +3702,23 @@ state, 4, loc->keymap, (int)strlen(loc->keymap), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind keymap %s\n", loc->keymap);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int64(
-state, 5, (sqlite_int64)loc->os_id)) > 0) {
-		fprintf(stderr, "Cannot bind os_id %lu\n", loc->os_id);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 6, (sqlite3_int64)loc->bt_id)) > 0) {
-		fprintf(stderr, "Cannot bind bt_id %lu\n", loc->bt_id);
-		return retval;
-	}
 	if ((retval = sqlite3_bind_text(
-state, 7, loc->timezone, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
+state, 5, loc->timezone, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind timezone %s\n", loc->timezone);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_text(
+state, 6, loc->name, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind name %s\n", loc->timezone);
+		return retval;
+	}
 	if ((retval = sqlite3_bind_int64(
-state, 8, (sqlite_int64)loc->cuser)) > 0) {
+state, 7, (sqlite_int64)loc->cuser)) > 0) {
 		fprintf(stderr, "Cannot bind cuser %lu\n", loc->cuser);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 9, (sqlite3_int64)loc->muser)) > 0) {
+state, 8, (sqlite3_int64)loc->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", loc->muser);
 		return retval;
 	}

@@ -181,6 +181,7 @@ init_locale(cbc_locale_s *locale)
 	snprintf(locale->language, COMM_S, "NULL");
 	snprintf(locale->keymap, COMM_S, "NULL");
 	snprintf(locale->timezone, COMM_S, "NULL");
+	snprintf(locale->name, COMM_S, "NULL");
 }
 
 void

@@ -28,18 +28,13 @@ CREATE TABLE `locale` (
   `country` varchar(15) NOT NULL DEFAULT 'GB',
   `language` varchar(15) NOT NULL DEFAULT 'en',
   `keymap` varchar(15) NOT NULL DEFAULT 'gb',
-  `os_id` int(7) NOT NULL,
-  `bt_id` int(7) NOT NULL,
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
+  `name` varchar(127) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`locale_id`),
-  KEY `os_id` (`os_id`,`bt_id`),
-  KEY `bt_id` (`bt_id`),
-  CONSTRAINT `locale_ibfk_1` FOREIGN KEY (`os_id`) REFERENCES `build_os` (`os_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `locale_ibfk_2` FOREIGN KEY (`bt_id`) REFERENCES `build_type` (`bt_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

@@ -455,6 +455,8 @@ display_cpc_usage(void);
 void
 display_ckc_usage(void);
 void
+display_cbclocale_usage(void);
+void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
