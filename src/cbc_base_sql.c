@@ -1358,12 +1358,14 @@ cbc_store_build_mysql(MYSQL_ROW row, cbc_s *base)
 	build->varient_id = strtoul(row[2], NULL, 10);
 	snprintf(build->net_int, RANGE_S, "%s", row[3]);
 	build->server_id = strtoul(row[4], NULL, 10);
-	build->locale_id = strtoul(row[5], NULL, 10);
-	build->def_scheme_id = strtoul(row[6], NULL, 10);
-	build->cuser = strtoul(row[7], NULL, 10);
-	build->muser = strtoul(row[8], NULL, 10);
-	convert_time(row[9], &(build->ctime));
-	convert_time(row[10], &(build->mtime));
+	build->os_id = strtoul(row[5], NULL, 10);
+	build->ip_id = strtoul(row[6], NULL, 10);
+	build->locale_id = strtoul(row[7], NULL, 10);
+	build->def_scheme_id = strtoul(row[8], NULL, 10);
+	build->cuser = strtoul(row[9], NULL, 10);
+	build->muser = strtoul(row[10], NULL, 10);
+	convert_time(row[11], &(build->ctime));
+	convert_time(row[12], &(build->mtime));
 	list = base->build;
 	if (list) {
 		while (list->next)
