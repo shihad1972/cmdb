@@ -61,8 +61,11 @@ validate_locale_comm_line(locale_comm_line_s *cl);
 static int
 list_locales(cbc_config_s *ccs);
 
+static int
+display_locales(cbc_config_s *ccs, locale_comm_line_s *cl);
+
 static void
-print_locales(cbc_locale_s *loc);
+print_locale(cbc_locale_s *loc);
 
 int
 main(int argc, char *argv[])
@@ -86,6 +89,8 @@ main(int argc, char *argv[])
 	}
 	if (cl->action == LIST_CONFIG)
 		retval = list_locales(ccs);
+	else if (cl->action == DISPLAY_CONFIG)
+		retval = display_locales(ccs, cl);
 	else {
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
@@ -232,27 +237,57 @@ list_locales(cbc_config_s *ccs)
 {
 	int retval = 0;
 	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in list_locales");
+	cbc_locale_s *loc;
 
 	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
 		fprintf(stderr, "DB query error %d\n", retval);
 		goto cleanup;
 	}
-	print_locales(cbc->locale);
+	loc = cbc->locale;
+	while (loc) {
+		printf("%s\n", loc->name);
+		loc = loc->next;
+	}
 	cleanup:
 		clean_cbc_struct(cbc);
 		return retval;
 }
 
 static void
-print_locales(cbc_locale_s *locale)
+print_locale(cbc_locale_s *locale)
 {
 	cbc_locale_s *loc = locale;
 
 	if (!(loc))
 		return;
+	printf("Locale %s\n\n", loc->name);
+	printf("Keymap:\t\t%s\n", loc->keymap);
+	printf("Language:\t%s\n", loc->language);
+	printf("Country:\t%s\n", loc->country);
+	printf("Locale:\t\t%s\n", loc->locale);
+	printf("Timezone:\t%s\n", loc->timezone);
+	printf("\n");
+}
+
+static int
+display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
+{
+	int retval = 0;
+	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in display_locales");
+	cbc_locale_s *loc;
+
+	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
+		fprintf(stderr, "DB query error %d\n", retval);
+		goto cleanup;
+	}
+	loc = cbc->locale;
 	while (loc) {
-		printf("%s\n", loc->name);
+		if (strncmp(loc->name, cl->name, HOST_S) == 0)
+			print_locale(loc);
 		loc = loc->next;
 	}
+	cleanup:
+		clean_cbc_struct(cbc);
+		return retval;
 }
 
