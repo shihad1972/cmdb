@@ -384,7 +384,7 @@ display_cmdb_usage(void)
 	printf("-a: add\n-d: display\n-l: list\n-r: remove\n-f: force\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
-	printf("-e: services\n-h: hardware\n-o: virtual machine hosts\n");
+	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-m: vmhost server name for adding a server\n");
