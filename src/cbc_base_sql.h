@@ -213,6 +213,9 @@ cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type);
 
+int
+cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
@@ -235,6 +238,9 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
 cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id);
 
 void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);

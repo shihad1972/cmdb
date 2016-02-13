@@ -120,6 +120,9 @@
 /* Define to 1 if you have the <wordexp.h> header file. */
 #define HAVE_WORDEXP_H 1
 
+/* Define to 1 if you have the <stdbool.h> header file. */
+#define HAVE_STDBOOL_H 1
+
 /* Define to 1 if the system has the type `_Bool'. */
 #define HAVE__BOOL 1
 

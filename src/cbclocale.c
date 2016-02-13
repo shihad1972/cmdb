@@ -263,7 +263,10 @@ list_locales(cbc_config_s *ccs)
 	}
 	loc = cbc->locale;
 	while (loc) {
-		printf("%s\n", loc->name);
+		printf("%s", loc->name);
+		if (loc->isdefault == true)
+			printf(" *");
+		printf("\n");
 		loc = loc->next;
 	}
 	cleanup:
@@ -278,13 +281,15 @@ print_locale(cbc_locale_s *locale)
 
 	if (!(loc))
 		return;
-	printf("Locale %s\n\n", loc->name);
+	printf("Locale %s", loc->name);
+	if (loc->isdefault == true)
+		printf(" * Default");
+	printf("\n\n");
 	printf("Keymap:\t\t%s\n", loc->keymap);
 	printf("Language:\t%s\n", loc->language);
 	printf("Country:\t%s\n", loc->country);
 	printf("Locale:\t\t%s\n", loc->locale);
 	printf("Timezone:\t%s\n", loc->timezone);
-	printf("\n");
 }
 
 static int

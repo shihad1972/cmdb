@@ -71,7 +71,7 @@ SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, timezone, name, \
+SELECT locale_id, locale, country, language, keymap, timezone, name, isdefault,\
  cuser, muser, ctime, mtime FROM locale","\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
@@ -384,7 +384,7 @@ SELECT locale_id FROM locale WHERE name = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 13, 10, 11, 7, 4, 11, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
+	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -790,6 +790,21 @@ cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 }
 
 int
+cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id)
+{
+	int retval = 0;
+	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
+		report_error(NO_DB_TYPE, "cbc_set_default");
+#ifdef HAVE_MYSQL
+	else if (strncmp(ccs->dbtype, "mysql", COMM_S) == 0)
+		retval = cbc_set_default_mysql(ccs, table, id);
+#endif // HAVE_MYSQL
+	else
+		report_error(DB_TYPE_INVALID, ccs->dbtype);
+	return retval;
+}
+
+int
 cbc_get_query(int type, const char **query, unsigned int *fields)
 {
 	int retval = 0;
@@ -1017,6 +1032,16 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	cbc_mysql_init(ccs, &cbc);
 	retval = cmdb_run_mysql_stmt(&cbc, mybind, query);
 	cmdb_mysql_cleanup(&cbc);
+	return retval;
+}
+
+int
+cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
+{
+	MYSQL cbc;
+	MYSQL_STMT *cbc_stmt;
+	int retval = 0;
+
 	return retval;
 }
 
@@ -1539,10 +1564,14 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(loc->keymap, RANGE_S, "%s", row[4]);
 	snprintf(loc->timezone, HOST_S, "%s", row[5]);
 	snprintf(loc->name, HOST_S, "%s", row[6]);
-	loc->cuser = strtoul(row[7], NULL, 10);
-	loc->muser = strtoul(row[8], NULL, 10);
-	convert_time(row[9], &(loc->ctime));
-	convert_time(row[10], &(loc->mtime));
+	if (strncmp(row[7], "0", CH_S) == 0)
+		loc->isdefault = false;
+	else
+		loc->isdefault = true;
+	loc->cuser = strtoul(row[8], NULL, 10);
+	loc->muser = strtoul(row[9], NULL, 10);
+	convert_time(row[10], &(loc->ctime));
+	convert_time(row[11], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)

@@ -28,6 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>
+#endif // HAVE_STDBOOL_H
 #ifdef HAVE_MYSQL
 # include <mysql.h>
 #endif /*HAVE_MYSQL */
@@ -136,6 +139,11 @@ cmdb_set_bind_mysql(MYSQL_BIND *mybind, unsigned int i, dbdata_u *data)
 		mybind->is_unsigned = 0;
 		mybind->buffer = &(list->small);
 		mybind->buffer_length = sizeof(short int);
+	} else if (i == DBTINY) {
+		mybind->buffer_type = MYSQL_TYPE_TINY;
+		mybind->is_unsigned = 0;
+		mybind->buffer = &(list->small);
+		mybind->buffer_length = sizeof(bool);
 	} else {
 		report_error(DB_TYPE_INVALID, "in cmdb_set_bind_mysql");
 	}
