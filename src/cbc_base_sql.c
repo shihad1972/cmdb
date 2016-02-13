@@ -380,7 +380,8 @@ SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?",
 SELECT package, varient_id FROM packages WHERE os_id = ?","\
 SELECT mirror from build_type where alias = ?"
 /* 80 */,"\
-SELECT locale_id FROM locale WHERE name = ?"
+SELECT locale_id FROM locale WHERE name = ?","\
+SELECT locale_id FROM locale WHERE isdefault > 0"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -402,13 +403,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -589,7 +590,8 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE },
-	{ DBTEXT, NONE, NONE, NONE }
+	{ DBTEXT, NONE, NONE, NONE },
+	{ NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -672,6 +674,7 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
@@ -788,7 +791,7 @@ cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 		report_error(DB_TYPE_INVALID, ccs->dbtype);
 	return retval;
 }
-
+/*
 int
 cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id)
 {
@@ -802,7 +805,7 @@ cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id)
 	else
 		report_error(DB_TYPE_INVALID, ccs->dbtype);
 	return retval;
-}
+} */
 
 int
 cbc_get_query(int type, const char **query, unsigned int *fields)
@@ -1034,7 +1037,7 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	cmdb_mysql_cleanup(&cbc);
 	return retval;
 }
-
+/*
 int
 cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
 {
@@ -1043,7 +1046,7 @@ cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
 	int retval = 0;
 
 	return retval;
-}
+} */
 
 int
 cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)

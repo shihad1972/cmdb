@@ -223,9 +223,14 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 void
 print_build_config(cbc_s *details)
 {
+	if (!(details))
+		report_error(CBC_NO_DATA, "details in print_build_config");
 	char *name = details->server->name, ip[RANGE_S], *addr;
 	char *cuser = get_uname(details->build->cuser);
 	char *muser = get_uname(details->build->muser);
+	char *locale = details->locale->locale;
+	char *lang = details->locale->language;
+	char *tz = details->locale->timezone;
 	time_t crtime = (time_t)details->build->ctime;
 	time_t motime = (time_t)details->build->mtime;
 	unsigned long int sid = details->build->def_scheme_id;
@@ -257,6 +262,8 @@ print_build_config(cbc_s *details)
 		printf("IP address:\t%s\n", addr);
 	else
 		printf("No build IP associated with server %s\n", name);
+	if (details->locale)
+		printf("Locale:\t\t%s\nLanguage:\t%s\nTimezone:\t%s\n", locale, lang, tz);
 	printf("Build created by %s at %s", cuser, ctime(&crtime));
 	printf("Build updated by %s at %s", muser, ctime(&motime));
 	if (part) {
