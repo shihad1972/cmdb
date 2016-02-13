@@ -33,6 +33,7 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
+#include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #ifdef HAVE_LIBPCRE
@@ -69,6 +70,9 @@ display_locales(cbc_config_s *ccs, locale_comm_line_s *cl);
 static int
 add_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
 
+static int
+remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+
 static void
 fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
 
@@ -101,6 +105,8 @@ main(int argc, char *argv[])
 		retval = display_locales(ccs, cl);
 	else if (cl->action == ADD_CONFIG)
 		retval = add_locale(ccs, cl);
+	else if (cl->action == RM_CONFIG)
+		retval = remove_locale(ccs, cl);
 	else {
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
@@ -333,5 +339,28 @@ fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl)
 	snprintf(loc->name, HOST_S, "%s", cl->name);
 	loc->cuser = (unsigned long int)getuid();
 	loc->muser = (unsigned long int)getuid();
+}
+
+static int
+remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+{
+	if (!(ccs) || !(cl))
+		report_error(CBC_NO_DATA, "remove_locale");
+	char *name = cl->name;
+	unsigned long int id;
+	int retval;
+	dbdata_s *data;
+
+	if ((retval = get_locale_id(ccs, name, &id)) != 0)
+		return retval;
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = id;
+	if ((retval = cbc_run_delete(ccs, data, LOCALE_ON_ID)) == 0)
+		fprintf(stderr, "Unable to delete locale %s\n", name);
+	else if (retval == 1)
+		printf("Locale %s deleted\n", name);
+	else
+		printf("%d locales deleted for %s\n", retval, name);
+	return 0;
 }
 

@@ -71,6 +71,9 @@ int
 get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id);
 
 int
+get_locale_id(cbc_config_s *cbc, char *name, uli_t *id);
+
+int
 get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id);
 
 int

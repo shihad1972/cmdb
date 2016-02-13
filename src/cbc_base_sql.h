@@ -65,7 +65,8 @@ enum {			/* cbc delete SQL statements */
 	SYSP_CONF = 13,
 	CBCSCR_ON_ID = 14,
 	CBCSCRARG_ON_ID = 15,
-	PART_OPT_ON_ID = 16
+	PART_OPT_ON_ID = 16,
+	LOCALE_ON_ID = 17
 };
 
 enum {			/* cbc search SQL statements */
@@ -148,7 +149,8 @@ enum {			/* cbc search SQL statements */
 	OS_DETAIL_ON_BT_ID = 76,
 	LOCALE_DETAILS_ON_OS_ID = 77,
 	PACKAGE_VID_ON_OS_ID = 78,
-	BOOT_FILES_MIRROR_DETAILS = 79
+	BOOT_FILES_MIRROR_DETAILS = 79,
+	LOCALE_ID_ON_NAME = 80
 };
 
 enum {			/* cbc update SQL statements */

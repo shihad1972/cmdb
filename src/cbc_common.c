@@ -330,6 +330,30 @@ get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
 }
 
 int
+get_locale_id(cbc_config_s *cbc, char *name, uli_t *id)
+{
+	int retval = 0;
+	int query = LOCALE_ID_ON_NAME;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, HOST_S, "%s", name);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find locale %s\n", name);
+		clean_dbdata_struct(data);
+		return LOCALE_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple locales with name %s?\n", name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
 get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
 {
 	int retval = 0, query = SCHEME_NAME_ON_SERVER_ID;

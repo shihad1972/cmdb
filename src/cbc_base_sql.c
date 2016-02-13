@@ -209,7 +209,8 @@ DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
 DELETE FROM system_package_conf WHERE syspack_conf_id = ?","\
 DELETE FROM system_scripts WHERE systscr_id = ?","\
 DELETE FROM system_scripts_args WHERE systscr_arg_id = ?","\
-DELETE FROM part_options WHERE part_options_id = ?"
+DELETE FROM part_options WHERE part_options_id = ?","\
+DELETE FROM locale WHERE locale_id = ?"
 };
 
 const char *cbc_sql_search[] = {
@@ -378,6 +379,8 @@ SELECT os_id, ctime, arch FROM build_os WHERE bt_id = ?","\
 SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?","\
 SELECT package, varient_id FROM packages WHERE os_id = ?","\
 SELECT mirror from build_type where alias = ?"
+/* 80 */,"\
+SELECT locale_id FROM locale WHERE name = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -393,19 +396,19 @@ const unsigned int cbc_update_args[] = {
 	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -487,6 +490,7 @@ const unsigned int cbc_update_types[][6] = {
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
@@ -584,6 +588,7 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
@@ -666,7 +671,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBINT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
-	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
