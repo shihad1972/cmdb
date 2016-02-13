@@ -1999,12 +1999,12 @@ cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 3)
 		*buffer = &(base->locale->keymap);
 	else if (i == 4)
-		*buffer = &(base->locale->timezone);
-	else if (i == 5)
 		*buffer = &(base->locale->name);
 	else if (i == 5)
-		*buffer = &(base->locale->cuser);
+		*buffer = &(base->locale->timezone);
 	else if (i == 6)
+		*buffer = &(base->locale->cuser);
+	else if (i == 7)
 		*buffer = &(base->locale->muser);
 }
 

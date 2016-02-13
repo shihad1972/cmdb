@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
@@ -64,6 +66,12 @@ list_locales(cbc_config_s *ccs);
 static int
 display_locales(cbc_config_s *ccs, locale_comm_line_s *cl);
 
+static int
+add_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+
+static void
+fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
+
 static void
 print_locale(cbc_locale_s *loc);
 
@@ -91,6 +99,8 @@ main(int argc, char *argv[])
 		retval = list_locales(ccs);
 	else if (cl->action == DISPLAY_CONFIG)
 		retval = display_locales(ccs, cl);
+	else if (cl->action == ADD_CONFIG)
+		retval = add_locale(ccs, cl);
 	else {
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
@@ -127,6 +137,8 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		{"version",		no_argument,		NULL,	'v'}
 	};
 
+	if (argc == 1)
+		return DISPLAY_USAGE;
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
 #else
 	while ((opt = getopt(argc, argv, optsttr)) != -1)
@@ -211,7 +223,7 @@ validate_locale_comm_line(locale_comm_line_s *cl)
 		if (validate_user_input(cl->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
 	if (strncmp(cl->timezone, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->timezone, LOGVOL_REGEX) < 0)
+		if (validate_user_input(cl->timezone, TIMEZONE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "timezone");
 	if (strncmp(cl->country, "NULL", COMM_S) != 0)
 		if (validate_user_input(cl->country, NAME_REGEX) < 0)
@@ -289,5 +301,37 @@ display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
 	cleanup:
 		clean_cbc_struct(cbc);
 		return retval;
+}
+
+static int
+add_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+{
+	int retval;
+	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in add_locale");
+	cbc_locale_s *loc = cmdb_malloc(sizeof(cbc_locale_s), "loc in add_locale");
+
+	cbc->locale = loc;
+	fill_locale(loc, cl);
+	if ((retval = cbc_run_insert(ccs, cbc, LOCALES)) != 0)
+		fprintf(stderr, "Unable to insert locale %s into database", loc->name);
+	else
+		printf("Locale %s added to DB\n", loc->name);
+	clean_cbc_struct(cbc);
+	return retval;
+}
+
+static void
+fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl)
+{
+	if (!(loc) || !(cl))
+		report_error(CBC_NO_DATA, "fill_locale");
+	snprintf(loc->country, RANGE_S, "%s", cl->country);
+	snprintf(loc->language, RANGE_S, "%s", cl->language);
+	snprintf(loc->keymap, RANGE_S, "%s", cl->keymap);
+	snprintf(loc->locale, MAC_S, "%s", cl->locale);
+	snprintf(loc->timezone, HOST_S, "%s", cl->timezone);
+	snprintf(loc->name, HOST_S, "%s", cl->name);
+	loc->cuser = (unsigned long int)getuid();
+	loc->muser = (unsigned long int)getuid();
 }
 
