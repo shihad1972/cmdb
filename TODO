@@ -1,6 +1,11 @@
 03/02/2016
 Sort out locale. Only need 1 for ALL operating systems. Will make it so much
 easier.
+    *** Update *** Need to set one locale to be the default. LOCALE_ID_ON_OS_ID
+    query no longer valid due to removal of os_id from the locale table. Need
+    to add a default column with only one locale being the default. Should
+    update with a transaction (set current default locale to 0 and update new
+    default to 1)
 
 08/01/2016
 Possibilities to add to the long options.
