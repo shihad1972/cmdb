@@ -124,7 +124,6 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 	int retval = 0;
 	const char *optstr = "adg:hk:lo:n:rt:u:v";
 	int opt;
-	size_t glen, klen, olen, nlen, tlen, ulen;
 #ifdef HAVE_GETOPT_H
 	int index;
 	struct option lopts[] = {
@@ -175,33 +174,27 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else
 			return DISPLAY_USAGE;
 	}
-	glen = strlen(cl->language);
-	klen = strlen(cl->keymap);
-	olen = strlen(cl->locale);
-	nlen = strlen(cl->name);
-	tlen = strlen(cl->timezone);
-	ulen = strlen(cl->country);
 	if ((cl->action == CVERSION) || (cl->action == LIST_CONFIG))
 		return retval;
 	if (((cl->action == RM_CONFIG) || (cl->action == DISPLAY_CONFIG) ||
-	    (cl->action == ADD_CONFIG)) && nlen == 0)
+	    (cl->action == ADD_CONFIG)) && (strncmp(cl->name, "NULL", COMM_S) == 0))
 		return NO_NAME;
 	if (cl->action == 0)
 		return NO_ACTION;
 	if (cl->action == ADD_CONFIG) {
-		if (glen == 0) {
+		if (strncmp(cl->language, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No language specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (klen == 0) {
+		} else if (strncmp(cl->keymap, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No keymap specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (olen == 0) {
+		} else if (strncmp(cl->locale, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No locale specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (tlen == 0) {
+		} else if (strncmp(cl->timezone, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No timezone specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (ulen == 0) {
+		} else if (strncmp(cl->country, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No country specified\n\n");
 			return DISPLAY_USAGE;
 		}

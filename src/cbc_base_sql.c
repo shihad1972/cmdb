@@ -71,7 +71,7 @@ SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, timezone, name, isdefault,\
+SELECT locale_id, locale, country, language, keymap, timezone, name,\
  cuser, muser, ctime, mtime FROM locale","\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
@@ -381,11 +381,11 @@ SELECT package, varient_id FROM packages WHERE os_id = ?","\
 SELECT mirror from build_type where alias = ?"
 /* 80 */,"\
 SELECT locale_id FROM locale WHERE name = ?","\
-SELECT locale_id FROM locale WHERE isdefault > 0"
+SELECT locale_id FROM default_locale WHERE default_locale > 0"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
+	5, 13, 13, 10, 11, 7, 4, 11, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
@@ -1567,14 +1567,10 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(loc->keymap, RANGE_S, "%s", row[4]);
 	snprintf(loc->timezone, HOST_S, "%s", row[5]);
 	snprintf(loc->name, HOST_S, "%s", row[6]);
-	if (strncmp(row[7], "0", CH_S) == 0)
-		loc->isdefault = false;
-	else
-		loc->isdefault = true;
-	loc->cuser = strtoul(row[8], NULL, 10);
-	loc->muser = strtoul(row[9], NULL, 10);
-	convert_time(row[10], &(loc->ctime));
-	convert_time(row[11], &(loc->mtime));
+	loc->cuser = strtoul(row[7], NULL, 10);
+	loc->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(loc->ctime));
+	convert_time(row[10], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)

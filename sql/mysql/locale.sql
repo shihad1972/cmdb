@@ -30,7 +30,6 @@ CREATE TABLE `locale` (
   `keymap` varchar(15) NOT NULL DEFAULT 'gb',
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
   `name` varchar(127) NOT NULL,
-  `isdefault` tinyint(1) NOT NULL DEFAULT 0,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

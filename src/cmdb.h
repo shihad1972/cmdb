@@ -339,6 +339,7 @@ enum {			/* cmdb Action codes */
 };
 
 enum {			/* cbc action codes */
+	SET_DEFAULT = 10,
 	WRITE_CONFIG = 11,
 	DISPLAY_CONFIG = 12,
 	ADD_CONFIG = 13,
