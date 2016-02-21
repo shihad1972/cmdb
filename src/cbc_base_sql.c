@@ -381,7 +381,7 @@ SELECT package, varient_id FROM packages WHERE os_id = ?","\
 SELECT mirror from build_type where alias = ?"
 /* 80 */,"\
 SELECT locale_id FROM locale WHERE name = ?","\
-SELECT locale_id FROM default_locale WHERE default_locale > 0"
+SELECT locale_id FROM default_locale WHERE locale_id > 0"
 };
 
 const unsigned int cbc_select_fields[] = {

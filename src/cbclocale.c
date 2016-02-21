@@ -77,7 +77,7 @@ static void
 fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
 
 static void
-print_locale(cbc_locale_s *loc);
+print_locale(cbc_config_s *ccs, cbc_locale_s *loc);
 
 int
 main(int argc, char *argv[])
@@ -247,9 +247,12 @@ static int
 list_locales(cbc_config_s *ccs)
 {
 	int retval = 0;
+	unsigned long int isdefault = 0;
 	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in list_locales");
 	cbc_locale_s *loc;
 
+	if ((retval = get_default_id(ccs, GET_DEFAULT_LOCALE, NULL, &isdefault)) != 0)
+		fprintf(stderr, "Cannot find default locale!\n");
 	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
 		fprintf(stderr, "DB query error %d\n", retval);
 		goto cleanup;
@@ -257,7 +260,7 @@ list_locales(cbc_config_s *ccs)
 	loc = cbc->locale;
 	while (loc) {
 		printf("%s", loc->name);
-		if (loc->isdefault == true)
+		if (loc->locale_id == isdefault)
 			printf(" *");
 		printf("\n");
 		loc = loc->next;
@@ -268,14 +271,18 @@ list_locales(cbc_config_s *ccs)
 }
 
 static void
-print_locale(cbc_locale_s *locale)
+print_locale(cbc_config_s *ccs, cbc_locale_s *locale)
 {
 	cbc_locale_s *loc = locale;
+	unsigned long int isdefault = 0;
+	int retval;
 
-	if (!(loc))
+	if (!(loc) || !(ccs))
 		return;
+	if ((retval = get_default_id(ccs, GET_DEFAULT_LOCALE, NULL, &isdefault)) != 0)
+		fprintf(stderr, "Cannot find default locale!\n");
 	printf("Locale %s", loc->name);
-	if (loc->isdefault == true)
+	if (loc->locale_id == isdefault)
 		printf(" * Default");
 	printf("\n\n");
 	printf("Keymap:\t\t%s\n", loc->keymap);
@@ -299,7 +306,7 @@ display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
 	loc = cbc->locale;
 	while (loc) {
 		if (strncmp(loc->name, cl->name, HOST_S) == 0)
-			print_locale(loc);
+			print_locale(ccs, loc);
 		loc = loc->next;
 	}
 	cleanup:
