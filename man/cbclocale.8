@@ -11,7 +11,7 @@ cbclocale \- Create Build Config Locale
 
 .B cbclocale
 [
-.B -adlr
+.B -adlrx
 ] [
 .B -n <name> -g <language> -k <keymap> -o <locale> -t <timezone> -u <county>
 ]
@@ -31,10 +31,13 @@ display
 list
 .IP "-r,  --remove, --delete"
 delete
+.IP "-x,  --default"
+set default locale
 .IP "-v,  --version"
 version
 .IP "-h,  --help"
 display a short help message
+.PP
 .B Details
 .IP "-g,  --language \fBlanguage\fP"
 langauge you wish for the server

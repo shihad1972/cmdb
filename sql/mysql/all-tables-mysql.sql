@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.47, for debian-linux-gnu (x86_64)
 --
 -- Host: mysql    Database: cmdb
 -- ------------------------------------------------------
--- Server version	5.5.40-0+wheezy1-log
+-- Server version	5.5.47-0+deb7u1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -49,7 +49,7 @@ CREATE TABLE `build` (
   CONSTRAINT `build_ibfk_4` FOREIGN KEY (`server_id`) REFERENCES `server` (`server_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `build_ibfk_5` FOREIGN KEY (`locale_id`) REFERENCES `locale` (`locale_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `build_ibfk_6` FOREIGN KEY (`def_scheme_id`) REFERENCES `seed_schemes` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -104,9 +104,8 @@ CREATE TABLE `build_domain` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`bd_id`),
-  KEY `config_ntp` (`config_ntp`,`config_ldap`,`config_log`),
-  KEY `config_email` (`config_email`,`config_xymon`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+  KEY `config_ntp` (`config_ntp`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -162,7 +161,7 @@ CREATE TABLE `build_ip` (
   KEY `server_id` (`server_id`),
   CONSTRAINT `build_ip_ibfk_1` FOREIGN KEY (`bd_id`) REFERENCES `build_domain` (`bd_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `build_ip_ibfk_2` FOREIGN KEY (`server_id`) REFERENCES `server` (`server_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -217,7 +216,7 @@ CREATE TABLE `build_os` (
   PRIMARY KEY (`os_id`),
   KEY `bt_id` (`bt_id`),
   CONSTRAINT `build_os_ibfk_1` FOREIGN KEY (`bt_id`) REFERENCES `build_type` (`bt_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -376,6 +375,56 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `default_locale`
+--
+
+DROP TABLE IF EXISTS `default_locale`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `default_locale` (
+  `restrict` enum('') NOT NULL,
+  `locale_id` int(7) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`restrict`),
+  KEY `locale_id` (`locale_id`),
+  CONSTRAINT `default_locale_ibfk_1` FOREIGN KEY (`locale_id`) REFERENCES `locale` (`locale_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER default_locale_insert BEFORE INSERT ON default_locale FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER default_locale_update BEFORE UPDATE ON default_locale FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
 -- Table structure for table `default_part`
 --
 
@@ -398,7 +447,7 @@ CREATE TABLE `default_part` (
   PRIMARY KEY (`def_part_id`),
   KEY `def_scheme_id` (`def_scheme_id`),
   CONSTRAINT `default_part_ibfk_1` FOREIGN KEY (`def_scheme_id`) REFERENCES `seed_schemes` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -416,7 +465,7 @@ CREATE TABLE `disk_dev` (
   PRIMARY KEY (`disk_id`),
   KEY `server_id` (`server_id`),
   CONSTRAINT `disk_dev_ibfk_1` FOREIGN KEY (`server_id`) REFERENCES `server` (`server_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -442,7 +491,7 @@ CREATE TABLE `glue_zones` (
   KEY `name` (`name`,`zone_id`),
   KEY `zone_id` (`zone_id`),
   CONSTRAINT `glue_zones_ibfk_1` FOREIGN KEY (`zone_id`) REFERENCES `zones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -512,7 +561,7 @@ CREATE TABLE `hardware` (
   KEY `hard_type_id` (`hard_type_id`),
   CONSTRAINT `hardware_ibfk_1` FOREIGN KEY (`server_id`) REFERENCES `server` (`server_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `hardware_ibfk_2` FOREIGN KEY (`hard_type_id`) REFERENCES `hard_type` (`hard_type_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -557,19 +606,15 @@ CREATE TABLE `locale` (
   `locale` varchar(31) NOT NULL DEFAULT 'en_GB',
   `country` varchar(15) NOT NULL DEFAULT 'GB',
   `language` varchar(15) NOT NULL DEFAULT 'en',
-  `keymap` varchar(15) NOT NULL DEFAULT 'uk',
+  `keymap` varchar(15) NOT NULL DEFAULT 'gb',
   `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
   `name` varchar(127) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`locale_id`),
-  KEY `os_id` (`os_id`,`bt_id`),
-  KEY `bt_id` (`bt_id`),
-  CONSTRAINT `locale_ibfk_1` FOREIGN KEY (`os_id`) REFERENCES `build_os` (`os_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `locale_ibfk_2` FOREIGN KEY (`bt_id`) REFERENCES `build_type` (`bt_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`locale_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -638,7 +683,7 @@ CREATE TABLE `packages` (
   KEY `varient_id` (`varient_id`),
   CONSTRAINT `packages_ibfk_1` FOREIGN KEY (`os_id`) REFERENCES `build_os` (`os_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `packages_ibfk_2` FOREIGN KEY (`varient_id`) REFERENCES `varient` (`varient_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2448 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9597 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -665,6 +710,60 @@ DELIMITER ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER packages_update BEFORE UPDATE ON packages FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `part_options`
+--
+
+DROP TABLE IF EXISTS `part_options`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `part_options` (
+  `part_options_id` int(7) NOT NULL AUTO_INCREMENT,
+  `def_part_id` int(11) NOT NULL,
+  `def_scheme_id` int(11) NOT NULL,
+  `poption` varchar(31) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`part_options_id`),
+  KEY `def_part_id` (`def_part_id`),
+  KEY `def_scheme_id` (`def_scheme_id`),
+  CONSTRAINT `part_options_ibfk_1` FOREIGN KEY (`def_part_id`) REFERENCES `default_part` (`def_part_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `part_options_ibfk_2` FOREIGN KEY (`def_scheme_id`) REFERENCES `seed_schemes` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER part_options_insert BEFORE INSERT ON part_options FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER part_options_update BEFORE UPDATE ON part_options FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -748,7 +847,7 @@ CREATE TABLE `records` (
   PRIMARY KEY (`id`),
   KEY `zone` (`zone`),
   CONSTRAINT `records_ibfk_1` FOREIGN KEY (`zone`) REFERENCES `zones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=94 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=111 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -866,7 +965,7 @@ CREATE TABLE `rev_zones` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`rev_zone_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -915,7 +1014,7 @@ CREATE TABLE `seed_schemes` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`def_scheme_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -971,7 +1070,7 @@ CREATE TABLE `server` (
   PRIMARY KEY (`server_id`),
   KEY `cust_id` (`cust_id`,`vm_server_id`),
   CONSTRAINT `server_ibfk_1` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1016,7 +1115,7 @@ CREATE TABLE `service_type` (
   `service` varchar(15) NOT NULL,
   `detail` varchar(31) DEFAULT NULL,
   PRIMARY KEY (`service_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1044,7 +1143,7 @@ CREATE TABLE `services` (
   CONSTRAINT `services_ibfk_1` FOREIGN KEY (`server_id`) REFERENCES `server` (`server_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `services_ibfk_2` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `services_ibfk_3` FOREIGN KEY (`service_type_id`) REFERENCES `service_type` (`service_type_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1091,12 +1190,12 @@ CREATE TABLE `system_package_args` (
   `type` varchar(31) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
-  `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`syspack_arg_id`),
   KEY `syspack_id` (`syspack_id`),
   CONSTRAINT `syspack_arg_ibfk_1` FOREIGN KEY (`syspack_id`) REFERENCES `system_packages` (`syspack_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1144,14 +1243,14 @@ CREATE TABLE `system_package_conf` (
   `arg` varchar(255) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
-  `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`syspack_conf_id`),
   KEY `syspack_id` (`syspack_id`),
   KEY `syspack_arg_id` (`syspack_arg_id`),
   CONSTRAINT `syspack_conf_ibkf_1` FOREIGN KEY (`syspack_id`) REFERENCES `system_packages` (`syspack_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `syspack_conf_ibkf_2` FOREIGN KEY (`syspack_arg_id`) REFERENCES `system_package_args` (`syspack_arg_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1199,7 +1298,7 @@ CREATE TABLE `system_packages` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`syspack_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1226,6 +1325,112 @@ DELIMITER ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_packages_update BEFORE UPDATE ON system_packages FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `system_scripts`
+--
+
+DROP TABLE IF EXISTS `system_scripts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_scripts` (
+  `systscr_id` int(7) NOT NULL AUTO_INCREMENT,
+  `name` varchar(127) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`systscr_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_scripts_insert BEFORE INSERT ON system_scripts FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_scripts_update BEFORE UPDATE ON system_scripts FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `system_scripts_args`
+--
+
+DROP TABLE IF EXISTS `system_scripts_args`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_scripts_args` (
+  `systscr_arg_id` int(7) NOT NULL AUTO_INCREMENT,
+  `systscr_id` int(11) NOT NULL,
+  `bd_id` int(11) NOT NULL,
+  `bt_id` int(11) NOT NULL,
+  `arg` varchar(127) NOT NULL,
+  `no` int(11) NOT NULL,
+  `cuser` int(11) NOT NULL DEFAULT '0',
+  `muser` int(11) NOT NULL DEFAULT '0',
+  `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`systscr_arg_id`),
+  KEY `systscr_id` (`systscr_id`),
+  KEY `bd_id` (`bd_id`),
+  KEY `bt_id` (`bt_id`),
+  CONSTRAINT `system_scripts_args_ibfk_1` FOREIGN KEY (`systscr_id`) REFERENCES `system_scripts` (`systscr_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `system_scripts_args_ibfk_2` FOREIGN KEY (`bd_id`) REFERENCES `build_domain` (`bd_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `system_scripts_args_ibfk_3` FOREIGN KEY (`bt_id`) REFERENCES `build_type` (`bt_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_scripts_args_insert BEFORE INSERT ON system_scripts_args FOR EACH ROW set NEW.mtime = NOW() */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER system_scripts_args_update BEFORE UPDATE ON system_scripts_args FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -1265,7 +1470,7 @@ CREATE TABLE `varient` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`varient_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1377,7 +1582,7 @@ CREATE TABLE `zones` (
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1419,4 +1624,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-09 21:52:05
+-- Dump completed on 2016-02-21 17:14:03

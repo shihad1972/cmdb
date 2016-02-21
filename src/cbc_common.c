@@ -102,7 +102,7 @@ get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id)
 		snprintf(data->args.text, RBUFF_S, "%s", name);
 	}
 	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		fprintf(stderr, "Cannot find id for query:\n%s\n", cbc_sql_search[query]);
+	//	fprintf(stderr, "Cannot find id for query:\n%s\n", cbc_sql_search[query]);
 		clean_dbdata_struct(data);
 		return -1;
 	} else if (retval > 1) {

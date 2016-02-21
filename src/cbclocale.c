@@ -73,6 +73,9 @@ add_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
 static int
 remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
 
+static int
+set_default_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+
 static void
 fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
 
@@ -107,6 +110,8 @@ main(int argc, char *argv[])
 		retval = add_locale(ccs, cl);
 	else if (cl->action == RM_CONFIG)
 		retval = remove_locale(ccs, cl);
+	else if (cl->action == SET_DEFAULT)
+		retval = set_default_locale(ccs, cl);
 	else {
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
@@ -122,7 +127,7 @@ static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 {
 	int retval = 0;
-	const char *optstr = "adg:hk:lo:n:rt:u:v";
+	const char *optstr = "adg:hk:lo:n:rt:u:vx";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -139,7 +144,8 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		{"delete",		no_argument,		NULL,	'r'},
 		{"timezone",		required_argument,	NULL,	't'},
 		{"country",		required_argument,	NULL,	'u'},
-		{"version",		no_argument,		NULL,	'v'}
+		{"version",		no_argument,		NULL,	'v'},
+		{"default",		no_argument,		NULL,	'x'}
 	};
 
 	if (argc == 1)
@@ -171,13 +177,16 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 			snprintf(cl->country, HOST_S, "%s", optarg);
 		else if (opt == 'v')
 			return CVERSION;
+		else if (opt == 'x')
+			cl->action = SET_DEFAULT;
 		else
 			return DISPLAY_USAGE;
 	}
 	if ((cl->action == CVERSION) || (cl->action == LIST_CONFIG))
 		return retval;
 	if (((cl->action == RM_CONFIG) || (cl->action == DISPLAY_CONFIG) ||
-	    (cl->action == ADD_CONFIG)) && (strncmp(cl->name, "NULL", COMM_S) == 0))
+	    (cl->action == ADD_CONFIG) || (cl->action == SET_DEFAULT)) &&
+	    (strncmp(cl->name, "NULL", COMM_S) == 0))
 		return NO_NAME;
 	if (cl->action == 0)
 		return NO_ACTION;
@@ -367,5 +376,29 @@ remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
 	else
 		printf("%d locales deleted for %s\n", retval, name);
 	return 0;
+}
+
+static int
+set_default_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+{
+	int retval = 0;
+	int query = UP_DEFAULT_LOCALE;
+	unsigned long int locale_id;
+	dbdata_s *data;
+
+	if ((retval = get_default_id(ccs, LOCALE_ID_ON_NAME, cl->name, &locale_id)) != 0) {
+		fprintf(stderr, "Cannot find locale %s\n", cl->name);
+		return retval;
+	}
+	init_multi_dbdata_struct(&data, 1);
+	data->args.number = locale_id;
+	if ((retval = cbc_run_update(ccs, data, query)) == 0)
+		fprintf(stderr, "Unable to set default locale\n");
+	else if (retval > 1)
+		fprintf(stderr, "Multiple default locales updated\n");
+	else
+		printf("Default locale set to %s\n", cl->name);
+	clean_dbdata_struct(data);
+	return retval;
 }
 

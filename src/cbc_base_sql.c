@@ -189,7 +189,8 @@ UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
   bd_id = ?","\
 UPDATE varient SET muser = ? WHERE varient_id = ?","\
 UPDATE seed_schemes SET muser = ? WHERE def_scheme_id = ?","\
-UPDATE build_domain SET muser = ? WHERE bd_id = ?"
+UPDATE build_domain SET muser = ? WHERE bd_id = ?","\
+UPDATE default_locale SET locale_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -394,7 +395,7 @@ const unsigned int cbc_insert_fields[] = {
 
 const unsigned int cbc_update_args[] = {
 	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
-	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
+	5, 6, 3, 3, 3, 3, 3, 2, 2, 2, 1
 };
 const unsigned int cbc_delete_args[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
@@ -487,7 +488,8 @@ const unsigned int cbc_update_types[][6] = {
 	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE, NONE }
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
