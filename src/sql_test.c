@@ -18,7 +18,7 @@
  * sql_test.c: main file for the sqlt program
  *
  */
-#include "../config.h"
+#include <config.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>

@@ -25,7 +25,7 @@
  *  (C) Iain M. Conochie 2012 - 2014
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -234,33 +234,22 @@ cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 int
 cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
-	int retval = 0, query = LOCALE_ID_ON_OS_ID;
-	unsigned int max;
-	dbdata_s *data;
+	int retval = 0;
+	int query = GET_DEFAULT_LOCALE;
+	unsigned long int isdefault;
 
 	if (!(cbt) || !(cml) || !(build))
 		return CBC_NO_DATA;
-	if (cml->locale != 0) {
-// May be nice to show _what_ locale is being used here.
-		build->locale_id = cml->locale;
+	if (strncmp(cml->locale, "NULL", COMM_S) != 0) {
+		retval = get_locale_id(cbt, cml->locale, &(build->locale_id));
 		return retval;
 	}
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = build->os_id;
-	retval = cbc_run_search(cbt, data, query);
-	if (retval == 0) {
-		retval = LOCALE_NOT_FOUND;
-		goto cleanup;
-	} else if (retval > 1 )
-		fprintf(stderr, "Multiple locale's found for os. Using 1st one\n");
-	retval = 0;
-	build->locale_id = data->fields.number;
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
+	if ((retval = get_default_id(cbt, query, NULL, &isdefault)) != 0) {
+		fprintf(stderr, "Cannot find default locale\n");
 		return retval;
+	}
+	build->locale_id = isdefault;
+	return retval;
 }
 
 int

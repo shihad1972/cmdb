@@ -22,7 +22,7 @@
  *  Contains functions which will fill up data structs based on the parameters
  *  supplied. Will also contian conditional code base on database type.
  */
-#include "../config.h"
+#include <config.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>

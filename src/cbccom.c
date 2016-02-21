@@ -25,7 +25,7 @@
  * 
  */
 
-#include "../config.h"
+#include <config.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -115,7 +115,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'b') {
 			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
-			cb->locale = strtoul(optarg, NULL, 10);
+			snprintf(cb->locale, NAME_S, "%s", optarg);
 		} else if (opt == 'k') {
 			snprintf(cb->netcard, HOST_S, "%s", optarg);
 		} else if (opt == 'j') {
@@ -193,7 +193,7 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "OS: %s\n", cml->os);
 	fprintf(stderr, "OS Version: %s\n", cml->os_version);
 	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale ID: %lu\n", cml->locale);
+	fprintf(stderr, "Locale: %s\n", cml->locale);
 	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
 	fprintf(stderr, "Action Type: %s\n", cml->action_type);
 	fprintf(stderr, "Partition: %s\n", cml->partition);
@@ -393,6 +393,7 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 	snprintf(cbt->arch, MAC_S, "NULL");
 	snprintf(cbt->netcard, COMM_S, "NULL");
 	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
+	snprintf(cbt->locale, COMM_S, "NULL");
 }
 
 void

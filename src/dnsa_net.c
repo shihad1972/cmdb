@@ -20,7 +20,7 @@
  *  dnsa_net.c: Holds functions for network related funcitons for dnsa
  *
  */
-#include "../config.h"
+#include <config.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>

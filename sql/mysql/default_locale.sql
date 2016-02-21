@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.47, for debian-linux-gnu (x86_64)
 --
 -- Host: mysql    Database: cmdb
 -- ------------------------------------------------------
--- Server version	5.5.40-0+wheezy1-log
+-- Server version	5.5.47-0+deb7u1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,26 +16,23 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `locale`
+-- Table structure for table `default_locale`
 --
 
-DROP TABLE IF EXISTS `locale`;
+DROP TABLE IF EXISTS `default_locale`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `locale` (
-  `locale_id` int(7) NOT NULL AUTO_INCREMENT,
-  `locale` varchar(31) NOT NULL DEFAULT 'en_GB',
-  `country` varchar(15) NOT NULL DEFAULT 'GB',
-  `language` varchar(15) NOT NULL DEFAULT 'en',
-  `keymap` varchar(15) NOT NULL DEFAULT 'gb',
-  `timezone` varchar(63) NOT NULL DEFAULT 'Europe/London',
-  `name` varchar(127) NOT NULL,
+CREATE TABLE `default_locale` (
+  `restrict` enum('') NOT NULL,
+  `locale_id` int(7) NOT NULL,
   `cuser` int(11) NOT NULL DEFAULT '0',
   `muser` int(11) NOT NULL DEFAULT '0',
   `ctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`locale_id`),
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`restrict`),
+  KEY `locale_id` (`locale_id`),
+  CONSTRAINT `default_locale_ibfk_1` FOREIGN KEY (`locale_id`) REFERENCES `locale` (`locale_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -46,7 +43,7 @@ CREATE TABLE `locale` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER locale_insert BEFORE INSERT ON locale FOR EACH ROW set NEW.mtime = NOW() */;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER default_locale_insert BEFORE INSERT ON default_locale FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -61,7 +58,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER locale_update BEFORE UPDATE ON locale FOR EACH ROW set NEW.mtime = NOW() */;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER default_locale_update BEFORE UPDATE ON default_locale FOR EACH ROW set NEW.mtime = NOW() */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -77,4 +74,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-08 14:22:49
+-- Dump completed on 2016-02-21 17:13:19

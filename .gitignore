@@ -1,5 +1,5 @@
 Makefile
-config.h
+include/config.h
 src/Makefile
 lib/Makefile
 daemon/Makefile

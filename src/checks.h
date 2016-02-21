@@ -54,7 +54,8 @@ enum {			/* regex search codes */
 	EMAIL_REGEX,
 	TXTRR_REGEX,
 	CN_REGEX,
-	DC_REGEX
+	DC_REGEX,
+	TIMEZONE_REGEX
 };
 
 extern const char *regexps[];

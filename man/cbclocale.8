@@ -1,0 +1,75 @@
+.TH cbclocale 8 "Version 0.2: 14 February 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+cbclocale \- Create Build Config Locale
+.SH SYNOPSIS
+.B cbclocale
+[
+.B action
+] [
+.B options
+]
+
+.B cbclocale
+[
+.B -adlrx
+] [
+.B -n <name> -g <language> -k <keymap> -o <locale> -t <timezone> -u <county>
+]
+
+.SH DESCRIPTION
+\fBcbclocale\fP enables you to control the locale settings for a server
+build. You can specify the language, keymap, locale, timezone and country
+To identify different locales, you associate these settings with a name.
+
+.SH OPTIONS
+.B Actions
+.IP "-a,  --add"
+add
+.IP "-d,  --display"
+display
+.IP "-l,  --list"
+list
+.IP "-r,  --remove, --delete"
+delete
+.IP "-x,  --default"
+set default locale
+.IP "-v,  --version"
+version
+.IP "-h,  --help"
+display a short help message
+.PP
+.B Details
+.IP "-g,  --language \fBlanguage\fP"
+langauge you wish for the server
+.IP "-k,  --keymap \fBkeymap\fP"
+keyboard mapping
+.IP "-l,  --locale \fBlocale\fP"
+locale setting
+.IP "-n,  --name \fBname\fP"
+name of the configuration as an identifier
+.IP "-t,  --timezone \fBtimezone\fP"
+timezone setting
+.IP "-u, --country \fBcountry\fP"
+country setting
+.PP
+.SH FILES
+.I /etc/dnsa/dnsa.conf
+.RS
+The system wide configuration file for cmdb / dnsa / cbc suite of
+programs. See
+.BR dnsa.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+\fBcbclocale\fP does not use any environment variables.
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(7),
+.BR cbc(8),
+.BR cbcdomain(8),
+.BR cbclocale(8),
+.BR cbcpart(8),
+.BR cbcvarient(8),
+.BR cbcos(8)

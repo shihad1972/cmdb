@@ -22,7 +22,7 @@
  */
 
 #define THIS_SQL_MAX 2097152	// 2MegaBytes
-#include "../config.h"
+#include <config.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

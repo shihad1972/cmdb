@@ -26,7 +26,7 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,9 +91,9 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[]);
 
 static void
 copy_new_build_os(cbc_config_s *cbc, uli_t *id);
-
+/*
 static void
-copy_locale_for_os(cbc_config_s *cbc, uli_t *id);
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id); */
 
 static void
 copy_packages_for_os(cbc_config_s *cbc, uli_t *id);
@@ -546,10 +546,10 @@ copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
 		return;
 	}
-	copy_locale_for_os(cbc, id);
+//	copy_locale_for_os(cbc, id);
 	copy_packages_for_os(cbc, id);
 }
-
+/*
 static void
 copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 {
@@ -608,7 +608,7 @@ copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 	printf("%d locale(s) inserted for new OS\n", i);
 	base->locale = llist;
 	clean_cbc_struct(base);
-}
+} */
 
 static void
 copy_packages_for_os(cbc_config_s *cbc, uli_t *id)

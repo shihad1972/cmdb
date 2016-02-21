@@ -23,8 +23,8 @@
 
 #ifndef __DNSA_BASE_SQL_H
 # define __DNSA_BASE_SQL_H
-# include "../config.h"
-#include "cmdb_dnsa.h"
+# include <config.h>
+# include "cmdb_dnsa.h"
 
 extern const char *dnsa_sql_select[];
 extern const char *dnsa_sql_insert[];

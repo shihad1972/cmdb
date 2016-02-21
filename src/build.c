@@ -23,7 +23,7 @@
  *  database for the main cbc program.
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -223,9 +223,14 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 void
 print_build_config(cbc_s *details)
 {
+	if (!(details))
+		report_error(CBC_NO_DATA, "details in print_build_config");
 	char *name = details->server->name, ip[RANGE_S], *addr;
 	char *cuser = get_uname(details->build->cuser);
 	char *muser = get_uname(details->build->muser);
+	char *locale = details->locale->locale;
+	char *lang = details->locale->language;
+	char *tz = details->locale->timezone;
 	time_t crtime = (time_t)details->build->ctime;
 	time_t motime = (time_t)details->build->mtime;
 	unsigned long int sid = details->build->def_scheme_id;
@@ -257,6 +262,8 @@ print_build_config(cbc_s *details)
 		printf("IP address:\t%s\n", addr);
 	else
 		printf("No build IP associated with server %s\n", name);
+	if (details->locale)
+		printf("Locale:\t\t%s\nLanguage:\t%s\nTimezone:\t%s\n", locale, lang, tz);
 	printf("Build created by %s at %s", cuser, ctime(&crtime));
 	printf("Build updated by %s at %s", muser, ctime(&motime));
 	if (part) {
@@ -835,13 +842,13 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	size_t len;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+		report_error(MALLOC_FAIL, "ip in fill_net_output");
 	if (!(ns = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ns in fill_net_build_output");
+		report_error(MALLOC_FAIL, "ns in fill_net_output");
 	if (!(nm = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "nm in fill_net_build_output");
+		report_error(MALLOC_FAIL, "nm in fill_net_output");
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
+		report_error(MALLOC_FAIL, "gw in fill_net_output");
 	char *locale = list->fields.text;
 	CHECK_DATA_LIST()
 	char *keymap = list->fields.text;

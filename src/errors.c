@@ -28,7 +28,7 @@
  *  (C) Iain M Conochie 2012 - 2013
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -366,6 +366,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcsysp_usage();
 		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
 			display_cbcscript_usage();
+		else if (strncmp(program, "cbclocale", CONF_S) == 0)
+			display_cbclocale_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -384,7 +386,7 @@ display_cmdb_usage(void)
 	printf("-a: add\n-d: display\n-l: list\n-r: remove\n-f: force\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
-	printf("-e: services\n-h: hardware\n-o: virtual machine hosts\n");
+	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-m: vmhost server name for adding a server\n");
@@ -605,6 +607,21 @@ display_cbcscript_usage(void)
 	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
 	printf("-t <build os>\n");
 	printf("See man page for full details\n");
+}
+
+void
+display_cbclocale_usage(void)
+{
+	printf("cbclocale: create build config locale %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbclocale <action> <options>\n");
+	printf("Action options\n");
+	printf("-a: add\t-d display\t-l: list\t-r: remove\n-x: set default locale\n");
+	printf("Options\n");
+	printf("-g language\t-k keymap\t-o locale\t-n name\n");
+	printf("-t timezone\t-u country\n");
+	printf("See man page for full details\n");
+	
 }
 
 void

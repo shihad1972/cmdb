@@ -26,7 +26,7 @@
  * Part of the cmdb program
  */
 
-#include "../config.h"
+#include <config.h>
 #ifdef HAVE_LIBPCRE
 # include <stdio.h>
 # include <stdlib.h>
@@ -50,14 +50,15 @@ const char *regexps[] = {
 	"^[a-zA-Z0-9][a-zA-Z0-9\\ \\,\\.\\-\\_]*[a-zA-Z0-9]$",
 	"^[a-z][a-z0-9]*$",
 	"^[0-9]*\\ [TGM]B$",
-	"^[0-9]*\\.[0-9]*$",
+	"^[0-9]*\\.?[0-9]*$",
 	"^[A-Z][A-Z]?[1-9][0-9]?\\ ?[1-9][A-Z]{2}$",
 	"^([a-z]{1,8}\\:\\/{2})?(([a-z0-9]*([a-z0-9][\\-\\.])?[a-z0-9])+/?)*$",
 	"^\\+?[0-9]*[0-9\\ ]*[0-9]$",
 	"^[a-zA-Z0-9]+[a-zA-Z0-9\\.\\_\\-]*@[a-zA-Z0-9]+[a-zA-Z0-9\\.\\-]+[a-zA-Z]*$",
 	"^[a-zA-Z0-9][a-zA-Z0-9\\ \\,\\.\\-\\_\\:]*[a-zA-Z0-9]$",
 	"^cn\\=[a-zA-Z0-9]*(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
-	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$"
+	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
+	"^[a-zA-Z]*[a-zA-Z0-0]*[\\-/]*[a-zA-Z0-9]*$"
 };
 
 int

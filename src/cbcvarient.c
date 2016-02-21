@@ -24,7 +24,7 @@
  *  part of the cbcvarient program
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>

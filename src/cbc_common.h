@@ -25,7 +25,7 @@
 
 #ifndef __CBC_COMMON_H__
 # define __CBC_COMMON_H__
-# include "../config.h"
+# include <config.h>
 # include "cbc_data.h"
 
 int
@@ -42,6 +42,9 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
 
 void
 set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id);
+
+int
+get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id);
 
 int
 get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id);
@@ -69,6 +72,9 @@ get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id);
 
 int
 get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id);
+
+int
+get_locale_id(cbc_config_s *cbc, char *name, uli_t *id);
 
 int
 get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id);

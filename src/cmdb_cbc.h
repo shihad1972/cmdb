@@ -25,7 +25,7 @@
 
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
-# include "../config.h"
+# include <config.h>
 # include "cbc_data.h"
 
 typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
@@ -41,13 +41,14 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char arch[MAC_S];
 	char netcard[HOST_S];
 	char harddisk[HOST_S];
+	char locale[NAME_S];
 	short int action;
 	short int server;
 	short int removeip;
 	short int lvm;
 	unsigned long int server_id;
 	unsigned long int os_id;
-	unsigned long int locale;
+	unsigned long int locale_id;
 } cbc_comm_line_s;
 
 typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */

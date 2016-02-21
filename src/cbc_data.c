@@ -22,11 +22,15 @@
  *  Contains functions to initalise the various data structs and clean them up.
  */
 
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>
+#endif // HAVE_STDBOOL_H
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -181,6 +185,7 @@ init_locale(cbc_locale_s *locale)
 	snprintf(locale->language, COMM_S, "NULL");
 	snprintf(locale->keymap, COMM_S, "NULL");
 	snprintf(locale->timezone, COMM_S, "NULL");
+	snprintf(locale->name, COMM_S, "NULL");
 }
 
 void

@@ -45,6 +45,7 @@ enum {			/* Database colum types */
 	DBTEXT = 1,
 	DBINT = 2,
 	DBSHORT = 3,
+	DBTINY = 4,
 	FLYBY
 };
 
@@ -338,6 +339,7 @@ enum {			/* cmdb Action codes */
 };
 
 enum {			/* cbc action codes */
+	SET_DEFAULT = 10,
 	WRITE_CONFIG = 11,
 	DISPLAY_CONFIG = 12,
 	ADD_CONFIG = 13,
@@ -454,6 +456,8 @@ void
 display_cpc_usage(void);
 void
 display_ckc_usage(void);
+void
+display_cbclocale_usage(void);
 void
 display_cbcsysp_usage(void);
 void
