@@ -25,7 +25,7 @@
 
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
-# include "../config.h"
+# include <config.h>
 
 typedef struct cbc_config_s {		/* Hold CMDB configuration values */
 	char dbtype[RANGE_S];

@@ -26,7 +26,7 @@
  * 
  */
 #define _GNU_SOURCE
-#include "../config.h"
+#include <config.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>

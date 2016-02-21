@@ -23,7 +23,7 @@
  *  supplied. Will also contian conditional code base on database type.
  */
 
-#include "../config.h"
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

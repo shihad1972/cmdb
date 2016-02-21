@@ -22,7 +22,7 @@
 
 #ifndef __CBC_NET_H
 # define __CBC_NET_H
-# include "../config.h"
+# include <config.h>
 # include "cbc_data.h"
 # include "ifaddrs.h"
 # include <sys/types.h>

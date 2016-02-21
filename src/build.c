@@ -23,7 +23,7 @@
  *  database for the main cbc program.
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>

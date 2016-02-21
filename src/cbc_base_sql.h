@@ -24,7 +24,7 @@
 
 #ifndef __CBC_BASE_SQL_H
 # define __CBC_BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 # include "base_sql.h"
 
 extern const char *cbc_sql_select[];

@@ -25,7 +25,7 @@
 
 #ifndef __CBC_COMMON_H__
 # define __CBC_COMMON_H__
-# include "../config.h"
+# include <config.h>
 # include "cbc_data.h"
 
 int

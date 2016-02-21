@@ -23,7 +23,7 @@
 
 #ifndef __CMDB_BASE_SQL_H
 #define __CMDB_BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 
 extern const char *sql_select[];
 extern const char *sql_insert[];

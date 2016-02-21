@@ -23,7 +23,7 @@
  */
 #ifndef __BASE_SQL_H
 # define __BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 # include "cmdb.h"
 /* cbc queries */
 

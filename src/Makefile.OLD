@@ -7,7 +7,7 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-CPPFLAGS = -I/usr/include/mysql
+CPPFLAGS = -I/usr/include/mysql -I../include/
 LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
 LIBS = -lmysqlclient $(PCLIBS) -lsqlite3
@@ -64,10 +64,10 @@ cbclocale:	$(CLOBJECTS) $(CVHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CLOBJECTS) $(LDFLAGS) $(LIBS)
 
 cpc:	$(POBJECTS) $(PHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
 
 ckc:	$(KOBJECTS) $(PHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
 
 cbcsysp:	$(SPOBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(SPOBJECTS) $(LDFLAGS) $(LIBS)

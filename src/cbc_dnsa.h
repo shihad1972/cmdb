@@ -29,7 +29,7 @@
 
 #ifndef __CBC_DNSA_H__
 # define __CBC_DNSA_H__
-# include "../config.h"
+# include <config.h>
 # ifdef HAVE_DNSA
 
 #  include "cmdb_dnsa.h"

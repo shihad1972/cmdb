@@ -22,7 +22,7 @@
  *  Main source file for ckc program
  */
 #define _GNU_SOURCE
-#include "../config.h"
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

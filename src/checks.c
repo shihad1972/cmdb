@@ -26,7 +26,7 @@
  * Part of the cmdb program
  */
 
-#include "../config.h"
+#include <config.h>
 #ifdef HAVE_LIBPCRE
 # include <stdio.h>
 # include <stdlib.h>

@@ -24,7 +24,7 @@
  *  part of the cbcdomain program
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>

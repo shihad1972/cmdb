@@ -22,7 +22,7 @@
  *  Contains functions to initalise the various data structs and clean them up.
  */
 
-#include "../config.h"
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

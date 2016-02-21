@@ -28,7 +28,7 @@
  *  (C) Iain M Conochie 2012 - 2013
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
