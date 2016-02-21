@@ -275,6 +275,7 @@ Also need to add an email alias for root in smtp configuration
 
 23/05/2013
 Still need to write cbclocale
+*** Fixed: Version 0.2.25 21/02/2016 ***
 
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements
