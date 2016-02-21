@@ -1,3 +1,6 @@
+21/02/2016
+I want to move config.h into include/
+
 03/03/2015
 I want to get rid of the need to have a server already in the database before
 adding a build. This would mean extending the ethernet and hard-disk options
