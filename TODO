@@ -3,6 +3,7 @@ Add default for build_os, partition and varient
 
 21/02/2016
 I want to move config.h into include/
+*** Fixed: 21/02/2016 ***
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before
