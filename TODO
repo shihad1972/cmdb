@@ -1,3 +1,6 @@
+24/02/2016
+Add default for build_os, partition and varient
+
 21/02/2016
 I want to move config.h into include/
 
