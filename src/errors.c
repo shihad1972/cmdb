@@ -230,6 +230,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "dbdata count is wrong in %s\n", errstr);
 	} else if (error == NO_SYSPACK_CONF) {
 		;
+	} else if (error == NO_DEVICE_OR_DETAIL) {
+		fprintf(stderr, "No device or detail in %s\n", errstr);
 	} else if (error == NO_ARG) {
 		fprintf(stderr, "Argument does not exist\n");
 	} else {

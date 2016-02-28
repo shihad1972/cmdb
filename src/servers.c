@@ -133,7 +133,7 @@ remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm)
 		fprintf(stderr, "Server %s not deleted\n", cm->name);
 		return SERVER_NOT_FOUND;
 	} else if (retval > 1) {
-		fprintf(stderr, "Multiple servers with naem %s deleted\n", cm->name);
+		fprintf(stderr, "Multiple servers with name %s deleted\n", cm->name);
 		return MULTIPLE_SERVERS;
 	} else 
 		printf("Server %s deleted from database\n", cm->name);
@@ -191,7 +191,7 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 		cmdb->hardware->server_id = cmdb->server->server_id = data->fields.number;
 	clean_dbdata_struct(data->next);
 	memset(data, 0, sizeof *data);
-	data->args.number = (uli_t)cmdb->hardware->ht_id;
+	data->args.number = cmdb->hardware->ht_id;
 	cmdb->hardware->cuser = cmdb->hardware->muser = cmdb->server->muser = (uli_t)getuid();
 	user[0] = cmdb->server->muser;
 	user[1] = cmdb->server->server_id;
@@ -217,6 +217,55 @@ add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb)
 	set_server_updated(config, user);
 	clean_dbdata_struct(data);
 	return retval;
+}
+
+int
+remove_hardware_from_database(cmdb_config_s *ccs, cmdb_comm_line_s *cm)
+{
+	int retval = 0;
+	int query = SERVER_ID_ON_NAME;
+	unsigned long int server_id;
+	unsigned int max;
+	dbdata_s *data;
+
+	if ((retval = get_table_id(ccs, query, cm->name, &server_id)) != 0) {
+		fprintf(stderr, "Cannot find server %s\n", cm->name);
+		return SERVER_NOT_FOUND;
+	}
+	if (cm->detail)
+		query = HARD_ID_ON_DETAIL_SERVER;
+	else if (cm->device)
+		query = HARD_ID_ON_DEVICE_SERVER;
+	else
+		report_error(NO_DEVICE_OR_DETAIL, "remove_hardware_from_database");
+	max = cmdb_get_max(cmdb_search_fields[query], cmdb_search_args[query]);
+	init_multi_dbdata_struct(&data, max);
+	if (cm->detail)
+		snprintf(data->args.text, HOST_S, "%s", cm->detail);
+	else if (cm->device)
+		snprintf(data->args.text, HOST_S, "%s", cm->device);
+	data->next->args.number = server_id;
+	if ((retval = cmdb_run_search(ccs, data, query)) == 0) {
+		fprintf(stderr, "Cannot find hardware for server %s\n", cm->name);
+		goto cleanup;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple pieces of hardware found! Using 1st\n");
+	}
+	data->args.number = data->fields.number;
+	clean_dbdata_struct(data->next);
+	data->next = NULL;
+	query = HARDWARES;
+	if ((retval = cmdb_run_delete(ccs, data, query)) == 0)
+		fprintf(stderr, "Cannot delete hardware from database\n");
+	else if (retval > 1)
+		fprintf(stderr, "Deleted multiple pieces of hardware\n");
+	else
+		printf("Hardware removed from DB\n");
+	retval = 0;
+
+	cleanup:
+		clean_dbdata_struct(data);
+		return retval;
 }
 
 void

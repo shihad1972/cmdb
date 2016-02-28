@@ -210,7 +210,10 @@ cmdb_hardware_action(cmdb_config_s *ccs, cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			printf("Hardware for server %s added to database\n",
 			  cmdb->server->name);
 		}
+	} else if (cm->action == RM_FROM_DB) {
+		retval = remove_hardware_from_database(ccs, cm);
 	} else {
+		printf("Action not supported (yet)\n");
 		display_action_error(cm->action);
 	}
 	return retval;

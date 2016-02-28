@@ -105,7 +105,11 @@ SELECT service_id FROM services WHERE cust_id = ?","\
 SELECT service_id FROM services s LEFT JOIN service_type st ON\
   s.service_type_id = st.service_type_id WHERE s.server_id = ? AND st.service = ?","\
 SELECT service_id FROM services s LEFT JOIN service_type st ON\
-  s.service_type_id = st.service_type_id WHERE s.cust_id = ? AND st.service = ?"
+  s.service_type_id = st.service_type_id WHERE s.cust_id = ? AND st.service = ?","\
+SELECT hard_id FROM hardware WHERE device = ? AND server_id = ?","\
+SELECT hard_id FROM hardware WHERE detail = ? AND server_id = ?","\
+SELECT hard_id FROM hardware WHERE device = ? AND hard_type_id = ?","\
+SELECT hard_id FROM hardware WHERE detail = ? AND hard_type_id = ?"
 };
 
 const char *cmdb_sql_update[] = { "\
@@ -127,9 +131,9 @@ const unsigned int search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1 };
 
 const unsigned int search_args[] = { 1,1,1,1,1,1,1,2,1,1,2 };
 
-const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const unsigned int cmdb_search_fields[] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
-const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2 };
+const unsigned int cmdb_search_args[] = { 1,1,1,1,1,1,1,2,1,1,2,1,1,2,2,2,2,2,2 };
 
 const unsigned int cmdb_delete_args[] = { 1,1,1,1,1,1 };
 
@@ -161,7 +165,11 @@ const unsigned int cmdb_search_args_type[][2] = {
 	{ DBINT, NONE },
 	{ DBINT, NONE },
 	{ DBINT, DBTEXT },
-	{ DBINT, DBTEXT }
+	{ DBINT, DBTEXT },
+	{ DBTEXT, DBINT },
+	{ DBTEXT, DBINT },
+	{ DBTEXT, DBINT },
+	{ DBTEXT, DBINT }
 };
 
 const unsigned int cmdb_search_fields_type[][1] = {
@@ -171,6 +179,10 @@ const unsigned int cmdb_search_fields_type[][1] = {
 	{ DBINT },
 	{ DBINT },
 	{ DBTEXT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
+	{ DBINT },
 	{ DBINT },
 	{ DBINT },
 	{ DBINT },

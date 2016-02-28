@@ -41,6 +41,7 @@
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
+#include "cmdb_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif // HAVE_LIBPCRE
@@ -232,6 +233,14 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 				retval = NO_NAME_OR_ID;
 			else if ((!(comp->service)) && (!(comp->url)) && (comp->force != 1))
 				retval = NO_SERVICE_URL;
+		} else if (comp->type == SERVER) {
+			if (!(comp->name))
+				retval = NO_NAME;
+		} else if (comp->type == HARDWARE) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if ((!(comp->device)) && (!(comp->detail)))
+				retval = NO_DEVICE | NO_DETAIL;
 		}
 	}
 	return retval;
@@ -1080,3 +1089,32 @@ complete_server_values(cmdb_s *cmdb, int cl)
 	if (cl & NO_UUID)
 		snprintf(cmdb->server->uuid, COMM_S, "none");
 }
+
+int
+get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id)
+{
+	int retval = 0;
+	dbdata_s *data;
+
+	if (!(cbc) || (query < 0))
+		return CBC_NO_DATA;
+	unsigned int max = cmdb_get_max(cmdb_search_args[query], cmdb_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if (name) {
+		if (cmdb_search_args[query] == 0)
+			fprintf(stderr, "Name %s passed for query with no args:\n%s\n",
+			 name, sql_search[query]);
+		snprintf(data->args.text, RBUFF_S, "%s", name);
+	}
+	if ((retval = cmdb_run_search(cbc, data, query)) == 0) {
+		clean_dbdata_struct(data);
+		return -1;
+	} else if (retval > 1) {
+// Returning the query here useful for debugging; not so much for the user.
+		fprintf(stderr, "Multiple id's found for query:\n%s\n", sql_search[query]);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
