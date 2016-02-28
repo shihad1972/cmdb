@@ -106,6 +106,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
 	} else if (error == CBC_NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
+	} else if (error == GET_TIME_FAILED) {
+		fprintf(stderr, "Call to localtime failed: %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
 	} else if (error == CHKZONE_FAIL) {

@@ -106,7 +106,8 @@ enum {			/* dnsa error codes */
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61,
 	CANNOT_UPDATE = 62,
-	RECORD_EXISTS = 63
+	RECORD_EXISTS = 63,
+	GET_TIME_FAILED = 64
 };
 
 enum {			/* Database Type errors */

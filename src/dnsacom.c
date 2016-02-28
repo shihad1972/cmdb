@@ -193,8 +193,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		(strncmp(comp->dest, "NULL", COMM_S) == 0))
 		retval = NO_DOMAIN_NAME;
 	else if ((comp->action == MULTIPLE_A) &&
-		(strncmp(comp->domain, "NULL", COMM_S != 0)) &&
-		(strncmp(comp->dest, "NULL", COMM_S != 0)))
+		(strncmp(comp->domain, "NULL", COMM_S) != 0) &&
+		(strncmp(comp->dest, "NULL", COMM_S) != 0))
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
