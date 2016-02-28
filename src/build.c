@@ -1055,9 +1055,10 @@ d-i grub-installer/bootdev  string %s\n", data->fields.text);
 int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
+//	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
+	char *tmp, output[BUFF_S], *os = cml->os;
 	size_t len;
-	if (strncmp(arch, "i386", COMM_S) == 0) {
+	if (strncmp(os + 1, "ebian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 \n\n\
 d-i apt-setup/non-free boolean true\n\
@@ -1065,18 +1066,14 @@ d-i apt-setup/contrib boolean true\n\
 d-i apt-setup/services-select multiselect security\n\
 d-i apt-setup/security_host string security.%s.org\n\
 \n\n\
-tasksel tasksel/first multiselect standard\n", os);
-	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
-\n\
-d-i apt-setup/non-free boolean true\n\
-d-i apt-setup/contrib boolean true\n\
-d-i apt-setup/services-select multiselect security\n\
-d-i apt-setup/security_host string security.%s.org\n\
-\n\
 tasksel tasksel/first multiselect standard\n", os);
 	} else {
-		return NO_ARCH;
+		snprintf(output, BUFF_S, "\
+\n\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n\
+\n\
+tasksel tasksel/first multiselect standard\n");
 	}
 	len = strlen(output);
 	if ((build->size + len) > build->len) {
