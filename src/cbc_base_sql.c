@@ -2717,13 +2717,15 @@ cbc_store_build_sqlite(sqlite3_stmt *state, cbc_s *base)
 	build->varient_id = (unsigned long int) sqlite3_column_int64(state, 2);
 	snprintf(build->net_int, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	build->server_id = (unsigned long int) sqlite3_column_int64(state, 4);
-	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 5);
-	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	build->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
-	build->muser = (unsigned long int) sqlite3_column_int64(state, 8);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
+	build->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
+	build->ip_id = (unsigned long int) sqlite3_column_int64(state, 6);
+	build->locale_id = (unsigned long int) sqlite3_column_int64(state, 7);
+	build->def_scheme_id = (unsigned long int) sqlite3_column_int64(state, 8);
+	build->cuser = (unsigned long int) sqlite3_column_int64(state, 9);
+	build->muser = (unsigned long int) sqlite3_column_int64(state, 10);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
 	convert_time(stime, &(build->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 12));
 	convert_time(stime, &(build->mtime));
 	list = base->build;
 	if (list) {

@@ -104,6 +104,9 @@ cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
 static void
 cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *os, int *test);
 
+static void
+cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
+
 int
 main (int argc, char *argv[])
 {
@@ -118,6 +121,7 @@ main (int argc, char *argv[])
 	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
 		report_error(MALLOC_FAIL, "cocl in cbcos main");
 	init_cbcos_config(cmc, cocl);
+	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
 		free(cocl);
 		free(cmc);
@@ -145,13 +149,26 @@ main (int argc, char *argv[])
 		printf("Unknown action type\n");
 	free(cmc);
 	if (retval != 0) {
-		snprintf(error, URL_S, "%s %s %s",
-			 cocl->os, cocl->version, cocl->arch);
+		cbcos_get_os_string(error, cocl);
 		free(cocl);
 		report_error(retval, error);
 	}
 	free(cocl);
 	exit(retval);
+}
+
+static void
+cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
+{
+	if (strncmp(cocl->version, "NULL", COMM_S) != 0) {
+		if (strncmp (cocl->arch, "NULL", COMM_S))
+			snprintf(error, URL_S, "%s %s %s",
+			 cocl->os, cocl->version, cocl->arch);
+		else
+			snprintf(error, URL_S, "%s %s", cocl->os, cocl->version);
+	} else {
+		snprintf(error, URL_S, "%s", cocl->os);
+	}
 }
 
 static void
@@ -317,10 +334,12 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		return MY_QUERY_FAIL;
 	}
 	os = base->bos;
-	printf("Operating System %s\n", name);
-	printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 	while (os) {
 		if (strncmp(os->os, name, MAC_S) == 0) {
+			if (i == 0) {
+				printf("Operating System %s\n", name);
+				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
+			}
 			i++;
 			create = (time_t)os->ctime;
 			if (strncmp(os->ver_alias, "none", COMM_S) == 0) {

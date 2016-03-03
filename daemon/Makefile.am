@@ -1,5 +1,4 @@
 sbin_PROGRAMS = cmdbd cmdbc
-AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 shar_SOURCES = client_info.c
 

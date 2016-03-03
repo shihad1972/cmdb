@@ -304,6 +304,7 @@ ckc_split_ip(char *net[], char *ip)
 		}
 		if (member)
 			net[i] = strndup(member, RANGE_S - 1);
+// FIXME: Checking for NULL tmp when perhaps not initialised
 		else if (!(tmp))
 			net[i] = ckc_get_ip_member(net[0], i);
 		i++;

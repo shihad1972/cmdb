@@ -1,7 +1,15 @@
+03/03/2016
+Using possible unitialised pointer tmp in ckc_split_ip in ckc.c: 308
+
+27/02/2016
+Cannot remove hardware from a server
+*** Fixed: 28/02/2016 ****
+
 02/02/2016
 Modifying the OS in cbc does not update the locale so still used the old locale
 
 Ubuntu build has security.ubuntu.org added by fill_kernel() function
+*** Fixed: 28/02/2016 ***
 
 01/02/2016
 Still seeing issues with locale and adding a new OS version.
@@ -18,6 +26,7 @@ name)
 When displaying specific OS, if it is not found then the top of the
 table is still printed. This should wait until we have found an
 os.
+*** Fixed: 24/02/2016 ***
 
 06/11/2015
 security.ubuntu.org does not exist, so we should not add this to the

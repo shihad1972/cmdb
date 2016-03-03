@@ -510,9 +510,9 @@ check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *pare
 	short int add = 0;
 	size_t len;
 	
-	buff = cmdb_malloc(RBUFF_S, "buff in check_a_record_for_ns");
 	if (!(glue))
 		return;
+	buff = cmdb_malloc(RBUFF_S, "buff in check_a_record_for_ns");
 	pns = strdup(glue->pri_ns);
 	sns = strdup(glue->sec_ns);
 	zone = strdup(parent);
@@ -2420,7 +2420,7 @@ add_int_ip_to_rev_records(dnsa_s *dnsa)
 			ip_addr = strncat(ip_addr, ".", CH_S);
 			ip_addr = strncat(ip_addr, host, 4);
 		} else if (prefix >= 24) {
-			tmp= strrchr(ip_addr, '.');
+			tmp = strrchr(ip_addr, '.');
 			*tmp = '\0';
 			ip_addr = strncat(ip_addr, ".", CH_S);
 			ip_addr = strncat(ip_addr, host, 4);
@@ -2608,7 +2608,8 @@ get_zone_serial(void)
 	unsigned long int serial;
 
 	now = time(0);
-	lctime = localtime(&now);
+	if (!(lctime = localtime(&now)))
+		report_error(GET_TIME_FAILED, strerror(errno));
 	snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
 	if (lctime->tm_mon < 9)
 		snprintf(smonth, COMM_S, "0%d", lctime->tm_mon + 1);
@@ -2986,7 +2987,8 @@ void
 split_glue_ns(char *ns, glue_zone_info_s *glue)
 {
 	char *pnt;
-	pnt = strchr(ns, ',');
+	if (!(pnt = strchr(ns, ',')))
+		return;
 	*pnt = '\0';
 	pnt++;
 	snprintf(glue->pri_ns, RBUFF_S, "%s", ns);
@@ -2997,7 +2999,8 @@ void
 split_glue_ip(char *ip, glue_zone_info_s *glue)
 {
 	char *pnt;
-	pnt = strchr(ip, ',');
+	if (!(pnt = strchr(ip, ',')))
+		return;
 	*pnt = '\0';
 	pnt++;
 	snprintf(glue->pri_dns, RANGE_S, "%s", ip);

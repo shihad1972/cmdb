@@ -326,6 +326,7 @@ cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vai
 	dbdata_s *data = NULL;
 	struct addrinfo h, *r, *p;
 
+	r = NULL;
 	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
 	init_multi_dbdata_struct(&data, max);
 	if (!(kernel = calloc(RBUFF_S, 1)))
@@ -469,7 +470,8 @@ cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vai
 			free(kernel);
 		if (initrd)
 			free(initrd);
-		freeaddrinfo(r);
+		if (r)
+			freeaddrinfo(r);
 		clean_dbdata_struct(data);
 		return retval;
 }

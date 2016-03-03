@@ -143,6 +143,8 @@ remove_service_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
 int
 add_hardware_to_database(cmdb_config_s *config, cmdb_s *cmdb);
 int
+remove_hardware_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
+int
 check_for_vm_host(cmdb_config_s *config, cmdb_s *cmdb, char *vmhost);
 int
 check_for_coid(cmdb_config_s *config, cmdb_s *cmdb, char *coid);
@@ -178,5 +180,11 @@ void
 print_customer_details(cmdb_customer_s *list, cmdb_s *base);
 int
 print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id);
+
+// Various DB functions
+
+int
+get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id);
+
 #endif
 

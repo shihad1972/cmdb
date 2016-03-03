@@ -106,7 +106,8 @@ enum {			/* dnsa error codes */
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61,
 	CANNOT_UPDATE = 62,
-	RECORD_EXISTS = 63
+	RECORD_EXISTS = 63,
+	GET_TIME_FAILED = 64
 };
 
 enum {			/* Database Type errors */
@@ -246,7 +247,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_NUMBER = 226,
 	NO_NTP_SERVER = 227,
 	NO_OPTION = 228,
-	CBC_DATA_WRONG_COUNT = 229
+	CBC_DATA_WRONG_COUNT = 229,
+	NO_DEVICE_OR_DETAIL = 230
 };
 
 enum {			/* command line error codes */

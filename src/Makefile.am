@@ -42,7 +42,7 @@ cbcdomain_SOURCES = \
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h\
 		base_sql.h cbcdomain.h cbc_common.h cbcnet.h
 cbclocale_SOURCES = \
-		cbclocal.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES) \
+		cbclocale.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES) \
 		cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h \
 		cbc_common.h
 cbcsysp_SOURCES = \
