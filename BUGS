@@ -1,3 +1,6 @@
+03/03/2016
+Using possible unitialised pointer tmp in ckc_split_ip in ckc.c: 308
+
 27/02/2016
 Cannot remove hardware from a server
 *** Fixed: 28/02/2016 ****
