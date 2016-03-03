@@ -1,5 +1,4 @@
 sbin_PROGRAMS = cmdbd
-AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 cmdbd_SOURCES = cmdbd.c cmdbd.h
 cmdbd_LDADD = ../lib/libalisacmdb.la
