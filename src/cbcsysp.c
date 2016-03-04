@@ -200,34 +200,34 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
-		retval = ARGV_INVAL;
+		retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKARG) {
 		if (cbcs->action != LIST_CONFIG) {
 			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
 				fprintf(stderr, "You need both package field and type\n");
-				retval = ARGV_INVAL;
+				retval = DISPLAY_USAGE;
 			} else if (cbcs->action == RM_CONFIG && !(cbcs->field)) {
 				fprintf(stderr,
 "You need to provide the field you want to remove\n");
-				retval = ARGV_INVAL;
+				retval = DISPLAY_USAGE;
 			}
 		} else if (!(cbcs->name)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKCNF) {
 		if (!(cbcs->domain))  {
 			fprintf(stderr, "No build domain supplied\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
 			fprintf(stderr, "Need both package name and field to list config\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	}
 	return retval;
