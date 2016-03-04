@@ -3386,22 +3386,32 @@ state, 4, (sqlite3_int64)build->server_id)) > 0) {
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 5, (sqlite3_int64)build->locale_id)) > 0) {
+state, 5, (sqlite3_int64)build->os_id)) > 0) {
+		fprintf(stderr, "Cannot bind os_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)build->ip_id)) > 0) {
+		fprintf(stderr, "Cannot bind ip_id\n");
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)build->locale_id)) > 0) {
 		fprintf(stderr, "Cannot bind locale_id\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 6, (sqlite3_int64)build->def_scheme_id)) > 0) {
+state, 8, (sqlite3_int64)build->def_scheme_id)) > 0) {
 		fprintf(stderr, "Cannot bind def_scheme_id\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 7, (sqlite3_int64)build->cuser)) > 0) {
+state, 9, (sqlite3_int64)build->cuser)) > 0) {
 		fprintf(stderr, "Cannot bind cuser\n");
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 8, (sqlite3_int64)build->muser)) > 0) {
+state, 10, (sqlite3_int64)build->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser\n");
 		return retval;
 	}
