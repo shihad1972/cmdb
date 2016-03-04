@@ -17,7 +17,7 @@ cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
 		zones.c dnsa_net.c dnsa_data.c\
 		cmdb_dnsa.h dnsa_base_sql.h cmdb.h checks.h\
-		base_sql.h dnsa_net.h
+		base_sql.h dnsa_net.h dnsa_data.h
 
 cbcos_SOURCES = \
 		cbcos.c $(combo_SOURCES) base_sql.c $(cbc_combo_SOURCES)\
