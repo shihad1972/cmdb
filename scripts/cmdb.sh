@@ -5,8 +5,7 @@
 #  This includes configuring apache, dhcp and tftp and creating a cmdb.conf file
 #  We can also create the initial bind configurations for dnsa
 #
-#
-#  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+#  Copyright (C) 2012 - 2016  Iain M Conochie <iain-AT-thargoid.co.uk>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -115,7 +114,9 @@ get_host() {
 # Get domain name
 
 get_domain() {
-  echo "Please input a domain name"
+  echo "Please input your domain name"
+  echo "This will be used to create the initial domain in DNSA"
+  echo "You will then be able to use this domain to build servers"
   read DOMAIN
 }
 
@@ -123,6 +124,7 @@ get_domain() {
 
 get_ip() {
   echo "Please input the IP address this server will use to build machines"
+  echo "This is the IP that will be used for the DNS server"
   read IPADDR
 }
 
@@ -228,6 +230,17 @@ EOF
 
 create_bind_config() {
 
+  if [ -d /etc/bind ]; then
+    BIND="/etc/bind/"
+    echo "Found ${BIND}"
+  elif [ -d /var/named ]; then
+    BIND="/var/named"
+    echo "Found ${BIND}"
+  else
+    unset BIND
+    echo "No bind directory found"
+  fi
+
   if [ ! -d $BIND ]; then
     echo "Bind config directory is not $BIND"
     echo "Please set the real bind config directory at the top of this script"
@@ -244,7 +257,9 @@ EOF
   touch ${BIND}/dnsa.conf ${BIND}/dnsa-rev.conf
   chown cmdb:cmdb ${BIND}/dnsa*
   chmod 664 ${BIND}/dnsa*
-  
+  mkdir ${BIND}/db
+  chgrp cmdb ${BIND}/db
+  chmod g+w ${BIND}/db
 }
 
 create_dhcp_config() {
@@ -396,7 +411,9 @@ create_tftp_config() {
 ###############################################################################
 
 debian_base() {
-
+  if [ -f /etc/mysql/my.cnf ]; then
+    MYSOCK=`grep sock /etc/mysql/my.cnf |tail -n 1 | awk '{print $3}'`
+  fi
   CLIENT="debian"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
@@ -460,7 +477,9 @@ debian_base() {
 }
 
 redhat_base() {
-
+  if [ -f /etc/my.cnf ]; then
+    MYSOCK=`grep sock /etc/my.cnf`
+  fi
   CHKCON=`which chkconfig`
 
   if [ -z "$CHKCON" ]; then
@@ -665,7 +684,7 @@ USER=cmdb			# DB user
 PASS=${CMDBPASS}		# DB pass
 HOST=$MYSQLHOST			# DB host
 PORT=3306			# DB port
-SOCKET=/var/lib/mysql/mysql.sock
+SOCKET=${MYSOCK}
 
 ## DNSA Settings
 
@@ -680,10 +699,10 @@ REFRESH=28800
 RETRY=7200
 EXPIRE=1209600
 TTL=86400
-PRIDNS=
+PRIDNS=${IPADDR}
 SECDNS=
 HOSTMASTER=
-PRINS=
+PRINS=${HOSTNAME}.${DOMAIN}
 SECNS=
 
 ## CBC settings
@@ -696,6 +715,7 @@ KICKSTART=ks/
 DHCPCONF=/etc/dhcp
 
 FINISH
+  chown cmdb:cmdb /etc/dnsa/dnsa.conf
   else
     echo "dnsa.conf file exists"
   fi
@@ -707,7 +727,7 @@ FINISH
 #
 ###############################################################################
 
-while getopts "b:d:h:i:nm:" opt; do
+while getopts "b:d:hi:n:m:x" opt; do
   case $opt in 
     b  ) DB=$OPTARG
          echo "Setting DB"
@@ -715,18 +735,21 @@ while getopts "b:d:h:i:nm:" opt; do
     d  ) DOMAIN=$OPTARG
          echo "Setting Domain"
          ;;
-    h  ) HOSTNAME=$OPTARG
+    n  ) HOSTNAME=$OPTARG
          echo "Setting Hostname"
          ;;
     i  ) IPADDR=$OPTARG
          echo "Setting IP address"
          ;;
-    n  ) unset HAVE_DNSA
+    x  ) unset HAVE_DNSA
          ;;
     m  ) MIRROR=$OPTARG
          echo "Setting mirror"
          ;;
-    \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype -m mirror [ -n ]"
+    h  ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
+	 exit 1
+	 ;;
+    \? ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
          exit 1
   esac
 done
@@ -747,17 +770,6 @@ elif [ -d /srv/tftp/ ]; then
 else
   unset TFTP
   echo "No tftp directory found"
-fi
-
-if [ -d /etc/bind ]; then
-  BIND="/etc/bind/"
-  echo "Found ${BIND}"
-elif [ -d /var/named ]; then
-  BIND="/var/named"
-  echo "Found ${BIND}"
-else
-  unset BIND
-  echo "No bind directory found"
 fi
 
 # Need to be root
@@ -807,6 +819,8 @@ if [ -z $IPADDR ]; then
   get_ip
 fi
 
+
+
 CENTMIRR="http://${MIRROR}/centos/"
 DEBMIRR="http://${MIRROR}/debian/dists/"
 UBUMIRR="http://${MIRROR}/ubuntu/dists/"
@@ -843,3 +857,8 @@ create_dhcp_config
 create_database
 
 create_config
+
+if [ $HAVE_DNSA ]; then
+  echo "Creating initial zone in dnsa..."
+  su - cmdb -c "dnsa -z -F -n $DOMAIN"
+fi
