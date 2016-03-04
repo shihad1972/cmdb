@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cmdbd cmdbc
 
-shar_SOURCES = client_info.c
+shar_SOURCES = client_info.c client_info.h conversion.h fileio.h
 
 cmdbd_SOURCES = cmdbd.c $(shar_SOURCES)
 cmdbd_LDADD = ../lib/libailsacmdb.la
