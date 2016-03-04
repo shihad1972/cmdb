@@ -792,10 +792,10 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	char *host = NULL, *dhost = NULL, *dipstr = NULL;
 	int retval = NONE;
 	void *addr;
-	struct addrinfo hints, *srvnfo;
+	struct addrinfo hints, *srvnfo = NULL;
 	struct sockaddr_in *ipv4;
 
-	host = cmdb_malloc(RBUFF_S, "host in check_notidfy_ip");
+	host = cmdb_malloc(RBUFF_S, "host in check_notify_ip");
 	dhost = strndup(zone->pri_dns, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -849,7 +849,8 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 		free(dhost);
 		free(host);
 		free(dipstr);
-		freeaddrinfo(srvnfo);
+		if (srvnfo)
+			freeaddrinfo(srvnfo);
 		return retval;
 }
 
