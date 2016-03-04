@@ -33,6 +33,7 @@ SERV=`which service 2>/dev/null`
 SQLITE=`which sqlite3 2>/dev/null`
 MYSQL=`which mysql 2>/dev/null`
 ROUTERS=`netstat -rn | grep ^0.0.0.0 | awk '{print $2}'`
+PXELINUX="/usr/lib/syslinux/pxelinux.0"
 
 # Files and directories
 
@@ -308,7 +309,7 @@ create_tftp_config() {
   chown cmdb:cmdb pxelinux.cfg
   if [ ! -f pxelinux.0 ]; then
     if echo $CLIENT | grep debian >/dev/null 2>&1; then
-      cp /usr/lib/syslinux/pxelinux.0 .
+      cp ${PXELINUX} .
     fi
   fi
   echo "Retrieving debian boot files..."
@@ -434,6 +435,7 @@ debian_base() {
   if [ ! -f /usr/lib/syslinux/pxelinux.0 ]; then
     echo "Installing pxelinux package"
     $APTG install pxelinux -y > /dev/null 2>&1
+    PXELINUX="/usr/lib/PXELINUX/pxelinux.0"
   fi
 
   if [ $HAVE_DNSA ]; then
@@ -790,7 +792,7 @@ else
   echo "Using $HOSTNAME as hostname. We do not want a FQDN here"
   echo "Change? (Y/N)"
   read answer
-  if [ $answer != "y" ] && [ $answer != "Y" ]; then
+  if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
     echo "Using $HOSTNAME"
   else
     get_host

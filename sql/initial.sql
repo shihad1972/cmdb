@@ -20,7 +20,7 @@ INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id) SELECT "Ubu
 --
 -- Create default locales
 INSERT INTO locale (locale, country, language, keymap, name) VALUES ("en_GB", "GB", "en", "gb", "english");
-INSERT INTO default_locale(locale_id) SELECT "locale_id" FROM locale WHERE name = "english";
+INSERT INTO default_locale(locale_id) SELECT locale_id FROM locale WHERE name = "english";
 --
 -- Create build varients
 INSERT INTO varient (varient, valias) VALUES ("Base Build", "base");
