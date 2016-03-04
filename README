@@ -1,80 +1,12 @@
-For full compilation instructions see the INSTALL FILE.
+The cmdb suite of programs is a Configuration Management Database and
+Automated Build System. There are programs to create build files, both
+preseed and kickstart, a DNS manipluation program, and a cmdb program.
 
-For full functionality, ensure that libpcre libsqlite3 and 
-libmysqlclient are installed along with the -dev or -devel packages.
+Data can be stored in a MySQL or SQLite database.
 
- The configure script will build the 3 suites of programs in the src/ 
-directory and make install will install them into /usr/local (unless you 
-specify a differnt location using the --prefix options to './configure'. 
+The CMDB program can store servers, customers, their contact details, and
+services running on the servers. It will also store hardware details for
+servers.
 
-###############################################################################
-#
-#
-# Installation Instructions
-#
-#
-###############################################################################
-
-You need to run the configure script to configure the build of the software.
-
-#############
-# IMPORTANT
-#############
-
-If using MySQL ensure the root user from your host has the GRANT privilege
-otherwise the script will be unable to create the cmdb user. This is not
-an issue if you are using a locally installed mysql.
-
-The script also assumes that the build network is your default network
-(i.e. the one with a default route) If this is not the case you will have to
-edit the entry in /etc/dhcp/dhcpd.networks and give it the correct routing
-info
-
-###############################################################################
-
-Once the software has been installed you will need to run the cmdb.sh script
-which will have been copied into the bindir you selected during ./configure.
-This is most likely /usr/local/bin. This script must be run as root.
-
-The script takes the following options:
-
-	-h hostname
-
-Set the hostname of the system. This should not be the FQDN of the system. We
-will get that with:
-
-	-d domain
-
-Set the domain name of the system.
-
-	-i ip_address
-
-Set the IP address the system will use to build servers. The network this ip
-address belongs to must exist and be available. This is for the automatic
-dhcpd configuration for the network. We will assume a /24 and you wish to use
-ip addresses .100 -> .250. You can change this in the dhcpd.networks file
-in the dhcpd configuration directory.
-
-	-n
-
-Do not install bind. I would only recommend doing this if you have not built
-the dnsa module in ./configure, otherwise you will most likely get strange
-errors
-
-	-m mirror
-
-Set the mirror to use to get the various files that are needed. This will also
-set the default mirror to use for building servers. If you have you own mirrors
-of the centos, debian and ubuntu systems, you would add this here. This will
-default to an http mirror, so do not provide the leading http:// This will
-expect the /centos /ubuntu and /debian directories so ensure these are setup.
-
-	-b database-type
-
-This will set the database type to use (mysql or sqlite). Ensure that you have
-support compilied in to enable this. If you do not, the script will set what
-capabilitied are set. 
-
-This script will install apache, bind, tftpd, syslinux, dhcpd and will setup
-some base configuration of these. 
+cmdb and the associated programs is licensed under the GPL
 
