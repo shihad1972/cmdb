@@ -33,6 +33,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <ailsacmdb.h>
 #include "client_info.h"

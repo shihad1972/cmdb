@@ -3,7 +3,7 @@ sbin_PROGRAMS = cmdbd cmdbc
 shar_SOURCES = client_info.c
 
 cmdbd_SOURCES = cmdbd.c $(shar_SOURCES)
-cmdbd_LDADD = ../lib/libalisacmdb.la
+cmdbd_LDADD = ../lib/libailsacmdb.la
 
 cmdbc_SOURCES = cmdbc.c $(shar_SOURCES)
 cmdbc_LDADD = ../lib/libailsacmdb.la
@@ -17,3 +17,8 @@ AM_CPPFLAGS += $(LIBGCRYPT_CFLAGS)
 AM_LDFLAGS += $(LIBGCRYPT_LIBS)
 endif
 
+if HAVE_LIBUUID
+AM_CPPFLAGS += $(UUID_CPPFLAGS)
+AM_LDFLAGS += $(UUID_LDFLAGS)
+LIBS += $(UUID_LIBS)
+endif
