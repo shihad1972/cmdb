@@ -571,7 +571,8 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	snprintf(zone->sec_dns, RBUFF_S - 1, "%s", row[3]);
-	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
+	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0))
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	zone->serial = strtoul(row[4], NULL, 10);
