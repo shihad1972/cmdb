@@ -219,6 +219,9 @@ EOF
   if [ `echo $APACNF | grep available` ]; then
     ln -s "$APACNF" /etc/apache2/conf-enabled/
   fi
+  if [ -z $APACTL ]; then
+    APACTL=`which apache2ctl 2>/dev/null`
+  fi
   [[ `$APACTL configtest` ]] && $APACTL restart
 }
 
@@ -400,7 +403,7 @@ debian_base() {
   fi
   if [ -d /etc/apache2/conf.d ]; then
     APACNF="/etc/apache2/conf.d/"
-  else if [ -d "/etc/apache2/conf-available" ]; then
+  elif [ -d "/etc/apache2/conf-available" ]; then
     APACNF="/etc/apache2/conf-available/"
   fi
   if ! id www-data | grep cmdb > /dev/null 2>&1; then
@@ -421,6 +424,16 @@ debian_base() {
     echo "Please use /srv/tftp for the directory"
     $APTG install tftpd-hpa syslinux -y > /dev/null 2>&1
     TFTP=/srv/tftp
+  fi
+
+  if [ ! -d /usr/lib/syslinux ]; then
+    echo "Installing syslinux package"
+    $APTG install syslinux -y > /dev/null 2>&1
+  fi
+
+  if [ ! -f /usr/lib/syslinux/pxelinux.0 ]; then
+    echo "Installing pxelinux package"
+    $APTG install pxelinux -y > /dev/null 2>&1
   fi
 
   if [ $HAVE_DNSA ]; then
