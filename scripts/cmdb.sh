@@ -44,7 +44,7 @@ MIRROR="mirrors.melbourne.co.uk"
 HAVE_DNSA="yes"
 SQL="/var/lib/cmdb/sql"
 SQLFILE="${SQL}/cmdb.sql"
-DB="sqlite"
+DB="mysql"
 DBNAME="cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
@@ -216,8 +216,10 @@ ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
 </Directory>
 
 EOF
-
-  [[ `$SERV httpd status` ]] || $SERV httpd start
+  if [ `echo $APACNF | grep available` ]; then
+    ln -s "$APACNF" /etc/apache2/conf-enabled/
+  fi
+  [[ `$APACTL configtest` ]] && $APACTL restart
 }
 
 create_bind_config() {
@@ -392,10 +394,14 @@ create_tftp_config() {
 debian_base() {
 
   CLIENT="debian"
-  APACNF="/etc/apache2/conf.d/"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
     $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
+  fi
+  if [ -d /etc/apache2/conf.d ]; then
+    APACNF="/etc/apache2/conf.d/"
+  else if [ -d "/etc/apache2/conf-available" ]; then
+    APACNF="/etc/apache2/conf-available/"
   fi
   if ! id www-data | grep cmdb > /dev/null 2>&1; then
     echo "Adding www-data to cmdb group"
@@ -786,21 +792,11 @@ if [ -z $IPADDR ]; then
   get_ip
 fi
 
-if [ $HAVE_DNSA ]; then
-  echo "Installing and configuring bind. If this is not what you want"
-  echo "then quit this script and run with the -n option"
-  echo "Hit enter to continue"
-  read
-else
-  echo "Not configuring bind; detected -n option"
-fi
-
 CENTMIRR="http://${MIRROR}/centos/"
 DEBMIRR="http://${MIRROR}/debian/dists/"
 UBUMIRR="http://${MIRROR}/ubuntu/dists/"
 
 create_cmdb_user
-
 
 # Check for OS type
 
@@ -816,7 +812,13 @@ fi
 create_apache_config
 
 if [ $HAVE_DNSA ]; then
+  echo "Installing and configuring bind. If this is not what you want"
+  echo "then quit this script and run with the -n option"
+  echo "Hit enter to continue"
+  read
   create_bind_config
+else
+  echo "Not configuring bind; detected -n option"
 fi
 
 create_tftp_config
