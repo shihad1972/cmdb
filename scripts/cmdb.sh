@@ -128,6 +128,13 @@ get_ip() {
   read IPADDR
 }
 
+get_slave_ns() {
+  echo "Please input the FQDN of your slave nameserver"
+  read SECNS
+  echo "Please input the IP of your slave nameserver"
+  read SECDNS
+}
+
 # Get Debian Mirror URL
 
 get_deb_mirror() {
@@ -700,10 +707,10 @@ RETRY=7200
 EXPIRE=1209600
 TTL=86400
 PRIDNS=${IPADDR}
-SECDNS=
-HOSTMASTER=
+SECDNS=${SECDNS}
+HOSTMASTER=hostmaster@${DOMAIN}
 PRINS=${HOSTNAME}.${DOMAIN}
-SECNS=
+SECNS=${SECNS}
 
 ## CBC settings
 TMPDIR=/tmp/cmdb
@@ -819,7 +826,11 @@ if [ -z $IPADDR ]; then
   get_ip
 fi
 
-
+echo "Do you want to add a slave nameserver? (Y/N) Yes is default"
+read answer
+if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
+  get_slave_ns
+fi
 
 CENTMIRR="http://${MIRROR}/centos/"
 DEBMIRR="http://${MIRROR}/debian/dists/"

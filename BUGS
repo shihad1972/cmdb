@@ -1,4 +1,10 @@
 04/03/2016
+When adding a zone into DNSA, if the secondary name server is not defined, we
+add a secondary nameserver anyway. Also, if we are adding the first zone and
+the nameserver is in the same domain, we need to have A records for the
+nameserver for the zone to load.
+
+04/03/2016
 Issues with install script:
 	Check location of mysql[d].sock
 	Create the /etc/bind/db directory

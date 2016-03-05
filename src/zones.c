@@ -1855,7 +1855,7 @@ int
 check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
 {
 	int retval;
-/**
+/*
  * If the record we want to delete is marked as an NS record for any zone
  * then refuse to delete.
  * However, if we are trying to delete the zone it belongs to this is ok.
@@ -1863,13 +1863,13 @@ check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
 	if ((retval = compare_fwd_ns_records_with_host(dnsa, name, cm)) != 0) {
 		return retval;
 	}
-/**
+/*
  * If the record is a destination for any other record then refuse to delete
  */
 	if ((retval = compare_host_with_record_destination(dnsa, name)) != 0) {
 		return retval;
 	}
-/**
+/*
  * CNAMES that the destination is not a Fully Qualified Domain Name will have
  * been missed in the above search. So we need to search for them. If they
  * exist, refuse to delete
@@ -2906,7 +2906,7 @@ add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 }
 
 int
-delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm)
+delete_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE, c = NONE;
 	unsigned long int glue_id;
