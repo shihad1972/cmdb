@@ -828,7 +828,7 @@ fi
 
 echo "Do you want to add a slave nameserver? (Y/N) Yes is default"
 read answer
-if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
+if [ "$answer" != "n" ] && [ "$answer" != "N" ]; then
   get_slave_ns
 fi
 
