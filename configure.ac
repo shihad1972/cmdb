@@ -7,6 +7,9 @@ AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_HEADERS([include/config.h])
 AM_INIT_AUTOMAKE
 
+# Add m4 macros
+AC_CONFIG_MACRO_DIR([m4])
+
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
@@ -16,6 +19,14 @@ AM_PROG_AR
 
 # Initialize libtool
 LT_INIT
+
+# Checks for libraries.
+AX_LIB_MYSQL
+AX_LIB_SQLITE3
+AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
+  [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
+AX_PATH_LIB_PCRE
+AX_LIB_GCRYPT([auto])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
@@ -37,22 +48,10 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([gethostname memset mkdir strchr strdup strerror strndup\
                 wordexp strrchr strstr strtol strtoul])
 
-# Add m4 macros
-AC_CONFIG_MACRO_DIR([m4])
-
-# Checks for libraries.
-AX_LIB_MYSQL
-AX_LIB_SQLITE3
-AX_PATH_LIB_PCRE
-AX_LIB_GCRYPT([auto])
-
 # Check for packages to enable
 AX_USER_CHECKS
 AX_CHECK_DNSA
 AX_CHECK_CBC
-
-AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
-  [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 
 AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
