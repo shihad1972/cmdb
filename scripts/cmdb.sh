@@ -232,7 +232,7 @@ EOF
   if [ -z $APACTL ]; then
     APACTL=`which apache2ctl 2>/dev/null`
   fi
-  [[ `$APACTL configtest` ]] && $APACTL restart
+  [[ `$APACTL configtest > /dev/null 2>&1` ]] && $APACTL restart
 }
 
 create_bind_config() {
@@ -494,7 +494,7 @@ debian_base() {
       echo "Installing sqlite3 command"
       apt-get install -y sqlite3 > /dev/null 2>&1
     fi
-  elif echo $DB | grep mysql; then
+  elif echo $DB | grep mysql > /dev/null 2>&1; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
       apt-get install -y mysql-client > /dev/null 2>&1
@@ -873,10 +873,12 @@ create_apache_config
 
 if [ $HAVE_DNSA ]; then
   echo "Installing and configuring bind."
+  echo ""
   echo "This will update your resolv.conf to point to this server and any"
   echo " slave servers you have configured."
+  echo ""
   echo "If this is not what you want then quit this script and run with the"
-  echo "  -n option"
+  echo " -n option"
   echo "Hit enter to continue"
   read
   create_bind_config
