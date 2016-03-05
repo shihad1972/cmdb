@@ -247,26 +247,46 @@ create_bind_config() {
     unset BIND
     echo "No bind directory found"
   fi
-
   if [ ! -d $BIND ]; then
     echo "Bind config directory is not $BIND"
     echo "Please set the real bind config directory at the top of this script"
     return 0
   fi
-  echo "Creating bind 9 config in ${BIND}"
-  cat >>${BIND}/named.conf<<EOF
+  if [[ ! `grep dnsa /etc/bind/named.conf` ]]; then
+    echo "Creating bind 9 config in ${BIND}"
+    cat >>${BIND}/named.conf<<EOF
 
 include "/etc/bind/dnsa.conf";
 include "/etc/bind/dnsa-rev.conf";
 
 EOF
-
+  fi
   touch ${BIND}/dnsa.conf ${BIND}/dnsa-rev.conf
   chown cmdb:cmdb ${BIND}/dnsa*
   chmod 664 ${BIND}/dnsa*
-  mkdir ${BIND}/db
+  if [ ! -d ${BIND}/db ]; then
+    mkdir ${BIND}/db
+  fi
   chgrp cmdb ${BIND}/db
   chmod g+w ${BIND}/db
+  if [[ ! `grep $IPADDR /etc/resolv.conf` ]]; then
+    echo "  Configuring /etc/resolv.conf..."
+    cat > /etc/resolv.conf <<EOF
+domain $DOMAIN
+search $DOMAIN
+nameserver $IPADDR
+EOF
+  fi
+  if [[ `grep ${IPADDR} /etc/hosts` ]]; then
+    sed -i "s/^${IPADDR}/${IPADDR}    ${HOSTNAME}.${DOMAIN}/" /etc/hosts
+  fi
+  if [ ! -z $SECDNS ]; then
+    if [[ ! `grep $SECDNS /etc/resolv.conf` ]]; then
+    cat >> /etc/resolv.conf <<EOF
+nameserver $SECDNS
+EOF
+    fi
+  fi
 }
 
 create_dhcp_config() {
@@ -852,8 +872,11 @@ fi
 create_apache_config
 
 if [ $HAVE_DNSA ]; then
-  echo "Installing and configuring bind. If this is not what you want"
-  echo "then quit this script and run with the -n option"
+  echo "Installing and configuring bind."
+  echo "This will update your resolv.conf to point to this server and any"
+  echo " slave servers you have configured."
+  echo "If this is not what you want then quit this script and run with the"
+  echo "  -n option"
   echo "Hit enter to continue"
   read
   create_bind_config
