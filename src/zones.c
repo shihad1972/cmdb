@@ -414,7 +414,8 @@ $TTL %lu\n\
 	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
 	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
 	zonefile->size = strlen(zonefile->string);
-	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0) {
+	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
+	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0)) {
 		snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n",
 			 zone->sec_dns);
 		len = strlen(buffer);
@@ -955,7 +956,8 @@ $TTL %lu\n\
 	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
 	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
 	zonefile->size = strlen(zonefile->string);
-	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0) {
+	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
+	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0)) {
 		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
 			 zone->sec_dns);
 		len = strlen(buffer);
@@ -1782,7 +1784,8 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 	user.next = data;
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
-	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
+	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0))
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
@@ -1829,7 +1832,8 @@ validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 	snprintf(zone->valid, COMM_S, "yes");
 	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
-	if (strncmp(zone->sec_dns, "(null)", COMM_S) != 0)
+	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
+	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0))
 		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
