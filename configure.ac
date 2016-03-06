@@ -4,6 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([cmdb], [0.2.25], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([include/config.h])
 AM_INIT_AUTOMAKE
 
@@ -59,6 +60,25 @@ AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
 AM_CONDITIONAL([HAVE_LIBGCRYPT], [$HAVE_LIBGCRYPT])
 AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
+
+dnl if --prefix is /usr, don't use /usr/var for localstatedir
+dnl or /usr/etc for sysconfdir
+dnl
+dnl Also check if localstatedir not set, set to ${prefix}/var/lib
+dnl and reset runstatedir to ${prefix}/var/run if not set
+
+if test "$prefix" = "/usr" && test "$localstatedir" = '${prefix}/var' ; then
+    localstatedir='/var/lib'
+fi
+if test "$prefix" = "/usr" && test "$sysconfdir" = '${prefix}/etc' ; then
+    sysconfdir='/etc'
+fi
+if test "$localstatedir" = '${prefix}/var'; then
+    localstatedir='${prefix}/var/lib'
+    runstatedir='${prefix}/var/run'
+fi
+
+gl_CONFIGMAKE_PREP
 
 AC_CONFIG_FILES([Makefile
                  daemon/Makefile
