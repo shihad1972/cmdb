@@ -28,6 +28,7 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 AX_PATH_LIB_PCRE
 AX_LIB_GCRYPT([auto])
+AX_LIB_UUID
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
