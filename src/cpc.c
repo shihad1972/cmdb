@@ -337,7 +337,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
 	sprintf(cpc->interface, "auto");
-	sprintf(cpc->kbd, "uk");
+	sprintf(cpc->kbd, "gb");
 	sprintf(cpc->locale, "en_GB");
 	sprintf(cpc->mirror, "mirror.ox.ac.uk");
 	sprintf(cpc->ntp_server, "0.uk.pool.ntp.org");
