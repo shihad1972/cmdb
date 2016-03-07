@@ -26,6 +26,7 @@
  */
 #define _GNU_SOURCE
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,17 +50,13 @@
 int
 main(int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval;
-	cbc_config_s *cbc;
-	cbc_sysp_s *cbs;
+	char *config = cmdb_malloc(CONF_S, "config in main");
+	cbc_config_s *cbc = cmdb_malloc(sizeof(cbc_config_s), "cbc in main");
+	cbc_sysp_s *cbs = cmdb_malloc(sizeof(cbc_sysp_s), "cbs in main");
 
-	if (!(cbc = malloc(sizeof(cbc_config_s))))
-		report_error(MALLOC_FAIL, "cbc in main");
-	if (!(cbs = malloc(sizeof(cbc_sysp_s))))
-		report_error(MALLOC_FAIL, "cbs in main");
-	init_cbcsysp_s(cbs);
 	init_cbc_config_values(cbc);
+	get_config_file_location(config);
 	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
@@ -103,6 +100,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	free(cbc);
+	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;

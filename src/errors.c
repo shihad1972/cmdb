@@ -29,6 +29,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -901,11 +902,13 @@ get_config_file_location(char *config)
 	FILE *cnf;
 	const char *conf = config;
 
-	snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
+	if (snprintf(config, CONF_S, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONF_S)
+		report_error(BUFFER_TOO_SMALL, "for config file");
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{
-		snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
+		if (snprintf(config, CONF_S, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONF_S)
+			report_error(BUFFER_TOO_SMALL, "for config file");
 		if ((cnf = fopen(conf, "r")))
 			fclose(cnf);
 		else

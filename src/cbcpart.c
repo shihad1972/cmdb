@@ -27,6 +27,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,21 +148,25 @@ get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt);
 int
 main (int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
+	char *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcpart_comm_line_s *cpl;
 	
 	cmc = cmdb_malloc(sizeof(cbc_config_s), "main");
 	cpl = cmdb_malloc(sizeof(cbcpart_comm_line_s), "main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcpart_config(cmc, cpl);
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
+		free(config);
 		free(cmc);
 		free(cpl);
 		display_command_line_error(retval, argv[0]);
 	}
 
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
+		free(config);
 		free (cpl);
 		free (cmc);
 		parse_cbc_config_error(retval);
@@ -181,6 +186,7 @@ main (int argc, char *argv[])
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
 	clean_cbcpart_comm_line(cpl);
+	free(config);
 	exit (retval);
 }
 

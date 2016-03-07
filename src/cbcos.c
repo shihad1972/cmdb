@@ -27,6 +27,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,8 +111,7 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
 int
 main (int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
-	char error[URL_S];
+	char error[URL_S], *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcos_comm_line_s *cocl;
@@ -120,14 +120,18 @@ main (int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcos main");
 	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
 		report_error(MALLOC_FAIL, "cocl in cbcos main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcos_config(cmc, cocl);
 	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
+		free(config);
 		free(cocl);
 		free(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
+		free(config);
 		free(cocl);
 		free(cmc);
 		parse_cbc_config_error(retval);
@@ -154,6 +158,7 @@ main (int argc, char *argv[])
 		report_error(retval, error);
 	}
 	free(cocl);
+	free(config);
 	exit(retval);
 }
 

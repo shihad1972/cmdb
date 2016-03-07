@@ -26,6 +26,7 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -392,7 +393,7 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");
 	snprintf(cbt->arch, MAC_S, "NULL");
 	snprintf(cbt->netcard, COMM_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
+	get_config_file_location(cbt->config);
 	snprintf(cbt->locale, COMM_S, "NULL");
 }
 

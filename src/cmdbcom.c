@@ -27,6 +27,7 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -53,6 +54,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
+	comp->config = cmdb_malloc(CONF_S, "comp->config in parse_cmdb_command_line");
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
 		{"display",		no_argument, 		NULL,	'd'},
@@ -94,7 +96,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	};
 #endif // HAVE_GETOPT_H
 	retval = 0;
-	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
+	get_config_file_location(comp->config);
 #ifdef HAVE_GETOPT_H
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
 #else
@@ -682,6 +684,7 @@ clean_cmdb_comm_line(cmdb_comm_line_s *list)
 	CLEAN_COMM_LIST(list, service);
 	CLEAN_COMM_LIST(list, uuid);
 	CLEAN_COMM_LIST(list, county);
+	free(list);
 }
 
 #ifdef CLEAN_COMM_LIST

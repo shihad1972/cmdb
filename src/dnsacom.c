@@ -1,7 +1,7 @@
 /*
  * 
  *  dnsa: DNS Administration
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2016  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -589,7 +590,7 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	strncpy(dcl->protocol, "NULL", COMM_S);
 	strncpy(dcl->glue_ip, "NULL", COMM_S);
 	strncpy(dcl->glue_ns, "NULL", COMM_S);
-	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
+	get_config_file_location(dcl->config);
 }
 
 void

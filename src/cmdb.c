@@ -54,21 +54,19 @@ int main(int argc, char *argv[])
 	cmdb_comm_line_s *cm;
 	cmdb_config_s *cmc;
 	cmdb_s *base;
-	char *cmdb_config;
 	int retval, cl;
 
-	if (!(cmdb_config = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "cmdb_config in cmdb.c");
 	cmdb_setup_config(&cmc, &cm, &base);
 	cl = parse_cmdb_command_line(argc, argv, cm, base);
 	if ((retval = check_for_comm_line_errors(cl, cm)) != 0) {
-		cmdb_main_free(cm, cmc, cmdb_config);
+		clean_cmdb_comm_line(cm);
+		free(cmc);
 		cmdb_clean_list(base);
 		display_command_line_error(retval, argv[0]);
 	}
-	sprintf(cmdb_config, "%s", cm->config);
-	if ((retval = parse_cmdb_config_file(cmc, cmdb_config)) != 0) {
-		cmdb_main_free(cm, cmc, cmdb_config);
+	if ((retval = parse_cmdb_config_file(cmc, cm->config)) != 0) {
+		clean_cmdb_comm_line(cm);
+		free(cmc);
 		cmdb_clean_list(base);
 		report_error(retval, "config");
 	}
@@ -87,7 +85,8 @@ int main(int argc, char *argv[])
 	else
 		display_type_error(cm->type);
 	cmdb_clean_list(base);
-	cmdb_main_free(cm, cmc, cmdb_config);
+	clean_cmdb_comm_line(cm);
+	free(cmc);
 	if (retval > 0)
 		report_error(retval, " from main ");
 	exit(retval);
