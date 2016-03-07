@@ -294,6 +294,7 @@ ckc_split_ip(char *net[], char *ip)
 
 	if (!(info = strndup(ip, TBUFF_S)))
 		report_error(MALLOC_FAIL, "info in ckc_split_ip");
+	tmp = NULL;
 	member = info;
 	while (i < 4) {
 		if (member) {

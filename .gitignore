@@ -3,3 +3,4 @@ include/config.h
 src/Makefile
 lib/Makefile
 daemon/Makefile
+include/configmake.h

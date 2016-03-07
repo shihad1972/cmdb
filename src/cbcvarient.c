@@ -25,6 +25,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -125,8 +126,7 @@ add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
 int
 main(int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
-	char error[URL_S];
+	char error[URL_S], *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcvari_comm_line_s *cvcl;
@@ -135,6 +135,8 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcvarient main");
 	if (!(cvcl = malloc(sizeof(cbcvari_comm_line_s))))
 		report_error(MALLOC_FAIL, "cvcl in cbcvarient main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcvari_config(cmc, cvcl);
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
@@ -182,7 +184,7 @@ main(int argc, char *argv[])
 		free(cvcl);
 		report_error(retval, error);
 	}
-
+	free(config);
 	free(cmc);
 	free(cvcl);
 	exit (retval);

@@ -22,6 +22,7 @@
  *  Main source file for the cbclocale program
  */
 #include <config.h>
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,7 +87,6 @@ int
 main(int argc, char *argv[])
 {
 	char conf[CONF_S];
-	const char *config;
 	int retval = 0;
 	locale_comm_line_s *cl = cmdb_malloc(sizeof(locale_comm_line_s), "cl in main");
 	cbc_config_s *ccs = cmdb_malloc(sizeof(cbc_config_s), "ccs in main");
@@ -97,8 +97,7 @@ main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	get_config_file_location(conf);
-	config = conf;
-	if ((retval = parse_cbc_config_file(ccs, config)) != 0) {
+	if ((retval = parse_cbc_config_file(ccs, conf)) != 0) {
 		parse_cbc_config_error(retval);
 		goto cleanup;
 	}

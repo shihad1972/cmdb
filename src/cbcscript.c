@@ -26,6 +26,7 @@
  */
 #define _GNU_SOURCE
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,23 +50,23 @@
 int
 main(int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval = 0;
-	cbc_syss_s *scr = 0;
-	cbc_config_s *cbc;
+	char *config = cmdb_malloc(CONF_S, "config in main");
+	cbc_syss_s *scr = cmdb_malloc(sizeof(cbc_syss_s), "scr in main");
+	cbc_config_s *cbc = cmdb_malloc(sizeof(cbc_config_s), "cbc in main");
 
-	if (!(cbc = malloc(sizeof(cbc_config_s))))
-		report_error(MALLOC_FAIL, "cbc in main");
 	init_cbc_config_values(cbc);
-	initialise_cbc_scr(&scr);
+	get_config_file_location(config);
 	if ((retval = parse_cbc_script_comm_line(argc, argv, scr)) != 0) {
 		clean_cbc_syss_s(scr);
 		free(cbc);
+		free(config);
 		display_command_line_error(retval, argv[0]);
 	}
 	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
 		clean_cbc_syss_s(scr);
 		free(cbc);
+		free(config);
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
@@ -95,6 +96,7 @@ main(int argc, char *argv[])
 	}
 	free(cbc);
 	clean_cbc_syss_s(scr);
+	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;

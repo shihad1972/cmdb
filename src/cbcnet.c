@@ -421,14 +421,14 @@ cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vai
 	buff = calloc(size, 1);
 	fprintf(stderr, "Grabbing Kernel. Size: %lu...\n", size);
 	if ((len = fread(buff, 1, size, rx)) != size)
-		fprintf(stderr, "Only read %lu bytes of %lu\n", len, size);
+		fprintf(stderr, "Only read %zu bytes of %lu\n", len, size);
 	fprintf(stderr, "Got it\n");
 	if (!(krn = fopen(kfile, "w"))) {
 		fprintf(stderr, "fdopen(kfile): %s\n", strerror(errno));
 		goto cleanup;
 	}
 	if ((size = fwrite(buff, 1, len, krn)) != len)
-		fprintf(stderr, "Only wrote %lu bytes of %lu\n", size, len);
+		fprintf(stderr, "Only wrote %lu bytes of %zu\n", size, len);
 	free(buff);
 	buff = NULL;
 	fprintf(tx, "%s", initrd);
@@ -443,14 +443,14 @@ cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vai
 	buff = calloc(size, 1);
 	fprintf(stderr, "Grabbing initrd. Size %lu...\n", size);
 	if ((len = fread(buff, 1, size, rx)) != size)
-		fprintf(stderr, "Only read %lu bytes of %lu\n", len, size);
+		fprintf(stderr, "Only read %zu bytes of %lu\n", len, size);
 	fprintf(stderr, "Got it\n");
 	if (!(intrd = fopen(infile, "w"))) {
 		fprintf(stderr, "fdopen(intrd): %s\n", strerror(errno));
 		goto cleanup;
 	}
 	if ((size = fwrite(buff, 1, len, intrd)) != len)
-		fprintf(stderr, "Only wrote %lu bytes of %lu\n", size, len);
+		fprintf(stderr, "Only wrote %lu bytes of %zu\n", size, len);
 	goto cleanup;
 
 	cleanup:

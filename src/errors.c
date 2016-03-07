@@ -29,12 +29,14 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
@@ -900,11 +902,13 @@ get_config_file_location(char *config)
 	FILE *cnf;
 	const char *conf = config;
 
-	snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
+	if (snprintf(config, CONF_S, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONF_S)
+		report_error(BUFFER_TOO_SMALL, "for config file");
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{
-		snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
+		if (snprintf(config, CONF_S, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONF_S)
+			report_error(BUFFER_TOO_SMALL, "for config file");
 		if ((cnf = fopen(conf, "r")))
 			fclose(cnf);
 		else
@@ -956,8 +960,12 @@ add_trailing_dot(char *member)
 int
 write_file(char *filename, char *output)
 {
-	int retval;
+	int retval = 0;
+// Ensure files are written group writable
+	mode_t mode = S_IWOTH;
+	mode_t em;
 	FILE *zonefile;
+	em = umask(mode);
 	if (!(zonefile = fopen(filename, "w"))) {
 		retval = FILE_O_FAIL;
 	} else {
@@ -965,6 +973,7 @@ write_file(char *filename, char *output)
 		fclose(zonefile);
 		retval = NONE;
 	}
+	umask(em);
 	return retval;
 }
 
