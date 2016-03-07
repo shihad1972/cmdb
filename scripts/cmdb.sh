@@ -364,6 +364,7 @@ create_tftp_config() {
   chmod 664 pxelinux.cfg
   chown cmdb:cmdb pxelinux.cfg
   if [ ! -f pxelinux.0 ]; then
+# Why only test debian here??
     if echo $CLIENT | grep debian >/dev/null 2>&1; then
       cp ${PXELINUX} .
     fi
@@ -478,11 +479,11 @@ debian_base() {
     $APTG install isc-dhcp-server -y > /dev/null 2>&1
   fi
 
+  TFTP=/srv/tftp
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftpd-hpa and syslinux packages"
     echo "Please use /srv/tftp for the directory"
     $APTG install tftpd-hpa syslinux -y > /dev/null 2>&1
-    TFTP=/srv/tftp
   fi
 
   if [ ! -d /usr/lib/syslinux ]; then
@@ -554,13 +555,13 @@ redhat_base() {
 # Need to check if syslinux is installed cos we need the pxelinux.0 file
 # from it
 
+  TFTP="/var/lib/tftpboot"
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftp-server and syslinux package"
     $YUM install tftp-server syslinux -y > /dev/null 2>&1
     echo "Setting tftp to start and restarting xinetd"
     $CHKCON xinetd on
     $SERV xinetd restart
-    TFTP="/var/lib/tftpboot"
   fi
 
   if [ $HAVE_DNSA ]; then
@@ -577,7 +578,7 @@ redhat_base() {
       echo "Installing sqlite3 command"
       yum install sqlite -y> /dev/null 2>&1
     fi
-  elif echo $DB | grep mysql; then
+  elif [ "$DB" == "mysql" ]; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
       yum install mysql -y> /dev/null 2>&1
@@ -637,15 +638,9 @@ STOP
     fi
     cat ${SQL}/initial.sql | $SQLITE $SQLFILE
     chown cmdb:cmdb $SQLFILE
-  elif echo $DB | grep mysql > /dev/null 2>&1; then
+  elif [ $DB == mysql ]; then
     SQLBASE=$SQL/all-tables-mysql.sql
-    echo "Please enter the name of the mysql host"
-    read MYSQLHOST
-    echo "Please enter the root password for $MYSQLHOST"
-    read -s MYSQLPASS
-    echo "Please enter password for new cmdb user"
-    read -s CMDBPASS
-    if $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" > /dev/null 2>&1; then
+    if [[ `$MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" 2>/dev/null` ]]; then
       echo "Connection successful"
     else
       echo "Cannot connect to mysql host. Are you sure root has access to ${MYSQLHOST}?"
@@ -660,7 +655,7 @@ CREATE USER 'cmdb'@'${IPADDR}' IDENTIFIED BY '${CMDBPASS}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${HOSTNAME}.${DOMAIN}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${IPADDR}';"
 STOP
-    if [ $MYSQLHOST = 'localhost' ]; then
+    if [ $MYSQLHOST == 'localhost' ]; then
       $MYSQL -p${MYSQLPASS} -u root -e <<STOP "
 CREATE USER 'cmdb'@'localhost' IDENTIFIED BY '${CMDBPASS}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'localhost';"
@@ -748,7 +743,7 @@ SECNS=${SECNS}
 
 ## CBC settings
 TMPDIR=/tmp/cmdb
-TFTPDIR=/srv/tftp
+TFTPDIR=${TFTP}
 PXE=pxelinux.cfg
 TOPLEVELOS=${LOCALSTATEDIR}/cmdb
 PRESEED=preseed
@@ -803,17 +798,6 @@ else
   exit 9
 fi
 
-if [ -d /var/lib/tftpboot/ ]; then
-  TFTP="/var/lib/tftpboot/"
-  echo "Found $TFTP"
-elif [ -d /srv/tftp/ ]; then 
-  TFTP="/srv/tftp/"
-  echo "Found $TFTP"
-else
-  unset TFTP
-  echo "No tftp directory found"
-fi
-
 # Need to be root
 if [[ $EUID -ne 0 ]]; then
    echo "You must run this script as root" 1>&2
@@ -826,18 +810,46 @@ if [ ! -f ${SQL}/initial.sql ]; then
   exit 7
 fi
 
-
-
-if [ $DBCAP != "both" ] && [ $DBCAP != "none" ]; then
-  if [ $DB != $DBCAP ]; then
+if [ "$DBCAP" != "both" ] && [ "$DBCAP" != "none" ]; then
+  if [ "$DB" != "$DBCAP" ]; then
     echo "Cannot use DB $DB"
     echo "We only have $DBCAP"
-    DB=$DBCAP
+    DB="$DBCAP"
   fi
-elif [ $DBCAP = "none" ]; then
+elif [ "$DBCAP" = "none" ]; then
   echo "No database capability in cbc! Exiting.."
   exit 10
 fi
+
+if [ "$DBCAP" = "mysql" ]; then
+  echo "Please enter the name of the mysql host"
+  read MYSQLHOST
+  echo "Please enter the root password for $MYSQLHOST"
+  read -s MYSQLPASS
+  echo "Please enter password for new cmdb user"
+  read -s CMDBPASS
+  if [ "$MYSQLHOST" == "localhost" ] || [ "$MYSQLHOST" == "127.0.0.1" ]; then
+    echo "Checking for local mysql server"
+    if [ ! -z $DPKG ]; then
+      if [[ `$DPKG -l mysql-server` ]]; then
+        echo "OK. mysql-server installed"
+      else
+        echo "Local MySQL server not installed"
+        echo "Please install the mysql-server package"
+        exit 11
+      fi
+    else
+      if [[ `$RPM -q mysql-server` ]]; then
+        echo "OK. MySQL server installed"
+      else
+        echo "Local MySQL server not installed"
+        echo "Please install the mysql-server package"
+        exit 11
+      fi
+    fi
+  fi
+fi
+
 
 if [ -z $HOSTNAME ]; then
   get_host
