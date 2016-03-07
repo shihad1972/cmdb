@@ -291,7 +291,7 @@ search $DOMAIN
 nameserver $IPADDR
 EOF
   fi
-  if [[ `grep ${IPADDR} /etc/hosts` ]]; then
+  if [[ `grep ${IPADDR} /etc/hosts` ]] && [[ ! `grep ${HOSTNAME}.${DOMAIN} /etc/hosts` ]] ; then
     sed -i "s/^${IPADDR}/${IPADDR}    ${HOSTNAME}.${DOMAIN}/" /etc/hosts
   fi
   if [ ! -z $SECDNS ]; then
@@ -910,5 +910,7 @@ create_config
 
 if [ $HAVE_DNSA ]; then
   echo "Creating initial zone in dnsa..."
-  su - cmdb -c "dnsa -z -F -n $DOMAIN"
+  su - cmdb -c "dnsa -z -F -n $DOMAIN 2>/dev/null"
+  su - cmdb -c "dnsa -a -h $HOSTNAME -n $DOMAIN -t A -i $IPADDR"
+  su - cmdb -c "dnsa -w -F 2>/dev/null"
 fi
