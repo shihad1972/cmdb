@@ -5,6 +5,9 @@ configmake header, I can then work out where this is supposed to be.
 This will probably be less necessary when I move to a daemon for the main
 work, and the command line programs just contact the daemon to do the work,
 as the daemon can have a config file passed to it on startup.
+	*** Update: 07/03/2016 ***
+	Install script cmdb.sh now takes into account the values in
+	configmake.h
 
 24/02/2016
 Add default for build_os, partition and varient
