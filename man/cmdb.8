@@ -1,4 +1,4 @@
-.TH CMDB 8 "Version 0.2: 06 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH CMDB 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cmdb \- Configuration Management Database
 .SH SYNOPSIS
@@ -15,9 +15,9 @@ cmdb \- Configuration Management Database
 
 .B cmdb
 [
-.B -adlrv
+.B -adhlrv
 ] [
-.B -ehotsu
+.B -eotsuw
 ] [
 .B -inm
 ] [
@@ -39,38 +39,40 @@ of that program.
 We also have contacts for customers.
 .SH OPTIONS
 .B Actions (these do not take arguments)
-.IP -a
+.IP "-a,  --add"
 add
-.IP -d
+.IP "-d,  --display"
 display
-.IP -l
+.IP "-h,  --help"
+help
+.IP "-l,  --list"
 list
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
-.IP -v
+.IP "-v,  --version"
 version (no other argument needed)
 .PP
 .B Types (these do not take arguments)
-.IP -e
+.IP "-e,  --service"
 services
-.IP -h
+.IP "-w,  --hardware"
 hardware
-.IP -s
+.IP "-s,  --server"
 server
-.IP -t
+.IP "-t,  --contact"
 contact
-.IP -u
+.IP "-u,  --customer"
 customer
-.IP -o
+.IP "-o,  --vm"
 virtual machine host
 .PP
 .B Naming
-.IP "-n name"
+.IP "-n,  --name \fBname\fP"
 This is the name of the server
-.IP "-i [ uuid | coid ]"
+.IP "-i,  --identity [ \fBuuid\fP | \fBcoid\fP ]"
 This is used to denote either the UUID of the server or the COID of the
 customer, so this option depends on the context you use it in.
-.IP "-m vmhost"
+.IP "-x,  --virtmachine \fBvmhost\fP"
 This is the name of the virtual machine host if you are dealing with
 servers that are VM's.
 Note this server should itself have an entry in the CMDB already.
@@ -80,84 +82,84 @@ Note this server should itself have an entry in the CMDB already.
 .B For adding a server.
 .PP
 .B cmdb -a -s -C coid -M make -O model -U uuid -V vendor -n name [ -m vmhost ]
-.IP "-C COID"
+.IP "-C,  --coid \fBCOID\fP"
 The COID is a unique identifier for the customer this server belongs.
 You should have at least one customer before you try to add servers.
-.IP "-M Make"
+.IP "-M,  --make \fBMake\fP"
 This is the make, or line, or the server.
-.IP "-O Model"
+.IP "-O,  --model \fBModel\fP"
 This is the model of the server.
-.IP "-U UUID"
+.IP "-U,  --uuid \fBUUID\fP"
 This is a unique idetifier for the server.
 You can use th UUID convention or you can use your own convention, as long as
 this is a combination of upper case letters and numbers.
-.IP "-V Vendor"
+.IP "-V,  --vendor \fBVendor\fP"
 This is the server vendor.
 .PP
 .B To add a customer
 .PP
 .B cmdb -a -u -A address -C coid -T city -Y county -Z zipcode / postcode
-.IP "-A Address"
+.IP "-A,  --address \fBAddress\fP"
 This is the address for the customer, generally a street name and number.
 You can add a city area if you wish.
 Remember due to the shell tokenising, you will most likely have to put quotes
 around your entry here.
-.IP "-C COID"
+.IP "-C,  --coid \fBCOID\fP"
 The COID is a unique identifer you can use as a shortcut to refer to your
 customer.
 The general convention that the program will enforce is a character string
 between 6 and 8 characters long containing only uppercase alphanumric
 characters.
-.IP "-T City"
+.IP "-T,  --city \fBCity\fP"
 This is the city or town the customer is located in.
-.IP "-Y County"
+.IP "-Y,  --county \fBCounty\fP"
 This is the county or region the customer is located in.
-.IP "-Z Postcode"
+.IP "-Z,  --postcode \fBPostcode\fP"
 This is the postcode or zipcode for the customers address.
 .PP
 .B To add a service
 .PP
 .B cmdb -a -e -D Description -L URL [ -I service_id | -S service ]
-.IP "-D Description"
+.IP "-D,  --description \fBDescription\fP"
 This is a description of the service.
 This can be up to 63 characters in length.
-.IP "-L URL"
+.IP "-L,  --url \fBURL\fP"
 This is the URL that the service runs on, and can also be up to 63 characters
 in length.
-.IP "-I service_id"
+.IP "-I,  --id \fBservice_id\fP"
 This is the service id number that you can retrieve from the database using
 the \fB-l -e\fP options to cmdb.
-.IP "-S service"
+.IP "-S,  --service \fBservice\fP"
 This is a full descriptive name for the service.
 .PP
 .B To add a contact
 .PP
 .B cmdb -a -t -E email -N Name -P Phone -i coid
-.IP "-E email"
+.IP "-E,  --email \fBemail\fP"
 This is the email address of the contact.
-.IP "-N name"
+.IP "-N,  --full-name \fBname\fP"
 This is the full name of the contact.
 Due to the shell's tokenising rules you will probably have to surround this
 option in quotes.
-.IP "-P Phone"
+.IP "-P,  --phone \fBPhone\fP"
 This is a telephone number for the customer.
 This should contain no white space and only numbers unless you wish to use a
 starting + to denote an international number.
 .PP
 .B To add hardware to a server
 .PP
-.b cmdb -a -h -D Detail -B Device -I hardware_type_id
+.b cmdb -a -w -D Detail -B Device -I hardware_type_id
 .PP
-.IP "-D Detail"
+.IP "-D,  --detail \fBDetail\fP"
 This is some important identifer for the piece of hardware we are dealing
 with.
 For example, for a network card the detail is the MAC address or for a hard
 disk the detail would be the size of the hard disk.
-.IP "-B Device"
+.IP "-B,  --device \fBDevice\fP"
 This is the /dev/ name for the UNIX device.
 So for example, for a network card this could be eth0 or for a disk device
 this could be sda or hda.
-.IP "-I id"
+.IP "-I,  --id \fBid\fP"
 This is the id of the particular piece of hardware you wish to add.
 You can find out the id by running \fBcmdb -l -h\fP
 .SH FILES

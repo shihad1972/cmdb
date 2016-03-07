@@ -1,0 +1,44 @@
+.TH ckc 8 "Version 0.2: 07 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+ckc \- Create Kickstart Config
+.SH SYNOPSIS
+.B ckc
+.B ( -d -f -h -i -k -l -n -p -t -u -v -y )
+.PP
+.SH DESCRIPTION
+\fBckc\fP will create a kickstart configuration file to allow you to automate
+the installation of a redhat distro based server. By default, the file will
+output to \fIstdout\fP, but you can use the \fB-f\fP option to specify an
+output filename.
+.PP
+.SH OPTIONS
+.IP "-d,  --domain \fBdomain name\fP"
+DNS domain name of the server
+.IP "-f,  --file \fBfilename\fP"
+filename to write the kickstart config to
+.IP "-i,  --ip \fBip address\fP"
+ip address the server will install with
+.IP "-k,  --disk \fBdisk device\fP"
+disk drive to install the server on. There is no need to specify the starting /dev/
+.IP "-l,  --language \fBlanguage\fP"
+language the server will use
+.IP "-n,  --hostname \fBhostname\fP"
+hostname of the server
+.IP "-p,  --packages \fBpack1,pack2...packN\fP"
+a comma separated list of packages to install
+.IP "-t,  --timezone \fBtimezone\fP"
+timezone the server will use
+.IP "-u,  --url \fBURL\fP"
+full URL location of the kickstart file
+.IP "-y,  --country \fBcountry\fP"
+country keyboard layout
+.PP
+.SH FILES
+No configuration files are used at present.
+.PP
+.SH ENVIRONMENT
+No environment variables are used at present.
+.PP
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-DOT-co-DOT-uk>
+

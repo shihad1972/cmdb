@@ -1,4 +1,4 @@
-.TH cbcscript 8 "Version 0.2: 29th January 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcscript 8 "Version 0.2: 07 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcscript \- Create Build Config Scripts
 .SH SYNOPSIS
@@ -30,17 +30,17 @@ Action and type switches do not take arguments.
 
 .SH OPTIONS
 .B actions
-.IP -a
+.IP "-a,  --add"
 add
-.IP -l
+.IP "-l,  --list"
 list
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
 .PP
 .B type
-.IP -f
+.IP "-f,  --script-arg"
 arg
-.IP -s
+.IP "-s,  --script"
 script
 .PP
 These actions specify what you want to do, and what objects you wish to act
@@ -48,37 +48,38 @@ on. How you act on them is specified via the options below, which all take
 arguments.
 .PP
 .B specifiers
-.IP -b
-<build domain>
-.IP -o
-<number>
-.IP -g
-<argument>
-.IP -n
-<name>
-.IP -t
-<build type>
+.IP "-b,  --domain, --build-domain \fBbuild domain\fP"
+specify the build domain
+.IP "-o,  --number \fBnumber\fP"
+specify the argument number
+.IP "-g,  --argument \fBargument\fP"
+script argument
+.IP "-n,  --name \fBname\fP"
+the name of the script
+.IP "-t,  --type \fBbuild type\fP"
+build type operating system
 .PP
 .SH EXAMPLES
 .B To add a script
 .IP
-\fBcbcscript -a -s -n <script-name>\fP
+\fBcbcscript -a -s -n \fIscript-name\fR
 .PP
 .B To add an argument to a script
-\fBcbcscript -a -f -b <domain> -n <script-name> -g <argument> -t <build-type-os> -o <number>\fP
+.IP
+\fBcbcscript -a -f -b \fIdomain\fP -n \fIscript-name\fP -g \fIargument\fP -t \fIbuild-type-os\fP -o \fInumber\fR
 .PP
 .B To list scripts
 .IP
-\fBcbcscript -l -s
+\fBcbcscript -l -s\fP
 .PP
 .B To list script configs for a domain
 .IP
-\fBcbcscript -l -f -b <domain>\fP. You can also add more identifiers if you
+\fBcbcscript -l -f -b \fIdomain\fR. You can also add more identifiers if you
 want a more specific listing
 .PP
 .B To remove a script argument
 .IP
-\fBcbcscript -r -f -b <domain> -n <script-name> -t <build-type-os> -o number\fP
+\fBcbcscript -r -f -b \fIdomain\fP -n \fIscript-name\fP -t \fIbuild-type-os\fP -o \fInumber\fR
 .PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf

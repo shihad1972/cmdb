@@ -86,6 +86,34 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 }
 
 int
+get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id)
+{
+	int retval = 0;
+	dbdata_s *data;
+
+	if (!(cbc) || (query < 0))
+		return CBC_NO_DATA;
+	unsigned int max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if (name) {
+		if (cbc_search_args[query] == 0)
+			fprintf(stderr, "Name %s passed for query with no args:\n%s\n",
+			 name, cbc_sql_search[query]);
+		snprintf(data->args.text, RBUFF_S, "%s", name);
+	}
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+	//	fprintf(stderr, "Cannot find id for query:\n%s\n", cbc_sql_search[query]);
+		clean_dbdata_struct(data);
+		return -1;
+	} else if (retval > 1) {
+		fprintf(stderr, "Multiple id's found for query:\n%s\n", cbc_sql_search[query]);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
 get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id)
 {
 	int retval = 0, query = SERVER_ID_ON_SNAME;
@@ -330,6 +358,30 @@ get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
 }
 
 int
+get_locale_id(cbc_config_s *cbc, char *name, uli_t *id)
+{
+	int retval = 0;
+	int query = LOCALE_ID_ON_NAME;
+	dbdata_s *data;
+	unsigned int max;
+	if (!(cbc) || !(name))
+		return CBC_NO_DATA;
+	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	snprintf(data->args.text, HOST_S, "%s", name);
+	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
+		fprintf(stderr, "Cannot find locale %s\n", name);
+		clean_dbdata_struct(data);
+		return LOCALE_NOT_FOUND;
+	} else if (retval > 1) {
+		fprintf(stderr, "Found multiple locales with name %s?\n", name);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+
+int
 get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
 {
 	int retval = 0, query = SCHEME_NAME_ON_SERVER_ID;
@@ -503,8 +555,6 @@ get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id)
 					 "Multiple OS's found!\n");
 					retval = MULTIPLE_OS;
 				} else {
-					fprintf(stderr,
-					 "No OS found!\n");
 					retval = OS_NOT_FOUND;
 				 }
 			}

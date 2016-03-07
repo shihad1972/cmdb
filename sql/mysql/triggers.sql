@@ -48,3 +48,5 @@ CREATE TRIGGER system_package_conf_update BEFORE UPDATE ON system_package_conf F
 CREATE TRIGGER system_package_conf_insert BEFORE INSERT ON system_package_conf FOR EACH ROW set NEW.mtime = NOW();
 
 
+CREATE TRIGGER default_locale_update BEFORE UPDATE ON default_locale FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER default_locale_insert BEFORE INSERT ON default_locale FOR EACH ROW set NEW.mtime = NOW();

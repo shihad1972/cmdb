@@ -7,11 +7,11 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-CPPFLAGS = -I/usr/include/mysql
+CPPFLAGS = -I/usr/include/mysql -I../include/
 LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
 LIBS = -lmysqlclient $(PCLIBS) -lsqlite3
-bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
+bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
 
 SOBJECTS = errors.o checks.o cmdb_data.o
 COMOBJECTS = cbc_data.o cbc_base_sql.o cbc_common.o cbccom.o
@@ -20,10 +20,12 @@ COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o cmdb_base_sql.o ba
 DOBJECTS = dnsa.o $(SOBJECTS) $(DNSCOMOBJ) base_sql.o
 BOBJECTS = cbc.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o base_sql.o
 CDOBJECTS = cbcdomain.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) cbcnet.o cbc_dnsa.o base_sql.o
-COOBJECTS = cbcos.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
+COOBJECTS = cbcos.o $(SOBJECTS) $(COMOBJECTS) base_sql.o cbcnet.o
 CVOBJECTS = cbcvarient.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 CKOBJECTS = cbcpart.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
+CLOBJECTS = cbclocale.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 POBJECTS = cpc.c $(SOBJECTS)
+KOBJECTS = ckc.c $(SOBJECTS)
 SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 
@@ -32,10 +34,8 @@ DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
 CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h
 BHEADERS = $(COMHEADERS) checks.h build.h
 CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
-COHEADERS = $(COMHEADERS) cbcos.h
-CVHEADERS = $(COMHEADERS) cbcvarient.h
-CKHEADERS = $(COMHEADERS) cbcpart.h
-PHEADERS = cmdb.h cmdb_cpc.h
+CVHEADERS = $(COMHEADERS)
+PHEADERS = cmdb.h
 
 all:	$(bin_programs)
 
@@ -51,17 +51,23 @@ cbc:	$(BOBJECTS) $(BHEADERS)
 cbcdomain:	$(CDOBJECTS) $(CDHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CDOBJECTS) $(LDFLAGS) $(LIBS)
 
-cbcos:	$(COOBJECTS) $(COHEADERS)
+cbcos:	$(COOBJECTS) $(COMMHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(COOBJECTS) $(LDFLAGS) $(LIBS)
 
 cbcvarient:	$(CVOBJECTS) $(CVHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CVOBJECTS) $(LDFLAGS) $(LIBS)
 
-cbcpart:	$(CKOBJECTS) $(CKHEADERS)
+cbcpart:	$(CKOBJECTS) $(CVHEADERS)
 	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LIBS)
 
+cbclocale:	$(CLOBJECTS) $(CVHEADERS)
+	$(CC) $(CFLAGS) -o $@ $(CLOBJECTS) $(LDFLAGS) $(LIBS)
+
 cpc:	$(POBJECTS) $(PHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
+
+ckc:	$(KOBJECTS) $(PHEADERS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
 
 cbcsysp:	$(SPOBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(SPOBJECTS) $(LDFLAGS) $(LIBS)

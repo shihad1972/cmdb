@@ -1,4 +1,4 @@
-.TH cbcos 8 "Version 0.2: 15 July 2013" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcos 8 "Version 0.2: 05 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcos \- Create Build Config Operating System
 .SH SYNOPSIS
@@ -11,7 +11,7 @@ cbcos \- Create Build Config Operating System
 
 .B cbcos
 [
-.B -adlrv
+.B -adglrv
 ] [
 .B -n <name> -e <version alias> -o <version> -s <os alias> -t <arch>
 ]
@@ -30,30 +30,37 @@ You are able to add, display, list and remove build operating systems.
 Currently the \fBcbc\fP system supports the following operating systems:
 \fIdebian, ubuntu\fP and \fIcentos\fP. Soon there will be support for
 \fIredhat\fP.
+\fBcbcos\fP will also download the boot files for the OS from the mirror
+server. You can refresh these boot files using the \fI-g\fP option. You can
+specify a specific OS version if you wish, but you do not have to.
 
 .SH OPTIONS
 .B Actions
-.IP -a
+.IP "-a,  --add"
 add
-.IP -d
+.IP "-d,  --display"
 display
-.IP -l
+.IP "-g,  --download"
+grab boot files
+.IP "-l,  --list"
 list
-.IP -r
+.IP "-r,  --remove, --delete"
 remove
-.IP -v
+.IP "-v,  --version"
 version (no other argument needed)
+.IP "-h,  --help"
+display a short help message
 .PP
 .B Details
-.IP "-n <name>"
+.IP "-n,  --name, --os \fBname\fP"
 Formal name of the operating system, such as Debian.
-.IP "-e <version alias>"
+.IP "-e,  --version-alias \fBversion alias\fP"
 This is used to specify the code name of the debian or ubuntu based version.
-.IP "-o <version number>"
+.IP "-o,  --os-version \fBversion number\fP"
 The specific version number of the operating system.
-.IP "-s <os alias>"
+.IP "-s,  --alias, --os-alias \fBos alias\fP"
 This is used to provide an alias to the more formal OS name.
-.IP "-t <architecture>
+.IP "-t,  --architecture, --os-arch \fBarchitecture\fP"
 Currently only \fIi386\fP and \fIx86_64\fP are available.
 .PP
 .SH FILES

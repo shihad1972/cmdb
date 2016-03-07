@@ -26,29 +26,83 @@
  *
  */
 
-#include "../config.h"
+#include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
-#endif /* HAVE_WORDEXP_H */
+#endif // HAVE_WORDEXP_H
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
+#include "cmdb_base_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
 {
-	int opt, retval = NONE;
-
-	comp->config = strndup("/etc/dnsa/dnsa.conf", CONF_S);
-	while ((opt = getopt(argc, argv,
-	 "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvx")) != -1) {
+	const char *optstr = "n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvwx";
+	int opt, retval;
+#ifdef HAVE_GETOPT_H
+	int index;
+	comp->config = cmdb_malloc(CONF_S, "comp->config in parse_cmdb_command_line");
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument, 		NULL,	'd'},
+		{"service",		no_argument,		NULL,	'e'},
+		{"force",		no_argument,		NULL,	'f'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"identity",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"vm",			no_argument,		NULL,	'o'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"server",		no_argument,		NULL,	's'},
+		{"contact",		no_argument,		NULL,	't'},
+		{"customer",		no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"hardware",		no_argument,		NULL,	'w'},
+		{"virtmachine",		required_argument,	NULL,	'x'},
+		{"address",		required_argument,	NULL,	'A'},
+		{"device",		required_argument,	NULL,	'B'},
+		{"coid",		required_argument,	NULL,	'C'},
+		{"detail",		required_argument,	NULL,	'D'},
+		{"description",		required_argument,	NULL,	'D'},
+		{"email",		required_argument,	NULL,	'E'},
+		{"id",			required_argument,	NULL,	'I'},
+		{"url",			required_argument,	NULL,	'L'},
+		{"make",		required_argument,	NULL,	'M'},
+		{"full-name",		required_argument,	NULL,	'N'},
+		{"model",		required_argument,	NULL,	'O'},
+		{"phone",		required_argument,	NULL,	'P'},
+		{"service-name",	required_argument,	NULL,	'S'},
+		{"city",		required_argument,	NULL,	'T'},
+		{"uuid",		required_argument,	NULL,	'U'},
+		{"vendor",		required_argument,	NULL,	'V'},
+		{"county",		required_argument,	NULL,	'Y'},
+		{"postcode",		required_argument,	NULL,	'Z'},
+		{NULL, 0, NULL, 0}
+	};
+#endif // HAVE_GETOPT_H
+	retval = 0;
+	get_config_file_location(comp->config);
+#ifdef HAVE_GETOPT_H
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 's') {
 			comp->type = SERVER;
 		} else if (opt == 'u') {
@@ -57,7 +111,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->type = CONTACT;
 		} else if (opt == 'e') {
 			comp->type = SERVICE;
-		} else if (opt == 'h') {
+		} else if (opt == 'w') {
 			comp->type = HARDWARE;
 		} else if (opt == 'o') {
 			comp->type = VM_HOST;
@@ -71,15 +125,17 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 			comp->action = ADD_TO_DB;
 		} else if (opt == 'r') {
 			comp->action = RM_FROM_DB;
-		} else if (opt == 'x') {
+		} else if (opt == 'm') {
 			comp->action = MODIFY;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else if (opt == 'f') {
 			comp->force = 1;
 		} else if (opt == 'n') {
 			comp->name = strndup(optarg, HOST_S);
 		} else if (opt == 'i') {
 			comp->id = strndup(optarg, CONF_S);
-		} else if (opt == 'm') {
+		} else if (opt == 'x') {
 			comp->vmhost = strndup(optarg, HOST_S);
 		} else if (opt == 'V') {
 			comp->vendor = strndup(optarg, CONF_S);
@@ -179,6 +235,14 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 				retval = NO_NAME_OR_ID;
 			else if ((!(comp->service)) && (!(comp->url)) && (comp->force != 1))
 				retval = NO_SERVICE_URL;
+		} else if (comp->type == SERVER) {
+			if (!(comp->name))
+				retval = NO_NAME;
+		} else if (comp->type == HARDWARE) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if ((!(comp->device)) && (!(comp->detail)))
+				retval = NO_DEVICE | NO_DETAIL;
 		}
 	}
 	return retval;
@@ -620,6 +684,7 @@ clean_cmdb_comm_line(cmdb_comm_line_s *list)
 	CLEAN_COMM_LIST(list, service);
 	CLEAN_COMM_LIST(list, uuid);
 	CLEAN_COMM_LIST(list, county);
+	free(list);
 }
 
 #ifdef CLEAN_COMM_LIST
@@ -1027,3 +1092,32 @@ complete_server_values(cmdb_s *cmdb, int cl)
 	if (cl & NO_UUID)
 		snprintf(cmdb->server->uuid, COMM_S, "none");
 }
+
+int
+get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id)
+{
+	int retval = 0;
+	dbdata_s *data;
+
+	if (!(cbc) || (query < 0))
+		return CBC_NO_DATA;
+	unsigned int max = cmdb_get_max(cmdb_search_args[query], cmdb_search_fields[query]);
+	init_multi_dbdata_struct(&data, max);
+	if (name) {
+		if (cmdb_search_args[query] == 0)
+			fprintf(stderr, "Name %s passed for query with no args:\n%s\n",
+			 name, sql_search[query]);
+		snprintf(data->args.text, RBUFF_S, "%s", name);
+	}
+	if ((retval = cmdb_run_search(cbc, data, query)) == 0) {
+		clean_dbdata_struct(data);
+		return -1;
+	} else if (retval > 1) {
+// Returning the query here useful for debugging; not so much for the user.
+		fprintf(stderr, "Multiple id's found for query:\n%s\n", sql_search[query]);
+	}
+	*id = data->fields.number;
+	clean_dbdata_struct(data);
+	return 0;
+}
+

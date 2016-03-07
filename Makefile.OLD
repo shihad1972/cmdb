@@ -6,13 +6,28 @@
 RM = rm -f
 ECHO = echo
 DIR = src
-SUBDIRS = src
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
+DAEMONDIR = daemon
+CLIENTDIR = client
+LIBDIR = lib
+SUBDIRS = lib src daemon
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
+sbin_PROGRAMS = cmdbd
+lib_LIBRARIES = libailsacmdb.a
 
-all:	$(bin_PROGRAMS)
+all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
+
+libs:	$(lib_LIBRARIES)
+
+$(lib_LIBRARIES):
+	$(MAKE) -C $(LIBDIR) $@
 
 $(bin_PROGRAMS):
 	$(MAKE) -C $(DIR) $@
 
+$(sbin_PROGRAMS):	$(lib_LIBRARIES)
+	$(MAKE) -C $(DAEMONDIR) $@
+
 clean :
-	cd $(DIR); $(MAKE) clean
+	for dir in $(SUBDIRS); do \
+	  $(MAKE) -C $$dir clean; \
+	done

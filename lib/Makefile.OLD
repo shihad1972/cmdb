@@ -1,0 +1,15 @@
+CPPFLAGS += -I../src/ -I../include/
+lib_LIBRARIES = libailsacmdb.a
+
+libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o)
+
+libailsacmdb.a(b64.o):	b64.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
+	$(AR) $(ARFLAGS) $@ $<
+
+.PHONY:	clean
+
+clean:
+	$(RM) *.o *.a

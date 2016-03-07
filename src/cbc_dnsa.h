@@ -29,7 +29,7 @@
 
 #ifndef __CBC_DNSA_H__
 # define __CBC_DNSA_H__
-# include "../config.h"
+# include <config.h>
 # ifdef HAVE_DNSA
 
 #  include "cmdb_dnsa.h"
@@ -66,6 +66,9 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
 
 void
 write_zone_and_reload_nameserver(cbc_comm_line_s *cml);
+
+void
+remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data);
 
 # endif /* HAVE_DNSA */
 

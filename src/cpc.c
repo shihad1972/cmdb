@@ -26,6 +26,7 @@
  * 
  */
 #define _GNU_SOURCE
+#include <config.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -35,10 +36,111 @@
 #include <pwd.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
-#include "cmdb_cpc.h"
 #include "cbc_data.h"
 #include "checks.h"
+
+typedef struct cpc_config_s {
+	char *disk;
+	char *domain;
+	char *interface;
+	char *file;
+	char *kbd;
+	char *locale;
+	char *mirror;
+	char *name;
+	char *ntp_server;
+	char *packages;
+	char *pinstall;
+	char *proxy;
+	char *rpass;
+	char *suite;
+	char *tzone;
+	char *ugroups;
+	char *uid;
+	char *uname;
+	char *upass;
+	char *url;
+	char *user;
+	short int add_root;
+	short int add_user;
+	short int encrypt_rpass;
+	short int encrypt_upass;
+	short int post;
+	short int ntp;
+	short int recommends;
+	short int utc;
+	short int action;
+} cpc_config_s;
+
+static int
+parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl);
+
+static int
+parse_cpc_config_file(cpc_config_s *cpc);
+
+static int
+parse_cpc_environment(cpc_config_s *cpc);
+
+static void
+fill_default_cpc_config_values(cpc_config_s *cpc);
+
+static void
+add_header(string_len_s *preseed);
+
+static void
+add_locale(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_network(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_mirror(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_root_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_no_root_account(string_len_s *pre);
+
+static void
+add_user_account(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_partitions(string_len_s *pre, cpc_config_s *cpc);
+/*
+static void
+add_no_recommends(string_len_s *pre, cpc_config_s *cpc); */
+
+static void
+add_apt(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+add_final(string_len_s *pre, cpc_config_s *cpc);
+
+static void
+build_preseed(cpc_config_s *cpc);
+
+static void
+init_cpc_config(cpc_config_s *cpc);
+
+static void
+fill_default_cpc_config_values(cpc_config_s *cpc);
+
+static void
+clean_cpc_config(cpc_config_s *cpc);
+
+static void
+replace_space(char *packages);
 
 int
 main (int argc, char *argv[])
@@ -59,17 +161,50 @@ main (int argc, char *argv[])
 		display_cpc_usage();
 		exit(1);
 	}
-	build_preseed(cpc);
+	if (cpc->action) {
+		if (cpc->action == HELP)
+			display_cpc_usage();
+		else if (cpc->action == VERS)
+			display_version(argv[0]);
+	} else {
+		build_preseed(cpc);
+	}
 	clean_cpc_config(cpc);
 	return retval;
 }
 
-int
+static int
 parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 {
-	int opt, retval = NONE;
+	const char *optstr = "d:e:f:hi:k:l:m:n:p:s:t:u:vy:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"domain",		required_argument,	NULL,	'd'},
+		{"ntp-server",		required_argument,	NULL,	'e'},
+		{"file",		required_argument,	NULL,	'f'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"interface",		required_argument,	NULL,	'i'},
+		{"disk",		required_argument,	NULL,	'k'},
+		{"locale",		required_argument,	NULL,	'l'},
+		{"mirror",		required_argument,	NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"packages",		required_argument,	NULL,	'p'},
+		{"suite",		required_argument,	NULL,	's'},
+		{"timezone",		required_argument,	NULL,	't'},
+		{"url",			required_argument,	NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"keyboard",		required_argument,	NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "d:e:f:i:k:l:m:n:p:t:u:v:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'd') {
 			snprintf(cl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
@@ -78,7 +213,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			snprintf(cl->file, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
 			snprintf(cl->interface, RBUFF_S, "%s", optarg);
-		} else if (opt == 'k') {
+		} else if (opt == 'y') {
 			snprintf(cl->kbd, RBUFF_S, "%s", optarg);
 		} else if (opt == 'l') {
 			snprintf(cl->locale, RBUFF_S, "%s", optarg);
@@ -95,8 +230,12 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 			snprintf(cl->tzone, RBUFF_S, "%s", optarg);
 		} else if (opt == 'u') {
 			snprintf(cl->url, RBUFF_S, "%s", optarg);
-		} else if (opt == 'v') {
+		} else if (opt == 'k') {
 			snprintf(cl->disk, RBUFF_S, "/dev/%s\n", optarg);
+		} else if (opt == 'h') {
+			cl->action = HELP;
+		} else if (opt == 'v') {
+			cl->action = VERS;
 		} else {
 			fprintf(stderr, "Unknown option %c\n", opt);
 			retval = DISPLAY_USAGE;
@@ -105,7 +244,7 @@ parse_cpc_comm_line(int argc, char *argv[], cpc_config_s *cl)
 	return retval;
 }
 
-int
+static int
 parse_cpc_config_file(cpc_config_s *cpc)
 {
 	char *file, *home, buff[CONF_S];
@@ -146,7 +285,7 @@ parse_cpc_config_file(cpc_config_s *cpc)
 #undef CPC_GET_CONFIG_FILE
 }
 
-int
+static int
 parse_cpc_environment(cpc_config_s *cpc)
 {
 	char *envar;
@@ -177,7 +316,7 @@ parse_cpc_environment(cpc_config_s *cpc)
 #undef CPC_GET_ENVIRON
 }
 
-void
+static void
 fill_default_cpc_config_values(cpc_config_s *cpc)
 {
 	uid_t uid;
@@ -198,7 +337,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	sprintf(cpc->domain, "mydomain.lan");
 	sprintf(cpc->name, "debian");
 	sprintf(cpc->interface, "auto");
-	sprintf(cpc->kbd, "uk");
+	sprintf(cpc->kbd, "gb");
 	sprintf(cpc->locale, "en_GB");
 	sprintf(cpc->mirror, "mirror.ox.ac.uk");
 	sprintf(cpc->ntp_server, "0.uk.pool.ntp.org");
@@ -212,7 +351,7 @@ fill_default_cpc_config_values(cpc_config_s *cpc)
 	cpc->add_root = cpc->add_user = cpc->utc = cpc->ntp = 1;
 }
 
-void
+static void
 build_preseed(cpc_config_s *cpc)
 {
 	string_len_s *output;
@@ -233,7 +372,7 @@ build_preseed(cpc_config_s *cpc)
 	clean_string_len(output);
 }
 
-void
+static void
 add_header(string_len_s *pre)
 {
 	snprintf(pre->string, BUFF_S, "\
@@ -244,7 +383,7 @@ add_header(string_len_s *pre)
 	pre->size = strlen(pre->string);
 }
 
-void
+static void
 add_locale(string_len_s *pre, cpc_config_s *cpc)
 {
 	snprintf(pre->string + pre->size, RBUFF_S, "\
@@ -256,7 +395,7 @@ d-i keyboard-configuration/xkb-keymap select %s\n\
 	pre->size = strlen(pre->string);
 }
 
-void
+static void
 add_network(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer;
@@ -281,7 +420,7 @@ d-i hw-detect/load_firmware boolean true\n\
 	free(buffer);
 }
 
-void
+static void
 add_mirror(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer, *proxy = NULL;
@@ -293,18 +432,18 @@ d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string %s\n\
 d-i mirror/suite string %s\n\
-\n", cpc->mirror, cpc->url, cpc->suite)) == -1) 
+", cpc->mirror, cpc->url, cpc->suite)) == -1) 
 		report_error(MALLOC_FAIL, "buffer in add_mirror");
 	size = strlen(buffer);
 	if (strlen(cpc->proxy) > 0) {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string %s\n\
+d-i mirror/http/proxy string %s\n\n\
 ", cpc->proxy)) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
 	} else {
 		if ((asprintf(&proxy, "\
-d-i mirror/http/proxy string\n\
+d-i mirror/http/proxy string\n\n\
 ")) == -1)
 			report_error(MALLOC_FAIL, "proxy in add_mirror");
 		psize = strlen(proxy);
@@ -319,7 +458,7 @@ d-i mirror/http/proxy string\n\
 	free(proxy);
 }
 
-void
+static void
 add_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	if (cpc->add_root > 0) {
@@ -338,7 +477,7 @@ You must create either a root account or user account!\n");
 		add_user_account(pre, cpc);
 }
 
-void
+static void
 add_root_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer;
@@ -364,7 +503,7 @@ d-i passwd/root-password-again password %s\n\
 	free(buffer);
 }
 
-void
+static void
 add_no_root_account(string_len_s *pre)
 {
 	char *buffer;
@@ -383,7 +522,7 @@ d-i passwd/root-login boolean false\n\
 	free(buffer);
 }
 
-void
+static void
 add_user_account(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *buffer = NULL, *pass = NULL, *uid = NULL, *groups = NULL;
@@ -446,7 +585,7 @@ d-i passwd/user-default-groups string %s\n\
 	free(buffer);
 }
 
-void
+static void
 add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *ntp = NULL, *tzone, *utc;
@@ -495,7 +634,7 @@ d-i clock-setup/ntp boolean false\n\
 	free(utc);
 }
 
-void
+static void
 add_partitions(string_len_s *pre, cpc_config_s *cpc)
 {
 /* Starting with the most simeple partition structure we can get away with
@@ -517,6 +656,7 @@ d-i partman/choose_partition select finish\n\
 d-i partman/confirm boolean true\n\
 d-i partman/confirm_nooverwrite boolean true\n\
 d-i partman/mount_style select uuid\n\
+d-i grub-installer/only_debian boolean true\n\
 \n", cpc->disk)) == -1)
 		report_error(MALLOC_FAIL, "part in add_partitions");
 	psize = strlen(part);
@@ -526,8 +666,8 @@ d-i partman/mount_style select uuid\n\
 	pre->size += psize;
 	free(part);
 }
-
-void
+/*
+static void
 add_no_recommends(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *rec;
@@ -544,9 +684,9 @@ d-i base-installer/install-recommends boolean false\n\
 	snprintf(pre->string + pre->size, rsize + 1, "%s", rec);
 	pre->size += rsize;
 	free(rec);
-}
+} */
 
-void
+static void
 add_apt(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *apt, *pack;
@@ -587,7 +727,7 @@ d-i pkgsel/include string %s\n\
 	}
 }
 
-void
+static void
 add_final(string_len_s *pre, cpc_config_s *cpc)
 {
 	char *final, *post;
@@ -618,7 +758,7 @@ d-i preseed/late_command string %s\n\
 	}
 }
 
-void
+static void
 init_cpc_config(cpc_config_s *cpc)
 {
 	memset(cpc, 0, sizeof(cpc_config_s));
@@ -666,7 +806,7 @@ init_cpc_config(cpc_config_s *cpc)
 		report_error(MALLOC_FAIL, "cpc->user init");
 }
 
-void
+static void
 clean_cpc_config(cpc_config_s *cpc)
 {
 	if (cpc) {
@@ -718,7 +858,7 @@ clean_cpc_config(cpc_config_s *cpc)
 	free(cpc);
 }
 
-void
+static void
 replace_space(char *packages)
 {
 	char *s = NULL;

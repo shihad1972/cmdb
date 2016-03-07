@@ -23,7 +23,7 @@
 
 #ifndef __DNSA_BASE_SQL_H
 # define __DNSA_BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 
 extern const char *dnsa_sql_select[];
 extern const char *dnsa_sql_insert[];
@@ -38,7 +38,7 @@ extern const unsigned int dnsa_search_args[];
 extern const unsigned int dnsa_extended_search_fields[];
 extern const unsigned int dnsa_extended_search_args[];
 extern const unsigned int dnsa_ext_search_field_type[][5];
-extern const unsigned int dnsa_ext_search_arg_type[][2];
+extern const unsigned int dnsa_ext_search_arg_type[][3];
 extern const unsigned int dnsa_update_args[];
 extern const unsigned int dnsa_update_arg_type[][3];
 extern const unsigned int dnsa_delete_args[];

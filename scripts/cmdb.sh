@@ -5,8 +5,7 @@
 #  This includes configuring apache, dhcp and tftp and creating a cmdb.conf file
 #  We can also create the initial bind configurations for dnsa
 #
-#
-#  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+#  Copyright (C) 2012 - 2016  Iain M Conochie <iain-AT-thargoid.co.uk>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -33,23 +32,38 @@ SERV=`which service 2>/dev/null`
 SQLITE=`which sqlite3 2>/dev/null`
 MYSQL=`which mysql 2>/dev/null`
 ROUTERS=`netstat -rn | grep ^0.0.0.0 | awk '{print $2}'`
+MIRROR="mirrors.melbourne.co.uk"
+CONFIGMAKE="include/configmake.h"
 
 # Files and directories
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
-MIRROR="mirrors.melbourne.co.uk"
+PXELINUX="/usr/lib/syslinux/pxelinux.0"
+
+# Get values from configmake.h
+if [ ! -f ${CONFIGMAKE} ]; then
+  echo "Cannot find file ${CONFIGMAKE}"
+  echo "Please run this script from the top level of the cmdb source directory"
+  exit 7
+fi
+
+SYSCONFDIR=`grep SYSCONFDIR ${CONFIGMAKE} | awk '{print $3}' | sed -e 's/"//g'`
+LOCALSTATEDIR=`grep LOCALSTATEDIR ${CONFIGMAKE} | awk '{print $3}' | sed -e 's/"//g'`
 
 # Options
 HAVE_DNSA="yes"
-SQL="/var/lib/cmdb/sql"
+SQL="${LOCALSTATEDIR}/cmdb/sql"
 SQLFILE="${SQL}/cmdb.sql"
-DB="sqlite"
+DB="mysql"
 DBNAME="cmdb"
+CONFDIR="${SYSCONFDIR}/dnsa"
+CONFFILE="${CONFDIR}/dnsa.conf"
+CMDBBASE="${LOCALSTATEDIR}/cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
-DEBDIST="wheezy"
+DEBDIST="wheezy jessie"
 DEBARCH="amd64 i386"
 DEBFILES="linux initrd.gz"
 
@@ -60,7 +74,7 @@ CENTFILE="vmlinuz initrd.img"
 
 UBUBASE="/current/images/netboot/ubuntu-installer/"
 UBUINST="/main/installer-"
-UBUDIST="precise quantal raring"
+UBUDIST="precise quantal raring trusty"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
@@ -75,7 +89,7 @@ UBUFILE="linux initrd.gz"
 
 create_cmdb_user() {
 
-  getent group | awk -F ':' '{print $1}'|grep cmdb >/dev/null
+  getent group cmdb >/dev/null 2>&1
 
   if [ $? -eq 0 ]; then
     echo "cmdb group exists. Not adding"
@@ -83,25 +97,25 @@ create_cmdb_user() {
     groupadd -r cmdb
   fi
 
-  id cmdb >/dev/null 2>&1
+  getent passwd cmdb >/dev/null 2>&1
   if [ $? -eq 0 ]; then
     echo "cmdb user exists. Not adding"
   else
-    useradd -g cmdb -d /var/lib/cmdb -s /sbin/nologin -c "CMDB User" -r cmdb
+    useradd -g cmdb -d ${CMDBBASE} -s /sbin/nologin -c "CMDB User" -r cmdb
   fi
 
-  if [ ! -d /var/lib/cmdb ]; then
-    mkdir /var/lib/cmdb
+  if [ ! -d ${CMDBBASE} ]; then
+    mkdir ${CMDBBASE}
   fi
 
   for i in web sql cmdb-bin logs scripts inc
-    do if [ ! -d /var/lib/cmdb/${i} ]; then
-      mkdir /var/lib/cmdb/${i}
+    do if [ ! -d ${CMDBBASE}/${i} ]; then
+      mkdir ${CMDBBASE}/${i}
      fi
   done
-  chown -R cmdb:cmdb /var/lib/cmdb
-  chmod -R 770 /var/lib/cmdb
-  chmod g+s /var/lib/cmdb/*
+  chown -R cmdb:cmdb ${CMDBBASE}
+  chmod -R 770 ${CMDBBASE}
+  chmod g+s ${CMDBBASE}*
 }
 
 # Get Hostname
@@ -114,7 +128,9 @@ get_host() {
 # Get domain name
 
 get_domain() {
-  echo "Please input a domain name"
+  echo "Please input your domain name"
+  echo "This will be used to create the initial domain in DNSA"
+  echo "You will then be able to use this domain to build servers"
   read DOMAIN
 }
 
@@ -122,7 +138,15 @@ get_domain() {
 
 get_ip() {
   echo "Please input the IP address this server will use to build machines"
+  echo "This is the IP that will be used for the DNS server"
   read IPADDR
+}
+
+get_slave_ns() {
+  echo "Please input the FQDN of your slave nameserver"
+  read SECNS
+  echo "Please input the IP of your slave nameserver"
+  read SECDNS
 }
 
 # Get Debian Mirror URL
@@ -177,38 +201,38 @@ create_apache_config() {
   echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
   echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
   echo "This is where we shall store the build files."
-  echo "They will be stored in /var/lib/cmdb/web/"
+  echo "They will be stored in ${CMDBBASE}/web/"
   echo " "
-  echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
+  echo "You can also put post-installation scripts into ${CMDBBASE}/scripts"
   echo " "
   echo "Creating config in ${APACNF}"
   cat >${APACNF}cmdb.conf<<EOF
 #
 # This is the connfiguration file for the cmdb web portal used
 # by the cmdb build system, Muppett
-Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
-<Directory "/var/lib/cmdb/scripts/">
+Alias /cmdb/scripts/ "${CMDBBASE}/scripts/"
+<Directory "${CMDBBASE}/scripts/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-Alias /cmdb/hosts/ "/var/lib/cmdb/hosts/"
-<Directory "/var/lib/cmdb/hosts/">
+Alias /cmdb/hosts/ "${CMDBBASE}/hosts/"
+<Directory "${CMDBBASE}/hosts/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-Alias /cmdb/ "/var/lib/cmdb/web/"
-<Directory "/var/lib/cmdb/web/">
+Alias /cmdb/ "${CMDBBASE}/web/"
+<Directory "${CMDBBASE}/web/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
-<Directory "/var/lib/cmdb/cgi-bin/">
+ScriptAlias /cmdb-bin/ "${CMDBBASE}/cgi-bin/"
+<Directory "${CMDBBASE}/cgi-bin/">
     AllowOverride None
     Options ExecCGI Includes
     Order allow,deny
@@ -216,29 +240,67 @@ ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
 </Directory>
 
 EOF
-
-  [[ `$SERV httpd status` ]] || $SERV httpd start
+  if [ `echo $APACNF | grep available` ]; then
+    ln -s "$APACNF" /etc/apache2/conf-enabled/
+  fi
+  if [ -z $APACTL ]; then
+    APACTL=`which apache2ctl 2>/dev/null`
+  fi
+  [[ `$APACTL configtest > /dev/null 2>&1` ]] && $APACTL restart
 }
 
 create_bind_config() {
 
+  if [ -d /etc/bind ]; then
+    BIND="/etc/bind/"
+    echo "Found ${BIND}"
+  elif [ -d /var/named ]; then
+    BIND="/var/named"
+    echo "Found ${BIND}"
+  else
+    unset BIND
+    echo "No bind directory found"
+  fi
   if [ ! -d $BIND ]; then
     echo "Bind config directory is not $BIND"
     echo "Please set the real bind config directory at the top of this script"
     return 0
   fi
-  echo "Creating bind 9 config in ${BIND}"
-  cat >>${BIND}/named.conf<<EOF
+  if [[ ! `grep dnsa /etc/bind/named.conf` ]]; then
+    echo "Creating bind 9 config in ${BIND}"
+    cat >>${BIND}/named.conf<<EOF
 
 include "/etc/bind/dnsa.conf";
 include "/etc/bind/dnsa-rev.conf";
 
 EOF
-
+  fi
   touch ${BIND}/dnsa.conf ${BIND}/dnsa-rev.conf
   chown cmdb:cmdb ${BIND}/dnsa*
   chmod 664 ${BIND}/dnsa*
-  
+  if [ ! -d ${BIND}/db ]; then
+    mkdir ${BIND}/db
+  fi
+  chgrp cmdb ${BIND}/db
+  chmod g+w ${BIND}/db
+  if [[ ! `grep $IPADDR /etc/resolv.conf` ]]; then
+    echo "  Configuring /etc/resolv.conf..."
+    cat > /etc/resolv.conf <<EOF
+domain $DOMAIN
+search $DOMAIN
+nameserver $IPADDR
+EOF
+  fi
+  if [[ `grep ${IPADDR} /etc/hosts` ]] && [[ ! `grep ${HOSTNAME}.${DOMAIN} /etc/hosts` ]] ; then
+    sed -i "s/^${IPADDR}/${IPADDR}    ${HOSTNAME}.${DOMAIN}/" /etc/hosts
+  fi
+  if [ ! -z $SECDNS ]; then
+    if [[ ! `grep $SECDNS /etc/resolv.conf` ]]; then
+    cat >> /etc/resolv.conf <<EOF
+nameserver $SECDNS
+EOF
+    fi
+  fi
 }
 
 create_dhcp_config() {
@@ -302,8 +364,9 @@ create_tftp_config() {
   chmod 664 pxelinux.cfg
   chown cmdb:cmdb pxelinux.cfg
   if [ ! -f pxelinux.0 ]; then
+# Why only test debian here??
     if echo $CLIENT | grep debian >/dev/null 2>&1; then
-      cp /usr/lib/syslinux/pxelinux.0 .
+      cp ${PXELINUX} .
     fi
   fi
   echo "Retrieving debian boot files..."
@@ -390,12 +453,18 @@ create_tftp_config() {
 ###############################################################################
 
 debian_base() {
-
+  if [ -f /etc/mysql/my.cnf ]; then
+    MYSOCK=`grep sock /etc/mysql/my.cnf |tail -n 1 | awk '{print $3}'`
+  fi
   CLIENT="debian"
-  APACNF="/etc/apache2/conf.d/"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
     $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
+  fi
+  if [ -d /etc/apache2/conf.d ]; then
+    APACNF="/etc/apache2/conf.d/"
+  elif [ -d "/etc/apache2/conf-available" ]; then
+    APACNF="/etc/apache2/conf-available/"
   fi
   if ! id www-data | grep cmdb > /dev/null 2>&1; then
     echo "Adding www-data to cmdb group"
@@ -410,11 +479,22 @@ debian_base() {
     $APTG install isc-dhcp-server -y > /dev/null 2>&1
   fi
 
+  TFTP=/srv/tftp
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftpd-hpa and syslinux packages"
     echo "Please use /srv/tftp for the directory"
     $APTG install tftpd-hpa syslinux -y > /dev/null 2>&1
-    TFTP=/srv/tftp
+  fi
+
+  if [ ! -d /usr/lib/syslinux ]; then
+    echo "Installing syslinux package"
+    $APTG install syslinux -y > /dev/null 2>&1
+  fi
+
+  if [ ! -f /usr/lib/syslinux/pxelinux.0 ]; then
+    echo "Installing pxelinux package"
+    $APTG install pxelinux -y > /dev/null 2>&1
+    PXELINUX="/usr/lib/PXELINUX/pxelinux.0"
   fi
 
   if [ $HAVE_DNSA ]; then
@@ -429,7 +509,7 @@ debian_base() {
       echo "Installing sqlite3 command"
       apt-get install -y sqlite3 > /dev/null 2>&1
     fi
-  elif echo $DB | grep mysql; then
+  elif echo $DB | grep mysql > /dev/null 2>&1; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
       apt-get install -y mysql-client > /dev/null 2>&1
@@ -439,7 +519,9 @@ debian_base() {
 }
 
 redhat_base() {
-
+  if [ -f /etc/my.cnf ]; then
+    MYSOCK=`grep sock /etc/my.cnf`
+  fi
   CHKCON=`which chkconfig`
 
   if [ -z "$CHKCON" ]; then
@@ -473,13 +555,13 @@ redhat_base() {
 # Need to check if syslinux is installed cos we need the pxelinux.0 file
 # from it
 
+  TFTP="/var/lib/tftpboot"
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftp-server and syslinux package"
     $YUM install tftp-server syslinux -y > /dev/null 2>&1
     echo "Setting tftp to start and restarting xinetd"
     $CHKCON xinetd on
     $SERV xinetd restart
-    TFTP="/var/lib/tftpboot"
   fi
 
   if [ $HAVE_DNSA ]; then
@@ -496,7 +578,7 @@ redhat_base() {
       echo "Installing sqlite3 command"
       yum install sqlite -y> /dev/null 2>&1
     fi
-  elif echo $DB | grep mysql; then
+  elif [ "$DB" == "mysql" ]; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
       yum install mysql -y> /dev/null 2>&1
@@ -556,15 +638,9 @@ STOP
     fi
     cat ${SQL}/initial.sql | $SQLITE $SQLFILE
     chown cmdb:cmdb $SQLFILE
-  elif echo $DB | grep mysql > /dev/null 2>&1; then
+  elif [ $DB == mysql ]; then
     SQLBASE=$SQL/all-tables-mysql.sql
-    echo "Please enter the name of the mysql host"
-    read MYSQLHOST
-    echo "Please enter the root password for $MYSQLHOST"
-    read -s MYSQLPASS
-    echo "Please enter password for new cmdb user"
-    read -s CMDBPASS
-    if $MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" > /dev/null 2>&1; then
+    if [[ `$MYSQL -h $MYSQLHOST -p${MYSQLPASS} -u root -e "SHOW DATABASES" 2>/dev/null` ]]; then
       echo "Connection successful"
     else
       echo "Cannot connect to mysql host. Are you sure root has access to ${MYSQLHOST}?"
@@ -579,7 +655,7 @@ CREATE USER 'cmdb'@'${IPADDR}' IDENTIFIED BY '${CMDBPASS}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${HOSTNAME}.${DOMAIN}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'${IPADDR}';"
 STOP
-    if [ $MYSQLHOST = 'localhost' ]; then
+    if [ $MYSQLHOST == 'localhost' ]; then
       $MYSQL -p${MYSQLPASS} -u root -e <<STOP "
 CREATE USER 'cmdb'@'localhost' IDENTIFIED BY '${CMDBPASS}';
 GRANT ALL ON cmdb.* TO 'cmdb'@'localhost';"
@@ -623,15 +699,15 @@ STOP
 
 create_config()
 {
-  if [ ! -d /etc/dnsa ]; then
+  if [ ! -d ${SYSCONFDIR}/dnsa ]; then
     echo "Creating directory /etc/dnsa"
-    mkdir /etc/dnsa
+    mkdir ${SYSCONFDIR}/dnsa
   else
-    echo "/etc/dnsa exists. Continuing"
+    echo "${SYSCONFDIR}/dnsa exists. Continuing"
   fi
   
-  if [ ! -f /etc/dnsa/dnsa.conf ]; then
-    cat >/etc/dnsa/dnsa.conf <<FINISH
+  if [ ! -f ${SYSCONFDIR}/dnsa/dnsa.conf ]; then
+    cat >${SYSCONFDIR}/dnsa/dnsa.conf <<FINISH
 ## DB Driver
 DBTYPE=$DB
 
@@ -644,12 +720,12 @@ USER=cmdb			# DB user
 PASS=${CMDBPASS}		# DB pass
 HOST=$MYSQLHOST			# DB host
 PORT=3306			# DB port
-SOCKET=/var/lib/mysql/mysql.sock
+SOCKET=${MYSOCK}
 
 ## DNSA Settings
 
-DIR=/etc/bind/db/		# BIND data directory for zone files
-BIND=/etc/bind/			# BIND configuration directory
+DIR=/etc/bind/db		# BIND data directory for zone files
+BIND=/etc/bind			# BIND configuration directory
 DNSA=dnsa.conf			# DNSA configuration filename for bind
 REV=dnsa-rev.conf		# Reverse zone configuration file for bind
 RNDC=/usr/sbin/rndc		# Path to rndc command
@@ -659,22 +735,24 @@ REFRESH=28800
 RETRY=7200
 EXPIRE=1209600
 TTL=86400
-PRIDNS=
-SECDNS=
-HOSTMASTER=
-PRINS=
-SECNS=
+PRIDNS=${IPADDR}
+SECDNS=${SECDNS}
+HOSTMASTER=hostmaster@${DOMAIN}
+PRINS=${HOSTNAME}.${DOMAIN}
+SECNS=${SECNS}
 
 ## CBC settings
 TMPDIR=/tmp/cmdb
-TFTPDIR=/srv/tftp/
+TFTPDIR=${TFTP}
 PXE=pxelinux.cfg
-TOPLEVELOS=/usr/local/zips
-PRESEED=preseed/
-KICKSTART=ks/
+TOPLEVELOS=${LOCALSTATEDIR}/cmdb
+PRESEED=preseed
+KICKSTART=ks
 DHCPCONF=/etc/dhcp
 
 FINISH
+  chown cmdb:cmdb ${SYSCONFDIR}/dnsa/dnsa.conf
+  chmod 664 ${SYSCONFDIR}/dnsa/dnsa.conf
   else
     echo "dnsa.conf file exists"
   fi
@@ -686,7 +764,7 @@ FINISH
 #
 ###############################################################################
 
-while getopts "b:d:h:i:nm:" opt; do
+while getopts "b:d:hi:n:m:x" opt; do
   case $opt in 
     b  ) DB=$OPTARG
          echo "Setting DB"
@@ -694,18 +772,21 @@ while getopts "b:d:h:i:nm:" opt; do
     d  ) DOMAIN=$OPTARG
          echo "Setting Domain"
          ;;
-    h  ) HOSTNAME=$OPTARG
+    n  ) HOSTNAME=$OPTARG
          echo "Setting Hostname"
          ;;
     i  ) IPADDR=$OPTARG
          echo "Setting IP address"
          ;;
-    n  ) unset HAVE_DNSA
+    x  ) unset HAVE_DNSA
          ;;
     m  ) MIRROR=$OPTARG
          echo "Setting mirror"
          ;;
-    \? ) echo "Usage: $0 -h hostname -d domain -i ip address -b dbtype -m mirror [ -n ]"
+    h  ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
+	 exit 1
+	 ;;
+    \? ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
          exit 1
   esac
 done
@@ -717,28 +798,6 @@ else
   exit 9
 fi
 
-if [ -d /var/lib/tftpboot/ ]; then
-  TFTP="/var/lib/tftpboot/"
-  echo "Found $TFTP"
-elif [ -d /srv/tftp/ ]; then 
-  TFTP="/srv/tftp/"
-  echo "Found $TFTP"
-else
-  unset TFTP
-  echo "No tftp directory found"
-fi
-
-if [ -d /etc/bind ]; then
-  BIND="/etc/bind/"
-  echo "Found ${BIND}"
-elif [ -d /var/named ]; then
-  BIND="/var/named"
-  echo "Found ${BIND}"
-else
-  unset BIND
-  echo "No bind directory found"
-fi
-
 # Need to be root
 if [[ $EUID -ne 0 ]]; then
    echo "You must run this script as root" 1>&2
@@ -748,22 +807,49 @@ fi
 
 if [ ! -f ${SQL}/initial.sql ]; then
   echo "Cannot find SQL initialisation file $SQL"
-  echo "Please run this script from the top level of the cmdb source directory"
   exit 7
 fi
 
-
-
-if [ $DBCAP != "both" ] && [ $DBCAP != "none" ]; then
-  if [ $DB != $DBCAP ]; then
+if [ "$DBCAP" != "both" ] && [ "$DBCAP" != "none" ]; then
+  if [ "$DB" != "$DBCAP" ]; then
     echo "Cannot use DB $DB"
     echo "We only have $DBCAP"
-    DB=$DBCAP
+    DB="$DBCAP"
   fi
-elif [ $DBCAP = "none" ]; then
+elif [ "$DBCAP" = "none" ]; then
   echo "No database capability in cbc! Exiting.."
   exit 10
 fi
+
+if [ "$DBCAP" = "mysql" ]; then
+  echo "Please enter the name of the mysql host"
+  read MYSQLHOST
+  echo "Please enter the root password for $MYSQLHOST"
+  read -s MYSQLPASS
+  echo "Please enter password for new cmdb user"
+  read -s CMDBPASS
+  if [ "$MYSQLHOST" == "localhost" ] || [ "$MYSQLHOST" == "127.0.0.1" ]; then
+    echo "Checking for local mysql server"
+    if [ ! -z $DPKG ]; then
+      if [[ `$DPKG -l mysql-server` ]]; then
+        echo "OK. mysql-server installed"
+      else
+        echo "Local MySQL server not installed"
+        echo "Please install the mysql-server package"
+        exit 11
+      fi
+    else
+      if [[ `$RPM -q mysql-server` ]]; then
+        echo "OK. MySQL server installed"
+      else
+        echo "Local MySQL server not installed"
+        echo "Please install the mysql-server package"
+        exit 11
+      fi
+    fi
+  fi
+fi
+
 
 if [ -z $HOSTNAME ]; then
   get_host
@@ -771,7 +857,7 @@ else
   echo "Using $HOSTNAME as hostname. We do not want a FQDN here"
   echo "Change? (Y/N)"
   read answer
-  if [ $answer != "y" ] && [ $answer != "Y" ]; then
+  if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
     echo "Using $HOSTNAME"
   else
     get_host
@@ -786,13 +872,10 @@ if [ -z $IPADDR ]; then
   get_ip
 fi
 
-if [ $HAVE_DNSA ]; then
-  echo "Installing and configuring bind. If this is not what you want"
-  echo "then quit this script and run with the -n option"
-  echo "Hit enter to continue"
-  read
-else
-  echo "Not configuring bind; detected -n option"
+echo "Do you want to add a slave nameserver? (Y/N) Yes is default"
+read answer
+if [ "$answer" != "n" ] && [ "$answer" != "N" ]; then
+  get_slave_ns
 fi
 
 CENTMIRR="http://${MIRROR}/centos/"
@@ -800,7 +883,6 @@ DEBMIRR="http://${MIRROR}/debian/dists/"
 UBUMIRR="http://${MIRROR}/ubuntu/dists/"
 
 create_cmdb_user
-
 
 # Check for OS type
 
@@ -816,7 +898,18 @@ fi
 create_apache_config
 
 if [ $HAVE_DNSA ]; then
+  echo "Installing and configuring bind."
+  echo ""
+  echo "This will update your resolv.conf to point to this server and any"
+  echo " slave servers you have configured."
+  echo ""
+  echo "If this is not what you want then quit this script and run with the"
+  echo " -n option"
+  echo "Hit enter to continue"
+  read
   create_bind_config
+else
+  echo "Not configuring bind; detected -n option"
 fi
 
 create_tftp_config
@@ -826,3 +919,10 @@ create_dhcp_config
 create_database
 
 create_config
+
+if [ $HAVE_DNSA ]; then
+  echo "Creating initial zone in dnsa..."
+  su - cmdb -c "dnsa -z -F -n $DOMAIN 2>/dev/null"
+  su - cmdb -c "dnsa -a -h $HOSTNAME -n $DOMAIN -t A -i $IPADDR"
+  su - cmdb -c "dnsa -w -F 2>/dev/null"
+fi

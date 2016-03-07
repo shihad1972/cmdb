@@ -45,6 +45,7 @@ enum {			/* Database colum types */
 	DBTEXT = 1,
 	DBINT = 2,
 	DBSHORT = 3,
+	DBTINY = 4,
 	FLYBY
 };
 
@@ -104,7 +105,9 @@ enum {			/* dnsa error codes */
 	BUFFER_TOO_SMALL = 55,
 	CREATE_FILE_FAIL = 60,
 	WRONG_PROTO = 61,
-	CANNOT_UPDATE = 62
+	CANNOT_UPDATE = 62,
+	RECORD_EXISTS = 63,
+	GET_TIME_FAILED = 64
 };
 
 enum {			/* Database Type errors */
@@ -244,7 +247,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_NUMBER = 226,
 	NO_NTP_SERVER = 227,
 	NO_OPTION = 228,
-	CBC_DATA_WRONG_COUNT = 229
+	CBC_DATA_WRONG_COUNT = 229,
+	NO_DEVICE_OR_DETAIL = 230
 };
 
 enum {			/* command line error codes */
@@ -330,10 +334,14 @@ enum {			/* cmdb Action codes */
 	ADD_TO_DB = 3,
 	RM_FROM_DB = 4,
 	CVERSION = 5,
-	MODIFY = 6
+	MODIFY = 6,
+	DOWNLOAD = 7,
+	HELP = 8,
+	VERS = 9
 };
 
 enum {			/* cbc action codes */
+	SET_DEFAULT = 10,
 	WRITE_CONFIG = 11,
 	DISPLAY_CONFIG = 12,
 	ADD_CONFIG = 13,
@@ -356,7 +364,8 @@ enum {			/* dnsa action codes */
 	ADD_PREFER_A = 28,
 	DELETE_ZONE = 29,
 	DELETE_RECORD = 30,
-	DELETE_PREFERRED = 31
+	DELETE_PREFERRED = 31,
+	ADD_CNAME_ON_ROOT = 32
 };
 
 enum {			/* cbc values for build type */
@@ -448,9 +457,15 @@ display_dnsa_usage(void);
 void
 display_cpc_usage(void);
 void
+display_ckc_usage(void);
+void
+display_cbclocale_usage(void);
+void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
+void
+display_version(char *prog);
 
 // Database fields query mismatch error functions
 
@@ -517,6 +532,8 @@ clean_string_l(string_l *list);
 
 void *
 cmdb_malloc(size_t len, const char *msg);
+void
+cmdb_free(void *data, size_t len);
 void
 resize_string_buff(string_len_s *build);
 

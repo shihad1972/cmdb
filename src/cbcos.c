@@ -26,27 +26,92 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
-#include "../config.h"
+#include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
-#include "cbcos.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
+#include "cbcnet.h"
+
+typedef struct cbcos_comm_line_s {
+	char alias[MAC_S];
+	char arch[RANGE_S];
+	char os[MAC_S];
+	char ver_alias[MAC_S];
+	char version[MAC_S];
+	short int action;
+} cbcos_comm_line_s;
+
+static void
+init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static void
+init_cbcos_comm_line(cbcos_comm_line_s *col);
+
+static int
+parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col);
+
+static int
+list_cbc_build_os(cbc_config_s *cmc);
+
+static int
+display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+cbcos_grab_boot_files(cbc_config_s *cmc, cbcos_comm_line_s *col);
+
+static int
+check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id);
+
+static void
+copy_new_os_profile(cbc_config_s *cmc, char *oss[]);
+
+static int
+cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[]);
+
+static void
+copy_new_build_os(cbc_config_s *cbc, uli_t *id);
+/*
+static void
+copy_locale_for_os(cbc_config_s *cbc, uli_t *id); */
+
+static void
+copy_packages_for_os(cbc_config_s *cbc, uli_t *id);
+
+static void
+cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
+
+static void
+cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *os, int *test);
+
+static void
+cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
 
 int
 main (int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
-	char error[URL_S];
+	char error[URL_S], *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcos_comm_line_s *cocl;
@@ -55,13 +120,18 @@ main (int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcos main");
 	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
 		report_error(MALLOC_FAIL, "cocl in cbcos main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcos_config(cmc, cocl);
+	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
+		free(config);
 		free(cocl);
 		free(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
+		free(config);
 		free(cocl);
 		free(cmc);
 		parse_cbc_config_error(retval);
@@ -77,27 +147,43 @@ main (int argc, char *argv[])
 		retval = remove_cbc_build_os(cmc, cocl);
 	else if (cocl->action == MOD_CONFIG)
 		printf("Cowardly refusal to modify Operating Systems\n");
+	else if (cocl->action == DOWNLOAD)
+		retval = cbcos_grab_boot_files(cmc, cocl);
 	else
 		printf("Unknown action type\n");
 	free(cmc);
 	if (retval != 0) {
-		snprintf(error, URL_S, "%s %s %s",
-			 cocl->os, cocl->version, cocl->arch);
+		cbcos_get_os_string(error, cocl);
 		free(cocl);
 		report_error(retval, error);
 	}
 	free(cocl);
+	free(config);
 	exit(retval);
 }
 
-void
+static void
+cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
+{
+	if (strncmp(cocl->version, "NULL", COMM_S) != 0) {
+		if (strncmp (cocl->arch, "NULL", COMM_S))
+			snprintf(error, URL_S, "%s %s %s",
+			 cocl->os, cocl->version, cocl->arch);
+		else
+			snprintf(error, URL_S, "%s %s", cocl->os, cocl->version);
+	} else {
+		snprintf(error, URL_S, "%s", cocl->os);
+	}
+}
+
+static void
 init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	init_cbc_config_values(cmc);
 	init_cbcos_comm_line(col);
 }
 
-void
+static void
 init_cbcos_comm_line(cbcos_comm_line_s *col)
 {
 	col->action = 0;
@@ -108,12 +194,39 @@ init_cbcos_comm_line(cbcos_comm_line_s *col)
 	snprintf(col->version, MAC_S, "NULL");
 }
 
-int
+static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
+	const char *optstr = "ade:ghlmn:o:rs:t:v";
 	int opt;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"version-alias",	required_argument,	NULL,	'e'},
+		{"download",		no_argument,		NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"os",			required_argument,	NULL,	'n'},
+		{"os-version",		required_argument,	NULL,	'o'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"alias",		required_argument,	NULL,	's'},
+		{"os-alias",		required_argument,	NULL,	's'},
+		{"architecture",	required_argument,	NULL,	't'},
+		{"os-arch",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ade:lmn:o:rs:t:v")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			col->action = ADD_CONFIG;
 		else if (opt == 'd')
@@ -126,6 +239,10 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = MOD_CONFIG;
 		else if (opt == 'v')
 			col->action = CVERSION;
+		else if (opt == 'g')
+			col->action = DOWNLOAD;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
 		else if (opt == 'e')
 			snprintf(col->ver_alias, MAC_S, "%s", optarg);
 		else if (opt == 'n')
@@ -156,14 +273,15 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}
-	if (col->action != LIST_CONFIG && (strncmp(col->os, "NULL", COMM_S) == 0)) {
+	if ((col->action != LIST_CONFIG && col->action != DOWNLOAD) && 
+		(strncmp(col->os, "NULL", COMM_S) == 0)) {
 		printf("No OS name was provided\n");
 		return DISPLAY_USAGE;
 	}
 	return NONE;
 }
 
-int
+static int
 list_cbc_build_os(cbc_config_s *cmc)
 {
 	char *oalias, *talias;
@@ -201,7 +319,7 @@ list_cbc_build_os(cbc_config_s *cmc)
 	return retval;
 }
 
-int
+static int
 display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os;
@@ -221,10 +339,12 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 		return MY_QUERY_FAIL;
 	}
 	os = base->bos;
-	printf("Operating System %s\n", name);
-	printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 	while (os) {
 		if (strncmp(os->os, name, MAC_S) == 0) {
+			if (i == 0) {
+				printf("Operating System %s\n", name);
+				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
+			}
 			i++;
 			create = (time_t)os->ctime;
 			if (strncmp(os->ver_alias, "none", COMM_S) == 0) {
@@ -251,7 +371,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	return retval;
 }
 
-int
+static int
 add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	char *oss[3];
@@ -296,12 +416,14 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	else
 		printf("Build os added to database\n");
 	copy_new_os_profile(cmc, oss);
+	if ((retval = cbc_get_boot_files(cmc, col->alias, col->version, col->arch, col->ver_alias)) != 0)
+		fprintf(stderr, "Unable to download boot files\n");
 	clean_dbdata_struct(data);
 	clean_cbc_struct(cbc);
 	return retval;
 }
 
-int
+static int
 remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
@@ -336,27 +458,7 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	return retval;
 }
 
-int
-check_for_build_os(cbcos_comm_line_s *col, dbdata_s *data)
-{
-	char *version = col->version, *arch = col->arch;
-	unsigned int i, type = BUILD_OS_ON_NAME, max;
-
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	dbdata_s *list = data->next->next;
-	while (list) {
-		if ((strncmp(version, list->fields.text, MAC_S) == 0) &&
-			(strncmp(arch, list->next->fields.text, RANGE_S) == 0)) {
-			return 1;
-		} else {
-			for (i = 0; ((i < max) && (list)); i++)
-				list = list->next;
-		}
-	}
-	return NONE;
-}
-
-int
+static int
 check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 {
 	int retval, query = BUILD_ID_ON_OS_ID, i;
@@ -391,7 +493,7 @@ check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 	return retval;
 }
 
-void
+static void
 copy_new_os_profile(cbc_config_s *cmc, char *oss[])
 {
 	char alias[RANGE_S];
@@ -419,7 +521,7 @@ copy_new_os_profile(cbc_config_s *cmc, char *oss[])
 	return;
 }
 
-int
+static int
 cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 {
 	if (!(cbc) || !(oss) || !(id))
@@ -461,18 +563,18 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 		return 0;
 }
 
-void
+static void
 copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 {
 	if (!(cbc) || !(id)) {
 		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
 		return;
 	}
-	copy_locale_for_os(cbc, id);
+//	copy_locale_for_os(cbc, id);
 	copy_packages_for_os(cbc, id);
 }
-
-void
+/*
+static void
 copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 {
 	int retval = 0, query = LOCALE_DETAILS_ON_OS_ID, i = 0;
@@ -530,9 +632,9 @@ copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
 	printf("%d locale(s) inserted for new OS\n", i);
 	base->locale = llist;
 	clean_cbc_struct(base);
-}
+} */
 
-void
+static void
 copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
 {
 	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
@@ -587,5 +689,80 @@ copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
 	printf("%d package(s) inserted\n", i);
 	base->package = plist;
 	clean_cbc_struct(base);
+}
+
+static int
+cbcos_grab_boot_files(cbc_config_s *cmc, cbcos_comm_line_s *col)
+{
+	int retval = 0;
+	int test = 0;
+	int count = 0;
+	cbc_s *cbc = NULL;
+	cbc_build_os_s *bos;
+
+	cbcos_check_for_null_in_comm_line(col, &test);
+	initialise_cbc_s(&cbc);
+	if ((retval = cbc_run_query(cmc, cbc, BUILD_OS)) != 0) {
+		fprintf(stderr, "Build os query failed\n");
+		goto cleanup;
+	}
+	bos = cbc->bos;
+	cbcos_check_for_null_in_comm_line(col, &test);
+	while (bos) {
+		if ((test & 7) == 7) {
+			printf("Will download OS %s, version %s, arch %s\n",
+			 bos->os, bos->version, bos->arch);
+			count++;
+			if ((retval = cbc_get_boot_files(cmc, bos->alias, bos->version, bos->arch, bos->ver_alias)) != 0)
+				fprintf(stderr, "Error downloading OS\n");
+		} else {
+			cbcos_check_for_os(col, bos, &test);
+			if ((test & 56) == 56) {
+				printf("Will download OS %s, version %s, arch %s\n",
+				 bos->os, bos->version, bos->arch);
+				count ++;
+				if ((retval = cbc_get_boot_files(cmc, bos->alias, bos->version, bos->arch, bos->ver_alias)) != 0)
+					fprintf(stderr, "Error downloading OS\n");
+			}
+		}
+		bos = bos->next;
+		test = test & 7;
+	}
+	if (count == 0)
+		fprintf(stderr, "No OS found to download\n");
+	cleanup:
+		if (cbc)
+			clean_cbc_struct(cbc);
+		return retval;
+}
+
+static void
+cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test)
+{
+	*test = 0;	// Sanity
+/* Set bit fields from command line input */
+	if (strncmp(col->arch, "NULL", RANGE_S) == 0)
+		*test = *test | 1;
+	if ((strncmp(col->version, "NULL", MAC_S) == 0) &&
+	    (strncmp(col->ver_alias, "NULL", MAC_S) == 0))
+		*test = *test | 2;
+	if ((strncmp(col->os, "NULL", MAC_S) == 0) &&
+	    (strncmp(col->alias, "NULL", MAC_S) == 0))
+		*test = *test | 4;
+}
+
+static void
+cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *cbos, int *test)
+{
+	if (((*test & 1) == 1 ) || (strncmp(col->arch, cbos->arch, RANGE_S) == 0))
+		*test = *test | 8;
+	if (((*test & 2) == 2) ||
+	    (strncmp(col->version, cbos->version, MAC_S) == 0) ||
+	    (strncmp(col->ver_alias, cbos->ver_alias, MAC_S) == 0))
+		*test = *test | 16;
+	if (((*test & 4) == 4) ||
+	    (strncmp(col->os, cbos->os, MAC_S) == 0) ||
+	    (strncmp(col->alias, cbos->alias, MAC_S) == 0))
+		*test = *test | 32;
 }
 

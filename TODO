@@ -1,13 +1,20 @@
-09/03/2015
-I want to be able to add copy functionality to cbcos and cbcvarient so that
-when a new OS or varient is created, it will copy the settings from an
-existing one. This will make the adding of a varient / OS much easier
-*** Fixed 01/04/2015 *** Version: 0.2.24.2
+06/03/2016
+I should probably have a default configuration file, and use make to create
+it and then have make install install it in ${sysconfdir}/cmdb. Using the
+configmake header, I can then work out where this is supposed to be.
+This will probably be less necessary when I move to a daemon for the main
+work, and the command line programs just contact the daemon to do the work,
+as the daemon can have a config file passed to it on startup.
+	*** Update: 07/03/2016 ***
+	Install script cmdb.sh now takes into account the values in
+	configmake.h
 
-06/03/2015
-Looks like I now need to add a grub part to preseed:
-d-i grub-installer/only_debian boolean true
-Need to add this to cbc and cpc
+24/02/2016
+Add default for build_os, partition and varient
+
+21/02/2016
+I want to move config.h into include/
+*** Fixed: 21/02/2016 ***
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before
@@ -47,17 +54,6 @@ probably want to associate these with the struct char memeber somehow.
 Currently config reading is pretty ugly :(
 Also need to add the ENV options too - should be able to get the
 values from environment.
-
-22/10/2014
-It seems we can add mount options to the partitioning scheme using the
-following:
-
-options/nodev{ nodev }
-etc.
-
-Need to work on a secure build with some specific options for mounted
-filesystems like /tmp, /var/log etc. See www.cisecurity.org
-*** Fixed in 135f524c26116913469405f5418cbd2feb6d4b40 22 March 2015 ***
 
 20/10/2014
 Need to add racks, switches and power outlets into the database. Also maybe
@@ -107,18 +103,13 @@ domain
 cpc	create preseed config
 ckc	create kickstart config
 **** Basic version of cpc has been written ****
+**** Basic version of ckc has been written ****
 
 09/08/2014
 Need to be able to update / modify in cmdb. I will need to the add the
 updates to the database.
 *** Server complete 16/10/2014 ***
 *** Customer and services seem complete too ***
-
-09/07/2014
-Adding new OS is not complete. There is no locale for the new OS so we
-cannot use it. This is error 190
-*** Added report_error for this ***
-*** This has now been sorted. Varients and locales from previous OS version added ***
 
 02/06/2014
 Need to add support for internal / external views.
@@ -187,12 +178,6 @@ search so that it will do a, e.g. cbc_search and get the correct values
 for number and type of args and fields. Also this will need to be the
 correct search itself. Could this config contain this information?
 
-15/06/2013
-When adding new build_os need to add locales for that os. Should probably
-base on build type
-*** Fixed. When adding new OS we now add locales and varients for
-    previous OS version ***
-
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
 it cannot add the zone due to the A records for the NS records are not
@@ -212,9 +197,9 @@ Should have the root password for the machine in the database and
 add this to the build file. Need to work out how to get hash
 
 Also need to add an email alias for root in smtp configuration
-
-23/05/2013
-Still need to write cbclocale
+	06/11/2015 **UPDATE**
+	The package configuration for postfix is supposed to do this, but
+	only seems to work in stretch (and not jessie nor wheezy)
 
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements

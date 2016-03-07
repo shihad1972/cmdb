@@ -23,7 +23,7 @@
  * 
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -44,11 +44,20 @@ void *
 cmdb_malloc(size_t len, const char *msg)
 {
 	void *data;
-	if (!(data = malloc(len))) {
+	if (!(data = calloc(len, 1))) {
 		perror(msg);
 		exit(MALLOC_FAIL);
 	}
 	return data;
+}
+
+void
+cmdb_free(void *data, size_t len)
+{
+	if (!(data))
+		return;
+	memset(data, 0, len);
+	free(data);
 }
 
 void

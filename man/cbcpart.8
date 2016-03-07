@@ -1,4 +1,4 @@
-.TH cbcpart 8 "Version 0.2: 14 March 2015" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcpart 8 "Version 0.2: 05 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcpart \- Create Build Config Partitions
 .SH SYNOPSIS
@@ -35,50 +35,51 @@ Manager for more flexible partition arangements.
 
 .SH OPTIONS
 .B action
-.IP -a
+.IP "-a,  --add"
 add a partition or scheme.
-.IP -d
+.IP "-d,  --display"
 display partitions in a scheme.
-.IP -l
+.IP "-l,  --list"
 list all partition schemes.
-.IP -m
+.IP "-m,  --modify"
 modify a scheme / partition.
-.IP -r
+.IP "-r,  --remove, --delete"
 remove a partition from a scheme or an entire partition scheme.
-.IP -v
+.IP "-v,  --version"
 version (no other argument needed)
-
+.IP "-h,  --help"
+display a short help message
 \fBNote\fP: these options are mutually exclusive.
 .PP
 .B selection
-.IP -p
+.IP "-p,  --partition"
 work on a partition.
-.IP -s
+.IP "-s,  --scheme"
 work on a scheme.
-.IP -o
+.IP "-o,  --option"
 work on a partition option.
 
 .PP
 .B details
-.IP -u
+.IP "-u,  --lvm"
 when adding a partition scheme, this option marks the scheme as using LVM.
-.IP "-g <log vol name>"
+.IP "-g,  --logical-volume, --logvol \fBlog vol name\fP"
 the name for the logical volume.
-.IP "-n <scheme name>"
+.IP "-n,  --scheme-name \fBscheme name\fP"
 the name of the partition scheme.
-.IP "-b <option>"
+.IP "-b,  --option \fBoption\fP"
 you can use this to supply a mount option for the partition
 .PP
 .B partition information
-.IP "-f <file system type>"
+.IP "-f,  --file-system \fBfile system type\fP"
 the file system type for the partition
-.IP "-t <mount-point>
+.IP "-t,  --mount-point \fBmount-point\fP"
 the mount point of the partition
-.IP "-i <minimum size>"
+.IP "-i,  --min-size \fBminimum size\fP"
 the minimum size of the partition
-.IP "-x <maximum size>"
+.IP "-x,  --max-size \fBmaximum size\fP"
 the maximum size of the partition
-.IP "-y <priority>"
+.IP "-y,  --priority \fBpriority\fP"
 the priority given to a partition when determining it's size
 .PP
 If you do not wish to use the min,max,priority scheme, just specify the maximum
@@ -116,4 +117,5 @@ Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
 .BR cbcdomain(8),
 .BR cbclocale(8),
 .BR cbcos(8),
+.BR cbclocale(8),
 .BR cbcvarient(8)

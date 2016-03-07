@@ -24,7 +24,7 @@
 
 #ifndef __CBC_BASE_SQL_H
 # define __CBC_BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 # include "base_sql.h"
 
 extern const char *cbc_sql_select[];
@@ -65,7 +65,8 @@ enum {			/* cbc delete SQL statements */
 	SYSP_CONF = 13,
 	CBCSCR_ON_ID = 14,
 	CBCSCRARG_ON_ID = 15,
-	PART_OPT_ON_ID = 16
+	PART_OPT_ON_ID = 16,
+	LOCALE_ON_ID = 17
 };
 
 enum {			/* cbc search SQL statements */
@@ -147,7 +148,10 @@ enum {			/* cbc search SQL statements */
 	PACKAGE_OS_ID_ON_VID = 75,
 	OS_DETAIL_ON_BT_ID = 76,
 	LOCALE_DETAILS_ON_OS_ID = 77,
-	PACKAGE_VID_ON_OS_ID = 78
+	PACKAGE_VID_ON_OS_ID = 78,
+	BOOT_FILES_MIRROR_DETAILS = 79,
+	LOCALE_ID_ON_NAME = 80,
+	GET_DEFAULT_LOCALE = 81
 };
 
 enum {			/* cbc update SQL statements */
@@ -182,7 +186,8 @@ enum {			/* cbc update SQL statements */
 	UP_DOM_XYMON = 28,
 	UP_VARIENT = 29,
 	UP_SEEDSCHEME = 30,
-	UP_BDOM_MUSER = 31
+	UP_BDOM_MUSER = 31,
+	UP_DEFAULT_LOCALE = 32
 };
 
 # ifdef HAVE_MYSQL
@@ -210,6 +215,9 @@ cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
 int
 cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type);
 
+int
+cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
@@ -232,6 +240,9 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
 
 int
 cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+
+int
+cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id);
 
 void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);

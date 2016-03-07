@@ -25,43 +25,42 @@
  *
  */
 #define _GNU_SOURCE
+#include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcsysp.h"
 
 int
 main(int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
 	int retval;
-	cbc_config_s *cbc;
-	cbc_sysp_s *cbs;
+	char *config = cmdb_malloc(CONF_S, "config in main");
+	cbc_config_s *cbc = cmdb_malloc(sizeof(cbc_config_s), "cbc in main");
+	cbc_sysp_s *cbs = cmdb_malloc(sizeof(cbc_sysp_s), "cbs in main");
 
-	if (!(cbc = malloc(sizeof(cbc_config_s))))
-		report_error(MALLOC_FAIL, "cbc in main");
-	if (!(cbs = malloc(sizeof(cbc_sysp_s))))
-		report_error(MALLOC_FAIL, "cbs in main");
-	init_cbcsysp_s(cbs);
 	init_cbc_config_values(cbc);
-	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) == DISPLAY_USAGE) {
+	get_config_file_location(config);
+	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
-	} else if (retval != 0) {
-		clean_cbcsysp_s(cbs);
-		free(cbc);
-		exit (retval);
 	}
 	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
 		clean_cbcsysp_s(cbs);
@@ -101,6 +100,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	free(cbc);
+	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;
@@ -109,9 +109,36 @@ main(int argc, char *argv[])
 int
 parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 {
-	int retval = 0, opt;
+	const char *optstr = "ab:df:g:hlmn:oprt:vy";
+	int retval, opt;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"field-no",		required_argument,	NULL,	'f'},
+		{"argument",		required_argument,	NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"package-config",	no_argument,		NULL,	'o'},
+		{"package",		no_argument,		NULL,	'p'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"type",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"package-arg",		no_argument,		NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ab:df:g:lmn:oprt:vy")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a')
 			cbcs->action = ADD_CONFIG;
 		else if (opt == 'l')
@@ -126,6 +153,8 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 			cbcs->what = SPACKAGE;
 		else if (opt == 'y')
 			cbcs->what = SPACKARG;
+		else if (opt == 'h')
+			return DISPLAY_USAGE;
 		else if (opt == 'v') {
 			cbcs->action = CVERSION;
 			retval = CVERSION;
@@ -169,34 +198,34 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
-		retval = ARGV_INVAL;
+		retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKARG) {
 		if (cbcs->action != LIST_CONFIG) {
 			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
 				fprintf(stderr, "You need both package field and type\n");
-				retval = ARGV_INVAL;
+				retval = DISPLAY_USAGE;
 			} else if (cbcs->action == RM_CONFIG && !(cbcs->field)) {
 				fprintf(stderr,
 "You need to provide the field you want to remove\n");
-				retval = ARGV_INVAL;
+				retval = DISPLAY_USAGE;
 			}
 		} else if (!(cbcs->name)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKCNF) {
 		if (!(cbcs->domain))  {
 			fprintf(stderr, "No build domain supplied\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
 			fprintf(stderr, "Need both package name and field to list config\n\n");
-			retval = ARGV_INVAL;
+			retval = DISPLAY_USAGE;
 		}
 	}
 	return retval;

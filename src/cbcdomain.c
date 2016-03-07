@@ -24,6 +24,8 @@
  *  part of the cbcdomain program
  * 
  */
+#include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,15 +36,20 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "cbcnet.h"
 #include "cbc_base_sql.h"
-#include "checks.h"
+#ifdef HAVE_LIBPCRE
+# include "checks.h"
+#endif // HAVE_LIBPCRE
 #include "cbcdomain.h"
-
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 # include "dnsa_base_sql.h"
@@ -52,7 +59,7 @@
 int
 main(int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
+	char *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcdomain_comm_line_s *cdcl;
@@ -61,15 +68,19 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcdomain main");
 	if (!(cdcl = malloc(sizeof(cbcdomain_comm_line_s))))
 		report_error(MALLOC_FAIL, "cdcl in cbcdomain main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcdomain_config(cmc, cdcl);
 	if ((retval = parse_cbcdomain_comm_line(argc, argv, cdcl)) != 0) {
 		free(cdcl);
 		free(cmc);
+		free(config);
 		display_command_line_error(retval, argv[0]);
 	}
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
 		free(cdcl);
 		free(cmc);
+		free(config);
 		parse_cbc_config_error(retval);
 		exit(retval);
 	}
@@ -88,6 +99,7 @@ main(int argc, char *argv[])
 
 	free(cdcl);
 	free(cmc);
+	free(config);
 	if (retval > 0)
 		report_error(retval, argv[0]);
 	exit(retval);
@@ -118,14 +130,37 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 			if (validate_user_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
 }
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
+	const char *optstr = "ab:k:lmn:rt:vw";
 	int opt, retval;
 
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ak:lmn:rt:vw")) != -1) {
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"network-info",	required_argument,	NULL,	'k'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"ntp-server",		required_argument,	NULL,	't'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"write",		no_argument,		NULL,	'w'},
+		{"commit",		no_argument,		NULL,	'w'},
+		{NULL,			0,			NULL,	0}
+	};
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
 		} else if (opt == 'l') {
@@ -138,13 +173,15 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'n') {
+		} else if (opt == 'b') {
 			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 't') {
 			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
 			cdl->confntp = 1;
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
@@ -275,34 +312,24 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 	fill_bdom_values(bdom, cdl);
 	check_bdom_overlap(cbs, bdom);
 #ifdef HAVE_DNSA
+	size_t dclen = sizeof(dnsa_config_s);
 	dnsa_config_s *dc;
 	dnsa_s *dnsa;
 	dbdata_s *user;
 	zone_info_s *zone;
 
-	if (!(dc = malloc(sizeof(dnsa_config_s))))
-		report_error(MALLOC_FAIL,"dc in add_cbc_build_domain");
-	if (!(dnsa = malloc(sizeof(dnsa_s))))
-		report_error(MALLOC_FAIL, "dnsa in add_cbc_build_domain");
-	if (!(zone = malloc(sizeof(zone_info_s))))
-		report_error(MALLOC_FAIL, "zone in add_cbc_build_domain");
-	if (!(user = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "user in add_cbc_build_domain");
+	dc = cmdb_malloc(dclen, "dc in add_cbc_build_domain");
+	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_cbc_build_domain");
+	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_cbc_build_domain");
+	init_multi_dbdata_struct(&user, 1);
 	dnsa_init_config_values(dc);
-	init_dnsa_struct(dnsa);
-	init_dbdata_struct(user);
 	init_zone_struct(zone);
+	dnsa->zones = zone;
 	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
 		fprintf(stderr, "Error in config file %s\n", cdl->config);
-		free(dc);
-		free(dnsa);
-		free(zone);
-		free(data);
-		clean_cbc_struct(base);
-		return retval;
+		goto dnsa_cleanup;
 	}
 	fill_cbc_fwd_zone(zone, bdom->domain, dc);
-	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
 		printf("Zone %s already in DNS\n", bdom->domain);
 		retval = NONE;
@@ -314,13 +341,8 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 			fprintf(stderr, "Added zone %s\n", zone->name);
 		}
 	}
-	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
-		dnsa_clean_list(dnsa);
-		free(dc);
-		free(data);
-		clean_cbc_struct(base);
-		return retval;
-	}
+	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0)
+		goto dnsa_cleanup;
 	data->args.number = zone->id;
 	user->args.number = (unsigned long int)getuid();
 	user->next = data;
@@ -330,6 +352,8 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 		printf("Zone marked as valid in the database\n");
 	user->next = NULL;
 	clean_dbdata_struct(user);
+	dnsa_clean_list(dnsa);
+	cmdb_free(dc, dclen);
 #endif // HAVE_DNSA
 	if ((retval = cbc_run_insert(cbs, base, BUILD_DOMAINS)) != 0) {
 		fprintf(stderr, "Unable to add build domain %s\n", domain);
@@ -339,8 +363,17 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 			fprintf(stderr, "Cannot write dhcpd.networks!!\n");
 	}
 	clean_cbc_struct(base);
-	free(data);
+	clean_dbdata_struct(data);
 	return retval;
+#ifdef HAVE_DNSA
+	dnsa_cleanup:
+		dnsa_clean_list(dnsa);
+		cmdb_free(dc, dclen);
+		clean_dbdata_struct(data);
+		clean_dbdata_struct(user);
+		clean_cbc_struct(base);
+		return retval;
+#endif // HAVE_DNSA
 }
 
 int

@@ -23,7 +23,7 @@
  *  database for the main cbc program.
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -80,7 +80,11 @@ display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	init_cbc_struct(cbc);
 	init_cbc_struct(details);
 	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME | PARTOPT;
+	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME; // | PARTOPT;
+/*
+ * Removed PARTOPT from the query - if there are no partition options, then
+ * this all fails :( The display function is not using it anyway.
+ */
 	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
 		clean_cbc_struct(cbc);
 		free(details);
@@ -219,9 +223,14 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details)
 void
 print_build_config(cbc_s *details)
 {
+	if (!(details))
+		report_error(CBC_NO_DATA, "details in print_build_config");
 	char *name = details->server->name, ip[RANGE_S], *addr;
 	char *cuser = get_uname(details->build->cuser);
 	char *muser = get_uname(details->build->muser);
+	char *locale = details->locale->locale;
+	char *lang = details->locale->language;
+	char *tz = details->locale->timezone;
 	time_t crtime = (time_t)details->build->ctime;
 	time_t motime = (time_t)details->build->mtime;
 	unsigned long int sid = details->build->def_scheme_id;
@@ -253,6 +262,8 @@ print_build_config(cbc_s *details)
 		printf("IP address:\t%s\n", addr);
 	else
 		printf("No build IP associated with server %s\n", name);
+	if (details->locale)
+		printf("Locale:\t\t%s\nLanguage:\t%s\nTimezone:\t%s\n", locale, lang, tz);
 	printf("Build created by %s at %s", cuser, ctime(&crtime));
 	printf("Build updated by %s at %s", muser, ctime(&motime));
 	if (part) {
@@ -831,13 +842,13 @@ fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
 	size_t len;
 
 	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_build_output");
+		report_error(MALLOC_FAIL, "ip in fill_net_output");
 	if (!(ns = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ns in fill_net_build_output");
+		report_error(MALLOC_FAIL, "ns in fill_net_output");
 	if (!(nm = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "nm in fill_net_build_output");
+		report_error(MALLOC_FAIL, "nm in fill_net_output");
 	if (!(gw = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "gw in fill_net_build_output");
+		report_error(MALLOC_FAIL, "gw in fill_net_output");
 	char *locale = list->fields.text;
 	CHECK_DATA_LIST()
 	char *keymap = list->fields.text;
@@ -1027,21 +1038,27 @@ fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 d-i partman-auto/expert_recipe string \\\n\
       monkey :: \\\n");
 	PRINT_STRING_WITH_LENGTH_CHECK
-	clean_dbdata_struct(data);
 
 	if (lvm > 0)
 		add_pre_volume_group(cml, build);
-	if ((retval = add_pre_parts(cmc, cml, build, lvm)) != 0)
-		return retval;
-	return NONE;
+	retval = add_pre_parts(cmc, cml, build, lvm);
+	memset(line, 0, FILE_S);
+	snprintf(line, FILE_S, "\
+\n\n\
+d-i grub-installer/only_debian boolean true\n\
+d-i grub-installer/bootdev  string %s\n", data->fields.text);
+	PRINT_STRING_WITH_LENGTH_CHECK
+	clean_dbdata_struct(data);
+	return retval;
 }
 
 int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 {
-	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
+//	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
+	char *tmp, output[BUFF_S], *os = cml->os;
 	size_t len;
-	if (strncmp(arch, "i386", COMM_S) == 0) {
+	if (strncmp(os + 1, "ebian", COMM_S) == 0) {
 		snprintf(output, BUFF_S, "\
 \n\n\
 d-i apt-setup/non-free boolean true\n\
@@ -1049,18 +1066,14 @@ d-i apt-setup/contrib boolean true\n\
 d-i apt-setup/services-select multiselect security\n\
 d-i apt-setup/security_host string security.%s.org\n\
 \n\n\
-tasksel tasksel/first multiselect standard\n", os);
-	} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
-\n\
-d-i apt-setup/non-free boolean true\n\
-d-i apt-setup/contrib boolean true\n\
-d-i apt-setup/services-select multiselect security\n\
-d-i apt-setup/security_host string security.%s.org\n\
-\n\
 tasksel tasksel/first multiselect standard\n", os);
 	} else {
-		return NO_ARCH;
+		snprintf(output, BUFF_S, "\
+\n\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n\
+\n\
+tasksel tasksel/first multiselect standard\n");
 	}
 	len = strlen(output);
 	if ((build->size + len) > build->len) {

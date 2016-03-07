@@ -24,12 +24,15 @@
  *
  *  Part of the CMDB program
  *
- *  (C) Iain M Conochie 2012 - 2013 */
+ *  (C) Iain M Conochie 2012 - 2016 */
 
 #ifndef __CBC_DATA_H__
 # define __CBC_DATA_H__
-# include "cmdb.h"
+# ifdef HAVE_STDBOOL_H
+#  include <stdbool.h>
+# endif // HAVE_STDBOOL_H
 # include "netinet/in.h"
+# include "cmdb.h"
 
 typedef struct cbc_boot_line_s {
 	char os[MAC_S];
@@ -128,13 +131,13 @@ typedef struct cbc_locale_s {
 	char language[RANGE_S];
 	char keymap[RANGE_S];
 	char timezone[HOST_S];
+	char name[HOST_S];
 	unsigned long int locale_id;
-	unsigned long int os_id;
-	unsigned long int bt_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
+	bool isdefault;
 	struct cbc_locale_s *next;
 } cbc_locale_s;
 

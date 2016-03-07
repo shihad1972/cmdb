@@ -23,7 +23,7 @@
  *  supplied. Will also contian conditional code base on database type.
  */
 
-#include "../config.h"
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -71,7 +71,7 @@ SELECT os_id, os, os_version, alias, ver_alias, arch, bt_id, cuser, muser, \
 SELECT bt_id, alias, build_type, arg, url, mirror, boot_line FROM build_type\
  ORDER BY alias","\
 SELECT disk_id, server_id, device, lvm FROM disk_dev","\
-SELECT locale_id, locale, country, language, keymap, os_id, bt_id, timezone, \
+SELECT locale_id, locale, country, language, keymap, timezone, name,\
  cuser, muser, ctime, mtime FROM locale","\
 SELECT pack_id, package, varient_id, os_id, cuser, muser, ctime, mtime FROM \
  packages","\
@@ -98,7 +98,7 @@ SELECT part_options_id, def_part_id, def_scheme_id, poption, cuser, muser, \
 
 const char *cbc_sql_insert[] = { "\
 INSERT INTO boot_line (os, os_ver, bt_id, boot_line) VALUES (?, ?,\
- ?, ?, ?)","\
+ ?, ?)","\
 INSERT INTO build (mac_addr, varient_id, net_inst_int, server_id, \
  os_id, ip_id, locale_id, def_scheme_id, cuser, muser) VALUES \
 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
@@ -110,10 +110,10 @@ INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, \
 INSERT INTO build_os (os, os_version, alias, ver_alias, arch,\
  bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES\
- (?, ?, ?, ?, ?, ?, ?)","\
+ (?, ?, ?, ?, ?, ?)","\
 INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)","\
-INSERT INTO locale (locale, country, language, keymap, os_id,\
- bt_id, timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+INSERT INTO locale (locale, country, language, keymap, name, \
+ timezone, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES \
  (?, ?, ?, ?, ?)","\
 INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
@@ -189,7 +189,8 @@ UPDATE build_domain SET config_xymon = 1, xymon_server = ?, muser = ? WHERE \
   bd_id = ?","\
 UPDATE varient SET muser = ? WHERE varient_id = ?","\
 UPDATE seed_schemes SET muser = ? WHERE def_scheme_id = ?","\
-UPDATE build_domain SET muser = ? WHERE bd_id = ?"
+UPDATE build_domain SET muser = ? WHERE bd_id = ?","\
+UPDATE default_locale SET locale_id = ?"
 };
 
 const char *cbc_sql_delete[] = { "\
@@ -209,7 +210,8 @@ DELETE FROM system_package_args WHERE syspack_arg_id = ?","\
 DELETE FROM system_package_conf WHERE syspack_conf_id = ?","\
 DELETE FROM system_scripts WHERE systscr_id = ?","\
 DELETE FROM system_scripts_args WHERE systscr_arg_id = ?","\
-DELETE FROM part_options WHERE part_options_id = ?"
+DELETE FROM part_options WHERE part_options_id = ?","\
+DELETE FROM locale WHERE locale_id = ?"
 };
 
 const char *cbc_sql_search[] = {
@@ -376,35 +378,39 @@ SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON \
 SELECT package, os_id FROM packages WHERE varient_id = ?","\
 SELECT os_id, ctime, arch FROM build_os WHERE bt_id = ?","\
 SELECT locale, country, language, keymap, timezone FROM locale WHERE os_id = ?","\
-SELECT package, varient_id FROM packages WHERE os_id = ?"
+SELECT package, varient_id FROM packages WHERE os_id = ?","\
+SELECT mirror from build_type where alias = ?"
+/* 80 */,"\
+SELECT locale_id FROM locale WHERE name = ?","\
+SELECT locale_id FROM default_locale WHERE locale_id > 0"
 };
 
 const unsigned int cbc_select_fields[] = {
-	5, 13, 13, 10, 11, 7, 4, 12, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
+	5, 13, 13, 10, 11, 7, 4, 11, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8
 };
 
 const unsigned int cbc_insert_fields[] = {
-	4, 10, 10, 7, 8, 6, 3, 9, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
+	4, 10, 10, 7, 8, 6, 3, 8, 5, 9, 4, 9, 4, 5, 3, 5, 6, 3, 7, 5
 };
 
 const unsigned int cbc_update_args[] = {
 	2, 2, 2, 2, 2, 3, 3, 3, 4, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5,
-	5, 6, 3, 3, 3, 3, 3, 2, 2, 2
+	5, 6, 3, 3, 3, 3, 3, 2, 2, 2, 1
 };
 const unsigned int cbc_delete_args[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1, 1
 };
 
 const int cbc_inserts[][24] = {
@@ -422,7 +428,7 @@ const int cbc_inserts[][24] = {
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBINT, DBTEXT, DBSHORT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0 },
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBTEXT, DBINT, DBINT,
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	  0, 0, 0, 0, 0, 0, 0, 0 },
@@ -482,10 +488,12 @@ const unsigned int cbc_update_types[][6] = {
 	{ DBTEXT, DBINT, DBINT, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
-	{ DBINT, DBINT, NONE, NONE, NONE, NONE }
+	{ DBINT, DBINT, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_delete_types[][2] = {
 	{ DBTEXT, NONE } ,
+	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
 	{ DBINT, NONE } ,
@@ -582,7 +590,10 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
 	{ DBINT, NONE, NONE, NONE },
-	{ DBINT, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE },
+	{ NONE, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -663,7 +674,10 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
+	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -779,6 +793,21 @@ cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 		report_error(DB_TYPE_INVALID, ccs->dbtype);
 	return retval;
 }
+/*
+int
+cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id)
+{
+	int retval = 0;
+	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
+		report_error(NO_DB_TYPE, "cbc_set_default");
+#ifdef HAVE_MYSQL
+	else if (strncmp(ccs->dbtype, "mysql", COMM_S) == 0)
+		retval = cbc_set_default_mysql(ccs, table, id);
+#endif // HAVE_MYSQL
+	else
+		report_error(DB_TYPE_INVALID, ccs->dbtype);
+	return retval;
+} */
 
 int
 cbc_get_query(int type, const char **query, unsigned int *fields)
@@ -1010,6 +1039,16 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 	cmdb_mysql_cleanup(&cbc);
 	return retval;
 }
+/*
+int
+cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
+{
+	MYSQL cbc;
+	MYSQL_STMT *cbc_stmt;
+	int retval = 0;
+
+	return retval;
+} */
 
 int
 cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
@@ -1528,13 +1567,12 @@ cbc_store_locale_mysql(MYSQL_ROW row, cbc_s *base)
 	snprintf(loc->country, RANGE_S, "%s", row[2]);
 	snprintf(loc->language, RANGE_S, "%s", row[3]);
 	snprintf(loc->keymap, RANGE_S, "%s", row[4]);
-	loc->os_id = strtoul(row[5], NULL, 10);
-	loc->bt_id = strtoul(row[6], NULL, 10);
-	snprintf(loc->timezone, HOST_S, "%s", row[7]);
-	loc->cuser = strtoul(row[8], NULL, 10);
-	loc->muser = strtoul(row[9], NULL, 10);
-	convert_time(row[10], &(loc->ctime));
-	convert_time(row[11], &(loc->mtime));
+	snprintf(loc->timezone, HOST_S, "%s", row[5]);
+	snprintf(loc->name, HOST_S, "%s", row[6]);
+	loc->cuser = strtoul(row[7], NULL, 10);
+	loc->muser = strtoul(row[8], NULL, 10);
+	convert_time(row[9], &(loc->ctime));
+	convert_time(row[10], &(loc->mtime));
 	list = base->locale;
 	if (list) {
 		while (list->next)
@@ -1997,14 +2035,12 @@ cbc_setup_bind_mysql_locale(void **buffer, cbc_s *base, unsigned int i)
 	else if (i == 3)
 		*buffer = &(base->locale->keymap);
 	else if (i == 4)
-		*buffer = &(base->locale->os_id);
+		*buffer = &(base->locale->name);
 	else if (i == 5)
-		*buffer = &(base->locale->bt_id);
-	else if (i == 6)
 		*buffer = &(base->locale->timezone);
-	else if (i == 7)
+	else if (i == 6)
 		*buffer = &(base->locale->cuser);
-	else if (i == 8)
+	else if (i == 7)
 		*buffer = &(base->locale->muser);
 }
 
@@ -2872,14 +2908,13 @@ cbc_store_locale_sqlite(sqlite3_stmt *state, cbc_s *base)
 	snprintf(loc->country, RANGE_S, "%s", sqlite3_column_text(state, 2));
 	snprintf(loc->language, RANGE_S, "%s", sqlite3_column_text(state, 3));
 	snprintf(loc->keymap, RANGE_S, "%s", sqlite3_column_text(state, 4));
-	loc->os_id = (unsigned long int) sqlite3_column_int64(state, 5);
-	loc->bt_id = (unsigned long int) sqlite3_column_int64(state, 6);
-	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 7));
-	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 8);
-	loc->muser = (unsigned long int) sqlite3_column_int64(state, 9);
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
+	snprintf(loc->timezone, HOST_S, "%s", sqlite3_column_text(state, 5));
+	snprintf(loc->name, HOST_S, "%s", sqlite3_column_text(state, 6));
+	loc->cuser = (unsigned long int) sqlite3_column_int64(state, 7);
+	loc->muser = (unsigned long int) sqlite3_column_int64(state, 8);
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 9));
 	convert_time(stime, &(loc->ctime));
-	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 11));
+	snprintf(stime, MAC_S, "%s", sqlite3_column_text(state, 10));
 	convert_time(stime, &(loc->mtime));
 	list = base->locale;
 	if (list) {
@@ -3717,28 +3752,23 @@ state, 4, loc->keymap, (int)strlen(loc->keymap), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind keymap %s\n", loc->keymap);
 		return retval;
 	}
-	if ((retval = sqlite3_bind_int64(
-state, 5, (sqlite_int64)loc->os_id)) > 0) {
-		fprintf(stderr, "Cannot bind os_id %lu\n", loc->os_id);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_int64(
-state, 6, (sqlite3_int64)loc->bt_id)) > 0) {
-		fprintf(stderr, "Cannot bind bt_id %lu\n", loc->bt_id);
-		return retval;
-	}
 	if ((retval = sqlite3_bind_text(
-state, 7, loc->timezone, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
+state, 5, loc->timezone, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
 		fprintf(stderr, "Cannot bind timezone %s\n", loc->timezone);
 		return retval;
 	}
+	if ((retval = sqlite3_bind_text(
+state, 6, loc->name, (int)strlen(loc->timezone), SQLITE_STATIC)) > 0) {
+		fprintf(stderr, "Cannot bind name %s\n", loc->timezone);
+		return retval;
+	}
 	if ((retval = sqlite3_bind_int64(
-state, 8, (sqlite_int64)loc->cuser)) > 0) {
+state, 7, (sqlite_int64)loc->cuser)) > 0) {
 		fprintf(stderr, "Cannot bind cuser %lu\n", loc->cuser);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int64(
-state, 9, (sqlite3_int64)loc->muser)) > 0) {
+state, 8, (sqlite3_int64)loc->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", loc->muser);
 		return retval;
 	}

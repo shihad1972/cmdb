@@ -28,13 +28,15 @@
  *  (C) Iain M Conochie 2012 - 2013
  * 
  */
-#include "../config.h"
+#include <config.h>
+#include <configmake.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
@@ -106,6 +108,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
 	} else if (error == CBC_NO_DATA) {
 		fprintf(stderr, "Null pointer passed for %s\n", errstr);
+	} else if (error == GET_TIME_FAILED) {
+		fprintf(stderr, "Call to localtime failed: %s\n", errstr);
 	} else if (error == FILE_O_FAIL) {
 		fprintf(stderr, "Unable to open file %s\n", errstr);
 	} else if (error == CHKZONE_FAIL) {
@@ -230,6 +234,10 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "dbdata count is wrong in %s\n", errstr);
 	} else if (error == NO_SYSPACK_CONF) {
 		;
+	} else if (error == NO_DEVICE_OR_DETAIL) {
+		fprintf(stderr, "No device or detail in %s\n", errstr);
+	} else if (error == NO_ARG) {
+		fprintf(stderr, "Argument does not exist\n");
 	} else {
 		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
 	}
@@ -364,6 +372,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 			display_cbcsysp_usage();
 		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
 			display_cbcscript_usage();
+		else if (strncmp(program, "cbclocale", CONF_S) == 0)
+			display_cbclocale_usage();
 		exit(0);
 	} else {
 		fprintf(stderr, "Unknown error code %d!\n", retval);
@@ -382,7 +392,7 @@ display_cmdb_usage(void)
 	printf("-a: add\n-d: display\n-l: list\n-r: remove\n-f: force\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
-	printf("-e: services\n-h: hardware\n-o: virtual machine hosts\n");
+	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-m: vmhost server name for adding a server\n");
@@ -435,12 +445,12 @@ display_cbcdomain_usage(void)
 	printf("-a: add build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
-	printf("All actions apart from -l and -w need -n <domain name>\n\n");
+	printf("All actions apart from -l and -w need -b <domain name>\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("NTP server configuration:\n");
 	printf("-t ntp_server\n\n");
-	printf("cbcdomain ( action ) [ -n domain ] ( app options )\n\n");
+	printf("cbcdomain ( action ) [ -b build-domain ] ( app options )\n\n");
 }
 
 void
@@ -449,8 +459,9 @@ display_cbcos_usage(void)
 	printf("cbcos: Program to manipulate build operating systems\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add OS\n-d: display OS\n-l: list OS\n-r: remove OS\n");
-	printf("All actions apart from -l need -n <OS name>\n\n");
+	printf("-a: add OS\n-d: display OS\n-g: grab boot files\n-l: list OS\n");
+	printf("-r: remove OS\n");
+	printf("All actions apart from -l and -g need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <alias>\n-t: <os architecture\n\n");
@@ -516,6 +527,7 @@ display_dnsa_usage(void)
 	printf("\n\t-h -n -i\n");
 	printf("-g: remove preferred A record\n\t -i\n");
 	printf("-l: list zones\n\t[ -F | -R ]\n");
+	printf("-m: add CNAME to root domain\n\t-h -n\n");
 	printf("-r: remove record\n\t-h -n\n");
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[ -F | -R ]\n");
@@ -539,7 +551,7 @@ display_cpc_usage(void)
 	printf("-d <domain>\tDNS domain name\n");
 	printf("-e <ntp-server>\n");
 	printf("-f <filename>\tOutput to the named file\n");
-	printf("-k <keyboard county layout>\n");
+	printf("-y <keyboard county layout>\n");
 	printf("-l <locale>\n");
 	printf("-i <interface>\n");
 	printf("-n <hostname>\tHost name\n");
@@ -548,7 +560,27 @@ display_cpc_usage(void)
 	printf("-s <suite>\n");
 	printf("-t <timezone>\n");
 	printf("-u <url>\n");
-	printf("-v <disk drive id>\n");
+	printf("-k <disk drive id>\n");
+}
+
+void
+display_ckc_usage(void)
+{
+	printf("ckc: create kickstart config %s\n", VERSION);
+	printf("Usage\n");
+	printf("-d <domain>\tDNS domain name\n");
+	printf("-f <filename>\tFilename to output kickstart file to\n");
+	printf("-i <ip address>\tIP address for the server\n");
+	printf("-k <disk>\tDisk to install on (no /dev/ needed)\n");
+	printf("-l <language>\tDefault language for system\n");
+	printf("-n <name>\tHostname for the server\n");
+	printf("-p <packages>\tComma separated list of extra packages\n");
+	printf("-t <timezone>\tTimezone for the server\n");
+	printf("-u <url>\tUrl location of kickstart file\n");
+	printf("-y <country>\tCountry keyboard mapping\n");
+	printf("\n");
+	printf("-h\tDisplay this help message\n");
+	printf("-v\tDisplay cpc version number\n");
 }
 
 void
@@ -581,6 +613,31 @@ display_cbcscript_usage(void)
 	printf("-b <domain>\t-o <number>\t-g <arg>\t-n <name>\n");
 	printf("-t <build os>\n");
 	printf("See man page for full details\n");
+}
+
+void
+display_cbclocale_usage(void)
+{
+	printf("cbclocale: create build config locale %s\n", VERSION);
+	printf("Usage:\t");
+	printf("cbclocale <action> <options>\n");
+	printf("Action options\n");
+	printf("-a: add\t-d display\t-l: list\t-r: remove\n-x: set default locale\n");
+	printf("Options\n");
+	printf("-g language\t-k keymap\t-o locale\t-n name\n");
+	printf("-t timezone\t-u country\n");
+	printf("See man page for full details\n");
+	
+}
+
+void
+display_version(char *prog)
+{
+	if (strrchr(prog, '/')) {
+		prog = strrchr(prog, '/');
+		prog++;
+	}
+	printf("%s: %s\n", prog, VERSION);
 }
 
 void
@@ -805,6 +862,8 @@ display_action_error(short int action)
 		fprintf(stderr, "Listing failed\n");
 	else if (action == ADD_TO_DB)
 		fprintf(stderr, "Adding to DB failed\n");
+	else if (action == RM_FROM_DB)
+		fprintf(stderr, "Removing from DB failed\n");
 	else
 		fprintf(stderr, "Unknown error code %d failed\n", action);
 }
@@ -843,11 +902,13 @@ get_config_file_location(char *config)
 	FILE *cnf;
 	const char *conf = config;
 
-	snprintf(config, CONF_S, "/etc/cmdb/cmdb.conf");
+	if (snprintf(config, CONF_S, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONF_S)
+		report_error(BUFFER_TOO_SMALL, "for config file");
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{
-		snprintf(config, CONF_S, "/etc/dnsa/dnsa.conf");
+		if (snprintf(config, CONF_S, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONF_S)
+			report_error(BUFFER_TOO_SMALL, "for config file");
 		if ((cnf = fopen(conf, "r")))
 			fclose(cnf);
 		else
@@ -899,8 +960,12 @@ add_trailing_dot(char *member)
 int
 write_file(char *filename, char *output)
 {
-	int retval;
+	int retval = 0;
+// Ensure files are written group writable
+	mode_t mode = S_IWOTH;
+	mode_t em;
 	FILE *zonefile;
+	em = umask(mode);
 	if (!(zonefile = fopen(filename, "w"))) {
 		retval = FILE_O_FAIL;
 	} else {
@@ -908,6 +973,7 @@ write_file(char *filename, char *output)
 		fclose(zonefile);
 		retval = NONE;
 	}
+	umask(em);
 	return retval;
 }
 
@@ -1057,8 +1123,7 @@ init_string_len(string_len_s *string)
 {
 	string->len = BUFF_S;
 	string->size = NONE;
-	if (!(string->string = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "string->string in init_string_len");
+	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
 }
 
 void

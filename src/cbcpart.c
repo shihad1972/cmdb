@@ -26,12 +26,17 @@
  *  (C) Iain M. Conochie 2012 - 2013
  * 
  */
+#include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -41,7 +46,98 @@
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
 #endif // HAVE_LIBPCRE
-#include "cbcpart.h"
+
+enum {
+	PARTITION = 1,
+	SCHEME = 2,
+	OPTION = 3
+};
+
+typedef struct cbcpart_comm_line_s {
+	unsigned long int min;
+	unsigned long int max;
+	unsigned long int pri;
+	unsigned long int scheme_id;
+	char *fs;
+	char *log_vol;
+	char *option;
+	char *partition;
+	char *scheme;
+	short int action;
+	short int lvm;
+	short int type;
+} cbcpart_comm_line_s;
+
+static void
+init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static void
+init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+
+static void
+clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+
+static int
+parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl);
+
+# ifdef HAVE_LIBPCRE
+static int
+validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
+# endif // HAVE_LIBPCRE
+
+static int
+validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc);
+
+static int
+list_seed_schemes(cbc_config_s *cbc);
+
+static int
+display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm);
+
+static int
+check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl);
+
+static int
+add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
+
+static void
+cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
+
+static int
+add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+/*
+static int
+mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
+modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl); */
 
 static void
 cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt);
@@ -52,21 +148,25 @@ get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt);
 int
 main (int argc, char *argv[])
 {
-	const char *config = "/etc/dnsa/dnsa.conf";
+	char *config;
 	int retval = NONE;
 	cbc_config_s *cmc;
 	cbcpart_comm_line_s *cpl;
 	
 	cmc = cmdb_malloc(sizeof(cbc_config_s), "main");
 	cpl = cmdb_malloc(sizeof(cbcpart_comm_line_s), "main");
+	config = cmdb_malloc(CONF_S, "config in main");
+	get_config_file_location(config);
 	init_cbcpart_config(cmc, cpl);
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
+		free(config);
 		free(cmc);
 		free(cpl);
 		display_command_line_error(retval, argv[0]);
 	}
 
 	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
+		free(config);
 		free (cpl);
 		free (cmc);
 		parse_cbc_config_error(retval);
@@ -86,23 +186,24 @@ main (int argc, char *argv[])
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
 	free(cmc);
 	clean_cbcpart_comm_line(cpl);
+	free(config);
 	exit (retval);
 }
 
-void
+static void
 init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	init_cbc_config_values(cbc);
 	init_cbcpart_comm_line(cpl);
 }
 
-void
+static void
 init_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
 	memset(cpl, 0, sizeof(cbcpart_comm_line_s));
 }
 
-void
+static void
 clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
 	if (cpl->fs)
@@ -118,13 +219,45 @@ clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 	free(cpl);
 }
 
-int
+static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
-	int opt, retval = 0;
 	const char *errmsg = "parse_cbcpart_comm_line";
+	const char *optstr = "ab:df:g:hi:lmn:oprst:uvx:y:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"partition-option",	required_argument,	NULL,	'b'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"file-system",		required_argument,	NULL,	'f'},
+		{"logical-volume",	required_argument,	NULL,	'g'},
+		{"logvol",		required_argument,	NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"min-size",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"scheme-name",		required_argument,	NULL,	'n'},
+		{"option",		no_argument,		NULL,	'o'},
+		{"partition",		no_argument,		NULL,	'p'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"scheme",		no_argument,		NULL,	's'},
+		{"mount-point",		required_argument,	NULL,	't'},
+		{"lvm",			no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"max-size",		required_argument,	NULL,	'x'},
+		{"priority",		required_argument,	NULL,	'y'},
+		{NULL,			0,			NULL,	0}
+	};
 
-	while ((opt = getopt(argc, argv, "ab:df:g:i:lmn:oprst:uvx:y:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			cpl->action = ADD_CONFIG;
 		} else if (opt == 'd') {
@@ -139,6 +272,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
 			cpl->action = CVERSION;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else if (opt == 'p') {
 			cpl->type = PARTITION;
 		} else if (opt == 's') {
@@ -208,7 +343,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 }
 
 #ifdef HAVE_LIBPCRE
-int
+static int
 validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
@@ -243,7 +378,7 @@ validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 }
 #endif // HAVE_LIBPCRE
 
-int
+static int
 validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 {
 	int retval = 0;
@@ -278,7 +413,7 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 	return retval;
 }
 
-int
+static int
 list_seed_schemes(cbc_config_s *cbc)
 {
 	int retval = NONE;
@@ -304,7 +439,7 @@ list_seed_schemes(cbc_config_s *cbc)
 	return retval;
 }
 
-int
+static int
 display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	char *opt;
@@ -374,7 +509,7 @@ printf("%s\t%s\t%lu\t%lu\t%s\n", p[0], p[1], part->min, part->max, p[2]);
 	return retval;
 }
 
-int
+static int
 add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -390,7 +525,7 @@ add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
-int
+static int
 remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -406,7 +541,7 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 /*
-int
+static int
 mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -420,7 +555,7 @@ mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 */
-int
+static int
 add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -489,7 +624,7 @@ add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		return retval;
 }
 
-int
+static int
 check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm)
 {
 	if ((lvm > 0) && (cpl->lvm < 1)) {
@@ -505,7 +640,7 @@ check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm)
 	return 0;
 }
 
-int
+static int
 check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl)
 {
 	while (dpart) {
@@ -527,7 +662,7 @@ part->log_vol, cpl->scheme);
 	return NONE;
 }
 
-int
+static int
 add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
@@ -565,7 +700,7 @@ add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
-int
+static int
 add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 {
 	int retval = NONE;
@@ -588,7 +723,7 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 	return retval;
 }
 
-void
+static void
 cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl)
 {
 	cbc_part_opt_s *opt;
@@ -607,7 +742,7 @@ cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl
 		printf("Partition option added to database\n");
 }
 
-int
+static int
 add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	cbc_s *base;
@@ -621,7 +756,7 @@ add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return 0;
 }
 
-int
+static int
 remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0, type;
@@ -659,7 +794,7 @@ remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
-int
+static int
 remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
@@ -686,7 +821,7 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 
-int
+static int
 remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
@@ -706,7 +841,7 @@ remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return 0;
 }
 /*
-int
+static int
 modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
@@ -726,7 +861,7 @@ modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		return retval;
 }
 
-int
+static int
 modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
@@ -734,7 +869,7 @@ modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 	return retval;
 }
 */
-void
+static void
 get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt)
 {
 	char *newopt, *optpos;
@@ -776,7 +911,7 @@ get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt)
 	}
 }
 
-void
+static void
 cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt)
 {
 	if (strlen(part->mount) >= 16)
@@ -794,4 +929,3 @@ cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt)
 		snprintf(p[2], RBUFF_S, "%s\t\t", opt);
 	snprintf(p[3], RBUFF_S, "%s", part->log_vol);
 }
-

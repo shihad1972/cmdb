@@ -23,7 +23,7 @@
  */
 #ifndef __BASE_SQL_H
 # define __BASE_SQL_H
-# include "../config.h"
+# include <config.h>
 # include "cmdb.h"
 /* cbc queries */
 
@@ -113,7 +113,11 @@ enum {			/* Search indexes and queries */
 	SERVICE_ID_ON_SERVER_ID,
 	SERVICE_ID_ON_CUST_ID,
 	SERVICE_ID_ON_SERVER_ID_SERVICE,
-	SERVICE_ID_ON_CUST_ID_SERVICE
+	SERVICE_ID_ON_CUST_ID_SERVICE,
+	HARD_ID_ON_DEVICE_SERVER,
+	HARD_ID_ON_DETAIL_SERVER,
+	HARD_ID_ON_DEVICE_TYPE,
+	HARD_ID_ON_DETAIL_TYPE
 };
 
 /* dnsa queries */
@@ -151,7 +155,10 @@ enum {			/* Delete indexes that diverge from SELECT */
 enum {			/* Extended searches */
 	RECORDS_ON_DEST_AND_ID = 0,
 	RECORDS_ON_ZONE,
-	DEST_IN_RANGE
+	DEST_IN_RANGE,
+	RECORD_ID_ON_IP_DEST_DOM,
+	FWD_ZONE_ID_ON_NAME,
+	BUILD_DOM_ON_SERVER_ID
 };
 
 enum {			/* Search indexes and queries */

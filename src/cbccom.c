@@ -25,32 +25,68 @@
  * 
  */
 
-#include "../config.h"
+#include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
-#endif /* HAVE_WORDEXP_H */
+#endif // HAVE_WORDEXP_H
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
-#endif /* HAVE_LIBPCRE */
-
+#endif // HAVE_LIBPCRE
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
-#endif /* HAVE_DNSA */
+#endif // HAVE_DNSA
 
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
+	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:";
 	int retval, opt, trim;
-
 	retval = NONE;
-	while ((opt = getopt(argc, argv, "ab:de:gi:k:j:lmn:o:p:qrs:t:u:vwx:")) != -1) {
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"build-domain",	required_argument,	NULL,	'b'},
+		{"domain",		required_argument,	NULL,	'b'},
+		{"locale",		required_argument,	NULL,	'e'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"remove-ip",		no_argument,		NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"id",			required_argument,	NULL,	'i'},
+		{"hard-disk",		required_argument,	NULL,	'j'},
+		{"network-card",	required_argument,	NULL,	'k'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"modify",		no_argument,		NULL,	'm'},
+		{"name",		required_argument,	NULL,	'n'},
+		{"operating-system",	required_argument,	NULL,	'o'},
+		{"partition-scheme",	required_argument,	NULL,	'p'},
+		{"os-version",		required_argument,	NULL,	's'},
+		{"architecture",	required_argument,	NULL,	't'},
+		{"query",		no_argument,		NULL,	'q'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"uuid",		required_argument,	NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"write",		no_argument,		NULL,	'w'},
+		{"commit",		no_argument,		NULL,	'w'},
+		{"varient",		required_argument,	NULL,	'x'},
+		{NULL,			0,			NULL,	0}
+	};
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'n') {
 			if ((trim = snprintf(cb->name, NAME_S, "%s", optarg)) >= NAME_S)
 				fprintf(stderr, "Hostname %s trimmed. 63 chars max!\n", optarg);
@@ -80,7 +116,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'b') {
 			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
-			cb->locale = strtoul(optarg, NULL, 10);
+			snprintf(cb->locale, NAME_S, "%s", optarg);
 		} else if (opt == 'k') {
 			snprintf(cb->netcard, HOST_S, "%s", optarg);
 		} else if (opt == 'j') {
@@ -98,6 +134,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			snprintf(cb->varient, CONF_S, "%s", optarg);
 		} else if (opt == 'v') {
 			cb->action = CVERSION;
+		} else if (opt == 'h') {
+			return DISPLAY_USAGE;
 		} else {
 			printf("Unknown option: %c\n", opt);
 			retval = DISPLAY_USAGE;
@@ -128,10 +166,10 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
 			retval = NO_BUILD_PARTITION;
 	}
-	return retval;
 #ifdef HAVE_LIBPCRE
 	validate_cbc_comm_line(cb);
 #endif /* HAVE_LIBPCRE */
+	return retval;
 }
 
 void
@@ -156,7 +194,7 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "OS: %s\n", cml->os);
 	fprintf(stderr, "OS Version: %s\n", cml->os_version);
 	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale ID: %lu\n", cml->locale);
+	fprintf(stderr, "Locale: %s\n", cml->locale);
 	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
 	fprintf(stderr, "Action Type: %s\n", cml->action_type);
 	fprintf(stderr, "Partition: %s\n", cml->partition);
@@ -355,7 +393,8 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");
 	snprintf(cbt->arch, MAC_S, "NULL");
 	snprintf(cbt->netcard, COMM_S, "NULL");
-	snprintf(cbt->config, CONF_S, "/etc/dnsa/dnsa.conf");
+	snprintf(cbt->config, COMM_S, "NULL");
+	snprintf(cbt->locale, COMM_S, "NULL");
 }
 
 void

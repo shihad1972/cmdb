@@ -17,11 +17,11 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *   
- * dnsa.c: main() function for the dnsa program
+ *  dnsa.c: main() function for the dnsa program
  *
  * 
  */
-#include "../config.h"
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,34 +35,24 @@ int main(int argc, char *argv[])
 {
 	dnsa_comm_line_s *cm;
 	dnsa_config_s *dc;
-	char *domain;
-	int retval, id;
+	char *domain = NULL;
+	int retval;
 
-	if (!(domain = malloc(CONF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "domain in dnsa.c");
-	if (!(dc = malloc(sizeof(dnsa_config_s))))
-		report_error(MALLOC_FAIL, "dc in dnsa.c");
-	if (!(cm = malloc(sizeof(dnsa_comm_line_s))))
-		report_error(MALLOC_FAIL, "cm in dnsa.c");
-	dnsa_init_all_config(dc, cm);
-	retval = parse_dnsa_command_line(argc, argv, cm);
-	if (retval != 0) {
-		free(domain);
-		free(dc);
-		free(cm);
+	cm = cmdb_malloc(sizeof(dnsa_comm_line_s), "cm in main");
+	dnsa_init_comm_line_struct(cm);
+	if ((retval = parse_dnsa_command_line(argc, argv, cm)) != 0) {
+		cmdb_free(cm, sizeof(dnsa_comm_line_s));
 		display_command_line_error(retval, argv[0]);
 	}
-	/* Get config values from config file */
-	id = parse_dnsa_config_file(dc, cm->config);
-	if (id > 1) {
+	dc = cmdb_malloc(sizeof(dnsa_config_s), "dc in main");
+	dnsa_init_config_values(dc);
+	if ((retval = parse_dnsa_config_file(dc, cm->config)) != 0) {
 		parse_dnsa_config_error(retval);
-		free(domain);
-		free(dc);
-		free(cm);
-		exit(id);
+		goto cleanup;
 	}
-	retval = id = 0;
-	strncpy(domain, cm->domain, CONF_S);
+	domain = cmdb_malloc(CONF_S, "domain in main");
+	if (!(strncpy(domain, cm->domain, CONF_S - 1)))
+		goto cleanup;
 	if (cm->type == FORWARD_ZONE) {
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
@@ -80,6 +70,8 @@ int main(int argc, char *argv[])
 			retval = delete_record(dc, cm);
 		} else if (cm->action == DELETE_ZONE) {
 			retval = delete_fwd_zone(dc, cm);
+		} else if (cm->action == ADD_CNAME_ON_ROOT) {
+			retval = add_cname_to_root_domain(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
@@ -118,8 +110,10 @@ int main(int argc, char *argv[])
 			printf("Action code %d not implemented\n", cm->action);
 	}
 
-	free(domain);
-	free(cm);
-	free(dc);
-	exit(retval);
+	cleanup:
+		if (domain)
+			cmdb_free(domain, CONF_S);
+		cmdb_free(cm, sizeof(dnsa_comm_line_s));
+		cmdb_free(dc, sizeof(dnsa_config_s));
+		exit(retval);
 }

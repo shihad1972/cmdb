@@ -1,7 +1,7 @@
 /*
  * 
  *  dnsa: DNS Administration
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2016  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,26 +25,74 @@
  * 
  * 
  */
-#include "../config.h"
+#include <config.h>
+#include <configmake.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
-#endif /* HAVE_WORDEXP_H */
+#endif // HAVE_WORDEXP_H
+#ifdef HAVE_GETOPT_H
+# define _GNU_SOURCE
+# include <getopt.h>
+#endif // HAVE_GETOPT_H
 #include "cmdb.h"
 #include "cmdb_dnsa.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"
-#endif /* HAVE_LIBPCRE */
+#endif // HAVE_LIBPCRE
 
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
-	int opt, retval = 0;
+	const char *optstr = "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:";
+	int opt, retval;
+	retval = 0;
+#ifdef HAVE_GETOPT_H
+	int index;
+	struct option lopts[] = {
+		{"add",			no_argument,		NULL,	'a'},
+		{"build",		no_argument,		NULL,	'b'},
+		{"display",		no_argument,		NULL,	'd'},
+		{"add-preferred-a",	no_argument,		NULL,	'e'},
+		{"delete-preferred-a",	no_argument,		NULL,	'g'},
+		{"host",		required_argument,	NULL,	'h'},
+		{"destination",		required_argument,	NULL,	'i'},
+		{"list",		no_argument,		NULL,	'l'},
+		{"add-cname",		no_argument,		NULL,	'm'},
+		{"zone-name",		required_argument,	NULL,	'n'},
+		{"protocol",		required_argument,	NULL,	'o'},
+		{"prefix",		required_argument,	NULL,	'p'},
+		{"priority",		required_argument,	NULL,	'p'},
+		{"delete-record",	no_argument,		NULL,	'r'},
+		{"remove",		no_argument,		NULL,	'r'},
+		{"delete",		no_argument,		NULL,	'r'},
+		{"service",		required_argument,	NULL,	's'},
+		{"record-type",		required_argument,	NULL,	't'},
+		{"display-multi-a",	no_argument,		NULL,	'u'},
+		{"version",		no_argument,		NULL,	'v'},
+		{"write",		no_argument,		NULL,	'w'},
+		{"commit",		no_argument,		NULL,	'w'},
+		{"delete-zone",		no_argument,		NULL,	'x'},
+		{"exterminate",		no_argument,		NULL,	'x'},
+		{"add-zone",		no_argument,		NULL,	'z'},
+		{"forward-zone",	no_argument,		NULL,	'F'},
+		{"glue-zone",		no_argument,		NULL,	'G'},
+		{"name-server-ip",	required_argument,	NULL,	'I'},
+		{"master-ip",		required_argument,	NULL,	'M'},
+		{"name-servers",	required_argument,	NULL,	'N'},
+		{"reverse-zone",	no_argument,		NULL,	'R'},
+		{"slave-zone",		no_argument,		NULL,	'S'},
+		{NULL, 0, NULL, 0}
+	};
 
-	while ((opt = getopt(argc, argv, "abdeglruvwxzFGI:M:N:RSh:i:n:o:p:s:t:")) != -1) {
+	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
 		if (opt == 'a') {
 			comp->action = ADD_HOST;
 			comp->type = FORWARD_ZONE;
@@ -62,6 +110,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'l') {
 			comp->action = LIST_ZONES;
 			snprintf(comp->domain, COMM_S, "all");
+		} else if (opt == 'm') {
+			comp->action = ADD_CNAME_ON_ROOT;
+			comp->type = FORWARD_ZONE;
 		} else if (opt == 'r') {
 			comp->action = DELETE_RECORD;
 			comp->type = FORWARD_ZONE;
@@ -112,7 +163,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 /* Check if user has specified destination with -h and act accordingly */
 		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
 		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
-			snprintf(comp->dest, RANGE_S, "%s", comp->host);
+			snprintf(comp->dest, RBUFF_S, "%s", comp->host);
 		snprintf(comp->host, RANGE_S, "%s", comp->service);
 		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
 			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
@@ -143,13 +194,13 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		(strncmp(comp->dest, "NULL", COMM_S) == 0))
 		retval = NO_DOMAIN_NAME;
 	else if ((comp->action == MULTIPLE_A) &&
-		(strncmp(comp->domain, "NULL", COMM_S != 0)) &&
-		(strncmp(comp->dest, "NULL", COMM_S != 0)))
+		(strncmp(comp->domain, "NULL", COMM_S) != 0) &&
+		(strncmp(comp->dest, "NULL", COMM_S) != 0))
 		retval = DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
 		retval = NO_IP_ADDRESS;
-	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD))
-	      && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD) ||
+	      (comp->action == ADD_CNAME_ON_ROOT)) && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
 		retval = NO_HOST_NAME;
 	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
 		retval = NO_RECORD_TYPE;
@@ -379,7 +430,8 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			report_error(USER_INPUT_INVALID, "IP address");
 		if (strncmp(comm->host, "@", COMM_S) != 0)
 			if (validate_user_input(comm->host, NAME_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "host");
+				if (validate_user_input(comm->host, DOMAIN_REGEX) < 0)
+					report_error(USER_INPUT_INVALID, "host");
 	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
 		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
@@ -401,10 +453,16 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		if ((validate_user_input(comm->host, DOMAIN_REGEX) < 0) &&
 		    (validate_user_input(comm->host, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "CNAME host");
+	} else if (comm->action == ADD_CNAME_ON_ROOT) {
+		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
+		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "hostname");
 	} else {
 		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
-		if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) ||
+		    (strncmp(comm->rtype, "NULL", COMM_S) == 0)) {
 			if (host[0] == '_') {
 				if (validate_user_input(host + 1, NAME_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");
@@ -435,8 +493,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 	ilen = strlen(regexps[IP_REGEX]);
 	if ((ilen + dlen + 4) > RBUFF_S)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
-	if (!(regex = calloc(RBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "regex in validate_glue_comm_line");
+	regex = cmdb_malloc(RBUFF_S, "regex in validate_glue_comm_line");
 	if (strchr(comm->glue_ip, ',')) {
 		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
@@ -462,7 +519,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue NS");
 	}
-	free(regex);
+	cmdb_free(regex, RBUFF_S);
 }
 
 void
@@ -490,12 +547,6 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 #endif /* HAVE_LIBPCRE */
 
 void
-init_dnsa_struct(dnsa_s *dnsa)
-{
-	memset(dnsa, 0, sizeof(dnsa_s));
-}
-
-void
 dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 {
 	dnsa_init_config_values(dc);
@@ -505,7 +556,6 @@ dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
 void
 dnsa_init_config_values(dnsa_config_s *dc)
 {
-	memset(dc, 0, sizeof(dnsa_config_s));
 	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
 	sprintf(dc->dbtype, "sqlite");
 	sprintf(dc->db, "bind");
@@ -522,9 +572,14 @@ dnsa_init_config_values(dnsa_config_s *dc)
 }
 
 void
+init_dnsa_struct(dnsa_s *dnsa)
+{
+	memset(dnsa, 0, sizeof(dnsa_s));
+}
+
+void
 dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 {
-	memset(dcl, 0, sizeof(dnsa_comm_line_s));
 	strncpy(dcl->domain, "NULL", COMM_S);
 	strncpy(dcl->dest, "NULL", COMM_S);
 	strncpy(dcl->rtype, "NULL", COMM_S);
@@ -535,13 +590,12 @@ dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
 	strncpy(dcl->protocol, "NULL", COMM_S);
 	strncpy(dcl->glue_ip, "NULL", COMM_S);
 	strncpy(dcl->glue_ns, "NULL", COMM_S);
-	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
+	get_config_file_location(dcl->config);
 }
 
 void
 init_zone_struct(zone_info_s *zone)
 {
-	memset(zone, 0, sizeof(zone_info_s));
 	snprintf(zone->name, COMM_S, "NULL");
 	snprintf(zone->pri_dns, COMM_S, "NULL");
 	snprintf(zone->sec_dns, COMM_S, "NULL");
@@ -557,7 +611,6 @@ init_zone_struct(zone_info_s *zone)
 void
 init_rev_zone_struct(rev_zone_info_s *rev)
 {
-	memset(rev, 0, sizeof(rev_zone_info_s));
 	snprintf(rev->net_range, COMM_S, "NULL");
 	snprintf(rev->net_start, COMM_S, "NULL");
 	snprintf(rev->net_finish, COMM_S, "NULL");
@@ -629,7 +682,7 @@ dnsa_clean_list(dnsa_s *dnsa)
 void
 dnsa_clean_zones(zone_info_s *list)
 {
-	zone_info_s *zone, *next;
+	zone_info_s *zone, *next = NULL;
 
 	if (list)
 		zone = list;
@@ -637,25 +690,20 @@ dnsa_clean_zones(zone_info_s *list)
 		return;
 	if (zone->next)
 		next = zone->next;
-	else
-		next = NULL;
 	while (zone) {
-		free(zone);
+		cmdb_free(zone, sizeof(zone_info_s));
 		if (next)
 			zone = next;
 		else
 			return;
-		if (zone->next)
-			next = zone->next;
-		else
-			next = NULL;
+		next = zone->next;
 	}
 }
 
 void
 dnsa_clean_rev_zones(rev_zone_info_s *list)
 {
-	rev_zone_info_s *zone, *next;
+	rev_zone_info_s *zone, *next = NULL;
 
 	if (list)
 		zone = list;
@@ -663,25 +711,20 @@ dnsa_clean_rev_zones(rev_zone_info_s *list)
 		return;
 	if (zone->next)
 		next = zone->next;
-	else
-		next = NULL;
 	while (zone) {
-		free(zone);
+		cmdb_free(zone, sizeof(rev_zone_info_s));
 		if (next)
 			zone = next;
 		else
 			return;
-		if (zone->next)
-			next = zone->next;
-		else
-			next = NULL;
+		next = zone->next;
 	}
 }
 
 void
 dnsa_clean_records(record_row_s *list)
 {
-	record_row_s *rec, *next;
+	record_row_s *rec, *next = NULL;
 
 	if (list)
 		rec = list;
@@ -689,25 +732,20 @@ dnsa_clean_records(record_row_s *list)
 		return;
 	if (rec->next)
 		next = rec->next;
-	else
-		next = NULL;
 	while (rec) {
-		free(rec);
+		cmdb_free(rec, sizeof(record_row_s));
 		if (next)
 			rec = next;
 		else
 			return;
-		if (rec->next)
-			next = rec->next;
-		else
-			next = NULL;
+		next = rec->next;
 	}
 }
 
 void
 dnsa_clean_rev_records(rev_record_row_s *list)
 {
-	rev_record_row_s *rec, *next;
+	rev_record_row_s *rec, *next = NULL;
 
 	if (list)
 		rec = list;
@@ -715,25 +753,20 @@ dnsa_clean_rev_records(rev_record_row_s *list)
 		return;
 	if (rec->next)
 		next = rec->next;
-	else
-		next = NULL;
 	while (rec) {
-		free(rec);
+		cmdb_free(rec, sizeof(rev_record_row_s));
 		if (next)
 			rec = next;
 		else
 			return;
-		if (rec->next)
-			next = rec->next;
-		else
-			next = NULL;
+		next = rec->next;
 	}
 }
 
 void
 dnsa_clean_prefer(preferred_a_s *list)
 {
-	preferred_a_s *prefer, *next;
+	preferred_a_s *prefer, *next = NULL;
 
 	if (list)
 		prefer = list;
@@ -741,25 +774,20 @@ dnsa_clean_prefer(preferred_a_s *list)
 		return;
 	if (prefer->next)
 		next = prefer->next;
-	else
-		next = NULL;
 	while (prefer) {
-		free(prefer);
+		cmdb_free(prefer, sizeof(preferred_a_s));
 		if (next)
 			prefer = next;
 		else
 			return;
-		if (prefer->next)
-			next = prefer->next;
-		else
-			next = NULL;
+		next = prefer->next;
 	}
 }
 
 void
 dnsa_clean_glue(glue_zone_info_s *list)
 {
-	glue_zone_info_s *glu, *next;
+	glue_zone_info_s *glu, *next = NULL;
 
 	if (list)
 		glu = list;
@@ -767,18 +795,13 @@ dnsa_clean_glue(glue_zone_info_s *list)
 		return;
 	if (glu->next)
 		next = glu->next;
-	else
-		next = NULL;
 	while (glu) {
-		free(glu);
+		cmdb_free(glu, sizeof(glue_zone_info_s));
 		if (next)
 			glu = next;
 		else
 			return;
-		if (glu->next)
-			next = glu->next;
-		else
-			next = NULL;
+		next = glu->next;
 	}
 }
 
