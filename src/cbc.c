@@ -42,7 +42,6 @@ main(int argc, char *argv[])
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
 	char sretval[MAC_S], conf[CONF_S];
-	const char *config = NULL;
 	int retval = NONE;
 	
 	if (!(cmc = malloc(sizeof(cbc_config_s))))
@@ -60,8 +59,7 @@ main(int argc, char *argv[])
 		retval = query_config();
 	else {
 		get_config_file_location(conf);
-		config = conf;
-		if ((retval = parse_cbc_config_file(cmc, config)) > 1) {
+		if ((retval = parse_cbc_config_file(cmc, conf)) > 1) {
 			parse_cbc_config_error(retval);
 			free(cml);
 			free(cmc);

@@ -53,7 +53,7 @@ LOCALSTATEDIR=`grep LOCALSTATEDIR ${CONFIGMAKE} | awk '{print $3}' | sed -e 's/"
 
 # Options
 HAVE_DNSA="yes"
-SQL="${LOCALSTATDIR}/cmdb/sql"
+SQL="${LOCALSTATEDIR}/cmdb/sql"
 SQLFILE="${SQL}/cmdb.sql"
 DB="mysql"
 DBNAME="cmdb"
@@ -750,7 +750,7 @@ SECNS=${SECNS}
 TMPDIR=/tmp/cmdb
 TFTPDIR=/srv/tftp
 PXE=pxelinux.cfg
-TOPLEVELOS=${LOCALSTATDIR}/cmdb
+TOPLEVELOS=${LOCALSTATEDIR}/cmdb
 PRESEED=preseed
 KICKSTART=ks
 DHCPCONF=/etc/dhcp
