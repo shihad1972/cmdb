@@ -32,20 +32,34 @@ SERV=`which service 2>/dev/null`
 SQLITE=`which sqlite3 2>/dev/null`
 MYSQL=`which mysql 2>/dev/null`
 ROUTERS=`netstat -rn | grep ^0.0.0.0 | awk '{print $2}'`
-PXELINUX="/usr/lib/syslinux/pxelinux.0"
+MIRROR="mirrors.melbourne.co.uk"
+CONFIGMAKE="include/configmake.h"
 
 # Files and directories
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
-MIRROR="mirrors.melbourne.co.uk"
+PXELINUX="/usr/lib/syslinux/pxelinux.0"
+
+# Get values from configmake.h
+if [ ! -f ${CONFIGMAKE} ]; then
+  echo "Cannot find file ${CONFIGMAKE}"
+  echo "Please run this script from the top level of the cmdb source directory"
+  exit 7
+fi
+
+SYSCONFDIR=`grep SYSCONFDIR ${CONFIGMAKE} | awk '{print $3}' | sed -e 's/"//g'`
+LOCALSTATEDIR=`grep LOCALSTATEDIR ${CONFIGMAKE} | awk '{print $3}' | sed -e 's/"//g'`
 
 # Options
 HAVE_DNSA="yes"
-SQL="/var/lib/cmdb/sql"
+SQL="${LOCALSTATDIR}/cmdb/sql"
 SQLFILE="${SQL}/cmdb.sql"
 DB="mysql"
 DBNAME="cmdb"
+CONFDIR="${SYSCONFDIR}/dnsa"
+CONFFILE="${CONFDIR}/dnsa.conf"
+CMDBBASE="${LOCALSTATEDIR}/cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
@@ -87,21 +101,21 @@ create_cmdb_user() {
   if [ $? -eq 0 ]; then
     echo "cmdb user exists. Not adding"
   else
-    useradd -g cmdb -d /var/lib/cmdb -s /sbin/nologin -c "CMDB User" -r cmdb
+    useradd -g cmdb -d ${CMDBBASE} -s /sbin/nologin -c "CMDB User" -r cmdb
   fi
 
-  if [ ! -d /var/lib/cmdb ]; then
-    mkdir /var/lib/cmdb
+  if [ ! -d ${CMDBBASE} ]; then
+    mkdir ${CMDBBASE}
   fi
 
   for i in web sql cmdb-bin logs scripts inc
-    do if [ ! -d /var/lib/cmdb/${i} ]; then
-      mkdir /var/lib/cmdb/${i}
+    do if [ ! -d ${CMDBBASE}/${i} ]; then
+      mkdir ${CMDBBASE}/${i}
      fi
   done
-  chown -R cmdb:cmdb /var/lib/cmdb
-  chmod -R 770 /var/lib/cmdb
-  chmod g+s /var/lib/cmdb/*
+  chown -R cmdb:cmdb ${CMDBBASE}
+  chmod -R 770 ${CMDBBASE}
+  chmod g+s ${CMDBBASE}*
 }
 
 # Get Hostname
@@ -187,38 +201,38 @@ create_apache_config() {
   echo "We shall create a web alias for the host ${HOSTNAME}.${DOMAIN}"
   echo "The web site will be available under http://${HOSTNAME}.${DOMAIN}/cmdb/"
   echo "This is where we shall store the build files."
-  echo "They will be stored in /var/lib/cmdb/web/"
+  echo "They will be stored in ${CMDBBASE}/web/"
   echo " "
-  echo "You can also put post-installation scripts into /var/lib/cmdb/scripts"
+  echo "You can also put post-installation scripts into ${CMDBBASE}/scripts"
   echo " "
   echo "Creating config in ${APACNF}"
   cat >${APACNF}cmdb.conf<<EOF
 #
 # This is the connfiguration file for the cmdb web portal used
 # by the cmdb build system, Muppett
-Alias /cmdb/scripts/ "/var/lib/cmdb/scripts/"
-<Directory "/var/lib/cmdb/scripts/">
+Alias /cmdb/scripts/ "${CMDBBASE}/scripts/"
+<Directory "${CMDBBASE}/scripts/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-Alias /cmdb/hosts/ "/var/lib/cmdb/hosts/"
-<Directory "/var/lib/cmdb/hosts/">
+Alias /cmdb/hosts/ "${CMDBBASE}/hosts/"
+<Directory "${CMDBBASE}/hosts/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-Alias /cmdb/ "/var/lib/cmdb/web/"
-<Directory "/var/lib/cmdb/web/">
+Alias /cmdb/ "${CMDBBASE}/web/"
+<Directory "${CMDBBASE}/web/">
     Options Indexes FollowSymLinks Includes MultiViews
     Order allow,deny
     Allow from all
 </Directory>
 
-ScriptAlias /cmdb-bin/ "/var/lib/cmdb/cgi-bin/"
-<Directory "/var/lib/cmdb/cgi-bin/">
+ScriptAlias /cmdb-bin/ "${CMDBBASE}/cgi-bin/"
+<Directory "${CMDBBASE}/cgi-bin/">
     AllowOverride None
     Options ExecCGI Includes
     Order allow,deny
@@ -690,15 +704,15 @@ STOP
 
 create_config()
 {
-  if [ ! -d /etc/dnsa ]; then
+  if [ ! -d ${SYSCONFDIR}/dnsa ]; then
     echo "Creating directory /etc/dnsa"
-    mkdir /etc/dnsa
+    mkdir ${SYSCONFDIR}/dnsa
   else
-    echo "/etc/dnsa exists. Continuing"
+    echo "${SYSCONFDIR}/dnsa exists. Continuing"
   fi
   
-  if [ ! -f /etc/dnsa/dnsa.conf ]; then
-    cat >/etc/dnsa/dnsa.conf <<FINISH
+  if [ ! -f ${SYSCONFDIR}/dnsa/dnsa.conf ]; then
+    cat >${SYSCONFDIR}/dnsa/dnsa.conf <<FINISH
 ## DB Driver
 DBTYPE=$DB
 
@@ -715,8 +729,8 @@ SOCKET=${MYSOCK}
 
 ## DNSA Settings
 
-DIR=/etc/bind/db/		# BIND data directory for zone files
-BIND=/etc/bind/			# BIND configuration directory
+DIR=/etc/bind/db		# BIND data directory for zone files
+BIND=/etc/bind			# BIND configuration directory
 DNSA=dnsa.conf			# DNSA configuration filename for bind
 REV=dnsa-rev.conf		# Reverse zone configuration file for bind
 RNDC=/usr/sbin/rndc		# Path to rndc command
@@ -734,15 +748,16 @@ SECNS=${SECNS}
 
 ## CBC settings
 TMPDIR=/tmp/cmdb
-TFTPDIR=/srv/tftp/
+TFTPDIR=/srv/tftp
 PXE=pxelinux.cfg
-TOPLEVELOS=/usr/local/zips
-PRESEED=preseed/
-KICKSTART=ks/
+TOPLEVELOS=${LOCALSTATDIR}/cmdb
+PRESEED=preseed
+KICKSTART=ks
 DHCPCONF=/etc/dhcp
 
 FINISH
-  chown cmdb:cmdb /etc/dnsa/dnsa.conf
+  chown cmdb:cmdb ${SYSCONFDIR}/dnsa/dnsa.conf
+  chmod 664 ${SYSCONFDIR}/dnsa/dnsa.conf
   else
     echo "dnsa.conf file exists"
   fi
@@ -808,7 +823,6 @@ fi
 
 if [ ! -f ${SQL}/initial.sql ]; then
   echo "Cannot find SQL initialisation file $SQL"
-  echo "Please run this script from the top level of the cmdb source directory"
   exit 7
 fi
 
