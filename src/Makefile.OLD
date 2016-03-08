@@ -15,7 +15,7 @@ bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcs
 
 SOBJECTS = errors.o checks.o cmdb_data.o
 COMOBJECTS = cbc_data.o cbc_base_sql.o cbc_common.o cbccom.o
-DNSCOMOBJ = dnsa_net.o dnsa_base_sql.o zones.o dnsacom.o
+DNSCOMOBJ = dnsa_net.o dnsa_base_sql.o zones.o dnsacom.o dnsa_data.o
 COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o cmdb_base_sql.o base_sql.o
 DOBJECTS = dnsa.o $(SOBJECTS) $(DNSCOMOBJ) base_sql.o
 BOBJECTS = cbc.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o base_sql.o
