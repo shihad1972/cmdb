@@ -6,11 +6,11 @@
 
 CC = gcc
 RM = rm -f
-override CFLAGS := -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-override CPPFLAGS := -I/usr/include/mysql -I../include/
-override LDFLAGS := -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
+override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/
+override LDFLAGS := $(LDFLAGS) -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
-override LDLIBS := -lmysqlclient $(PCLIBS) -lsqlite3
+override LDLIBS := -lmysqlclient $(PCLIBS) -lsqlite3 $(LDLIBS)
 bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
 
 SOBJECTS = errors.o checks.o cmdb_data.o

@@ -9,7 +9,7 @@ RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
 override LDFLAGS := $(LDFLAGS) -L../lib/
 CFLAGS += `libgcrypt-config --cflags`
-override LDLIBS := $(LDLIBS) `libgcrypt-config --libs` -lailsacmdb
+override LDLIBS := `libgcrypt-config --libs` -lailsacmdb $(LDLIBS)
 override CPPFLAGS := $(CPPFLAGS) -I../src/ -I../include/
 
 sbin_PROGRAMS = cmdbd
