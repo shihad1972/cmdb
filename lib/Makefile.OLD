@@ -1,4 +1,4 @@
-CPPFLAGS += -I../src/ -I../include/
+override CPPFLAGS := -I../src/ -I../include/
 lib_LIBRARIES = libailsacmdb.a
 
 libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o)

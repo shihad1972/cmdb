@@ -6,11 +6,11 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-CPPFLAGS = -I/usr/include/mysql -I../include/
-LDFLAGS = -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
+override CFLAGS := -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+override CPPFLAGS := -I/usr/include/mysql -I../include/
+override LDFLAGS := -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
-LIBS = -lmysqlclient $(PCLIBS) -lsqlite3
+override LDLIBS := -lmysqlclient $(PCLIBS) -lsqlite3
 bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
 
 SOBJECTS = errors.o checks.o cmdb_data.o
@@ -40,28 +40,28 @@ PHEADERS = cmdb.h
 all:	$(bin_programs)
 
 dnsa:	$(DOBJECTS) $(DHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cmdb:	$(COBJECTS) $(CHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(COBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(COBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbc:	$(BOBJECTS) $(BHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(BOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(BOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbcdomain:	$(CDOBJECTS) $(CDHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(CDOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CDOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbcos:	$(COOBJECTS) $(COMMHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(COOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(COOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbcvarient:	$(CVOBJECTS) $(CVHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(CVOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CVOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbcpart:	$(CKOBJECTS) $(CVHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CKOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbclocale:	$(CLOBJECTS) $(CVHEADERS)
-	$(CC) $(CFLAGS) -o $@ $(CLOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CLOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cpc:	$(POBJECTS) $(PHEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(POBJECTS) $(PCLIBS)
@@ -70,10 +70,10 @@ ckc:	$(KOBJECTS) $(PHEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(KOBJECTS) $(PCLIBS)
 
 cbcsysp:	$(SPOBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(SPOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(SPOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 cbcscript:	$(SSOBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(SSOBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(SSOBJECTS) $(LDFLAGS) $(LDLIBS)
 
 .PHONY :	clean
 clean :

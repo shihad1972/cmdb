@@ -7,11 +7,10 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-LDFLAGS = -L../lib/
-CPPFLAGS =
+override LDFLAGS := $(LDFLAGS) -L../lib/
 CFLAGS += `libgcrypt-config --cflags`
-LDFLAGS += `libgcrypt-config --libs` -lailsacmdb
-CPPFLAGS += -I../src/ -I../include/
+override LDLIBS := $(LDLIBS) `libgcrypt-config --libs` -lailsacmdb
+override CPPFLAGS := $(CPPFLAGS) -I../src/ -I../include/
 
 sbin_PROGRAMS = cmdbd
 
@@ -21,7 +20,7 @@ CDHEADERS = cmdbd.h
 all:	$(sbin_PROGRAMS)
 
 cmdbd:	$(CDOBJECTS) $(CDHEADERS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 .PHONY:	clean
 

@@ -18,6 +18,8 @@ all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
 libs:	$(lib_LIBRARIES)
 
+daemon:	$(sbin_PROGRAMS)
+
 $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
