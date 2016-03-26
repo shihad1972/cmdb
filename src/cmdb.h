@@ -22,6 +22,7 @@
 
 #ifndef __CMDB_H__
 # define __CMDB_H__
+# include <stddef.h>
 # ifdef HAVE_SQLITE3
 #  include <sqlite3.h>
 # endif /* HAVE_SQLITE3 */
