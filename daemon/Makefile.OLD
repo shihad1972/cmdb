@@ -6,11 +6,12 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+override CFLAGS := -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L `libgcrypt-config --cflags` $(CFLAGS)
 override LDFLAGS := $(LDFLAGS) -L../lib/
-CFLAGS += `libgcrypt-config --cflags`
-override LDLIBS := `libgcrypt-config --libs` -lailsacmdb $(LDLIBS)
 override CPPFLAGS := $(CPPFLAGS) -I../src/ -I../include/
+# Seems I have to use the full path to the "local" library,
+# otherwise make thinks it is a target.
+LDLIBS := -lgcrypt ../lib/libailsacmdb.a
 
 sbin_PROGRAMS = cmdbd
 
@@ -19,8 +20,8 @@ CDHEADERS = cmdbd.h
 
 all:	$(sbin_PROGRAMS)
 
-cmdbd:	$(CDOBJECTS) $(CDHEADERS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) -o $@ $(LDFLAGS) $(LDLIBS)
+cmdbd:	$(CDOBJECTS) $(LDLIBS)
+$(CDOBJECTS):	$(CDHEADERS)
 
 .PHONY:	clean
 
