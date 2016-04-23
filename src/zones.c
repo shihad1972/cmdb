@@ -979,7 +979,7 @@ add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 	rev_record_row_s *record = dnsa->rev_records;
 	len = NONE;
 
-	buffer = cmdb_malloc(BUFF_S, "buffer in add_records_to_fwd_zonefile");
+	buffer = cmdb_malloc(BUFF_S, "buffer in add_records_to_rev_zonefile");
 	while (record) {
 		if (record->rev_zone != id) {
 			record = record->next;
