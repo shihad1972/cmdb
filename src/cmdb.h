@@ -22,6 +22,7 @@
 
 #ifndef __CMDB_H__
 # define __CMDB_H__
+# include <stddef.h>
 # ifdef HAVE_SQLITE3
 #  include <sqlite3.h>
 # endif /* HAVE_SQLITE3 */
@@ -134,7 +135,7 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	SERVER_PACKAGES_NOT_FOUND = 113,
 	OS_NOT_FOUND = 114,
 	OS_VERSION_NOT_FOUND = 115,
-	OS_DOES_NOT_EXIST = 116,
+	OS_NO_VERSION = 116,
 	MULTIPLE_OS = 117,
 	MULTIPLE_VARIENTS = 118,
 	VARIENT_NOT_FOUND = 119,

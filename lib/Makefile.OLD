@@ -1,5 +1,5 @@
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-CPPFLAGS += -I../src/ -I../include/
+override CPPFLAGS := -I../src/ -I../include/
 lib_LIBRARIES = libailsacmdb.a
 
 #libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)

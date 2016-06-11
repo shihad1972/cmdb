@@ -351,11 +351,11 @@ ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE system_scripts (
 systscr_id INTEGER PRIMARY KEY,
-name varchar(127),
+name varchar(127) NOT NULL,
 cuser int NOT NULL DEFAULT 0,
 muser int NOT NULL DEFAULT 0,
 ctime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
-mtime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00'
+mtime timestamp NOT NULL DEFAULT '1970-01-01 00:00:00',
 );
 CREATE TABLE system_scripts_args (
 systscr_arg_id INTEGER PRIMARY KEY,
@@ -610,4 +610,20 @@ END;
 CREATE TRIGGER update_part_options AFTER UPDATE on part_options
 BEGIN
 UPDATE part_options SET mtime = CURRENT_TIMESTAMP WHERE part_options_id = new.part_options_id;
+END;
+CREATE TRIGGER system_scripts_update AFTER UPDATE ON system_scripts
+BEGIN
+UPDATE system_scripts SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER system_scripts_insert AFTER INSERT ON system_scripts
+BEGIN
+UPDATE system_scripts SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
+END;
+CREATE TRIGGER system_scripts_args_update AFTER UPDATE ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET mtime = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER system_scripts_args_insert AFTER INSERT ON system_scripts_args
+BEGIN
+UPDATE system_scripts_args SET ctime = CURRENT_TIMESTAMP, mtime = CURRENT_TIMESTAMP where id = new.id;
 END;

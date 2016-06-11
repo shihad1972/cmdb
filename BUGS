@@ -1,3 +1,10 @@
+22/04/2016
+When we try to write a zonefile that contains SRV records, and the zone is
+currently unavailable, we get a segmnentation fault. e.g.
+dnsa -w -F -n shihad.org
+getaddrinfo: Name or service not known
+Segmentation fault
+
 04/03/2016
 When adding a zone into DNSA, if the secondary name server is not defined, we
 add a secondary nameserver anyway. Also, if we are adding the first zone and
@@ -77,3 +84,4 @@ should probably do this for update as well. Needs done on cmdb and also dnsa.
 22/12/2014
 cbcvarient is not honouring the -t <arch> when listing
  *** FIXED dc4b43c ***
+  Properly fixed in *** a6f3a69 ***; can specify arch with no OS name / alias

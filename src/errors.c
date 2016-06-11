@@ -152,6 +152,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No partition information for server id %s\n", errstr);
 	} else if (error == OS_NOT_FOUND) {
 		fprintf(stderr, "Build Operating System %s was not found\n", errstr);
+	} else if (error == OS_NO_VERSION) {
+		fprintf(stderr, "Version supplied with no OS\n");
 	} else if (error == NO_PARTITION_SCHEMES) {
 		fprintf(stderr, "No partition schemes were found\n");
 	} else if (error == NO_VM_HOSTS) {
