@@ -348,7 +348,7 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 		}
 	} else {
 		printf("OS %s does not exist\n", cml->os);
-		return OS_DOES_NOT_EXIST;
+		return OS_NOT_FOUND;
 	}
 	return retval;
 }

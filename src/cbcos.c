@@ -538,7 +538,7 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
 		fprintf(stderr, "Cannot find any previous os for %s\n", oss[2]);
 		clean_dbdata_struct(data);
-		return OS_DOES_NOT_EXIST;
+		return OS_NOT_FOUND;
 	}
 	if (check_data_length(data, max) != 0) {
 		clean_dbdata_struct(data);
