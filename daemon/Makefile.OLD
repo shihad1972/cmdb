@@ -6,14 +6,12 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_GNU_SOURCE
+override CFLAGS := -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_GNU_SOURCE
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
-CPPFLAGS =
-CFLAGS += `libgcrypt-config --cflags`
-LIBS += `libgcrypt-config --libs` -lailsacmdb -lpcre -lmysqlclient -lsqlite3 -luuid
-CPPFLAGS += -I../src/ -I../include/ -I/usr/include/mysql -I/usr/include/uuid
-bin_PROGRAMS = ailsa cmdbc
-sbin_PROGRAMS = cmdbd
+override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/mysql -I/usr/include/uuid `libgcrypt-config --cflags`
+LDLIBS = `libgcrypt-config --libs` -lailsacmdb -lpcre -lmysqlclient -lsqlite3 -luuid
+bin_PROGRAMS = ailsa
+sbin_PROGRAMS = cmdbd cmdbc
 
 SOBJECTS = client_info.o
 CDOBJECTS = cmdbd.o
@@ -21,16 +19,15 @@ COBJECTS = cmdbc.o
 AOBJECTS = ailsa.o conversion.o fileio.o
 DBOBJECTS = ../src/cbc_base_sql.o ../src/dnsa_base_sql.o ../src/base_sql.o ../src/cmdb_base_sql.o ../src/dnsa_data.o ../src/cmdb_data.o ../src/cbc_data.o ../src/errors.o
 
-all:	$(sbin_PROGRAMS)
-
-cmdbd:	$(CDOBJECTS) $(SOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(CDOBJECTS) $(SOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
-
+all:	$(sbin_PROGRAMS) $(bin_PROGRAMS)
+cmdbd:	$(SOBJECTS) $(CDOBJECTS)
 cmdbc:	$(COBJECTS) $(SOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(COBJECTS) $(SOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+
+$(sbin_PROGRAMS):
+	$(LINK.o) $@.o $(SOBJECTS)  $(LDLIBS) -o $@
 
 ailsa:	$(AOBJECTS) $(DBOBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(AOBJECTS) $(DBOBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+	$(LINK.o) $(AOBJECTS) $(DBOBJECTS)  $(LDLIBS) -o $@
 
 .PHONY:	clean
 

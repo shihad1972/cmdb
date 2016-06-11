@@ -1,6 +1,10 @@
 sbin_PROGRAMS = cmdbd cmdbc
+bin_PROGRAMS = ailsa
 
-shar_SOURCES = client_info.c client_info.h conversion.h fileio.h
+shar_SOURCES = client_info.c client_info.h
+
+ailsa_SOURCES = ailsa.c conversion.c fileio.c conversion.h fileio.h
+ailsa_LDADD = $(top_builddir)/lib/libailsacmdb.la
 
 cmdbd_SOURCES = cmdbd.c $(shar_SOURCES)
 cmdbd_LDADD = $(top_builddir)/lib/libailsacmdb.la
