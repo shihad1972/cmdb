@@ -84,3 +84,4 @@ should probably do this for update as well. Needs done on cmdb and also dnsa.
 22/12/2014
 cbcvarient is not honouring the -t <arch> when listing
  *** FIXED dc4b43c ***
+  Properly fixed in *** a6f3a69 ***; can specify arch with no OS name / alias
