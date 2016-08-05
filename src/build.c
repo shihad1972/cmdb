@@ -291,7 +291,6 @@ list_build_servers(cbc_config_s *cmc)
 	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
 		printf("No servers have build configurations\n");
 	} else {
-		printf("We have %d servers with build configurations\n", retval);
 		list = data;
 		while (list) {
 			printf("%s\n", list->fields.text);
