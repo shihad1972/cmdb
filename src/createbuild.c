@@ -555,7 +555,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 	unsigned long int ids[4] = { vid, osid, dsid, sid };
 	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
 		return CANNOT_MODIFY_BUILD_DOMAIN;
-	if (cml->locale != 0)
+	if (strncmp(cml->locale, "NULL", COMM_S) != 0)
 		return LOCALE_NOT_IMPLEMENTED;
 	if ((type = get_modify_query(ids)) == 0) {
 		printf("No modifiers?\n");
