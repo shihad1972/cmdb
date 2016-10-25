@@ -10,52 +10,47 @@ cpc_SOURCES = cpc.c $(combo_SOURCES)
 ckc_SOURCES = ckc.c $(combo_SOURCES)
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
-		cmdb_cmdb.h cmdb.h checks.h\
+		cmdb_checks.h\
 		cmdb_data.h
 cmdb_LDADD = $(top_builddir)/lib/libailsasql.la
 
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c dnsa_data.c\
-		cmdb_dnsa.h dnsa_cmdb.h checks.h\
+		cmdb_dnsa.h dnsa_checks.h\
 		dnsa_net.h dnsa_data.h
 dnsa_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbcos_SOURCES = \
 		cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c\
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_\
-		cbc_common.h
+		cmdb.h
 cbcos_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcvarient_SOURCES = \
 		cbcvarient.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cmdb.h cmdb_cbc.h cbc_data.h\
-		cbc_common.h
+		cmdb.h
 cbcvarient_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cmdb.h cmdb_cbc.h cbc_data.h \
-		cbc_common.h
+		cmdb.h
 cbcpart_LDADD = $(top_builddir)/lib/libailsasql.la
 cbc_SOURCES =	cbc.c $(combo_SOURCES) $(cbc_combo_SOURCES) build.c createbuild.c\
-		cmdb_cbc.h cbc_cmdb.h checks.h cbc_common.h \
-		cbc_data.h build.h
+		cbc_checks.h \
+		cbc_data.h
 cbc_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcdomain_SOURCES = \
 		cbcdomain.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c\
-		cmdb.h cmdb_cbc.h cbc_data.h\
-		cbcdomain.h cbc_common.h cbcnet.h
+		cbcdomain.h cbcnet.h
 cbcdomain_LDADD = $(top_builddir)/lib/libailsasql.la
 cbclocale_SOURCES = \
 		cbclocale.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_\
-		cbc_common.h
+		cmdb.h
 cbclocale_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcsysp_SOURCES = \
 		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cbcsysp.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h \
+		cbcsysp.h \
 		cbc_checks.h
 cbcsysp_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcscript_SOURCES = \
 		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
-		cbcscript.h cmdb.h cmdb_cbc.h cbc_data.h cbc_common.h \
+		cbcscript.h \
 		cbc_checks.h
 cbcscript_LDADD = $(top_builddir)/lib/libailsasql.la
 if HAVE_CBC
