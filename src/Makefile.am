@@ -53,7 +53,7 @@ if HAVE_DNSA
 bin_PROGRAMS += dnsa
 if HAVE_CBC
 cbc_SOURCES +=	cbc_dnsa.c dnsacom.c zones.c dnsa_net.c\
-		dnsa_data.c dnsa_net.h
+		dnsa_data.c
 cbcdomain_SOURCES += zones.c cbc_dnsa.c\
 		dnsacom.c dnsa_net.c dnsa_data.c cbc_common.h\
 		cbc_dnsa.h cmdb_dnsa.h
