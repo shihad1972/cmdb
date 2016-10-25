@@ -17,7 +17,6 @@ SOBJECTS = client_info.o
 CDOBJECTS = cmdbd.o
 COBJECTS = cmdbc.o
 AOBJECTS = ailsa.o conversion.o fileio.o
-DBOBJECTS = ../src/errors.o
 
 all:	$(sbin_PROGRAMS) $(bin_PROGRAMS)
 cmdbd:	$(SOBJECTS) $(CDOBJECTS)
@@ -26,7 +25,7 @@ cmdbc:	$(COBJECTS) $(SOBJECTS)
 $(sbin_PROGRAMS):
 	$(LINK.o) $@.o $(SOBJECTS)  $(LDLIBS) -o $@
 
-ailsa:	$(AOBJECTS) $(DBOBJECTS)
+ailsa:	$(AOBJECTS)
 	$(LINK.o) $(AOBJECTS) $(DBOBJECTS)  $(LDLIBS) -o $@
 
 .PHONY:	clean
