@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.25.2], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.3], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([include/config.h])
@@ -74,6 +74,9 @@ if test "$prefix" = "/usr" && test "$localstatedir" = '${prefix}/var' ; then
 fi
 if test "$prefix" = "/usr" && test "$sysconfdir" = '${prefix}/etc' ; then
     sysconfdir='/etc'
+fi
+if test "$prefix" = "/usr/local" && test "$localstatedir" = "${prefix}/var" ; then
+    localstatedir='/var/lib'
 fi
 if test "$localstatedir" = '/var/lib'; then
     runstatedir='/var/run'
