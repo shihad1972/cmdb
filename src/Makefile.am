@@ -9,29 +9,19 @@ cpc_SOURCES = cpc.c $(combo_SOURCES)
 
 ckc_SOURCES = ckc.c $(combo_SOURCES)
 
-cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
-		cmdb_checks.h\
-		cmdb_data.h
+cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES)
 cmdb_LDADD = $(top_builddir)/lib/libailsasql.la
 
-dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c dnsa_data.c\
-		cmdb_dnsa.h dnsa_checks.h\
-		dnsa_net.h dnsa_data.h
+dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c dnsa_data.c
 dnsa_LDADD = $(top_builddir)/lib/libailsasql.la
 
-cbcos_SOURCES = \
-		cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c\
-		cmdb.h
+cbcos_SOURCES = cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c cmdb.h
 cbcos_LDADD = $(top_builddir)/lib/libailsasql.la
 
-cbcvarient_SOURCES = \
-		cbcvarient.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cmdb.h
+cbcvarient_SOURCES = cbcvarient.c $(combo_SOURCES) $(cbc_combo_SOURCES)
 cbcvarient_LDADD = $(top_builddir)/lib/libailsasql.la
 
-cbcpart_SOURCES = \
-		cbcpart.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cmdb.h
+cbcpart_SOURCES = cbcpart.c $(combo_SOURCES) $(cbc_combo_SOURCES)
 cbcpart_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbc_SOURCES =	cbc.c $(combo_SOURCES) $(cbc_combo_SOURCES) build.c createbuild.c
@@ -43,8 +33,7 @@ cbcdomain_SOURCES = \
 cbcdomain_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbclocale_SOURCES = \
-		cbclocale.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
-		cmdb.h
+		cbclocale.c $(combo_SOURCES) $(cbc_combo_SOURCES)
 cbclocale_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbcsysp_SOURCES = \
