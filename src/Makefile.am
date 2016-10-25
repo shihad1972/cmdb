@@ -1,9 +1,9 @@
 bin_PROGRAMS = cmdb cpc ckc
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
-combo_SOURCES = errors.c checks.c cmdb_data.c checks.h
+combo_SOURCES = errors.c checks.c checks.h
 
-cbc_combo_SOURCES = cbc_data.c cbc_common.c cbccom.c
+cbc_combo_SOURCES = cbc_common.c cbccom.c
 
 cpc_SOURCES = cpc.c $(combo_SOURCES)
 
@@ -12,7 +12,7 @@ ckc_SOURCES = ckc.c $(combo_SOURCES)
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES)
 cmdb_LDADD = $(top_builddir)/lib/libailsasql.la
 
-dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c dnsa_data.c
+dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c
 dnsa_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbcos_SOURCES = cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c
@@ -52,8 +52,8 @@ endif
 if HAVE_DNSA
 bin_PROGRAMS += dnsa
 if HAVE_CBC
-cbc_SOURCES +=	cbc_dnsa.c dnsacom.c zones.c dnsa_net.c dnsa_data.c
-cbcdomain_SOURCES += zones.c cbc_dnsa.c dnsacom.c dnsa_net.c dnsa_data.c
+cbc_SOURCES +=	cbc_dnsa.c dnsacom.c zones.c dnsa_net.c
+cbcdomain_SOURCES += zones.c cbc_dnsa.c dnsacom.c dnsa_net.c
 endif
 endif
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
