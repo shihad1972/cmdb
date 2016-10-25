@@ -11,7 +11,7 @@ CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
-sbin_PROGRAMS = cmdbd
+sbin_PROGRAMS = cmdbd ailsa cmdbc
 lib_LIBRARIES = libailsacmdb.a
 
 all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
@@ -24,6 +24,9 @@ $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
 $(bin_PROGRAMS):
+	$(MAKE) -C $(DIR) $@
+
+sqlt:
 	$(MAKE) -C $(DIR) $@
 
 $(sbin_PROGRAMS):	$(lib_LIBRARIES)

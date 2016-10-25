@@ -1,7 +1,7 @@
 /*
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,10 +17,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  cmdbd.h: Main cmdb header file
+ *  logging.c
+ *
+ *  Functions for logging for cmdbd and cmdbcd
+ *
  */
+#include <syslog.h>
 
-#ifndef __CMDBD_H__
-# define __CMDBD_H__
+void
+ailsa_start_syslog(const char *prog)
+{
+	int fac = LOG_DAEMON;
+	int opt = LOG_PID;
 
-#endif // __CMDBD_H__
+	openlog(prog, opt, fac);
+}
+

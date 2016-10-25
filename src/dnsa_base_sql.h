@@ -24,6 +24,7 @@
 #ifndef __DNSA_BASE_SQL_H
 # define __DNSA_BASE_SQL_H
 # include <config.h>
+# include "cmdb_dnsa.h"
 
 extern const char *dnsa_sql_select[];
 extern const char *dnsa_sql_insert[];
@@ -45,7 +46,7 @@ extern const unsigned int dnsa_delete_args[];
 extern const unsigned int dnsa_delete_arg_type[][1];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[][15];
+extern const int dnsa_mysql_inserts[][15];
 # endif /* HAVE_MYSQL */
 
 int

@@ -35,6 +35,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include "cmdb.h"
+#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 #include "dnsa_net.h"
 

@@ -28,6 +28,7 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 AX_PATH_LIB_PCRE
 AX_LIB_GCRYPT([auto])
+AX_LIB_UUID
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
@@ -58,6 +59,7 @@ AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
 AM_CONDITIONAL([HAVE_LIBGCRYPT], [$HAVE_LIBGCRYPT])
+AM_CONDITIONAL([HAVE_LIBUUID], [test x"$HAVE_LIBUUID" = "xtrue"])
 AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 

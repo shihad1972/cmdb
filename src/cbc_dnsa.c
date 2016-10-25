@@ -52,6 +52,7 @@
 
 #ifdef HAVE_DNSA
 
+# include "dnsa_data.h"
 # include "cmdb_dnsa.h"
 # include "cbc_dnsa.h"
 # include "dnsa_base_sql.h"

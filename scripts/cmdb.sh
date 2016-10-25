@@ -108,10 +108,10 @@ create_cmdb_user() {
     mkdir ${CMDBBASE}
   fi
 
-  for i in web sql cmdb-bin logs scripts inc
+  for i in web sql cmdb-bin logs scripts inc data data/raw
     do if [ ! -d ${CMDBBASE}/${i} ]; then
       mkdir ${CMDBBASE}/${i}
-     fi
+    fi
   done
   chown -R cmdb:cmdb ${CMDBBASE}
   chmod -R 770 ${CMDBBASE}

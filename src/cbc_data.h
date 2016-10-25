@@ -34,16 +34,36 @@
 # include "netinet/in.h"
 # include "cmdb.h"
 
+typedef struct cbc_config_s {		/* Hold CMDB configuration values */
+	char dbtype[RANGE_S];
+	char file[CONF_S];
+	char db[CONF_S];
+	char user[CONF_S];
+	char pass[CONF_S];
+	char host[CONF_S];
+	char socket[CONF_S];
+	char tmpdir[CONF_S];
+	char tftpdir[CONF_S];
+	char pxe[CONF_S];
+	char toplevelos[CONF_S];
+	char dhcpconf[CONF_S];
+	char kickstart[CONF_S];
+	char preseed[CONF_S];
+	unsigned int port;
+	unsigned long int cliflag;
+} cbc_config_s;
+
 typedef struct cbc_boot_line_s {
+	struct cbc_boot_line_s *next;
 	char os[MAC_S];
 	char os_ver[MAC_S];
 	char boot_line[RBUFF_S];
 	unsigned long int boot_id;
 	unsigned long int bt_id;
-	struct cbc_boot_line_s *next;
 } cbc_boot_line_s;
 
 typedef struct cbc_build_s { 
+	struct cbc_build_s *next;
 	char mac_addr[MAC_S];
 	char net_int[RANGE_S];
 	unsigned long int build_id;
@@ -57,10 +77,10 @@ typedef struct cbc_build_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_build_s *next;
 } cbc_build_s;
 
 typedef struct cbc_build_domain_s {
+	struct cbc_build_domain_s *next;
 	char domain[RBUFF_S];
 	char ntp_server[RBUFF_S];
 	short int config_ntp;
@@ -74,10 +94,10 @@ typedef struct cbc_build_domain_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_build_domain_s *next;
 } cbc_build_domain_s;
 
 typedef struct cbc_build_ip_s {
+	struct cbc_build_ip_s *next;
 	char host[HOST_S];
 	char domain[RBUFF_S];
 	unsigned long int ip;
@@ -88,10 +108,10 @@ typedef struct cbc_build_ip_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_build_ip_s *next;
 } cbc_build_ip_s;
 
 typedef struct cbc_build_os_s {
+	struct cbc_build_os_s *next;
 	char os[MAC_S];
 	char version[MAC_S];
 	char alias[MAC_S];
@@ -103,10 +123,10 @@ typedef struct cbc_build_os_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_build_os_s *next;
 } cbc_build_os_s;
 
 typedef struct cbc_build_type_s {
+	struct cbc_build_type_s *next;
 	char alias[MAC_S];
 	char build_type[MAC_S];
 	char arg[RANGE_S];
@@ -114,18 +134,18 @@ typedef struct cbc_build_type_s {
 	char mirror[RBUFF_S];
 	char boot_line[URL_S];
 	unsigned long int bt_id;
-	struct cbc_build_type_s *next;
 } cbc_build_type_s;
 
 typedef struct cbc_disk_dev_s {
+	struct cbc_disk_dev_s *next;
 	char device[HOST_S];
 	short int lvm;
 	unsigned long int disk_id;
 	unsigned long int server_id;
-	struct cbc_disk_dev_s *next;
 } cbc_disk_dev_s;
 
 typedef struct cbc_locale_s {
+	struct cbc_locale_s *next;
 	char locale[MAC_S];
 	char country[RANGE_S];
 	char language[RANGE_S];
@@ -138,10 +158,10 @@ typedef struct cbc_locale_s {
 	unsigned long int ctime;
 	unsigned long int mtime;
 	bool isdefault;
-	struct cbc_locale_s *next;
 } cbc_locale_s;
 
 typedef struct cbc_package_s {
+	struct cbc_package_s *next;
 	char package[HOST_S];
 	unsigned long int pack_id;
 	unsigned long int vari_id;
@@ -150,7 +170,6 @@ typedef struct cbc_package_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_package_s *next;
 } cbc_package_s;
 
 typedef union part_id_u {
@@ -164,6 +183,7 @@ typedef union scheme_id_u {
 } scheme_id_u;
 
 typedef struct cbc_pre_part_s {
+	struct cbc_pre_part_s *next;
 	char mount[HOST_S];
 	char fs[RANGE_S];
 	char log_vol[MAC_S];
@@ -177,10 +197,10 @@ typedef struct cbc_pre_part_s {
 	unsigned long int mtime;
 	union part_id_u id;
 	union scheme_id_u link_id;
-	struct cbc_pre_part_s *next;
 } cbc_pre_part_s;
 
 typedef struct cbc_seed_scheme_s {
+	struct cbc_seed_scheme_s *next;
 	char name[CONF_S];
 	short int lvm;
 	unsigned long int def_scheme_id;
@@ -188,10 +208,10 @@ typedef struct cbc_seed_scheme_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_seed_scheme_s *next;
 } cbc_seed_scheme_s;
 
 typedef struct cbc_server_s {
+	struct cbc_server_s *next;
 	char vendor[CONF_S];
 	char make[CONF_S];
 	char model[CONF_S];
@@ -204,10 +224,10 @@ typedef struct cbc_server_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_server_s *next;
 } cbc_server_s;
 
 typedef struct cbc_varient_s {
+	struct cbc_varient_s *next;
 	char varient[HOST_S];
 	char valias[MAC_S];
 	unsigned long int varient_id;
@@ -215,10 +235,10 @@ typedef struct cbc_varient_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_varient_s *next;
 } cbc_varient_s;
 
 typedef struct cbc_vm_server_hosts_s {
+	struct cbc_vm_server_hosts_s *next;
 	char vm_server[RBUFF_S];
 	char type[HOST_S];
 	unsigned long int vm_s_id;
@@ -227,20 +247,20 @@ typedef struct cbc_vm_server_hosts_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_vm_server_hosts_s *next;
 } cbc_vm_server_hosts_s;
 
 typedef struct cbc_syspack_s {
+	struct cbc_syspack_s *next;
 	char name[URL_S];
 	unsigned long int syspack_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_syspack_s *next;
 } cbc_syspack_s;
 
 typedef struct cbc_syspack_arg_s {
+	struct cbc_syspack_arg_s *next;
 	char field[URL_S];
 	char type[MAC_S];
 	unsigned long int syspack_arg_id;
@@ -249,10 +269,10 @@ typedef struct cbc_syspack_arg_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_syspack_arg_s *next;
 } cbc_syspack_arg_s;
 
 typedef struct cbc_syspack_conf_s {
+	struct cbc_syspack_conf_s *next;
 	char arg[RBUFF_S];
 	unsigned long int syspack_conf_id;
 	unsigned long int syspack_arg_id;
@@ -262,20 +282,20 @@ typedef struct cbc_syspack_conf_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_syspack_conf_s *next;
 } cbc_syspack_conf_s;
 
 typedef struct cbc_script_s {
+	struct cbc_script_s *next;
 	char name[CONF_S];
 	unsigned long int systscr_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_script_s *next;
 } cbc_script_s;
 
 typedef struct cbc_script_arg_s {
+	struct cbc_script_arg_s *next;
 	char arg[CONF_S];
 //	char type[MAC_S];
 	unsigned long int systscr_arg_id;
@@ -287,10 +307,10 @@ typedef struct cbc_script_arg_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_script_arg_s *next;
 } cbc_script_arg_s;
 
 typedef struct cbc_part_opt_s {
+	struct cbc_part_opt_s *next;
 	char *option;
 	unsigned long int part_options_id;
 	unsigned long int def_part_id;
@@ -299,11 +319,9 @@ typedef struct cbc_part_opt_s {
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-	struct cbc_part_opt_s *next;
 } cbc_part_opt_s;
 
 typedef struct cbc_s {
-	struct cbc_boot_line_s *bootl;
 	struct cbc_build_s *build;
 	struct cbc_build_domain_s *bdom;
 	struct cbc_build_ip_s *bip;
@@ -313,17 +331,16 @@ typedef struct cbc_s {
 	struct cbc_locale_s *locale;
 	struct cbc_package_s *package;
 	struct cbc_pre_part_s *dpart;
-	struct cbc_pre_part_s *spart;
 	struct cbc_seed_scheme_s *sscheme;
-	struct cbc_server_s *server;
 	struct cbc_varient_s *varient;
-	struct cbc_vm_server_hosts_s *vmhost;
 	struct cbc_syspack_s *syspack;
 	struct cbc_syspack_arg_s *sysarg;
 	struct cbc_syspack_conf_s *sysconf;
 	struct cbc_script_s *scripts;
 	struct cbc_script_arg_s *script_arg;
 	struct cbc_part_opt_s *part_opt;
+	struct cbc_server_s *server;
+	struct cbc_vm_server_hosts_s *vmhost;
 } cbc_s;
 
 typedef struct cbc_dhcp_s { // Info for a dhcp network
@@ -565,7 +582,8 @@ display_cbc_server(cbc_s *base);
 void
 display_varient(cbc_s *base);
 
-void
-display_vm_hosts(cbc_s *base);
+/* void
+display_vm_hosts(cbc_s *base); */
 
 #endif /* __CBC_DATA_H__ */
+

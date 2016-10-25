@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cmdb.h"
+#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"

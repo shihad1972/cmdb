@@ -817,7 +817,7 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	char *timestamp;
 	cmdb_server_s *server, *list;
 
-	if (!(server = malloc(sizeof(cmdb_server_s))))
+	if (!(server = calloc(sizeof(cmdb_server_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "server in store_server_mysql");
 	server->server_id = strtoul(row[0], NULL, 10);
 	snprintf(server->vendor, CONF_S, "%s", row[1]);
@@ -851,7 +851,7 @@ store_customer_mysql(MYSQL_ROW row, cmdb_s *base)
 	char *timestamp;
 	cmdb_customer_s *customer, *list;
 
-	if (!(customer = malloc(sizeof(cmdb_customer_s))))
+	if (!(customer = calloc(sizeof(cmdb_customer_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "customer in store_customer_mysql");
 	customer->cust_id = strtoul(row[0], NULL, 10);
 	snprintf(customer->name, HOST_S, "%s", row[1]);
@@ -884,7 +884,7 @@ store_contact_mysql(MYSQL_ROW row, cmdb_s *base)
 	char *timestamp;
 	cmdb_contact_s *contact, *list;
 
-	if (!(contact = malloc(sizeof(cmdb_contact_s))))
+	if (!(contact = calloc(sizeof(cmdb_contact_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "contact in store_contact_mysql");
 	contact->cont_id = strtoul(row[0], NULL, 10);
 	snprintf(contact->name, HOST_S, "%s", row[1]);
@@ -915,7 +915,7 @@ store_service_mysql(MYSQL_ROW row, cmdb_s *base)
 	cmdb_service_s *service, *list;
 	cmdb_service_type_s *type;
 
-	if (!(service = malloc(sizeof(cmdb_service_s))))
+	if (!(service = calloc(sizeof(cmdb_service_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "service in store_service_mysql");
 	service->service_id = strtoul(row[0], NULL, 10);
 	service->server_id = strtoul(row[1], NULL, 10);
@@ -952,7 +952,7 @@ store_service_type_mysql(MYSQL_ROW row, cmdb_s *base)
 {
 	cmdb_service_type_s *service, *list;
 
-	if (!(service = malloc(sizeof(cmdb_service_type_s))))
+	if (!(service = calloc(sizeof(cmdb_service_type_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "service in store_service_type_mysql");
 
 	service->service_id = strtoul(row[0], NULL, 10);
@@ -976,7 +976,7 @@ store_hardware_mysql(MYSQL_ROW row, cmdb_s *base)
 	cmdb_hardware_s *hard, *list;
 	cmdb_hard_type_s *type;
 
-	if (!(hard = malloc(sizeof(cmdb_hardware_s))))
+	if (!(hard = calloc(sizeof(cmdb_hardware_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "hardware in store_hardware_mysql");
 
 	hard->hard_id = strtoul(row[0], NULL, 10);
@@ -1013,7 +1013,7 @@ store_hardware_type_mysql(MYSQL_ROW row, cmdb_s *base)
 {
 	cmdb_hard_type_s *hard, *list;
 
-	if (!(hard = malloc(sizeof(cmdb_hard_type_s))))
+	if (!(hard = calloc(sizeof(cmdb_hard_type_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "hardware in store_hardware_type_mysql");
 
 	hard->ht_id = strtoul(row[0], NULL, 10);
@@ -1037,7 +1037,7 @@ store_vm_hosts_mysql(MYSQL_ROW row, cmdb_s *base)
 	char *timestamp;
 	cmdb_vm_host_s *vmhost, *list;
 
-	if (!(vmhost = malloc(sizeof(cmdb_vm_host_s))))
+	if (!(vmhost = calloc(sizeof(cmdb_vm_host_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "vmhost in store_vm_hosts_mysql");
 	vmhost->id = strtoul(row[0], NULL, 10);
 	snprintf(vmhost->name, RBUFF_S, "%s", row[1]);

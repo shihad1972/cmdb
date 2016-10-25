@@ -12,7 +12,7 @@ ckc_SOURCES = ckc.c $(combo_SOURCES)
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
 		cmdb_cmdb.h cmdb_base_sql.h cmdb.h checks.h\
-		base_sql.h
+		base_sql.h cmdb_data.h
 
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) base_sql.c dnsa_base_sql.c\
 		zones.c dnsa_net.c dnsa_data.c\

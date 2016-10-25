@@ -24,6 +24,7 @@
 #ifndef __CMDB_BASE_SQL_H
 #define __CMDB_BASE_SQL_H
 # include <config.h>
+# include "cmdb_cmdb.h"
 
 extern const char *sql_select[];
 extern const char *sql_insert[];
@@ -44,7 +45,7 @@ extern const unsigned int cmdb_update_args[];
 extern const unsigned int cmdb_update_args_type[][5];
 
 # ifdef HAVE_MYSQL
-extern const int mysql_inserts[8][7];
+extern const int cmdb_mysql_inserts[8][7];
 # endif /* HAVE_MYSQL */
 
 enum {		/* cmdb update SQL statements */
