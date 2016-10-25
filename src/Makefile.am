@@ -1,7 +1,7 @@
 bin_PROGRAMS = cmdb cpc ckc
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
-combo_SOURCES = errors.c checks.c cmdb_data.c
+combo_SOURCES = errors.c checks.c cmdb_data.c checks.h
 
 cbc_combo_SOURCES = cbc_data.c cbc_common.c cbccom.c
 
