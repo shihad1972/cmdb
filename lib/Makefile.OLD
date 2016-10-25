@@ -1,11 +1,14 @@
 CFLAGS = -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
-override CPPFLAGS := -I../src/ -I../include/
-lib_LIBRARIES = libailsacmdb.a
+CPPFLAGS = -I../src/ -I../include/ -I/usr/include/mysql
+lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
 #libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)
 libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) \
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o)
+
+libailsasql.a:	libailsasql.a(base_sql.o) libailsasql.a(cmdb_base_sql.o) libailsasql.a(dnsa_base_sql.o) \
+		libailsasql.a(cbc_base_sql.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -29,6 +32,18 @@ libailsacmdb.a(fileio.o):	fileio.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(data.o):	data.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(base_sql.o): base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(cmdb_base_sql.o): cmdb_base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(dnsa_base_sql.o): dnsa_base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(cbc_base_sql.o): cbc_base_sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

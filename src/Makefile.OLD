@@ -8,71 +8,53 @@ CC = gcc
 RM = rm -f
 override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/
-override LDFLAGS := $(LDFLAGS) -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
+LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
-override LDLIBS := -lmysqlclient $(PCLIBS) -lsqlite3 $(LDLIBS)
+LDLIBS = -lailsasql -lmysqlclient $(PCLIBS) -lsqlite3
 bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
 
 SOBJECTS = errors.o checks.o cmdb_data.o
-COMOBJECTS = cbc_data.o cbc_base_sql.o cbc_common.o cbccom.o
-DNSCOMOBJ = dnsa_net.o dnsa_base_sql.o zones.o dnsacom.o dnsa_data.o
-DBOBJECTS = cbc_base_sql.o dnsa_base_sql.o base_sql.o cmdb_base_sql.o
-COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o cmdb_base_sql.o base_sql.o
-DOBJECTS = dnsa.o $(SOBJECTS) $(DNSCOMOBJ) base_sql.o
-BOBJECTS = cbc.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o base_sql.o
-CDOBJECTS = cbcdomain.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) cbcnet.o cbc_dnsa.o base_sql.o
-COOBJECTS = cbcos.o $(SOBJECTS) $(COMOBJECTS) base_sql.o cbcnet.o
-CVOBJECTS = cbcvarient.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
-CKOBJECTS = cbcpart.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
-CLOBJECTS = cbclocale.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
+COMOBJECTS = cbc_data.o cbc_common.o cbccom.o
+DNSCOMOBJ = dnsa_net.o zones.o dnsacom.o dnsa_data.o
+COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o
+DOBJECTS = dnsa.o $(SOBJECTS) $(DNSCOMOBJ)
+BOBJECTS = cbc.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o
+CDOBJECTS = cbcdomain.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) cbcnet.o cbc_dnsa.o
+COOBJECTS = cbcos.o $(SOBJECTS) $(COMOBJECTS) cbcnet.o
+CVOBJECTS = cbcvarient.o $(SOBJECTS) $(COMOBJECTS)
+CKOBJECTS = cbcpart.o $(SOBJECTS) $(COMOBJECTS)
+CLOBJECTS = cbclocale.o $(SOBJECTS) $(COMOBJECTS)
 POBJECTS = cpc.c $(SOBJECTS)
 KOBJECTS = ckc.c $(SOBJECTS)
-SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
-SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
+SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS)
+SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS)
 TOBJECTS = sql_test.o $(SOBJECTS)
-
-COMHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbc_common.h
-DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
-CHEADERS = cmdb_cmdb.h cmdb_base_sql.h base_sql.h cmdb.h checks.h cmdb_data.h
-BHEADERS = $(COMHEADERS) checks.h build.h
-CDHEADERS = $(COMHEADERS) cbc_dnsa.h cmdb_dnsa.h dnsa_base_sql.h
-CVHEADERS = $(COMHEADERS)
-PHEADERS = cmdb.h
 
 all:	$(bin_programs)
 
-dnsa:	$(DOBJECTS) $(LDLIBS)
-$(DOBJECTS):	$(DHEADERS)
+dnsa:	$(DOBJECTS)
 
-cmdb:	$(COBJECTS) $(LDLIBS)
-$(COBJECTS):	$(CHEADERS)
+cmdb:	$(COBJECTS)
 
-cbc:	$(BOBJECTS) $(LDLIBS)
-$(BOBJECTS):	$(BHEADERS)
+cbc:	$(BOBJECTS)
 
-cbcdomain:	$(CDOBJECTS) $(LDLIBS)
-$(CDOBJECTS):	$(CDHEADERS)
+cbcdomain:	$(CDOBJECTS)
 
-cbcos:	$(COOBJECTS) $(LDLIBS)
-$(COOBJECTS):	$(COMMHEADERS)
+cbcos:	$(COOBJECTS)
 
-cbcvarient:	$(CVOBJECTS) $(LDLIBS)
-$(CVOBJECTS):	$(CVHEADERS)
+cbcvarient:	$(CVOBJECTS)
 
-cbcpart:	$(CKOBJECTS) $(LDLIBS)
-$(CKOBJECTS):	$(CVHEADERS)
+cbcpart:	$(CKOBJECTS)
 
-cbclocale:	$(CLOBJECTS) $(LDLIBS)
-$(CLOBJECTS):	$(CVHEADERS)
+cbclocale:	$(CLOBJECTS)
 
-cpc:	$(POBJECTS) $(LDLIBS)
+cpc:	$(POBJECTS)
 
-ckc:	$(KOBJECTS) $(LDLIBS)
-$(POBJECTS) $(KOBJECTS) :	$(PHEADERS)
+ckc:	$(KOBJECTS)
 
-cbcsysp:	$(SPOBJECTS) $(LDLIBS)
+cbcsysp:	$(SPOBJECTS)
 
-cbcscript:	$(SSOBJECTS) $(LDLIBS)
+cbcscript:	$(SSOBJECTS)
 
 .PHONY :	clean
 clean :

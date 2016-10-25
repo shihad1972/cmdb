@@ -12,7 +12,7 @@ LIBDIR = lib
 SUBDIRS = lib src daemon
 bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
 sbin_PROGRAMS = cmdbd ailsa cmdbc
-lib_LIBRARIES = libailsacmdb.a
+lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
 all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
