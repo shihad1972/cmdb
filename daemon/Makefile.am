@@ -3,6 +3,8 @@ bin_PROGRAMS = ailsa
 
 shar_SOURCES = client_info.c client_info.h
 
+sql_SOURCES = $(top_srcdir)/src/cbc_base_sql.c $(top_srcdir)/src/cmdb_base_sql.c $(top_srcdir)/src/dnsa_base_sql.c $(top_srcdir)/src/base_sql.c
+
 ailsa_SOURCES = ailsa.c conversion.c fileio.c conversion.h fileio.h
 ailsa_LDADD = $(top_builddir)/lib/libailsacmdb.la
 
