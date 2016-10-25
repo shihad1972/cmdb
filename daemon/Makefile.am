@@ -3,16 +3,14 @@ sbin_PROGRAMS = cmdbd cmdbc
 
 shar_SOURCES = client_info.c client_info.h
 
-sql_SOURCES = $(top_srcdir)/src/cbc_base_sql.c $(top_srcdir)/src/cmdb_base_sql.c $(top_srcdir)/src/dnsa_base_sql.c $(top_srcdir)/src/base_sql.c
-
 ailsa_SOURCES = ailsa.c conversion.c fileio.c conversion.h fileio.h $(sql_SOURCES)
-ailsa_LDADD = $(top_builddir)/lib/libailsacmdb.la
+ailsa_LDADD = $(top_builddir)/lib/libailsacmdb.la $(top_builddir)/lib/libailsasql.la
 
 cmdbd_SOURCES = cmdbd.c $(shar_SOURCES)
-cmdbd_LDADD = $(top_builddir)/lib/libailsacmdb.la
+cmdbd_LDADD = $(top_builddir)/lib/libailsacmdb.la $(top_builddir)/lib/libailsasql.la
 
 cmdbc_SOURCES = cmdbc.c $(shar_SOURCES)
-cmdbc_LDADD = $(top_builddir)/lib/libailsacmdb.la
+cmdbc_LDADD = $(top_builddir)/lib/libailsacmdb.la $(top_builddir)/lib/libailsasql.la
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_CPPFLAGS = -I$(top_srcdir)/src/ -I$(top_srcdir)/include/
