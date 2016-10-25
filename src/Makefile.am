@@ -15,7 +15,7 @@ cmdb_LDADD = $(top_builddir)/lib/libailsasql.la
 dnsa_SOURCES =	dnsa.c dnsacom.c $(combo_SOURCES) zones.c dnsa_net.c dnsa_data.c
 dnsa_LDADD = $(top_builddir)/lib/libailsasql.la
 
-cbcos_SOURCES = cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c cmdb.h
+cbcos_SOURCES = cbcos.c $(combo_SOURCES) $(cbc_combo_SOURCES) cbcnet.c
 cbcos_LDADD = $(top_builddir)/lib/libailsasql.la
 
 cbcvarient_SOURCES = cbcvarient.c $(combo_SOURCES) $(cbc_combo_SOURCES)
