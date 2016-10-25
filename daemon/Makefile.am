@@ -1,5 +1,5 @@
 sbin_PROGRAMS = cmdbd cmdbc
-bin_PROGRAMS = ailsa
+##bin_PROGRAMS = ailsa
 
 shar_SOURCES = client_info.c client_info.h
 
