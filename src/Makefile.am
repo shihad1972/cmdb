@@ -31,10 +31,10 @@ cbcvarient_SOURCES = \
 cbcvarient_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcpart_SOURCES = \
 		cbcpart.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cmdb.h cmdb_cbc.h cbc_data.h cbc_\
+		cmdb.h cmdb_cbc.h cbc_data.h \
 		cbc_common.h
 cbcpart_LDADD = $(top_builddir)/lib/libailsasql.la
-cbc_SOURCES =	cbc.c $(combo_SOURCES)$(cbc_combo_SOURCES) build.c createbuild.c\
+cbc_SOURCES =	cbc.c $(combo_SOURCES) $(cbc_combo_SOURCES) build.c createbuild.c\
 		cmdb_cbc.h cbc_cmdb.h checks.h cbc_common.h \
 		cbc_data.h build.h
 cbc_LDADD = $(top_builddir)/lib/libailsasql.la
