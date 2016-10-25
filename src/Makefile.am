@@ -32,7 +32,6 @@ cbcpart_SOURCES = \
 		cmdb.h
 cbcpart_LDADD = $(top_builddir)/lib/libailsasql.la
 cbc_SOURCES =	cbc.c $(combo_SOURCES) $(cbc_combo_SOURCES) build.c createbuild.c\
-		cbc_checks.h \
 		cbc_data.h
 cbc_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcdomain_SOURCES = \
@@ -45,13 +44,11 @@ cbclocale_SOURCES = \
 cbclocale_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcsysp_SOURCES = \
 		cbcsysp.c $(combo_SOURCES) $(cbc_combo_SOURCES)\
-		cbcsysp.h \
-		cbc_checks.h
+		cbcsysp.h
 cbcsysp_LDADD = $(top_builddir)/lib/libailsasql.la
 cbcscript_SOURCES = \
 		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
-		cbcscript.h \
-		cbc_checks.h
+		cbcscript.h
 cbcscript_LDADD = $(top_builddir)/lib/libailsasql.la
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcvarient cbcpart cbcsysp cbcscript cbclocale
