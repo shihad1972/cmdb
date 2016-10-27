@@ -212,7 +212,7 @@ const unsigned int cmdb_update_args_type[][5] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE },
 	{ DBINT, DBINT, NONE, NONE, NONE }
 };
-	
+
 int
 cmdb_run_query(cmdb_config_s *config, cmdb_s *base, int type)
 {

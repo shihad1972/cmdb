@@ -217,6 +217,7 @@ typedef struct cbc_server_s {
 	char model[CONF_S];
 	char uuid[CONF_S];
 	char name[HOST_S];
+	char server_name[RBUFF_S];
 	unsigned long int server_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
