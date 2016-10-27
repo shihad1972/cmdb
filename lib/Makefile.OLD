@@ -8,8 +8,7 @@ libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
 
-libailsasql.a:	libailsasql.a(base_sql.o) libailsasql.a(cmdb_base_sql.o) libailsasql.a(dnsa_base_sql.o) \
-		libailsasql.a(cbc_base_sql.o)
+libailsasql.a:	libailsasql.a(sql.o) \
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -47,16 +46,7 @@ libailsacmdb.a(dnsa_data.o): dnsa_data.o
 libailsacmdb.a(cbc_data.o): cbc_data.o
 	$(AR) $(ARFLAGS) $@ $<
 
-libailsasql.a(base_sql.o): base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(cmdb_base_sql.o): cmdb_base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(dnsa_base_sql.o): dnsa_base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(cbc_base_sql.o): cbc_base_sql.o
+libailsasql.a(sql.o): sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

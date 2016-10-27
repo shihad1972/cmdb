@@ -23,7 +23,7 @@ daemon:	$(sbin_PROGRAMS)
 $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
-$(bin_PROGRAMS):
+$(bin_PROGRAMS):	$(lib_LIBRARIES)
 	$(MAKE) -C $(DIR) $@
 
 sqlt:

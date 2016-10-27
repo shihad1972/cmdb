@@ -42,13 +42,22 @@ enum {			/* Buffer Sizes */
 	BUILD_S = 65536
 };
 
-enum {			/* Database colum types */
+enum {			/* Database column types */
 	DBTEXT = 1,
 	DBINT = 2,
 	DBSHORT = 3,
 	DBTINY = 4,
 	FLYBY
 };
+
+enum {			/* Database query types */
+	DBSEL = 1,
+	DBINS = 2,
+	DBDEL = 3,
+	DBSER = 4,
+	DBUPD = 5
+};
+
 
 enum {			/* dnsa error codes */
 	OK = 0,
