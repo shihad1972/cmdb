@@ -10,7 +10,7 @@ DAEMONDIR = daemon
 CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2
 sbin_PROGRAMS = cmdbd ailsa cmdbc
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 

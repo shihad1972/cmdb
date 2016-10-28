@@ -34,4 +34,14 @@ typedef struct ailsa_sql_s {
 
 extern const ailsa_sql_s queries[];
 
+enum {			/* Select statements */
+	SERVER = 1,
+	CUSTOMER = 2,
+	CONTACT = 4,
+	SERVICE = 8,
+	SERVICE_TYPE = 16,
+	HARDWARE = 32,
+	HARDWARE_TYPE = 64,
+	VM_HOST = 128
+};
 #endif // __CMDB_SQL_H__

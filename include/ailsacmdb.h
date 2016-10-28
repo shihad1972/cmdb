@@ -287,6 +287,9 @@ ailsa_calloc(size_t len, const char *msg);
 void
 ailsa_start_syslog(const char *prog);
 
+void
+ailsa_syslog(int priority, const char *msg, ...);
+
 // Config parse and free functions
 
 void
@@ -297,6 +300,9 @@ cmdbd_clean_config(struct cmdbd_config *cmdbd);
 
 void
 cmdbc_clean_config(struct cmdbc_config *cmdbc);
+
+void
+cmdbd_print_config(struct cmdbd_config *conf);
 
 // Networking Functions
 

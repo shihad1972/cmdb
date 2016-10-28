@@ -146,6 +146,34 @@ typedef struct cmdb_s {
 	struct cmdb_vm_host_s *vmhost;
 } cmdb_s;
 
+typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
+	char *vmhost;
+	char *config;
+	char *vendor;
+	char *make;
+	char *model;
+	char *id;
+	char *uuid;
+	char *stype;
+	char *name;
+	char *address;
+	char *city;
+	char *email;
+	char *detail;
+	char *hclass;
+	char *url;
+	char *device;
+	char *phone;
+	char *postcode;
+	char *county;
+	char *coid;
+	char *service;
+	short int action;
+	short int type;
+	short int force;
+	unsigned long int sid;
+} cmdb_comm_line_s;
+
 void
 cmdb_init_struct(cmdb_s *cmdb);
 void
@@ -184,5 +212,21 @@ void
 clean_hardware_type_list(cmdb_hard_type_s *list);
 void
 clean_vmhost_list(cmdb_vm_host_s *list);
+void
+clean_cmdb_comm_line(cmdb_comm_line_s *list);
+
+/* Fill struct functions. These use the pcre regex to check input */
+int
+fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+int
+fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
 #endif // __CMDB_DATA_H__

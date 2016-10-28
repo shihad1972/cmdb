@@ -27,7 +27,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cmdb.h"
-#include "cmdb_cmdb.h"
 #include "cmdb_sql.h"
 #ifdef HAVE_LIBPCRE
 # include "checks.h"

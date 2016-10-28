@@ -63,11 +63,11 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 	FILE *f;
 
 	if (!(line = calloc(RBUFF_S, sizeof(char)))) {
-		syslog(LOG_CRIT, "Out Of Memory!");
+		ailsa_syslog(LOG_CRIT, "Out Of Memory!");
 		exit(1);
 	}
 	if (!(f = fopen(file, "r"))) {
-		syslog(LOG_ALERT, "Cannot open config file %s", file);
+		ailsa_syslog(LOG_ALERT, "Cannot open config file %s", file);
 		exit(1);
 	}
 	while (get_line(f, line, RBUFF_S)) {
@@ -81,7 +81,7 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 		else if (len == sizeof(struct cmdbc_config))
 			cmdbc_fill_config((struct cmdbc_config *)data);
 		if (retval != 0)
-			syslog(LOG_ALERT, "Config directory %s too long", nv.value);
+			ailsa_syslog(LOG_ALERT, "Config directory %s too long", nv.value);
 		memset(line, 0, RBUFF_S);
 	}
 	fclose(f);
@@ -196,10 +196,10 @@ log_config_error(int retval, int lineno)
 	case 1:
 		break;	// Empty line or comment
 	case 2:
-		syslog(LOG_WARNING, "Name %s has no value at line %d", nv.name, lineno);
+		ailsa_syslog(LOG_WARNING, "Name %s has no value at line %d", nv.name, lineno);
 		break;
 	default:
-		syslog(LOG_WARNING, "Unknown config error %d at line %d", retval, lineno);
+		ailsa_syslog(LOG_WARNING, "Unknown config error %d at line %d", retval, lineno);
 		break;
 	}
 }
@@ -325,7 +325,7 @@ cmdbd_fill_config(struct cmdbd_config *conf)
 		retval = ailsa_add_trailing_slash(conf->toplevelos);
 		break;
 	default:
-		syslog(LOG_WARNING, "Unknown config type %s", nv.name);	
+		ailsa_syslog(LOG_WARNING, "Unknown config type %s", nv.name);	
 		break;
 	}
 	return retval;
@@ -336,5 +336,38 @@ cmdbc_fill_config(struct cmdbc_config *conf)
 {
 	if (!conf)
 		return;
+}
+
+void
+cmdbd_print_config(struct cmdbd_config *conf)
+{
+	if (!(conf))
+		return;
+	if (conf->dbtype)
+		printf("Database type: %s\n", conf->dbtype);
+	if (conf->db)
+		printf("Database name: %s\n", conf->db);
+	if (conf->file)
+		printf("Database file: %s\n", conf->file);
+	if (conf->user)
+		printf("Database user: %s\n", conf->user);
+	if (conf->pass)
+		printf("Database pass: %s\n", conf->pass);
+	if (conf->host)
+		printf("Database host: %s\n", conf->host);
+	if (conf->dir)	
+		printf("Database dir : %s\n", conf->dir);
+	if (conf->bind)
+		printf("Database bind: %s\n", conf->bind);
+	if (conf->dnsa)
+		printf("Database dnsa: %s\n", conf->dnsa);
+	if (conf->rev)
+		printf("Database rev : %s\n", conf->rev);
+	if (conf->rndc)
+		printf("Database rndc: %s\n", conf->rndc);
+	if (conf->chkz)
+		printf("Database chkz: %s\n", conf->chkz);
+	if (conf->chkc)
+		printf("Database chkc: %s\n", conf->chkc);
 }
 

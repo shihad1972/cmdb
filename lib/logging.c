@@ -22,6 +22,11 @@
  *  Functions for logging for cmdbd and cmdbcd
  *
  */
+#define _BSD_SOURCE
+#include <stdio.h>
+#include <stdarg.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <syslog.h>
 
 void
@@ -31,5 +36,21 @@ ailsa_start_syslog(const char *prog)
 	int opt = LOG_PID;
 
 	openlog(prog, opt, fac);
+}
+
+void
+ailsa_syslog(int priority, const char *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+	if (getppid() > 1) {
+		vfprintf(stderr, msg, ap);
+		fprintf(stderr, "\n");
+	} else {
+		vsyslog(priority, msg, ap);
+	}
+	va_end(ap);
+		
 }
 

@@ -40,7 +40,6 @@
 #include <netdb.h>
 #include "cmdb.h"
 #include "cmdb_data.h"
-#include "cmdb_cmdb.h"
 
 void *
 cmdb_malloc(size_t len, const char *msg)

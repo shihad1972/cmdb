@@ -24,35 +24,6 @@
 # define __CMDB_CMDB_H__
 # include "cmdb_data.h"
 
-
-typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
-	char *vmhost;
-	char *config;
-	char *vendor;
-	char *make;
-	char *model;
-	char *id;
-	char *uuid;
-	char *stype;
-	char *name;
-	char *address;
-	char *city;
-	char *email;
-	char *detail;
-	char *hclass;
-	char *url;
-	char *device;
-	char *phone;
-	char *postcode;
-	char *county;
-	char *coid;
-	char *service;
-	short int action;
-	short int type;
-	short int force;
-	unsigned long int sid;
-} cmdb_comm_line_s;
-
 void
 cmdb_main_free(cmdb_comm_line_s *cm, cmdb_config_s *cmc, char *cmdb_config);
 int
@@ -102,24 +73,6 @@ void
 display_vm_hosts(cmdb_config_s *config);
 int
 add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base);
-
-/* Fill struct functions. These use the pcre regex to check input */
-int
-fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-int
-fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-int
-fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-int
-fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-int
-fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-int
-fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
-
-/* Complete the structs if comm line options were missing */
-void
-complete_server_values(cmdb_s *cmdb, int cl);
 
 /* New user input functions */
 int

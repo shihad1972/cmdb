@@ -25,7 +25,7 @@
  * 
  *  Part of the CMDB program
  * 
- *  (C) Iain M Conochie 2012 - 2013
+ *  (C) Iain M Conochie 2012 - 2016
  * 
  */
 #include <config.h>
@@ -354,7 +354,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == CVERSION)
 		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
-		if ((strncmp(program, "cmdb", CONF_S) == 0))
+		if ((strncmp(program, "cmdb", CONF_S) == 0) || (strncmp(program, "cmdb2", CONF_S) == 0))
 			display_cmdb_usage();
 		else if ((strncmp(program, "cbc", CONF_S) == 0))
 			display_cbc_usage();

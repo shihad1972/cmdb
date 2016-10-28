@@ -11,12 +11,13 @@ override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
 LDLIBS = -lailsasql -lailsacmdb -lmysqlclient $(PCLIBS) -lsqlite3
-bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
+bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2
 
 SOBJECTS = checks.o
 COMOBJECTS = cbc_common.o cbccom.o
 DNSCOMOBJ = dnsa_net.o zones.o dnsacom.o
 COBJECTS = cmdb.o cmdbcom.o $(SOBJECTS) servers.o customers.o
+C2OBJECTS = cmdb2.o cmdb2com.o
 DOBJECTS = dnsa.o $(SOBJECTS) $(DNSCOMOBJ)
 BOBJECTS = cbc.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o
 CDOBJECTS = cbcdomain.o $(SOBJECTS) $(COMOBJECTS) $(DNSCOMOBJ) cbcnet.o cbc_dnsa.o
@@ -35,6 +36,8 @@ all:	$(bin_programs)
 dnsa:	$(DOBJECTS)
 
 cmdb:	$(COBJECTS)
+
+cmdb2:	$(C2OBJECTS)
 
 cbc:	$(BOBJECTS)
 
