@@ -39,8 +39,9 @@
 #endif /* HAVE_SQLITE3 */
 
 const char *cmdb_sql_select[] = { "\
-SELECT server_id, vendor, make, model, uuid, cust_id, vm_server_id, name, \
+SELECT server_id, server_type_id, cust_id, vm_server_id, name, \
  cuser, muser, ctime, mtime FROM server ORDER BY cust_id WHERE server_name = ?","\
+SELECT server_type_id, vendor, make, model, cuser, muser, ctime, mtime FROM server_type","\
 SELECT cust_id, name, address, city, county, postcode, coid, cuser, muser, \
  ctime, mtime FROM customer ORDER BY coid","\
 SELECT cont_id, name, phone, email, cust_id, cuser, muser, ctime, mtime \
@@ -115,8 +116,10 @@ SELECT part_options_id, def_part_id, def_scheme_id, poption, cuser, muser, \
 };
 
 const char *cmdb_sql_insert[] = { "\
-INSERT INTO server (name, vendor, make, model, uuid, cust_id, vm_server_id, \
-cuser, muser) VALUES (?,?,?,?,?,?,?,?,?)","\
+INSERT INTO server (name, server_type_id, cust_id, vm_server_id, \
+cuser, muser) VALUES (?,?,?,?,?,?)","\
+INSERT INTO server_type (vendor, make, model, alias, cuser, muser) \
+ VALUES (?, ?, ?, ?, ?, ?)","\
 INSERT INTO customer (name, address, city, county, postcode, coid, cuser, \
 muser) VALUES (?,?,?,?,?,?,?,?)","\
 INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES \
@@ -520,7 +523,7 @@ UPDATE default_locale SET locale_id = ?"
 const unsigned int cmdb_select_args[] = { 1,0,0,0,0,0,0,0
                                       };
 
-const unsigned int cmdb_select_fields[] = { 12, 11, 9, 10, 3, 9, 3, 8, 
+const unsigned int cmdb_select_fields[] = { 9, 8, 11, 9, 10, 3, 9, 3, 8,
                                        18, 23, 13, 9, 5, 2, 9, 4, 11,
 	                               5, 13, 13, 10, 11, 7, 4, 11, 8, 12, 7, 12, 7, 8, 6, 8, 9, 6, 10, 8 };
 
@@ -552,8 +555,10 @@ const unsigned int cmdb_update_args[] = { 2, 2, 2, 2, 2, 2, 2,
 	5, 6, 3, 3, 3, 3, 3, 2, 2, 2, 1 };
 
 const int cmdb_inserts[][24] = {
-	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT, DBINT,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, 0, 0, 0, 0, 0, 0,
           0, 0, 0,0, 0, 0, 0, 0, 0, 0 },
 	{ DBTEXT, DBTEXT, DBTEXT, DBINT, DBINT, DBINT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },

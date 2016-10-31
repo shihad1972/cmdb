@@ -22,6 +22,7 @@
 
 #ifndef __CMDB_DATA_H__
 # define __CMDB_DATA_H__
+# include <ailsacmdb.h>
 
 typedef struct cmdb_config_s { /* Hold CMDB configuration values */
 	char dbtype[RANGE_S];
@@ -36,21 +37,33 @@ typedef struct cmdb_config_s { /* Hold CMDB configuration values */
 } cmdb_config_s;
 
 typedef struct cmdb_server_s {
-	struct cmdb_server_s *next;
-	char vendor[CONF_S];
-	char make[CONF_S];
-	char model[CONF_S];
-	char uuid[CONF_S];
+	unsigned short int type;
 	char name[HOST_S];
 	char server_name[RBUFF_S];
 	unsigned long int server_id;
+	unsigned long int server_type_id;
 	unsigned long int cust_id;
 	unsigned long int vm_server_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
+	struct cmdb_server_s *next;
 } cmdb_server_s;
+
+typedef struct cmdb_server_type_s {
+	unsigned short int type;
+	char vendor[HOST_S];
+	char make[HOST_S];
+	char model[MAC_S];
+	char alias[MAC_S];
+	unsigned long int server_type_id;
+	unsigned long int cuser;
+	unsigned long int muser;
+	unsigned long int ctime;
+	unsigned long int mtime;
+	struct cmdb_server_type_s *next;
+} cmdb_server_type_s;
 
 typedef struct cmdb_customer_s {
 	struct cmdb_customer_s *next;
@@ -137,6 +150,7 @@ typedef struct cmdb_vm_host_s {
 
 typedef struct cmdb_s {
 	struct cmdb_server_s *server;
+	struct cmdb_server_type_s *servertype;
 	struct cmdb_customer_s *customer;
 	struct cmdb_contact_s *contact;
 	struct cmdb_service_s *service;
@@ -199,6 +213,8 @@ cmdb_clean_list(cmdb_s *cmdb);
 void
 clean_server_list(cmdb_server_s *list);
 void
+clean_server_type_list(cmdb_server_type_s *list);
+void
 clean_customer_list(cmdb_customer_s *list);
 void
 clean_contact_list(cmdb_contact_s *list);
@@ -228,5 +244,9 @@ int
 fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
+
+// pre database access functions
+int
+cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc);
 
 #endif // __CMDB_DATA_H__

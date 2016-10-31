@@ -15,13 +15,11 @@ cmdb \- Configuration Management Database
 
 .B cmdb
 [
-.B -adhlrv
+.B -adhlmrv
 ] [
-.B -eotsuw
+.B -eotsuwy
 ] [
-.B -inm
-] [
-.B -ABCDEILMPSTUVY
+.B -ABCDEILMPSTVY
 ]
 .SH DESCRIPTION
 \fBcmdb\fP is a front end to a Configuration Management Database for
@@ -47,6 +45,8 @@ display
 help
 .IP "-l,  --list"
 list
+.IP "-m,  --modify"
+modify
 .IP "-r,  --remove, --delete"
 remove
 .IP "-v,  --version"
@@ -65,13 +65,12 @@ contact
 customer
 .IP "-o,  --vm"
 virtual machine host
+.IP "-y,  --servertype"
+server type
 .PP
 .B Naming
 .IP "-n,  --name \fBname\fP"
 This is the name of the server
-.IP "-i,  --identity [ \fBuuid\fP | \fBcoid\fP ]"
-This is used to denote either the UUID of the server or the COID of the
-customer, so this option depends on the context you use it in.
 .IP "-x,  --virtmachine \fBvmhost\fP"
 This is the name of the virtual machine host if you are dealing with
 servers that are VM's.
@@ -81,18 +80,22 @@ Note this server should itself have an entry in the CMDB already.
 .PP
 .B For adding a server.
 .PP
-.B cmdb -a -s -C coid -M make -O model -U uuid -V vendor -n name [ -m vmhost ]
+.B cmdb -a -s -C coid -n name -k server-type-alias [ -m vmhost ]
 .IP "-C,  --coid \fBCOID\fP"
 The COID is a unique identifier for the customer this server belongs.
 You should have at least one customer before you try to add servers.
+.IP "-n,  --name \fBserver name\fP"
+The name of the server you are adding.
+.IP "-k,  --alias"
+The alias of the server type
+.PP
+.B For adding a server type
+.PP
+.B cmdb -a -s -M make -O model -V vendor -k server-type-alias
 .IP "-M,  --make \fBMake\fP"
 This is the make, or line, or the server.
 .IP "-O,  --model \fBModel\fP"
 This is the model of the server.
-.IP "-U,  --uuid \fBUUID\fP"
-This is a unique idetifier for the server.
-You can use th UUID convention or you can use your own convention, as long as
-this is a combination of upper case letters and numbers.
 .IP "-V,  --vendor \fBVendor\fP"
 This is the server vendor.
 .PP

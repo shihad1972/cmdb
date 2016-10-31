@@ -360,14 +360,45 @@ cmdbd_print_config(struct cmdbd_config *conf)
 	if (conf->bind)
 		printf("Database bind: %s\n", conf->bind);
 	if (conf->dnsa)
-		printf("Database dnsa: %s\n", conf->dnsa);
+		printf("DNS zones config: %s\n", conf->dnsa);
 	if (conf->rev)
-		printf("Database rev : %s\n", conf->rev);
+		printf("Reverse config: %s\n", conf->rev);
 	if (conf->rndc)
 		printf("Database rndc: %s\n", conf->rndc);
 	if (conf->chkz)
-		printf("Database chkz: %s\n", conf->chkz);
+		printf("Check Zone: %s\n", conf->chkz);
 	if (conf->chkc)
-		printf("Database chkc: %s\n", conf->chkc);
+		printf("Check Config: %s\n", conf->chkc);
+	if (conf->socket)
+		printf("Database socket: %s\n", conf->socket);
+	if (conf->hostmaster)
+		printf("Hostmaster Email: %s\n", conf->hostmaster);
+	if (conf->prins)
+		printf("Primary DNS Server:   %s\n", conf->prins);
+	if (conf->secns)
+		printf("Secondary DNS Server: %s\n", conf->secns);
+	if (conf->pridns)
+		printf("Primary DNS IP:   %s\n", conf->pridns);
+	if (conf->secdns)
+		printf("Secondary DNS IP: %s\n", conf->secdns);
+	if (conf->toplevelos)
+		printf("Top level OS: %s\n", conf->toplevelos);
+	if (conf->pxe)
+		printf("PXE directory:   %s\n", conf->pxe);
+	if (conf->tmpdir)
+		printf("Temporary Directory: %s\n", conf->tmpdir);
+	if (conf->preseed)
+		printf("Preseed base directory: %s\n", conf->preseed);
+	if (conf->kickstart)
+		printf("Kickstart base directory: %s\n", conf->kickstart);
+	if (conf->tftpdir)
+		printf("TFTP directory: %s\n", conf->tftpdir);
+	if (conf->dhcpconf)
+		printf("DHCP config file: %s\n", conf->dhcpconf);
+	printf("Database Port #: %u\n", conf->port);
+	printf("DNS Zone refresh: %lu\n", conf->refresh);
+	printf("DNS Zone expiry:  %lu\n", conf->expire);
+	printf("DNS Zone TTL:     %lu\n", conf->ttl);
+	printf("Client flags:     %lu\n", conf->cliflag);
 }
 

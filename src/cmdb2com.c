@@ -44,16 +44,13 @@
 #include <cmdb_sql.h>
 #include <ailsacmdb.h>
 
-static void
-complete_server_values(cmdb_s *cmdb, int cl);
-
 static int
-check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base);
+check_cmdb_comm_options(cmdb_comm_line_s *comp);
 
 int
-parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
+parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:n:i:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvwx";
+	const char *optstr = "c:i:k:n:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvwxy";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -65,6 +62,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		{"force",		no_argument,		NULL,	'f'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"identity",		required_argument,	NULL,	'i'},
+		{"alias",		required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"modify",		no_argument,		NULL,	'm'},
 		{"name",		required_argument,	NULL,	'n'},
@@ -77,6 +75,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 		{"version",		no_argument,		NULL,	'v'},
 		{"hardware",		no_argument,		NULL,	'w'},
 		{"virtmachine",		required_argument,	NULL,	'x'},
+		{"servertype",		no_argument,		NULL,	'y'},
 		{"address",		required_argument,	NULL,	'A'},
 		{"device",		required_argument,	NULL,	'B'},
 		{"coid",		required_argument,	NULL,	'C'},
@@ -100,7 +99,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 #endif // HAVE_GETOPT_H
 	retval = 0;
 	if (!(comp->config)) {
-		comp->config = cmdb_malloc(CONF_S, "comp->config in parse_cmdb_command_line");
+		comp->config = ailsa_calloc(CONF_S, "comp->config in parse_cmdb_command_line");
 		get_config_file_location(comp->config);
 	}
 #ifdef HAVE_GETOPT_H
@@ -109,89 +108,90 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *b
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 's') {
+		if (opt == 's')
 			comp->type = SERVER;
-		} else if (opt == 'u') {
+		else if (opt == 'y')
+			comp->type = SERVER_TYPE;
+		else if (opt == 'u')
 			comp->type = CUSTOMER;
-		} else if (opt == 't') {
+		else if (opt == 't')
 			comp->type = CONTACT;
-		} else if (opt == 'e') {
+		else if (opt == 'e')
 			comp->type = SERVICE;
-		} else if (opt == 'w') {
+		else if (opt == 'w')
 			comp->type = HARDWARE;
-		} else if (opt == 'o') {
+		else if (opt == 'o')
 			comp->type = VM_HOST;
-		} else if (opt == 'd') {
+		else if (opt == 'd')
 			comp->action = DISPLAY;
-		} else if (opt == 'v') {
+		else if (opt == 'v')
 			comp->action = CVERSION;
-		} else if (opt == 'l') {
+		else if (opt == 'l')
 			comp->action = LIST_OBJ;
-		} else if (opt == 'a') {
+		else if (opt == 'a')
 			comp->action = ADD_TO_DB;
-		} else if (opt == 'r') {
+		else if (opt == 'r')
 			comp->action = RM_FROM_DB;
-		} else if (opt == 'm') {
+		else if (opt == 'm')
 			comp->action = MODIFY;
-		} else if (opt == 'h') {
+		else if (opt == 'h')
 			return DISPLAY_USAGE;
-		} else if (opt == 'f') {
+		else if (opt == 'f')
 			comp->force = 1;
-		} else if (opt == 'c') {
+		else if (opt == 'c')
 			comp->config = strndup(optarg, RBUFF_S);
-		} else if (opt == 'n') {
+		else if (opt == 'n')
 			comp->name = strndup(optarg, HOST_S);
-		} else if (opt == 'i') {
+		else if (opt == 'i')
 			comp->id = strndup(optarg, CONF_S);
-		} else if (opt == 'x') {
+		else if (opt == 'x')
 			comp->vmhost = strndup(optarg, HOST_S);
-		} else if (opt == 'V') {
+		else if (opt == 'V')
 			comp->vendor = strndup(optarg, CONF_S);
-		} else if (opt == 'M') {
+		else if (opt == 'M')
 			comp->make = strndup(optarg, CONF_S);
-		} else if (opt == 'O') {
+		else if (opt == 'O')
 			comp->model = strndup(optarg, CONF_S);
-		} else if (opt == 'U') {
+		else if (opt == 'U')
 			comp->uuid = strndup(optarg, CONF_S);
-		} else if (opt == 'C') {
+		else if (opt == 'C')
 			comp->coid = strndup(optarg, RANGE_S);
-		} else if (opt == 'A') {
+		else if (opt == 'A')
 			comp->address = strndup(optarg, NAME_S);
-		} else if (opt == 'T') {
+		else if (opt == 'T')
 			comp->city = strndup(optarg, HOST_S);
-		} else if (opt == 'Y') {
+		else if (opt == 'Y')
 			comp->county = strndup(optarg, MAC_S);
-		} else if (opt == 'Z') {
+		else if (opt == 'Z')
 			comp->postcode = strndup(optarg, RANGE_S);
-		} else if (opt == 'N') {
+		else if (opt == 'N')
 			comp->name = strndup(optarg, HOST_S);
-		} else if (opt == 'P') {
+		else if (opt == 'P')
 			comp->phone = strndup(optarg, MAC_S);
-		} else if (opt == 'E') {
+		else if (opt == 'E')
 			comp->email = strndup(optarg, HOST_S);
-		} else if (opt == 'D') {
+		else if (opt == 'D')
 			comp->detail = strndup(optarg, HOST_S);
-		} else if (opt == 'I') {
+		else if (opt == 'I')
 			comp->sid = strtoul(optarg, NULL, 10);
-		} else if (opt == 'L') {
+		else if (opt == 'L')
 			comp->url = strndup(optarg, RBUFF_S);
-		} else if (opt == 'B') {
+		else if (opt == 'B')
 			comp->device = strndup(optarg, MAC_S);
-		} else if (opt == 'S') {
+		else if (opt == 'S')
 			comp->service = strndup(optarg, RANGE_S);
-		} else if (opt == 'H') {
+		else if (opt == 'H')
 			comp->hclass = strndup(optarg, MAC_S);
-		} else {
+		else
 			return DISPLAY_USAGE;
-		}
 	}
 
-	retval = check_cmdb_comm_options(comp, base);
+	retval = check_cmdb_comm_options(comp);
 	return retval;
 }
 
 int
-check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
+check_cmdb_comm_options(cmdb_comm_line_s *comp)
 {
 	int retval;
 
@@ -205,32 +205,18 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp, cmdb_s *base)
 		retval = NO_TYPE;
 	else if ((comp->action == NONE) && (comp->type != NONE))
 		retval = NO_ACTION;
-	else if ((comp->action == NONE) && (comp->type == NONE)) {
+	else if ((comp->action == NONE) && (comp->type == NONE))
 		retval = NO_ACTION;
-	} else if (comp->action == LIST_OBJ) {
-		if (comp->type == CONTACT)
+	else if (comp->action == LIST_OBJ) {
+		if (comp->type == CONTACT) {
 			if ((!(comp->id)) && (!(comp->coid)))
 				retval = NO_COID;
+		}
 	} else if ((!(comp->name)) && (!(comp->id)) &&
 		(comp->type != NONE || comp->action != NONE) &&
 		(comp->type != CONTACT))
 		retval = NO_NAME_OR_ID;
-	else if (comp->action == ADD_TO_DB) {
-		if (comp->type == SERVER) {
-			retval = fill_server_values(comp, base);
-			complete_server_values(base, retval);
-		} else if (comp->type == CUSTOMER) {
-			retval = fill_customer_values(comp, base);
-		} else if (comp->type == SERVICE) {
-			retval = fill_service_values(comp, base);
-		} else if (comp->type == CONTACT) {
-			retval = fill_contact_values(comp, base);
-		} else if (comp->type == HARDWARE) {
-			retval = fill_hardware_values(comp, base);
-		} else if (comp->type == VM_HOST) {
-			retval = fill_vmhost_values(comp, base);
-		}
-	} else if (comp->action == DISPLAY) {
+	else if (comp->action == DISPLAY) {
 		if (comp->type == CONTACT) {
 			if ((!(comp->id)) && (!(comp->coid)))
 				retval = NO_COID;
@@ -354,43 +340,6 @@ fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_customer_t(cust);
 	cmdb->server = server;
 	cmdb->customer = cust;
-	if (cm->vendor) {
-#ifdef HAVE_LIBPCRE
-		if (ailsa_validate_input(cm->vendor, CUSTOMER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "vendor");
-#endif /* HAVE_LIBPCRE */
-		snprintf(server->vendor, CONF_S, "%s", cm->vendor);
-	} else {
-		retval = retval | NO_VENDOR;
-	}
-	if (cm->make) {
-#ifdef HAVE_LIBPCRE
-		if (ailsa_validate_input(cm->make, CUSTOMER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "make");
-#endif /* HAVE_LIBPCRE */
-		snprintf(server->make, CONF_S, "%s", cm->make);
-	} else {
-		retval = retval | NO_MAKE;
-	}
-	if (cm->model) {
-#ifdef HAVE_LIBPCRE
-		if (ailsa_validate_input(cm->model, CUSTOMER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "model");
-#endif /* HAVE_LIBPCRE */
-		snprintf(server->model, CONF_S, "%s", cm->model);
-	} else {
-		retval = retval | NO_MODEL;
-	}
-	if (cm->uuid) {
-#ifdef HAVE_LIBPCRE
-		if (ailsa_validate_input(cm->uuid, UUID_REGEX) < 0)
-			if (ailsa_validate_input(cm->uuid, FS_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "uuid");
-#endif /* HAVE_LIBPCRE */
-		snprintf(server->uuid, HOST_S, "%s", cm->uuid);
-	} else {
-		retval = retval | NO_UUID;
-	}
 	if (cm->name) {
 #ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, NAME_REGEX) < 0)
@@ -719,19 +668,6 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 		retval = retval | NO_NAME;
 	}
 	return retval;
-}
-
-void
-complete_server_values(cmdb_s *cmdb, int cl)
-{
-	if (cl & NO_VENDOR)
-		snprintf(cmdb->server->vendor, COMM_S, "none");
-	if (cl & NO_MAKE)
-		snprintf(cmdb->server->make, COMM_S, "none");
-	if (cl & NO_MODEL)
-		snprintf(cmdb->server->model, COMM_S, "none");
-	if (cl & NO_UUID)
-		snprintf(cmdb->server->uuid, COMM_S, "none");
 }
 
 void

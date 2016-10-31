@@ -215,10 +215,6 @@ void
 init_cbc_server(cbc_server_s *server)
 {
 	memset(server, 0, sizeof(cbc_server_s));
-	snprintf(server->vendor, COMM_S, "NULL");
-	snprintf(server->make, COMM_S, "NULL");
-	snprintf(server->model, COMM_S, "NULL");
-	snprintf(server->uuid, COMM_S, "NULL");
 	snprintf(server->name, COMM_S, "NULL");
 }
 

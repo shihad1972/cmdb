@@ -34,19 +34,22 @@ int
 main(int argc, char *argv[])
 {
 	int retval = 0;
-	cmdb_s *cmdb = ailsa_calloc(sizeof(cmdb_s), "cmdb in main");
 	cmdb_comm_line_s *cm = ailsa_calloc(sizeof(cmdb_comm_line_s), "cm in main");
 	size_t len = sizeof(struct cmdbd_config);
 	struct cmdbd_config *cc = ailsa_calloc(len, "cc in main");
 
-	if ((retval = parse_cmdb_command_line(argc, argv, cm, cmdb)) != 0)
+	if ((retval = parse_cmdb_command_line(argc, argv, cm)) != 0)
 		goto cleanup;
 	cmdbd_parse_config(cm->config, cc, len);
-	cmdbd_print_config(cc);
+//	cmdbd_print_config(cc);
+	switch(cm->action) {
+	case ADD_TO_DB:
+		retval = cmdb_add_to_db(cm, cc);
+		break;
+	}
 
 	cleanup:
 		cmdbd_clean_config(cc);
-		cmdb_clean_list(cmdb);
 		clean_cmdb_comm_line(cm);
 		my_free(cc);
 		if (retval != 0)

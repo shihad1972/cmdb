@@ -141,6 +141,17 @@ resize_string_buff(string_len_s *build)
 		build->string = tmp;
 }
 
+void *
+check_for_resize(void *ptr, size_t *size, size_t len)
+{
+	if (len >= *size) {
+		*size *= 2;
+		if (!(ptr = realloc(ptr, *size)))
+			report_error(MALLOC_FAIL, "ptr in check_for_resize");
+	}
+	return ptr;
+}
+
 void
 cmdb_init_struct(cmdb_s *cmdb)
 {
@@ -151,10 +162,6 @@ void
 cmdb_init_server_t(cmdb_server_s *server)
 {
 	memset(server, 0, sizeof *server);
-	snprintf(server->vendor, COMM_S, "NULL");
-	snprintf(server->make, COMM_S, "NULL");
-	snprintf(server->model, COMM_S, "NULL");
-	snprintf(server->uuid, COMM_S, "NULL");
 	snprintf(server->name, COMM_S, "NULL");
 }
 
@@ -224,6 +231,8 @@ cmdb_clean_list(cmdb_s *cmdb)
 {
 	if (cmdb->server)
 		clean_server_list(cmdb->server);
+	if (cmdb->servertype)
+		clean_server_type_list(cmdb->servertype);
 	if (cmdb->customer)
 		clean_customer_list(cmdb->customer);
 	if (cmdb->contact)
@@ -256,6 +265,21 @@ clean_server_list(cmdb_server_s *list)
 		} else {
 			next = NULL;
 		}
+	}
+}
+
+void
+clean_server_type_list(cmdb_server_type_s *list)
+{
+	cmdb_server_type_s *type, *next;
+
+	type = list;
+	next = type->next;
+	while(type) {
+		free(type);
+		type = next;
+		if (next)
+			next = type->next;
 	}
 }
 
@@ -385,13 +409,11 @@ clean_vmhost_list(cmdb_vm_host_s *list)
 	}
 }
 
-void *
-check_for_resize(void *ptr, size_t *size, size_t len)
+int
+cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
 {
-	if (len >= *size) {
-		*size *= 2;
-		ptr = realloc(ptr, *size);
-	}
-	return ptr;
+	int retval = 0;
+
+	return retval;
 }
 
