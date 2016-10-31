@@ -1,3 +1,12 @@
+i31/10/2016
+Add support for a YAML data file, so we do not have the unwieldy command
+line options. Once this is up and working, this can be the default data
+definition language for the daemon too.
+
+Reworking the SQL code:
+  - allow inserts of multiple entries
+  - condense cmdb dnsa and cbc sql into 1 set of functions
+
 06/03/2016
 I should probably have a default configuration file, and use make to create
 it and then have make install install it in ${sysconfdir}/cmdb. Using the
