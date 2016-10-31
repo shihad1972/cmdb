@@ -9,8 +9,7 @@ RM = rm -f
 override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
-PCLIBS = -lpcre
-LDLIBS = -lailsasql -lailsacmdb -lmysqlclient $(PCLIBS) -lsqlite3
+LDLIBS = -lailsasql -lailsacmdb -lyaml -lmysqlclient -lpcre -lsqlite3
 bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2
 
 SOBJECTS = checks.o
