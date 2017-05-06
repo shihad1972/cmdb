@@ -417,3 +417,11 @@ cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
 	return retval;
 }
 
+int
+cmdb_list_from_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
+{
+	int retval = 0;
+
+	return retval;
+}
+

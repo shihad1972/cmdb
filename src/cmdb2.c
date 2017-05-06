@@ -46,6 +46,9 @@ main(int argc, char *argv[])
 	case ADD_TO_DB:
 		retval = cmdb_add_to_db(cm, cc);
 		break;
+	case LIST_OBJ:
+		retval = cmdb_list_from_db(cm, cc);
+		break;
 	}
 
 	cleanup:

@@ -43,9 +43,6 @@
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 #include "cmdb_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp, cmdb_s *base)
