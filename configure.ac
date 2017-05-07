@@ -29,6 +29,8 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
 AX_PATH_LIB_PCRE
 AX_LIB_GCRYPT([auto])
 AX_LIB_UUID
+AX_LIB_ODBC
+AX_LIB_YAML
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
