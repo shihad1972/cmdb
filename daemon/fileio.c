@@ -173,7 +173,8 @@ static const char *cmdb_files[] = {
 	"service-types",
 	"hardware",
 	"hardware-types",
-	"vmhosts"
+	"vmhosts",
+	NULL
 };
 
 static const size_t cmdb_sizes[] =  {
@@ -184,7 +185,8 @@ static const size_t cmdb_sizes[] =  {
 	sizeof(cmdb_service_type_s),
 	sizeof(cmdb_hardware_s),
 	sizeof(cmdb_hard_type_s),
-	sizeof(cmdb_vm_host_s)
+	sizeof(cmdb_vm_host_s),
+	0
 };
 
 int
