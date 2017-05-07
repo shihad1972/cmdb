@@ -10,7 +10,7 @@ override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion 
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LDLIBS = -lailsasql -lailsacmdb -lyaml -lmysqlclient -lpcre -lsqlite3
-bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2
+bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2
 
 SOBJECTS = checks.o
 COMOBJECTS = cbc_common.o cbccom.o
@@ -33,8 +33,6 @@ TOBJECTS = sql_test.o $(SOBJECTS)
 all:	$(bin_programs)
 
 dnsa:	$(DOBJECTS)
-
-cmdb:	$(COBJECTS)
 
 cmdb2:	$(C2OBJECTS)
 
