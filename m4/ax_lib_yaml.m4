@@ -10,10 +10,9 @@ AC_ARG_WITH([libyaml],
 if test ".$with_libyaml" = ".no"; then
 	AC_MSG_ERROR([libyaml is required for this program])
 else
-	AC_MSG_RESULT([yes])
 	AC_CHECK_LIB([yaml], [yaml_parser_initialize])
 	if test "x$ac_cv_lib_yaml_yaml_parser_initialize" = "xyes" ; then
-		AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [true],
+		AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [1],
 			[define to true if we find the yaml.h header file])], [], [])
 		YAML_LIBS="-lyaml"
 		HAVE_LIBYAML="true"
@@ -27,6 +26,8 @@ else
 		CPPFLAGS="$OLDCPPFLAGS"
 		LDFLAGS="$OLDLDFLAGS"
 		if test "x$ac_cv_lib_yaml_yaml_parser_initialize" = "xyes" ; then
+			AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [1],
+				[define to true if we find the yaml.h header file])], [], [])
 			YAML_LIBS="-lyaml"
 			YAML_CPPFLAGS="$-I$with_yaml/include"
 			HAVE_LIBYAML="true"

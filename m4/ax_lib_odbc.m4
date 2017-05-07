@@ -4,16 +4,16 @@
 # User may have to provide the path to the install if it cannot be found
 #
 AC_DEFUN([AX_LIB_ODBC],[dnl
-AC_MSG_CHECKING([lib odbc])
 AC_ARG_WITH([libodbc], 
 [  --with-libodbc[[=prefix]] compile using libodbc],,
 [    with_libodbc="yes"])
 if test ".$with_libodbc" = ".no"; then
 	AC_MSG_ERROR([libodbc is required for this program])
 else
-	AC_MSG_RESULT([yes])
 	AC_CHECK_LIB([odbc], [SQLAllocHandle])
 	if test "x$ac_cv_lib_odbc_SQLAllocHandle" = "xyes" ; then
+		AC_CHECK_HEADER([sql.h], [AC_DEFINE([HAVE_ODBC_H], [1],
+			[define to true if we find the sql.h header file])], [], [])
 		ODBC_LIBS="-lodbc"
 		HAVE_LIBODBC="true"
 		AC_MSG_CHECKING([lib odbc])
@@ -28,6 +28,8 @@ else
 		CPPFLAGS="$OLDCPPFLAGS"
 		LDFLAGS="$OLDLDFLAGS"
 		if test "x$ac_cv_lib_odbc_SQLAllocHandle" = "xyes" ; then
+			AC_CHECK_HEADER([sql.h], [AC_DEFINE([HAVE_ODBC_H], [1],
+				[define to true if we find the sql.h header file])], [], [])
 			ODBC_LIBS="-lodbc"
 			ODBC_CPPFLAGS="$-I$with_odbc/include"
 			HAVE_LIBODBC="true"
