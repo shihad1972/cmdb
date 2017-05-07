@@ -4,7 +4,6 @@
 # User may have to provide the path to the install if it cannot be found
 #
 AC_DEFUN([AX_LIB_YAML],[dnl
-AC_MSG_CHECKING([lib yaml])
 AC_ARG_WITH([libyaml], 
 [  --with-libyaml[[=prefix]] compile using libyaml],,
 [    with_libyaml="yes"])
@@ -14,10 +13,10 @@ else
 	AC_MSG_RESULT([yes])
 	AC_CHECK_LIB([yaml], [yaml_parser_initialize])
 	if test "x$ac_cv_lib_yaml_yaml_parser_initialize" = "xyes" ; then
+		AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [true],
+			[define to true if we find the yaml.h header file])], [], [])
 		YAML_LIBS="-lyaml"
 		HAVE_LIBYAML="true"
-		AC_MSG_CHECKING([lib yaml])
-		AC_MSG_RESULT([$YAML_LIBS])
 		m4_ifval($1,$1)
 	fi
 	if test "x$HAVE_LIBYAML" = "x" && "x$with_yaml" != "xyes" ; then
