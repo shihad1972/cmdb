@@ -4,3 +4,4 @@ src/Makefile
 lib/Makefile
 daemon/Makefile
 include/configmake.h
+src/cmdb2
