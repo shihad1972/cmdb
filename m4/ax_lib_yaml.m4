@@ -13,12 +13,13 @@ else
 	AC_CHECK_LIB([yaml], [yaml_parser_initialize])
 	if test "x$ac_cv_lib_yaml_yaml_parser_initialize" = "xyes" ; then
 		AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [1],
-			[define to true if we find the yaml.h header file])], [], [])
+			[define to true if we find the yaml.h header file])],
+				[AC_MSG_ERROR([Cannot locate yaml.h. Please install yaml development package])], [])
 		YAML_LIBS="-lyaml"
 		HAVE_LIBYAML="true"
 		m4_ifval($1,$1)
 	fi
-	if test "x$HAVE_LIBYAML" = "x" && "x$with_yaml" != "xyes" ; then
+	if test "x$HAVE_LIBYAML" = "x" && test "x$with_libyaml" != "xyes" ; then
 		AC_MSG_CHECKING([checking with supplied path $with_yaml])
 		OLDCPPFLAGS="$CPPFLAGS" ; CPPFLAGS="$OLDCPPFLAGS -I$with_yaml/include"
 		OLDLDFLAGS="$LDFLAGS" ; LDFLAGS="OLDLDFLAGS -L $with_yaml/lib"
@@ -27,7 +28,8 @@ else
 		LDFLAGS="$OLDLDFLAGS"
 		if test "x$ac_cv_lib_yaml_yaml_parser_initialize" = "xyes" ; then
 			AC_CHECK_HEADER([yaml.h], [AC_DEFINE([HAVE_YAML_H], [1],
-				[define to true if we find the yaml.h header file])], [], [])
+				[define to true if we find the yaml.h header file])],
+					[AC_MSG_ERROR([Cannot locate yaml.h. Please install yaml development package])], [])
 			YAML_LIBS="-lyaml"
 			YAML_CPPFLAGS="$-I$with_yaml/include"
 			HAVE_LIBYAML="true"

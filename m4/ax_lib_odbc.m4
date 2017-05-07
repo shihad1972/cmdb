@@ -13,14 +13,15 @@ else
 	AC_CHECK_LIB([odbc], [SQLAllocHandle])
 	if test "x$ac_cv_lib_odbc_SQLAllocHandle" = "xyes" ; then
 		AC_CHECK_HEADER([sql.h], [AC_DEFINE([HAVE_ODBC_H], [1],
-			[define to true if we find the sql.h header file])], [], [])
+			[define to true if we find the sql.h header file])],
+				[AC_MSG_ERROR([Cannot locate sql.h file. Please install odbc development package])], [])
 		ODBC_LIBS="-lodbc"
 		HAVE_LIBODBC="true"
 		AC_MSG_CHECKING([lib odbc])
 		AC_MSG_RESULT([$ODBC_LIBS])
 		m4_ifval($1,$1)
 	fi
-	if test "x$HAVE_LIBODBC" = "x" && "x$with_odbc" != "xyes" ; then
+	if test "x$HAVE_LIBODBC" = "x" && test "x$with_odbc" != "xyes" ; then
 		AC_MSG_CHECKING([checking with supplied path $with_odbc])
 		OLDCPPFLAGS="$CPPFLAGS" ; CPPFLAGS="$OLDCPPFLAGS -I$with_odbc/include"
 		OLDLDFLAGS="$LDFLAGS" ; LDFLAGS="OLDLDFLAGS -L $with_odbc/lib"
@@ -29,7 +30,8 @@ else
 		LDFLAGS="$OLDLDFLAGS"
 		if test "x$ac_cv_lib_odbc_SQLAllocHandle" = "xyes" ; then
 			AC_CHECK_HEADER([sql.h], [AC_DEFINE([HAVE_ODBC_H], [1],
-				[define to true if we find the sql.h header file])], [], [])
+				[define to true if we find the sql.h header file])],
+					[AC_MSG_ERROR([Cannot locate sql.h file. Please install odbc development package])], [])
 			ODBC_LIBS="-lodbc"
 			ODBC_CPPFLAGS="$-I$with_odbc/include"
 			HAVE_LIBODBC="true"
