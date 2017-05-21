@@ -9,8 +9,8 @@ RM = rm -f
 override CFLAGS := -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_GNU_SOURCE
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/mysql -I/usr/include/uuid `libgcrypt-config --cflags`
-LDLIBS = `libgcrypt-config --libs` -lailsasql -lailsacmdb -lpcre -lmysqlclient -lsqlite3 -luuid
-bin_PROGRAMS = ailsa
+LDLIBS = `libgcrypt-config --libs` -lailsasql -lailsacmdb -lpcre -lmysqlclient -lsqlite3 -luuid -lyaml
+#bin_PROGRAMS = ailsa
 sbin_PROGRAMS = cmdbd cmdbc
 
 SOBJECTS = client_info.o
