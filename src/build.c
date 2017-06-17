@@ -957,6 +957,7 @@ d-i mirror/suite string %s\n\
 \n\
 ### Account setup\n\
 d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
+d-i passwd/root-login boolean false\n\
 d-i passwd/user-fullname string Admin User\n\
 d-i passwd/username string sysadmin\n\
 d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
