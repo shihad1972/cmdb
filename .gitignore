@@ -4,3 +4,5 @@ src/Makefile
 lib/Makefile
 daemon/Makefile
 include/configmake.h
+*.swp
+*.o

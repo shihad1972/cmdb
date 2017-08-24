@@ -121,7 +121,7 @@ INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
-cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
  (?, ?, ?, ?, ?)","\
@@ -2673,6 +2673,8 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_scripta(state, base->script_arg);
 	else if (type == PARTOPTS)
 		retval = cbc_setup_bind_sqlite_partopt(state, base->part_opt);
+	else if (type == CSERVERS)
+		retval = cbc_setup_bind_sqlite_server(state, base->server);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -3964,6 +3966,59 @@ state, 4, (sqlite3_int64)opt->cuser)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 5, (sqlite3_int64)opt->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", opt->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_server(sqlite3_stmt *state, cbc_server_s *server)
+{
+	int retval = NONE;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, server->name, (int)strlen(server->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, server->vendor, (int)strlen(server->vendor), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->vendor);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, server->make, (int)strlen(server->make), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->make);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, server->model, (int)strlen(server->model), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->model);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, server->uuid, (int)strlen(server->uuid), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->uuid);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)server->cust_id)) > 0) {
+		printf("Cannot bind %lu\n", server->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)server->vm_server_id)) > 0) {
+		printf("Cannot bind %lu\n", server->vm_server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite3_int64)server->cuser)) > 0) {
+		printf("Cannot bind %lu\n", server->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)server->muser)) > 0) {
+		printf("Cannot bind %lu\n", server->muser);
 		return retval;
 	}
 	return retval;

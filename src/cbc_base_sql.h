@@ -516,5 +516,8 @@ cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg);
 int
 cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt);
 
+int
+cbc_setup_bind_sqlite_server(sqlite3_stmt *state, cbc_server_s *server);
+
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */
