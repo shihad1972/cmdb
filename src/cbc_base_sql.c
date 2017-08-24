@@ -1354,6 +1354,8 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_scripta(buffer, base, i);
 	else if (type == PARTOPTS)
 		cbc_setup_bind_mysql_partopts(buffer, base, i);
+	else if (type == CSERVERS)
+		cbc_setup_bind_mysql_servers(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_setup_insert_mysql_buffer");
 }
@@ -2200,6 +2202,33 @@ cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->part_opt->cuser);
 	else if (i == 4)
 		*buffer = &(base->part_opt->muser);
+}
+
+void
+cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->server->name);
+	else if (i == 1)
+		*buffer = &(base->server->vendor);
+	else if (i == 2)
+		*buffer = &(base->server->make);
+	else if (i == 3)
+		*buffer = &(base->server->model);
+	else if (i == 4)
+		*buffer = &(base->server->uuid);
+	else if (i == 5)
+		*buffer = &(base->server->cust_id);
+	else if (i == 6)
+		*buffer = &(base->server->vm_server_id);
+	else if (i == 7)
+		*buffer = &(base->server->cuser);
+	else if (i == 8)
+		*buffer = &(base->server->muser);
+	else if (i == 9)
+		*buffer = &(base->server->ctime);
+	else if (i == 10)
+		*buffer = &(base->server->mtime);
 }
 
 #endif /* HAVE_MYSQL */

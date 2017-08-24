@@ -367,6 +367,9 @@ cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i);
 void
 cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i);
 
+void
+cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
