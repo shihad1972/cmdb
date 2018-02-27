@@ -6,6 +6,7 @@ lib_LIBRARIES = libailsacmdb.a libailsasql.a
 libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) libailsacmdb.a(errors.o)\
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
+		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
 
 libailsasql.a:	libailsasql.a(sql.o) \
@@ -32,6 +33,12 @@ libailsacmdb.a(fileio.o):	fileio.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(data.o):	data.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(list.o):	list.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(hash.o):	hash.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(errors.o):	errors.o
