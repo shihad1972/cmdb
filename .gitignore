@@ -5,3 +5,8 @@ lib/Makefile
 daemon/Makefile
 include/configmake.h
 src/cmdb2
+*.swp
+*.db
+html/
+infer-out/
+latex/
