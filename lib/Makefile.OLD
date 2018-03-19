@@ -3,7 +3,7 @@ CPPFLAGS = -I../src/ -I../include/ -I/usr/include/mysql
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
 #libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)
-libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
+libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) libailsacmdb.a(b64.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) libailsacmdb.a(errors.o)\
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
 		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) \

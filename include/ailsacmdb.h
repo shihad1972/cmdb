@@ -91,7 +91,6 @@ enum {			// Client commands
 	CLOSE = 5
 };
 
-
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -118,6 +117,32 @@ typedef struct ailsa_hash_s {
 	unsigned int	size;
 	AILLIST		*table;
 } AILHASH;
+
+// DB result / insert storage types
+
+enum {			// DB Query Types
+	DBSELECT = 0,
+	DBINSERT,
+	DBUPDATE
+};
+
+typedef union ailsa_dbdata_u {
+	char *string;
+	unsigned long int number;
+	short int small;
+	char tiny;
+} AILDATAU;
+
+typedef struct ailsa_dbdata_s {
+	union AILDATAU *fields;
+	union AILDATAU *args;
+} AILDATA;
+
+typedef struct ailsa_db_s {
+	char *query;
+	AILLIST *data;
+	char type;
+} AILSADB;
 
 // Various client information data structs
 
