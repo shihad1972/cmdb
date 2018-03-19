@@ -10,3 +10,6 @@ src/cmdb2
 html/
 infer-out/
 latex/
+*.o
+*.so
+*.a
