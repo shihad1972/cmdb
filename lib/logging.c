@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <ailsacmdb.h>
 
 void
 ailsa_start_syslog(const char *prog)
@@ -52,5 +53,15 @@ ailsa_syslog(int priority, const char *msg, ...)
 	}
 	va_end(ap);
 		
+}
+
+void
+ailsa_show_error(int retval)
+{
+	switch(retval) {
+	case AILSA_NO_ACTION:
+		fprintf(stderr, "No action was specified on the command line\n");
+		break;
+	}
 }
 

@@ -179,3 +179,16 @@ ailsa_clean_client_info(struct client_info *ci)
 	memset(ci, 0, sizeof(struct client_info));
 }
 
+void
+ailsa_clean_mkvm(void *vm)
+{
+	ailsa_mkvm_s *i;
+
+	i = vm;
+	if (i->name)
+		my_free(i->name);
+	if (i->pool)
+		my_free(i->pool);
+	free(i);
+}
+

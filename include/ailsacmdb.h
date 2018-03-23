@@ -91,6 +91,20 @@ enum {			// Client commands
 	CLOSE = 5
 };
 
+enum {			// Action Codes
+	AILSA_ADD = 1,
+	AILSA_HELP = 100,
+	AILSA_VERSION = 101
+};
+
+enum {                  // Buffer lengths
+	DOMAIN_LEN = 256
+};
+
+enum {                  // Error codes
+	AILSA_NO_ACTION = 1
+};
+
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -244,8 +258,23 @@ struct cmdb_client_config {     // Ugly, but it will do for now :(
 	char *ip;
 };
 
+// mkvm data types
+
+typedef struct ailsa_mkvm_s {
+	char *name;
+	char *pool;
+	short int action;
+} ailsa_mkvm_s;
+
+// library version info
+
 void
 show_ailsacmdb_version();
+
+// library error message function(s)
+
+void
+ailsa_show_error(int retval);
 
 // AIL_ data functions;
 
@@ -400,6 +429,9 @@ ailsa_clean_file(void *file);
 
 void
 ailsa_clean_pkg(void *pkg);
+
+void
+ailsa_clean_mkvm(void *vm);
 
 // client_info clean
 
