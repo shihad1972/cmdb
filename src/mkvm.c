@@ -1,6 +1,6 @@
 /* 
  *
- *  <prog name>: <full prog name>
+ *  mkvm : make virtual machine
  *  Copyright (C) 2018  Iain M Conochie <iain-AT-thargoid.co.uk> 
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,17 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  <source file name>
+ *  mkvm.c
  *
- *  <source file description>
+ *  main and command line parsing functions for mkvm
+ *
  */
+
+int
+main(int argc, char *argv[])
+{
+	int retval = 0;
+
+	return retval;
+}
+
