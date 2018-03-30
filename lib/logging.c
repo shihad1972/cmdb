@@ -62,6 +62,11 @@ ailsa_show_error(int retval)
 	case AILSA_NO_ACTION:
 		fprintf(stderr, "No action was specified on the command line\n");
 		break;
+	case AILSA_NO_CONNECT:
+		fprintf(stderr, "Program was unable to make connection to libvirtd\n");
+		break;
+	default:
+		return;
 	}
 }
 

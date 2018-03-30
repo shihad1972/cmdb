@@ -189,6 +189,8 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->name);
 	if (i->pool)
 		my_free(i->pool);
+	if (i->uri)
+		my_free(i->uri);
 	free(i);
 }
 

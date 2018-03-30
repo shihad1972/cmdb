@@ -102,7 +102,9 @@ enum {                  // Buffer lengths
 };
 
 enum {                  // Error codes
-	AILSA_NO_ACTION = 1
+	AILSA_NO_ACTION = 1,
+	AILSA_NO_DATA = 200,
+	AILSA_NO_CONNECT = 201
 };
 
 // Linked List data types
@@ -263,6 +265,7 @@ struct cmdb_client_config {     // Ugly, but it will do for now :(
 typedef struct ailsa_mkvm_s {
 	char *name;
 	char *pool;
+	char *uri;
 	short int action;
 } ailsa_mkvm_s;
 

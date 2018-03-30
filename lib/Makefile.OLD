@@ -9,7 +9,7 @@ libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) libai
 		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
 
-libailsasql.a:	libailsasql.a(sql.o) \
+libailsasql.a:	libailsasql.a(sql.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<

@@ -414,6 +414,8 @@ cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
 {
 	int retval = 0;
 
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
 	return retval;
 }
 
@@ -422,6 +424,8 @@ cmdb_list_from_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
 {
 	int retval = 0;
 
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
 	return retval;
 }
 
