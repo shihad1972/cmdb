@@ -32,6 +32,7 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include "virtual.h"
 
 static int
 parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
@@ -44,7 +45,17 @@ main(int argc, char *argv[])
 
 	if ((retval = parse_mkvm_command_line(argc, argv, vm)) != 0)
 		goto cleanup;
-
+	switch (vm->action) {
+	case AILSA_ADD:
+		retval = mkvm_create_vm(vm);
+		break;
+	case AILSA_HELP:
+		display_mkvm_usage();
+		break;
+	case AILSA_VERSION:
+		display_version(argv[0]);
+		break;
+	}
 	cleanup:
 		ailsa_show_error(retval);
 		ailsa_clean_mkvm((void *)vm);
@@ -56,14 +67,16 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "n:p:ahv";
-	size_t len;
+	const char *optstr = "n:p:u:ahv";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
 	struct option opts[] = {
+		{"storage",	required_argument,	NULL,	'g'},
+		{"size",	required_argument,	NULL,	'g'},
 		{"name",	required_argument,	NULL,	'n'},
 		{"pool",	required_argument,	NULL,	'p'},
+		{"uri",		required_argument,	NULL,	'u'},
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
 		{"version",	no_argument,		NULL,	'v'}
@@ -74,6 +87,9 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 #endif // HAVE_GETOPT_H
 	{
 		switch(opt) {
+		case 'g':
+			vm->size = strtoul(optarg, NULL, 10);
+			break;
 		case 'n':
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "hostname trimmed to 255 characters\n");
@@ -83,6 +99,11 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "pool namd trimmed to 255 characters\n");
 			vm->pool = strndup(optarg, DOMAIN_LEN);
+			break;
+		case 'u':
+			if (strlen(optarg) >= DOMAIN_LEN)
+				fprintf(stderr, "uri trimmed to 255 characters\n");
+			vm->uri = strndup(optarg, DOMAIN_LEN);
 			break;
 		case 'a':
 			vm->action = AILSA_ADD;
@@ -99,6 +120,8 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		}
 	}
+	if (vm->size == 0)
+		vm->size = 10;
 	if (vm->action == 0)
 		retval = AILSA_NO_ACTION;
 	return retval;

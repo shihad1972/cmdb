@@ -1,6 +1,6 @@
 /* 
  *
- *  dynamo:
+ *  mkvm: Make Virtual Machine
  *  Copyright (C) 2018  Iain M Conochie <iain-AT-thargoid.co.uk> 
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,27 +17,11 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  dynamo.c
+ *  virtual.h
  *
- *  Contains main function for dynamo program
+ *  header file for function declarations from virtual.c
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <libvirt/libvirt.h>
-
 int
-main(int argc, char *argv[])
-{
-	virConnectPtr conn;
-	const char *uri = "qemu:///system";
-	int retval;
+mkvm_create_vm(ailsa_mkvm_s *vm);
 
-	conn  = virConnectOpen(uri);
-	if (!(conn)) {
-		fprintf(stderr, "Connection to %s failed\n", uri);
-		return 1;
-	}
-	retval = virConnectClose(conn);
-	return retval;
-}

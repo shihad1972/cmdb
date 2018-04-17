@@ -824,7 +824,7 @@ default %s\n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img ksdevice=%s console=tty0 ramdisk_size=8192\
- %s=%s%s.cfg\n\n",
+ %s=%s%s.cfg text\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
 url, cml->name);
 	}

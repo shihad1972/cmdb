@@ -266,6 +266,8 @@ typedef struct ailsa_mkvm_s {
 	char *name;
 	char *pool;
 	char *uri;
+	char *storxml;
+	unsigned long int size;
 	short int action;
 } ailsa_mkvm_s;
 
@@ -454,5 +456,13 @@ build_sql_update(unsigned int prog, unsigned int no);
 
 char *
 build_sql_delete(unsigned int prog, unsigned int no);
+
+// various usage functions
+
+void
+display_mkvm_usage(void);
+
+void
+display_version(char *prog);
 
 #endif // __AILSACMDB_H__

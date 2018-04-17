@@ -191,6 +191,8 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->pool);
 	if (i->uri)
 		my_free(i->uri);
+	if (i->storxml)
+		my_free(i->storxml);
 	free(i);
 }
 
