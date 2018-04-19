@@ -151,7 +151,8 @@ enum {			/* cbc search SQL statements */
 	PACKAGE_VID_ON_OS_ID = 78,
 	BOOT_FILES_MIRROR_DETAILS = 79,
 	LOCALE_ID_ON_NAME = 80,
-	GET_DEFAULT_LOCALE = 81
+	GET_DEFAULT_LOCALE = 81,
+	GET_BUILD_OS_FROM_SERVER_ID = 82
 };
 
 enum {			/* cbc update SQL statements */
