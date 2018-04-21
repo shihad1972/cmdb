@@ -1,7 +1,7 @@
 /*
  *
  *  cbcscript: Create Build Configuration Scripts
- *  Copyright (C) 2014 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2014 - 2018  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -367,7 +367,7 @@ cbc_script_rm_arg(cbc_config_s *cbc, cbc_syss_s *scr)
 		clean_cbc_script_args(arg);
 		return NO_ARG;
 	} else if (retval > 1)
-		fprintf(stderr, "More than one cbcscript ar returned. Using 1st\n");
+		fprintf(stderr, "More than one cbcscript was returned. Using 1st\n");
 	clean_dbdata_struct(data->next);
 	data->next = 0;
 	data->args.number = data->fields.number;
