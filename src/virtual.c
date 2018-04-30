@@ -86,7 +86,7 @@ ailsa_create_storage_xml(ailsa_mkvm_s *vm)
 	int retval = 0;
 	xmlDocPtr doc = NULL;
 	xmlNodePtr root, node, next;
-	xmlDtdPtr = NULL;
+	xmlDtdPtr dptr = NULL;
 
 	root = node = next = NULL;
 	if (!(vm))
