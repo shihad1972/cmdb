@@ -85,6 +85,11 @@ if [ -z "$REALM" ]; then
 DOMAIN=$DOMAIN
 REALM=\`echo \$DOMAIN | tr '[:lower:]' '[:upper:]'\`
 echo "krb5_realm = \$REALM" >> /etc/sssd/sssd.conf
+if [ -x /bin/systemctl ]; then
+  /bin/systemctl restart sssd
+else
+  /usr/sbin/service sssd restart
+fi
 EOF
   chmod 755 ${TGT}/usr/share/firstboot/001-sssd.sh
 else
@@ -96,15 +101,19 @@ chmod 600 $TARGET
 if [ -n "$URL" ] && [ -n "$WGET" ]; then
   echo "Command: $WGET -O ${TGT}/etc/ssl/certs/Root-CA.pem $URL"
   $WGET -O ${TGT}/etc/ssl/certs/Root-CA.pem $URL
+  echo "Command: $WGET -O ${TGT}/usr/local/share/ca-certificates/Buka-CA.crt $URL"
+  $WGET -O ${TGT}/usr/local/share/ca-certificates/Buka-CA.crt $URL
   if [ -n $TGT ]; then
     cat >> ${TGT}/usr/share/firstboot/001-rehash.sh <<EOF
 #!/bin/sh
 
 /usr/bin/c_rehash /etc/ssl/certs/
+/usr/sbin/update-ca-certificates
 EOF
     chmod 755 ${TGT}/usr/share/firstboot/001-rehash.sh
   else
     /usr/bin/c_rehash /etc/ssl/certs/
+    /usr/sbin/update-ca-certificates
   fi
 fi
 
