@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 	}
 	dc = cmdb_malloc(sizeof(dnsa_config_s), "dc in main");
 	dnsa_init_config_values(dc);
+	get_config_file_location(cm->config);
 	if ((retval = parse_dnsa_config_file(dc, cm->config)) != 0) {
 		parse_dnsa_config_error(retval);
 		goto cleanup;
