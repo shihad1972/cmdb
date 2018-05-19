@@ -41,6 +41,12 @@
 #include "cbc_data.h"
 #include "cbc_base_sql.h"
 
+static int
+compare_iface_bdom(cbc_build_domain_s *bdl, cbc_iface_s *i);
+
+static int
+bdom_not_in_iface_list(cbc_build_domain_s *bdl, cbc_dhcp_s *list);
+
 /*
  * Temporary variables while I work out how to define these in the
  * database
@@ -129,7 +135,7 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 {
 	int retval = 0;
 	cbc_build_domain_s *bdl;
-	cbc_dhcp_s *list = NULL, *temp;
+	cbc_dhcp_s *list = NULL;
 
 	if (!(bd))
 		return NO_BUILD_DOMAIN;
@@ -137,29 +143,53 @@ get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i)
 		return NO_IFACE;
 	bdl = bd;
 	while (bdl) {
-		insert_into_dhcp_list(&list, &temp);
-// To check if the this network is already added, we need to pass list
-		if ((retval = fill_dhcp_server(bdl, i, list)) != 0) {
-			remove_from_dhcp_list(&list);
-			if (retval == 1)
-				fprintf(stderr, "\
-Skipping domain %s: No interface\n", bdl->domain);
-			else if (retval == 2)
-				fprintf(stderr, "\
-Netmask does not correlate for domain %s\n", bdl->domain);
-			else if (retval == 3)
-				fprintf(stderr, "\
-Network already has a configuration in dhcpd.networks\n");
+		if (compare_iface_bdom(bdl, i)) {
+			if (bdom_not_in_iface_list(bdl, list)) {
+				insert_into_dhcp_list(&list);
+				fill_dhcp_server(bdl, i, list);
+			}
 		}
 		bdl = bdl->next;
-		retval = 0;
 	}
 	*dh = list;
 	return retval;
 }
 
+static int
+compare_iface_bdom(cbc_build_domain_s *bdl, cbc_iface_s *i)
+{
+	int retval = 0;
+	cbc_iface_s *list = i;
+
+	while (list) {
+		if (((unsigned long int)list->sip <= bdl->start_ip) &&
+		  ((unsigned long int)list->fip >= bdl->end_ip))
+			retval = 1;
+		list = list->next;
+	}
+	return retval;
+}
+
+static int
+bdom_not_in_iface_list(cbc_build_domain_s *bdl, cbc_dhcp_s *list)
+{
+	int retval = 1;
+	cbc_dhcp_s *i = list;
+
+	if (!(i)) {
+		return retval;
+	} else {
+		while (i) {
+			if ((i->nw & i->nm) == (bdl->start_ip & bdl->netmask))
+				retval = 0;
+			i = i->next;
+		}
+	}
+	return retval;
+}
+
 void
-insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
+insert_into_dhcp_list(cbc_dhcp_s **list)
 {
 	cbc_dhcp_s *i = NULL, *l = NULL;
 
@@ -169,7 +199,6 @@ insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item)
 	if (!(i->dom_search = malloc(sizeof(string_l))))
 		report_error(MALLOC_FAIL, "dh->dom_search in insert_into_dhcp_list");
 	init_string_l(i->dom_search);
-	*item = i;
 	if (!(*list))
 		*list = i;
 	else {
