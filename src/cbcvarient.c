@@ -560,7 +560,6 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 
 	if (!(bos))
 		return OS_NOT_FOUND;
-	bos = base->bos;
 	printf("\nDisplaying build packages for os %s\n", cvl->alias);
 	if (strncmp(cvl->version, "NULL", COMM_S) != 0) {	// version set
 		if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {	// arch set
