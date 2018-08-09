@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2018  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -269,7 +269,7 @@ add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
 void
 write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 {
-	char config[NAME_S] = "/etc/dnsa/dnsa.conf", *buff;
+	char config[NAME_S], *buff;
 	int retval = NONE;
 	size_t dclen = sizeof(dnsa_config_s);
 	dnsa_config_s *dc;
@@ -277,6 +277,7 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 	zone_info_s *zone;
 
 	buff = config;
+	get_config_file_location(buff);
 	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in write_zone_and_reload_nameserver");
 	dc = cmdb_malloc(dclen, "dc in write_zone_and_reload_nameserver");
 	if ((retval = parse_dnsa_config_file(dc, config)) != 0) {
