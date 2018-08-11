@@ -62,6 +62,8 @@ cbcscript:	$(SSOBJECTS)
 
 mkvm:	$(MKVMOBJS)
 
+hellolv:	hellolv.o
+
 .PHONY :	clean
 clean :
 	$(RM) *.o $(bin_programs)

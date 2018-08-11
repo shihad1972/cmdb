@@ -13,3 +13,6 @@ latex/
 *.o
 *.so
 *.a
+daemon/cmdbc
+daemon/cmdbd
+src/hellolv
