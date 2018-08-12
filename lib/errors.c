@@ -1068,7 +1068,7 @@ get_ip_from_hostname(dbdata_s *data)
 		}
 	}
 	if ((retval = getaddrinfo(list->fields.text, "http", &hints, &srvinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(retval));
+		fprintf(stderr, "lib getaddrinfo error: %s\n", gai_strerror(retval));
 		return NO_IP_ADDRESS;
 	}
 	if (srvinfo->ai_family == AF_INET) {
