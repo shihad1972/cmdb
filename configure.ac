@@ -32,7 +32,7 @@ AX_LIB_UUID
 AX_LIB_ODBC
 AX_LIB_YAML
 AM_PATH_XML2(2.4.0)
-PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt.)])
+PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt])])
 AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
 
 # Checks for header files.
