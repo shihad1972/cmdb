@@ -65,6 +65,7 @@ AM_CONDITIONAL([HAVE_LIBGCRYPT], [$HAVE_LIBGCRYPT])
 AM_CONDITIONAL([HAVE_LIBUUID], [test x"$HAVE_LIBUUID" = "xtrue"])
 AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
+AM_CONDITIONAL([HAVE_LIBXML], [$HAVE_LIBXML])
 
 dnl if --prefix is /usr, don't use /usr/var for localstatedir
 dnl or /usr/etc for sysconfdir
