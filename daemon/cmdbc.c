@@ -24,11 +24,13 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <assert.h>
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif // HAVE_GETOPT_H
@@ -58,28 +60,30 @@ static int
 cmdbc_check_config(struct cmdbc_config *c);
 
 static int
-cmdbc_init_client(const char *basedir);
+cmdbc_init_client(char *basedir);
 
 static int
-get_client_uuid(const char *basedir);
+get_client_uuid(char *basedir);
 
 int
 main(int argc, char *argv[])
 {
-	const char *basedir = "/var/lib/cmdb/client/";
+	char basedir[FILE_S];
 	int retval = 0;
 	int s;
 	struct cmdbc_config *cm = ailsa_calloc(sizeof(struct cmdbc_config), "cm in main");
 
+	snprintf(basedir, FILE_S, "%s/cmdb/client/", LOCALSTATEDIR);
 	ailsa_start_syslog(basename(argv[0]));
 	if (argc > 1)
 		parse_command_line(cm, argc, argv);
-	if ((retval = cmdbc_check_config(cm)) != 0)
+	if ((retval = cmdbc_check_config(cm)) != 0) {
+		assert(retval == 0);
 		goto cleanup;
+	}
 	if ((retval = cmdbc_init_client(basedir)) != 0)
 		goto cleanup;
-	if ((s = ailsa_tcp_socket(ccc.host, "cmdb")) < 0) {
-		syslog(LOG_ALERT, "socket() for client failed");
+	if ((s = ailsa_tcp_socket(cm->host, "cmdb")) < 0) {
 		goto cleanup;
 	}
 	if ((retval = ailsa_do_client_send(s, &ccc)) != 0)
@@ -135,7 +139,7 @@ parse_command_line(struct cmdbc_config *cm, int argc, char *argv[])
 }
 
 static int
-cmdbc_init_client(const char *basedir)
+cmdbc_init_client(char *basedir)
 {
 	int retval = 0;
 	memset(&ccc, 0, sizeof(struct cmdbc_config));
@@ -159,7 +163,7 @@ cmdbc_init_client(const char *basedir)
 }
 
 static int
-get_client_uuid(const char *basedir)
+get_client_uuid(char *basedir)
 {
 	char *file;
 	int retval;
