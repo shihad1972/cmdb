@@ -31,6 +31,7 @@ AX_LIB_GCRYPT([auto])
 AX_LIB_UUID
 AX_LIB_ODBC
 AX_LIB_YAML
+AM_PATH_XML2(2.4.0)
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
