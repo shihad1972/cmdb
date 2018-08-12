@@ -7,7 +7,7 @@ cpc_SOURCES = cpc.c $(combo_SOURCES)
 
 ckc_SOURCES = ckc.c $(combo_SOURCES)
 
-mkvm_SOURCES = mkvm.c virtual.c
+mkvm_SOURCES = mkvm.c virtual.c virtual.h
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS = -L$(top_builddir)/lib -lailsasql -lailsacmdb
