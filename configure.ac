@@ -32,6 +32,8 @@ AX_LIB_UUID
 AX_LIB_ODBC
 AX_LIB_YAML
 AM_PATH_XML2(2.4.0)
+PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt.)])
+AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
@@ -66,6 +68,7 @@ AM_CONDITIONAL([HAVE_LIBUUID], [test x"$HAVE_LIBUUID" = "xtrue"])
 AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 AM_CONDITIONAL([HAVE_LIBXML], [$HAVE_LIBXML])
+AM_CONDITIONAL([HAVE_LIBVIRT], [$HAVE_LIBVIRT])
 
 dnl if --prefix is /usr, don't use /usr/var for localstatedir
 dnl or /usr/etc for sysconfdir

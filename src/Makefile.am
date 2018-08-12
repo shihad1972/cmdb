@@ -10,7 +10,8 @@ ckc_SOURCES = ckc.c $(combo_SOURCES)
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
-AM_LDFLAGS = -L$(top_builddir)/lib -lailsasql -lailsacmdb
+AM_LDFLAGS = -L$(top_builddir)/lib
+LIBS += -lailsasql -lailsacmdb
 
 if HAVE_MYSQL
 AM_CPPFLAGS += $(MYSQL_CFLAGS)
@@ -29,5 +30,12 @@ endif
 
 if HAVE_LIBXML
 AM_CPPFLAGS += $(XML_CPPFLAGS)
-AM_LDFLAGS += $(XML_LIBS)
+LIBS += $(XML_LIBS)
+endif
+
+if HAVE_LIBVIRT
+AM_CPPFLAGS += $(LIBVIRT_CPPFLAGS)
+AM_CFLAGS += $(LIBVIRT_CFLAGS)
+AM_LDFLAGS += $(LIBVIRT_LDFLAGS)
+LIBS += $(LIBVIRT_LIBS)
 endif
