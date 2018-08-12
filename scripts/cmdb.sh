@@ -108,7 +108,7 @@ create_cmdb_user() {
     mkdir ${CMDBBASE}
   fi
 
-  for i in web sql cmdb-bin logs scripts inc data data/raw
+  for i in web sql cmdb-bin logs scripts inc data data/raw client
     do if [ ! -d ${CMDBBASE}/${i} ]; then
       mkdir ${CMDBBASE}/${i}
     fi
