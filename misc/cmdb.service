@@ -1,0 +1,12 @@
+[Unit]
+Description=Configuration Management Database
+Requires=network.target
+
+[Service]
+Type=forking
+User=cmdb
+Group=cmdb
+ExecStart=/usr/local/bin/cmdbd
+
+[Install]
+WantedBy=multi-user.target
