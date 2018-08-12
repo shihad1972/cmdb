@@ -50,12 +50,12 @@ main(int argc, char *argv[])
 	struct cmdbc_config *cm = ailsa_calloc(sizeof(struct cmdbc_config), "cm in main");
 
 	ailsa_start_syslog(basename(argv[0]));
-/*	if (daemon(0, 0) < 0) {
+	if (daemon(0, 0) < 0) {
 		syslog(LOG_ALERT, "Failed to daemonise: %s", strerror(errno));
 		exit(1);
 	} else {
 		syslog(LOG_INFO, "Starting cmdb...");
-	} */
+	}
 	if (argc > 1)
 		parse_command_line(cm, argc, argv);
 	if (!(cm->service))
