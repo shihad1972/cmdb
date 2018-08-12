@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb cpc ckc
+bin_PROGRAMS = cpc ckc
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 combo_SOURCES = checks.c checks.h
@@ -45,13 +45,7 @@ cbcscript_SOURCES = \
 		cbcscript.c $(combo_SOURCES) $(cbc_combo_SOURCES) \
 		cbcscript.h
 #cbcscript_LDADD = $(top_builddir)/lib/libailsasql.la
-if HAVE_CBC
-bin_PROGRAMS += cbc cbcdomain cbcos cbcvarient cbcpart cbcsysp cbcscript cbclocale
-endif
 
-if HAVE_DNSA
-bin_PROGRAMS += dnsa
-if HAVE_CBC
 cbc_SOURCES +=	cbc_dnsa.c dnsacom.c zones.c dnsa_net.c
 cbcdomain_SOURCES += zones.c cbc_dnsa.c dnsacom.c dnsa_net.c
 endif
