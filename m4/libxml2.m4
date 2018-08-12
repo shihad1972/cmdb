@@ -184,5 +184,6 @@ main()
   fi
   AC_SUBST(XML_CPPFLAGS)
   AC_SUBST(XML_LIBS)
+  AC_DEFINE([HAVE_LIBXML], [1], [define to true if we find libxml])
   rm -f conf.xmltest
 ])
