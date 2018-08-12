@@ -79,7 +79,7 @@ ailsa_tcp_socket_bind(const char *node, const char *service)
 	struct addrinfo *saddr;
 	int retval = getaddrinfo(node, service, &acrit, &saddr);
 	if (retval != 0) {
-		syslog(LOG_ALERT, "Cannot get address: %s", gai_strerror(retval));
+		syslog(LOG_ALERT, "1: Cannot get address: %s", gai_strerror(retval));
 		return -1;
 	}
 
@@ -119,7 +119,7 @@ ailsa_tcp_socket(const char *node, const char *service)
 	struct addrinfo *saddr;
 	int retval = getaddrinfo(node, service, &crit, &saddr);
 	if (retval != 0) {
-		syslog(LOG_ALERT, "getaddrinfo() failure: %s", gai_strerror(retval));
+		ailsa_syslog(LOG_ALERT, "getaddrinfo() failure: %s. Does cmdb have an entry in /etc/services?", gai_strerror(retval));
 		return -1;
 	}
 	int sock = -1;
@@ -127,8 +127,9 @@ ailsa_tcp_socket(const char *node, const char *service)
 		sock = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 		if (sock < 0)
 			continue; // Try next one..
-		if (connect(sock, addr->ai_addr, addr->ai_addrlen) == 0)
+		if ((retval = connect(sock, addr->ai_addr, addr->ai_addrlen)) == 0)
 			break; // Got one!
+		ailsa_syslog(LOG_ALERT, "connect() failure: %s.", strerror(errno));
 		close(sock); // conect failed, try next one
 		sock = -1;
 	}
@@ -171,6 +172,7 @@ ailsa_get_fqdn(char *host, char *fqdn, char *ip)
 		return -1;
 	}
 	int status, retval;
+	void *addr;
 	struct addrinfo hints, *res, *p;
 	socklen_t len = sizeof(struct sockaddr_in6);
 
@@ -178,14 +180,16 @@ ailsa_get_fqdn(char *host, char *fqdn, char *ip)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	if ((status = getaddrinfo(host, NULL, &hints, &res)) != 0) {
-		syslog(LOG_ALERT, "getaddrinfo failure: %s", gai_strerror(status));
+		syslog(LOG_ALERT, "3: getaddrinfo failure: %s", gai_strerror(status));
 		return -1;
 	}
 	p = res;
 	status = 0;
 	while (p) {
-		if (p->ai_addr->sa_family == AF_INET) {
-			if (!(inet_ntop(AF_INET, p->ai_addr, ip, INET6_ADDRSTRLEN))) {
+		if (p->ai_family == AF_INET) {
+			struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+			addr = &(ipv4->sin_addr);
+			if (!(inet_ntop(AF_INET, addr, ip, INET6_ADDRSTRLEN))) {
 				syslog(LOG_ALERT, "inet_ntop error: %s", strerror(errno));
 			} else {
 				status = 1;
@@ -194,8 +198,10 @@ ailsa_get_fqdn(char *host, char *fqdn, char *ip)
 					retval = -1;
 				}
 			}
-		} else if (p->ai_addr->sa_family == AF_INET6) {
-			if (!(inet_ntop(AF_INET6, p->ai_addr, ip, INET6_ADDRSTRLEN))) {
+		} else if (p->ai_family == AF_INET6) {
+			struct sockaddr_in *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+			addr = &(ipv6->sin_addr);
+			if (!(inet_ntop(AF_INET6, addr, ip, INET6_ADDRSTRLEN))) {
 				syslog(LOG_ALERT, "inet_ntop error: %s", strerror(errno));
 			} else {
 				status = 1;
