@@ -567,7 +567,8 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 			if ((osid = get_single_os_id(base, cvl)) == 0) {
 				return OS_NOT_FOUND;
 			}
-			retval = display_specific_os_packages(base, id, osid);
+			if ((retval = display_specific_os_packages(base, id, osid)) == SERVER_PACKAGES_NOT_FOUND)
+				fprintf(stderr, "Os has no packages\n");
 		} else {					// arch not set
 			while (bos) {
 				if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
@@ -575,7 +576,8 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -588,7 +590,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -598,7 +601,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -608,6 +612,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 		printf("\tNo build varient for os %s\n", cvl->alias);
 	else
 		flag = 0;
+	if (retval == SERVER_PACKAGES_NOT_FOUND)
+		retval = 0;
 	return retval;
 }
 
