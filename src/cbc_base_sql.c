@@ -384,7 +384,7 @@ SELECT mirror from build_type where alias = ?"
 SELECT locale_id FROM locale WHERE name = ?","\
 SELECT locale_id FROM default_locale WHERE locale_id > 0","\
 SELECT bo.os, bo.os_version FROM build_os bo LEFT JOIN build b\
- WHERE bo.os_id = b.os_id AND b.server_id = ?"
+ ON bo.os_id = b.os_id WHERE b.server_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
