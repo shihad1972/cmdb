@@ -73,6 +73,9 @@ fi
 if test "$prefix" = "/usr" && test "$sysconfdir" = '${prefix}/etc' ; then
     sysconfdir='/etc'
 fi
+if test "$prefix" = "/usr/local" && test "$localstatedir" = "${prefix}/var" ; then
+    localstatedir='/var/lib'
+fi
 if test "$localstatedir" = '/var/lib'; then
     runstatedir='/var/run'
 fi
