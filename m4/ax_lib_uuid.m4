@@ -15,12 +15,12 @@ if test "x$with_libuuid" = "xno"; then
 	AC_MSG_RESULT([disabled])
 	m4_ifval($2,$2)
 else
-	for libdir in /usr/include /usr/local/include
+	for incdirs in /usr/include /usr/local/include
 	do
-	    OLDCPPFLAGS="$CPPFLAGS" ; CPPFLAGS="-I$libdir/uuid"
+	    OLDCPPFLAGS="$CPPFLAGS" ; CPPFLAGS="-I$incdirs/uuid"
 	    AC_CHECK_LIB([uuid], [uuid_generate])
 	    if test "x$ac_cv_lib_uuid_uuid_generate" = "xyes" ; then
-		UUID_CPPFLAGS="-I$libdir/uuid"
+		UUID_CPPFLAGS="-I$incdirs/uuid"
 		UUID_LIBS="-luuid"
 		HAVE_LIBUUID="true"
 	        CPPFLAGS="$OLDCPPFLAGS"
