@@ -69,6 +69,7 @@ AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 AM_CONDITIONAL([HAVE_LIBXML], [$HAVE_LIBXML])
 AM_CONDITIONAL([HAVE_LIBVIRT], [$HAVE_LIBVIRT])
+AM_CONDITIONAL([AX_LIB_ODBC], [$AX_LIB_ODBC])
 
 dnl if --prefix is /usr, don't use /usr/var for localstatedir
 dnl or /usr/etc for sysconfdir
