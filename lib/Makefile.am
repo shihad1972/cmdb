@@ -5,7 +5,7 @@ lib_LTLIBRARIES = libailsacmdb.la
 libailsacmdb_la_SOURCES = ailsacmdb.c parse_config.c logging.c networking.c \
 			fileio.c data.c dnsa_data.c cmdb_data.c cbc_data.c \
 			errors.c list.c
-if HAVE_ODBC
+if HAVE_LIBODBC
 lib_LTLIBRARIES += libailsasql.la
 libailsasql_la_SOURCES = base_sql.c sql.c
 endif
