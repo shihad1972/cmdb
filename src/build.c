@@ -816,7 +816,7 @@ default %s\n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img country=%s \
-console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
+console-setup/layoutcode=%s %s %s=%s%s.cfg console=ttyS0,115200n8\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
 	} else if ((strncmp(alias, "centos", COMM_S) == 0) ||
