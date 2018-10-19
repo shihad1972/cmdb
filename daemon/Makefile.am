@@ -12,7 +12,7 @@ cmdbd_LDADD = $(top_builddir)/lib/libailsacmdb.la $(top_builddir)/lib/libailsasq
 cmdbc_SOURCES = cmdbc.c $(shar_SOURCES)
 cmdbc_LDADD = $(top_builddir)/lib/libailsacmdb.la $(top_builddir)/lib/libailsasql.la
 
-AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
+AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_GNU_SOURCE
 AM_CPPFLAGS = -I$(top_srcdir)/src/ -I$(top_srcdir)/include/
 AM_LDFLAGS =
 
