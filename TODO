@@ -1,3 +1,9 @@
+09/11/2018
+Deleting SRV records is tricky; it seems to delete all SRV records
+for a given service (e.g. ldap) and we cannot specify which one
+to delete
+
+
 06/03/2016
 I should probably have a default configuration file, and use make to create
 it and then have make install install it in ${sysconfdir}/cmdb. Using the
