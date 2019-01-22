@@ -28,6 +28,8 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 AX_PATH_LIB_PCRE
 AX_LIB_GCRYPT([auto])
+PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt])])
+AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
