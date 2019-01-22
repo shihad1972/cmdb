@@ -39,38 +39,38 @@ PHEADERS = cmdb.h
 
 all:	$(bin_programs)
 
-dnsa:	$(DOBJECTS) $(LDLIBS)
+dnsa:	$(DOBJECTS) 
 $(DOBJECTS):	$(DHEADERS)
 
-cmdb:	$(COBJECTS) $(LDLIBS)
+cmdb:	$(COBJECTS) 
 $(COBJECTS):	$(CHEADERS)
 
-cbc:	$(BOBJECTS) $(LDLIBS)
+cbc:	$(BOBJECTS) 
 $(BOBJECTS):	$(BHEADERS)
 
-cbcdomain:	$(CDOBJECTS) $(LDLIBS)
+cbcdomain:	$(CDOBJECTS) 
 $(CDOBJECTS):	$(CDHEADERS)
 
-cbcos:	$(COOBJECTS) $(LDLIBS)
+cbcos:	$(COOBJECTS) 
 $(COOBJECTS):	$(COMMHEADERS)
 
-cbcvarient:	$(CVOBJECTS) $(LDLIBS)
+cbcvarient:	$(CVOBJECTS) 
 $(CVOBJECTS):	$(CVHEADERS)
 
-cbcpart:	$(CKOBJECTS) $(LDLIBS)
+cbcpart:	$(CKOBJECTS) 
 $(CKOBJECTS):	$(CVHEADERS)
 
-cbclocale:	$(CLOBJECTS) $(LDLIBS)
+cbclocale:	$(CLOBJECTS) 
 $(CLOBJECTS):	$(CVHEADERS)
 
-cpc:	$(POBJECTS) $(LDLIBS)
+cpc:	$(POBJECTS) 
 
-ckc:	$(KOBJECTS) $(LDLIBS)
+ckc:	$(KOBJECTS) 
 $(POBJECTS) $(KOBJECTS) :	$(PHEADERS)
 
-cbcsysp:	$(SPOBJECTS) $(LDLIBS)
+cbcsysp:	$(SPOBJECTS) 
 
-cbcscript:	$(SSOBJECTS) $(LDLIBS)
+cbcscript:	$(SSOBJECTS) 
 
 .PHONY :	clean
 clean :
