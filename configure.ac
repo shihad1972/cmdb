@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.2.25.5], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.2.26], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cmdb.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([include/config.h])
@@ -28,6 +28,7 @@ AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 AX_PATH_LIB_PCRE
 AX_LIB_GCRYPT([auto])
+AM_PATH_XML2(2.4.0)
 PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt])])
 AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
 
@@ -60,6 +61,7 @@ AM_CONDITIONAL([HAVE_MYSQL], [$HAVE_MYSQL])
 AM_CONDITIONAL([HAVE_PCRE], [$HAVE_PCRE])
 AM_CONDITIONAL([HAVE_SQLITE3], [$HAVE_SQLITE3])
 AM_CONDITIONAL([HAVE_LIBGCRYPT], [$HAVE_LIBGCRYPT])
+AM_CONDITIONAL([HAVE_LIBXML], [$HAVE_LIBXML])
 AM_CONDITIONAL([HAVE_LIBVIRT], [$HAVE_LIBVIRT])
 AM_CONDITIONAL([HAVE_DNSA], [$HAVE_DNSA])
 AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])

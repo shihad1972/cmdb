@@ -25,7 +25,7 @@
  * 
  *  Part of the CMDB program
  * 
- *  (C) Iain M Conochie 2012 - 2013
+ *  (C) Iain M Conochie 2012 - 2016
  * 
  */
 #include <config.h>
@@ -46,7 +46,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "cmdb.h"
-#include "base_sql.h"
+// #include "base_sql.h"
 
 void
 report_error(int error, const char *errstr)
@@ -354,7 +354,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == CVERSION)
 		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
-		if ((strncmp(program, "cmdb", CONF_S) == 0))
+		if ((strncmp(program, "cmdb", CONF_S) == 0) || (strncmp(program, "cmdb2", CONF_S) == 0))
 			display_cmdb_usage();
 		else if ((strncmp(program, "cbc", CONF_S) == 0))
 			display_cbc_usage();
@@ -630,6 +630,33 @@ display_cbclocale_usage(void)
 	printf("-t timezone\t-u country\n");
 	printf("See man page for full details\n");
 	
+}
+
+void
+display_mkvm_usage(void)
+{
+	const char *prog = "mkvm";
+
+	printf("%s: make virtual machine %s\n", prog, VERSION);
+	printf("Usage:\t");
+	printf("%s <action> <options>\n", prog);
+	printf("Actions\n");
+	printf("\t-a: add\n");
+	printf("\t-h: help\t-v: version\n");
+	printf("Options\n");
+	printf("\t-n <name>: Supply VM name\n");
+	printf("\t-p <pool>: Provide the storage pool name\n");
+	printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
+}
+
+void
+display_version(char *prog)
+{
+	if (strrchr(prog, '/')) {
+		prog = strrchr(prog, '/');
+		prog++;
+	}
+	printf("%s: %s\n", prog, VERSION);
 }
 
 void
@@ -1041,7 +1068,7 @@ get_ip_from_hostname(dbdata_s *data)
 		}
 	}
 	if ((retval = getaddrinfo(list->fields.text, "http", &hints, &srvinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(retval));
+		fprintf(stderr, "lib getaddrinfo error: %s\n", gai_strerror(retval));
 		return NO_IP_ADDRESS;
 	}
 	if (srvinfo->ai_family == AF_INET) {

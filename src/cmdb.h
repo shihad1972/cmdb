@@ -465,9 +465,10 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
+/*
 void
 display_version(char *prog);
-
+*/
 // Database fields query mismatch error functions
 
 void

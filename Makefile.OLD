@@ -10,7 +10,7 @@ DAEMONDIR = daemon
 CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale mkvm
 sbin_PROGRAMS = cmdbd
 lib_LIBRARIES = libailsacmdb.a
 
@@ -23,7 +23,7 @@ daemon:	$(sbin_PROGRAMS)
 $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
-$(bin_PROGRAMS):
+$(bin_PROGRAMS):	$(lib_LIBRARIES)
 	$(MAKE) -C $(DIR) $@
 
 $(sbin_PROGRAMS):	$(lib_LIBRARIES)

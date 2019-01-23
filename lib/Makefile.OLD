@@ -1,12 +1,18 @@
 override CPPFLAGS := -I../src/ -I../include/
 lib_LIBRARIES = libailsacmdb.a
 
-libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o)
+libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(logging.o) libailsacmdb(data.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(logging.o):	logging.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(data.o):	data.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean
