@@ -1,7 +1,7 @@
 /* 
  *
  *  mkvm : make virtual machine
- *  Copyright (C) 2018  Iain M Conochie <iain-AT-thargoid.co.uk> 
+ *  Copyright (C) 2018 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ main(int argc, char *argv[])
 	}
 	cleanup:
 		ailsa_show_error(retval);
+		if (retval > 0)
+			display_mkvm_usage();
 		ailsa_clean_mkvm((void *)vm);
 		return retval;
 }
@@ -70,7 +72,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "n:p:u:ahv";
+	const char *optstr = "n:p:u:k:ahv";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
@@ -80,6 +82,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		{"name",	required_argument,	NULL,	'n'},
 		{"pool",	required_argument,	NULL,	'p'},
 		{"uri",		required_argument,	NULL,	'u'},
+		{"network",	required_argument,	NULL,	'k'},
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
 		{"version",	no_argument,		NULL,	'v'}
@@ -107,6 +110,11 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "uri trimmed to 255 characters\n");
 			vm->uri = strndup(optarg, DOMAIN_LEN);
+			break;
+		case 'k':
+			if (strlen(optarg) >= DOMAIN_LEN)
+				fprintf(stderr, "network trimmed to 255 characters\n");
+			vm->network = strndup(optarg, DOMAIN_LEN);
 			break;
 		case 'a':
 			vm->action = AILSA_ADD;
