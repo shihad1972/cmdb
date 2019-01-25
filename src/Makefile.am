@@ -68,7 +68,8 @@ cbcdomain_SOURCES += zones.c cbc_dnsa.c\
 endif
 endif
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
-AM_LDFLAGS =
+AM_LDFLAGS = -L$(top_builddir)/lib
+LIBS += -lailsacmdb
 
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)
