@@ -30,6 +30,16 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+// Storage data structures and functions
+
+typedef struct ailsa_virt_stor_s {
+	virStoragePoolPtr pool;
+	virStorageVolPtr vol;
+} ailsa_virt_stor_s;
+
+
+// End of Storage
+
 static int
 ailsa_connect_libvirt(virConnectPtr *conn, const char *uri);
 
@@ -39,9 +49,10 @@ ailsa_create_storage_xml(ailsa_mkvm_s *vm);
 int
 mkvm_create_vm(ailsa_mkvm_s *vm)
 {
-	int retval = 0;
+	int retval = 0, numnet = 0;
+	char *networks;
 	virConnectPtr conn;
-	virStoragePoolPtr pool = NULL;
+	ailsa_virt_stor_s *storage;
 
 	if ((retval = ailsa_connect_libvirt(&conn, (const char *)vm->uri)) != 0)
 		return retval;
@@ -49,19 +60,29 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 		fprintf(stderr, "Cannot find pool %s\n", vm->pool);
 		retval = -1;
 		goto cleanup;
-/*	} else {
-		printf("Found pool %s\n", vm->pool);
-		goto cleanup; */
 	}
-	if ((retval = ailsa_create_storage_xml(vm)) != 0) {
-		printf("Unable to create XML to define storage\n");
-		retval = -1;
+	if (!(vol = virStorageVolLookupByName(pool, vm->name))) {
+		fprintf (stderr, "Cannot find volume %s\n", vm->name);
+		if ((retval = ailsa_create_storage_xml(vm)) != 0) {
+			printf("Unable to create XML to define storage\n");
+			retval = -1;
+			goto cleanup;
+		}
+	}
+	if ((numnet = virConnectListNetworks(conn, &networks, DOMAIN_LEN)) < 0) {
+		fprintf(stderr, "Cannot get networks list\n");
 		goto cleanup;
+	}
+	while (networks) {
+		printf("%s\n", networks);
+		networks++;
 	}
 	
 	cleanup:
 		if (pool)
 			virStoragePoolFree(pool);
+		if (vol)
+			virStorageVolFree(vol);
 		virConnectClose(conn);
 		return retval;
 }
