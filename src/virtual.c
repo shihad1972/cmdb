@@ -49,9 +49,11 @@ ailsa_create_storage_xml(ailsa_mkvm_s *vm);
 int
 mkvm_create_vm(ailsa_mkvm_s *vm)
 {
-	int retval = 0, numnet = 0;
-	char *networks;
+	int retval = 0;
 	virConnectPtr conn;
+	virStoragePoolPtr pool = NULL;
+	virStorageVolPtr vol = NULL;
+	virNetworkPtr net = NULL;
 	ailsa_virt_stor_s *storage;
 
 	if ((retval = ailsa_connect_libvirt(&conn, (const char *)vm->uri)) != 0)
@@ -69,13 +71,8 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 			goto cleanup;
 		}
 	}
-	if ((numnet = virConnectListNetworks(conn, &networks, DOMAIN_LEN)) < 0) {
-		fprintf(stderr, "Cannot get networks list\n");
-		goto cleanup;
-	}
-	while (networks) {
-		printf("%s\n", networks);
-		networks++;
+	if (!(net = virNetworkLookupByName(conn, vm->network))) {
+		printf("Network %s not found\n", vm->network);
 	}
 	
 	cleanup:
@@ -83,6 +80,8 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 			virStoragePoolFree(pool);
 		if (vol)
 			virStorageVolFree(vol);
+		if (net)
+			virNetworkFree(net);
 		virConnectClose(conn);
 		return retval;
 }

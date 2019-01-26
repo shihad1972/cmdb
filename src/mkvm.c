@@ -154,4 +154,5 @@ display_mkvm_usage(void)
         printf("\t-n <name>: Supply VM name\n");
         printf("\t-p <pool>: Provide the storage pool name\n");
         printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
+	printf("\t-k <network>: Name of the network to attach the BM on\n");
 }

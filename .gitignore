@@ -13,3 +13,4 @@ latex/
 *.o
 *.so
 *.a
+src/mkvm
