@@ -33,15 +33,6 @@ enum {                  // Buffer lengths
 #  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 # endif // my_free
 
-/* Grab config values from confile file that uses NAME=value as configuration
-   options */
-# ifndef GET_CONFIG_OPTION
-#  define GET_CONFIG_OPTION(CONFIG, conf, buff, config_file) { \
-   while (fgets(buff, CONFIG_LEN, config_file)) \
-     sscanf(buff, CONFIG, conf); \
-   rewind(config_file); \
-  }
-# endif
 /*
 ** base64 returnable errors
 **

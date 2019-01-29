@@ -31,6 +31,12 @@
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
+#ifdef HAVE_REGEX_H
+# include <regex.h>
+#endif // HAVE_REGEX_H
+#ifdef HAVE_WORDEXP_H
+# include <wordexp.h>
+#endif // HAVE_WORDEXP_H
 #include <ailsacmdb.h>
 #include "virtual.h"
 
@@ -40,8 +46,17 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 static void
 display_mkvm_usage(void);
 
-static int
+static void
 parse_mkvm_config(ailsa_mkvm_s *vm);
+
+static void
+parse_system_mkvm_config(ailsa_mkvm_s *vm);
+
+static void
+parse_user_mkvm_config(ailsa_mkvm_s *vm);
+
+static void
+parse_config_values(ailsa_mkvm_s *vm, FILE *conf);
 
 int
 main(int argc, char *argv[])
@@ -49,6 +64,7 @@ main(int argc, char *argv[])
 	int retval = 0;
 	ailsa_mkvm_s *vm = ailsa_calloc(sizeof(ailsa_mkvm_s), "vm in main");
 
+	parse_mkvm_config(vm);
 	if ((retval = parse_mkvm_command_line(argc, argv, vm)) != 0)
 		goto cleanup;
 	switch (vm->action) {
@@ -102,22 +118,34 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		case 'n':
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "hostname trimmed to 255 characters\n");
-			vm->name = strndup(optarg, DOMAIN_LEN);
+			if (!(vm->name))
+				vm->name = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->name, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'p':
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "pool namd trimmed to 255 characters\n");
-			vm->pool = strndup(optarg, DOMAIN_LEN);
+			if (!(vm->pool))
+				vm->pool = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->pool, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'u':
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "uri trimmed to 255 characters\n");
-			vm->uri = strndup(optarg, DOMAIN_LEN);
+			if (!(vm->uri))
+				vm->uri = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->uri, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'k':
 			if (strlen(optarg) >= DOMAIN_LEN)
 				fprintf(stderr, "network trimmed to 255 characters\n");
-			vm->network = strndup(optarg, DOMAIN_LEN);
+			if (!(vm->network))
+				vm->network = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->network, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'a':
 			vm->action = AILSA_ADD;
@@ -141,9 +169,89 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 	return retval;
 }
 
-static int
+static void
 parse_mkvm_config(ailsa_mkvm_s *vm)
 {
+	parse_system_mkvm_config(vm);
+	parse_user_mkvm_config(vm);
+}
+
+
+static void
+parse_system_mkvm_config(ailsa_mkvm_s *vm)
+{
+	const char *path = "/etc/cmdb/mkvm.conf";
+	FILE *conf = NULL;
+
+	if (!(conf = fopen(path, "r")))
+		goto cleanup;
+	parse_config_values(vm, conf);
+	cleanup:
+		if (conf)
+			fclose(conf);
+}
+
+static void
+parse_user_mkvm_config(ailsa_mkvm_s *vm)
+{
+	int retval = 0;
+	FILE *conf = NULL;
+	char **uconf = NULL;
+#ifdef HAVE_WORDEXP
+	const char *upath = "~/.mkvm.conf";
+	wordexp_t p;
+
+	if ((retval = wordexp(upath, &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if (!(conf = fopen(*uconf, "r")))
+			goto cleanup;
+	}
+#endif // HAVE_WORDEXP
+	if (!(conf)) {
+		char wpath[CONFIG_LEN];
+		int len;
+		*uconf = getenv("HOME");	// Need to sanatise this input.
+		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.mkvm.conf", *uconf)) >= CONFIG_LEN) {
+			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+			goto cleanup;
+		}
+		if (!(conf = fopen(wpath, "r")))
+			goto cleanup;
+	}
+	parse_config_values(vm, conf);
+	cleanup:
+		if (conf)
+			fclose(conf);
+#ifdef HAVE_WORDEXP
+		wordfree(&p);
+#endif // HAVE_WORDEXP
+}
+
+
+static void
+parse_config_values(ailsa_mkvm_s *vm, FILE *conf)
+{
+
+/* Grab config values from confile file that uses NAME=value as configuration
+   options */
+# ifndef GET_CONFIG_OPTION
+#  define GET_CONFIG_OPTION(CONFIG, option) { \
+   while (fgets(buff, CONFIG_LEN, conf)) \
+     sscanf(buff, CONFIG, temp); \
+   rewind(conf); \
+   if (!(option) && (*temp)) \
+     option = ailsa_calloc(CONFIG_LEN, "option in parse_config_values"); \
+   if (*temp) \
+     snprintf(option, CONFIG_LEN, "%s", temp);\
+   memset(temp, 0, CONFIG_LEN); \
+  }
+# endif
+	char buff[CONFIG_LEN], temp[CONFIG_LEN];
+
+	GET_CONFIG_OPTION("NETWORK=%s", vm->network);
+	GET_CONFIG_OPTION("URI=%s", vm->uri);
+	GET_CONFIG_OPTION("POOL=%s", vm->pool);
+	GET_CONFIG_OPTION("NAME=%s", vm->name);
 }
 
 static void

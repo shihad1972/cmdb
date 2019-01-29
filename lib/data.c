@@ -19,7 +19,7 @@
  *  
  *  data.c
  *
- *  Contains the functions for data types various AIL_ data types
+ *  Contains the functions to initialise and destroy various data types
  *
  */
 

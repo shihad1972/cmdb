@@ -64,7 +64,7 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 		goto cleanup;
 	}
 	if (!(vol = virStorageVolLookupByName(pool, vm->name))) {
-		fprintf (stderr, "Cannot find volume %s\n", vm->name);
+		fprintf (stderr, "Cannot find volume %s in pool %s\n", vm->name, vm->pool);
 		if ((retval = ailsa_create_storage_xml(vm)) != 0) {
 			printf("Unable to create XML to define storage\n");
 			retval = -1;
