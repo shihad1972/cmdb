@@ -22,12 +22,26 @@
 #ifndef __AILSACMDB_H__
 # define __AILSACMDB_H__
 
+enum {                  // Buffer lengths
+	CONFIG_LEN = 256,
+	DOMAIN_LEN = 256
+};
+
 /** Useful macro to safely avoid double-free memory corruption
  ** Shamelessly stolen from the nagios source. Thanks :) */
 # ifndef my_free
 #  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 # endif // my_free
 
+/* Grab config values from confile file that uses NAME=value as configuration
+   options */
+# ifndef GET_CONFIG_OPTION
+#  define GET_CONFIG_OPTION(CONFIG, conf, buff, config_file) { \
+   while (fgets(buff, CONFIG_LEN, config_file)) \
+     sscanf(buff, CONFIG, conf); \
+   rewind(config_file); \
+  }
+# endif
 /*
 ** base64 returnable errors
 **
@@ -45,10 +59,6 @@ enum {                  // Action Codes
         AILSA_ADD = 1,
         AILSA_HELP = 100,
         AILSA_VERSION = 101
-};
-
-enum {                  // Buffer lengths
-        DOMAIN_LEN = 256
 };
 
 enum {                  // Error codes

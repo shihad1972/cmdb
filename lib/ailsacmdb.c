@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#ifdef HAVE_REGEX_H
+# include <regex.h>
+#endif
 #include <ailsacmdb.h>
 
 void
@@ -109,3 +112,7 @@ ailsa_add_trailing_dot(char *member)
 	return retval;
 }
 
+#ifdef HAVE_REGEXEC
+
+
+#endif

@@ -40,6 +40,9 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 static void
 display_mkvm_usage(void);
 
+static int
+parse_mkvm_config(ailsa_mkvm_s *vm);
+
 int
 main(int argc, char *argv[])
 {
@@ -138,6 +141,10 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 	return retval;
 }
 
+static int
+parse_mkvm_config(ailsa_mkvm_s *vm)
+{
+}
 
 static void
 display_mkvm_usage(void)
