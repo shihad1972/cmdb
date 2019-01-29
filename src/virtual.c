@@ -27,6 +27,7 @@
 #include <string.h>
 #include <ailsacmdb.h>
 #include <libvirt/libvirt.h>
+#include <libvirt/virterror.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -46,6 +47,11 @@ ailsa_connect_libvirt(virConnectPtr *conn, const char *uri);
 static int
 ailsa_create_storage_xml(ailsa_mkvm_s *vm);
 
+static void
+ailsa_custom_libvirt_err(void *data, virErrorPtr err)
+{
+}
+
 int
 mkvm_create_vm(ailsa_mkvm_s *vm)
 {
@@ -54,10 +60,16 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 	virStoragePoolPtr pool = NULL;
 	virStorageVolPtr vol = NULL;
 	virNetworkPtr net = NULL;
+	virDomainPtr dom = NULL;
 	ailsa_virt_stor_s *storage;
 
+	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
 	if ((retval = ailsa_connect_libvirt(&conn, (const char *)vm->uri)) != 0)
 		return retval;
+	if ((dom = virDomainLookupByName(conn, (const char *)vm->name))) {
+		fprintf(stderr, "Domain %s already exists!\n", vm->name);
+		goto cleanup;
+	}
 	if (!(pool = virStoragePoolLookupByName(conn, vm->pool))) {
 		fprintf(stderr, "Cannot find pool %s\n", vm->pool);
 		retval = -1;
@@ -82,6 +94,8 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 			virStorageVolFree(vol);
 		if (net)
 			virNetworkFree(net);
+		if (dom)
+			virDomainFree(dom);
 		virConnectClose(conn);
 		return retval;
 }
