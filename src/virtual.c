@@ -45,12 +45,16 @@ static int
 ailsa_connect_libvirt(virConnectPtr *conn, const char *uri);
 
 static int
-ailsa_create_storage_xml(ailsa_mkvm_s *vm);
+ailsa_create_volume_xml(ailsa_mkvm_s *vm);
 
+#ifndef DEBUG
 static void
 ailsa_custom_libvirt_err(void *data, virErrorPtr err)
 {
+	if (!(data) || !(err))
+		return;
 }
+#endif
 
 int
 mkvm_create_vm(ailsa_mkvm_s *vm)
@@ -61,12 +65,14 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 	virStorageVolPtr vol = NULL;
 	virNetworkPtr net = NULL;
 	virDomainPtr dom = NULL;
-	ailsa_virt_stor_s *storage;
 
+#ifndef DEBUG
 	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
+#endif
 	if ((retval = ailsa_connect_libvirt(&conn, (const char *)vm->uri)) != 0)
 		return retval;
 	if ((dom = virDomainLookupByName(conn, (const char *)vm->name))) {
+// If the domain is _inactive_ it will not be returned here.
 		fprintf(stderr, "Domain %s already exists!\n", vm->name);
 		goto cleanup;
 	}
@@ -76,8 +82,7 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 		goto cleanup;
 	}
 	if (!(vol = virStorageVolLookupByName(pool, vm->name))) {
-		fprintf (stderr, "Cannot find volume %s in pool %s\n", vm->name, vm->pool);
-		if ((retval = ailsa_create_storage_xml(vm)) != 0) {
+		if ((retval = ailsa_create_volume_xml(vm)) != 0) {
 			printf("Unable to create XML to define storage\n");
 			retval = -1;
 			goto cleanup;
@@ -115,14 +120,10 @@ ailsa_connect_libvirt(virConnectPtr *conn, const char *uri)
 }
 
 static int
-ailsa_create_storage_xml(ailsa_mkvm_s *vm)
+ailsa_create_volume_xml(ailsa_mkvm_s *vm)
 {
 	int retval = 0;
-	xmlDocPtr doc = NULL;
-	xmlNodePtr root, node, next;
-	xmlDtdPtr dptr = NULL;
 
-	root = node = next = NULL;
 	if (!(vm))
 		return AILSA_NO_DATA;
 

@@ -88,7 +88,6 @@ void *
 ailsa_calloc(size_t len, const char *msg);
 
 // the rest ...
-/* 
 void
 ailsa_chomp(char *line);
 void
@@ -97,6 +96,7 @@ int
 ailsa_add_trailing_slash(char *member);
 int
 ailsa_add_trailing_dot(char *member);
+/*
 void
 report_error(int error, const char *errstr);
 void

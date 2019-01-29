@@ -30,7 +30,7 @@
 #include <errno.h>
 #ifdef HAVE_REGEX_H
 # include <regex.h>
-#endif
+#endif // HAVE_REGEX_H
 #include <ailsacmdb.h>
 
 void
