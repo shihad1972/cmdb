@@ -54,3 +54,11 @@ ailsa_clean_mkvm(void *vm)
 	free(i);
 }
 
+void
+ailsa_init_string(ailsa_string_s *string)
+{
+	string->len = BUFFER_LEN;
+	string->size = NONE;
+	string->string = ailsa_calloc(BUFFER_LEN, "string->string in ailsa_init_string");
+}
+

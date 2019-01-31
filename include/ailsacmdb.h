@@ -23,8 +23,11 @@
 # define __AILSACMDB_H__
 
 enum {                  // Buffer lengths
+	NONE = 0,
 	CONFIG_LEN = 256,
-	DOMAIN_LEN = 256
+	DOMAIN_LEN = 256,
+	BUFFER_LEN = 1024,
+	FILE_LEN = 4096
 };
 
 /** Useful macro to safely avoid double-free memory corruption
@@ -70,6 +73,15 @@ typedef struct ailsa_mkvm_s {
         short int action;
 } ailsa_mkvm_s;
 
+// Various data types
+
+
+typedef struct ailsa_string_s {
+        char *string;
+        size_t len;
+        size_t size;
+} ailsa_string_s;
+
 // library version info
 
 void
@@ -86,7 +98,8 @@ void
 ailsa_clean_mkvm(void *vm);
 void *
 ailsa_calloc(size_t len, const char *msg);
-
+void
+ailsa_init_string(ailsa_string_s *string);
 // the rest ...
 void
 ailsa_chomp(char *line);

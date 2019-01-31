@@ -123,10 +123,18 @@ static int
 ailsa_create_volume_xml(ailsa_mkvm_s *vm)
 {
 	int retval = 0;
+	ailsa_string_s *data = ailsa_calloc(sizeof(ailsa_string_s), "data in ailsa_create_volume_xml");
+	unsigned long int capacity;
 
 	if (!(vm))
 		return AILSA_NO_DATA;
-
+	capacity = vm->size * 1024 * 1024 * 1024;
+	ailsa_init_string(data);
+	sprintf(data->string, "\
+<volume>\n\
+  <name>%s</name>\n\
+  <capacity unit='bytes'>%lu</capacity>\n\
+  <allocation unit='bytes'>%lu</allocation>\n", vm->name, capacity, capacity);
 	return retval;
 }
 
