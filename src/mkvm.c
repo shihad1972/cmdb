@@ -91,15 +91,17 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "n:p:u:k:ahv";
+	const char *optstr = "c:g:n:p:r:u:k:ahv";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
 	struct option opts[] = {
+		{"cpus",	required_argument,	NULL,	'c'},
 		{"storage",	required_argument,	NULL,	'g'},
 		{"size",	required_argument,	NULL,	'g'},
 		{"name",	required_argument,	NULL,	'n'},
 		{"pool",	required_argument,	NULL,	'p'},
+		{"ram",		required_argument,	NULL,	'r'},
 		{"uri",		required_argument,	NULL,	'u'},
 		{"network",	required_argument,	NULL,	'k'},
 		{"add",		no_argument,		NULL,	'a'},
@@ -114,6 +116,12 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		switch(opt) {
 		case 'g':
 			vm->size = strtoul(optarg, NULL, 10);
+			break;
+		case 'c':
+			vm->cpus = strtoul(optarg, NULL, 10);
+			break;
+		case 'r':
+			vm->ram = strtoul(optarg, NULL, 10);
 			break;
 		case 'n':
 			if (strlen(optarg) >= DOMAIN_LEN)
@@ -245,6 +253,13 @@ parse_config_values(ailsa_mkvm_s *vm, FILE *conf)
      snprintf(option, CONFIG_LEN, "%s", temp);\
    memset(temp, 0, CONFIG_LEN); \
   }
+# ifndef GET_CONFIG_INT
+#  define GET_CONFIG_INT(CONFIG, option) { \
+   while (fgets(buff, CONFIG_LEN, conf)) \
+     sscanf(buff, CONFIG, &(option)); \
+   rewind(conf); \
+  }
+# endif
 # endif
 	char buff[CONFIG_LEN], temp[CONFIG_LEN];
 
@@ -252,6 +267,8 @@ parse_config_values(ailsa_mkvm_s *vm, FILE *conf)
 	GET_CONFIG_OPTION("URI=%s", vm->uri);
 	GET_CONFIG_OPTION("POOL=%s", vm->pool);
 	GET_CONFIG_OPTION("NAME=%s", vm->name);
+	GET_CONFIG_INT("RAM=%lu", vm->ram);
+	GET_CONFIG_INT("CPUS=%lu", vm->cpus);
 }
 
 static void
@@ -270,4 +287,6 @@ display_mkvm_usage(void)
         printf("\t-p <pool>: Provide the storage pool name\n");
         printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
 	printf("\t-k <network>: Name of the network to attach the BM on\n");
+	printf("\t-c <cpus>: No of CPU's the vm should have\n");
+	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have\n");
 }

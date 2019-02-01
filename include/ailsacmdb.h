@@ -68,8 +68,11 @@ typedef struct ailsa_mkvm_s {
         char *pool;
         char *uri;
         char *storxml;
+	char *path;
 	char *network;
         unsigned long int size;
+	unsigned long int ram;
+	unsigned long int cpus;
         short int action;
 } ailsa_mkvm_s;
 

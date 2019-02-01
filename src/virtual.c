@@ -93,6 +93,11 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 			goto cleanup;
 		}
 	}
+	if (!(vm->path = virStorageVolGetPath(vol))) {
+		printf("Unable to get the volume path for volume %s\n", vm->name);
+		retval = -1;
+		goto cleanup;
+	}
 	if (!(net = virNetworkLookupByName(conn, vm->network))) {
 		printf("Network %s not found\n", vm->network);
 	}

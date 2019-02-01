@@ -49,6 +49,8 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->uri);
 	if (i->storxml)
 		my_free(i->storxml);
+	if (i->path)
+		my_free(i->path);
 	if (i->network)
 		my_free(i->network);
 	free(i);
