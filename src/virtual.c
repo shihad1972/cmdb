@@ -87,6 +87,11 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 			retval = -1;
 			goto cleanup;
 		}
+		if (!(vol = virStorageVolCreateXML(pool, (const char *)vm->storxml, 0))) {
+			printf("Unable to create storage volume %s\n", vm->name);
+			retval = -1;
+			goto cleanup;
+		}
 	}
 	if (!(net = virNetworkLookupByName(conn, vm->network))) {
 		printf("Network %s not found\n", vm->network);
@@ -123,18 +128,18 @@ static int
 ailsa_create_volume_xml(ailsa_mkvm_s *vm)
 {
 	int retval = 0;
-	ailsa_string_s *data = ailsa_calloc(sizeof(ailsa_string_s), "data in ailsa_create_volume_xml");
-	unsigned long int capacity;
+	unsigned long int capacity = 0;
 
 	if (!(vm))
 		return AILSA_NO_DATA;
+	vm->storxml = ailsa_calloc(FILE_LEN, "vm->xmlstor in ailsa_create_volume_xml");
 	capacity = vm->size * 1024 * 1024 * 1024;
-	ailsa_init_string(data);
-	sprintf(data->string, "\
+	sprintf(vm->storxml, "\
 <volume>\n\
   <name>%s</name>\n\
   <capacity unit='bytes'>%lu</capacity>\n\
-  <allocation unit='bytes'>%lu</allocation>\n", vm->name, capacity, capacity);
+  <allocation unit='bytes'>%lu</allocation>\n\
+</volume>\n", vm->name, capacity, capacity);
 	return retval;
 }
 
