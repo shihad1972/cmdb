@@ -59,8 +59,8 @@ ailsa_clean_mkvm(void *vm)
 void
 ailsa_init_string(ailsa_string_s *string)
 {
-	string->len = BUFFER_LEN;
+	string->len = FILE_LEN;
 	string->size = NONE;
-	string->string = ailsa_calloc(BUFFER_LEN, "string->string in ailsa_init_string");
+	string->string = ailsa_calloc(FILE_LEN, "string->string in ailsa_init_string");
 }
 
