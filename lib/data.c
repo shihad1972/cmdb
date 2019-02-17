@@ -60,7 +60,7 @@ void
 ailsa_init_string(ailsa_string_s *string)
 {
 	string->len = FILE_LEN;
-	string->size = NONE;
+	string->size = 0;
 	string->string = ailsa_calloc(FILE_LEN, "string->string in ailsa_init_string");
 }
 

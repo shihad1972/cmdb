@@ -23,7 +23,6 @@
 # define __AILSACMDB_H__
 
 enum {                  // Buffer lengths
-	NONE = 0,
 	CONFIG_LEN = 256,
 	DOMAIN_LEN = 256,
 	BUFFER_LEN = 1024,

@@ -873,7 +873,7 @@ chomp(char *input)
 void
 display_action_error(short int action)
 {
-	if (action == NONE)
+	if (action == 0)
 		fprintf(stderr, "No action specified\n");
 	else if (action == DISPLAY)
 		fprintf(stderr, "Display failed\n");
@@ -947,7 +947,7 @@ add_trailing_slash(char *member)
 		member[len] = '/';
 		member[len + 1] = '\0';
 	} else if (member[len - 1] == '/') {
-		retval = NONE;
+		retval = 0;
 	} else {
 		retval = -1;
 	}
@@ -969,7 +969,7 @@ add_trailing_dot(char *member)
 		member[len] = '.';
 		member[len +1] = '\0';
 	} else if (member[len - 1] == '.') {
-		retval = NONE;
+		retval = 0;
 	} else {
 		retval = -1;
 	}
@@ -990,7 +990,7 @@ write_file(char *filename, char *output)
 	} else {
 		fputs(output, zonefile);
 		fclose(zonefile);
-		retval = NONE;
+		retval = 0;
 	}
 	umask(em);
 	return retval;
@@ -1141,7 +1141,7 @@ void
 init_string_len(string_len_s *string)
 {
 	string->len = BUFF_S;
-	string->size = NONE;
+	string->size = 0;
 	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
 }
 
