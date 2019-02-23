@@ -53,14 +53,16 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->path);
 	if (i->network)
 		my_free(i->network);
+	if (i->vt)
+		my_free(i->vt);
 	free(i);
 }
 
 void
 ailsa_init_string(ailsa_string_s *str)
 {
-	str->len = FILE_LEN;
-	str->size = 0;
+	str->size = FILE_LEN;
+	str->len = 0;
 	str->string = ailsa_calloc(FILE_LEN, "string->string in ailsa_init_string");
 }
 
@@ -72,5 +74,28 @@ ailsa_clean_string(ailsa_string_s *str)
 	if (str->string)
 		my_free(str->string);
 	free(str);
+}
+
+void
+ailsa_resize_string(ailsa_string_s *str)
+{
+	char *tmp;
+
+	str->size *= 2;
+	tmp = ailsa_realloc(str->string, str->size * sizeof(char), "In ailsa_resize_string");
+	str->string = tmp;
+}
+
+void
+ailsa_fill_string(ailsa_string_s *str, const char *s)
+{
+	size_t len;
+
+	len = strlen(s);
+	if (len + str->len >= str->size)
+		ailsa_resize_string(str);
+	len++;
+	snprintf(str->string + str->len, len, "%s", s);
+	str->len = strlen(str->string);
 }
 

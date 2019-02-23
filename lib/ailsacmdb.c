@@ -71,6 +71,19 @@ ailsa_calloc(size_t len, const char *msg)
 	return p;
 }
 
+void *
+ailsa_realloc(void *r, size_t len, const char *msg)
+{
+	void *p;
+
+	if (!(p = realloc(r, len * sizeof(char)))) {
+		perror(msg);
+		exit(errno);
+	}
+	return p;
+}
+
+
 int
 ailsa_add_trailing_slash(char *member)
 {

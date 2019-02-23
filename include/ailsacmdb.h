@@ -69,6 +69,7 @@ typedef struct ailsa_mkvm_s {
         char *storxml;
 	char *path;
 	char *network;
+	char *vt;		// Volume Type
         unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
@@ -100,10 +101,19 @@ void
 ailsa_clean_mkvm(void *vm);
 void *
 ailsa_calloc(size_t len, const char *msg);
+void *
+ailsa_realloc(void *r, size_t len, const char *msg);
+
+// ailsa_string_s functions
+
 void
 ailsa_init_string(ailsa_string_s *string);
 void
 ailsa_clean_string(ailsa_string_s *str);
+void
+ailsa_resize_string(ailsa_string_s *str);
+void
+ailsa_fill_string(ailsa_string_s *str, const char *s);
 
 // UUID functions
 char *
