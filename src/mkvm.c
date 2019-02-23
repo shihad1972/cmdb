@@ -1,4 +1,4 @@
-/* 
+/*
  *
  *  mkvm : make virtual machine
  *  Copyright (C) 2018 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>

@@ -34,6 +34,9 @@
 /* Define to 1 if you have the `pcre' library (-lpcre). */
 #define HAVE_LIBPCRE 1
 
+/* Define to 1 if you have the UUID library */
+#define HAVE_LIBUUID 1
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #define HAVE_MALLOC 1

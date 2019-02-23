@@ -43,7 +43,7 @@
 char *
 ailsa_gen_uuid_str(void)
 {
-	uuid_t	uuid = 0;
+	uuid_t	uuid;
 	char 	*out = NULL;
 
 	out = ailsa_calloc(64, "out in ailsa_get_uuid_str");

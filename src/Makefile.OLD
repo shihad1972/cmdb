@@ -10,7 +10,7 @@ override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion 
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/ -I/usr/include/libxml2
 override LDFLAGS := $(LDFLAGS) -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
-override LDLIBS := -lmysqlclient $(PCLIBS) -lsqlite3 -lvirt -lxml2 ../lib/libailsacmdb.a
+override LDLIBS := -lmysqlclient $(PCLIBS) -luuid -lsqlite3 -lvirt -lxml2 ../lib/libailsacmdb.a
 bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale mkvm
 
 SOBJECTS = checks.o cmdb_data.o errors.o
