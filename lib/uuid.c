@@ -33,44 +33,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef HAVE_LIBUUID
+# include <uuid.h>
+#endif
 #include <ailsacmdb.h>
 
-void
-ailsa_clean_mkvm(void *vm)
-{
-	ailsa_mkvm_s *i;
+#ifdef HAVE_LIBUUID
 
-	i = vm;
-	if (i->name)
-		my_free(i->name);
-	if (i->pool)
-		my_free(i->pool);
-	if (i->uri)
-		my_free(i->uri);
-	if (i->storxml)
-		my_free(i->storxml);
-	if (i->path)
-		my_free(i->path);
-	if (i->network)
-		my_free(i->network);
-	free(i);
+char *
+ailsa_gen_uuid_str(void)
+{
+	uuid_t	uuid = 0;
+	char 	*out = NULL;
+
+	out = ailsa_calloc(64, "out in ailsa_get_uuid_str");
+	uuid_generate(uuid);
+	uuid_unparse_lower(uuid, out);
+	return out;
 }
 
-void
-ailsa_init_string(ailsa_string_s *str)
-{
-	str->len = FILE_LEN;
-	str->size = 0;
-	str->string = ailsa_calloc(FILE_LEN, "string->string in ailsa_init_string");
-}
-
-void
-ailsa_clean_string(ailsa_string_s *str)
-{
-	if (!(str))
-		return;
-	if (str->string)
-		my_free(str->string);
-	free(str);
-}
-
+#endif

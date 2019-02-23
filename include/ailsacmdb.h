@@ -102,6 +102,13 @@ void *
 ailsa_calloc(size_t len, const char *msg);
 void
 ailsa_init_string(ailsa_string_s *string);
+void
+ailsa_clean_string(ailsa_string_s *str);
+
+// UUID functions
+char *
+ailsa_gen_uuid_str(void);
+
 // the rest ...
 void
 ailsa_chomp(char *line);
