@@ -55,6 +55,8 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->network);
 	if (i->vt)
 		my_free(i->vt);
+	if (i->vtstr)
+		my_free(i->vtstr);
 	free(i);
 }
 

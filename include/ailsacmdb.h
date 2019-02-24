@@ -23,6 +23,8 @@
 # define __AILSACMDB_H__
 
 enum {                  // Buffer lengths
+	MAC_LEN = 32,
+	HOST_LEN = 64,
 	CONFIG_LEN = 256,
 	DOMAIN_LEN = 256,
 	BUFFER_LEN = 1024,
@@ -70,6 +72,7 @@ typedef struct ailsa_mkvm_s {
 	char *path;
 	char *network;
 	char *vt;		// Volume Type
+	char *vtstr;
         unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
