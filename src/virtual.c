@@ -211,8 +211,6 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 ", vm->name, uuid, ram, ram, vm->cpus);
 	ailsa_fill_string(dom, buf);
 	memset(buf, 0, FILE_LEN);
-	if ((retval = ailsa_get_vol(vol, vm)) != 0)
-		goto cleanup;
 	snprintf(buf, FILE_LEN, "\
   <devices>\n\
     <emulator>/usr/bin/kvm</emulator>\n\
@@ -223,7 +221,31 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>\n\
     </disk>\n\
 ", vm->vt, vm->vtstr, vm->path);
-
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
+	snprintf(buf, FILE_LEN, "\
+    <controller type='usb' index='0' model='ich9-ehci1'>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x7'/>\n\
+    </controller>\n\
+    <controller type='usb' index='0' model='ich9-uhci1'>\n\
+      <master startport='0'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0' multifunction='on'/>\n\
+    </controller>\n\
+    <controller type='usb' index='0' model='ich9-uhci2'>\n\
+      <master startport='2'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x1'/>\n\
+    </controller>\n\
+    <controller type='usb' index='0' model='ich9-uhci3'>\n\
+      <master startport='4'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x2'/>\n\
+    </controller>\n\
+    <controller type='pci' index='0' model='pci-root'/>\n\
+    <controller type='virtio-serial' index='0'>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>\n\
+    </controller>\n\
+");
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
 	cleanup:
 		if (uuid)
 			my_free(uuid);
@@ -239,6 +261,7 @@ ailsa_get_vol(virStorageVolPtr uvol, ailsa_mkvm_s *vm)
 	virStorageVolPtr vol = uvol;
 	virStorageVolInfoPtr vol_info = NULL;
 
+	vol_info = ailsa_calloc(sizeof(virStorageVolInfo), "vol_info in ailsa_get_vol");
 	if ((retval = virStorageVolGetInfo(vol, vol_info)) != 0) {
 		fprintf(stderr, "Unable to get vol info for %s\n", vm->name);
 		goto cleanup;
@@ -254,6 +277,8 @@ ailsa_get_vol(virStorageVolPtr uvol, ailsa_mkvm_s *vm)
 		goto cleanup;
 	}
 	cleanup:
+		if (vol_info)
+			my_free(vol_info);
 		return retval;
 }
 

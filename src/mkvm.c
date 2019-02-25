@@ -273,6 +273,7 @@ parse_config_values(ailsa_mkvm_s *vm, FILE *conf)
 	GET_CONFIG_OPTION("NAME=%s", vm->name);
 	GET_CONFIG_INT("RAM=%lu", vm->ram);
 	GET_CONFIG_INT("CPUS=%lu", vm->cpus);
+	GET_CONFIG_INT("STORAGE=%lu", vm->size);
 }
 
 static void
