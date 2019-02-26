@@ -62,21 +62,26 @@ enum {                  // Error codes
         AILSA_NO_CONNECT = 201
 };
 
+enum {			// MAC Address generation types
+	AILSA_ESX = 1,
+	AILSA_KVM = 2
+};
+
 // mkvm data types
 
 typedef struct ailsa_mkvm_s {
-        char *name;
-        char *pool;
-        char *uri;
-        char *storxml;
+	char *name;
+	char *pool;
+	char *uri;
+	char *storxml;
 	char *path;
 	char *network;
 	char *vt;		// Volume Type
 	char *vtstr;
-        unsigned long int size;
+	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
-        short int action;
+	short int action;
 } ailsa_mkvm_s;
 
 // Various data types
@@ -121,6 +126,10 @@ ailsa_fill_string(ailsa_string_s *str, const char *s);
 // UUID functions
 char *
 ailsa_gen_uuid_str(void);
+
+// Network functions
+int
+ailsa_gen_mac(char *mac, int type);
 
 // the rest ...
 void
