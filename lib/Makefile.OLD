@@ -4,7 +4,7 @@ lib_LIBRARIES = libailsacmdb.a
 
 libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(data.o) \
-		libailsacmdb.a(uuid.o)
+		libailsacmdb.a(uuid.o) libailsacmdb.a(config.o)
 
 libailsacmdb.a(b64.o):	b64.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -19,6 +19,9 @@ libailsacmdb.a(data.o):	data.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(uuid.o):	uuid.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(config.o): config.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

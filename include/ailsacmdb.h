@@ -131,6 +131,15 @@ ailsa_gen_uuid_str(void);
 int
 ailsa_gen_mac(char *mac, int type);
 
+// Config and command line parsing
+
+void
+display_mkvm_usage(void);
+void
+parse_mkvm_config(ailsa_mkvm_s *vm);
+int
+parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
+
 // the rest ...
 void
 ailsa_chomp(char *line);
