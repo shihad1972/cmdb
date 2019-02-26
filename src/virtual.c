@@ -107,16 +107,25 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 	}
 	if ((retval = ailsa_get_vol(vol, vm)) != 0) {
 		fprintf(stderr, "Unable to get vol info for %s\n", vm->name);
+		retval = -1;
 		goto cleanup;
 	}
 	if (!(net = virNetworkLookupByName(conn, vm->network))) {
 		fprintf(stderr, "Network %s not found\n", vm->network);
+		retval = -1;
+		goto cleanup;
 	}
 	if ((retval = ailsa_create_domain_xml(vm, domain)) != 0) {
 		fprintf(stderr, "Unable to create XML document for domain\n");
+		retval = -1;
 		goto cleanup;
 	}
-	
+	if (!(dom = virDomainDefineXML(conn, domain->string))) {
+		fprintf(stderr, "Unable to create domain %s!\n", vm->name);
+		retval = -1;
+		goto cleanup;
+	}
+
 	cleanup:
 		if (pool)
 			virStoragePoolFree(pool);
@@ -171,13 +180,16 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	int retval = 0;
 	char *uuid = NULL;
 	char buf[FILE_LEN];
+	char mac[MAC_LEN];
 	unsigned long int ram = 0;
-	virStorageVolPtr vol = NULL;
 
 	if (!(vm))
 		return -1;
 	ram = vm->ram * 1024;
 	uuid = ailsa_gen_uuid_str();
+	memset(mac, 0, MAC_LEN);
+	if ((retval = ailsa_gen_mac(mac, AILSA_KVM)) != 0)
+		goto cleanup;
 	snprintf(buf, FILE_LEN, "\
 <domain type='kvm'>\n\
   <name>%s</name>\n\
@@ -246,6 +258,69 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 ");
 	ailsa_fill_string(dom, buf);
 	memset(buf, 0, FILE_LEN);
+	snprintf(buf, FILE_LEN, "\
+    <interface type='network'>\n\
+      <mac address='%s'/>\n\
+      <source network='%s'/>\n\
+      <model type='virtio'/>\n\
+      <boot order='1'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>\n\
+    </interface>\n\
+", mac, vm->network);
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
+	snprintf(buf, FILE_LEN, "\
+    <serial type='pty'>\n\
+      <source path='/dev/pts/1'/>\n\
+      <target port='0'/>\n\
+      <alias name='serial0'/>\n\
+    </serial>\n\
+    <console type='pty' tty='/dev/pts/1'>\n\
+      <source path='/dev/pts/1'/>\n\
+      <target type='serial' port='0'/>\n\
+      <alias name='serial0'/>\n\
+    </console>\n\
+    <channel type='spicevmc'>\n\
+      <target type='virtio' name='com.redhat.spice.0'/>\n\
+      <alias name='channel0'/>\n\
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>\n\
+    </channel>\n\
+    <input type='mouse' bus='ps2'/>\n\
+    <input type='keyboard' bus='ps2'/>\n\
+    <graphics type='spice' port='5901' autoport='yes' listen='127.0.0.1'>\n\
+      <listen type='address' address='127.0.0.1'/>\n\
+    </graphics>\n\
+");
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
+	snprintf(buf, FILE_LEN, "\
+    <video>\n\
+      <model type='qxl' ram='65536' vram='65536' heads='1'/>\n\
+      <alias name='video0'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>\n\
+    </video>\n\
+    <redirdev bus='usb' type='spicevmc'>\n\
+      <alias name='redir0'/>\n\
+    </redirdev>\n\
+    <redirdev bus='usb' type='spicevmc'>\n\
+      <alias name='redir1'/>\n\
+    </redirdev>\n\
+    <redirdev bus='usb' type='spicevmc'>\n\
+      <alias name='redir2'/>\n\
+    </redirdev>\n\
+    <redirdev bus='usb' type='spicevmc'>\n\
+      <alias name='redir3'/>\n\
+    </redirdev>\n\
+    <memballoon model='virtio'>\n\
+      <alias name='balloon0'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>\n\
+    </memballoon>\n\
+  </devices>\n\
+</domain>\n\
+");
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
+
 	cleanup:
 		if (uuid)
 			my_free(uuid);
@@ -293,8 +368,8 @@ ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm)
 		snprintf(str, MAC_LEN, "file");
 		snprintf(vt, MAC_LEN, "file");
 	} else if (info->type == VIR_STORAGE_VOL_BLOCK) {
-		snprintf(str, MAC_LEN, "block");
-		snprintf(vt, MAC_LEN, "dev");
+		snprintf(str, MAC_LEN, "dev");
+		snprintf(vt, MAC_LEN, "block");
 	} else {
 		my_free(str);
 		my_free(vt);
