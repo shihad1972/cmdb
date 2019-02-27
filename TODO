@@ -1,3 +1,7 @@
+27/02/2019
+Need to add a generic logging function, that can handle both console
+output and also logging to syslog.
+
 09/11/2018
 Deleting SRV records is tricky; it seems to delete all SRV records
 for a given service (e.g. ldap) and we cannot specify which one
