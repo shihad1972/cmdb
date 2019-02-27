@@ -61,6 +61,53 @@ ailsa_clean_mkvm(void *vm)
 }
 
 void
+ailsa_clean_cmdb(void *cmdb)
+{
+	ailsa_cmdb_s *i;
+
+	i = cmdb;
+	if (i->db)
+		my_free(i->db);
+	if (i->dbtype)
+		my_free(i->dbtype);
+	if (i->file)
+		my_free(i->file);
+	if (i->user)
+		my_free(i->user);
+	if (i->pass)
+		my_free(i->pass);
+	if (i->host)
+		my_free(i->host);
+	if (i->dir)
+		my_free(i->dir);
+	if (i->bind)
+		my_free(i->bind);
+	if (i->dnsa)
+		my_free(i->dnsa);
+	if (i->rev)
+		my_free(i->rev);
+	if (i->rndc)
+		my_free(i->rndc);
+	if (i->chkz)
+		my_free(i->chkz);
+	if (i->chkc)
+		my_free(i->chkc);
+	if (i->socket)
+		my_free(i->socket);
+	if (i->hostmaster)
+		my_free(i->hostmaster);
+	if (i->prins)
+		my_free(i->prins);
+	if (i->secns)
+		my_free(i->secns);
+	if (i->pridns)
+		my_free(i->pridns);
+	if (i->secdns)
+		my_free(i->secdns);
+	free(i);
+}
+
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;

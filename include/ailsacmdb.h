@@ -67,7 +67,42 @@ enum {			// MAC Address generation types
 	AILSA_KVM = 2
 };
 
-// mkvm data types
+// Various data types
+
+typedef struct ailsa_cmdb_s {
+	char *dbtype;
+	char *db;
+	char *file;
+	char *user;
+	char *pass;
+	char *host;
+	char *dir;
+	char *bind;
+	char *dnsa;
+	char *rev;
+	char *rndc;
+	char *chkz;
+	char *chkc;
+	char *socket;
+	char *hostmaster;
+	char *prins;
+	char *secns;
+	char *pridns;
+	char *secdns;
+	char *tmpdir;
+	char *tftpdir;
+	char *pxe;
+	char *toplevelos;
+	char *dhcpconf;
+	char *kickstart;
+	char *preseed;
+	unsigned int port;
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
+	unsigned long int cliflag;
+} ailsa_cmdb_s;
 
 typedef struct ailsa_mkvm_s {
 	char *name;
@@ -83,9 +118,6 @@ typedef struct ailsa_mkvm_s {
 	unsigned long int cpus;
 	short int action;
 } ailsa_mkvm_s;
-
-// Various data types
-
 
 typedef struct ailsa_string_s {
         char *string;
@@ -107,6 +139,8 @@ ailsa_show_error(int retval);
 
 void
 ailsa_clean_mkvm(void *vm);
+void
+ailsa_clean_dnsa(void *dnsa);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -139,6 +173,8 @@ void
 parse_mkvm_config(ailsa_mkvm_s *vm);
 int
 parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
+void
+parse_cmdb_config(ailsa_cmdb_s *cmdb);
 
 // the rest ...
 void

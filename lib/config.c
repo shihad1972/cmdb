@@ -49,6 +49,15 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm);
 static void
 parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf);
 
+static void
+parse_system_cmdb_config(ailsa_cmdb_s *cmdb);
+
+static void
+parse_user_cmdb_config(ailsa_cmdb_s *cmdb);
+
+static void
+parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf);
+
 int
 parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
@@ -151,6 +160,12 @@ parse_mkvm_config(ailsa_mkvm_s *vm)
 	parse_user_mkvm_config(vm);
 }
 
+void
+parse_cmdb_config(ailsa_cmdb_s *cmdb)
+{
+	parse_system_cmdb_config(cmdb);
+	parse_user_cmdb_config(cmdb);
+}
 
 static void
 parse_system_mkvm_config(ailsa_mkvm_s *vm)
@@ -158,8 +173,12 @@ parse_system_mkvm_config(ailsa_mkvm_s *vm)
 	const char *path = "/etc/cmdb/mkvm.conf";
 	FILE *conf = NULL;
 
-	if (!(conf = fopen(path, "r")))
+	if (!(conf = fopen(path, "r"))) {
+#ifdef DEBUG
+		fprintf(stderr, "Cannot open file %s\n", path);
+#endif
 		goto cleanup;
+	}
 	parse_mkvm_config_values(vm, conf);
 	cleanup:
 		if (conf)
@@ -178,8 +197,12 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 
 	if ((retval = wordexp(upath, &p, 0)) == 0) {
 		uconf = p.we_wordv;
-		if (!(conf = fopen(*uconf, "r")))
+		if (!(conf = fopen(*uconf, "r"))) {
+#ifdef DEBUG
+			fprintf(stderr, "Cannot open file %s\n", *uconf);
+#endif
 			goto cleanup;
+		}
 	}
 #endif // HAVE_WORDEXP
 	if (!(conf)) {
@@ -190,8 +213,12 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
 			goto cleanup;
 		}
-		if (!(conf = fopen(wpath, "r")))
+		if (!(conf = fopen(wpath, "r"))) {
+#ifdef DEBUG
+			fprintf(stderr, "Cannot open file %s\n", wpath);
+#endif
 			goto cleanup;
+		}
 	}
 	parse_mkvm_config_values(vm, conf);
 	cleanup:
@@ -203,14 +230,10 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 }
 
 
-static void
-parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf)
-{
-
 /* Grab config values from confile file that uses NAME=value as configuration
    options */
-# ifndef GET_CONFIG_OPTION
-#  define GET_CONFIG_OPTION(CONFIG, option) { \
+#ifndef GET_CONFIG_OPTION
+# define GET_CONFIG_OPTION(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \
      sscanf(buff, CONFIG, temp); \
    rewind(conf); \
@@ -220,14 +243,19 @@ parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf)
      snprintf(option, CONFIG_LEN, "%s", temp);\
    memset(temp, 0, CONFIG_LEN); \
   }
-# ifndef GET_CONFIG_INT
+#endif
+#ifndef GET_CONFIG_INT
 #  define GET_CONFIG_INT(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \
      sscanf(buff, CONFIG, &(option)); \
    rewind(conf); \
   }
-# endif
-# endif
+#endif
+
+static void
+parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf)
+{
+
 	char buff[CONFIG_LEN], temp[CONFIG_LEN];
 
 	GET_CONFIG_OPTION("NETWORK=%s", vm->network);
@@ -259,3 +287,55 @@ display_mkvm_usage(void)
 	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
 	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
 }
+
+static void
+parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
+{
+}
+
+static void
+parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
+{
+}
+
+static void
+parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
+{
+	char buff[CONFIG_LEN], temp[CONFIG_LEN];
+
+	GET_CONFIG_OPTION("DBTYPE=%s", cmdb->dbtype);
+	GET_CONFIG_OPTION("DB=%s", cmdb->db);
+	GET_CONFIG_OPTION("FILE=%s", cmdb->file);
+	GET_CONFIG_OPTION("USER=%s", cmdb->user);
+	GET_CONFIG_OPTION("PASS=%s", cmdb->pass);
+	GET_CONFIG_OPTION("HOST=%s", cmdb->host);
+	GET_CONFIG_OPTION("DIR=%s", cmdb->dir);
+	GET_CONFIG_OPTION("BIND=%s", cmdb->bind);
+	GET_CONFIG_OPTION("DNSA=%s", cmdb->dnsa);
+	GET_CONFIG_OPTION("REV=%s", cmdb->rev);
+	GET_CONFIG_OPTION("RNDC=%s", cmdb->rndc);
+	GET_CONFIG_OPTION("CHKZ=%s", cmdb->chkz);
+	GET_CONFIG_OPTION("CHKC=%s", cmdb->chkc);
+	GET_CONFIG_OPTION("SOCKET=%s", cmdb->socket);
+	GET_CONFIG_OPTION("HOSTMASTER=%s", cmdb->hostmaster);
+	GET_CONFIG_OPTION("PRINS=%s", cmdb->prins);
+	GET_CONFIG_OPTION("SECNS=%s", cmdb->secns);
+	GET_CONFIG_OPTION("PRIDNS=%s", cmdb->pridns);
+	GET_CONFIG_OPTION("SECDNS=%s", cmdb->secdns);
+	GET_CONFIG_OPTION("TMPDIR=%s", cmdb->tmpdir);
+	GET_CONFIG_OPTION("TFTPDIR=%s", cmdb->tftpdir);
+	GET_CONFIG_OPTION("PXE=%s", cmdb->pxe);
+	GET_CONFIG_OPTION("TOPLEVELOS=%s", cmdb->toplevelos);
+	GET_CONFIG_OPTION("DHCPCONF=%s", cmdb->dhcpconf);
+	GET_CONFIG_OPTION("KICKSTART=%s", cmdb->kickstart);
+	GET_CONFIG_OPTION("PRESEED=%s", cmdb->preseed);
+	GET_CONFIG_INT("PORT=%u", cmdb->port);
+	GET_CONFIG_INT("REFRESH=%lu", cmdb->refresh);
+	GET_CONFIG_INT("RETRY=%lu", cmdb->retry);
+	GET_CONFIG_INT("EXPIRE=%lu", cmdb->expire);
+	GET_CONFIG_INT("TTL=%lu", cmdb->ttl);
+	GET_CONFIG_INT("CLIFLAG=%lu", cmdb->cliflag);
+}
+
+#undef GET_CONFIG_OPTION
+#undef GET_CONFIG_INT
