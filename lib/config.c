@@ -229,7 +229,6 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 #endif // HAVE_WORDEXP
 }
 
-
 /* Grab config values from confile file that uses NAME=value as configuration
    options */
 #ifndef GET_CONFIG_OPTION
@@ -245,7 +244,7 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
   }
 #endif
 #ifndef GET_CONFIG_INT
-#  define GET_CONFIG_INT(CONFIG, option) { \
+# define GET_CONFIG_INT(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \
      sscanf(buff, CONFIG, &(option)); \
    rewind(conf); \
@@ -265,37 +264,6 @@ parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf)
 	GET_CONFIG_INT("RAM=%lu", vm->ram);
 	GET_CONFIG_INT("CPUS=%lu", vm->cpus);
 	GET_CONFIG_INT("STORAGE=%lu", vm->size);
-}
-
-void
-display_mkvm_usage(void)
-{
-        const char *prog = "mkvm";
-
-        printf("%s: make virtual machine %s\n", prog, VERSION);
-        printf("Usage:\t");
-        printf("%s <action> <options>\n", prog);
-        printf("Actions\n");
-        printf("\t-a: add\n");
-        printf("\t-h: help\t-v: version\n");
-        printf("Options\n");
-	printf("\t-u <uri>: Connection URI for libvirtd\n");
-        printf("\t-n <name>: Supply VM name\n");
-        printf("\t-p <pool>: Provide the storage pool name\n");
-        printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
-	printf("\t-k <network>: Name of the network to attach the VM to\n");
-	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
-	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
-}
-
-static void
-parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
-{
-}
-
-static void
-parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
-{
 }
 
 static void
@@ -335,6 +303,117 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 	GET_CONFIG_INT("EXPIRE=%lu", cmdb->expire);
 	GET_CONFIG_INT("TTL=%lu", cmdb->ttl);
 	GET_CONFIG_INT("CLIFLAG=%lu", cmdb->cliflag);
+}
+
+void
+display_mkvm_usage(void)
+{
+        const char *prog = "mkvm";
+
+        printf("%s: make virtual machine %s\n", prog, VERSION);
+        printf("Usage:\t");
+        printf("%s <action> <options>\n", prog);
+        printf("Actions\n");
+        printf("\t-a: add\n");
+        printf("\t-h: help\t-v: version\n");
+        printf("Options\n");
+	printf("\t-u <uri>: Connection URI for libvirtd\n");
+        printf("\t-n <name>: Supply VM name\n");
+        printf("\t-p <pool>: Provide the storage pool name\n");
+        printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
+	printf("\t-k <network>: Name of the network to attach the VM to\n");
+	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
+	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
+}
+
+#ifndef OPEN_CMDB_FILE
+# define OPEN_CMDB_FILE { \
+	if ((conf = fopen(path, "r"))) { \
+		parse_cmdb_config_values(cmdb, conf); \
+		goto cleanup; \
+	} \
+  }
+#endif
+
+static void
+parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
+{
+	const char *path = NULL;
+	FILE *conf = NULL;
+
+	path = "/etc/cmdb/cmdb.conf";
+	OPEN_CMDB_FILE
+	path = "/etc/cmdb/dnsa.conf";
+	OPEN_CMDB_FILE
+	path = "/etc/dnsa/cmdb.conf";
+	OPEN_CMDB_FILE
+	path = "/etc/dnsa/dnsa.conf";
+	OPEN_CMDB_FILE
+	cleanup:
+		if (conf)
+			fclose(conf);
+}
+
+static void
+parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
+{
+	int retval = 0;
+	FILE *conf = NULL;
+	char **uconf = NULL;
+#ifdef HAVE_WORDEXP
+	const char *upath = "~/.cmdb.conf";
+	wordexp_t p;
+
+	if ((retval = wordexp(upath, &p, 0)) == 0) {
+		uconf = p.we_wordv;
+		if (!(conf = fopen(*uconf, "r"))) {
+#ifdef DEBUG
+			fprintf(stderr, "Cannot open file %s\n", *uconf);
+#endif
+			wordfree(&p);
+			upath = "~/.dnsa.conf";
+			if ((retval = wordexp(upath, &p, 0)) == 0) {
+				uconf = p.we_wordv;
+				if (!(conf = fopen(*uconf, "r"))) {
+#ifdef DEBUG
+					fprintf(stderr, "Cannot open file %s\n", *uconf);
+#endif
+				}
+			}
+		}
+	}
+#endif // HAVE_WORDEXP
+	if (!(conf)) {
+		char wpath[CONFIG_LEN];
+		int len;
+		*uconf = getenv("HOME");	// Need to sanatise this input.
+		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.cmdb.conf", *uconf)) >= CONFIG_LEN) {
+			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+			goto cleanup;
+		}
+		if (!(conf = fopen(wpath, "r"))) {
+#ifdef DEBUG
+			fprintf(stderr, "Cannot open file %s\n", wpath);
+#endif
+			if ((len = snprintf(wpath, CONFIG_LEN, "%s/.dnsa.conf", *uconf)) >= CONFIG_LEN) {
+				fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+				goto cleanup;
+			}
+			if (!(conf = fopen(wpath, "r"))) {
+#ifdef DEBUG
+				fprintf(stderr, "Cannot open file %s\n", wpath);
+#endif
+				goto cleanup;
+			}
+		}
+	}
+	parse_cmdb_config_values(cmdb, conf);
+	cleanup:
+		if (conf)
+			fclose(conf);
+#ifdef HAVE_WORDEXP
+		wordfree(&p);
+#endif // HAVE_WORDEXP
 }
 
 #undef GET_CONFIG_OPTION

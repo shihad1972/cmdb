@@ -45,8 +45,10 @@ main(int argc, char *argv[])
 {
 	int retval = 0;
 	ailsa_mkvm_s *vm = ailsa_calloc(sizeof(ailsa_mkvm_s), "vm in main");
+	ailsa_cmdb_s *cmdb = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmdb in main");
 
 	parse_mkvm_config(vm);
+	parse_cmdb_config(cmdb);
 	if ((retval = parse_mkvm_command_line(argc, argv, vm)) != 0)
 		goto cleanup;
 	switch (vm->action) {

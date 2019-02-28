@@ -22,7 +22,7 @@
  *  Contains generic functions for the ailsacmdb library
  *
  */
-
+#define _XOPEN_SOURCE 500
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,18 +130,18 @@ ailsa_gen_mac(char *mac, int type)
 {
 	int retval = 0;
 	char buf[MAC_LEN];
-	long int r, a, m;
+	long int r;
 	if (!(mac))
 		return AILSA_NO_DATA;
 	r = random();
 	if (type == AILSA_ESX) {
-		snprintf(buf, MAC_LEN, "00:50:56:%x:%x:%x",
+		snprintf(buf, MAC_LEN, "00:50:56:%ld:%ld:%ld",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	} else if (type == AILSA_KVM) {
-		snprintf(buf, MAC_LEN, "52:54:00:%x:%x:%x",
+		snprintf(buf, MAC_LEN, "52:54:00:%ld:%ld:%ld",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	} else {
-		snprintf(buf, MAC_LEN, "26:20:31:%x:%x:%x",
+		snprintf(buf, MAC_LEN, "26:20:31:%ld:%ld:%ld",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	}
 	snprintf(mac, MAC_LEN, "%s", buf);
