@@ -125,6 +125,33 @@ typedef struct ailsa_string_s {
         size_t size;
 } ailsa_string_s;
 
+// Linked List data types
+
+typedef struct ailsa_element_s {
+	struct	ailsa_element_s *prev;
+	struct	ailsa_element_s *next;
+	void	*data;
+} AILELEM;
+
+typedef struct ailsa_list_s {
+	size_t 	total;
+	int 	(*cmd)(const void *key1, const void *key2);
+	void 	(*destroy)(void *data);
+	void 	*head;
+	void 	*tail;
+} AILLIST;
+
+// Hash table types
+
+typedef struct ailsa_hash_s {
+	unsigned int	buckets;
+	unsigned int	(*h)(const void *key);
+	int		(*match)(const void *key1, const void *key2);
+	void		(*destroy)(void *data);
+	unsigned int	size;
+	AILLIST		*table;
+} AILHASH;
+
 // library version info
 
 void
@@ -175,6 +202,34 @@ int
 parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 void
 parse_cmdb_config(ailsa_cmdb_s *cmdb);
+
+// List and hash functions
+
+void
+ailsa_list_init(AILLIST *list, void (*destory)(void *data));
+void
+ailsa_list_destroy(AILLIST *list);
+int
+ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
+int
+ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
+int
+ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
+unsigned int
+ailsa_hash(const void *key);
+int
+ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
+		unsigned int (*h)(const void *key),
+		int (*match)(const void *key1, const void *key2),
+		void (*destroy)(void *data));
+void
+ailsa_hash_destroy(AILHASH *htbl);
+int
+ailsa_hash_insert(AILHASH *htbl, void *data, const char *key);
+int
+ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
+int
+ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // the rest ...
 void

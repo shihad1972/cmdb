@@ -3,14 +3,21 @@ override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/
 
 lib_LIBRARIES = libailsacmdb.a
 
-libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) \
+libailsacmdb.a:	libailsacmdb.a(hash.o) libailsacmdb.a(ailsacmdb.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(data.o) \
-		libailsacmdb.a(uuid.o) libailsacmdb.a(config.o)
+		libailsacmdb.a(uuid.o) libailsacmdb.a(config.o) \
+		libailsacmdb.a(list.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(logging.o):	logging.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(hash.o):	hash.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(list.o):	list.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(data.o):	data.o
