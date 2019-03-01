@@ -22,7 +22,6 @@
  *  Contains generic functions for the ailsacmdb library
  *
  */
-#define _XOPEN_SOURCE 500
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +61,7 @@ ailsa_munch(char *line)
 void *
 ailsa_calloc(size_t len, const char *msg)
 {
-	void *p;
+	void *p = NULL;
 
 	if (!(p = calloc(len, sizeof(char)))) {
 		perror(msg);

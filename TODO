@@ -55,6 +55,7 @@ DB access :(
 26/11/2014
 Would be nice if I could create a VM xml file to use for libvirt.
 Not too sure if I need to use the libvirt API or not.
+	** DONE!!!!! ** 0.2.26.1 can create a VM using libvirt API
 
 21/11/2014
 Check the auditd source code for a cool way to read a config file.
@@ -186,6 +187,7 @@ Problem with this is to work out a way of passing the program to the SQL
 search so that it will do a, e.g. cbc_search and get the correct values
 for number and type of args and fields. Also this will need to be the
 correct search itself. Could this config contain this information?
+	** Started. ailsa_cmdb_s **
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains

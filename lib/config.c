@@ -370,15 +370,16 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 #ifdef DEBUG
 			fprintf(stderr, "Cannot open file %s\n", *uconf);
 #endif
-			wordfree(&p);
 			upath = "~/.dnsa.conf";
-			if ((retval = wordexp(upath, &p, 0)) == 0) {
-				uconf = p.we_wordv;
+			wordexp_t r;
+			if ((retval = wordexp(upath, &r, 0)) == 0) {
+				uconf = r.we_wordv;
 				if (!(conf = fopen(*uconf, "r"))) {
 #ifdef DEBUG
 					fprintf(stderr, "Cannot open file %s\n", *uconf);
 #endif
 				}
+				wordfree(&r);
 			}
 		}
 	}
