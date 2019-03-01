@@ -188,10 +188,11 @@ parse_system_mkvm_config(ailsa_mkvm_s *vm)
 static void
 parse_user_mkvm_config(ailsa_mkvm_s *vm)
 {
-	int retval = 0;
 	FILE *conf = NULL;
-	char **uconf = NULL;
+	char *home;
 #ifdef HAVE_WORDEXP
+	int retval = 0;
+	char **uconf = NULL;
 	const char *upath = "~/.mkvm.conf";
 	wordexp_t p;
 
@@ -208,8 +209,8 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 	if (!(conf)) {
 		char wpath[CONFIG_LEN];
 		int len;
-		*uconf = getenv("HOME");	// Need to sanatise this input.
-		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.mkvm.conf", *uconf)) >= CONFIG_LEN) {
+		home = getenv("HOME");	// Need to sanatise this input.
+		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.mkvm.conf", home)) >= CONFIG_LEN) {
 			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
 			goto cleanup;
 		}
@@ -357,10 +358,11 @@ parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
 static void
 parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 {
-	int retval = 0;
 	FILE *conf = NULL;
-	char **uconf = NULL;
+	char *home = NULL;
 #ifdef HAVE_WORDEXP
+	int retval = 0;
+	char **uconf = NULL;
 	const char *upath = "~/.cmdb.conf";
 	wordexp_t p;
 
@@ -387,8 +389,8 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 	if (!(conf)) {
 		char wpath[CONFIG_LEN];
 		int len;
-		*uconf = getenv("HOME");	// Need to sanatise this input.
-		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.cmdb.conf", *uconf)) >= CONFIG_LEN) {
+		home = getenv("HOME");	// Need to sanatise this input.
+		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.cmdb.conf", home)) >= CONFIG_LEN) {
 			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
 			goto cleanup;
 		}
@@ -396,7 +398,7 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 #ifdef DEBUG
 			fprintf(stderr, "Cannot open file %s\n", wpath);
 #endif
-			if ((len = snprintf(wpath, CONFIG_LEN, "%s/.dnsa.conf", *uconf)) >= CONFIG_LEN) {
+			if ((len = snprintf(wpath, CONFIG_LEN, "%s/.dnsa.conf", home)) >= CONFIG_LEN) {
 				fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
 				goto cleanup;
 			}
