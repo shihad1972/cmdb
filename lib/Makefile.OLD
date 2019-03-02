@@ -1,12 +1,12 @@
 override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_XOPEN_SOURCE=700
-override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/
+override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/ -I/usr/include/mysql
 
 lib_LIBRARIES = libailsacmdb.a
 
 libailsacmdb.a:	libailsacmdb.a(hash.o) libailsacmdb.a(ailsacmdb.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(data.o) \
 		libailsacmdb.a(uuid.o) libailsacmdb.a(config.o) \
-		libailsacmdb.a(list.o)
+		libailsacmdb.a(list.o) libailsacmdb.a(sql.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -27,6 +27,9 @@ libailsacmdb.a(uuid.o):	uuid.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(config.o): config.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(sql.o):	sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

@@ -51,9 +51,17 @@ enum {                  // Buffer lengths
 # define B64_SYNTAX_TOOMANYARGS  6
 
 enum {                  // Action Codes
-        AILSA_ADD = 1,
-        AILSA_HELP = 100,
-        AILSA_VERSION = 101
+	AILSA_ADD = 1,
+	AILSA_CMDB_ADD = 50,
+	AILSA_HELP = 100,
+	AILSA_VERSION = 101
+};
+
+enum {			// SQL Data types
+	AILSA_DB_TEXT = 1,
+	AILSA_DB_LINT = 2,
+	AILSA_DB_SINT = 3,
+	AILSA_DB_TINY = 4
 };
 
 enum {                  // Error codes
@@ -113,6 +121,7 @@ typedef struct ailsa_mkvm_s {
 	char *network;
 	char *vt;		// Volume Type
 	char *vtstr;
+	char *mac;
 	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
@@ -152,6 +161,20 @@ typedef struct ailsa_hash_s {
 	AILLIST		*table;
 } AILHASH;
 
+// SQL types
+
+typedef struct ailsa_db_value_s {
+	char *name;
+	unsigned int type;
+} AILDBV;
+
+typedef struct ailsa_simple_select_s {
+	AILLIST	*fields;
+	char *table;
+	char *arg;
+	AILDBV *value;
+} AILSS;
+
 // library version info
 
 void
@@ -167,7 +190,7 @@ ailsa_show_error(int retval);
 void
 ailsa_clean_mkvm(void *vm);
 void
-ailsa_clean_dnsa(void *dnsa);
+ailsa_clean_cmdb(void *cmdb);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -230,6 +253,18 @@ int
 ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
 int
 ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
+
+// SQL functions.
+void
+ailsa_clean_dbv(void *dbv);
+int
+ailsa_init_ss(AILSS *data);
+void
+ailsa_clean_ss_data(void *data);
+void
+ailsa_clean_ss(AILSS *data);
+char *
+ailsa_build_simple_sql_query(AILSS *query);
 
 // the rest ...
 void
