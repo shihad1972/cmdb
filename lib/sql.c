@@ -134,7 +134,9 @@ ailsa_build_simple_sql_query(AILSS *query)
 	ailsa_fill_string(str, buf);
 	len = strlen(str->string);
 	qstr = strndup(str->string, len + 1);
-	printf("%s\n", qstr);
+#ifdef DEBUG
+	fprintf(stderr, "%s\n", qstr);
+#endif // DEBUG
 	cleanup:
 		if (str)
 			ailsa_clean_string(str);
