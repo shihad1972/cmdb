@@ -46,7 +46,6 @@ ailsa_init_ss(AILSS *data)
 {
 	int retval = 0;
 	AILLIST *fields = NULL;
-	AILDBV *value = NULL;
 	AILSS *tmp = NULL;
 
 	if (!(data))
@@ -54,10 +53,8 @@ ailsa_init_ss(AILSS *data)
 	else
 		tmp = data;
 	fields = ailsa_calloc(sizeof(AILLIST), "fields in ailsa_init_ss");
-	value = ailsa_calloc(sizeof(AILDBV), "values in ailsa_init_ss");
-	ailsa_list_init(fields, ailsa_clean_ss_data);
+	ailsa_list_init(fields, ailsa_clean_dbv);
 	tmp->fields = fields;
-	tmp->value = value;
 	return retval;
 }
 
@@ -77,13 +74,15 @@ ailsa_clean_ss(AILSS *data)
 	if (!(data))
 		return;
 	a = data;
-	ailsa_clean_dbv(a->value);
 	ailsa_list_destroy(a->fields);
+	if (a->fields)
+		my_free(a->fields);
 	if (a->table)
 		my_free(a->table);
 	if (a->arg)
 		my_free(a->arg);
-	my_free(a->fields);
+	if (a->value)
+		my_free(a->value);
 	my_free(a);
 }
 
@@ -105,9 +104,10 @@ ailsa_build_simple_sql_query(AILSS *query)
 	ailsa_string_s *str = NULL;
 	char buf[MAC_LEN];
 	char *qstr = NULL;
-	char *tmp;
+	char *tmp = NULL;
 	size_t len = 0;
 	AILELEM *element = NULL;
+	AILDBV *d = NULL;
 
 	if (!(query))
 		goto cleanup;
@@ -116,7 +116,8 @@ ailsa_build_simple_sql_query(AILSS *query)
 	ailsa_init_string(str);
 	ailsa_fill_string(str, "SELECT ");
 	while (element) {
-		tmp = (char *)element->data;
+		d = (AILDBV *)element->data;
+		tmp = d->name;
 		snprintf(buf, MAC_LEN, "%s ", tmp);
 		ailsa_fill_string(str, buf);
 		memset(buf, 0, MAC_LEN);
@@ -130,7 +131,7 @@ ailsa_build_simple_sql_query(AILSS *query)
 	snprintf(buf, MAC_LEN, "%s ", query->arg);
 	ailsa_fill_string(str, buf);
 	memset(buf, 0, MAC_LEN);
-	snprintf(buf, MAC_LEN, "= %s", query->value->name);
+	snprintf(buf, MAC_LEN, "= %s", query->value);
 	ailsa_fill_string(str, buf);
 	len = strlen(str->string);
 	qstr = strndup(str->string, len + 1);

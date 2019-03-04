@@ -134,6 +134,17 @@ typedef struct ailsa_string_s {
         size_t size;
 } ailsa_string_s;
 
+typedef union ailsa_data_u {
+	char *text;
+	unsigned long int number;
+	short int small;
+} ailsa_data_u;
+
+typedef struct ailsa_data_s {
+	union ailsa_data_u *data;
+	unsigned int type;
+} ailsa_data_s;
+
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -172,7 +183,7 @@ typedef struct ailsa_simple_select_s {
 	AILLIST	*fields;
 	char *table;
 	char *arg;
-	AILDBV *value;
+	char *value;
 } AILSS;
 
 // library version info

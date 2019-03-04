@@ -1,4 +1,4 @@
-override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_XOPEN_SOURCE=700
+override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_XOPEN_SOURCE=700 -DDEBUG
 override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/ -I/usr/include/mysql
 
 lib_LIBRARIES = libailsacmdb.a
