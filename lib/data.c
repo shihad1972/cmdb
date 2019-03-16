@@ -124,6 +124,27 @@ ailsa_clean_cmdb(void *cmdb)
 }
 
 void
+ailsa_init_data(ailsa_data_s *data)
+{
+	if (!(data))
+		return;
+	data->data = ailsa_calloc(sizeof(ailsa_data_u), "data->data in ailsa_init_data");
+}
+
+void
+ailsa_clean_data(void *data)
+{
+	ailsa_data_s *tmp;
+	if (!(data))
+		return;
+	tmp = data;
+	if (tmp->type == AILSA_DB_TEXT)
+		free(tmp->data->text);
+	my_free(tmp->data);
+	my_free(tmp);
+}
+
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
