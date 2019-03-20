@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb cpc ckc
+bin_PROGRAMS = cmdb cpc ckc mkvm
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 combo_SOURCES = errors.c checks.c cmdb_data.c
@@ -8,6 +8,8 @@ cbc_combo_SOURCES = cbc_base_sql.c cbc_data.c cbc_common.c cbccom.c
 cpc_SOURCES = cpc.c $(combo_SOURCES)
 
 ckc_SOURCES = ckc.c $(combo_SOURCES)
+
+mkvm_SOURCES = mkvm.c virtual.c virtual.h
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
