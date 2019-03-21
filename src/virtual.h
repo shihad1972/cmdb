@@ -25,3 +25,5 @@
 int
 mkvm_create_vm(ailsa_mkvm_s *vm);
 
+int
+mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm);

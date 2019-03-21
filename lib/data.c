@@ -57,6 +57,8 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->vt);
 	if (i->vtstr)
 		my_free(i->vtstr);
+	if (i->mac)
+		my_free(i->mac);
 	free(i);
 }
 
@@ -104,7 +106,42 @@ ailsa_clean_cmdb(void *cmdb)
 		my_free(i->pridns);
 	if (i->secdns)
 		my_free(i->secdns);
+	if (i->tmpdir)
+		my_free(i->tmpdir);
+	if (i->tftpdir)
+		my_free(i->tftpdir);
+	if (i->pxe)
+		my_free(i->pxe);
+	if (i->toplevelos)
+		my_free(i->toplevelos);
+	if (i->dhcpconf)
+		my_free(i->dhcpconf);
+	if (i->kickstart)
+		my_free(i->kickstart);
+	if (i->preseed)
+		my_free(i->preseed);
 	free(i);
+}
+
+void
+ailsa_init_data(ailsa_data_s *data)
+{
+	if (!(data))
+		return;
+	data->data = ailsa_calloc(sizeof(ailsa_data_u), "data->data in ailsa_init_data");
+}
+
+void
+ailsa_clean_data(void *data)
+{
+	ailsa_data_s *tmp;
+	if (!(data))
+		return;
+	tmp = data;
+	if (tmp->type == AILSA_DB_TEXT)
+		free(tmp->data->text);
+	my_free(tmp->data);
+	my_free(tmp);
 }
 
 void
@@ -122,7 +159,7 @@ ailsa_clean_string(ailsa_string_s *str)
 		return;
 	if (str->string)
 		my_free(str->string);
-	free(str);
+	my_free(str);
 }
 
 void

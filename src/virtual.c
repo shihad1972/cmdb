@@ -125,7 +125,6 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 		retval = -1;
 		goto cleanup;
 	}
-
 	cleanup:
 		if (pool)
 			virStoragePoolFree(pool);
@@ -189,6 +188,8 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	uuid = ailsa_gen_uuid_str();
 	memset(mac, 0, MAC_LEN);
 	if ((retval = ailsa_gen_mac(mac, AILSA_KVM)) != 0)
+		goto cleanup;
+	if (!(vm->mac = strndup(mac, MAC_LEN)))
 		goto cleanup;
 	snprintf(buf, FILE_LEN, "\
 <domain type='kvm'>\n\
@@ -381,3 +382,35 @@ ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm)
 	return retval;
 }
 
+int
+mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
+{
+	int retval =  0;
+	char *query = NULL;
+	AILSS *select = ailsa_calloc(sizeof(AILSS), "select in mkvm_add_to_cmdb");
+	AILDBV *fields = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmvb");
+
+	if (!(cmdb) || !(vm))
+		return AILSA_NO_DATA;
+	if ((retval = ailsa_init_ss(select)) != 0) {
+		fprintf(stderr, "Cannot initialise AILSS select\n");
+		goto cleanup;
+	}
+	fields->name = strdup("server_id");
+	fields->type = AILSA_DB_LINT;
+	if ((retval = ailsa_list_ins_next(select->fields, NULL, fields)) != 0) {
+		fprintf(stderr, "Cannot insert data into list in mkvm_add_to_cmdb\n");
+		goto cleanup;
+	}
+	select->table = strndup("server", MAC_LEN);
+	select->arg = strndup("name", MAC_LEN);
+	select->value = strndup(vm->name, HOST_LEN);
+	if (!(query = ailsa_build_simple_sql_query(select))) {
+		fprintf(stderr, "Cannot build SQL query in mkvm_add_to_cmdb\n");
+		goto cleanup;
+	}
+	cleanup:
+		my_free(query);
+		ailsa_clean_ss(select);
+		return retval;
+}

@@ -63,7 +63,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "c:g:n:p:r:u:k:ahv";
+	const char *optstr = "c:g:n:p:r:u:k:ahvC";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
@@ -79,6 +79,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
 		{"version",	no_argument,		NULL,	'v'}
+		{"cmdb",	no_argument,		NULL,	'C'}
 	};
 	while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
 #else
@@ -135,6 +136,9 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'v':
 			vm->action = AILSA_VERSION;
+			break;
+		case 'C':
+			vm->action = AILSA_CMDB_ADD;
 			break;
 		default:
 			fprintf(stderr, "Unknown option %c\n", opt);
