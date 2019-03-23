@@ -1,4 +1,5 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include/
+AM_CFLAGS =
 AM_LDFLAGS =
 
 lib_LTLIBRARIES = libailsacmdb.la
