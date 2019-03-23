@@ -3,7 +3,7 @@ AM_CFLAGS =
 AM_LDFLAGS =
 
 lib_LTLIBRARIES = libailsacmdb.la
-libailsacmdb_la_SOURCES = ailsacmdb.c logging.c data.c uuid.c config.c sql.c hash.c
+libailsacmdb_la_SOURCES = ailsacmdb.c logging.c data.c uuid.c config.c sql.c hash.c list.c
 include_HEADERS = $(top_srcdir)/include/ailsacmdb.h
 
 if HAVE_LIBUUID
