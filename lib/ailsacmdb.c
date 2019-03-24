@@ -150,4 +150,4 @@ ailsa_gen_mac(char *mac, int type)
 #ifdef HAVE_REGEXEC
 
 
-#endif
+#endif // HAVE_REGEXEC
