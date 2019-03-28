@@ -59,6 +59,92 @@ static void
 parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf);
 
 int
+parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
+{
+	int retval = 0;
+	int opt;
+	const char *optstr = "aghvyn:l:p:";
+#ifdef HAVE_GOTOPT_H
+	int index;
+	struct option opts[] = {
+		{"name",		required_argument,	NULL,	'n'},
+		{"volume-group",	required_argument,	NULL,	'l'},
+		{"path",		required_argument,	NULL,	'p'},
+		{"add",			no_argument,		NULL,	'a'},
+		{"lvm",			no_argument,		NULL,	'g'},
+		{"help",		no_argument,		NULL,	'h'},
+		{"directory",		no_argument,		NULL,	'y'},
+		{"version",		no_argument,		NULL,	'v'}
+	};
+	while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
+#else
+	while ((opt = getopt(argc, argv, optstr)) != -1)
+#endif // HAVE_GETOPT_H
+	{
+		switch(opt) {
+		case 'n':
+			if (strlen(optarg) >= DOMAIN_LEN)
+				fprintf(stderr, "name trimmed to 255 characters`n");
+			if (!(vm->name))
+				vm->name = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->name, DOMAIN_LEN, "%s", optarg);
+			break;
+		case 'l':
+			if (strlen(optarg) >= DOMAIN_LEN)
+				fprintf(stderr, "volume group name trimmed to 255 characters\n");
+			if (!(vm->logvol))
+				vm->logvol = strndup(optarg, DOMAIN_LEN);
+			else
+				snprintf(vm->logvol, CONFIG_LEN, "%s", optarg);
+			break;
+		case 'g':
+			vm->sptype = AILSA_LOGVOL;
+			break;
+		case 'y':
+			vm->sptype = AILSA_DIRECTORY;
+			break;
+		case 'a':
+			vm->action = AILSA_ADD;
+			break;
+		case 'h':
+			vm->action = AILSA_HELP;
+			break;
+		case 'v':
+			vm->action = AILSA_VERSION;
+			break;
+		default:
+			fprintf(stderr, "Unknown option %c\n", opt);
+			retval = 1;
+			break;
+		}
+	}
+	if (vm->action == 0)
+		retval = AILSA_NO_ACTION;
+	if (vm->sptype == 0)
+		retval = AILSA_NO_TYPE;
+	if (vm->action == AILSA_ADD) {
+		if (!(vm->name))
+			retval = AILSA_NO_NAME;
+		else if (strlen(vm->name) == 0)
+			retval = AILSA_NO_NAME;
+	}
+	if (vm->sptype == AILSA_LOGVOL) {
+		if (!(vm->logvol)) 
+			retval = AILSA_NO_LOGVOL;
+		else if (strlen(vm->logvol) == 0)
+			retval = AILSA_NO_LOGVOL;
+	}
+	if (vm->sptype == AILSA_DIRECTORY) {
+		if (!(vm->path))
+			retval = AILSA_NO_DIRECTORY;
+		else if (strlen(vm->path) == 0)
+			retval = AILSA_NO_DIRECTORY;
+	}
+	return retval;
+}
+
+int
 parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
@@ -78,7 +164,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		{"network",	required_argument,	NULL,	'k'},
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
-		{"version",	no_argument,		NULL,	'v'}
+		{"version",	no_argument,		NULL,	'v'},
 		{"cmdb",	no_argument,		NULL,	'C'}
 	};
 	while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
@@ -313,22 +399,42 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 void
 display_mkvm_usage(void)
 {
-        const char *prog = "mkvm";
+	const char *prog = "mkvm";
 
-        printf("%s: make virtual machine %s\n", prog, VERSION);
-        printf("Usage:\t");
-        printf("%s <action> <options>\n", prog);
-        printf("Actions\n");
-        printf("\t-a: add\n");
-        printf("\t-h: help\t-v: version\n");
-        printf("Options\n");
+	printf("%s: make virtual machine %s\n", prog, VERSION);
+	printf("Usage:\t");
+	printf("%s <action> <options>\n", prog);
+	printf("Actions\n");
+	printf("\t-a: add\n");
+	printf("\t-h: help\t-v: version\n");
+	printf("Options\n");
 	printf("\t-u <uri>: Connection URI for libvirtd\n");
-        printf("\t-n <name>: Supply VM name\n");
-        printf("\t-p <pool>: Provide the storage pool name\n");
-        printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
+	printf("\t-n <name>: Supply VM name\n");
+	printf("\t-p <pool>: Provide the storage pool name\n");
+	printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
 	printf("\t-k <network>: Name of the network to attach the VM to\n");
 	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
 	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
+}
+
+void
+display_mksp_usage(void)
+{
+	const char *prog = "mksp";
+
+	printf("%s: make storage pool %s\n", prog, VERSION);
+	printf("Usage:\t");
+	printf("%s <action> <type> <options>\n", prog);
+	printf("Actions\n");
+	printf("\t-a: add\n");
+	printf("\t-h: help\t-v: version\n");
+	printf("Type\n");
+	printf("\t-g: Volume Group\n");
+	printf("\t-y: Directory\n");
+	printf("Options\n");
+	printf("\t-n <name>: Specify the name of the storage pool\n");
+	printf("\t-l <volume-group>: Specify the name of the volume group\n");
+	printf("\t-p <path>: Specify the path to the storage directory\n");
 }
 
 #ifndef OPEN_CMDB_FILE

@@ -44,6 +44,15 @@ int
 main(int argc, char *argv[])
 {
 	int retval = 0;
+	ailsa_mkvm_s *vm = ailsa_calloc(sizeof(ailsa_mkvm_s), "vm in main");
 
-	return retval;
+	if ((retval = parse_mksp_command_line(argc, argv, vm)) != 0)
+		goto cleanup;
+
+	cleanup:
+		ailsa_show_error(retval);
+		if (retval > 0)
+			display_mksp_usage();
+		ailsa_clean_mkvm((void *)vm);
+		return retval;
 }

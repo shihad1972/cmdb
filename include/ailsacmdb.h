@@ -65,14 +65,23 @@ enum {			// SQL Data types
 };
 
 enum {                  // Error codes
-        AILSA_NO_ACTION = 1,
-        AILSA_NO_DATA = 200,
-        AILSA_NO_CONNECT = 201
+	AILSA_NO_ACTION = 1,
+	AILSA_NO_TYPE = 2,
+	AILSA_NO_NAME = 3,
+	AILSA_NO_LOGVOL = 4,
+	AILSA_NO_DIRECTORY = 5,
+	AILSA_NO_DATA = 200,
+	AILSA_NO_CONNECT = 201
 };
 
 enum {			// MAC Address generation types
 	AILSA_ESX = 1,
 	AILSA_KVM = 2
+};
+
+enum {			// Storage Pool types
+	AILSA_LOGVOL = 1,
+	AILSA_DIRECTORY = 2
 };
 
 // Various data types
@@ -122,9 +131,11 @@ typedef struct ailsa_mkvm_s {
 	char *vt;		// Volume Type
 	char *vtstr;
 	char *mac;
+	char *logvol;
 	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
+	unsigned long int sptype;
 	short int action;
 } ailsa_mkvm_s;
 
@@ -231,11 +242,15 @@ ailsa_gen_mac(char *mac, int type);
 void
 display_mkvm_usage(void);
 void
+display_mksp_usage(void);
+void
 parse_mkvm_config(ailsa_mkvm_s *vm);
-int
-parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 void
 parse_cmdb_config(ailsa_cmdb_s *cmdb);
+int
+parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
+int
+parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 
 // List and hash functions
 

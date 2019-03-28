@@ -64,6 +64,18 @@ ailsa_show_error(int retval)
 	case AILSA_NO_ACTION:
 		fprintf(stderr, "No action was specified on the command line\n\n");
 		break;
+	case AILSA_NO_TYPE:
+		fprintf(stderr, "No type was specified on the command line\n\n");
+		break;
+	case AILSA_NO_NAME:
+		fprintf(stderr, "No name was specified on the command line\n\n");
+		break;
+	case AILSA_NO_LOGVOL:
+		fprintf(stderr, "A logical volume pool was specified, but no name provided\n\n");
+		break;
+	case AILSA_NO_DIRECTORY:
+		fprintf(stderr, "A directory pool was specified, but no path provided\n\n");
+		break;
 	case AILSA_NO_CONNECT:
 		fprintf(stderr, "Program was unable to make connection to libvirtd\n\n");
 		break;
