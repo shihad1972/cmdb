@@ -11,7 +11,7 @@ override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/ -I/usr/inclu
 override LDFLAGS := $(LDFLAGS) -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 PCLIBS = -lpcre
 override LDLIBS := -lmysqlclient $(PCLIBS) -luuid -lsqlite3 -lvirt -lxml2 ../lib/libailsacmdb.a
-bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale mkvm
+bin_programs = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale mkvm mksp
 
 SOBJECTS = checks.o cmdb_data.o errors.o
 COMOBJECTS = cbc_data.o cbc_base_sql.o cbc_common.o cbccom.o
@@ -28,7 +28,9 @@ POBJECTS = cpc.c $(SOBJECTS)
 KOBJECTS = ckc.c $(SOBJECTS)
 SPOBJECTS = cbcsysp.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
 SSOBJECTS = cbcscript.o $(SOBJECTS) $(COMOBJECTS) base_sql.o
-VOBJECTS = mkvm.o virtual.o
+VOBJECTS = virtual.o
+MKVMOBJETS = mkvm.o $(VOBJECTS)
+MKPOOLOBJECTS = mksp.o $(VOBJECTS)
 
 COMHEADERS = cmdb.h cmdb_cbc.h cbc_data.h cbc_base_sql.h base_sql.h cbc_common.h
 DHEADERS = cmdb_dnsa.h dnsa_base_sql.h base_sql.h cmdb.h checks.h
@@ -73,7 +75,9 @@ cbcsysp:	$(SPOBJECTS)
 
 cbcscript:	$(SSOBJECTS) 
 
-mkvm:	$(VOBJECTS)
+mkvm:	$(MKVMOBJETS)
+
+mksp:	$(MKPOOLOBJECTS)
 
 .PHONY :	clean
 clean :
