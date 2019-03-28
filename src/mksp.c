@@ -46,9 +46,20 @@ main(int argc, char *argv[])
 	int retval = 0;
 	ailsa_mkvm_s *vm = ailsa_calloc(sizeof(ailsa_mkvm_s), "vm in main");
 
+	parse_mkvm_config(vm);
 	if ((retval = parse_mksp_command_line(argc, argv, vm)) != 0)
 		goto cleanup;
-
+	switch (vm->action) {
+	case AILSA_ADD:
+		retval = mksp_create_storage_pool(vm);
+		break;
+	case AILSA_HELP:
+		display_mksp_usage();
+		break;
+	case AILSA_VERSION:
+		display_version(argv[0]);
+		break;
+	}
 	cleanup:
 		ailsa_show_error(retval);
 		if (retval > 0)

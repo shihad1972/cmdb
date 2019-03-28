@@ -414,3 +414,14 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 		ailsa_clean_ss(select);
 		return retval;
 }
+
+int
+mksp_create_storage_pool(ailsa_mkvm_s *sp)
+{
+	int retval = 0;
+
+	if (!(sp))
+		return AILSA_NO_DATA;
+
+	return retval;
+}

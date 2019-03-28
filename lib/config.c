@@ -63,12 +63,13 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "aghvyn:l:p:";
+	const char *optstr = "aghvyn:l:p:u:";
 #ifdef HAVE_GOTOPT_H
 	int index;
 	struct option opts[] = {
 		{"name",		required_argument,	NULL,	'n'},
 		{"volume-group",	required_argument,	NULL,	'l'},
+		{"uri",			required_argument,	NULL,	'u'},
 		{"path",		required_argument,	NULL,	'p'},
 		{"add",			no_argument,		NULL,	'a'},
 		{"lvm",			no_argument,		NULL,	'g'},
@@ -83,20 +84,28 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 	{
 		switch(opt) {
 		case 'n':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "name trimmed to 255 characters`n");
 			if (!(vm->name))
-				vm->name = strndup(optarg, DOMAIN_LEN);
+				vm->name = strndup(optarg, CONFIG_LEN);
 			else
-				snprintf(vm->name, DOMAIN_LEN, "%s", optarg);
+				snprintf(vm->name, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'l':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "volume group name trimmed to 255 characters\n");
 			if (!(vm->logvol))
-				vm->logvol = strndup(optarg, DOMAIN_LEN);
+				vm->logvol = strndup(optarg, CONFIG_LEN);
 			else
 				snprintf(vm->logvol, CONFIG_LEN, "%s", optarg);
+			break;
+		case 'u':
+			if (strlen(optarg) >= CONFIG_LEN)
+				fprintf(stderr, "uri trimmed to 255 characters\n");
+			if (!(vm->uri))
+				vm->uri = strndup(optarg, CONFIG_LEN);
+			else
+				snprintf(vm->uri, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'g':
 			vm->sptype = AILSA_LOGVOL;
@@ -183,34 +192,34 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			vm->ram = strtoul(optarg, NULL, 10);
 			break;
 		case 'n':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "hostname trimmed to 255 characters\n");
 			if (!(vm->name))
-				vm->name = strndup(optarg, DOMAIN_LEN);
+				vm->name = strndup(optarg, CONFIG_LEN);
 			else
 				snprintf(vm->name, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'p':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "pool namd trimmed to 255 characters\n");
 			if (!(vm->pool))
-				vm->pool = strndup(optarg, DOMAIN_LEN);
+				vm->pool = strndup(optarg, CONFIG_LEN);
 			else
 				snprintf(vm->pool, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'u':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "uri trimmed to 255 characters\n");
 			if (!(vm->uri))
-				vm->uri = strndup(optarg, DOMAIN_LEN);
+				vm->uri = strndup(optarg, CONFIG_LEN);
 			else
 				snprintf(vm->uri, CONFIG_LEN, "%s", optarg);
 			break;
 		case 'k':
-			if (strlen(optarg) >= DOMAIN_LEN)
+			if (strlen(optarg) >= CONFIG_LEN)
 				fprintf(stderr, "network trimmed to 255 characters\n");
 			if (!(vm->network))
-				vm->network = strndup(optarg, DOMAIN_LEN);
+				vm->network = strndup(optarg, CONFIG_LEN);
 			else
 				snprintf(vm->network, CONFIG_LEN, "%s", optarg);
 			break;
