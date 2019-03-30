@@ -107,6 +107,14 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			else
 				snprintf(vm->uri, CONFIG_LEN, "%s", optarg);
 			break;
+		case 'p':
+			if (strlen(optarg) >= CONFIG_LEN)
+				fprintf(stderr, "path trimmed to 255 characters\n");
+			if (!(vm->path))
+				vm->path = strndup(optarg, CONFIG_LEN);
+			else
+				snprintf(vm->path, CONFIG_LEN, "%s", optarg);
+			break;
 		case 'g':
 			vm->sptype = AILSA_LOGVOL;
 			break;
@@ -124,7 +132,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		default:
 			fprintf(stderr, "Unknown option %c\n", opt);
-			retval = 1;
+			return 1;
 			break;
 		}
 	}
@@ -138,6 +146,8 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		else if (strlen(vm->name) == 0)
 			retval = AILSA_NO_NAME;
 	}
+	if ((vm->action == AILSA_HELP) || (vm->action == AILSA_VERSION))
+		return 0;
 	if (vm->sptype == AILSA_LOGVOL) {
 		if (!(vm->logvol)) 
 			retval = AILSA_NO_LOGVOL;
@@ -237,7 +247,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		default:
 			fprintf(stderr, "Unknown option %c\n", opt);
-			retval = 1;
+			return 1;
 			break;
 		}
 	}

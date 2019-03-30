@@ -151,6 +151,8 @@ ailsa_simple_select(ailsa_cmdb_s *config, char *query, void *results)
 	SELECT something, something_else FROM table WHERE column = identifier;
 */
 	int retval = 0;
+	if (!(config) || !(query) || !(results))
+		return AILSA_NO_DATA;
 
 	return retval;
 }

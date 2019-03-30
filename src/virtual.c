@@ -56,6 +56,9 @@ ailsa_get_vol(virStorageVolPtr vol, ailsa_mkvm_s *vm);
 static int
 ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm);
 
+static int
+ailsa_create_storage_pool_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom);
+
 #ifndef DEBUG
 static void
 ailsa_custom_libvirt_err(void *data, virErrorPtr err)
@@ -419,9 +422,105 @@ int
 mksp_create_storage_pool(ailsa_mkvm_s *sp)
 {
 	int retval = 0;
+	virConnectPtr conn;
+	ailsa_string_s *domain = NULL;
+	virStoragePoolPtr pool = NULL;
 
 	if (!(sp))
 		return AILSA_NO_DATA;
+#ifndef DEBUG
+	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
+#endif // DEBUG
+	domain = ailsa_calloc(sizeof(ailsa_string_s), "domain in mkvm_create_storage_pool");
+	ailsa_init_string(domain);
+	if ((retval = ailsa_connect_libvirt(&conn, (const char *)sp->uri)) != 0)
+		return retval;
+	if (!(pool = virStoragePoolLookupByName(conn, sp->name))) {
+		if ((retval = ailsa_create_storage_pool_xml(sp, domain)) != 0)
+			goto cleanup;
+		if (!(pool = virStoragePoolDefineXML(conn, domain->string, 0))) {
+			fprintf(stderr, "Unable to define storage pool %s\n", sp->name);
+			retval = AILSA_NO_POOL;
+			goto cleanup;
+		}
+		if ((retval = virStoragePoolCreate(pool, 0)) != 0) {
+			fprintf(stderr, "Unable to start storage pool %s\n", sp->name);
+			retval = AILSA_NO_POOL;
+			goto cleanup;
+		}
+		if ((retval = virStoragePoolSetAutostart(pool, 1)) != 0) {
+			fprintf(stderr, "Unable to set pool %s to autostart\n", sp->name);
+			goto cleanup;
+			retval = AILSA_NO_POOL;
+		}
+	// If the pool is already defined, we want to make it active and autostart it
+	} else {
+		if ((retval = virStoragePoolIsActive(pool)) == 0) {
+			if ((retval = virStoragePoolCreate(pool, 0)) != 0) {
+				fprintf(stderr, "Unable to activate storage pool %s\n", sp->name);
+				retval = AILSA_NO_POOL;
+				goto cleanup;
+			}
+		}
+		if ((retval = virStoragePoolSetAutostart(pool, 1)) != 0) {
+			fprintf(stderr, "Unable to set pool %s to autostart\n", sp->name);
+			goto cleanup;
+			retval = AILSA_NO_POOL;
+		}
+		
+	}
+	cleanup:
+		if (pool)
+			virStoragePoolFree(pool);
+		if (domain)
+			ailsa_clean_string(domain);
+		return retval;
+}
 
-	return retval;
+static int
+ailsa_create_storage_pool_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
+{
+	int retval = 0;
+	char buf[FILE_LEN];
+	char type[MAC_LEN];
+
+	if (!(vm) || !(dom))
+		return AILSA_NO_DATA;
+	if (vm->sptype == AILSA_LOGVOL)
+		sprintf(type, "logical");
+	else if (vm->sptype == AILSA_DIRECTORY)
+		sprintf(type, "dir");
+	else
+		goto cleanup;
+	snprintf(buf, FILE_LEN, "\
+<pool type='%s'>\n\
+  <name>%s</name>\n\
+  <source>\n", type, vm->name);
+	ailsa_fill_string(dom, buf);
+	memset(buf, 0, FILE_LEN);
+	if (vm->sptype == AILSA_LOGVOL) {
+		sprintf(buf, "\
+    <name>%s</name>\n\
+    <format type='lvm2'/>\n\
+", vm->logvol);
+		ailsa_fill_string(dom, buf);
+		memset(buf, 0, FILE_LEN);
+	}
+	memset(type, 0, MAC_LEN);
+	if (vm->sptype == AILSA_LOGVOL)
+		sprintf(type, "/dev/%s", vm->logvol);
+	else if (vm->sptype == AILSA_DIRECTORY)
+		sprintf(type, "%s", vm->path);
+	else
+		return AILSA_NO_TYPE;
+	snprintf(buf, FILE_LEN, "\
+  </source>\n\
+  <target>\n\
+    <path>%s</path>\n\
+  </target>\n\
+</pool>\n", type);
+	ailsa_fill_string(dom, buf);
+
+	cleanup:
+		return retval;
 }

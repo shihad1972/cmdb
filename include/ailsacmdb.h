@@ -70,6 +70,7 @@ enum {                  // Error codes
 	AILSA_NO_NAME = 3,
 	AILSA_NO_LOGVOL = 4,
 	AILSA_NO_DIRECTORY = 5,
+	AILSA_NO_POOL = 6,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201
 };
