@@ -72,7 +72,8 @@ enum {                  // Error codes
 	AILSA_NO_DIRECTORY = 5,
 	AILSA_NO_POOL = 6,
 	AILSA_NO_DATA = 200,
-	AILSA_NO_CONNECT = 201
+	AILSA_NO_CONNECT = 201,
+	AILSA_NO_QUERY = 300
 };
 
 enum {			// MAC Address generation types
@@ -193,9 +194,8 @@ typedef struct ailsa_db_value_s {
 
 typedef struct ailsa_simple_select_s {
 	AILLIST	*fields;
-	char *table;
-	char *arg;
-	char *value;
+	AILLIST	*args;
+	char *query;
 } AILSS;
 
 // library version info
@@ -214,6 +214,10 @@ void
 ailsa_clean_mkvm(void *vm);
 void
 ailsa_clean_cmdb(void *cmdb);
+void
+ailsa_init_data(ailsa_data_s *data);
+void
+ailsa_clean_data(void *data);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -282,6 +286,7 @@ int
 ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // SQL functions.
+
 void
 ailsa_clean_dbv(void *dbv);
 int
@@ -290,8 +295,8 @@ void
 ailsa_clean_ss_data(void *data);
 void
 ailsa_clean_ss(AILSS *data);
-char *
-ailsa_build_simple_sql_query(AILSS *query);
+int
+ailsa_simple_select(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
 
 // the rest ...
 void

@@ -259,6 +259,8 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		vm->cpus = 1;
 	if (vm->ram == 0)
 		vm->ram = 256;
+	if ((vm->action == AILSA_CMDB_ADD) && !(vm->name))
+		retval = AILSA_NO_DATA;
 	return retval;
 }
 

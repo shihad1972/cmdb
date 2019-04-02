@@ -45,7 +45,7 @@ int
 ailsa_init_ss(AILSS *data)
 {
 	int retval = 0;
-	AILLIST *fields = NULL;
+	AILLIST *fields = NULL, *args = NULL;
 	AILSS *tmp = NULL;
 
 	if (!(data))
@@ -54,7 +54,10 @@ ailsa_init_ss(AILSS *data)
 		tmp = data;
 	fields = ailsa_calloc(sizeof(AILLIST), "fields in ailsa_init_ss");
 	ailsa_list_init(fields, ailsa_clean_dbv);
+	args = ailsa_calloc(sizeof(AILLIST), "args in ailsa_init_ss");
+	ailsa_list_init(args, ailsa_clean_dbv);
 	tmp->fields = fields;
+	tmp->args = args;
 	return retval;
 }
 
@@ -75,14 +78,13 @@ ailsa_clean_ss(AILSS *data)
 		return;
 	a = data;
 	ailsa_list_destroy(a->fields);
+	ailsa_list_destroy(a->args);
 	if (a->fields)
 		my_free(a->fields);
-	if (a->table)
-		my_free(a->table);
-	if (a->arg)
-		my_free(a->arg);
-	if (a->value)
-		my_free(a->value);
+	if (a->args)
+		my_free(a->args);
+	if (a->query)
+		my_free(a->query);
 	my_free(a);
 }
 
@@ -98,62 +100,17 @@ ailsa_clean_dbv(void *dbv)
 	my_free(tmp);
 }
 
-char *
-ailsa_build_simple_sql_query(AILSS *query)
-{
-	ailsa_string_s *str = NULL;
-	char buf[MAC_LEN];
-	char *qstr = NULL;
-	char *tmp = NULL;
-	size_t len = 0;
-	AILELEM *element = NULL;
-	AILDBV *d = NULL;
-
-	if (!(query))
-		goto cleanup;
-	element = query->fields->head;
-	str = ailsa_calloc(sizeof(ailsa_string_s), "str in ailsa_build_simple_sql_query");
-	ailsa_init_string(str);
-	ailsa_fill_string(str, "SELECT ");
-	while (element) {
-		d = (AILDBV *)element->data;
-		tmp = d->name;
-		snprintf(buf, MAC_LEN, "%s ", tmp);
-		ailsa_fill_string(str, buf);
-		memset(buf, 0, MAC_LEN);
-		element = element->next;
-	}
-	ailsa_fill_string(str, "FROM ");
-	snprintf(buf, MAC_LEN, "%s ", query->table);
-	ailsa_fill_string(str, buf);
-	memset(buf, 0, MAC_LEN);
-	ailsa_fill_string(str, "WHERE ");
-	snprintf(buf, MAC_LEN, "%s ", query->arg);
-	ailsa_fill_string(str, buf);
-	memset(buf, 0, MAC_LEN);
-	snprintf(buf, MAC_LEN, "= %s", query->value);
-	ailsa_fill_string(str, buf);
-	len = strlen(str->string);
-	qstr = strndup(str->string, len + 1);
-#ifdef DEBUG
-	fprintf(stderr, "%s\n", qstr);
-#endif // DEBUG
-	cleanup:
-		if (str)
-			ailsa_clean_string(str);
-		return qstr;
-}
-
 int
-ailsa_simple_select(ailsa_cmdb_s *config, char *query, void *results)
+ailsa_simple_select(ailsa_cmdb_s *config, AILSS *query, AILLIST *results)
 {
 /* Will run an SQL statement of the like:
 	SELECT something, something_else FROM table WHERE column = identifier;
 */
 	int retval = 0;
+
 	if (!(config) || !(query) || !(results))
 		return AILSA_NO_DATA;
-
-	return retval;
+	cleanup:
+		return retval;
 }
 

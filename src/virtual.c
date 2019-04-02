@@ -389,9 +389,10 @@ int
 mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 {
 	int retval =  0;
-	char *query = NULL;
+	size_t len;
 	AILSS *select = ailsa_calloc(sizeof(AILSS), "select in mkvm_add_to_cmdb");
 	AILDBV *fields = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmvb");
+	AILDBV *args = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmvb");
 
 	if (!(cmdb) || !(vm))
 		return AILSA_NO_DATA;
@@ -399,21 +400,22 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 		fprintf(stderr, "Cannot initialise AILSS select\n");
 		goto cleanup;
 	}
+	select->query = strndup("SELECT server_id FROM server WHERE name = ?", CONFIG_LEN);
 	fields->name = strdup("server_id");
 	fields->type = AILSA_DB_LINT;
 	if ((retval = ailsa_list_ins_next(select->fields, NULL, fields)) != 0) {
-		fprintf(stderr, "Cannot insert data into list in mkvm_add_to_cmdb\n");
+		fprintf(stderr, "Cannot insert fields into list in mkvm_add_to_cmdb\n");
 		goto cleanup;
 	}
-	select->table = strndup("server", MAC_LEN);
-	select->arg = strndup("name", MAC_LEN);
-	select->value = strndup(vm->name, HOST_LEN);
-	if (!(query = ailsa_build_simple_sql_query(select))) {
-		fprintf(stderr, "Cannot build SQL query in mkvm_add_to_cmdb\n");
+	if ((len = strlen(vm->name)) >= CONFIG_LEN)
+		fprintf(stderr, "Name of vm trundated to 255 characters!\n");
+	args->name = strndup(vm->name, CONFIG_LEN);
+	args->type = AILSA_DB_TEXT;
+	if ((retval = ailsa_list_ins_next(select->args, NULL, args)) != 0) {
+		fprintf(stderr, "Cannot insert args into list in mkvm_add_to_cmdb\n");
 		goto cleanup;
 	}
 	cleanup:
-		my_free(query);
 		ailsa_clean_ss(select);
 		return retval;
 }
