@@ -134,13 +134,13 @@ ailsa_gen_mac(char *mac, int type)
 		return AILSA_NO_DATA;
 	r = random();
 	if (type == AILSA_ESX) {
-		snprintf(buf, MAC_LEN, "00:50:56:%ld:%ld:%ld",
+		snprintf(buf, MAC_LEN, "00:50:56:%lx:%lx:%lx",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	} else if (type == AILSA_KVM) {
-		snprintf(buf, MAC_LEN, "52:54:00:%ld:%ld:%ld",
+		snprintf(buf, MAC_LEN, "52:54:00:%lx:%lx:%lx",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	} else {
-		snprintf(buf, MAC_LEN, "26:20:31:%ld:%ld:%ld",
+		snprintf(buf, MAC_LEN, "26:20:31:%lx:%lx:%lx",
 			(r >> 24), (r >> 16) & 0xff, (r >> 8) & 0xff);
 	}
 	snprintf(mac, MAC_LEN, "%s", buf);
