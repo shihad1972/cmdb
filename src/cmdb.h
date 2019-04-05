@@ -249,7 +249,8 @@ enum {			/* cmdb and cbc error codes: start @ 100 to avoid conflict */
 	NO_NTP_SERVER = 227,
 	NO_OPTION = 228,
 	CBC_DATA_WRONG_COUNT = 229,
-	NO_DEVICE_OR_DETAIL = 230
+	NO_DEVICE_OR_DETAIL = 230,
+	BUILD_IP_OUT_OF_RANGE = 231
 };
 
 enum {			/* command line error codes */
