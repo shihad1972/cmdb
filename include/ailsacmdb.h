@@ -73,7 +73,9 @@ enum {                  // Error codes
 	AILSA_NO_POOL = 6,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
-	AILSA_NO_QUERY = 300
+	AILSA_NO_QUERY = 300,
+	AILSA_NO_DBTYPE = 301,
+	AILSA_INVALID_DBTYPE = 302
 };
 
 enum {			// MAC Address generation types

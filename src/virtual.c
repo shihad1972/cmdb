@@ -391,11 +391,13 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 	int retval =  0;
 	size_t len;
 	AILSS *select = ailsa_calloc(sizeof(AILSS), "select in mkvm_add_to_cmdb");
-	AILDBV *fields = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmvb");
-	AILDBV *args = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmvb");
+	AILDBV *fields = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmdb");
+	AILDBV *args = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmdb");
+	AILLIST *results = ailsa_calloc(sizeof(AILLIST), "results in mkvm_add_to_cmdb");
 
 	if (!(cmdb) || !(vm))
 		return AILSA_NO_DATA;
+	ailsa_list_init(results, ailsa_clean_data);
 	if ((retval = ailsa_init_ss(select)) != 0) {
 		fprintf(stderr, "Cannot initialise AILSS select\n");
 		goto cleanup;
@@ -415,8 +417,19 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 		fprintf(stderr, "Cannot insert args into list in mkvm_add_to_cmdb\n");
 		goto cleanup;
 	}
+	if ((retval = ailsa_simple_select(cmdb, select, results)) < 0) {
+		fprintf(stderr, "Cannot get server_id from database in mkvm_add_to_cmdb\n");
+		goto cleanup;
+	} else if (retval > 0) {
+		fprintf(stderr, "VM %s exists in database\n", vm->name);
+		goto cleanup;
+	}
 	cleanup:
 		ailsa_clean_ss(select);
+		if (results) {
+			ailsa_list_destroy(results);
+			my_free(results);
+		}
 		return retval;
 }
 
