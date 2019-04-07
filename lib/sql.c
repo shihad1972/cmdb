@@ -34,11 +34,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ailsacmdb.h>
+
 #ifdef HAVE_MYSQL
 # include <mysql.h>
+static int
+ailsa_simple_select_mysql(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
 #endif /* HAVE_MYSQL */
+
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
+static int
+ailsa_simple_select_sqlite(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
 #endif /* HAVE_SQLITE3 */
 
 int
@@ -110,7 +116,54 @@ ailsa_simple_select(ailsa_cmdb_s *config, AILSS *query, AILLIST *results)
 
 	if (!(config) || !(query) || !(results))
 		return AILSA_NO_DATA;
+	if (strncmp(config->dbtype, "none", CONFIG_LEN) == 0) {
+		retval = AILSA_NO_DBTYPE;
+		goto cleanup;
+#ifdef HAVE_MYSQL
+	} else if (strncmp(config->dbtype, "mysql", CONFIG_LEN) == 0) {
+		retval = ailsa_simple_select_mysql(config, query, results);
+		goto cleanup;
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	} else if (strncmp(config->dbtype, "sqlite", CONFIG_LEN) == 0) {
+		retval = ailsa_simple_select_sqlite(config, query, results);
+		goto cleanup;
+#endif // HAVE_SQLITE3
+	} else {
+		retval = AILSA_INVALID_DBTYPE;
+		goto cleanup;
+	}
+
 	cleanup:
 		return retval;
 }
 
+#ifdef HAVE_MYSQL
+
+static int
+ailsa_simple_select_mysql(ailsa_cmdb_s *config, AILSS *query, AILLIST *results)
+{
+	int retval = 0;
+
+	if (!(config) || !(query) || !(results))
+		return AILSA_NO_DATA;
+	return retval;
+}
+
+
+#endif // HAVE_MYSQL
+
+
+#ifdef HAVE_SQLITE3
+
+static int
+ailsa_simple_select_sqlite(ailsa_cmdb_s *config, AILSS *query, AILLIST *results)
+{
+	int retval = 0;
+
+	if (!(config) || !(query) || !(results))
+		return AILSA_NO_DATA;
+	return retval;
+}
+
+#endif // HAVE_SQLITE3
