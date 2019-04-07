@@ -71,6 +71,7 @@ enum {                  // Error codes
 	AILSA_NO_LOGVOL = 4,
 	AILSA_NO_DIRECTORY = 5,
 	AILSA_NO_POOL = 6,
+	AILSA_NO_NETWORK = 7,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_QUERY = 300
@@ -130,6 +131,7 @@ typedef struct ailsa_mkvm_s {
 	char *storxml;
 	char *path;
 	char *network;
+	char *netdev;
 	char *vt;		// Volume Type
 	char *vtstr;
 	char *mac;

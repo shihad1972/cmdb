@@ -168,7 +168,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "c:g:n:p:r:u:k:ahvC";
+	const char *optstr = "c:g:n:p:r:u:k:b:ahvC";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
@@ -181,6 +181,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		{"ram",		required_argument,	NULL,	'r'},
 		{"uri",		required_argument,	NULL,	'u'},
 		{"network",	required_argument,	NULL,	'k'},
+		{"bridge",	required_argument,	NULL,	'b'},
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
 		{"version",	no_argument,		NULL,	'v'},
@@ -233,6 +234,13 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			else
 				snprintf(vm->network, CONFIG_LEN, "%s", optarg);
 			break;
+		case 'b':
+			if (strlen(optarg) >= CONFIG_LEN)
+				fprintf(stderr, "netdev trimmed to 255 characters\n");
+			if (vm->netdev)
+				my_free(vm->netdev);
+			vm->netdev = strndup(optarg, CONFIG_LEN);
+			break;
 		case 'a':
 			vm->action = AILSA_ADD;
 			break;
@@ -261,6 +269,8 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		vm->ram = 256;
 	if ((vm->action == AILSA_CMDB_ADD) && !(vm->name))
 		retval = AILSA_NO_DATA;
+	if (!(vm->network ) && !(vm->netdev))
+		retval = AILSA_NO_NETWORK;
 	return retval;
 }
 

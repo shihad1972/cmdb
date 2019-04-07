@@ -262,7 +262,17 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 ");
 	ailsa_fill_string(dom, buf);
 	memset(buf, 0, FILE_LEN);
-	snprintf(buf, FILE_LEN, "\
+	if (vm->netdev)
+		snprintf(buf, FILE_LEN, "\
+    <interface type='bridge'>\n\
+      <mac address='%s'/>\n\
+      <source bridge='%s'/>\n\
+      <model type='virtio'/>\n\
+      <boot order='1'/>\n\
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>\n\
+", mac, vm->netdev);
+	else
+		snprintf(buf, FILE_LEN, "\
     <interface type='network'>\n\
       <mac address='%s'/>\n\
       <source network='%s'/>\n\

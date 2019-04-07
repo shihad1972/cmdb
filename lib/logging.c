@@ -73,8 +73,14 @@ ailsa_show_error(int retval)
 	case AILSA_NO_LOGVOL:
 		fprintf(stderr, "A logical volume pool was specified, but no name provided\n\n");
 		break;
+	case AILSA_NO_POOL:
+		fprintf(stderr, "Program was unable to create or activate th storage pool\n\n");
+		break;
 	case AILSA_NO_DIRECTORY:
 		fprintf(stderr, "A directory pool was specified, but no path provided\n\n");
+		break;
+	case AILSA_NO_NETWORK:
+		fprintf(stderr, "There was no network specified for the virtual machine\n\n");
 		break;
 	case AILSA_NO_CONNECT:
 		fprintf(stderr, "Program was unable to make connection to libvirtd\n\n");
