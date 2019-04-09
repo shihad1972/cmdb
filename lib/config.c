@@ -438,14 +438,16 @@ display_mkvm_usage(void)
 	printf("Actions\n");
 	printf("\t-a: add\n");
 	printf("\t-h: help\t-v: version\n");
+	printf("\t-C: add to cmdb\n");
 	printf("Options\n");
 	printf("\t-u <uri>: Connection URI for libvirtd\n");
 	printf("\t-n <name>: Supply VM name\n");
 	printf("\t-p <pool>: Provide the storage pool name\n");
 	printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
-	printf("\t-k <network>: Name of the network to attach the VM to\n");
 	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
 	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
+	printf("Mutually exclusive Options\n");
+	printf("\t[ -k <network>: Name of the network | -b <bridge-device>: Name of the bridge ]\n");
 }
 
 void
