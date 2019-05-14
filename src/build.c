@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -801,7 +801,17 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	CHECK_DATA_LIST()
 	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
+		if (cml->gui > 0)
+			snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
+url, cml->name);
+		else
+			snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\
@@ -810,7 +820,18 @@ append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg vga=off console=ttyS0,115200n8\
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
 url, cml->name);
 	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
+		if (cml->gui > 0)
+			snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img country=%s \
+console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
+bline, arg, url, cml->name);
+		else
+			snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\

@@ -49,7 +49,7 @@
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:";
+	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:y";
 	int retval, opt, trim;
 	retval = NONE;
 #ifdef HAVE_GETOPT_H
@@ -80,6 +80,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		{"write",		no_argument,		NULL,	'w'},
 		{"commit",		no_argument,		NULL,	'w'},
 		{"varient",		required_argument,	NULL,	'x'},
+		{"gui",			no_argument,		NULL,	'y'},
 		{NULL,			0,			NULL,	0}
 	};
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
@@ -132,6 +133,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			snprintf(cb->os_version, MAC_S, "%s", optarg);
 		} else if (opt == 'x') {
 			snprintf(cb->varient, CONF_S, "%s", optarg);
+		} else if (opt == 'y') {
+			cb->gui = 1;
 		} else if (opt == 'v') {
 			cb->action = CVERSION;
 		} else if (opt == 'h') {
