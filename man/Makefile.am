@@ -1,4 +1,4 @@
-man_MANS = cmdb.8 cpc.8 ckc.8
+man_MANS = cmdb.8 cpc.8 ckc.8 mkvm.8 mksp.8
 
 if HAVE_DNSA
 
