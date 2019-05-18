@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
@@ -813,9 +814,9 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 	while (list) {
 		if (strncmp(cvl->version, "NULL", COMM_S) != 0) {
 			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
-				if (((strncmp(cvl->alias, list->alias, MAC_S) == 0) ||
-                                     (strncmp(cvl->os, list->os, MAC_S) == 0)) &&
-				     (strncmp(cvl->arch, list->arch, RANGE_S) == 0) &&
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
 				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
 					retval++;
 					if (id) {
@@ -824,8 +825,8 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 					}
 				}
 			} else {
-				if (((strncmp(cvl->alias, list->alias, MAC_S) == 0) ||
-				     (strncmp(cvl->os, list->os, MAC_S) == 0)) &&
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
 				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
 					retval++;
 					if (id) {
@@ -834,10 +835,33 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 					}
 				}
 			}
+		} else if (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0) {
+			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
+				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			} else {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			}
 		} else if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
-			if (((strncmp(cvl->alias, list->alias, MAC_S) == 0) ||
-			     (strncmp(cvl->os, list->os, MAC_S) == 0)) &&
-			     (strncmp(cvl->arch, list->arch, RANGE_S) == 0)) {
+			if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+			     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+			     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0)) {
 				retval++;
 				if (id) {
 					*os_id = list->os_id;
@@ -845,8 +869,8 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 				}
 			}
 		} else {
-			if ((strncmp(cvl->alias, list->alias, MAC_S) == 0) ||
-			    (strncmp(cvl->os, list->os, MAC_S) == 0)) {
+			if ((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+			    (strncasecmp(cvl->os, list->os, MAC_S) == 0)) {
 				retval++;
 				if (id) {
 					*os_id = list->os_id;
