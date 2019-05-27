@@ -202,7 +202,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
   <currentMemory unit='KiB'>%lu</currentMemory>\n\
   <vcpu placement='static'>%lu</vcpu>\n\
   <os>\n\
-    <type arch='x86_64' machine='pc-i440fx-2.8'>hvm</type>\n\
+    <type arch='x86_64' machine='pc-i440fx-2.1'>hvm</type>\n\
   </os>\n\
   <features>\n\
     <acpi/>\n\
@@ -210,7 +210,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
     <pae/>\n\
   </features>\n\
   <cpu mode='custom' match='exact'>\n\
-    <model fallback='allow'>Opteron_G3</model>\n\
+    <model fallback='allow'>Westmere</model>\n\
   </cpu>\n\
   <clock offset='utc'>\n\
     <timer name='rtc' tickpolicy='catchup'/>\n\
