@@ -562,7 +562,8 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 	if (!(bos))
 		return OS_NOT_FOUND;
 	printf("Displaying build packages for os %s\n\n", cvl->alias);
-	if (strncmp(cvl->version, "NULL", COMM_S) != 0) {	// version set
+	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) ||
+	    (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0)) {	// version set
 		if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {	// arch set
 			printf("Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
 			if ((osid = get_single_os_id(base, cvl)) == 0) {
@@ -573,7 +574,8 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 		} else {					// arch not set
 			while (bos) {
 				if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
-				    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
+				   ((strncmp(cvl->version, bos->version, MAC_S) == 0) ||
+                                    (strncmp(cvl->ver_alias, bos->ver_alias, MAC_S) == 0))) {
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
