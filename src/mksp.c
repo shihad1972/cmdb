@@ -1,6 +1,6 @@
 /*
  *
- *  mkvm : make virtual machine
+ *  mksp : make storgae pool
  *  Copyright (C) 2018 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  mkvm.c
+ *  mksp.c
  *
- *  main and command line parsing functions for mkvm
+ *  main and command line parsing functions for mksp
  *
  */
 
