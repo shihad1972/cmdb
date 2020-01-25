@@ -2916,7 +2916,7 @@ int
 delete_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = NONE, c = NONE;
-	unsigned long int glue_id;
+	unsigned long int glue_id = 0;
 	dnsa_s *dnsa;
 	dbdata_s data, user;
 	glue_zone_info_s *glue;
