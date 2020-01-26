@@ -8,7 +8,7 @@ dnsa_SOURCES = dnsa.c zones.c dnsacom.c dnsa_net.c
 CBC_COMBO = cbc_common.c cbccom.c
 CBC_DNSA = cbc_dnsa.c dnsacom.c dnsa_net.c zones.c
 cbc_SOURCES = cbc.c $(CBC_COMBO) build.c createbuild.c
-cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO) cbcnet.c
+cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO) cbcnet.c cbcnet.h cbcdomain.h
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain
