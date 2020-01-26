@@ -51,7 +51,6 @@ int
 read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf);
 void
 parse_dnsa_config_error(int error);
-# ifdef HAVE_LIBPCRE
 int
 validate_comm_line(dnsa_comm_line_s *comm);
 void
@@ -60,7 +59,6 @@ void
 validate_glue_comm_line(dnsa_comm_line_s *comm);
 void
 validate_rev_comm_line(dnsa_comm_line_s *comm);
-# endif /* HAVE_LIBPCRE */
 /* Zone action Functions */
 int
 add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
