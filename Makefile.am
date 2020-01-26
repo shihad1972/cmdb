@@ -6,7 +6,7 @@
 RM = rm -f
 ECHO = echo
 DIR = src
-SUBDIRS = lib src man scripts sql daemon
+SUBDIRS = lib src man scripts sql
 EXTRA_DIST = docs man scripts sql lib include
 ACLOCAL_AMFLAGS = -I m4
 

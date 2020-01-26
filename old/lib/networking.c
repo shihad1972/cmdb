@@ -141,7 +141,7 @@ int
 ailsa_do_client_send(int s, struct cmdb_client_config *c)
 {
 	char line[BUFF_S], *p;
-	int retval;
+	int retval = 0;
 	ssize_t len;
 
 	memset(&line, 0, BUFF_S);
@@ -223,6 +223,10 @@ ailsa_get_fqdn(char *host, char *fqdn, char *ip)
 static char *
 print_sock_addr(const struct sockaddr *addr)
 {
+/* Here, we are returning the address of a buffer in the function
+   which generates a compiler warning. Perhaps making it static
+   will allow the error to go?
+ */
 	const void *num_addr;
 	char addr_buff[INET6_ADDRSTRLEN], *retval;
 	retval = addr_buff;

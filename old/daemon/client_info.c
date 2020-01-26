@@ -89,7 +89,8 @@ static void
 ailsa_handle_client(int client)
 {
 	char sbuf[BUFF_S];
-	int retval, command;
+	int retval = 0;
+	int command = 0;
 	size_t len;
 	ssize_t slen;
 	struct client_info ci;

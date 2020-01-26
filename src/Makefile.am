@@ -1,13 +1,26 @@
-bin_PROGRAMS = cmdb cpc ckc mkvm mksp
+bin_PROGRAMS = cmdb2 cpc ckc mkvm mksp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
-combo_SOURCES = checks.c checks.h
-
-cpc_SOURCES = cpc.c $(combo_SOURCES)
-
-ckc_SOURCES = ckc.c $(combo_SOURCES)
-
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
+mksp_SOURCES = mksp.c virtual.c virtual.h
+cmdb2_SOURCES = cmdb2.c cmdb2com.c
+dnsa_SOURCES = dnsa.c zones.c dnsacom.c dnsa_net.c dnsa_net.h
+CBC_COMBO = cbc_common.c cbccom.c
+CBC_DNSA = cbc_dnsa.c dnsacom.c dnsa_net.c zones.c
+cbc_SOURCES = cbc.c $(CBC_COMBO) build.c createbuild.c
+cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO) cbcnet.c
+
+if HAVE_CBC
+bin_PROGRAMS += cbc cbcdomain
+endif
+
+if HAVE_DNSA
+bin_PROGRAMS += dnsa
+if HAVE_CBC
+cbc_SOURCES += $(CBC_DNSA)
+cbcdomain_SOURCES += $(CBC_DNSA)
+endif
+endif
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS = -L$(top_builddir)/lib
