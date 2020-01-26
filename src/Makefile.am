@@ -11,7 +11,7 @@ cbc_SOURCES = cbc.c $(CBC_COMBO) build.c createbuild.c
 cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO) cbcnet.c cbcnet.h cbcdomain.h
 
 if HAVE_CBC
-bin_PROGRAMS += cbc cbcdomain
+bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript
 endif
 
 if HAVE_DNSA
