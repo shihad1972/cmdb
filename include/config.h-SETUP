@@ -117,9 +117,6 @@
 /* libgcrypt library available for use */
 #define HAVE_LIBGCRYPT /**/
 
-/* Define to 1 if you have the `pcre' library (-lpcre). */
-#define HAVE_LIBPCRE 1
-
 /* Define to 1 if you have the `uuid' library (-luuid). */
 #define HAVE_LIBUUID 1
 

@@ -75,7 +75,7 @@ For the license see the COPYING file in this directory
 
 For full compilation instructions see the INSTALL FILE.
 
-For full functionality, ensure that libpcre libsqlite3 and 
+For full functionality, ensure that libsqlite3 and 
 libmysqlclient are installed along with the -dev or -devel packages.
 
  The configure script will build the 3 suites of programs in the src/ 

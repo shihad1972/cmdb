@@ -231,7 +231,7 @@ clean_vmhost_list(cmdb_vm_host_s *list);
 void
 clean_cmdb_comm_line(cmdb_comm_line_s *list);
 
-/* Fill struct functions. These use the pcre regex to check input */
+/* Fill struct functions. These use the regex to check input */
 int
 fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
