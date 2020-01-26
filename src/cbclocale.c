@@ -55,10 +55,8 @@ init_locale_comm_line(locale_comm_line_s *cl);
 static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl);
 
-#ifdef HAVE_LIBPCRE
 static void
 validate_locale_comm_line(locale_comm_line_s *cl);
-#endif // HAVE_LIBPCRE
 
 static int
 list_locales(cbc_config_s *ccs);
@@ -205,13 +203,10 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 			return DISPLAY_USAGE;
 		}
 	}
-#ifdef HAVE_LIBPCRE
 	validate_locale_comm_line(cl);
-#endif // HAVE_LIBPCRE
 	return retval;
 }
 
-#ifdef HAVE_LIBPCRE
 static void
 validate_locale_comm_line(locale_comm_line_s *cl)
 {
@@ -234,7 +229,6 @@ validate_locale_comm_line(locale_comm_line_s *cl)
 		if (ailsa_validate_input(cl->country, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "country");
 }
-#endif // HAVE_LIBPCRE
 
 static void
 init_locale_comm_line(locale_comm_line_s *cl)

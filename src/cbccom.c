@@ -167,9 +167,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
 			retval = NO_BUILD_PARTITION;
 	}
-#ifdef HAVE_LIBPCRE
 	validate_cbc_comm_line(cb);
-#endif /* HAVE_LIBPCRE */
 	return retval;
 }
 
@@ -203,8 +201,6 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	
 	fprintf(stderr, "\n");
 }
-
-#ifdef HAVE_LIBPCRE
 
 void
 validate_cbc_comm_line(cbc_comm_line_s *cml)
@@ -241,8 +237,6 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 		if (ailsa_validate_input(cml->config, PATH_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "config file path");
 }
-
-#endif /* HAVE_LIBPCRE */
 
 int
 parse_cbc_config_file(cbc_config_s *cbc, const char *config)

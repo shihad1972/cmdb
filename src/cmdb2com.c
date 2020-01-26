@@ -341,19 +341,15 @@ fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb->server = server;
 	cmdb->customer = cust;
 	if (cm->name) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
-#endif /* HAVE_LIBPCRE */
 		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
 	}
 	if (cm->coid) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "coid");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
 		retval = retval | NO_COID;
@@ -372,55 +368,43 @@ fill_customer_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_customer_t(cust);
 	cmdb->customer = cust;
 	if (cm->address) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->address, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "address");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->address, NAME_S, "%s", cm->address);
 	} else {
 		retval = retval | CBC_NO_ADDRESS;
 	}
 	if (cm->city) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->city, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "city");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->city, HOST_S, "%s", cm->city);
 	} else {
 		retval = retval | NO_CITY;
 	}
 	if (cm->county) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->county, ADDRESS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "county");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->county, MAC_S, "%s", cm->county);
 	} else {
 		retval = retval | NO_COUNTY;
 	}
 	if (cm->postcode) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->postcode, POSTCODE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "postcode");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->postcode, RANGE_S, "%s", cm->postcode);
 	} else {
 		retval = retval | NO_POSTCODE;
 	}
 	if (cm->coid) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "coid");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else {
 		retval = retval | NO_COID;
 	}
 	if (cm->name) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "customer name");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
@@ -439,19 +423,15 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_service_t(servi);
 	cmdb->service = servi;
 	if (cm->detail) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->detail, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service detail");
-#endif /* HAVE_LIBPCRE */
 		snprintf(servi->detail, HOST_S, "%s", cm->detail);
 	} else {
 		retval = retval | NO_DETAIL;
 	}
 	if (cm->url) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->url, URL_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service url");
-#endif /* HAVE_LIBPCRE */
 		snprintf(servi->url, URL_S, "%s", cm->url);
 	} else {
 		retval = retval | NO_URL;
@@ -462,10 +442,8 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "stype in fill_service_values");
 		cmdb_init_servicetype_t(stype);
 		cmdb->servicetype = stype;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service service");
-#endif /* HAVE_LIBPCRE */
 		snprintf(stype->service, RANGE_S, "%s", cm->service);
 	} else {
 		retval = retval | NO_SERVICE;
@@ -476,10 +454,8 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "server in fill_service_values");
 		cmdb_init_server_t(server);
 		cmdb->server = server;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service name");
-#endif /* HAVE_LIBPCRE */
 		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
@@ -490,10 +466,8 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "cust in fill_service_values");
 		cmdb_init_customer_t(cust);
 		cmdb->customer = cust;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->coid, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service coid");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->coid);
 	} else if (cm->id) {
 		cmdb_customer_s *cust;
@@ -501,10 +475,8 @@ fill_service_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "cust in fill_service_values");
 		cmdb_init_customer_t(cust);
 		cmdb->customer = cust;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->id, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service coid");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->id);
 	} else {
 		retval = retval | NO_COID;
@@ -527,28 +499,22 @@ fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_contact_t(cont);
 	cmdb->contact = cont;
 	if (cm->name) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact name");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cont->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;
 	}
 	if (cm->phone) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->phone, PHONE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact phone");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cont->phone, MAC_S, "%s", cm->phone);
 	} else {
 		retval = retval | NO_PHONE;
 	}
 	if (cm->email) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->email, EMAIL_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact email");
-#endif /* HAVE_LIBPCRE */
 		snprintf(cont->email, HOST_S, "%s", cm->email);
 	} else {
 		retval = retval | NO_EMAIL;
@@ -559,10 +525,8 @@ fill_contact_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "cust in fill_contact_values");
 		cmdb_init_customer_t(cust);
 		cmdb->customer = cust;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->id, COID_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "contact COID");
-#endif /*HAVE_LIBPCRE */
 		snprintf(cust->coid, RANGE_S, "%s", cm->id);
 	} else {
 		retval = retval | NO_COID;
@@ -581,7 +545,6 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_hardware_t(hard);
 	cmdb->hardware = hard;
 	if (cm->detail) {
-#ifdef HAVE_LIBPCRE
 		/* Hard coded net device. Should change this sometime */
 		if (cm->sid == 1) {
 			if (ailsa_validate_input(cm->detail, MAC_REGEX) < 0)
@@ -590,16 +553,13 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			if (ailsa_validate_input(cm->detail, ADDRESS_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "hardware detail");
 		}
-#endif /* HAVE_LIBPCRE */
 		snprintf(hard->detail, HOST_S, "%s", cm->detail);
 	} else {
 		retval = retval | NO_DETAIL;
 	}
 	if (cm->device) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->device, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware device");
-#endif /* HAVE_LIBPCRE */
 		snprintf(hard->device, MAC_S, "%s", cm->device);
 	} else {
 		retval = retval | NO_DEVICE;
@@ -610,10 +570,8 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "server in fill_hardware_values");
 		cmdb_init_server_t(server);
 		cmdb->server = server;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hardware server");
-#endif /* HAVE_LIBPCRE */
 		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval |  NO_NAME;
@@ -636,19 +594,15 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_vmhost_t(vmhost);
 	cmdb->vmhost = vmhost;
 	if (cm->vmhost) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->vmhost, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost hostname");
-#endif /* HAVE_LIBPCRE */
 		snprintf(vmhost->name, RBUFF_S, "%s", cm->vmhost);
 	} else {
 		retval = retval | NO_VHOST;
 	}
 	if (cm->model) {
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->model, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost type");
-#endif /* HAVE_LIBPCRE */
 		snprintf(vmhost->type, MAC_S, "%s", cm->model);
 	} else {
 		retval = retval | NO_TYPE;
@@ -659,10 +613,8 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 			report_error(MALLOC_FAIL, "server in fill_vmhost_values");
 		cmdb_init_server_t(server);
 		cmdb->server = server;
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(cm->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "vmhost name");
-#endif /* HAVE_LIBPCRE */
 		snprintf(server->name, HOST_S, "%s", cm->name);
 	} else {
 		retval = retval | NO_NAME;

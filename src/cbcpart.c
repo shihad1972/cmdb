@@ -78,10 +78,8 @@ clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
 static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl);
 
-# ifdef HAVE_LIBPCRE
 static int
 validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
-# endif // HAVE_LIBPCRE
 
 static int
 validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc);
@@ -298,7 +296,6 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 't') {
 			cpl->partition = cmdb_malloc(RBUFF_S, errmsg);
 			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
-#ifdef HAVE_LIBPCRE
 		} else if (opt == 'i') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				fprintf(stderr, "minimum not a number?\n");
@@ -317,30 +314,19 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 				return USER_INPUT_INVALID;
 			}
 			cpl->pri = strtoul(optarg, NULL, 10);
-#else
-		} else if (opt == 'i') {
-			cpl->min = strtoul(optarg, NULL, 10);
-		} else if (opt == 'x') {
-			cpl->max = strtoul(optarg, NULL, 10);
-		} else if (opt == 'y') {
-			cpl->pri = strtoul(optarg, NULL, 10);
-#endif
 		} else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
 		}
 	}
-#ifdef HAVE_LIBPCRE
 	if ((validate_cbcpart_comm_line(cpl)) != 0)
 		return USER_INPUT_INVALID;
-#endif // HAVE_LIBPCRE
 	if (argc == 1)
 		return DISPLAY_USAGE;
 	retval = validate_cbcpart_user_input(cpl, argc);
 	return retval;
 }
 
-#ifdef HAVE_LIBPCRE
 static int
 validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
@@ -374,7 +360,6 @@ validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 	}
 	return retval;
 }
-#endif // HAVE_LIBPCRE
 
 static int
 validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)

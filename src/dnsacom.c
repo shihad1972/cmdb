@@ -228,10 +228,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
 		retval = NONE;
 	}
-#ifdef HAVE_LIBPCRE
 	if (retval == 0)
 		retval = validate_comm_line(comp);
-#endif /* HAVE_LIBPCRE */
 	return retval;
 }
 
@@ -392,7 +390,6 @@ parse_dnsa_config_error(int error)
 		fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
 }
 
-#ifdef HAVE_LIBPCRE
 int
 validate_comm_line(dnsa_comm_line_s *comm)
 {
@@ -543,8 +540,6 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "IP address");
 }
-
-#endif /* HAVE_LIBPCRE */
 
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)

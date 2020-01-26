@@ -119,7 +119,6 @@ init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
 	init_cbcdomain_comm_line(cdcl);
 }
 
-#ifdef HAVE_LIBPCRE
 void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
@@ -128,7 +127,7 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 			if (ailsa_validate_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
 }
-#endif // HAVE_LIBPCRE
+
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
@@ -185,9 +184,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			return DISPLAY_USAGE;
 		}
 	}
-#ifdef HAVE_LIBPCRE
 	validate_cbcdomain_comm_line(cdl);
-#endif /* HAVE_LIBPCRE */
 	if (argc == 1)
 		return DISPLAY_USAGE;
 	if (cdl->action == CVERSION)
@@ -226,10 +223,8 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 		} else {
 			return USER_INPUT_INVALID;
 		}
-#ifdef HAVE_LIBPCRE
 		if (ailsa_validate_input(ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network");
-#endif /* HAVE_LIBPCRE */
 		if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		else
