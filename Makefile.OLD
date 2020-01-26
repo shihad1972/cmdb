@@ -6,31 +6,24 @@
 RM = rm -f
 ECHO = echo
 DIR = src
-DAEMONDIR = daemon
 CLIENTDIR = client
 LIBDIR = lib
-SUBDIRS = lib src daemon
+SUBDIRS = lib src
 mk_PROGRAMS = mkvm mksp
 bin_PROGRAMS = dnsa cmdb2 cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale $(mk_PROGRAMS)
-sbin_PROGRAMS = cmdbd
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
-all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
+all:	$(lib_LIBRARIES) $(bin_PROGRAMS)
 
 libs:	$(lib_LIBRARIES)
 
 mk:	$(mk_PROGRAMS)
-
-daemon:	$(sbin_PROGRAMS)
 
 $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
 $(bin_PROGRAMS):	$(lib_LIBRARIES)
 	$(MAKE) -C $(DIR) $@
-
-$(sbin_PROGRAMS):	$(lib_LIBRARIES)
-	$(MAKE) -C $(DAEMONDIR) $@
 
 clean :
 	for dir in $(SUBDIRS); do \

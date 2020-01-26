@@ -4,7 +4,7 @@ ARFLAGS = rvU
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
 libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
-		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) libailsacmdb.a(errors.o)\
+		libailsacmdb.a(logging.o) libailsacmdb.a(errors.o)\
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
 		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
