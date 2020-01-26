@@ -30,7 +30,7 @@
 #include <ailsacmdb.h>
 #include "cmdb.h"
 
-static const char *regexps[] = {
+const char *regexps[] = {
 	"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
 	"^[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9]$",
 	"^[0-9]+$",
@@ -52,7 +52,8 @@ static const char *regexps[] = {
 	"^[a-zA-Z0-9]+[a-zA-Z0-9\\.\\_\\-]*@[a-zA-Z0-9]+[a-zA-Z0-9\\.\\-]+[a-zA-Z]*$",
 	"^[a-zA-Z0-9][a-zA-Z0-9\\ \\,\\.\\-\\_\\:]*[a-zA-Z0-9]$",
 	"^cn\\=[a-zA-Z0-9]*(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
-	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$"
+	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
+	"^[a-zA-Z]*[a-zA-Z0-0]*[\\-/]*[a-zA-Z0-9]*$"
 };
 
 int
@@ -80,3 +81,26 @@ ailsa_validate_input(char *input, int test)
 	return retval;
 }
 
+int
+ailsa_validate_string(const char *input, const char *re_test)
+{
+	regex_t re;
+	regmatch_t pos[1];
+	char *errstr = NULL;
+	size_t len;
+	int fl = REG_EXTENDED;
+	int retval;
+
+	if ((retval = regcomp(&re, re_test, fl)) != 0) {
+		len = regerror(retval, &re, NULL, 0);
+		errstr = ailsa_calloc(len, "errstr in ailsa_validate_string");
+		(void) regerror(retval, &re, errstr, len);
+		syslog(LOG_ALERT, "Regex compile failed: %s", errstr);
+		free(errstr);
+		return retval;
+	}
+	if ((retval = regexec(&re, input, 1, pos, 0)) != 0)
+		retval = -1;
+	regfree(&re);
+	return retval;
+}

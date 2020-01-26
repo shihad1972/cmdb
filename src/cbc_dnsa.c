@@ -44,12 +44,6 @@
 #include "cmdb_cbc.h"
 #include "cbc_base_sql.h"
 
-#ifdef HAVE_LIBPCRE
-
-# include "checks.h"
-
-#endif /* HAVE_LIBPCRE */
-
 #ifdef HAVE_DNSA
 
 # include "dnsa_data.h"

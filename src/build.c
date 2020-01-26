@@ -44,9 +44,6 @@
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "build.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 /* Hopefully this will be the file to need these variables
    These are used to substitue these values from the database when used as
@@ -122,15 +119,6 @@ cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 				server = server->next;
 			}
 		}
-	} else if (strncmp(cml->uuid, "NULL", COMM_S) != 0) {
-		while (server) {
-			if (strncmp(server->uuid, cml->uuid, CONF_S) == 0) {
-				details->server = server;
-				break;
-			} else {
-				server = server->next;
-			}
-		}
 	} else if (cml->server_id != 0) {
 		while (server) {
 			if (server->server_id == cml->server_id) {
@@ -141,7 +129,7 @@ cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 			}
 		}
 	} else {
-		printf("No server specifier??\n");
+		printf("No server specifier?? (UUID no longer valid!)\n");
 		return NO_SERVERS;
 	}
 	if (!details->server)

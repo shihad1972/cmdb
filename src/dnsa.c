@@ -28,9 +28,6 @@
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 int main(int argc, char *argv[])
 {

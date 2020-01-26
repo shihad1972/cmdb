@@ -93,6 +93,10 @@ ailsa_clean_iface(void *iface)
 		my_free(i->ip);
 	if (i->nm)
 		my_free(i->nm);
+	if (i->mac)
+		my_free(i->mac);
+	free(i);
+}
 void
 ailsa_clean_mkvm(void *vm)
 {
@@ -204,22 +208,6 @@ ailsa_clean_client_info(struct client_info *ci)
 }
 
 void
-ailsa_clean_mkvm(void *vm)
-{
-	ailsa_mkvm_s *i;
-
-	i = vm;
-	if (i->name)
-		my_free(i->name);
-	if (i->pool)
-		my_free(i->pool);
-	if (i->uri)
-		my_free(i->uri);
-	if (i->storxml)
-		my_free(i->storxml);
-	free(i);
-}
-
 ailsa_clean_cmdb(void *cmdb)
 {
 	ailsa_cmdb_s *i;

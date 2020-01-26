@@ -40,15 +40,13 @@
 # define _GNU_SOURCE
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "cbcnet.h"
 #include "cbc_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 #include "cbcdomain.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
@@ -126,8 +124,8 @@ void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
 	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
-		if (validate_user_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
-			if (validate_user_input(cdl->ntpserver, IP_REGEX) < 0)
+		if (ailsa_validate_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
+			if (ailsa_validate_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
 }
 #endif // HAVE_LIBPCRE
@@ -229,7 +227,7 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 			return USER_INPUT_INVALID;
 		}
 #ifdef HAVE_LIBPCRE
-		if (validate_user_input(ip, IP_REGEX) < 0)
+		if (ailsa_validate_input(ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network");
 #endif /* HAVE_LIBPCRE */
 		if (inet_pton(AF_INET, ip, &ip_addr))

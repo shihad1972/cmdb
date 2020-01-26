@@ -42,7 +42,6 @@
 #include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cbc_data.h"
-#include "checks.h"
 
 typedef struct cpc_config_s {
 	char *disk;

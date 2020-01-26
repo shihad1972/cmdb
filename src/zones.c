@@ -43,9 +43,6 @@
 #include "base_sql.h"
 #include "dnsa_base_sql.h"
 #include "dnsa_net.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 void
 list_zones(dnsa_config_s *dc)

@@ -633,33 +633,6 @@ display_cbclocale_usage(void)
 }
 
 void
-display_mkvm_usage(void)
-{
-	const char *prog = "mkvm";
-
-	printf("%s: make virtual machine %s\n", prog, VERSION);
-	printf("Usage:\t");
-	printf("%s <action> <options>\n", prog);
-	printf("Actions\n");
-	printf("\t-a: add\n");
-	printf("\t-h: help\t-v: version\n");
-	printf("Options\n");
-	printf("\t-n <name>: Supply VM name\n");
-	printf("\t-p <pool>: Provide the storage pool name\n");
-	printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
-}
-
-void
-display_version(char *prog)
-{
-	if (strrchr(prog, '/')) {
-		prog = strrchr(prog, '/');
-		prog++;
-	}
-	printf("%s: %s\n", prog, VERSION);
-}
-
-void
 get_error_string(int error, char *errstr)
 {
 	if (error == SERVER_NOT_FOUND)

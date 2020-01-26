@@ -18,3 +18,4 @@ daemon/cmdbd
 src/hellolv
 src/mkvm
 src/mksp
+.vscode

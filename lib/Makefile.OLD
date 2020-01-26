@@ -3,14 +3,14 @@ override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/ -I/usr/include
 ARFLAGS = rvU
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
-#libailsacmdb.a:	libailsacmdb.a(b64.o) libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o)
 libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) libailsacmdb.a(b64.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(networking.o) libailsacmdb.a(errors.o)\
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
-		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) \
+		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
 
-libailsasql.a:	libailsasql.a(sql.o)
+libailsasql.a:	libailsasql.a(sql.o) libailsasql.a(base_sql.o) libailsasql.a(dnsa_base_sql.o) \
+		libailsasql.a(cmdb_base_sql.o) libailsasql.a(cbc_base_sql.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -33,13 +33,7 @@ libailsacmdb.a(uuid.o):	uuid.o
 libailsacmdb.a(config.o): config.o
 	$(AR) $(ARFLAGS) $@ $<
 
-libailsacmdb.a(sql.o):	sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
 libailsacmdb.a(parse_config.o):	parse_config.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(logging.o):	logging.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(networking.o):	networking.o
@@ -49,15 +43,6 @@ libailsacmdb.a(regexp.o):	regexp.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(fileio.o):	fileio.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(data.o):	data.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(list.o):	list.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(hash.o):	hash.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(errors.o):	errors.o
@@ -72,7 +57,19 @@ libailsacmdb.a(dnsa_data.o): dnsa_data.o
 libailsacmdb.a(cbc_data.o): cbc_data.o
 	$(AR) $(ARFLAGS) $@ $<
 
-libailsasql.a(sql.o): sql.o
+libailsasql.a(sql.o):	sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(base_sql.o):	base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(dnsa_base_sql.o):	dnsa_base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(cmdb_base_sql.o):	cmdb_base_sql.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsasql.a(cbc_base_sql.o):	cbc_base_sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

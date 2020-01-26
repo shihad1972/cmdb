@@ -11,9 +11,9 @@ CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
 mk_PROGRAMS = mkvm mksp
-bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale $(mk_PROGRAMS)
+bin_PROGRAMS = dnsa cmdb2 cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale $(mk_PROGRAMS)
 sbin_PROGRAMS = cmdbd
-lib_LIBRARIES = libailsacmdb.a
+lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
 all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
 

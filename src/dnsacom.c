@@ -39,11 +39,10 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include "cmdb.h"
+#include <ailsacmdb.h>
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
+
 
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
@@ -420,65 +419,65 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	else
 		report_error(CBC_NO_DATA, "comm in validate_fwd_comm_line");
 	if (strlen(comm->rtype) != 0)
-		if (validate_user_input(comm->rtype, FS_REGEX) < 0)
+		if (ailsa_validate_input(comm->rtype, FS_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "record type");
 	if (strncmp(comm->domain, "all", COMM_S) != 0)
-		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
 /* Test values for different RR's. Still need to add check for AAAA */
 	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
-		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "IP address");
 		if (strncmp(comm->host, "@", COMM_S) != 0)
-			if (validate_user_input(comm->host, NAME_REGEX) < 0)
-				if (validate_user_input(comm->host, DOMAIN_REGEX) < 0)
+			if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
+				if (ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "host");
 	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
-		if (validate_user_input(comm->dest, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "server host name");
 		if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
 		    (strncmp(comm->host, "@", COMM_S) != 0))
-			if (validate_user_input(comm->host, NAME_REGEX) < 0)
+			if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "host");
 	} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
-		if ((validate_user_input(comm->dest, DOMAIN_REGEX) < 0) &&
-		    (validate_user_input(comm->dest, NAME_REGEX) < 0))
+		if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+		    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "SRV destination");
-		if (validate_user_input(comm->service, NAME_REGEX) < 0)
+		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "SRV service");
 	} else if (strncmp(comm->rtype, "CNAME", COMM_S) == 0) {
-		if ((validate_user_input(comm->dest, DOMAIN_REGEX) < 0) &&
-		    (validate_user_input(comm->dest, NAME_REGEX) < 0))
+		if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+		    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "CNAME destination");
-		if ((validate_user_input(comm->host, DOMAIN_REGEX) < 0) &&
-		    (validate_user_input(comm->host, NAME_REGEX) < 0))
+		if ((ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0) &&
+		    (ailsa_validate_input(comm->host, NAME_REGEX) < 0))
 			report_error(USER_INPUT_INVALID, "CNAME host");
 	} else if (comm->action == ADD_CNAME_ON_ROOT) {
-		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
-		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hostname");
 	} else {
-		if (validate_user_input(comm->dest, TXTRR_REGEX) < 0)
+		if (ailsa_validate_input(comm->dest, TXTRR_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "Extended RR value");
 		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) ||
 		    (strncmp(comm->rtype, "NULL", COMM_S) == 0)) {
 			if (host[0] == '_') {
-				if (validate_user_input(host + 1, NAME_REGEX) < 0)
+				if (ailsa_validate_input(host + 1, NAME_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");
 			} else {
-				if (validate_user_input(host, NAME_REGEX) < 0)
+				if (ailsa_validate_input(host, NAME_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");
 			}
 		} else {
-			if (validate_user_input(host, NAME_REGEX) < 0)
-				if (validate_user_input(host, DOMAIN_REGEX) < 0)
+			if (ailsa_validate_input(host, NAME_REGEX) < 0)
+				if (ailsa_validate_input(host, DOMAIN_REGEX) < 0)
 					report_error(USER_INPUT_INVALID, "hostname");
 		}
 	}
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
-		if (validate_user_input(comm->service, NAME_REGEX) < 0)
+		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "service");
 	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
 		validate_glue_comm_line(comm);
@@ -500,11 +499,11 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
 			strncat(regex, "\\,", 3);
 			strncat(regex, regexps[IP_REGEX] + 1, ilen);
-			if (validate_ext_user_input(comm->glue_ip, regex) < 0)
+			if (ailsa_validate_string(comm->glue_ip, regex) < 0)
 				report_error(USER_INPUT_INVALID, "glue IP");
 		}
 	} else if (comm->action != DELETE_ZONE) {
-		if (validate_user_input(comm->glue_ip, IP_REGEX) < 0)
+		if (ailsa_validate_input(comm->glue_ip, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue IP");
 	}
 	memset(regex, 0, RBUFF_S);
@@ -513,11 +512,11 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 			snprintf(regex, dlen, "%s", regexps[DOMAIN_REGEX]);
 			strncat(regex, "\\,", 3);
 			strncat(regex, regexps[DOMAIN_REGEX] + 1, dlen);
-			if (validate_ext_user_input(comm->glue_ns, regex) < 0)
+			if (ailsa_validate_string(comm->glue_ns, regex) < 0)
 				report_error(USER_INPUT_INVALID, "glue NS");
 		}
 	} else {
-		if (validate_user_input(comm->glue_ns, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(comm->glue_ns, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "glue NS");
 	}
 	cmdb_free(regex, RBUFF_S);
@@ -530,18 +529,18 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
 	   (comm->action != ADD_PREFER_A) &&
 	    (comm->action != DELETE_PREFERRED)))
-		if (validate_user_input(comm->domain, IP_REGEX) < 0)
+		if (ailsa_validate_input(comm->domain, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
 	if (comm->action == ADD_PREFER_A) {
-		if (validate_user_input(comm->domain, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "domain");
-		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "IP address");
-		if (validate_user_input(comm->host, NAME_REGEX) < 0)
+		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "hostname");
 	}
 	if (comm->action == DELETE_PREFERRED)
-		if (validate_user_input(comm->dest, IP_REGEX) < 0)
+		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "IP address");
 }
 

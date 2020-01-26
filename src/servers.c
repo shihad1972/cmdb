@@ -35,9 +35,6 @@
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 #include "cmdb_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb)

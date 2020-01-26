@@ -37,11 +37,9 @@
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 #endif // HAVE_DNSA
@@ -212,35 +210,35 @@ void
 validate_cbc_comm_line(cbc_comm_line_s *cml)
 {
 	if (strncmp(cml->uuid, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->uuid, UUID_REGEX) < 0)
-			if (validate_user_input(cml->uuid, FS_REGEX) < 0)
+		if (ailsa_validate_input(cml->uuid, UUID_REGEX) < 0)
+			if (ailsa_validate_input(cml->uuid, FS_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "uuid");
 	if (strncmp(cml->name, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->name, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cml->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
 	if (strncmp(cml->os, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->os, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cml->os, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "os");
 	if (strncmp(cml->os_version, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->os_version, OS_VER_REGEX) < 0)
+		if (ailsa_validate_input(cml->os_version, OS_VER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "os version");
 	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->partition, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cml->partition, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "partition scheme");
 	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->varient, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cml->varient, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "varient");
 	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->build_domain, DOMAIN_REGEX) < 0)
+		if (ailsa_validate_input(cml->build_domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "build domain");
 	if (strncmp(cml->arch, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->arch, CUSTOMER_REGEX) < 0)
+		if (ailsa_validate_input(cml->arch, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "architecture");
 	if (strncmp(cml->netcard, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->netcard, DEV_REGEX) < 0)
+		if (ailsa_validate_input(cml->netcard, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network device");
 	if (strncmp(cml->config, "NULL", COMM_S) != 0)
-		if (validate_user_input(cml->config, PATH_REGEX) < 0)
+		if (ailsa_validate_input(cml->config, PATH_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "config file path");
 }
 

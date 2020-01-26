@@ -66,6 +66,7 @@ enum {                  // Buffer lengths
 
 // Data Definitions
 
+extern const char *regexps[];
 enum {			/* regex search codes */
 	UUID_REGEX = 0,
 	NAME_REGEX,
@@ -88,7 +89,8 @@ enum {			/* regex search codes */
 	EMAIL_REGEX,
 	TXTRR_REGEX,
 	CN_REGEX,
-	DC_REGEX
+	DC_REGEX,
+	TIMEZONE_REGEX
 };
 
 enum {			// Client commands
@@ -115,8 +117,17 @@ enum {			// SQL Data types
 
 enum {                  // Error codes
 	AILSA_NO_ACTION = 1,
+	AILSA_NO_TYPE = 2,
+	AILSA_NO_NAME = 3,
+	AILSA_NO_LOGVOL = 4,
+	AILSA_NO_DIRECTORY = 5,
+	AILSA_NO_POOL = 6,
+	AILSA_NO_NETWORK = 7,
 	AILSA_NO_DATA = 200,
-	AILSA_NO_CONNECT = 201
+	AILSA_NO_CONNECT = 201,
+	AILSA_NO_QUERY = 300,
+	AILSA_NO_DBTYPE = 301,
+	AILSA_INVALID_DBTYPE = 302
 };
 
 // Linked List data types
@@ -162,8 +173,8 @@ typedef union ailsa_dbdata_u {
 } AILDATAU;
 
 typedef struct ailsa_dbdata_s {
-	union AILDATAU *fields;
-	union AILDATAU *args;
+	AILDATAU *fields;
+	AILDATAU *args;
 } AILDATA;
 
 typedef struct ailsa_db_s {
@@ -171,6 +182,16 @@ typedef struct ailsa_db_s {
 	AILLIST *data;
 	char type;
 } AILSADB;
+
+enum {			// MAC Address generation types
+	AILSA_ESX = 1,
+	AILSA_KVM = 2
+};
+
+enum {			// Storage Pool types
+	AILSA_LOGVOL = 1,
+	AILSA_DIRECTORY = 2
+};
 
 // Various client information data structs
 
@@ -226,27 +247,39 @@ struct client_info {
 // Structs to hold configuration values
 
 struct cmdbd_config {
-	AILSA_NO_TYPE = 2,
-	AILSA_NO_NAME = 3,
-	AILSA_NO_LOGVOL = 4,
-	AILSA_NO_DIRECTORY = 5,
-	AILSA_NO_POOL = 6,
-	AILSA_NO_NETWORK = 7,
-	AILSA_NO_DATA = 200,
-	AILSA_NO_CONNECT = 201,
-	AILSA_NO_QUERY = 300,
-	AILSA_NO_DBTYPE = 301,
-	AILSA_INVALID_DBTYPE = 302
-};
+	char *dbtype;
+	char *db;
+	char *file;
+	char *user;
+	char *pass;
+	char *host;
+	char *dir;
+	char *bind;
+	char *dnsa;
+	char *rev;
+	char *rndc;
+	char *chkz;
+	char *chkc;
+	char *socket;
+	char *hostmaster;
+	char *prins;
+	char *secns;
+	char *pridns;
+	char *secdns;
+	char *toplevelos;
+	char *pxe;
+	char *tmpdir;
+	char *preseed;
+	char *tftpdir;
+	char *dhcpconf;
+	char *kickstart;
+	unsigned int port;
+	unsigned long int refresh;
+	unsigned long int retry;
+	unsigned long int expire;
+	unsigned long int ttl;
+	unsigned long int cliflag;
 
-enum {			// MAC Address generation types
-	AILSA_ESX = 1,
-	AILSA_KVM = 2
-};
-
-enum {			// Storage Pool types
-	AILSA_LOGVOL = 1,
-	AILSA_DIRECTORY = 2
 };
 
 // Various data types
@@ -335,33 +368,6 @@ typedef struct ailsa_data_s {
 	union ailsa_data_u *data;
 	unsigned int type;
 } ailsa_data_s;
-
-// Linked List data types
-
-typedef struct ailsa_element_s {
-	struct	ailsa_element_s *prev;
-	struct	ailsa_element_s *next;
-	void	*data;
-} AILELEM;
-
-typedef struct ailsa_list_s {
-	size_t 	total;
-	int 	(*cmd)(const void *key1, const void *key2);
-	void 	(*destroy)(void *data);
-	void 	*head;
-	void 	*tail;
-} AILLIST;
-
-// Hash table types
-
-typedef struct ailsa_hash_s {
-	unsigned int	buckets;
-	unsigned int	(*h)(const void *key);
-	int		(*match)(const void *key1, const void *key2);
-	void		(*destroy)(void *data);
-	unsigned int	size;
-	AILLIST		*table;
-} AILHASH;
 
 // SQL types
 
@@ -477,7 +483,6 @@ ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
 		unsigned int (*h)(const void *key),
 		int (*match)(const void *key1, const void *key2),
 		void (*destroy)(void *data));
-<<<<<<< HEAD
 
 void
 ailsa_hash_destroy(AILHASH *htbl);
@@ -580,6 +585,9 @@ ailsa_append_file(const char *name, void *data, size_t len);
 int
 ailsa_validate_input(char *input, int test);
 
+int
+ailsa_validate_string(const char *input, const char *re_test);
+
 // Various struct data functions
 
 // struct data init functions
@@ -633,14 +641,6 @@ display_mkvm_usage(void);
 
 void
 display_version(char *prog);
-void
-ailsa_hash_destroy(AILHASH *htbl);
-int
-ailsa_hash_insert(AILHASH *htbl, void *data, const char *key);
-int
-ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
-int
-ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // SQL functions.
 

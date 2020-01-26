@@ -42,9 +42,6 @@
 #include "base_sql.h"
 #include "cbc_base_sql.h"
 #include "cbc_common.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 
 enum {

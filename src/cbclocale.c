@@ -31,15 +31,13 @@
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 
 typedef struct locale_comm_line_s {
 	char country[RANGE_S];
@@ -218,22 +216,22 @@ static void
 validate_locale_comm_line(locale_comm_line_s *cl)
 {
 	if (strncmp(cl->language, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->language, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->language, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "language");
 	if (strncmp(cl->keymap, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->keymap, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->keymap, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "keymap");
 	if (strncmp(cl->locale, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->locale, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->locale, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "locale");
 	if (strncmp(cl->name, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->name, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
 	if (strncmp(cl->timezone, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->timezone, TIMEZONE_REGEX) < 0)
+		if (ailsa_validate_input(cl->timezone, TIMEZONE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "timezone");
 	if (strncmp(cl->country, "NULL", COMM_S) != 0)
-		if (validate_user_input(cl->country, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->country, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "country");
 }
 #endif // HAVE_LIBPCRE

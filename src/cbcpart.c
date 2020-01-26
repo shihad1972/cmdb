@@ -37,15 +37,13 @@
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 
 enum {
 	PARTITION = 1,
@@ -302,19 +300,19 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
 #ifdef HAVE_LIBPCRE
 		} else if (opt == 'i') {
-			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				fprintf(stderr, "minimum not a number?\n");
 				return USER_INPUT_INVALID;
 			}
 			cpl->min = strtoul(optarg, NULL, 10);
 		} else if (opt == 'x') {
-			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				fprintf(stderr, "maximum not a number?\n");
 				return USER_INPUT_INVALID;
 			}
 			cpl->max = strtoul(optarg, NULL, 10);
 		} else if (opt == 'y') {
-			if ((validate_user_input(optarg, ID_REGEX)) < 0) {
+			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				fprintf(stderr, "priority not a number?\n");
 				return USER_INPUT_INVALID;
 			}
@@ -349,27 +347,27 @@ validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 	int retval = 0;
 
 	if (cpl->fs) {
-		if ((validate_user_input(cpl->fs, FS_REGEX)) < 0) {
+		if ((ailsa_validate_input(cpl->fs, FS_REGEX)) < 0) {
 			fprintf(stderr, "filesystem (-f) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->log_vol) {
-		if ((validate_user_input(cpl->log_vol, LOGVOL_REGEX)) < 0) {
+		if ((ailsa_validate_input(cpl->log_vol, LOGVOL_REGEX)) < 0) {
 			fprintf(stderr, "logical volume name (-g) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->partition) {
-		if ((validate_user_input(cpl->partition, PATH_REGEX)) < 0) {
+		if ((ailsa_validate_input(cpl->partition, PATH_REGEX)) < 0) {
 			fprintf(stderr, "path (-t) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->option) {
-		if ((validate_user_input(cpl->option, FS_REGEX)) < 0) {
+		if ((ailsa_validate_input(cpl->option, FS_REGEX)) < 0) {
 			fprintf(stderr, "partition option (-o) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->scheme) {
-		if ((validate_user_input(cpl->scheme, NAME_REGEX)) < 0) {
+		if ((ailsa_validate_input(cpl->scheme, NAME_REGEX)) < 0) {
 			fprintf(stderr, "partition scheme name (-n) invalid!\n");
 			return USER_INPUT_INVALID;
 		}

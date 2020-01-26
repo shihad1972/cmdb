@@ -30,9 +30,6 @@
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "build.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 
 int
 main(int argc, char *argv[])

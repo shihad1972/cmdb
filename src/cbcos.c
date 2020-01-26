@@ -44,9 +44,6 @@
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif // HAVE_LIBPCRE
 #include "cbcnet.h"
 
 typedef struct cbcos_comm_line_s {

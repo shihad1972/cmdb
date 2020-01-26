@@ -31,9 +31,6 @@
 #include "cmdb_cmdb.h"
 #include "base_sql.h"
 #include "cmdb_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 #ifdef HAVE_MYSQL
 # include <mysql.h>
 #endif /* HAVE_MYSQL */
@@ -651,14 +648,6 @@ setup_insert_mysql_bind_buff_server(void **buffer, cmdb_s *base, unsigned int i)
 {
 	if (i == 0)
 		*buffer = &(base->server->name);
-	else if (i == 1)
-		*buffer = &(base->server->vendor);
-	else if (i == 2)
-		*buffer = &(base->server->make);
-	else if (i == 3)
-		*buffer = &(base->server->model);
-	else if (i == 4)
-		*buffer = &(base->server->uuid);
 	else if (i == 5)
 		*buffer = &(base->server->cust_id);
 	else if (i == 6)
@@ -820,10 +809,6 @@ store_server_mysql(MYSQL_ROW row, cmdb_s *base)
 	if (!(server = calloc(sizeof(cmdb_server_s), sizeof(char))))
 		report_error(MALLOC_FAIL, "server in store_server_mysql");
 	server->server_id = strtoul(row[0], NULL, 10);
-	snprintf(server->vendor, CONF_S, "%s", row[1]);
-	snprintf(server->make, CONF_S, "%s", row[2]);
-	snprintf(server->model, CONF_S, "%s", row[3]);
-	snprintf(server->uuid, CONF_S, "%s", row[4]);
 	server->cust_id = strtoul(row[5], NULL, 10);
 	server->vm_server_id = strtoul(row[6], NULL, 10);
 	snprintf(server->name, HOST_S, "%s", row[7]);
@@ -1425,10 +1410,6 @@ store_server_sqlite(sqlite3_stmt *state, cmdb_s *base)
 	if (!(stime = calloc(MAC_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "ctime in store_server_sqlite");
 	server->server_id = (unsigned long int) sqlite3_column_int(state, 0);
-	snprintf(server->vendor, CONF_S, "%s", sqlite3_column_text(state, 1));
-	snprintf(server->make, CONF_S, "%s", sqlite3_column_text(state, 2));
-	snprintf(server->model, CONF_S, "%s", sqlite3_column_text(state, 3));
-	snprintf(server->uuid, CONF_S, "%s", sqlite3_column_text(state, 4));
 	server->cust_id = (unsigned long int) sqlite3_column_int(state, 5);
 	server->vm_server_id = (unsigned long int) sqlite3_column_int(state, 6);
 	snprintf(server->name, HOST_S, "%s", sqlite3_column_text(state, 7));
@@ -1707,26 +1688,6 @@ setup_bind_sqlite_server(sqlite3_stmt *state, cmdb_server_s *server)
 	if ((retval = sqlite3_bind_text(
 state, 1, server->name, (int)strlen(server->name), SQLITE_STATIC)) > 0) {
 		printf("Cannot bind %s\n", server->name);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 2, server->vendor, (int)strlen(server->vendor), SQLITE_STATIC)) > 0) {
-		printf("Cannot bind %s\n", server->vendor);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 3, server->make, (int)strlen(server->make), SQLITE_STATIC)) > 0) {
-		printf("Cannot bind %s\n", server->make);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 4, server->model, (int)strlen(server->model), SQLITE_STATIC)) > 0) {
-		printf("Cannot bind %s\n", server->model);
-		return retval;
-	}
-	if ((retval = sqlite3_bind_text(
-state, 5, server->uuid, (int)strlen(server->uuid), SQLITE_STATIC)) > 0) {
-		printf("Cannot bind %s\n", server->uuid);
 		return retval;
 	}
 	if ((retval = sqlite3_bind_int(

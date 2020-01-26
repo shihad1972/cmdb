@@ -199,8 +199,8 @@ ailsa_get_fqdn(char *host, char *fqdn, char *ip)
 				}
 			}
 		} else if (p->ai_family == AF_INET6) {
-			struct sockaddr_in *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-			addr = &(ipv6->sin_addr);
+			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+			addr = &(ipv6->sin6_addr);
 			if (!(inet_ntop(AF_INET6, addr, ip, INET6_ADDRSTRLEN))) {
 				syslog(LOG_ALERT, "inet_ntop error: %s", strerror(errno));
 			} else {
