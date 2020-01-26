@@ -9,6 +9,12 @@ CBC_COMBO = cbc_common.c cbccom.c
 CBC_DNSA = cbc_dnsa.c dnsacom.c dnsa_net.c zones.c
 cbc_SOURCES = cbc.c $(CBC_COMBO) build.c createbuild.c
 cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO) cbcnet.c cbcnet.h cbcdomain.h
+cbcos_SOURCES = cbcos.c cbcnet.c $(CBC_COMBO)
+cbcpart_SOURCES = cbcpart.c $(CBC_COMBO)
+cbclocale_SOURCES = cbclocale.c $(CBC_COMBO)
+cbcvarient_SOURCES = cbcvarient.c $(CBC_COMBO)
+cbcsysp_SOURCES = cbcsysp.c cbcsysp.h $(CBC_COMBO)
+cbcscript_SOURCES = cbcscript.c cbcscript.h $(CBC_COMBO)
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript
