@@ -457,26 +457,22 @@ set_scheme_updated(cbc_config_s *cbc, char *scheme)
 }
 // Should get rid of the uli_id *id in this function
 void
-set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id)
+set_build_domain_updated(cbc_config_s *cbt, char *domain)
 {
 	int retval, query = UP_BDOM_MUSER;
 	dbdata_s *data;
 
-	if (!(cbt) || (!(domain) && (id == 0)))
+	if (!(cbt) || (!(domain)))
 		return;
 	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	if (id == 0) { // need to get build_domain id
-		snprintf(data->args.text, RBUFF_S, "%s", domain);
-		if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
-			fprintf(stderr, "Cannot find build domain %s\n", domain);
-			clean_dbdata_struct(data);
-			return;
-		} else {
-			data->next->args.number = data->fields.number;
-			memset(&(data->args.text), 0, RBUFF_S);
-		}
+	snprintf(data->args.text, RBUFF_S, "%s", domain);
+	if ((retval = cbc_run_search(cbt, data, BD_ID_ON_DOMAIN)) == 0) {
+		fprintf(stderr, "Cannot find build domain %s\n", domain);
+		clean_dbdata_struct(data);
+		return;
 	} else {
-		data->next->args.number = id;
+		data->next->args.number = data->fields.number;
+		memset(&(data->args.text), 0, RBUFF_S);
 	}
 	data->args.number = (unsigned long int)getuid();
 	if ((retval = cbc_run_update(cbt, data, query)) == 0)

@@ -41,7 +41,7 @@ void
 check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
 
 void
-set_build_domain_updated(cbc_config_s *cbt, char *domain, uli_t id);
+set_build_domain_updated(cbc_config_s *cbt, char *domain);
 
 int
 get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id);

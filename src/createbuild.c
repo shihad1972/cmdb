@@ -93,7 +93,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 		fprintf(stderr, "Cannot insert build into db\n");
 	} else {
 		printf("Build inserted into db\n");
-		set_build_domain_updated(cbt, cml->build_domain, 0);
+		set_build_domain_updated(cbt, cml->build_domain);
 	}
 	goto cleanup;
 
