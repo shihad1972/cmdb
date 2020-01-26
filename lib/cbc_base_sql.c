@@ -39,9 +39,6 @@
 #include "cbc_data.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#ifdef HAVE_LIBPCRE
-# include "checks.h"
-#endif /* HAVE_LIBPCRE */
 #ifdef HAVE_MYSQL
 # include <mysql.h>
 #endif /* HAVE_MYSQL */
