@@ -446,10 +446,14 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 
 	printf("Server Details:\n");
 	printf("Name:\t\t%s\n", server->name);
-	printf("UUID:\t\t%s\n", server->uuid);
-	printf("Vendor:\t\t%s\n", server->vendor);
-	printf("Make:\t\t%s\n", server->make);
-	printf("Model:\t\t%s\n", server->model);
+	if ((strncmp(server->uuid, "none", MAC_S)) != 0)
+		printf("UUID:\t\t%s\n", server->uuid);
+	if ((strncmp(server->vendor, "none", MAC_S)) != 0)
+		printf("Vendor:\t\t%s\n", server->vendor);
+	if ((strncmp(server->make, "none", MAC_S)) != 0)
+		printf("Make:\t\t%s\n", server->make);
+	if ((strncmp(server->model, "none", MAC_S)) != 0)
+		printf("Model:\t\t%s\n", server->model);
 	uid = (uid_t)server->cuser;
 	user = getpwuid(uid);
 	uname = user->pw_name;
@@ -467,8 +471,6 @@ print_server_details(cmdb_server_s *server, cmdb_s *base)
 			customer = customer->next;
 		printf("Customer:\t%s\n", customer->name);
 		printf("COID:\t\t%s\n", customer->coid);
-	} else {
-		printf("No Customer associated with this server!\n");
 	}
 	if (server->vm_server_id > 0) {
 		while (server->vm_server_id != vmhost->id) {

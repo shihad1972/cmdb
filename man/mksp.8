@@ -1,0 +1,64 @@
+.TH mksp 8 "Version 0.2: 18 May 2019" "MKVM suite manuals" "mkvm collection"
+.SH NAME
+mksp \- Make Storage Pool
+.SH SYNOPSIS
+.B mksp
+[
+.B action
+]   [
+.B type
+]   \fBoptions\fP
+.PP
+.B mksp
+[
+.B -a | -h | -v
+]   [
+.B -g | -y 
+]   -n \fBname\fP -u \fBuri\fP   [ -l \fBvolume-group\fP | -p \fBpath\fP ]
+.PP
+.SH DESCRIPTION
+\fBmksp\fP will create a \fBlibvirt\fP storage pool, in which you can create
+individual volumes for virtual machines. You can create storage pools from
+a filesystem directory, or a logical volume group.
+.PP
+\fBmksp\fP configuration options are the name of the storage pool, and the
+path (if a filesystem directory) or the volume group name (if an LVM pool)
+.PP
+.SH OPTIONS
+.B Actions (these do not take arguments, and are mutually exclusive)
+.IP "-a,  --add"
+.IP "-h,  --help"
+.IP "-v,  --version"
+.PP
+.B Storage Pool types
+.IP "-g,  --lvm"
+Create a storage pool from a logical volume group
+.IP "-y,  --directory"
+Create a storage pool from a filesystem directory
+.PP
+.B Configuration options
+.IP "-n,  --name \fBname\fP"
+Name of the storage pool
+.IP "-u,  --uri \fBURI\fP"
+Specify the libvirt connection URI
+.PP
+.B The next 2 options are mutually exclusive
+.IP "-l,  --volume-group \fBVG name\fP"
+The volume group name to use for the storage pool
+.IP "-p,  --path \fBdirectory path\fP"
+The path to the directory to use for the storage pool
+.PP
+.SH FILES
+.I /etc/cmdb/mkvm.conf
+.RS
+The system wide configuration file
+.RE
+.I ~/.mkvm.conf
+.RS
+User configuration file
+.RE
+.SH ENVIRONMENT
+This program does not use environment variables.
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+

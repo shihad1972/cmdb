@@ -46,6 +46,7 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	short int server;
 	short int removeip;
 	short int lvm;
+	short int gui;
 	unsigned long int server_id;
 	unsigned long int os_id;
 	unsigned long int locale_id;

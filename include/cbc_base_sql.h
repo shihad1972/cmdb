@@ -153,7 +153,8 @@ enum {			/* cbc search SQL statements */
 	PACKAGE_VID_ON_OS_ID = 78,
 	BOOT_FILES_MIRROR_DETAILS = 79,
 	LOCALE_ID_ON_NAME = 80,
-	GET_DEFAULT_LOCALE = 81
+	GET_DEFAULT_LOCALE = 81,
+	GET_BUILD_OS_FROM_SERVER_ID = 82
 };
 
 enum {			/* cbc update SQL statements */
@@ -369,6 +370,9 @@ cbc_setup_bind_mysql_scripta(void **buffer, cbc_s *base, unsigned int i);
 void
 cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i);
 
+void
+cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i);
+
 # endif /* HAVE_MYSQL */
 
 # ifdef HAVE_SQLITE3
@@ -517,6 +521,9 @@ cbc_setup_bind_sqlite_scripta(sqlite3_stmt *state, cbc_script_arg_s *arg);
 
 int
 cbc_setup_bind_sqlite_partopt(sqlite3_stmt *state, cbc_part_opt_s *opt);
+
+int
+cbc_setup_bind_sqlite_server(sqlite3_stmt *state, cbc_server_s *server);
 
 # endif /* HAVE_SQLITE3 */
 #endif /* __CBC_BASE_SQL_H */

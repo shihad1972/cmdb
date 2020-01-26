@@ -111,6 +111,11 @@
 
 /* Define to 1 if you have the `odbc' library (-lodbc). */
 #define HAVE_LIBODBC 1
+/* Define to 1 if you have the <regex.h> header file. */
+#define HAVE_REGEX_H 1
+
+/* libgcrypt library available for use */
+#define HAVE_LIBGCRYPT /**/
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
 #define HAVE_LIBPCRE 1

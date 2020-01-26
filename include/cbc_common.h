@@ -97,4 +97,7 @@ fill_dbdata_os_search(dbdata_s *data, char *os[]);
 void
 check_for_alias(char **what, char *name, char *alias);
 
+int
+cbc_add_server(cbc_config_s *cbc, char *name, long unsigned int *server_id);
+
 #endif /* CBC_COMMON_H */

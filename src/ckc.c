@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <getopt.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 
 typedef struct ckc_config_s {

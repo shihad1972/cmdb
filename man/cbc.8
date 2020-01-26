@@ -1,11 +1,11 @@
-.TH cbc 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbc 8 "Version 0.2: 18 May 2019" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbc \- Create Build Config
 .SH SYNOPSIS
 .B cbc
 [
 .B action
-] ( -n | -i | -i )
+] ( -n | -i | -u )
 .B <server specifier>
 [
 .B build options
@@ -67,6 +67,9 @@ This is the name of the build domain the server build is to be a part of.
 This is the build varient. This will contain a list of packages to install
 so it makes sense to use this as a functional name of the server, e.g. web,
 mysql, ldap etc.
+.IP "-y,  --gui"
+This option will allow console output to go to the graphics driver, and
+not the seral console.
 .IP "-e,  --locale \fBlocale_id\fP"
 This is the database locale_id of the locale you wish to have enabled on the
 server.

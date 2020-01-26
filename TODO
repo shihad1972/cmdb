@@ -7,6 +7,15 @@ Reworking the SQL code:
   - allow inserts of multiple entries
   - condense cmdb dnsa and cbc sql into 1 set of functions
 
+27/02/2019
+Need to add a generic logging function, that can handle both console
+output and also logging to syslog.
+
+09/11/2018
+Deleting SRV records is tricky; it seems to delete all SRV records
+for a given service (e.g. ldap) and we cannot specify which one
+to delete
+
 06/03/2016
 I should probably have a default configuration file, and use make to create
 it and then have make install install it in ${sysconfdir}/cmdb. Using the
@@ -20,10 +29,6 @@ as the daemon can have a config file passed to it on startup.
 
 24/02/2016
 Add default for build_os, partition and varient
-
-21/02/2016
-I want to move config.h into include/
-*** Fixed: 21/02/2016 ***
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before
@@ -58,6 +63,7 @@ DB access :(
 26/11/2014
 Would be nice if I could create a VM xml file to use for libvirt.
 Not too sure if I need to use the libvirt API or not.
+	** DONE!!!!! ** 0.2.26.1 can create a VM using libvirt API
 
 21/11/2014
 Check the auditd source code for a cool way to read a config file.
@@ -189,6 +195,7 @@ Problem with this is to work out a way of passing the program to the SQL
 search so that it will do a, e.g. cbc_search and get the correct values
 for number and type of args and fields. Also this will need to be the
 correct search itself. Could this config contain this information?
+	** Started. ailsa_cmdb_s **
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains

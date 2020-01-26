@@ -25,10 +25,12 @@
 #define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <ailsacmdb.h>
+#include "config.h"
 
 void
 ailsa_start_syslog(const char *prog)
@@ -60,13 +62,41 @@ ailsa_show_error(int retval)
 {
 	switch(retval) {
 	case AILSA_NO_ACTION:
-		fprintf(stderr, "No action was specified on the command line\n");
+		fprintf(stderr, "No action was specified on the command line\n\n");
+		break;
+	case AILSA_NO_TYPE:
+		fprintf(stderr, "No type was specified on the command line\n\n");
+		break;
+	case AILSA_NO_NAME:
+		fprintf(stderr, "No name was specified on the command line\n\n");
+		break;
+	case AILSA_NO_LOGVOL:
+		fprintf(stderr, "A logical volume pool was specified, but no name provided\n\n");
+		break;
+	case AILSA_NO_POOL:
+		fprintf(stderr, "Program was unable to create or activate th storage pool\n\n");
+		break;
+	case AILSA_NO_DIRECTORY:
+		fprintf(stderr, "A directory pool was specified, but no path provided\n\n");
+		break;
+	case AILSA_NO_NETWORK:
+		fprintf(stderr, "There was no network specified for the virtual machine\n\n");
 		break;
 	case AILSA_NO_CONNECT:
-		fprintf(stderr, "Program was unable to make connection to libvirtd\n");
+		fprintf(stderr, "Program was unable to make connection to libvirtd\n\n");
 		break;
 	default:
 		return;
 	}
+}
+
+void
+display_version(char *prog)
+{
+        if (strrchr(prog, '/')) {
+                prog = strrchr(prog, '/');
+                prog++;
+        }
+        printf("%s: %s\n", prog, VERSION);
 }
 

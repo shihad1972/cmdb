@@ -55,7 +55,7 @@ int
 get_dhcp_server_info(cbc_build_domain_s *bd, cbc_dhcp_s **dh, cbc_iface_s *i);
 
 void
-insert_into_dhcp_list(cbc_dhcp_s **list, cbc_dhcp_s **item);
+insert_into_dhcp_list(cbc_dhcp_s **list);
 
 void
 remove_from_dhcp_list(cbc_dhcp_s **list);

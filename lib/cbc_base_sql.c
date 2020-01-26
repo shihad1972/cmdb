@@ -121,7 +121,7 @@ INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, \
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO server (vendor, make, model, uuid, cust_id, vm_server_id, name, \
-cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)","\
+cuser, muser)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)","\
 INSERT INTO varient (varient, valias, cuser, muser) VALUES (?, ?, ?, ?)","\
 INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES\
  (?, ?, ?, ?, ?)","\
@@ -382,7 +382,9 @@ SELECT package, varient_id FROM packages WHERE os_id = ?","\
 SELECT mirror from build_type where alias = ?"
 /* 80 */,"\
 SELECT locale_id FROM locale WHERE name = ?","\
-SELECT locale_id FROM default_locale WHERE locale_id > 0"
+SELECT locale_id FROM default_locale WHERE locale_id > 0","\
+SELECT bo.os, bo.os_version FROM build_os bo LEFT JOIN build b\
+ ON bo.os_id = b.os_id WHERE b.server_id = ?"
 };
 
 const unsigned int cbc_select_fields[] = {
@@ -404,13 +406,13 @@ const unsigned int cbc_search_args[] = {
 	1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, // 22
 	1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 1, 1, 1, // 22
-	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0
+	3, 1, 2, 1, 4, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1
 };
 const unsigned int cbc_search_fields[] = {
 	5, 5, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 10,
 	10, 7, 2, 6, 1, 5, 3, 4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 11, 1, 2,
 	2, 6, 1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 4, 1, 4, 4, 1, 2, 1,
-	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1, 1
+	1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 3, 5, 2, 1, 1, 1, 2
 };
 
 const int cbc_inserts[][24] = {
@@ -593,7 +595,8 @@ const unsigned int cbc_search_arg_types[][4] = {
 	{ DBINT, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE },
-	{ NONE, NONE, NONE, NONE }
+	{ NONE, NONE, NONE, NONE },
+	{ DBINT, NONE, NONE, NONE }
 };
 const unsigned int cbc_search_field_types[][11] = {
 	{ DBSHORT, DBSHORT, DBTEXT, DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE } ,
@@ -677,7 +680,8 @@ const unsigned int cbc_search_field_types[][11] = {
 	{ DBTEXT, DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
 	{ DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
 	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
-	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+	{ DBINT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE } ,
+	{ DBTEXT, DBTEXT, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
 };
 
 int
@@ -1354,6 +1358,8 @@ cbc_setup_insert_mysql_buffer(int type, void **buffer, cbc_s *base, unsigned int
 		cbc_setup_bind_mysql_scripta(buffer, base, i);
 	else if (type == PARTOPTS)
 		cbc_setup_bind_mysql_partopts(buffer, base, i);
+	else if (type == CSERVERS)
+		cbc_setup_bind_mysql_servers(buffer, base, i);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_setup_insert_mysql_buffer");
 }
@@ -2202,6 +2208,33 @@ cbc_setup_bind_mysql_partopts(void **buffer, cbc_s *base, unsigned int i)
 		*buffer = &(base->part_opt->muser);
 }
 
+void
+cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i)
+{
+	if (i == 0)
+		*buffer = &(base->server->name);
+	else if (i == 1)
+		*buffer = &(base->server->vendor);
+	else if (i == 2)
+		*buffer = &(base->server->make);
+	else if (i == 3)
+		*buffer = &(base->server->model);
+	else if (i == 4)
+		*buffer = &(base->server->uuid);
+	else if (i == 5)
+		*buffer = &(base->server->cust_id);
+	else if (i == 6)
+		*buffer = &(base->server->vm_server_id);
+	else if (i == 7)
+		*buffer = &(base->server->cuser);
+	else if (i == 8)
+		*buffer = &(base->server->muser);
+	else if (i == 9)
+		*buffer = &(base->server->ctime);
+	else if (i == 10)
+		*buffer = &(base->server->mtime);
+}
+
 #endif /* HAVE_MYSQL */
 
 #ifdef HAVE_SQLITE3
@@ -2673,6 +2706,8 @@ cbc_setup_insert_sqlite_bind(sqlite3_stmt *state, cbc_s *base, int type)
 		retval = cbc_setup_bind_sqlite_scripta(state, base->script_arg);
 	else if (type == PARTOPTS)
 		retval = cbc_setup_bind_sqlite_partopt(state, base->part_opt);
+	else if (type == CSERVERS)
+		retval = cbc_setup_bind_sqlite_server(state, base->server);
 	else
 		report_error(UNKNOWN_STRUCT_DB_TABLE, "cbc_run_insert_sqlite");
 	return retval;
@@ -3964,6 +3999,59 @@ state, 4, (sqlite3_int64)opt->cuser)) > 0) {
 	if ((retval = sqlite3_bind_int64(
 state, 5, (sqlite3_int64)opt->muser)) > 0) {
 		fprintf(stderr, "Cannot bind muser %lu\n", opt->muser);
+		return retval;
+	}
+	return retval;
+}
+
+int
+cbc_setup_bind_sqlite_server(sqlite3_stmt *state, cbc_server_s *server)
+{
+	int retval = NONE;
+
+	if ((retval = sqlite3_bind_text(
+state, 1, server->name, (int)strlen(server->name), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->name);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 2, server->vendor, (int)strlen(server->vendor), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->vendor);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 3, server->make, (int)strlen(server->make), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->make);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 4, server->model, (int)strlen(server->model), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->model);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_text(
+state, 5, server->uuid, (int)strlen(server->uuid), SQLITE_STATIC)) > 0) {
+		printf("Cannot bind %s\n", server->uuid);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 6, (sqlite3_int64)server->cust_id)) > 0) {
+		printf("Cannot bind %lu\n", server->cust_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 7, (sqlite3_int64)server->vm_server_id)) > 0) {
+		printf("Cannot bind %lu\n", server->vm_server_id);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 8, (sqlite3_int64)server->cuser)) > 0) {
+		printf("Cannot bind %lu\n", server->cuser);
+		return retval;
+	}
+	if ((retval = sqlite3_bind_int64(
+state, 9, (sqlite3_int64)server->muser)) > 0) {
+		printf("Cannot bind %lu\n", server->muser);
 		return retval;
 	}
 	return retval;

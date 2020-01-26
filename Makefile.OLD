@@ -10,14 +10,16 @@ DAEMONDIR = daemon
 CLIENTDIR = client
 LIBDIR = lib
 SUBDIRS = lib src daemon
-#bin_PROGRAMS = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2 dynamo hellolv mkvm
-bin_programs = hellolv mkvm dynamo cmdb2
-sbin_PROGRAMS = cmdbd cmdbc
-lib_LIBRARIES = libailsacmdb.a libailsasql.a
+mk_PROGRAMS = mkvm mksp
+bin_PROGRAMS = dnsa cmdb cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale $(mk_PROGRAMS)
+sbin_PROGRAMS = cmdbd
+lib_LIBRARIES = libailsacmdb.a
 
 all:	$(lib_LIBRARIES) $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
 libs:	$(lib_LIBRARIES)
+
+mk:	$(mk_PROGRAMS)
 
 daemon:	$(sbin_PROGRAMS)
 
@@ -25,9 +27,6 @@ $(lib_LIBRARIES):
 	$(MAKE) -C $(LIBDIR) $@
 
 $(bin_PROGRAMS):	$(lib_LIBRARIES)
-	$(MAKE) -C $(DIR) $@
-
-sqlt:
 	$(MAKE) -C $(DIR) $@
 
 $(sbin_PROGRAMS):	$(lib_LIBRARIES)

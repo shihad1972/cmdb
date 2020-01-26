@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 201r54  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2018  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -531,7 +531,7 @@ fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
                 filename \"pxelinux.0\";\n\
         }\n\
 }\n\n", list->dname, val.ns, list->dom_search->string, val.gw, val.sn,
-        val.nm, val.gw);
+        val.nm, val.ns);
 		len = strlen(buff);
 		if ((len + conf->size) > conf->len)
 			resize_string_buff(conf);

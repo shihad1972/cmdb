@@ -50,10 +50,13 @@ void
 ailsa_list_destroy(AILLIST *list)
 {
 	void *data;
+	int retval = 0;
 
+	if (!(list))
+		return;
 	while (list->total > 0) {
-		if (ailsa_list_remove(list, list->tail, (void **)&data) == 0 &&
-		    list->destroy != NULL) {
+		retval = ailsa_list_remove(list, list->tail, (void **)&data);
+		if (retval == 0 && list->destroy != NULL) {
 			list->destroy(data);
 		}
 	}

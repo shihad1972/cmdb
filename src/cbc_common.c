@@ -602,3 +602,26 @@ check_for_alias(char **what, char *name, char *alias)
 		*what = alias;
 }
 
+int
+cbc_add_server(cbc_config_s *cbc, char *name, long unsigned int *server_id)
+{
+	int retval = 0;
+	cbc_server_s *server;
+	cbc_s *base;
+
+	server = cmdb_malloc(sizeof(cbc_server_s), "server in cbc_add_server");
+	base = cmdb_malloc(sizeof(cbc_s), "base in cbc_add_server");
+	base->server = server;
+	snprintf(server->name, HOST_S, "%s", name);
+	server->cuser = server->muser = (unsigned long int)getuid();
+	if ((retval = cbc_run_insert(cbc, base, CSERVERS)) != 0) {
+		fprintf(stderr, "Caanot add server %s to database!\n", name);
+	} else {
+		printf("Server %s added to database\n", name);
+		if (server_id)
+			retval = get_server_id(cbc, name, server_id);
+	}
+	clean_cbc_struct(base);
+	return retval;
+}
+

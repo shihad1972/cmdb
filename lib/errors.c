@@ -674,6 +674,8 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, MAC_S, "Build domain not found.");
 	else if (error == NO_BUILD_IP) 
 		snprintf(errstr, MAC_S, "No IP's left in build domain.");
+	else if (error == BUILD_IP_OUT_OF_RANGE)
+		snprintf(errstr, MAC_S, "Build IP from DNS outside range.");
 	else if (error == BUILD_IP_IN_USE)
 		snprintf(errstr, MAC_S, "Build IP already in use.");
 	else if (error == CANNOT_INSERT_IP)

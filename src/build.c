@@ -1,7 +1,7 @@
 /* 
  *
  *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -66,6 +66,9 @@ const int sp_query[] = { 33, 63, 64, 20, 33 };
 const int spvar_no = 5;
 
 const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
+
+static void
+check_for_gb_keyboard(cbc_config_s *cbc, unsigned long int server_id, char *key);
 
 int
 display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
@@ -798,7 +801,8 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	CHECK_DATA_LIST()
 	char *net_inst = list->fields.text;
 	if (strncmp(alias, "debian", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
+		if (cml->gui > 0)
+			snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\
@@ -806,14 +810,34 @@ kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
 url, cml->name);
+		else
+			snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg vga=off console=ttyS0,115200n8\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
+url, cml->name);
 	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
+		if (cml->gui > 0)
+			snprintf(output, BUFF_S, "\
 default %s\n\
 \n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img country=%s \
 console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
+cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
+bline, arg, url, cml->name);
+		else
+			snprintf(output, BUFF_S, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img country=%s \
+console-setup/layoutcode=%s %s %s=%s%s.cfg console=ttyS0,115200n8\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
 bline, arg, url, cml->name);
 	} else if ((strncmp(alias, "centos", COMM_S) == 0) ||
@@ -823,8 +847,8 @@ default %s\n\
 \n\
 label %s\n\
 kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img ksdevice=%s console=tty0 ramdisk_size=8192\
- %s=%s%s.cfg text\n\n",
+append initrd=initrd-%s-%s-%s.img ksdevice=%s vga=off console=ttyS0,115200n8 ramdisk_size=8192\
+ %s=%s%s.cfg\n\n",
 cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
 url, cml->name);
 	}
@@ -1481,7 +1505,12 @@ fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 	key = data->fields.text;
 	loc = data->next->fields.text;
 	tim = data->next->next->fields.text;
-
+/*
+ * Redhat 6 kickstart crashes if you supply gb as keyboard type.
+ * Need to check this and updated to uk if found. All other OS
+ * seem to be unaffected.
+ */
+	check_for_gb_keyboard(cbc, cml->server_id, key);
 	/* root password is k1Ckstart */
 	snprintf(buff, FILE_S, "\
 auth --useshadow --enablemd5\n\
@@ -1905,6 +1934,28 @@ cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
 	} else if (type == UP_BUILD_PART) {
 		data->args.number = ids[2];
 		data->next->args.number = ids[3];
+	}
+}
+
+// Static functions
+void
+check_for_gb_keyboard(cbc_config_s *cbc, unsigned long int server_id, char *key)
+{
+	if (!(cbc) || !(key) || !(server_id))
+		return;
+	int retval = 0, type = GET_BUILD_OS_FROM_SERVER_ID;
+	unsigned int max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
+	dbdata_s *data;
+
+	init_multi_dbdata_struct(&data, max);
+	data->args.number = server_id;
+	if ((retval = cbc_run_search(cbc, data, type)) == 1) {
+		if ((strncmp(data->fields.text, "Centos", RBUFF_S) == 0) ||
+		 (strncmp(data->fields.text, "Redhat", RBUFF_S) == 0)) {
+			if (strncmp(data->next->fields.text, "6", RBUFF_S) == 0)
+				if (strncmp(key, "gb", RBUFF_S) == 0)
+					snprintf(key, COMM_S, "uk");
+		}
 	}
 }
 

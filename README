@@ -14,4 +14,3 @@ To install binaries under /usr/local but use system /var/lib and /etc configure
 as:
 
   ./configure --sysconfdir=/etc --localstatedir=/var/lib
-

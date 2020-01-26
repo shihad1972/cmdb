@@ -395,6 +395,8 @@ cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data)
 
 	if (!(ipinfo) || !(data))
 		return CBC_NO_DATA;
+	if (*(ipinfo + 3) > *(ipinfo + 2))
+		return BUILD_IP_OUT_OF_RANGE;
 	while (*(ipinfo + 3) <= *(ipinfo + 2)) {
 		i = FALSE;
 		list = data;

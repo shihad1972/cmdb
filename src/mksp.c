@@ -1,6 +1,6 @@
 /*
  *
- *  mkvm : make virtual machine
+ *  mksp : make storgae pool
  *  Copyright (C) 2018 - 2019  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  mkvm.c
+ *  mksp.c
  *
- *  main and command line parsing functions for mkvm
+ *  main and command line parsing functions for mksp
  *
  */
 
@@ -45,21 +45,16 @@ main(int argc, char *argv[])
 {
 	int retval = 0;
 	ailsa_mkvm_s *vm = ailsa_calloc(sizeof(ailsa_mkvm_s), "vm in main");
-	ailsa_cmdb_s *cmdb = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmdb in main");
 
 	parse_mkvm_config(vm);
-	parse_cmdb_config(cmdb);
-	if ((retval = parse_mkvm_command_line(argc, argv, vm)) != 0)
+	if ((retval = parse_mksp_command_line(argc, argv, vm)) != 0)
 		goto cleanup;
 	switch (vm->action) {
 	case AILSA_ADD:
-		retval = mkvm_create_vm(vm);
-		break;
-	case AILSA_CMDB_ADD:
-		retval = mkvm_add_to_cmdb(cmdb, vm);
+		retval = mksp_create_storage_pool(vm);
 		break;
 	case AILSA_HELP:
-		display_mkvm_usage();
+		display_mksp_usage();
 		break;
 	case AILSA_VERSION:
 		display_version(argv[0]);
@@ -68,9 +63,7 @@ main(int argc, char *argv[])
 	cleanup:
 		ailsa_show_error(retval);
 		if (retval > 0)
-			display_mkvm_usage();
+			display_mksp_usage();
 		ailsa_clean_mkvm((void *)vm);
-		ailsa_clean_cmdb((void *)cmdb);
 		return retval;
 }
-

@@ -1,4 +1,4 @@
-bin_PROGRAMS = cpc ckc mkvm
+bin_PROGRAMS = cmdb cpc ckc mkvm mksp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 combo_SOURCES = checks.c checks.h

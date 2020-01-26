@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
@@ -106,10 +107,10 @@ static unsigned long int
 get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl);
 
 static int
-cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id);
+cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id);
 
 static int
-cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id);
+cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id);
 
 static cbc_package_s *
 build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack);
@@ -560,23 +561,26 @@ display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *
 
 	if (!(bos))
 		return OS_NOT_FOUND;
-	bos = base->bos;
-	printf("\nDisplaying build packages for os %s\n", cvl->alias);
-	if (strncmp(cvl->version, "NULL", COMM_S) != 0) {	// version set
+	printf("Displaying build packages for os %s\n\n", cvl->alias);
+	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) ||
+	    (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0)) {	// version set
 		if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {	// arch set
 			printf("Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
 			if ((osid = get_single_os_id(base, cvl)) == 0) {
 				return OS_NOT_FOUND;
 			}
-			retval = display_specific_os_packages(base, id, osid);
+			if ((retval = display_specific_os_packages(base, id, osid)) == SERVER_PACKAGES_NOT_FOUND)
+				fprintf(stderr, "Os has no packages\n");
 		} else {					// arch not set
 			while (bos) {
 				if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
-				    (strncmp(cvl->version, bos->version, MAC_S) == 0)) {
+				   ((strncmp(cvl->version, bos->version, MAC_S) == 0) ||
+                                    (strncmp(cvl->ver_alias, bos->ver_alias, MAC_S) == 0))) {
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -589,7 +593,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -599,7 +604,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 					flag = 1;
 					printf("\
 Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					retval = display_specific_os_packages(base, id, bos->os_id);
+					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
+						fprintf(stderr, "Os has no packages\n");
 				}
 				bos = bos->next;
 			}
@@ -609,6 +615,8 @@ Version: %s\tArch: %s\n\t", bos->version, bos->arch);
 		printf("\tNo build varient for os %s\n", cvl->alias);
 	else
 		flag = 0;
+	if (retval == SERVER_PACKAGES_NOT_FOUND)
+		retval = 0;
 	return retval;
 }
 
@@ -704,7 +712,7 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
 		return retval;
 // This will setup the array of osid's in osid if we have more than one version / arch
-	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0)
+	if ((os = cbc_get_os(base->bos, cvl, &osid)) == 0)
 		return OS_NOT_FOUND;
 // Set the last to the varient_id
 	*(osid + (unsigned long int)os) = vid;
@@ -750,7 +758,7 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
 		return retval;
 // This will setup the array of osid's in osid if we have more than one version / arch
-	if ((os = cbc_get_os(base->bos, cvl->os, cvl->alias, cvl->arch, cvl->version, &osid)) == 0) {
+	if ((os = cbc_get_os(base->bos, cvl, &osid)) == 0) {
 		clean_cbc_struct(base);
 		return OS_NOT_FOUND;
 	}
@@ -783,22 +791,22 @@ remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 }
 
 static int
-cbc_get_os(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int **id)
+cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id)
 {
 	int retval = NONE;
 	unsigned long int *os_id = NULL;
 
-	if ((retval = cbc_get_os_list(os, name, alias, arch, ver, os_id)) == 0)
+	if ((retval = cbc_get_os_list(os, cvl, os_id)) == 0)
 		return retval;
 	if (!(os_id = calloc((size_t)retval + 1, sizeof(unsigned long int))))
-		report_error(MALLOC_FAIL, "os_id = cbc_get_os");
-	retval = cbc_get_os_list(os, name, alias, arch, ver, os_id);
+		report_error(MALLOC_FAIL, "os_id in cbc_get_os");
+	retval = cbc_get_os_list(os, cvl, os_id);
 	*id = os_id;
 	return retval;
 }
 
 static int
-cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *ver, unsigned long int *id)
+cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id)
 {
 	int retval = NONE;
 	cbc_build_os_s *list;
@@ -806,12 +814,12 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 
 	list = os;
 	while (list) {
-		if (strncmp(ver, "NULL", COMM_S) != 0) {
-			if (strncmp(arch, "NULL", COMM_S) != 0) {
-				if (((strncmp(alias, list->alias, MAC_S) == 0) ||
-                                     (strncmp(name, list->os, MAC_S) == 0)) &&
-				     (strncmp(arch, list->arch, RANGE_S) == 0) &&
-				     (strncmp(ver, list->version, MAC_S) == 0)) {
+		if (strncmp(cvl->version, "NULL", COMM_S) != 0) {
+			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
+				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
 					retval++;
 					if (id) {
 						*os_id = list->os_id;
@@ -819,9 +827,9 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 					}
 				}
 			} else {
-				if (((strncmp(alias, list->alias, MAC_S) == 0) ||
-				     (strncmp(name, list->os, MAC_S) == 0)) &&
-				     (strncmp(ver, list->version, MAC_S) == 0)) {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
 					retval++;
 					if (id) {
 						*os_id = list->os_id;
@@ -829,10 +837,33 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 					}
 				}
 			}
-		} else if (strncmp(arch, "NULL", COMM_S) != 0) {
-			if (((strncmp(alias, list->alias, MAC_S) == 0) ||
-			     (strncmp(name, list->os, MAC_S) == 0)) &&
-			     (strncmp(arch, list->arch, RANGE_S) == 0)) {
+		} else if (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0) {
+			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
+				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			} else {
+				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
+					retval++;
+					if (id) {
+						*os_id = list->os_id;
+						os_id++;
+					}
+				}
+			}
+		} else if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
+			if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+			     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
+			     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0)) {
 				retval++;
 				if (id) {
 					*os_id = list->os_id;
@@ -840,8 +871,8 @@ cbc_get_os_list(cbc_build_os_s *os, char *name, char *alias, char *arch, char *v
 				}
 			}
 		} else {
-			if ((strncmp(alias, list->alias, MAC_S) == 0) ||
-			    (strncmp(name, list->os, MAC_S) == 0)) {
+			if ((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
+			    (strncasecmp(cvl->os, list->os, MAC_S) == 0)) {
 				retval++;
 				if (id) {
 					*os_id = list->os_id;

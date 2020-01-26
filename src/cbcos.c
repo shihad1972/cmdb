@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
@@ -165,8 +166,8 @@ main (int argc, char *argv[])
 static void
 cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 {
-	if (strncmp(cocl->version, "NULL", COMM_S) != 0) {
-		if (strncmp (cocl->arch, "NULL", COMM_S))
+	if (strncasecmp(cocl->version, "NULL", COMM_S) != 0) {
+		if (strncasecmp (cocl->arch, "NULL", COMM_S))
 			snprintf(error, URL_S, "%s %s %s",
 			 cocl->os, cocl->version, cocl->arch);
 		else
@@ -267,14 +268,14 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		return NO_ACTION;
 	}
 	if (col->action == ADD_CONFIG && (
-		strncmp(col->version, "NULL", COMM_S) == 0 ||
-		strncmp(col->os, "NULL", COMM_S) == 0 ||
-		strncmp(col->arch, "NULL", COMM_S) == 0)) {
+		strncasecmp(col->version, "NULL", COMM_S) == 0 ||
+		strncasecmp(col->os, "NULL", COMM_S) == 0 ||
+		strncasecmp(col->arch, "NULL", COMM_S) == 0)) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}
 	if ((col->action != LIST_CONFIG && col->action != DOWNLOAD) && 
-		(strncmp(col->os, "NULL", COMM_S) == 0)) {
+		(strncasecmp(col->os, "NULL", COMM_S) == 0)) {
 		printf("No OS name was provided\n");
 		return DISPLAY_USAGE;
 	}
@@ -304,7 +305,7 @@ list_cbc_build_os(cbc_config_s *cmc)
 		talias = type->alias;
 		oalias = os->alias;
 		while (os) {
-			if (strncmp(talias, oalias, MAC_S) != 0) {
+			if (strncasecmp(talias, oalias, MAC_S) != 0) {
 				os = os->next;
 				oalias = os->alias;
 			} else {
@@ -340,14 +341,14 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	}
 	os = base->bos;
 	while (os) {
-		if (strncmp(os->os, name, MAC_S) == 0) {
+		if (strncasecmp(os->os, name, MAC_S) == 0) {
 			if (i == 0) {
 				printf("Operating System %s\n", name);
 				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 			}
 			i++;
 			create = (time_t)os->ctime;
-			if (strncmp(os->ver_alias, "none", COMM_S) == 0) {
+			if (strncasecmp(os->ver_alias, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
 				     os->version, os->arch);
 			} else {
@@ -384,9 +385,9 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 	initialise_cbc_s(&cbc);
 	initialise_cbc_os_s(&os);
 	cbc->bos = os;
-	if (strncmp(col->ver_alias, "NULL", COMM_S) == 0)
+	if (strncasecmp(col->ver_alias, "NULL", COMM_S) == 0)
 		snprintf(col->ver_alias, COMM_S, "none");
-	if (strncmp(col->alias, "NULL", MAC_S) == 0) {
+	if (strncasecmp(col->alias, "NULL", MAC_S) == 0) {
 		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
 			clean_cbc_struct(cbc);
 			return OS_NOT_FOUND;
@@ -546,7 +547,7 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 	}
 	list = data;
 	while (data) {
-		if ((strncmp(arch, data->next->next->fields.text, RBUFF_S) == 0) &&
+		if ((strncasecmp(arch, data->next->next->fields.text, RBUFF_S) == 0) &&
 		    (data->fields.number != id[0])) {
 			convert_time(data->next->fields.text, &ctime);
 			if (ctime > time) {
@@ -741,28 +742,28 @@ cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test)
 {
 	*test = 0;	// Sanity
 /* Set bit fields from command line input */
-	if (strncmp(col->arch, "NULL", RANGE_S) == 0)
+	if (strncasecmp(col->arch, "NULL", RANGE_S) == 0)
 		*test = *test | 1;
-	if ((strncmp(col->version, "NULL", MAC_S) == 0) &&
-	    (strncmp(col->ver_alias, "NULL", MAC_S) == 0))
+	if ((strncasecmp(col->version, "NULL", MAC_S) == 0) &&
+	    (strncasecmp(col->ver_alias, "NULL", MAC_S) == 0))
 		*test = *test | 2;
-	if ((strncmp(col->os, "NULL", MAC_S) == 0) &&
-	    (strncmp(col->alias, "NULL", MAC_S) == 0))
+	if ((strncasecmp(col->os, "NULL", MAC_S) == 0) &&
+	    (strncasecmp(col->alias, "NULL", MAC_S) == 0))
 		*test = *test | 4;
 }
 
 static void
 cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *cbos, int *test)
 {
-	if (((*test & 1) == 1 ) || (strncmp(col->arch, cbos->arch, RANGE_S) == 0))
+	if (((*test & 1) == 1 ) || (strncasecmp(col->arch, cbos->arch, RANGE_S) == 0))
 		*test = *test | 8;
 	if (((*test & 2) == 2) ||
-	    (strncmp(col->version, cbos->version, MAC_S) == 0) ||
-	    (strncmp(col->ver_alias, cbos->ver_alias, MAC_S) == 0))
+	    (strncasecmp(col->version, cbos->version, MAC_S) == 0) ||
+	    (strncasecmp(col->ver_alias, cbos->ver_alias, MAC_S) == 0))
 		*test = *test | 16;
 	if (((*test & 4) == 4) ||
-	    (strncmp(col->os, cbos->os, MAC_S) == 0) ||
-	    (strncmp(col->alias, cbos->alias, MAC_S) == 0))
+	    (strncasecmp(col->os, cbos->os, MAC_S) == 0) ||
+	    (strncasecmp(col->alias, cbos->alias, MAC_S) == 0))
 		*test = *test | 32;
 }
 
