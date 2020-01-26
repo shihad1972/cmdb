@@ -50,7 +50,7 @@ static void
 log_config_error(int retval, int lineno);
 
 static int
-cmdbd_fill_config(struct cmdbd_config *data);
+cmdbd_fill_config(ailsa_cmdb_s *data);
 
 static void
 cmdbc_fill_config(struct cmdbc_config *data);
@@ -77,7 +77,7 @@ cmdbd_parse_config(const char *file, void *data, size_t len)
 			continue;
 		}
 		if (len == sizeof(struct cmdbd_config))
-			retval = cmdbd_fill_config((struct cmdbd_config *)data);
+			retval = cmdbd_fill_config((ailsa_cmdb_s *)data);
 		else if (len == sizeof(struct cmdbc_config))
 			cmdbc_fill_config((struct cmdbc_config *)data);
 		if (retval != 0)
@@ -98,7 +98,7 @@ cmdbc_clean_config(struct cmdbc_config *c)
 }
 
 void
-cmdbd_clean_config(struct cmdbd_config *c)
+cmdbd_clean_config(ailsa_cmdb_s *c)
 {
 	if (c->dbtype)
 		my_free(c->dbtype);
@@ -205,7 +205,7 @@ log_config_error(int retval, int lineno)
 }
 
 static int
-cmdbd_fill_config(struct cmdbd_config *conf)
+cmdbd_fill_config(ailsa_cmdb_s *conf)
 {
 	int retval = 0;
 	unsigned long int i;
@@ -339,7 +339,7 @@ cmdbc_fill_config(struct cmdbc_config *conf)
 }
 
 void
-cmdbd_print_config(struct cmdbd_config *conf)
+cmdbd_print_config(ailsa_cmdb_s *conf)
 {
 	if (!(conf))
 		return;

@@ -221,6 +221,10 @@ get_client_info(int client, int command, char *buf, struct client_info *ci)
 {
 	int retval = 0;
 
+	if (!(buf) || !(ci)) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
 	cleanup:
 		return retval;
 }

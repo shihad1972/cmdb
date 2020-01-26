@@ -529,13 +529,13 @@ void
 cmdbd_parse_config(const char *file, void *data, size_t len);
 
 void
-cmdbd_clean_config(struct cmdbd_config *cmdbd);
+cmdbd_clean_config(ailsa_cmdb_s *cmdbd);
 
 void
 cmdbc_clean_config(struct cmdbc_config *cmdbc);
 
 void
-cmdbd_print_config(struct cmdbd_config *conf);
+cmdbd_print_config(ailsa_cmdb_s *conf);
 
 // Networking Functions
 

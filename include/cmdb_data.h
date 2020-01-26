@@ -247,8 +247,8 @@ fill_vmhost_values(cmdb_comm_line_s *cm, cmdb_s *cmdb);
 
 // pre database access functions
 int
-cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc);
+cmdb_add_to_db(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 int
-cmdb_list_from_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc);
+cmdb_list_from_db(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 #endif // __CMDB_DATA_H__

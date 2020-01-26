@@ -410,7 +410,7 @@ clean_vmhost_list(cmdb_vm_host_s *list)
 }
 
 int
-cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
+cmdb_add_to_db(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval = 0;
 
@@ -420,7 +420,7 @@ cmdb_add_to_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
 }
 
 int
-cmdb_list_from_db(cmdb_comm_line_s *cm, struct cmdbd_config *cc)
+cmdb_list_from_db(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval = 0;
 

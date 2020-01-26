@@ -35,8 +35,8 @@ main(int argc, char *argv[])
 {
 	int retval = 0;
 	cmdb_comm_line_s *cm = ailsa_calloc(sizeof(cmdb_comm_line_s), "cm in main");
-	size_t len = sizeof(struct cmdbd_config);
-	struct cmdbd_config *cc = ailsa_calloc(len, "cc in main");
+	size_t len = sizeof(ailsa_cmdb_s);
+	ailsa_cmdb_s *cc = ailsa_calloc(len, "cc in main");
 
 	if ((retval = parse_cmdb_command_line(argc, argv, cm)) != 0)
 		goto cleanup;
