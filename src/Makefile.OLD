@@ -6,13 +6,13 @@
 
 CC = gcc
 RM = rm -f
-override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_POSIX_C_SOURCE=200809L
+override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_XOPEN_SOURCE=700
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/ -I/usr/include/libxml2
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid
 bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2 hellolv mkvm mksp
 
-COMOBJECTS = cbc_common.o cbccom.o
+COMOBJECTS = cbc_common.o
 DNSCOMOBJ = dnsa_net.o zones.o dnsacom.o
 COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
 C2OBJECTS = cmdb2.o cmdb2com.o
@@ -20,7 +20,7 @@ VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)
 DOBJECTS = dnsa.o $(DNSCOMOBJ)
-BOBJECTS = cbc.o $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o
+BOBJECTS = cbc.o $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbc_dnsa.o cbccom.o
 CDOBJECTS = cbcdomain.o $(COMOBJECTS) $(DNSCOMOBJ) cbcnet.o cbc_dnsa.o
 COOBJECTS = cbcos.o $(COMOBJECTS) cbcnet.o
 CVOBJECTS = cbcvarient.o $(COMOBJECTS)
