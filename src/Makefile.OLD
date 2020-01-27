@@ -10,12 +10,12 @@ override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion 
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/ -I/usr/include/libxml2
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid
-bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb2 hellolv mkvm mksp
+bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb hellolv mkvm mksp
 
 COMOBJECTS = cbc_common.o
 DNSCOMOBJ = dnsa_net.o zones.o dnsacom.o
 COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
-C2OBJECTS = cmdb2.o cmdb2com.o
+COBJECTS = cmdb.o cmdbcom.o
 VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)
@@ -36,7 +36,7 @@ all:	$(bin_programs)
 
 dnsa:	$(DOBJECTS)
 
-cmdb2:	$(C2OBJECTS)
+cmdb:	$(COBJECTS)
 
 cbc:	$(BOBJECTS)
 

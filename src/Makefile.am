@@ -1,9 +1,9 @@
-bin_PROGRAMS = cmdb2 cpc ckc mkvm mksp
+bin_PROGRAMS = cmdb cpc ckc mkvm mksp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
 mksp_SOURCES = mksp.c virtual.c virtual.h
-cmdb2_SOURCES = cmdb2.c cmdb2com.c
+cmdb_SOURCES = cmdb.c cmdbcom.c
 dnsa_SOURCES = dnsa.c zones.c dnsacom.c dnsa_net.c
 CBC_COMBO = cbc_common.c
 CBC_DNSA = cbc_dnsa.c dnsacom.c dnsa_net.c zones.c
