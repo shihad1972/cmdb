@@ -1,6 +1,6 @@
 /*
  *  cbc: Create Build config
- *  (C) 2014 Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  (C) 2014 - 2020 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

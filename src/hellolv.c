@@ -3,7 +3,7 @@
  * Similar API's exist for storage pools, networks, and interfaces. */
 
 #include <config.h>
-
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libvirt/libvirt.h>

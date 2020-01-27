@@ -1,5 +1,5 @@
 /*
- *  sqlt: sql tester (C) 2015 Iain M Conochie
+ *  sqlt: sql tester (C) 2015 - 2020 Iain M Conochie
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
  *
  */
 #include <config.h>
+#include <configmake.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>

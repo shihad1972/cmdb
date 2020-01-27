@@ -1,7 +1,7 @@
 /* 
  *
  *  cpc: Create Preseed Configuration
- *  Copyright (C) 2014 Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2014 - 2020 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
  */
 #define _GNU_SOURCE
 #include <config.h>
+#include <configmake.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>

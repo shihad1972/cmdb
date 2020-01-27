@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
  * 
  */
 #include <config.h>
+#include <configmake.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
