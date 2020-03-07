@@ -1,3 +1,7 @@
+07/02/202
+Start to use the errors.c in lib/ directory. cmdb-0.3 branch has put the
+base_sql.h header file into include/
+
 27/02/2019
 Need to add a generic logging function, that can handle both console
 output and also logging to syslog.
