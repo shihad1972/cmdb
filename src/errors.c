@@ -397,7 +397,7 @@ display_cmdb_usage(void)
 	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
-	printf("-m: vmhost server name for adding a server\n");
+	printf("-x: vmhost server name for adding a server\n");
 	printf("Adding options:\n");
 	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
