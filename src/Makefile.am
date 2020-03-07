@@ -10,6 +10,7 @@ cpc_SOURCES = cpc.c $(combo_SOURCES)
 ckc_SOURCES = ckc.c $(combo_SOURCES)
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
+mksp_SOURCES = mksp.c virtual.c virtual.h
 
 cmdb_SOURCES =	cmdb.c cmdbcom.c customers.c servers.c $(combo_SOURCES) \
 		cmdb_base_sql.c base_sql.c\
