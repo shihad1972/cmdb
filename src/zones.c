@@ -793,10 +793,8 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	char *host = NULL, *dhost = NULL, *dipstr = NULL;
 	int retval = NONE;
 	void *addr;
-	struct addrinfo hints;
-	struct addrinfo *rp = NULL, *srvnfo = NULL;
+	struct addrinfo hints, *srvnfo = NULL;
 	struct sockaddr_in *ipv4;
-	struct sockaddr_in6 *ipv6;
 
 	host = cmdb_malloc(RBUFF_S, "host in check_notify_ip");
 	dhost = strndup(zone->pri_dns, RBUFF_S);
@@ -816,52 +814,32 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
 		goto cleanup;
 	}
-	for (rp = srvnfo; rp != NULL; rp = rp->ai_next) {
-		if (rp->ai_family == AF_INET) {
-			ipv4 = (struct sockaddr_in *)rp->ai_addr;
-			addr = &(ipv4->sin_addr);
-			if (!(inet_ntop(AF_INET, addr, *ipstr, INET_ADDRSTRLEN))) {
-				fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-				retval = CANNOT_CONVERT;
-				goto cleanup;
-			}
-		} else if (rp->ai_family == AF_INET6) {
-			ipv6 = (struct sockaddr_in6 *)rp->ai_addr;
-			addr = &(ipv6->sin6_addr);
-			if (!(inet_ntop(AF_INET6, addr, *ipstr, INET6_ADDRSTRLEN))) {
-				fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-				retval = CANNOT_CONVERT;
-				goto cleanup;
-			}
-		} else {
-			report_error(WRONG_PROTO, "check_notify_ip");
+	if (srvnfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+		if (!(inet_ntop(AF_INET, addr, *ipstr, INET_ADDRSTRLEN))) {
+			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+			retval = CANNOT_CONVERT;
+			goto cleanup;
 		}
+	} else {
+		report_error(WRONG_PROTO, "check_notify_ip");
 	}
 	freeaddrinfo(srvnfo);
 	if ((retval = getaddrinfo(host, "http", &hints, &srvnfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
 		goto cleanup;
 	}
-	for (rp = srvnfo; rp != NULL; rp = rp->ai_next) {
-		if (rp->ai_family == AF_INET) {
-			ipv4 = (struct sockaddr_in *)rp->ai_addr;
-			addr = &(ipv4->sin_addr);
-			if (!(inet_ntop(AF_INET, addr, dipstr, INET_ADDRSTRLEN))) {
-				fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-				retval =  CANNOT_CONVERT;
-				goto cleanup;
-			}
-		} else if (rp->ai_family == AF_INET6) {
-			ipv6 = (struct sockaddr_in6 *)rp->ai_addr;
-			addr = &(ipv6->sin6_addr);
-			if (!(inet_ntop(AF_INET6, addr, *ipstr, INET6_ADDRSTRLEN))) {
-				fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-				retval = CANNOT_CONVERT;
-				goto cleanup;
-			}
-		} else {
-			report_error(WRONG_PROTO, "check_notify_ip");
+	if (srvnfo->ai_family == AF_INET) {
+		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+		if (!(inet_ntop(AF_INET, addr, dipstr, INET_ADDRSTRLEN))) {
+			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+			retval =  CANNOT_CONVERT;
+			goto cleanup;
 		}
+	} else {
+		report_error(WRONG_PROTO, "check_notify_ip");
 	}
 	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) == 0) {
 		free(*ipstr);
