@@ -800,7 +800,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	struct sockaddr_in6 *ipv6;
 
 	host = cmdb_malloc(RBUFF_S, "host in check_notify_ip");
-	dhost = strndup(zone->pri_dns, RBUFF_S);
+	dhost = strndup(zone->sec_dns, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
