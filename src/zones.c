@@ -797,7 +797,7 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 	struct sockaddr_in *ipv4;
 
 	host = cmdb_malloc(RBUFF_S, "host in check_notify_ip");
-	dhost = strndup(zone->pri_dns, RBUFF_S);
+	dhost = strndup(zone->sec_dns, RBUFF_S);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -814,6 +814,12 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
 		goto cleanup;
 	}
+/*
+ * Although we _can_ support IPv6 here, we would need a way to pass this back
+ * to the calling function that we would be providing an IPv6 IP address, as
+ * the notify part of the bind config is IPv6 specific. This function is
+ * called by create_fwd_config.
+ */
 	if (srvnfo->ai_family == AF_INET) {
 		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
 		addr = &(ipv4->sin_addr);
