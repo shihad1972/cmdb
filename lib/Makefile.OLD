@@ -7,7 +7,8 @@ libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(logging.o) libailsacmdb.a(errors.o)\
 		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
 		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o) \
-		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o)
+		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o) \
+		libailsacmdb.a(dnsa_net.o) libailsacmdb.a(cbcnet.o)
 
 libailsasql.a:	libailsasql.a(sql.o) libailsasql.a(base_sql.o) libailsasql.a(dnsa_base_sql.o) \
 		libailsasql.a(cmdb_base_sql.o) libailsasql.a(cbc_base_sql.o)
@@ -55,6 +56,12 @@ libailsacmdb.a(dnsa_data.o): dnsa_data.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(cbc_data.o): cbc_data.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(dnsa_net.o): dnsa_net.o
+	$(AR) $(ARFLAGS) $@ $<
+
+libailsacmdb.a(cbcnet.o): cbcnet.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(sql.o):	sql.o
