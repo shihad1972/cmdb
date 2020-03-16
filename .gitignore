@@ -15,5 +15,3 @@ latex/
 *.a
 src/mkvm
 src/mksp
-.vscode/*
-src/dnsa
