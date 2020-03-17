@@ -34,6 +34,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
+#include <cmdb.h>
 
 #ifdef HAVE_MYSQL
 # include <mysql.h>
@@ -46,6 +48,21 @@ ailsa_simple_select_mysql(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
 static int
 ailsa_simple_select_sqlite(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
 #endif /* HAVE_SQLITE3 */
+
+const struct ailsa_sql_single_s server[12] = {
+	{ .string = "name", .type = DBTEXT, .length = HOST_S },
+	{ .string = "make", .type = DBTEXT, .length = HOST_S },
+	{ .string = "uuid", .type = DBTEXT, .length = HOST_S },
+	{ .string = "vendor", .type = DBTEXT, .length = HOST_S },
+	{ .string = "model", .type = DBTEXT, .length = MAC_LEN },
+        { .string = "server_id", .type = DBINT, .length = 0 },
+        { .string = "cust_id", .type = DBINT, .length = 0 },
+        { .string = "vm_server_id", .type = DBINT, .length = 0 },
+        { .string = "cuser", .type = DBINT, .length = 0 },
+        { .string = "muser", .type = DBINT, .length = 0 },
+        { .string = "ctime", .type = DBTIME, .length = 0 },
+        { .string = "mtime", .type = DBTIME, .length = 0 }
+};
 
 int
 ailsa_init_ss(AILSS *data)

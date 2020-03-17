@@ -5,6 +5,7 @@ lib/Makefile
 daemon/Makefile
 include/configmake.h
 src/cmdb2
+src/cmdb
 src/cpc
 src/ckc
 src/cbc

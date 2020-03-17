@@ -47,7 +47,7 @@ enum {			/* Database column types */
 	DBINT = 2,
 	DBSHORT = 3,
 	DBTINY = 4,
-	FLYBY
+	DBTIME = 5
 };
 
 enum {			/* Database query types */

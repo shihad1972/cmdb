@@ -15,7 +15,6 @@ bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript
 COMOBJECTS = cbc_common.o
 DNSCOMOBJ = zones.o dnsacom.o
 COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
-COBJECTS = cmdb.o cmdbcom.o
 VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)

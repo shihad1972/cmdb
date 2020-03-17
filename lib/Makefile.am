@@ -7,7 +7,7 @@ libailsacmdb_la_SOURCES = ailsacmdb.c parse_config.c logging.c \
 			errors.c list.c hash.c config.c uuid.c dnsa_net.c cbcnet.c
 libailsasql_la_SOURCES = sql.c base_sql.c cmdb_base_sql.c dnsa_base_sql.c \
 			cbc_base_sql.c
-include_HEADERS = $(top_srcdir)/include/ailsacmdb.h
+include_HEADERS = $(top_srcdir)/include/ailsacmdb.h $(top_srcdir)/include/ailsasql.h
 
 if HAVE_MYSQL
 AM_CFLAGS += $(MYSQL_CFLAGS)

@@ -1,7 +1,6 @@
 /*
- *
- *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  ailsasql: Ailsatech SQL library
+ *  Copyright (C) 2019 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,18 +16,16 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  customers.c: Contains functions for customer component of cmdb
- *
+ *  ailsasql.h: Main ailsacmdb library header file
  */
 
-#include <config.h>
-#include <configmake.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <time.h>
-#include <unistd.h>
-#include <ailsacmdb.h>
-#include "cmdb.h"
+#ifndef __AILSASQL_H__
+# define __AILSASQL_H__
+
+typedef struct ailsa_sql_single_s {
+	const char *string;
+	short int type;
+	short int length;
+} ailsa_sql_single_s;
+
+#endif

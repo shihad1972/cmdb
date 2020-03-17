@@ -31,6 +31,12 @@
 #include <cmdb_cmdb.h>
 #include <cmdb_sql.h>
 
+static int
+cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+static int
+cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 int
 main(int argc, char *argv[])
 {
@@ -41,14 +47,13 @@ main(int argc, char *argv[])
 
 	if ((retval = parse_cmdb_command_line(argc, argv, cm)) != 0)
 		goto cleanup;
-	cmdbd_parse_config(cm->config, cc, len);
-//	cmdbd_print_config(cc);
-	switch(cm->action) {
-	case ADD_TO_DB:
-		retval = cmdb_add_to_db(cm, cc);
+	parse_cmdb_config(cc);
+	switch(cm->type) {
+	case SERVER:
+		retval = cmdb_server_actions(cm, cc);
 		break;
-	case LIST_OBJ:
-		retval = cmdb_list_from_db(cm, cc);
+	case CUSTOMER:
+		retval = cmdb_customer_actions(cm, cc);
 		break;
 	}
 
@@ -59,5 +64,36 @@ main(int argc, char *argv[])
 		if (retval != 0)
 			display_command_line_error(retval, argv[0]);
 		return retval;
+}
+
+static int
+cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval = 0;
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	switch(cm->action) {
+	case ADD_TO_DB:
+		retval = cmdb_add_server_to_database(cm, cc);
+		break;
+	case LIST_OBJ:
+		retval = cmdb_list_servers(cm, cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
+	return retval;
+}
+
+static int
+cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval = 0;
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+
+	return retval;
 }
 

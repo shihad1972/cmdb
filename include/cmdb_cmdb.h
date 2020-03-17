@@ -139,5 +139,14 @@ print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id);
 int
 get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id);
 
+
+// New CMDB functions for re-worked program
+
+int
+cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+int
+cmdb_list_servers(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 #endif
 
