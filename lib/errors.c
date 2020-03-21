@@ -97,7 +97,7 @@ report_error(int error, const char *errstr)
 	} else if (error == SQLITE_BIND_FAILED) {
 		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
 	} else if (error == DB_WRONG_TYPE) {
-		fprintf(stderr, "Wrong DB type in for query %s\n", errstr);
+		fprintf(stderr, "Wrong DB type in query %s\n", errstr);
 	} else if (error == UNKNOWN_QUERY) {
 		fprintf(stderr, "Unknown query for type %s\n", errstr);
 	} else if (error == NO_DB_TYPE) {

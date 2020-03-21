@@ -145,7 +145,7 @@ get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id);
 int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
-int
+void
 cmdb_list_servers(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 #endif

@@ -589,3 +589,11 @@ init_initial_string_l(string_l **string, int count)
 		}
 	}
 }
+
+AILLIST *
+ailsa_db_data_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	ailsa_list_init(list, ailsa_clean_data);
+	return list;
+}

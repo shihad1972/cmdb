@@ -37,10 +37,26 @@
 #ifdef HAVE_SQLITE3
 # include <sqlite3.h>
 #endif /*HAVE_SQLITE3 */
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
 #ifdef HAVE_MYSQL
+
+void
+cmdb_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql)
+{
+	const char *unix_socket;
+
+	unix_socket = dc->socket;
+
+	if (!(mysql_init(cbc_mysql))) {
+		report_error(MY_INIT_FAIL, mysql_error(cbc_mysql));
+	}
+	if (!(mysql_real_connect(cbc_mysql, dc->host, dc->user, dc->pass,
+		dc->db, dc->port, unix_socket, dc->cliflag)))
+		report_error(MY_CONN_FAIL, mysql_error(cbc_mysql));
+}
 
 void
 cmdb_mysql_query(MYSQL *mycmdb, const char *query)

@@ -45,7 +45,8 @@ enum {                  // Buffer lengths
 	CONFIG_LEN = 256,
 	DOMAIN_LEN = 256,
 	BUFFER_LEN = 1024,
-	FILE_LEN = 4096
+	FILE_LEN = 4096,
+	SQL_TEXT_MAX = 4096
 };
 /*
 ** base64 returnable errors
@@ -112,7 +113,8 @@ enum {			// SQL Data types
 	AILSA_DB_TEXT = 1,
 	AILSA_DB_LINT = 2,
 	AILSA_DB_SINT = 3,
-	AILSA_DB_TINY = 4
+	AILSA_DB_TINY = 4,
+	AILSA_DB_FLOAT = 5
 };
 
 enum {                  // Error codes
@@ -140,7 +142,7 @@ typedef struct ailsa_element_s {
 
 typedef struct ailsa_list_s {
 	size_t 	total;
-	int 	(*cmd)(const void *key1, const void *key2);
+	int 	(*cmp)(const void *key1, const void *key2);
 	void 	(*destroy)(void *data);
 	void 	*head;
 	void 	*tail;
@@ -170,6 +172,7 @@ typedef union ailsa_dbdata_u {
 	unsigned long int number;
 	short int small;
 	char tiny;
+	double point;
 } AILDATAU;
 
 typedef struct ailsa_dbdata_s {
@@ -362,6 +365,8 @@ typedef union ailsa_data_u {
 	char *text;
 	unsigned long int number;
 	short int small;
+	char tiny;
+	double point;
 } ailsa_data_u;
 
 typedef struct ailsa_data_s {
@@ -406,6 +411,9 @@ ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
 
 int
 ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
+
+int
+ailsa_list_insert(AILLIST *list, void *data);
 
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
@@ -594,6 +602,9 @@ ailsa_validate_string(const char *input, const char *re_test);
 
 int
 ailsa_init_client_info(struct client_info *ci);
+
+AILLIST *
+ailsa_db_data_list_init(void);
 
 // Struct data clean functions to be used with AILLIST destroy()
 

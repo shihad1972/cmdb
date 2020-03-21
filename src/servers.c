@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <time.h>
@@ -44,11 +45,40 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	return retval;
 }
 
-int
+void
 cmdb_list_servers(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval = 0;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *name, *coid;
+	ailsa_data_s *one, *two;
 
-	return retval;
+	if (!(cc)) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cc, SERVER_NAME_COID, list) != 0)) {
+		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
+		goto cleanup;
+	}
+	name = list->head;
+	printf("Server Name\t\tCOID\n");
+	while (name) {
+		coid = name->next;
+		one = (ailsa_data_s *)name->data;
+		two = (ailsa_data_s *)coid->data;
+		if (strlen(one->data->text) < 8)
+			printf("%s\t\t\t%s\n",one->data->text, two->data->text);
+		else if (strlen(one->data->text) < 16)
+			printf("%s\t\t%s\n",one->data->text, two->data->text);
+		else
+			printf("%s\t%s\n",one->data->text, two->data->text);
+		name = coid->next;
+		if (name)
+			coid = name->next;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 }
 

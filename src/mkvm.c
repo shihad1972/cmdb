@@ -56,8 +56,8 @@ main(int argc, char *argv[])
 	case AILSA_ADD:
 		retval = mkvm_create_vm(vm);
 		break;
-	case AILSA_CMDB_ADD:
-		retval = mkvm_add_to_cmdb(cmdb, vm);
+/*	case AILSA_CMDB_ADD:
+		retval = mkvm_add_to_cmdb(cmdb, vm); */
 		break;
 	case AILSA_HELP:
 		display_mkvm_usage();

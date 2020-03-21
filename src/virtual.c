@@ -395,7 +395,7 @@ ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm)
 	vm->vtstr = str;
 	return retval;
 }
-
+/*
 int
 mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 {
@@ -442,7 +442,7 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 			my_free(results);
 		}
 		return retval;
-}
+} */
 
 int
 mksp_create_storage_pool(ailsa_mkvm_s *sp)
