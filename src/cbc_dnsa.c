@@ -38,7 +38,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
-#include <config.h>
+#include <ailsacmdb.h>
 #include "base_sql.h"
 #include "cbc_data.h"
 #include "cmdb.h"

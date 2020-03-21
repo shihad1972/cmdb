@@ -837,15 +837,6 @@ unknown query type %d: required %d, got %d\n", query, required, fields);
 }
 
 void
-chomp(char *input)
-{
-	size_t len;
-	len = strlen(input);
-	if (input[len -1] == '\n')
-		input[len -1] = '\0';
-}
-
-void
 display_action_error(short int action)
 {
 	if (action == NONE)
@@ -908,47 +899,6 @@ get_config_file_location(char *config)
 		else
 			report_error(CONF_ERR, "no config file");
 	}
-}
-
-int
-add_trailing_slash(char *member)
-{
-	size_t len;
-	int retval;
-	
-	retval = 0;
-	len = strlen(member);
-	if ((member[len - 1] != '/') && len < CONF_S) {
-		member[len] = '/';
-		member[len + 1] = '\0';
-	} else if (member[len - 1] == '/') {
-		retval = NONE;
-	} else {
-		retval = -1;
-	}
-	
-	return retval;
-}
-
-int
-add_trailing_dot(char *member)
-{
-/* Maximum string size is 255 bytes */
-	size_t len;
-	int retval;
-	
-	retval = 0;
-	if ((len = strlen(member)) > 254)
-		return -1;
-	if (member[len - 1] != '.') {
-		member[len] = '.';
-		member[len +1] = '\0';
-	} else if (member[len - 1] == '.') {
-		retval = NONE;
-	} else {
-		retval = -1;
-	}
-	return retval;
 }
 
 int

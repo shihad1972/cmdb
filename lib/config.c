@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
@@ -513,7 +514,7 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 		uconf = p.we_wordv;
 		if (!(conf = fopen(*uconf, "r"))) {
 #ifdef DEBUG
-			fprintf(stderr, "Cannot open file %s\n", *uconf);
+			ailsa_syslog(LOG_DEBUG, "Cannot open file %s", *uconf);
 #endif
 			upath = "~/.dnsa.conf";
 			wordexp_t r;
@@ -521,7 +522,7 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 				uconf = r.we_wordv;
 				if (!(conf = fopen(*uconf, "r"))) {
 #ifdef DEBUG
-					fprintf(stderr, "Cannot open file %s\n", *uconf);
+					ailsa_syslog(LOG_DEBUG, "Cannot open file %s", *uconf);
 #endif
 				}
 				wordfree(&r);

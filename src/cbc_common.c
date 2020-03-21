@@ -742,17 +742,17 @@ parse_cbc_config_file(cbc_config_s *cbc, const char *config)
 		wordfree(&p);
 	}
 #endif /* HAVE_WORDEXP */
-	if ((retval = add_trailing_slash(cbc->tmpdir)) != 0)
+	if ((retval = ailsa_add_trailing_slash(cbc->tmpdir)) != 0)
 		retval = TMP_ERR;
-	if ((retval = add_trailing_slash(cbc->tftpdir)) != 0)
+	if ((retval = ailsa_add_trailing_slash(cbc->tftpdir)) != 0)
 		retval = TFTP_ERR;
-	if ((retval = add_trailing_slash(cbc->pxe)) != 0)
+	if ((retval = ailsa_add_trailing_slash(cbc->pxe)) != 0)
 		retval = PXE_ERR;
-	if ((retval = add_trailing_slash(cbc->toplevelos)) != 0)
+	if ((retval = ailsa_add_trailing_slash(cbc->toplevelos)) != 0)
 		retval = OS_ERR;
-	if ((retval = add_trailing_slash(cbc->preseed)) != 0)
+	if ((retval = ailsa_add_trailing_slash(cbc->preseed)) != 0)
 		retval = PRESEED_ERR;
-	if ((retval = add_trailing_slash(cbc->kickstart)) !=0)
+	if ((retval = ailsa_add_trailing_slash(cbc->kickstart)) !=0)
 		retval = KICKSTART_ERR;
 
 	return retval;

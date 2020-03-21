@@ -490,14 +490,6 @@ dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
 
 // Miscellaneous
 
-void
-chomp(char *input);
-void
-get_config_file_location(char *config);
-int
-add_trailing_slash(char *member);
-int
-add_trailing_dot(char *member);
 unsigned int
 cmdb_get_max(const unsigned int args, const unsigned int fields);
 void

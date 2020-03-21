@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"

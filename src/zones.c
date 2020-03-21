@@ -38,6 +38,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
@@ -1789,12 +1790,12 @@ validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa)
 	init_multi_dbdata_struct(&data, 1);
 	init_dbdata_struct(&user);
 	user.next = data;
-	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->name);
@@ -1838,12 +1839,12 @@ validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
 	
 	buffer = &command[0];
 	snprintf(zone->valid, COMM_S, "yes");
-	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
 		printf("Unable to get ID of zone %s\n", zone->net_range);
@@ -3070,9 +3071,9 @@ check_glue_zone_input(glue_zone_info_s *glue)
 	const char *pri = glue->pri_ns;
 	const char *sec = glue->sec_ns;
 	if (strstr(pri, gzone))
-		add_trailing_dot(glue->pri_ns);
+		ailsa_add_trailing_dot(glue->pri_ns);
 	if (strstr(sec, gzone))
-		add_trailing_dot(glue->sec_ns);
+		ailsa_add_trailing_dot(glue->sec_ns);
 }
 
 void

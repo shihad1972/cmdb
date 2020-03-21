@@ -35,6 +35,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
@@ -566,13 +567,13 @@ dnsa_store_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	zone->id = strtoul(row[0], NULL, 10);
 	snprintf(zone->name, RBUFF_S, "%s", row[1]);
 	snprintf(zone->pri_dns, RBUFF_S - 1, "%s", row[2]);
-	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	snprintf(zone->sec_dns, RBUFF_S - 1, "%s", row[3]);
 	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	zone->serial = strtoul(row[4], NULL, 10);
 	zone->refresh = strtoul(row[5], NULL, 10);
@@ -645,13 +646,13 @@ dnsa_store_rev_zone_mysql(MYSQL_ROW row, dnsa_s *base)
 	rev->start_ip = strtoul(row[5], NULL, 10);
 	rev->end_ip = strtoul(row[6], NULL, 10);
 	snprintf(rev->pri_dns, RBUFF_S - 1, "%s", row[7]);
-	if ((retval = add_trailing_dot(rev->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(rev->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	snprintf(rev->sec_dns, RBUFF_S - 1, "%s", row[8]);
 	if ((strncmp(rev->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(rev->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(rev->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(rev->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(rev->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	rev->serial = strtoul(row[9], NULL, 10);
 	rev->refresh = strtoul(row[10], NULL, 10);
@@ -1338,13 +1339,13 @@ dnsa_store_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	zone->id = (unsigned long int) sqlite3_column_int64(state, 0);
 	snprintf(zone->name, RBUFF_S, "%s", sqlite3_column_text(state, 1));
 	snprintf(zone->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 2));
-	if ((retval = add_trailing_dot(zone->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	snprintf(zone->sec_dns, RBUFF_S - 1, "%s", sqlite3_column_text(state, 3));
 	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(zone->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	zone->serial = (unsigned long int) sqlite3_column_int64(state, 4);
 	zone->refresh = (unsigned long int) sqlite3_column_int64(state, 5);
@@ -1393,13 +1394,13 @@ dnsa_store_rev_zone_sqlite(sqlite3_stmt *state, dnsa_s *base)
 	rev->start_ip = (unsigned long int) sqlite3_column_int64(state, 5);
 	rev->end_ip = (unsigned long int) sqlite3_column_int64(state, 6);
 	snprintf(rev->pri_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 7));
-	if ((retval = add_trailing_dot(rev->pri_dns)) != 0)
+	if ((retval = ailsa_add_trailing_dot(rev->pri_dns)) != 0)
 		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
 	snprintf(rev->sec_dns, RBUFF_S -1, "%s", sqlite3_column_text(state, 8));
 	if ((strncmp(rev->sec_dns, "(null)", COMM_S) != 0) &&
 	    (strncmp(rev->sec_dns, "NULL", COMM_S) != 0) &&
 	    (strnlen(rev->sec_dns, COMM_S) != 0))
-		if ((retval = add_trailing_dot(rev->sec_dns)) != 0)
+		if ((retval = ailsa_add_trailing_dot(rev->sec_dns)) != 0)
 			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
 	rev->serial = (unsigned long int) sqlite3_column_int64(state, 9);
 	rev->refresh = (unsigned long int) sqlite3_column_int64(state, 10);

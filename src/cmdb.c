@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
+#include <syslog.h>
 #include <ailsacmdb.h>
 #include <cmdb.h>
 #include <cmdb_cmdb.h>
@@ -41,6 +43,7 @@ int
 main(int argc, char *argv[])
 {
 	int retval = 0;
+	ailsa_start_syslog(basename(argv[0]));
 	cmdb_comm_line_s *cm = ailsa_calloc(sizeof(cmdb_comm_line_s), "cm in main");
 	size_t len = sizeof(ailsa_cmdb_s);
 	ailsa_cmdb_s *cc = ailsa_calloc(len, "cc in main");
@@ -55,6 +58,9 @@ main(int argc, char *argv[])
 	case CUSTOMER:
 		retval = cmdb_customer_actions(cm, cc);
 		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Unknown type %d", cm->type);
+		goto cleanup;
 	}
 
 	cleanup:

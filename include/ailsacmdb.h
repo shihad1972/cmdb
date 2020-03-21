@@ -642,26 +642,7 @@ display_mkvm_usage(void);
 void
 display_version(char *prog);
 
-// SQL functions.
-
-void
-ailsa_clean_dbv(void *dbv);
-int
-ailsa_init_ss(AILSS *data);
-void
-ailsa_clean_ss_data(void *data);
-void
-ailsa_clean_ss(AILSS *data);
-int
-ailsa_simple_select(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
-
 // the rest ...
-void
-ailsa_chomp(char *line);
-void
-ailsa_munch(char *line);
-int
-ailsa_add_trailing_slash(char *member);
 int
 ailsa_add_trailing_dot(char *member);
 void
@@ -682,10 +663,6 @@ void
 display_type_error(short int type);
 void
 get_config_file_location(char *config);
-int
-add_trailing_slash(char *member);
-int
-add_trailing_dot(char *member);
 int
 write_file(char *filename, char *output);
 void

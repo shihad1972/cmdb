@@ -263,11 +263,11 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 		wordfree(&p);
 	}
 #endif /* HAVE_WORDEXP */
-	if ((retval = add_trailing_slash(dc->dir)) != 0)
+	if ((retval = ailsa_add_trailing_slash(dc->dir)) != 0)
 		return DIR_ERR;
-	if ((retval = add_trailing_slash(dc->bind)) != 0)
+	if ((retval = ailsa_add_trailing_slash(dc->bind)) != 0)
 		return BIND_ERR;
-	if ((retval = add_trailing_dot(dc->hostmaster)) != 0)
+	if ((retval = ailsa_add_trailing_dot(dc->hostmaster)) != 0)
 		return HOSTM_ERR;
 	return retval;
 }
