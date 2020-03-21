@@ -24,16 +24,27 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <errno.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+/* For freeBSD ?? */
+#include <sys/socket.h>
+#include <netinet/in.h>
+/* End freeBSD */
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <fcntl.h>
 #include <ailsacmdb.h>
+#include <cmdb.h>
 
 // Various data functions.
 
@@ -330,3 +341,251 @@ ailsa_fill_string(ailsa_string_s *str, const char *s)
 	str->len = strlen(str->string);
 }
 
+
+void
+get_config_file_location(char *config)
+{
+	FILE *cnf;
+	const char *conf = config;
+
+	if (snprintf(config, CONF_S, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONF_S)
+		report_error(BUFFER_TOO_SMALL, "for config file");
+	if ((cnf = fopen(conf, "r"))) {
+		fclose(cnf);
+	} else	{
+		if (snprintf(config, CONF_S, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONF_S)
+			report_error(BUFFER_TOO_SMALL, "for config file");
+		if ((cnf = fopen(conf, "r")))
+			fclose(cnf);
+		else
+			report_error(CONF_ERR, "no config file");
+	}
+}
+
+int
+write_file(char *filename, char *output)
+{
+	int retval = 0;
+// Ensure files are written group writable
+	mode_t mode = S_IWOTH;
+	mode_t em;
+	FILE *zonefile;
+	em = umask(mode);
+	if (!(zonefile = fopen(filename, "w"))) {
+		retval = FILE_O_FAIL;
+	} else {
+		fputs(output, zonefile);
+		fclose(zonefile);
+		retval = NONE;
+	}
+	umask(em);
+	return retval;
+}
+
+void
+convert_time(char *timestamp, unsigned long int *store)
+{
+	char *tmp, *line;
+	struct tm timval;
+	size_t len;
+	time_t epoch;
+
+	if (strncmp(timestamp, "0", COMM_S) == 0) {
+		*store = 0;
+		return;
+	}
+	memset(&timval, 0, sizeof timval);
+	len = strlen(timestamp) + 1;
+	line = strndup(timestamp, len - 1);
+	tmp = strtok(line, "-");
+	timval.tm_year = (int)strtol(tmp, NULL, 10);
+	if (timval.tm_year > 1900)
+		timval.tm_year -= 1900;
+	tmp = strtok(NULL, "-");
+	timval.tm_mon = (int)strtol(tmp, NULL, 10) - 1;
+	tmp = strtok(NULL, " ");
+	timval.tm_mday = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_hour = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_min = (int)strtol(tmp, NULL, 10);
+	tmp = strtok(NULL, ":");
+	timval.tm_sec = (int)strtol(tmp, NULL, 10);
+	timval.tm_isdst = -1;
+	epoch = mktime(&timval);
+	if (epoch < 0)
+		*store = 0;
+	else
+		*store = (unsigned long int)epoch;
+	free(line);
+}
+
+char *
+get_uname(unsigned long int uid)
+{
+	struct passwd *user;
+
+	if ((user = getpwuid((uid_t)uid)))
+		return user->pw_name;
+	else
+		return NULL;
+}
+
+
+int
+get_ip_from_hostname(dbdata_s *data)
+{
+	int retval = 0;
+	struct addrinfo hints, *srvinfo;
+	void *addr;
+	dbdata_s *list;
+
+	if (!(data))
+		return CBC_NO_DATA;
+	list = data;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	if (strlen(list->fields.text) == 0) {
+		if ((retval = gethostname(list->fields.text, RBUFF_S)) != 0) {
+			fprintf(stderr, "%s", strerror(errno));
+			return NO_NAME;
+		}
+	}
+	if ((retval = getaddrinfo(list->fields.text, "http", &hints, &srvinfo)) != 0) {
+		fprintf(stderr, "lib getaddrinfo error: %s\n", gai_strerror(retval));
+		return NO_IP_ADDRESS;
+	}
+	if (srvinfo->ai_family == AF_INET) {
+		struct sockaddr_in *ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
+		addr = &(ipv4->sin_addr);
+	} else {
+		fprintf(stderr, "ai_family %d not supported\n", srvinfo->ai_family);
+		freeaddrinfo(srvinfo);
+		return NO_NAME;
+	}
+	inet_ntop(srvinfo->ai_family, addr, list->args.text, RBUFF_S);
+	freeaddrinfo(srvinfo);
+	return retval;
+}
+
+void
+init_dbdata_struct(dbdata_s *data)
+{
+	memset(data, 0, sizeof(dbdata_s));
+}
+
+void
+init_multi_dbdata_struct(dbdata_s **list, unsigned int i)
+{
+	unsigned int max;
+	dbdata_s *data = NULL, *dlist = NULL;
+	*list = NULL;
+
+	for (max = 0; max < i; max++) {
+		if (!(data = malloc(sizeof(dbdata_s))))
+			report_error(MALLOC_FAIL, "data in init_multi_dbdata_struct");
+		init_dbdata_struct(data);
+		if (!(*list)) {
+			*list = dlist = data;
+		} else {
+			while (dlist->next)
+				dlist = dlist->next;
+			dlist->next = data;
+		}
+	}
+}
+
+void
+clean_dbdata_struct(dbdata_s *list)
+{
+	dbdata_s *data = NULL, *next = NULL;
+
+	if (list)
+		data = list;
+	else
+		return;
+	if (data->next)
+		next = data->next;
+	else
+		next = NULL;
+	while (data) {
+		free(data);
+		if (next)
+			data = next;
+		else
+			return;
+		if (data->next)
+			next = data->next;
+		else
+			next = NULL;
+	}
+}
+
+void
+init_string_len(string_len_s *string)
+{
+	string->len = BUFF_S;
+	string->size = NONE;
+	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
+}
+
+void
+clean_string_len(string_len_s *string)
+{
+	if (string) {
+		if (string->string)
+			free(string->string);
+		free(string);
+	}
+}
+
+void
+init_string_l(string_l *string)
+{
+	memset(string, 0, sizeof(string_l));
+	if (!(string->string = calloc(RBUFF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
+}
+
+void
+clean_string_l(string_l *list)
+{
+	string_l *data, *next;
+
+	if (list)
+		data = list;
+	else
+		return;
+	next = data->next;
+	while (data) {
+		free(data->string);
+		free(data);
+		if (next)
+			data = next;
+		else
+			return;
+		next = data->next;
+	}
+}
+
+void
+init_initial_string_l(string_l **string, int count)
+{
+	int i;
+	string_l *data, *list = NULL;
+
+	for (i = 0; i < count; i++) {
+		if (!(data = malloc(sizeof(string_l))))
+			report_error(MALLOC_FAIL, "data in init_initial_string_l");
+		init_string_l(data);
+		if (!(list)) {
+			*string = list = data;
+		} else {
+			while (list->next)
+				list = list->next;
+			list ->next = data;
+		}
+	}
+}
