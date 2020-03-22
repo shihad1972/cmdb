@@ -78,7 +78,7 @@ extern const struct ailsa_sql_single_s server[];
 extern size_t server_fields;
 
 int
-ailsa_basic_query(ailsa_cmdb_s *cmdb, short int query_no, AILLIST *results);
+ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

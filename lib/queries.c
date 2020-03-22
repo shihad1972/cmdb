@@ -61,37 +61,31 @@ const struct ailsa_sql_single_s server[12] = {
 	{ .string = "mtime", .type = DBTIME, .length = 0 }
 };
 
-const struct ailsa_sql_basic_s basic_queries[1] = {
-	{ "\
+const char *basic_queries[] = {"\
 SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
-	  2,
-	  { (short int)DBTEXT, (short int)DBTEXT } 
-	}
 };
-
-size_t server_fields = sizeof(server) / sizeof(ailsa_sql_single_s);  // Howto get the size of the array
 
 #ifdef HAVE_MYSQL
 static void
 ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *sql);
 static int
-ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_basic_s *data, AILLIST *results);
+ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
 #endif
 
 #ifdef HAVE_SQLITE3
 static int
-ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_basic_s *data, AILLIST *results);
+ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
 static void
-ailsa_store_basic_sqlite(sqlite3_stmt *state, const ailsa_sql_basic_s *data, AILLIST *results);
+ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
 #endif
 
 int
-ailsa_basic_query(ailsa_cmdb_s *cmdb, short int query_no, AILLIST *results)
+ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 {
 	int retval = 0;
-	const struct ailsa_sql_basic_s *query = &basic_queries[query_no];
+	const char *query = basic_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
 		report_error(NO_DB_TYPE, "ailsa_basic_query");
@@ -130,15 +124,14 @@ ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *sql)
 }
 
 static int
-ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_basic_s *data, AILLIST *results)
+ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 {
-	if (!(cmdb) || !(data) || !(results))
+	if (!(cmdb) || !(query) || !(results))
 		return AILSA_NO_DATA;
 
 	int retval = 0;
 	unsigned int total, i, *fields;
 	size_t size;
-	const char *query = data->query;
 	MYSQL sql;
 	MYSQL_RES *sql_res;
 	MYSQL_ROW sql_row;
@@ -211,19 +204,18 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 
 #ifdef HAVE_SQLITE3
 static int
-ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_basic_s *data, AILLIST *results)
+ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 {
 	int retval = 0;
-	if (!(cmdb) || !(data) || !(results))
+	if (!(cmdb) || !(query) || !(results))
 		return AILSA_NO_DATA;
-	const char *query = data->query;
 	const char *file = cmdb->file;
 	sqlite3 *sql = NULL;
 	sqlite3_stmt *state = NULL;
 
 	cmdb_setup_ro_sqlite(query, file, &sql, &state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
-		ailsa_store_basic_sqlite(state, data, results);
+		ailsa_store_basic_sqlite(state, results);
 	cmdb_sqlite_cleanup(sql, state);
 	if (retval == SQLITE_DONE)
 		retval = 0;
@@ -231,10 +223,10 @@ ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_basic_s *dat
 }
 
 static void
-ailsa_store_basic_sqlite(sqlite3_stmt *state, const ailsa_sql_basic_s *data, AILLIST *results)
+ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 {
 	ailsa_data_s *tmp;
-	if (!(state) || !(data) || !(results))
+	if (!(state) || !(results))
 		return;
 	short int fields, i;
 	int type, retval;

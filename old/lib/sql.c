@@ -55,13 +55,21 @@ const struct ailsa_sql_single_s server[12] = {
 	{ .string = "uuid", .type = DBTEXT, .length = HOST_S },
 	{ .string = "vendor", .type = DBTEXT, .length = HOST_S },
 	{ .string = "model", .type = DBTEXT, .length = MAC_LEN },
-        { .string = "server_id", .type = DBINT, .length = 0 },
-        { .string = "cust_id", .type = DBINT, .length = 0 },
-        { .string = "vm_server_id", .type = DBINT, .length = 0 },
-        { .string = "cuser", .type = DBINT, .length = 0 },
-        { .string = "muser", .type = DBINT, .length = 0 },
-        { .string = "ctime", .type = DBTIME, .length = 0 },
-        { .string = "mtime", .type = DBTIME, .length = 0 }
+	{ .string = "server_id", .type = DBINT, .length = 0 },
+	{ .string = "cust_id", .type = DBINT, .length = 0 },
+	{ .string = "vm_server_id", .type = DBINT, .length = 0 },
+	{ .string = "cuser", .type = DBINT, .length = 0 },
+	{ .string = "muser", .type = DBINT, .length = 0 },
+	{ .string = "ctime", .type = DBTIME, .length = 0 },
+	{ .string = "mtime", .type = DBTIME, .length = 0 }
+};
+
+size_t server_fields = sizeof(server) / sizeof(ailsa_sql_single_s);
+
+// Basic queries
+
+const char *ailsa_sql_queries[] = { "\
+SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id"
 };
 
 int
