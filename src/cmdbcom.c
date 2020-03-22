@@ -317,7 +317,7 @@ clean_cmdb_comm_line(cmdb_comm_line_s *list)
 #ifdef CLEAN_COMM_LIST
 # undef CLEAN_COMM_LIST
 #endif /* CLEAN_COMM_LIST */
-
+/*
 int
 fill_server_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 {
@@ -545,7 +545,7 @@ fill_hardware_values(cmdb_comm_line_s *cm, cmdb_s *cmdb)
 	cmdb_init_hardware_t(hard);
 	cmdb->hardware = hard;
 	if (cm->detail) {
-		/* Hard coded net device. Should change this sometime */
+		// Hard coded net device. Should change this sometime
 		if (cm->sid == 1) {
 			if (ailsa_validate_input(cm->detail, MAC_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "hardware detail");
@@ -630,7 +630,7 @@ cmdb_main_free(cmdb_comm_line_s *cm, cmdb_config_s *cmc, char *cmdb_config)
 	free(cmc);
 	free(cmdb_config);
 }
-/*
+
 int
 get_table_id(cmdb_config_s *cbc, int query, char *name, unsigned long int *id)
 {

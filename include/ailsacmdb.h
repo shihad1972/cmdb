@@ -402,19 +402,14 @@ ailsa_show_error(int retval);
 // Linked List
 void
 ailsa_list_init(AILLIST *list, void (*destory)(void *data));
-
 void
 ailsa_list_destroy(AILLIST *list);
-
 int
 ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
-
 int
 ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
-
 int
 ailsa_list_insert(AILLIST *list, void *data);
-
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
 
@@ -422,6 +417,19 @@ ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
 
 unsigned int
 ailsa_hash(const void *key);
+int
+ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
+		unsigned int (*h)(const void *key),
+		int (*match)(const void *key1, const void *key2),
+		void (*destroy)(void *data));
+void
+ailsa_hash_destroy(AILHASH *htbl);
+int
+ailsa_hash_insert(AILHASH *htbl, void *data, const char *key);
+int
+ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
+int
+ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // memory functions
 
@@ -472,107 +480,28 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 int
 parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 
-// List and hash functions
-
-void
-ailsa_list_init(AILLIST *list, void (*destory)(void *data));
-void
-ailsa_list_destroy(AILLIST *list);
-int
-ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
-int
-ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
-int
-ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
-unsigned int
-ailsa_hash(const void *key);
-int
-ailsa_hash_init(AILHASH *htbl, unsigned int buckets,
-		unsigned int (*h)(const void *key),
-		int (*match)(const void *key1, const void *key2),
-		void (*destroy)(void *data));
-
-void
-ailsa_hash_destroy(AILHASH *htbl);
-
-int
-ailsa_hash_insert(AILHASH *htbl, void *data, const char *key);
-
-int
-ailsa_hash_remove(AILHASH *htbl, void **data, const char *key);
-
-int
-ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 
 // Path and various string functions
 
 int
 ailsa_add_trailing_dot(char *string);
-
 int
 ailsa_add_trailing_slash(char *string);
-
 void
 ailsa_chomp(char *line);
-
 void
 ailsa_munch(char *line);
-
-// Memory functions
-
-void *
-ailsa_calloc(size_t len, const char *msg);
 
 // Logging functions
 
 void
 ailsa_start_syslog(const char *prog);
-
 void
 ailsa_syslog(int priority, const char *msg, ...);
 
 // Config parse and free functions
-
-void
-cmdbd_parse_config(const char *file, void *data, size_t len);
-
 void
 cmdbd_clean_config(ailsa_cmdb_s *cmdbd);
-
-void
-cmdbc_clean_config(struct cmdbc_config *cmdbc);
-
-void
-cmdbd_print_config(ailsa_cmdb_s *conf);
-
-// Networking Functions
-
-int
-ailsa_tcp_socket_bind(const char *node, const char *service);
-
-int
-ailsa_tcp_socket(const char *node, const char *service);
- 
-int
-ailsa_accept_tcp_connection(int sock);
-
-int
-ailsa_get_fqdn(char *host, char *fqdn, char *ip);
-
-int
-ailsa_do_client_send(int s, struct cmdb_client_config *c);
-
-int
-ailsa_handle_send_error(int error);
-
-int
-ailsa_handle_recv_error(int error);
-
-int
-ailsa_send_response(int client, char *buf);
-
-int
-ailsa_do_close(int client, char *buf);
 
 // File / Directory IO helper functions
 
@@ -610,19 +539,14 @@ ailsa_db_data_list_init(void);
 
 void
 ailsa_clean_hard(void *hard);
-
 void
 ailsa_clean_iface(void *iface);
-
 void
 ailsa_clean_route(void *route);
-
 void
 ailsa_clean_file(void *file);
-
 void
 ailsa_clean_pkg(void *pkg);
-
 void
 ailsa_clean_mkvm(void *vm);
 

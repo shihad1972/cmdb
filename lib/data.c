@@ -528,7 +528,7 @@ init_string_len(string_len_s *string)
 {
 	string->len = BUFF_S;
 	string->size = NONE;
-	string->string = cmdb_malloc(BUFF_S, "string->string in init_string_len");
+	string->string = ailsa_calloc(BUFF_S, "string->string in init_string_len");
 }
 
 void
