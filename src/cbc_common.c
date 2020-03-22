@@ -470,7 +470,7 @@ get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
 	} else if (retval > 1) {
 		fprintf(stderr, "FOund multiple schemes for server_id %lu\n", server_id);
 	}
-	snprintf(name, CONF_S, "%s", data->fields.text);
+	snprintf(name, RBUFF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
 	return 0;
 }

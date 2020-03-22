@@ -636,81 +636,81 @@ void
 get_error_string(int error, char *errstr)
 {
 	if (error == SERVER_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Server not found.");
+		snprintf(errstr, CONF_S, "Server not found.");
 	else if (error == SERVER_UUID_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Server not found.");
+		snprintf(errstr, CONF_S, "Server not found.");
 	else if (error == SERVER_ID_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Server not found.");
+		snprintf(errstr, CONF_S, "Server not found.");
 	else if (error == NO_NAME_UUID_ID)
-		snprintf(errstr, MAC_S, "No server specifier.");
+		snprintf(errstr, CONF_S, "No server specifier.");
 	else if (error == BUILD_DOMAIN_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Build domain not found.");
+		snprintf(errstr, CONF_S, "Build domain not found.");
 	else if (error == NO_BUILD_IP) 
-		snprintf(errstr, MAC_S, "No IP's left in build domain.");
+		snprintf(errstr, CONF_S, "No IP's left in build domain.");
 	else if (error == BUILD_IP_OUT_OF_RANGE)
-		snprintf(errstr, MAC_S, "Build IP from DNS outside range.");
+		snprintf(errstr, CONF_S, "Build IP from DNS outside range.");
 	else if (error == BUILD_IP_IN_USE)
-		snprintf(errstr, MAC_S, "Build IP already in use.");
+		snprintf(errstr, CONF_S, "Build IP already in use.");
 	else if (error == CANNOT_INSERT_IP)
-		snprintf(errstr, MAC_S, "Cannot insert build IP into DB.");
+		snprintf(errstr, CONF_S, "Cannot insert build IP into DB.");
 	else if (error == SERVER_BUILD_NOT_FOUND)
-		snprintf(errstr, MAC_S, "No server build.");
+		snprintf(errstr, CONF_S, "No server build.");
 	else if (error == NO_DHCP_B_ERR)
-		snprintf(errstr, MAC_S, "Cannot find dhcp details.");
+		snprintf(errstr, CONF_S, "Cannot find dhcp details.");
 	else if (error == MULTI_DHCP_B_ERR)
-		snprintf(errstr, MAC_S, "Multiple dhcp details.");
+		snprintf(errstr, CONF_S, "Multiple dhcp details.");
 	else if (error == NO_TFTP_B_ERR)
-		snprintf(errstr, MAC_S, "Cannot find TFTP details.");
+		snprintf(errstr, CONF_S, "Cannot find TFTP details.");
 	else if (error == MULTI_TFTP_B_ERR)
-		snprintf(errstr, MAC_S, "Multiple TFTP details.");
+		snprintf(errstr, CONF_S, "Multiple TFTP details.");
 	else if (error == NO_NET_BUILD_ERR)
-		snprintf(errstr, MAC_S, "Cannot find NET_BUILD_DETAILS.");
+		snprintf(errstr, CONF_S, "Cannot find NET_BUILD_DETAILS.");
 	else if (error == MULTI_NET_BUILD_ERR)
-		snprintf(errstr, MAC_S, "Multiple NET_BUILD_DETAILS.");
+		snprintf(errstr, CONF_S, "Multiple NET_BUILD_DETAILS.");
 	else if (error == NO_BUILD_MIRR_ERR)
-		snprintf(errstr, MAC_S, "Cannot find BUILD_MIRROR.");
+		snprintf(errstr, CONF_S, "Cannot find BUILD_MIRROR.");
 	else if (error == MULTI_BUILD_MIRR_ERR)
-		snprintf(errstr, MAC_S, "Multiple BUILD_MIRROR.");
+		snprintf(errstr, CONF_S, "Multiple BUILD_MIRROR.");
 	else if (error == VARIENT_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Unknown build varient.");
+		snprintf(errstr, CONF_S, "Unknown build varient.");
 	else if (error == MULTIPLE_VARIENTS)
-		snprintf(errstr, MAC_S, "Multiple varients found.");
+		snprintf(errstr, CONF_S, "Multiple varients found.");
 	else if (error == NO_NETWORK_HARDWARE)
-		snprintf(errstr, MAC_S, "Network device not found.");
+		snprintf(errstr, CONF_S, "Network device not found.");
 	else if (error == OS_NOT_FOUND)
-		snprintf(errstr, MAC_S, "OS not found.");
+		snprintf(errstr, CONF_S, "OS not found.");
 	else if (error == MULTIPLE_OS)
-		snprintf(errstr, MAC_S, "Multiple OS found.");
+		snprintf(errstr, CONF_S, "Multiple OS found.");
 	else if (error == SCHEME_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Partition scheme not found.");
+		snprintf(errstr, CONF_S, "Partition scheme not found.");
 	else if (error == INSERT_NOT_CONFIGURED)
-		snprintf(errstr, MAC_S, "No Database insert function.");
+		snprintf(errstr, CONF_S, "No Database insert function.");
 	else if (error == CANNOT_FIND_BUILD_IP)
-		snprintf(errstr, MAC_S, "Cannot find the build IP!");
+		snprintf(errstr, CONF_S, "Cannot find the build IP!");
 	else if (error == BUILD_IN_DATABASE)
-		snprintf(errstr, MAC_S, "Build for server already exists.");
+		snprintf(errstr, CONF_S, "Build for server already exists.");
 	else if (error == CANNOT_MODIFY_BUILD_DOMAIN)
-		snprintf(errstr, MAC_S, "Cannot modify build domain.");
+		snprintf(errstr, CONF_S, "Cannot modify build domain.");
 	else if (error == LOCALE_NOT_IMPLEMENTED)
-		snprintf(errstr, MAC_S, "Locale not implemented, sorry.");
+		snprintf(errstr, CONF_S, "Locale not implemented, sorry.");
 	else if (error == NO_MODIFIERS)
-		snprintf(errstr, MAC_S, "No modifiers supplied.");
+		snprintf(errstr, CONF_S, "No modifiers supplied.");
 	else if (error == PARTITIONS_NOT_FOUND)
-		snprintf(errstr, MAC_S, "Partition scheme not found.");
+		snprintf(errstr, CONF_S, "Partition scheme not found.");
 	else if (error == NO_BASIC_DISK)
-		snprintf(errstr, MAC_S, "Cannot find partitions.");
+		snprintf(errstr, CONF_S, "Cannot find partitions.");
 	else if (error == NO_BUILD_URL)
-		snprintf(errstr, MAC_S, "No url in build domain.");
+		snprintf(errstr, CONF_S, "No url in build domain.");
 	else if (error == NO_LOG_CONFIG)
-		snprintf(errstr, MAC_S, "Cannot get log config.");
+		snprintf(errstr, CONF_S, "Cannot get log config.");
 	else if (error == NO_BD_CONFIG)
-		snprintf(errstr, MAC_S, "Cannot get build domain config.");
+		snprintf(errstr, CONF_S, "Cannot get build domain config.");
 	else if (error == NO_HARD_DISK_DEV)
-		snprintf(errstr, MAC_S, "Cannot find disk for server");
+		snprintf(errstr, CONF_S, "Cannot find disk for server");
 	else if (error == NO_BUILD_PACKAGES)
-		snprintf(errstr, MAC_S, "No build packages in database");
+		snprintf(errstr, CONF_S, "No build packages in database");
 	else
-		snprintf(errstr, MAC_S, "Unknown error %d", error);
+		snprintf(errstr, CONF_S, "Unknown error %d", error);
 }
 
 void

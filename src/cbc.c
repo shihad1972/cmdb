@@ -38,7 +38,7 @@ main(int argc, char *argv[])
 {
 	cbc_config_s *cmc;
 	cbc_comm_line_s *cml;
-	char sretval[MAC_S], conf[CONF_S];
+	char sretval[CONF_S], conf[CONF_S];
 	int retval = NONE;
 	
 	if (!(cmc = malloc(sizeof(cbc_config_s))))

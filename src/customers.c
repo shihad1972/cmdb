@@ -65,6 +65,8 @@ cmdb_list_customers(ailsa_cmdb_s *cc)
         name = coid->next;
         if (name)
             city = name->next;
+        else
+            break;
         one = (ailsa_data_s *)coid->data;
         two = (ailsa_data_s *)name->data;
         three = (ailsa_data_s *)city->data;

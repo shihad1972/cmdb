@@ -32,7 +32,7 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char config[CONF_S];
 	char name[CONF_S];
 	char uuid[CONF_S];
-	char partition[CONF_S];
+	char partition[RBUFF_S];
 	char varient[CONF_S];
 	char os[CONF_S];
 	char os_version[MAC_S];

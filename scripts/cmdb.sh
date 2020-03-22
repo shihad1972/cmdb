@@ -39,7 +39,7 @@ CONFIGMAKE="include/configmake.h"
 
 DHCPF="/etc/dhcp/dhcpd.hosts"
 DHCPD="/etc/dhcp/"
-PXELINUX="/usr/lib/syslinux/pxelinux.0"
+PXELINUX="/usr/lib/PXELINUX/pxelinux.0"
 
 # Get values from configmake.h
 if [ ! -f ${CONFIGMAKE} ]; then
@@ -56,25 +56,25 @@ HAVE_DNSA="yes"
 SQL="${LOCALSTATEDIR}/cmdb/sql"
 SQLFILE="${SQL}/cmdb.sql"
 DB="mysql"
-DBNAME="cmdb"
+DBNAME=""
 CONFDIR="${SYSCONFDIR}/dnsa"
 CONFFILE="${CONFDIR}/dnsa.conf"
 CMDBBASE="${LOCALSTATEDIR}/cmdb"
 
 DEBBASE="/current/images/netboot/debian-installer/"
 DEBINST="/main/installer-"
-DEBDIST="wheezy jessie"
+DEBDIST="stretch buster"
 DEBARCH="amd64 i386"
 DEBFILES="linux initrd.gz"
 
 CENTBASE="/images/pxeboot/"
-CENTVER="5 6"
+CENTVER="7 8"
 CENTARCH="i386 x86_64"
 CENTFILE="vmlinuz initrd.img"
 
 UBUBASE="/current/images/netboot/ubuntu-installer/"
 UBUINST="/main/installer-"
-UBUDIST="precise quantal raring trusty"
+UBUDIST="bionic eoan"
 UBUARCH="amd64 i386"
 UBUFILE="linux initrd.gz"
 
@@ -459,7 +459,11 @@ debian_base() {
   CLIENT="debian"
   if [ -z "$APACTL" ]; then
     echo "Installing apache2 package"
-    $APTG install apache2 apache2.2-bin libapache2-mod-php5 -y > /dev/null 2>&1
+    $APTG install apache2 apache2-bin libapache2-mod-php -y > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "Cannot install apache packages"
+      exit 2
+    fi
   fi
   if [ -d /etc/apache2/conf.d ]; then
     APACNF="/etc/apache2/conf.d/"
@@ -477,42 +481,51 @@ debian_base() {
   if [ ! -d "$DHCPD" ]; then
     echo "Installing isc-dhcp-server package"
     $APTG install isc-dhcp-server -y > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "Cannot install dhcp server package"
+      exit 2
+    fi
   fi
 
   TFTP=/srv/tftp
   if [ ! -d "$TFTP" ]; then
     echo "Installing tftpd-hpa and syslinux packages"
     echo "Please use /srv/tftp for the directory"
-    $APTG install tftpd-hpa syslinux -y > /dev/null 2>&1
-  fi
-
-  if [ ! -d /usr/lib/syslinux ]; then
-    echo "Installing syslinux package"
-    $APTG install syslinux -y > /dev/null 2>&1
-  fi
-
-  if [ ! -f /usr/lib/syslinux/pxelinux.0 ]; then
-    echo "Installing pxelinux package"
-    $APTG install pxelinux -y > /dev/null 2>&1
-    PXELINUX="/usr/lib/PXELINUX/pxelinux.0"
+    $APTG install tftpd-hpa syslinux pxelinux -y > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "Cannot install TFTP packages"
+      exit 2
+    fi
   fi
 
   if [ $HAVE_DNSA ]; then
     if [ ! -d "$BIND" ]; then
       echo "Installing bind9 package"
       $APTG install bind9 bind9-host -y > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "Cannot install bind9 packages"
+        exit 2
+      fi
     fi
   fi
 
   if echo $DB | grep sqlite > /dev/null 2>&1; then
     if [ -z $SQLITE ]; then
       echo "Installing sqlite3 command"
-      apt-get install -y sqlite3 > /dev/null 2>&1
+      $APTG install -y sqlite3 > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "Cannot install sqlite3 packages"
+        exit 2
+      fi
     fi
   elif echo $DB | grep mysql > /dev/null 2>&1; then
     if [ -z $MYSQL ]; then
       echo "Install mysql command"
-      apt-get install -y mysql-client > /dev/null 2>&1
+      $APTG install -y mysql-client > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "Cannot install mysql packages"
+        exit 2
+      fi
     fi
   fi
 
@@ -764,7 +777,7 @@ FINISH
 #
 ###############################################################################
 
-while getopts "b:d:hi:n:m:x" opt; do
+while getopts "b:d:hi:n:m:t:x" opt; do
   case $opt in 
     b  ) DB=$OPTARG
          echo "Setting DB"
@@ -775,6 +788,9 @@ while getopts "b:d:hi:n:m:x" opt; do
     n  ) HOSTNAME=$OPTARG
          echo "Setting Hostname"
          ;;
+    t  ) DBNAME=$OPTARG
+         echo "Setting Mysql DB Name"
+         ;;
     i  ) IPADDR=$OPTARG
          echo "Setting IP address"
          ;;
@@ -783,11 +799,12 @@ while getopts "b:d:hi:n:m:x" opt; do
     m  ) MIRROR=$OPTARG
          echo "Setting mirror"
          ;;
-    h  ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
-	 exit 1
-	 ;;
-    \? ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror [ -x ]"
+    h  ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror -t dbname [ -x ]"
+	       exit 1
+	       ;;
+    \? ) echo "Usage: $0 -n hostname -d domain -i ip address -b dbtype -m mirror -t dbname [ -x ]"
          exit 1
+         ;;
   esac
 done
 
@@ -821,14 +838,18 @@ elif [ "$DBCAP" = "none" ]; then
   exit 10
 fi
 
-if [ "$DBCAP" = "mysql" ]; then
+if [ "$DB" = "mysql" ]; then
   echo "Please enter the name of the mysql host"
   read MYSQLHOST
   echo "Please enter the root password for $MYSQLHOST"
   read -s MYSQLPASS
   echo "Please enter password for new cmdb user"
   read -s CMDBPASS
-  if [ "$MYSQLHOST" == "localhost" ] || [ "$MYSQLHOST" == "127.0.0.1" ]; then
+  if [ -z "${DBNAME}" ]; then
+    echo "Please enter the name of the database"
+    read -s DBNAME
+  fi
+  if [ "$MYSQLHOST" = "localhost" ] || [ "$MYSQLHOST" = "127.0.0.1" ]; then
     echo "Checking for local mysql server"
     if [ ! -z $DPKG ]; then
       if [[ `$DPKG -l mysql-server` ]]; then

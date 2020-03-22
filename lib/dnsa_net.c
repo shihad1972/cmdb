@@ -83,13 +83,13 @@ get_port_number(record_row_s *rec, char *name, unsigned short int *port)
 	struct addrinfo hints, *srvinfo;
 	struct sockaddr_in *ipv4;
 
-	if (!(host = calloc(RBUFF_S, sizeof(char))))
+	if (!(host = calloc(TBUFF_S, sizeof(char))))
 		report_error(MALLOC_FAIL, "host in get_port_number");
 	len = strlen(rec->dest);
 	if (rec->dest[len - 1] == '.')
 		snprintf(host, RBUFF_S, "%s", rec->dest);
 	else
-		snprintf(host, RBUFF_S, "%s.%s", rec->dest, name);
+		snprintf(host, TBUFF_S, "%s.%s", rec->dest, name);
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	if ((strncmp(rec->protocol, "tcp", COMM_S)) == 0)
