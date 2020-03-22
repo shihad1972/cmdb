@@ -146,7 +146,7 @@ int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void
-cmdb_list_servers(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+cmdb_list_servers(ailsa_cmdb_s *cc);
 
 #endif
 

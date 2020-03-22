@@ -83,7 +83,7 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		retval = cmdb_add_server_to_database(cm, cc);
 		break;
 	case LIST_OBJ:
-		cmdb_list_servers(cm, cc);
+		cmdb_list_servers(cc);
 		break;
 	default:
 		display_type_error(cm->type);

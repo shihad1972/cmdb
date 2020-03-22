@@ -41,12 +41,14 @@ int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval = 0;
-	
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+		
 	return retval;
 }
 
 void
-cmdb_list_servers(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+cmdb_list_servers(ailsa_cmdb_s *cc)
 {
 	int retval = 0;
 	AILLIST *list = ailsa_db_data_list_init();
