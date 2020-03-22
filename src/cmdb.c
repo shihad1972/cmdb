@@ -99,7 +99,18 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval = 0;
 	if (!(cm) || !(cc))
 		return AILSA_NO_DATA;
-
+	switch(cm->action) {
+	case ADD_TO_DB:
+		retval = cmdb_add_customer_to_database(cm, cc);
+		break;
+	case LIST_OBJ:
+		cmdb_list_customers(cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
 	return retval;
 }
 

@@ -60,7 +60,8 @@ enum {			// SQL Tables
 };
 
 enum {			// SQL BASIC QUERIES
-	SERVER_NAME_COID = 0
+	SERVER_NAME_COID = 0,
+	COID_NAME_CITY
 };
 typedef struct ailsa_sql_single_s {
 	const char *string;

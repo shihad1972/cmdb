@@ -32,23 +32,23 @@ int
 check_cmdb_comm_options(cmdb_comm_line_s *conf);
 int
 check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm);
-int
-parse_cmdb_config_file(cmdb_config_s *dc, char *config);
+/*int
+parse_cmdb_config_file(cmdb_config_s *dc, char *config); 
 int
 read_cmdb_config_values(cmdb_config_s *dc, FILE *cnf);
 void
-init_cmdb_comm_line_values(cmdb_comm_line_s *cm);
+init_cmdb_comm_line_values(cmdb_comm_line_s *cm); 
 void
 cmdb_setup_config(cmdb_config_s **cf, cmdb_comm_line_s **com, cmdb_s **cmdb);
 void
-init_cmdb_config_values(cmdb_config_s *dc);
+init_cmdb_config_values(cmdb_config_s *dc); */
 void
 clean_cmdb_comm_line(cmdb_comm_line_s *list);
 
+/*void
+display_server_info (char *name, char *uuid, cmdb_config_s *config); 
 void
-display_server_info (char *name, char *uuid, cmdb_config_s *config);
-void
-display_all_servers(cmdb_config_s *config);
+display_all_servers(cmdb_config_s *config); 
 void
 print_all_servers(cmdb_s *cmdb);
 void
@@ -72,10 +72,10 @@ print_customer_servers(cmdb_server_s *server, unsigned long int cust_id);
 void
 display_vm_hosts(cmdb_config_s *config);
 int
-add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base);
+add_vm_host_to_db(cmdb_config_s *cmc, cmdb_comm_line_s *cm, cmdb_s *base); */
 
 /* New user input functions */
-int
+/*int
 add_server_to_database(cmdb_config_s *config, cmdb_comm_line_s *cm, cmdb_s *cmdb);
 int
 remove_server_from_database(cmdb_config_s *config, cmdb_comm_line_s *cm);
@@ -116,23 +116,23 @@ cmdb_get_server_id(cmdb_config_s *config, char *server);
 int
 update_member_on_id(cmdb_config_s *config, char *member, unsigned long int id, int type);
 int
-update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type);
+update_member_id_on_id(cmdb_config_s *config, unsigned long int *id, int type); */
 
 /* New server functions for linked list */
 
-void
+/*void
 print_server_details(cmdb_server_s *server, cmdb_s *base);
 int
 print_services(cmdb_service_s *service, unsigned long int id, int type);
 int
-print_hardware(cmdb_hardware_s *hard, unsigned long int id);
+print_hardware(cmdb_hardware_s *hard, unsigned long int id); */
 
 /* New customer functions for linked list */
 
-void
+/*void
 print_customer_details(cmdb_customer_s *list, cmdb_s *base);
 int
-print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id);
+print_customer_contacts(cmdb_contact_s *contacts, unsigned long int cust_id); */
 
 // Various DB functions
 
@@ -147,6 +147,12 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void
 cmdb_list_servers(ailsa_cmdb_s *cc);
+
+int
+cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
+cmdb_list_customers(ailsa_cmdb_s *cc);
 
 #endif
 

@@ -61,8 +61,9 @@ const struct ailsa_sql_single_s server[12] = {
 	{ .string = "mtime", .type = DBTIME, .length = 0 }
 };
 
-const char *basic_queries[] = {"\
-SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
+const char *basic_queries[] = {
+"SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
+"SELECT coid, name, city FROM customer ORDER BY coid", // COID_NAME_CITY
 };
 
 #ifdef HAVE_MYSQL

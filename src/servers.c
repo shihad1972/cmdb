@@ -55,10 +55,8 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 	AILELEM *name, *coid;
 	ailsa_data_s *one, *two;
 
-	if (!(cc)) {
-		retval = AILSA_NO_DATA;
+	if (!(cc))
 		goto cleanup;
-	}
 	if ((retval = ailsa_basic_query(cc, SERVER_NAME_COID, list) != 0)) {
 		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
 		goto cleanup;
