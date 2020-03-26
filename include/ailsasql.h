@@ -22,6 +22,15 @@
 #ifndef __AILSASQL_H__
 # define __AILSASQL_H__
 
+enum {			// SQL Data types
+	AILSA_DB_TEXT = 1,
+	AILSA_DB_LINT = 2,
+	AILSA_DB_SINT = 3,
+	AILSA_DB_TINY = 4,
+	AILSA_DB_FLOAT = 5,
+	AILSA_DB_TIME = 6
+};
+
 enum {			// SQL Tables
 	BUILD_TABLE = 0,
 	BUILD_DOMAIN_TABLE,
@@ -63,23 +72,29 @@ enum {			// SQL BASIC QUERIES
 	SERVER_NAME_COID = 0,
 	COID_NAME_CITY
 };
+
+enum {			// SQL ARGUMENT QUERIES
+	CONTACT_DETAILS_ON_COID = 0
+};
 typedef struct ailsa_sql_single_s {
 	const char *string;
 	short int type;
 	short int length;
 } ailsa_sql_single_s;
 
-typedef struct ailsa_sql_basic_s {
+typedef struct ailsa_sql_query_s {
 	const char *query;
 	short int number;
 	short int fields[3];
-} ailsa_sql_basic_s;
+} ailsa_sql_query_s;
 
 extern const struct ailsa_sql_single_s server[];
 extern size_t server_fields;
 
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
+int
+ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

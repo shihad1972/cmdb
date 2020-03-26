@@ -45,6 +45,8 @@
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
@@ -879,6 +881,28 @@ Unable to perform requested action on ");
 		fprintf(stderr, "%s", message);
 		fprintf(stderr, "%d\n", type);
 	}
+}
+
+const char *
+ailsa_strerror(int type)
+{
+	const char *message = NULL;
+
+	switch (type) {
+	case AILSA_NO_QUERY:
+		message = "No query was passed";
+		break;
+	case AILSA_NO_DBTYPE:
+		message = "There is no DB type configured";
+		break;
+	case AILSA_INVALID_DBTYPE:
+		message = "An invalid DB type was used";
+		break;
+	default:
+		message = "Unknown type error";
+		break;
+	}
+	return message;
 }
 
 #ifdef HAVE_SQLITE3

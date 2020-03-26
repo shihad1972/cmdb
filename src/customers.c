@@ -80,3 +80,50 @@ cmdb_list_customers(ailsa_cmdb_s *cc)
         ailsa_list_destroy(list);
         my_free(list);
 }
+
+void
+cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+    int retval = 0;
+    AILLIST *args = ailsa_db_data_list_init();
+    AILLIST *results = ailsa_db_data_list_init();
+    AILELEM *phone, *email, *name;
+    ailsa_data_s *one, *two, *three, *data;
+
+    if (!(cc))
+        goto cleanup;
+    data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+    ailsa_init_data(data);
+    data->data->text = strndup(cm->coid, SQL_TEXT_MAX);
+    data->type = AILSA_DB_TEXT;
+    if ((retval = ailsa_list_insert(args, data)) != 0) {
+        ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_contacts_for_customer");
+        goto cleanup;
+    }
+    if ((retval = ailsa_argument_query(cc, CONTACT_DETAILS_ON_COID, args, results))) {
+        ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+        goto cleanup;
+    }
+    name = results->head;
+    printf("Name\t\tPhone\t\tEmail\n");
+    while (name) {
+        if (name->next)
+            phone = name->next;
+        else
+            break;
+        if (phone->next)
+            email = phone->next;
+        else
+            break;
+        one = name->data;
+        two = phone->data;
+        three = email->data;
+        printf("%s\t%s\t%s\n", one->data->text, two->data->text, three->data->text);
+        name = email->next;
+    }
+    cleanup:
+        ailsa_list_destroy(results);
+        ailsa_list_destroy(args);
+        my_free(results);
+        my_free(args);
+}

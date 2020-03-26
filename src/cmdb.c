@@ -39,6 +39,9 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 static int
 cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
+static int
+cmdb_contact_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 int
 main(int argc, char *argv[])
 {
@@ -57,6 +60,9 @@ main(int argc, char *argv[])
 		break;
 	case CUSTOMER:
 		retval = cmdb_customer_actions(cm, cc);
+		break;
+	case CONTACT:
+		retval = cmdb_contact_actions(cm, cc);
 		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Unknown type %d", cm->type);
@@ -114,3 +120,20 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	return retval;
 }
 
+static int
+cmdb_contact_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval = 0;
+	if (!(cm) | !(cc))
+		return AILSA_NO_DATA;
+	switch(cm->action) {
+	case LIST_OBJ:
+		cmdb_list_contacts_for_customer(cm, cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
+	return retval;
+}

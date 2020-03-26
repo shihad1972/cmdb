@@ -44,6 +44,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include <cmdb.h>
 
 // Various data functions.

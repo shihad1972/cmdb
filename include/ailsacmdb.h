@@ -109,14 +109,6 @@ enum {                  // Action Codes
 	AILSA_VERSION = 101
 };
 
-enum {			// SQL Data types
-	AILSA_DB_TEXT = 1,
-	AILSA_DB_LINT = 2,
-	AILSA_DB_SINT = 3,
-	AILSA_DB_TINY = 4,
-	AILSA_DB_FLOAT = 5
-};
-
 enum {                  // Error codes
 	AILSA_NO_ACTION = 1,
 	AILSA_NO_TYPE = 2,
@@ -396,6 +388,8 @@ show_ailsacmdb_version();
 
 void
 ailsa_show_error(int retval);
+const char *
+ailsa_strerror(int type);
 
 // AIL_ data functions;
 
@@ -507,13 +501,10 @@ cmdbd_clean_config(ailsa_cmdb_s *cmdbd);
 
 int
 check_directory_access(const char *dir, int create);
-
 int
 ailsa_write_file(const char *name, void *data, size_t len);
-
 int
 ailsa_read_file(const char *name, void *data, size_t len);
-
 int
 ailsa_append_file(const char *name, void *data, size_t len);
 
@@ -521,7 +512,6 @@ ailsa_append_file(const char *name, void *data, size_t len);
  
 int
 ailsa_validate_input(char *input, int test);
-
 int
 ailsa_validate_string(const char *input, const char *re_test);
 
@@ -531,7 +521,6 @@ ailsa_validate_string(const char *input, const char *re_test);
 
 int
 ailsa_init_client_info(struct client_info *ci);
-
 AILLIST *
 ailsa_db_data_list_init(void);
 
@@ -559,13 +548,10 @@ ailsa_clean_client_info(struct client_info *ci);
 
 char *
 build_sql_query(unsigned int prog, unsigned int no);
-
 char *
 build_sql_insert(unsigned int prog, unsigned int no, unsigned int count);
-
 char *
 build_sql_update(unsigned int prog, unsigned int no);
-
 char *
 build_sql_delete(unsigned int prog, unsigned int no);
 
@@ -573,7 +559,6 @@ build_sql_delete(unsigned int prog, unsigned int no);
 
 void
 display_mkvm_usage(void);
-
 void
 display_version(char *prog);
 
