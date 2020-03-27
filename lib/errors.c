@@ -898,6 +898,15 @@ ailsa_strerror(int type)
 	case AILSA_INVALID_DBTYPE:
 		message = "An invalid DB type was used";
 		break;
+	case AILSA_NO_PARAMETERS:
+		message = "No parameters for MySQL bind operation";
+		break;
+	case AILSA_NO_QUERY_NO:
+		message = "Query number passed was 0";
+		break;
+	case AILSA_NO_FIELDS:
+		message = "No feilds to select in MySQL query";
+		break;
 	default:
 		message = "Unknown type error";
 		break;

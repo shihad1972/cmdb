@@ -83,6 +83,12 @@ int
 ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
+static int
+ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_sql_query_s argu, AILLIST *args);
+static int
+ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results);
+static int
+ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -94,6 +100,8 @@ static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
 static int
 ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s argu, AILLIST *args);
+static unsigned int
+ailsa_set_my_type(unsigned int type);
 #endif
 
 int
@@ -208,9 +216,57 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 {
 	if (!(cmdb) || !(args) || !(results))
 		return AILSA_NO_DATA;
-	int retval = 0;
 
-	return retval;
+	int retval = 0;
+	const char *query = argument.query;
+	MYSQL sql;
+	MYSQL_STMT *stmt = NULL;
+	MYSQL_BIND *params = NULL;
+	MYSQL_BIND *res = NULL;
+
+	ailsa_mysql_init(cmdb, &sql);
+	if (!(stmt = mysql_stmt_init(&sql))) {
+		ailsa_syslog(LOG_ERR, "Error from mysql: %s", mysql_error(&sql));
+		retval = MY_STATEMENT_FAIL;
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0) {
+		ailsa_syslog(LOG_ERR, "Error from mysql: %s", mysql_error(&sql));
+		goto cleanup;
+	}
+	if ((retval = ailsa_bind_params_mysql(stmt, &params, argument, args)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_bind_results_mysql(stmt, &res, results)) != 0)
+		goto cleanup;
+	if ((retval = mysql_stmt_execute(stmt)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot execute MySQL statement. %s", mysql_stmt_error(stmt));
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_store_result(stmt)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot store result of MySQL statement: %s", mysql_stmt_error(stmt));
+		goto cleanup;
+	}
+	while ((retval = mysql_stmt_fetch(stmt)) == 0) {
+		if (res)
+			my_free(res);
+		if ((retval = ailsa_bind_results_mysql(stmt, &res, results)) != 0)
+			goto cleanup;
+	}
+	if (retval != MYSQL_NO_DATA)
+		ailsa_syslog(LOG_ERR, "Cannot fetch data from mysql result set: %s", mysql_stmt_error(stmt));
+	else
+		retval = 0;
+	cleanup:
+		if (stmt) {
+			mysql_stmt_free_result(stmt);
+			mysql_stmt_close(stmt);
+		}
+		if (params)
+			my_free(params);
+		if (res)
+			my_free(res);
+		cmdb_mysql_cleanup(&sql);
+		return retval;
 }
 
 static void
@@ -246,7 +302,142 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 	}
 }
 
-#endif
+static int
+ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_sql_query_s argument, AILLIST *args)
+{
+	if (!(stmt) || !(args))
+		return AILSA_NO_DATA;
+	AILELEM *member = args->head;
+	MYSQL_BIND *tmp = NULL;
+	ailsa_data_s *data;
+	int retval = 0;
+	unsigned long params = mysql_stmt_param_count(stmt), i;
+	if (params > 0)
+		 tmp = ailsa_calloc(sizeof(MYSQL_BIND) * (size_t)params, "tmp in ailsa_bind_params_mysql");
+	else
+		return AILSA_NO_PARAMETERS;
+	for (i = 0; i < params; i++) {
+		data = member->data;
+		if ((retval = ailsa_set_bind_mysql(&(tmp[i]), data, argument.fields[i])) != 0) {
+			my_free(tmp);
+			return retval;
+		}
+		member = member->next;
+	}
+	*bind = tmp;
+	if ((retval = mysql_stmt_bind_param(stmt, tmp)) != 0)
+		ailsa_syslog(LOG_ERR, "Unable to bind MySQL paramters: %s", mysql_stmt_error(stmt));
+	return retval;
+}
+
+
+static int
+ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results)
+{
+	if (!(stmt) || !(results))
+		return AILSA_NO_DATA;
+	MYSQL_BIND *tmp = NULL;
+	MYSQL_RES *res = NULL;
+	MYSQL_FIELD *field = NULL;
+	ailsa_data_s *data;
+	int retval = 0;
+	unsigned int fields = mysql_stmt_field_count(stmt), i, type;
+	if (fields > 0)
+		tmp = ailsa_calloc(sizeof(MYSQL_BIND) * (size_t)fields, "tmp in ailsa_bind_results_mysql");
+	else
+		return AILSA_NO_FIELDS;
+	if (!(res = mysql_stmt_result_metadata(stmt))) {
+		my_free(tmp);
+		goto cleanup;
+	}
+	for (i = 0; i < fields; i++) {
+		data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_bind_results_mysql");
+		ailsa_init_data(data);
+		if ((retval = ailsa_list_insert(results, data)) != 0)
+			return retval;
+		field = mysql_fetch_field_direct(res, i);
+		type = ailsa_set_my_type(field->type);
+		if ((retval = ailsa_set_bind_mysql(&(tmp[i]), data, (short int)type)) != 0) {
+			my_free(tmp);
+			goto cleanup;
+		}
+	}
+	*bind = tmp;
+	if ((retval = mysql_stmt_bind_result(stmt, tmp)) != 0)
+		ailsa_syslog(LOG_ERR, "Unable to bind MySQL results: %s", mysql_stmt_error(stmt));
+
+	cleanup:
+		if (res)
+			mysql_free_result(res);
+		return retval;
+}
+
+static int
+ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields)
+{
+	if (!(bind) || !(data))
+		return AILSA_NO_DATA;
+	size_t len;
+	switch(fields) {
+	case AILSA_DB_TEXT:
+		if (!(data->data->text))
+			data->data->text = ailsa_calloc(CONFIG_LEN, "data text in ailsa_set_bind_mysql");
+		data->type = AILSA_DB_TEXT;
+		bind->buffer_type = MYSQL_TYPE_STRING;
+		bind->is_unsigned = 0;
+		bind->buffer = data->data->text;
+		len = strlen(data->data->text);
+		if (len > 0)
+			bind->buffer_length = len;
+		else
+			bind->buffer_length = CONFIG_LEN;
+		break;
+	case AILSA_DB_LINT:
+		data->type = AILSA_DB_LINT;
+		bind->buffer_type = MYSQL_TYPE_LONG;
+		bind->is_unsigned = 1;
+		bind->buffer = &(data->data->number);
+		bind->buffer_length = sizeof(unsigned long int);
+		break;
+	case AILSA_DB_SINT:
+		data->type = AILSA_DB_SINT;
+		bind->buffer_type = MYSQL_TYPE_SHORT;
+		bind->is_unsigned = 0;
+		bind->buffer = &(data->data->small);
+		bind->buffer_length = sizeof(short int);
+		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Wrong db column type %hi in ailsa_set_bind_mysql", fields);
+		return AILSA_INVALID_DBTYPE;
+	}
+	return 0;
+}
+
+static unsigned int
+ailsa_set_my_type(unsigned int type)
+{
+	unsigned int retval;
+
+	switch(type) {
+	case MYSQL_TYPE_VAR_STRING:
+	case MYSQL_TYPE_VARCHAR:
+		retval = AILSA_DB_TEXT;
+		break;
+	case MYSQL_TYPE_LONG:
+		retval = AILSA_DB_LINT;
+		break;
+	case MYSQL_TYPE_SHORT:
+		retval = AILSA_DB_SINT;
+		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Unknown MySQL type: %u", type);
+		exit(AILSA_INVALID_DBTYPE);
+		break;
+	}
+	return retval;
+}
+
+#endif // HAVE_MYSQL
 
 #ifdef HAVE_SQLITE3
 static int
