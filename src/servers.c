@@ -50,7 +50,7 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 void
 cmdb_list_servers(ailsa_cmdb_s *cc)
 {
-	int retval = 0;
+	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *name, *coid;
 	ailsa_data_s *one, *two;
@@ -82,3 +82,44 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 		my_free(list);
 }
 
+void
+cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILELEM *service, *url, *detail;
+	ailsa_data_s *one, *two, *three;
+
+	if (!(cm) || !(cc))
+		goto cleanup;
+	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, results))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	printf("Services for server %s:\n", cm->name);
+	service = results->head;
+	while (service) {
+		url = service->next;
+		if (url)
+			detail = url->next;
+		else
+			break;
+		one = service->data;
+		two = url->data;
+		three = detail->data;
+		printf("%s service\t@ %s\t%s\n", one->data->text, two->data->text, three->data->text);
+		service = detail->next;
+	}
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+}

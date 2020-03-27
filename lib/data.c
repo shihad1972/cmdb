@@ -598,3 +598,12 @@ ailsa_db_data_list_init(void)
 	ailsa_list_init(list, ailsa_clean_data);
 	return list;
 }
+
+ailsa_data_s *
+ailsa_db_text_data_init(void)
+{
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_init_data(data);
+	data->type = AILSA_DB_TEXT;
+	return data;
+}

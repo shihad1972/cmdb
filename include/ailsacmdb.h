@@ -526,6 +526,8 @@ int
 ailsa_init_client_info(struct client_info *ci);
 AILLIST *
 ailsa_db_data_list_init(void);
+ailsa_data_s *
+ailsa_db_text_data_init(void);
 
 // Struct data clean functions to be used with AILLIST destroy()
 

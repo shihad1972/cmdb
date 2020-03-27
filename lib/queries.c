@@ -66,9 +66,17 @@ const char *basic_queries[] = {
 "SELECT coid, name, city FROM customer ORDER BY coid", // COID_NAME_CITY
 };
 
-const struct ailsa_sql_query_s argument_queries[1] = {
+const struct ailsa_sql_query_s argument_queries[] = {
 	{ // CONTACT_DETAILS_ON_COID
 "SELECT co.name, co.phone, co.email FROM customer cu INNER JOIN contacts co ON co.cust_id = cu.cust_id WHERE cu.coid = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SERVICES_ON_SERVER
+"SELECT st.service, s.url, s.detail FROM service_type st \
+	LEFT JOIN services s ON st.service_type_id = s.service_type_id \
+	LEFT JOIN server se ON s.server_id = se.server_id \
+	WHERE se.name = ?",
 	1,
 	{ AILSA_DB_TEXT }
 	}
