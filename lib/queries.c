@@ -79,6 +79,14 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	WHERE se.name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // HARDWARE_ON_SERVER
+"SELECT ht.class, h.device, h.detail FROM hardware h \
+	LEFT JOIN hard_type ht ON ht.hard_type_id = h.hard_type_id \
+	LEFT JOIN server s ON h.server_id = s.server_id \
+	WHERE s.name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 

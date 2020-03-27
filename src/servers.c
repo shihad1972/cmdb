@@ -123,3 +123,45 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		my_free(args);
 		my_free(results);
 }
+
+void
+cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILELEM *class, *device, *detail;
+	ailsa_data_s *one, *two, *three;
+
+	if (!(cm) || !(cc))
+		goto cleanup;
+	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_hardware_for_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, results))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	printf("Hardware for server %s:\n", cm->name);
+	class = results->head;
+	while (class) {
+		device = class->next;
+		if (device)
+			detail = device->next;
+		else
+			break;
+		one = class->data;
+		two = device->data;
+		three = detail->data;
+		printf("  %s /dev/%s %s\n", one->data->text, two->data->text, three->data->text);
+		class = detail->next;
+	}
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+}
