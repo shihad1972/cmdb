@@ -102,6 +102,8 @@ static int
 ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s argu, AILLIST *args);
 static unsigned int
 ailsa_set_my_type(unsigned int type);
+static void
+ailsa_remove_empty_results_mysql(MYSQL_STMT *stmt, AILLIST *results);
 #endif
 
 int
@@ -252,10 +254,12 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 		if ((retval = ailsa_bind_results_mysql(stmt, &res, results)) != 0)
 			goto cleanup;
 	}
-	if (retval != MYSQL_NO_DATA)
+	if (retval != MYSQL_NO_DATA) {
 		ailsa_syslog(LOG_ERR, "Cannot fetch data from mysql result set: %s", mysql_stmt_error(stmt));
-	else
+	} else {
 		retval = 0;
+		ailsa_remove_empty_results_mysql(stmt, results);
+	}
 	cleanup:
 		if (stmt) {
 			mysql_stmt_free_result(stmt);
@@ -435,6 +439,23 @@ ailsa_set_my_type(unsigned int type)
 		break;
 	}
 	return retval;
+}
+
+static void
+ailsa_remove_empty_results_mysql(MYSQL_STMT *stmt, AILLIST *results)
+{
+	if (!(stmt) || !(results))
+		return;
+
+	unsigned int fields = mysql_stmt_field_count(stmt), i;
+	void *data = NULL;
+	AILELEM *tail = NULL;
+
+	for (i = 0; i < fields; i++) {
+		tail = results->tail;
+		ailsa_list_remove(results, tail, &data);
+		ailsa_clean_data(data);
+	}
 }
 
 #endif // HAVE_MYSQL
