@@ -19,6 +19,7 @@ src/cbcos
 src/cbcvariant
 src/dnsa
 *.swp
+*.kate-swp
 *.db
 html/
 infer-out/
