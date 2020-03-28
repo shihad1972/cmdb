@@ -49,6 +49,12 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 void
 cmdb_list_servers(ailsa_cmdb_s *cc);
 
+void
+cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
+cmdb_display_server_details(AILLIST *server);
+
 int
 cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
@@ -62,7 +68,13 @@ void
 cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void
+cmdb_display_services(AILLIST *list);
+
+void
 cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
+cmdb_display_hardware(AILLIST *list);
 
 void
 cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc);

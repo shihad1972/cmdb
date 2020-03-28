@@ -121,6 +121,9 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case LIST_OBJ:
 		cmdb_list_servers(cc);
 		break;
+	case DISPLAY:
+		cmdb_display_server(cm, cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;

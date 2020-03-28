@@ -36,6 +36,7 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_data.h"
+#include "cmdb_cmdb.h"
 
 int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
@@ -83,14 +84,94 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 }
 
 void
+cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *services = ailsa_db_data_list_init();
+	AILLIST *hardware = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	if (!(cm) || !(cc))
+		goto cleanup;
+	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVER_DETAILS_ON_NAME, args, server))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, services))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, hardware))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	printf("Details for server %s:\n", cm->name);
+	cmdb_display_server_details(server);
+	printf("Services:\n");
+	cmdb_display_services(services);
+	printf("Hardware:\n");
+	cmdb_display_hardware(hardware);
+
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(server);
+		ailsa_list_destroy(services);
+		ailsa_list_destroy(hardware);
+		my_free(args);
+		my_free(server);
+		my_free(services);
+		my_free(hardware);
+}
+
+void
+cmdb_display_server_details(AILLIST *server)
+{
+	if (!(server))
+		return;
+	AILELEM *elem, *time;
+	ailsa_data_s *data, *user;
+
+	elem = server->head;
+	data = elem->data;
+	printf("  Vendor: %s\n", data->data->text);
+	elem = elem->next;
+	data = elem->data;
+	printf("  Make: %s\n", data->data->text);
+	elem = elem->next;
+	data = elem->data;
+	printf("  Model: %s\n", data->data->text);
+	elem = elem->next;
+	data = elem->data;
+	printf("  UUID: %s\n", data->data->text);
+	elem = elem->next;
+	data = elem->data;
+	printf("  Customer COID: %s\n", data->data->text);
+	elem = elem->next;
+	data = elem->data;
+	time = elem->next;
+	user = time->data;
+	printf("  Created by %s @ %s\n", get_uname(data->data->number), user->data->text);
+	elem = time->next;
+	data = elem->data;
+	time = elem->next;
+	user = time->data;
+	printf("  Modified by %s @ %s\n", get_uname(data->data->number), user->data->text);
+}
+
+void
 cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *service, *url, *detail;
-	ailsa_data_s *one, *two, *three;
 
 	if (!(cm) || !(cc))
 		goto cleanup;
@@ -104,7 +185,23 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	printf("Services for server %s:\n", cm->name);
-	service = results->head;
+	cmdb_display_services(results);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+}
+
+void
+cmdb_display_services(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *service, *url, *detail;
+	ailsa_data_s *one, *two, *three;
+
+	service = list->head;
 	while (service) {
 		url = service->next;
 		if (url)
@@ -114,14 +211,9 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		one = service->data;
 		two = url->data;
 		three = detail->data;
-		printf("%s service\t@ %s\t%s\n", one->data->text, two->data->text, three->data->text);
+		printf("  %s service\t@ %s\t%s\n", one->data->text, two->data->text, three->data->text);
 		service = detail->next;
 	}
-	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
 }
 
 void
@@ -160,8 +252,6 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *class, *device, *detail;
-	ailsa_data_s *one, *two, *three;
 
 	if (!(cm) || !(cc))
 		goto cleanup;
@@ -175,7 +265,23 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	printf("Hardware for server %s:\n", cm->name);
-	class = results->head;
+	cmdb_display_hardware(results);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+}
+
+void
+cmdb_display_hardware(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *class, *device, *detail;
+	ailsa_data_s *one, *two, *three;
+
+	class = list->head;
 	while (class) {
 		device = class->next;
 		if (device)
@@ -188,11 +294,6 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		printf("  %s /dev/%s %s\n", one->data->text, two->data->text, three->data->text);
 		class = detail->next;
 	}
-	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
 }
 
 void

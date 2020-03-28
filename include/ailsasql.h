@@ -79,7 +79,8 @@ enum {			// SQL BASIC QUERIES
 enum {			// SQL ARGUMENT QUERIES
 	CONTACT_DETAILS_ON_COID = 0,
 	SERVICES_ON_SERVER,
-	HARDWARE_ON_SERVER
+	HARDWARE_ON_SERVER,
+	SERVER_DETAILS_ON_NAME
 };
 typedef struct ailsa_sql_single_s {
 	const char *string;
@@ -93,7 +94,7 @@ typedef struct ailsa_sql_query_s {
 	short int fields[3];
 } ailsa_sql_query_s;
 
-extern const struct ailsa_sql_single_s server[];
+extern const struct ailsa_sql_single_s server_table[];
 extern size_t server_fields;
 
 int

@@ -46,7 +46,7 @@
 #include <cmdb.h>
 #include <base_sql.h>
 
-const struct ailsa_sql_single_s server[12] = {
+const struct ailsa_sql_single_s server_table[12] = {
 	{ .string = "name", .type = AILSA_DB_TEXT, .length = HOST_S },
 	{ .string = "make", .type = AILSA_DB_TEXT, .length = HOST_S },
 	{ .string = "uuid", .type = AILSA_DB_TEXT, .length = HOST_S },
@@ -87,6 +87,14 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT ht.class, h.device, h.detail FROM hardware h \
 	LEFT JOIN hard_type ht ON ht.hard_type_id = h.hard_type_id \
 	LEFT JOIN server s ON h.server_id = s.server_id \
+	WHERE s.name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SERVER_DETAILS_ON_NAME
+"SELECT s.vendor, s.make, s.model, s.uuid, c.coid, \
+	s.cuser, s.ctime, s.muser, s.mtime FROM server s \
+	JOIN customer c ON s.cust_id = c.cust_id \
 	WHERE s.name = ?",
 	1,
 	{ AILSA_DB_TEXT }
