@@ -48,6 +48,9 @@ cmdb_service_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 static int
 cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
+static int
+cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 int
 main(int argc, char *argv[])
 {
@@ -75,6 +78,9 @@ main(int argc, char *argv[])
 		break;
 	case HARDWARE:
 		retval = cmdb_hardware_actions(cm, cc);
+		break;
+	case VM_HOST:
+		retval = cmdb_vm_host_actions(cm, cc);
 		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Unknown type %d", cm->type);
@@ -177,6 +183,24 @@ cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	switch(cm->action) {
 	case LIST_OBJ:
 		cmdb_list_hardware_for_server(cm, cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
+	return retval;
+}
+
+static int
+cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	switch(cm->action) {
+	case LIST_OBJ:
+		cmdb_list_vm_server_hosts(cc);
 		break;
 	default:
 		display_type_error(cm->type);
