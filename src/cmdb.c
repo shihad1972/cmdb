@@ -46,7 +46,13 @@ static int
 cmdb_service_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 static int
+cmdb_service_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+static int
 cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+static int
+cmdb_hardware_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 static int
 cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
@@ -76,8 +82,14 @@ main(int argc, char *argv[])
 	case SERVICE:
 		retval = cmdb_service_actions(cm, cc);
 		break;
+	case SERVICE_TYPE:
+		retval = cmdb_service_type_actions(cm, cc);
+		break;
 	case HARDWARE:
 		retval = cmdb_hardware_actions(cm, cc);
+		break;
+	case HARDWARE_TYPE:
+		retval = cmdb_hardware_type_actions(cm, cc);
 		break;
 	case VM_HOST:
 		retval = cmdb_vm_host_actions(cm, cc);
@@ -201,6 +213,42 @@ cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	switch(cm->action) {
 	case LIST_OBJ:
 		cmdb_list_vm_server_hosts(cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
+	return retval;
+}
+
+static int
+cmdb_service_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	switch(cm->action) {
+	case LIST_OBJ:
+		cmdb_list_service_types(cc);
+		break;
+	default:
+		display_type_error(cm->type);
+		retval = WRONG_TYPE;
+		break;
+	}
+	return retval;
+}
+
+static int
+cmdb_hardware_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	switch(cm->action) {
+	case LIST_OBJ:
+		cmdb_list_hardware_types(cc);
 		break;
 	default:
 		display_type_error(cm->type);

@@ -397,6 +397,7 @@ display_cmdb_usage(void)
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
 	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
+	printf("-j: service types\n-z: hardware types\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-m: vmhost server name for adding a server\n");
@@ -407,8 +408,12 @@ display_cmdb_usage(void)
 	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
 	printf("For services (with -i COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t\t[ -I service_id | -S service ]\n");
+	printf("For service types\n");
+	printf("-y: type\t-D detail\n");
 	printf("For hardware (with -n name to specify server)\n");
 	printf("-D: Detail\t-B: Device\t-I: hardware_id\n");
+	printf("For hardware types\n");
+	printf("-y: type\t-D detail\n");
 	printf("For Contact (with -i coid to specify customer)\n");
 	printf("-N: Name\t-P: Phone\t-E: email\n");
 	printf("For VM Host Server (with -n name to specify server)\n");

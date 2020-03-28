@@ -125,6 +125,35 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 }
 
 void
+cmdb_list_service_types(ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *name, *type;
+	ailsa_data_s *one, *two;
+
+	if (!(cc))
+		return;
+	if ((retval = ailsa_basic_query(cc, SERVICE_TYPES_ALL, list) != 0)) {
+		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
+		goto cleanup;
+	}
+	name = list->head;
+	printf("Service Types:\n");
+	while (name) {
+		type = name->next;
+		one = name->data;
+		if (type)
+			two = type->data;
+		printf("%s\t\t%s\n", one->data->text, two->data->text);
+		name = type->next;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+}
+
+void
 cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval;
@@ -167,13 +196,42 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 }
 
 void
+cmdb_list_hardware_types(ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *class, *type;
+	ailsa_data_s *one, *two;
+
+	if (!(cc))
+		return;
+	if ((retval = ailsa_basic_query(cc, HARDWARE_TYPES_ALL, list) != 0)) {
+		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
+		goto cleanup;
+	}
+	class = list->head;
+	printf("Hardware Types:\n");
+	while (class) {
+		type = class->next;
+		one = class->data;
+		if (type)
+			two = type->data;
+		printf("%s\t\t%s\n", one->data->text, two->data->text);
+		class = type->next;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+}
+
+void
 cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc)
 {
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *name, *type;
 	ailsa_data_s *one, *two;
-	
+
 	if (!(cc))
 		return;
 	if ((retval = ailsa_basic_query(cc, VM_SERVERS, list) != 0)) {

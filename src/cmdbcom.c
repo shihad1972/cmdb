@@ -50,7 +50,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:m:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhlorstuvwxy";
+	const char *optstr = "c:i:k:n:m:y:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhjlorstuvwxz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -62,6 +62,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"force",		no_argument,		NULL,	'f'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"identity",		required_argument,	NULL,	'i'},
+		{"service-type",	no_argument,		NULL,	'j'},
+		{"servicetype",		no_argument,		NULL,	'j'},
 		{"alias",		required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"modify",		no_argument,		NULL,	'm'},
@@ -75,7 +77,10 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"version",		no_argument,		NULL,	'v'},
 		{"hardware",		no_argument,		NULL,	'w'},
 		{"virtmachine",		required_argument,	NULL,	'x'},
-		{"servertype",		no_argument,		NULL,	'y'},
+		{"type",		required_argument,	NULL,	'y'},
+		{"hardtype",		no_argument,		NULL,	'z'},
+		{"hard-type",		no_argument,		NULL,	'z'},
+		{"hardwaretype",	no_argument,		NULL,	'z'},
 		{"address",		required_argument,	NULL,	'A'},
 		{"device",		required_argument,	NULL,	'B'},
 		{"coid",		required_argument,	NULL,	'C'},
@@ -110,16 +115,18 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 	{
 		if (opt == 's')
 			comp->type = SERVER;
-		else if (opt == 'y')
-			comp->type = SERVER_TYPE;
 		else if (opt == 'u')
 			comp->type = CUSTOMER;
 		else if (opt == 't')
 			comp->type = CONTACT;
 		else if (opt == 'e')
 			comp->type = SERVICE;
+		else if (opt == 'j')
+			comp->type = SERVICE_TYPE;
 		else if (opt == 'w')
 			comp->type = HARDWARE;
+		else if (opt == 'z')
+			comp->type = HARDWARE_TYPE;
 		else if (opt == 'o')
 			comp->type = VM_HOST;
 		else if (opt == 'd')
@@ -146,6 +153,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			comp->id = strndup(optarg, CONF_S);
 		else if (opt == 'x')
 			comp->vmhost = strndup(optarg, HOST_S);
+		else if (opt == 'y')
+			comp->shtype = strndup(optarg, MAC_S);
 		else if (opt == 'V')
 			comp->vendor = strndup(optarg, CONF_S);
 		else if (opt == 'M')
@@ -214,6 +223,9 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (comp->type == SERVICE) {
 			if (!(comp->id) && !(comp->name))
 				retval = NO_NAME_OR_ID;
+		} else if (comp->type == HARDWARE) {
+			if (!(comp->id) && !(comp->name))
+				retval = NO_NAME_OR_ID;
 		}
 	} else if ((!(comp->name)) && (!(comp->id)) &&
 		(comp->type != NONE || comp->action != NONE) &&
@@ -266,6 +278,7 @@ clean_cmdb_comm_line(cmdb_comm_line_s *list)
 	CLEAN_COMM_LIST(list, city);
 	CLEAN_COMM_LIST(list, email);
 	CLEAN_COMM_LIST(list, detail);
+	CLEAN_COMM_LIST(list, shtype);
 	CLEAN_COMM_LIST(list, hclass);
 	CLEAN_COMM_LIST(list, url);
 	CLEAN_COMM_LIST(list, device);

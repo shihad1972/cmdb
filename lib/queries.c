@@ -65,6 +65,8 @@ const char *basic_queries[] = {
 "SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
 "SELECT coid, name, city FROM customer ORDER BY coid", // COID_NAME_CITY
 "SELECT vm_server, type FROM vm_server_hosts", // VM_SERVERS
+"SELECT service, detail FROM service_type", // SERVICE_TYPES_ALL
+"SELECT type, class FROM hard_type", // HARDWARE_TYPES_ALL
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {

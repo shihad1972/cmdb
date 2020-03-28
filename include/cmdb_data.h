@@ -182,6 +182,7 @@ typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
 	char *county;
 	char *coid;
 	char *service;
+	char *shtype;
 	short int action;
 	short int type;
 	short int force;
