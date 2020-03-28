@@ -297,6 +297,10 @@ ailsa_clean_data(void *data)
 	tmp = data;
 	if (tmp->type == AILSA_DB_TEXT)
 		free(tmp->data->text);
+#ifdef HAVE_MYSQL
+	if (tmp->type == AILSA_DB_TIME)
+		free(tmp->data->time);
+#endif
 	my_free(tmp->data);
 	my_free(tmp);
 }

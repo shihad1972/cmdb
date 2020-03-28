@@ -23,6 +23,9 @@
 # define __AILSACMDB_H__
 # include <stdlib.h>
 # include <time.h>
+# ifdef HAVE_MYSQL
+#  include <mysql.h>
+# endif
 /** Useful macro to safely avoid double-free memory corruption
  ** Shamelessly stolen from the nagios source. Thanks :) */
 # ifndef my_free
@@ -362,6 +365,9 @@ typedef union ailsa_data_u {
 	short int small;
 	char tiny;
 	double point;
+#ifdef HAVE_MYSQL
+	MYSQL_TIME *time;
+#endif
 } ailsa_data_u;
 
 typedef struct ailsa_data_s {

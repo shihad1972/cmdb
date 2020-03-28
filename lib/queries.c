@@ -437,6 +437,15 @@ ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields)
 		bind->buffer = &(data->data->small);
 		bind->buffer_length = sizeof(short int);
 		break;
+	case AILSA_DB_TIME:
+		if (!(data->data->time))
+			data->data->time = ailsa_calloc(sizeof(MYSQL_TIME), "data text in ailsa_set_bind_mysql");
+		data->type = AILSA_DB_TIME;
+		bind->buffer_type = MYSQL_TYPE_TIMESTAMP;
+		bind->is_unsigned = 0;
+		bind->buffer = data->data->time;
+		bind->buffer_length = sizeof(MYSQL_TIME);
+		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Wrong db column type %hi in ailsa_set_bind_mysql", fields);
 		return AILSA_INVALID_DBTYPE;
@@ -459,6 +468,9 @@ ailsa_set_my_type(unsigned int type)
 		break;
 	case MYSQL_TYPE_SHORT:
 		retval = AILSA_DB_SINT;
+		break;
+	case MYSQL_TYPE_TIMESTAMP:
+		retval = AILSA_DB_TIME;
 		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Unknown MySQL type: %u", type);
