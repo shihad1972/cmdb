@@ -175,7 +175,7 @@ cmdb_display_server_details(AILLIST *server)
 	user = time->data;
 #ifdef HAVE_MYSQL
 	if (user->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %4u-%02u-%02u %02u:%02u:%02u\n", get_uname(data->data->number),
+		printf("  Created by %s @ %04u-%02u-%02u %02u:%02u:%02u\n", get_uname(data->data->number),
 			user->data->time->year, user->data->time->month, user->data->time->day,
 			user->data->time->hour, user->data->time->minute, user->data->time->second);
 	} else

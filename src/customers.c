@@ -189,7 +189,7 @@ cmdb_display_customer_details(AILLIST *list)
 	two = second->data;
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %4u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
+		printf("  Created by %s @ %04u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
 			two->data->time->year, two->data->time->month, two->data->time->day,
 			two->data->time->hour, two->data->time->minute, two->data->time->second);
 	} else
