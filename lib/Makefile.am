@@ -5,7 +5,7 @@ lib_LTLIBRARIES = libailsacmdb.la libailsasql.la
 libailsacmdb_la_SOURCES = ailsacmdb.c parse_config.c logging.c \
 			regexp.c fileio.c data.c dnsa_data.c cmdb_data.c cbc_data.c \
 			errors.c list.c hash.c config.c uuid.c dnsa_net.c cbcnet.c
-libailsasql_la_SOURCES = queries.c base_sql.c dnsa_base_sql.c cbc_base_sql.c
+libailsasql_la_SOURCES = queries.c base_sql.c dnsa_base_sql.c cbc_base_sql.c sql.c
 include_HEADERS = $(top_srcdir)/include/ailsacmdb.h $(top_srcdir)/include/ailsasql.h
 
 if HAVE_MYSQL

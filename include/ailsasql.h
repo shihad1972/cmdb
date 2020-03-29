@@ -107,21 +107,25 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
-cmdb_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql);
+ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql);
+int
+ailsa_mysql_query_with_checks(MYSQL *mycmdb, const char *query);
+int
+ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
+void
+ailsa_mysql_cleanup(MYSQL *cmdb);
+void
+ailsa_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 
 # endif // HAVE_MYSQL
 
-// SQL functions.
-/*
+# ifdef HAVE_SQLITE3
+#  include <sqlite3.h>
 void
-ailsa_clean_dbv(void *dbv);
-int
-ailsa_init_ss(AILSS *data);
+ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 void
-ailsa_clean_ss_data(void *data);
+ailsa_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 void
-ailsa_clean_ss(AILSS *data);
-int
-ailsa_simple_select(ailsa_cmdb_s *config, AILSS *query, AILLIST *results);
-*/
+ailsa_sqlite_cleanup(sqlite3 *cmdb, sqlite3_stmt *stmt);
+# endif // HAVE_SQLITE3
 #endif

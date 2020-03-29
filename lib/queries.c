@@ -116,8 +116,6 @@ const struct ailsa_sql_query_s argument_queries[] = {
 };
 
 #ifdef HAVE_MYSQL
-static void
-ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *sql);
 static int
 ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
 int
@@ -191,25 +189,6 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 
 #ifdef HAVE_MYSQL
 
-static void
-ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *sql)
-{
-	const char *unix_socket;
-
-	unix_socket = dc->socket;
-
-	if (!(mysql_init(sql))) {
-		ailsa_syslog(LOG_ERR, "Error initalising MySQL: %s", mysql_error(sql));
-		exit(MY_INIT_FAIL);
-	}
-	if (!(mysql_real_connect(sql, dc->host, dc->user, dc->pass,
-	  dc->db, dc->port, unix_socket, dc->cliflag))) {
-		ailsa_syslog(LOG_ERR, "Cannot connect to MySQL DB: %s", mysql_error(sql));
-		exit(MY_CONN_FAIL);
-	}
-	
-}
-
 static int
 ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 {
@@ -227,12 +206,12 @@ ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 
 	ailsa_mysql_init(cmdb, &sql);
 
-	if ((retval = cmdb_mysql_query_with_checks(&sql, query)) != 0) {
+	if ((retval = ailsa_mysql_query_with_checks(&sql, query)) != 0) {
 		ailsa_syslog(LOG_ERR, "MySQL query failed: %s", mysql_error(&sql));
 		exit(MY_QUERY_FAIL);
 	}
 	if (!(sql_res = mysql_store_result(&sql))) {
-		cmdb_mysql_cleanup(&sql);
+		ailsa_mysql_cleanup(&sql);
 		ailsa_syslog(LOG_ERR, "MySQL store result failed: %s", mysql_error(&sql));
 		exit(MY_STORE_FAIL);
 	}
@@ -249,7 +228,7 @@ ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 		while ((sql_row = mysql_fetch_row(sql_res)))
 			ailsa_store_mysql_row(sql_row, results, fields);
 	}
-	cmdb_mysql_cleanup_full(&sql, sql_res);
+	ailsa_mysql_cleanup_full(&sql, sql_res);
 	my_free(fields);
 	return retval;
 }
@@ -310,7 +289,7 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 			my_free(params);
 		if (res)
 			my_free(res);
-		cmdb_mysql_cleanup(&sql);
+		ailsa_mysql_cleanup(&sql);
 		return retval;
 }
 
@@ -524,10 +503,10 @@ ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results
 	sqlite3 *sql = NULL;
 	sqlite3_stmt *state = NULL;
 
-	cmdb_setup_ro_sqlite(query, file, &sql, &state);
+	ailsa_setup_ro_sqlite(query, file, &sql, &state);
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		ailsa_store_basic_sqlite(state, results);
-	cmdb_sqlite_cleanup(sql, state);
+	ailsa_sqlite_cleanup(sql, state);
 	if (retval == SQLITE_DONE)
 		retval = 0;
 	return retval;
@@ -544,14 +523,14 @@ ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s a
 	const char *query = argument.query;
 	const char *file = cmdb->file;
 
-	cmdb_setup_ro_sqlite(query, file, &sql, &state);
+	ailsa_setup_ro_sqlite(query, file, &sql, &state);
 	if ((retval = ailsa_bind_arguments_sqlite(state, argument, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		return retval;
 	}
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		ailsa_store_basic_sqlite(state, results);
-	cmdb_sqlite_cleanup(sql, state);
+	ailsa_sqlite_cleanup(sql, state);
 	if (retval == SQLITE_DONE)
 		retval = 0;
 	return retval;
