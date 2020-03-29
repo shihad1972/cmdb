@@ -63,20 +63,24 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	name = list->head;
-	printf("Server Name\t\tCOID\n");
-	while (name) {
-		coid = name->next;
-		one = (ailsa_data_s *)name->data;
-		two = (ailsa_data_s *)coid->data;
-		if (strlen(one->data->text) < 8)
-			printf("%s\t\t\t%s\n",one->data->text, two->data->text);
-		else if (strlen(one->data->text) < 16)
-			printf("%s\t\t%s\n",one->data->text, two->data->text);
-		else
-			printf("%s\t%s\n",one->data->text, two->data->text);
-		name = coid->next;
-		if (name)
+	if (list->total > 0) {
+		printf("Server Name\t\tCOID\n");
+		while (name) {
 			coid = name->next;
+			one = (ailsa_data_s *)name->data;
+			two = (ailsa_data_s *)coid->data;
+			if (strlen(one->data->text) < 8)
+				printf("%s\t\t\t%s\n",one->data->text, two->data->text);
+			else if (strlen(one->data->text) < 16)
+				printf("%s\t\t%s\n",one->data->text, two->data->text);
+			else
+				printf("%s\t%s\n",one->data->text, two->data->text);
+			name = coid->next;
+			if (name)
+				coid = name->next;
+		}
+	} else {
+		fprintf(stderr, "No servers found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -112,12 +116,24 @@ cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	printf("Details for server %s:\n", cm->name);
-	cmdb_display_server_details(server);
-	printf("Services:\n");
-	cmdb_display_services(services);
-	printf("Hardware:\n");
-	cmdb_display_hardware(hardware);
+	if (server->total > 0) {
+		printf("Details for server %s:\n", cm->name);
+		cmdb_display_server_details(server);
+		if (services->total > 0) {
+			printf("Services:\n");
+			cmdb_display_services(services);
+		} else {
+			printf("No Services\n");
+		}
+		if (hardware->total > 0) {
+			printf("Hardware:\n");
+			cmdb_display_hardware(hardware);
+		} else {
+			printf("No Hardware\n");
+		}
+	} else {
+		fprintf(stderr, "Cannot find server %s\n", cm->name);
+	}
 
 	cleanup:
 		ailsa_list_destroy(args);
@@ -198,8 +214,12 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	printf("Services for server %s:\n", cm->name);
-	cmdb_display_services(results);
+	if (results->total > 0) {
+		printf("Services for server %s:\n", cm->name);
+		cmdb_display_services(results);
+	} else {
+		fprintf(stderr, "No Services for server %s\n", cm->name);
+	}
 	cleanup:
 		ailsa_list_destroy(args);
 		ailsa_list_destroy(results);
@@ -245,14 +265,18 @@ cmdb_list_service_types(ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	name = list->head;
-	printf("Service Types:\n");
-	while (name) {
-		type = name->next;
-		one = name->data;
-		if (type)
-			two = type->data;
-		printf("%s\t\t%s\n", one->data->text, two->data->text);
-		name = type->next;
+	if (list->total > 0) {
+		printf("Service Types:\n");
+		while (name) {
+			type = name->next;
+			one = name->data;
+			if (type)
+				two = type->data;
+			printf(" %s\t\t%s\n", one->data->text, two->data->text);
+			name = type->next;
+		}
+	} else {
+		fprintf(stderr, "No service types found in database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -278,8 +302,12 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	printf("Hardware for server %s:\n", cm->name);
-	cmdb_display_hardware(results);
+	if (results->total > 0) {
+		printf("Hardware for server %s:\n", cm->name);
+		cmdb_display_hardware(results);
+	} else {
+		fprintf(stderr, "No hardware for server %s\n", cm->name);
+	}
 	cleanup:
 		ailsa_list_destroy(args);
 		ailsa_list_destroy(results);
@@ -325,14 +353,18 @@ cmdb_list_hardware_types(ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	class = list->head;
-	printf("Hardware Types:\n");
-	while (class) {
-		type = class->next;
-		one = class->data;
-		if (type)
-			two = type->data;
-		printf("%s\t\t%s\n", one->data->text, two->data->text);
-		class = type->next;
+	if (list->total > 0) {
+		printf("Hardware Types:\n");
+		while (class) {
+			type = class->next;
+			one = class->data;
+			if (type)
+				two = type->data;
+			printf(" %s\t\t%s\n", one->data->text, two->data->text);
+			class = type->next;
+		}
+	} else {
+		fprintf(stderr, "No hardware types found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -354,17 +386,71 @@ cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	name = list->head;
-	printf("Virtual Machine hosts:\n");
-	while (name) {
-		type = name->next;
-		one = name->data;
-		if (type)
-			two = type->data;
-		printf("%s, type %s\n", one->data->text, two->data->text);
-		name = type->next;
+	if (list->total > 0) {
+		printf("Virtual Machine hosts:\n");
+		while (name) {
+			type = name->next;
+			one = name->data;
+			if (type)
+				two = type->data;
+			printf(" %s, type %s\n", one->data->text, two->data->text);
+			name = type->next;
+		}
+	} else {
+		fprintf(stderr, "No virtual machine hosts found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
 		my_free(list);
+}
+
+void
+cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return;
+	int retval;
+	AILLIST *results = ailsa_db_data_list_init();
+	AILLIST *args = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, VM_HOST_BUILT_SERVERS, args, results))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		printf("VM host %s built virtual machines:\n", cm->name);
+		cmdb_display_built_vms(results);
+	} else {
+		fprintf(stderr, "VM Host has no built virtual machines\n");
+	}
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+}
+
+void
+cmdb_display_built_vms(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *name, *varient;
+	ailsa_data_s *one, *two;
+
+	name = list->head;
+	while (name) {
+		varient = name->next;
+		one = name->data;
+		two = varient->data;
+		printf("  %s built as %s\n", one->data->text, two->data->text);
+		name = varient->next;
+	}
 }
 

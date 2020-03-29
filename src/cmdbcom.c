@@ -227,17 +227,19 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			if (!(comp->id) && !(comp->name))
 				retval = NO_NAME_OR_ID;
 		}
-	} else if ((!(comp->name)) && (!(comp->id)) &&
-		(comp->type != NONE || comp->action != NONE) &&
-		(comp->type != CONTACT))
-		retval = NO_NAME_OR_ID;
-	else if (comp->action == DISPLAY) {
-		if (comp->type == CONTACT) {
-			if ((!(comp->id)) && (!(comp->coid)))
+	} else if (comp->action == DISPLAY) {
+		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {
+			retval = WRONG_TYPE_FOR_DISPLAY;
+		} else if (comp->type == CUSTOMER) {
+			if (!comp->coid)
 				retval = NO_COID;
 		} else if (!comp->name) {
 			retval = NO_NAME;
 		}
+	} else if ((!(comp->name)) && (!(comp->id)) && 
+		(comp->type != NONE || comp->action != NONE) &&
+		(comp->type != CONTACT)) {
+		retval = NO_NAME_OR_ID;
 	} else if (comp->action == RM_FROM_DB) {
 		if (comp->type == SERVICE) {
 			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))

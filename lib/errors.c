@@ -314,6 +314,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No varient or valias supplied.\n");
 	else if (retval == NO_EMAIL)
 		fprintf(stderr, "No email address specified with -E.\n");
+	else if (retval == WRONG_TYPE_FOR_DISPLAY)
+		fprintf(stderr, "Cannot display this type in cmdb\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
 		fprintf(stderr, "Both domain name and IP given on command line.\n");
 	else if (retval == NO_PARTITION_INFO)

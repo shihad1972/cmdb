@@ -300,7 +300,8 @@ enum {			/* command line error codes */
 	NO_OS_SPECIFIED = -30,
 	NO_BUILD_DOMAIN = -31,
 	NO_BUILD_VARIENT = -32,
-	NO_BUILD_PARTITION = -33
+	NO_BUILD_PARTITION = -33,
+	WRONG_TYPE_FOR_DISPLAY = -34
 };
 
 enum {			/* config file error codes */

@@ -98,6 +98,20 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	WHERE s.name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // VM_HOST_BUILT_SERVERS
+"SELECT s.name, v.varient from varient v \
+	JOIN build b ON v.varient_id = b.varient_id \
+	JOIN server s ON b.server_id = s.server_id \
+	JOIN vm_server_hosts vm ON s.vm_server_id = vm.vm_server_id \
+	WHERE vm.vm_server = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // CUSTOMER_DETAILS_ON_COID
+"SELECT name, address, city, county, postcode, cuser, ctime, muser, mtime FROM customer WHERE coid = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 

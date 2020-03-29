@@ -145,6 +145,9 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case LIST_OBJ:
 		cmdb_list_customers(cc);
 		break;
+	case DISPLAY:
+		cmdb_display_customer(cm, cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;
@@ -216,6 +219,9 @@ cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	switch(cm->action) {
 	case LIST_OBJ:
 		cmdb_list_vm_server_hosts(cc);
+		break;
+	case DISPLAY:
+		cmdb_display_vm_server(cm, cc);
 		break;
 	default:
 		display_type_error(cm->type);

@@ -62,7 +62,16 @@ void
 cmdb_list_customers(ailsa_cmdb_s *cc);
 
 void
+cmdb_display_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
 cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
+cmdb_display_contacts(AILLIST *list);
+
+void
+cmdb_display_customer_details(AILLIST *list);
 
 void
 cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
@@ -78,6 +87,12 @@ cmdb_display_hardware(AILLIST *list);
 
 void
 cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc);
+
+void
+cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+void
+cmdb_display_built_vms(AILLIST *list);
 
 void
 cmdb_list_service_types(ailsa_cmdb_s *cc);

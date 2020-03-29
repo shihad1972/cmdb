@@ -35,6 +35,7 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_data.h"
+#include "cmdb_cmdb.h"
 
 int
 cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
@@ -84,15 +85,13 @@ cmdb_list_customers(ailsa_cmdb_s *cc)
 void
 cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
-	int retval = 0;
+	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	AILELEM *phone, *email, *name;
-	ailsa_data_s *one, *two, *three, *data;
+	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	if (!(cc))
+	if (!(cc) || !(cm))
 		goto cleanup;
-	data = ailsa_db_text_data_init();
 	data->data->text = strndup(cm->coid, SQL_TEXT_MAX);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_contacts_for_customer");
@@ -102,26 +101,138 @@ cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	name = results->head;
-	printf("Name\t\tPhone\t\tEmail\n");
-	while (name) {
-		if (name->next)
-			phone = name->next;
-		else
-			break;
-		if (phone->next)
-			email = phone->next;
-		else
-			break;
-		one = name->data;
-		two = phone->data;
-		three = email->data;
-		printf("%s\t%s\t%s\n", one->data->text, two->data->text, three->data->text);
-		name = email->next;
-	}
+	printf("Contacts for COID %s\n", cm->coid);
+	cmdb_display_contacts(results);
 	cleanup:
 		ailsa_list_destroy(results);
 		ailsa_list_destroy(args);
 		my_free(results);
 		my_free(args);
+}
+
+void
+cmdb_display_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *customer = ailsa_db_data_list_init();
+	AILLIST *contacts = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	if (!(cc) || !(cm))
+		goto cleanup;
+	data->data->text = strndup(cm->coid, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_contacts_for_customer");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CUSTOMER_DETAILS_ON_COID, args, customer))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CONTACT_DETAILS_ON_COID, args, contacts))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if (customer->total > 0) {
+		printf("Details for coid %s\n", cm->coid);
+	} else {
+		printf("Coid %s not found in DB\n", cm->coid);
+		goto cleanup;
+	}
+	cmdb_display_customer_details(customer);
+	if (contacts->total > 0) {
+		printf("Contacts:\n");
+	} else {
+		printf("No contacts for customer\n");
+		goto cleanup;
+	}
+	cmdb_display_contacts(contacts);
+
+	cleanup:
+		ailsa_list_destroy(customer);
+		ailsa_list_destroy(contacts);
+		ailsa_list_destroy(args);
+		my_free(customer);
+		my_free(contacts);
+		my_free(args);
+}
+
+void
+cmdb_display_customer_details(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *first, *second;
+	ailsa_data_s *one, *two;
+
+	first = list->head;
+	if (list->total == 0)
+		return;
+	one = first->data;
+	printf(" %s\n", one->data->text);
+	first = first->next;
+	one = first->data;
+	printf("  %s,\n", one->data->text);
+	first = first->next;
+	one = first->data;
+	printf("  %s,\n", one->data->text);
+	first = first->next;
+	one = first->data;
+	printf("  %s,\n", one->data->text);
+	first = first->next;
+	one = first->data;
+	printf("  %s\n", one->data->text);
+	first = first->next;
+	one = first->data;
+	second = first->next;
+	two = second->data;
+#ifdef HAVE_MYSQL
+	if (two->type == AILSA_DB_TIME) {
+		printf("  Created by %s @ %4u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
+			two->data->time->year, two->data->time->month, two->data->time->day,
+			two->data->time->hour, two->data->time->minute, two->data->time->second);
+	} else
+#endif
+		printf("  Created by %s @ %s\n", get_uname(one->data->number), two->data->text);
+	first = second->next;
+	one = first->data;
+	second = first->next;
+	two = second->data;
+#ifdef HAVE_MYSQL
+	if (two->type == AILSA_DB_TIME) {
+		printf("  Modified by %s @ %04u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
+			two->data->time->year, two->data->time->month, two->data->time->day,
+			two->data->time->hour, two->data->time->minute, two->data->time->second);
+	} else
+#endif
+		printf("  Modified by %s @ %s\n", get_uname(one->data->number), two->data->text);
+}
+
+void
+cmdb_display_contacts(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *phone, *email, *name;
+	ailsa_data_s *one, *two, *three;
+
+	name = list->head;
+	if (list->total > 0) {
+		while (name) {
+			if (name->next)
+				phone = name->next;
+			else
+				break;
+			if (phone->next)
+				email = phone->next;
+			else
+				break;
+			one = name->data;
+			two = phone->data;
+			three = email->data;
+			printf("  %s\t%s\t%s\n", one->data->text, two->data->text, three->data->text);
+			name = email->next;
+		}
+	}
 }
