@@ -554,7 +554,11 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 			}
 		}
 	}
-	parse_cmdb_config_values(cmdb, conf);
+	fseek(conf, 0, SEEK_END);
+	if (ftell(conf) > 0) {
+		fseek(conf, 0, SEEK_SET);
+		parse_cmdb_config_values(cmdb, conf);
+	}
 	cleanup:
 		if (conf)
 			fclose(conf);
