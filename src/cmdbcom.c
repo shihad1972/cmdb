@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <syslog.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
 #endif // HAVE_WORDEXP_H
@@ -229,12 +230,27 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		if (comp->type == CONTACT) {
 			if (!(comp->name))
 				retval = NO_CONT_NAME;
-			if (!(comp->email))
+			else if (!(comp->email))
 				retval = NO_EMAIL;
-			if (!(comp->phone))
+			else if (!(comp->phone))
 				retval = NO_PHONE;
-			if (!(comp->coid))
+			else if (!(comp->coid))
 				retval = NO_COID;
+		} else if (comp->type == SERVER) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if (!(comp->coid))
+				retval = NO_COID;
+			if (!(comp->make))
+				comp->make = strdup("none");
+			if (!(comp->model))
+				comp->model = strdup("none");
+			if (!(comp->vendor))
+				comp->vendor = strdup("none");
+			if (!(comp->uuid)) {
+				ailsa_syslog(LOG_INFO, "Auto generating UUID for server");
+				comp->uuid = ailsa_gen_uuid_str();
+			}
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

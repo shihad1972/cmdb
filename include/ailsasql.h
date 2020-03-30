@@ -84,11 +84,13 @@ enum {			// SQL ARGUMENT QUERIES
 	VM_HOST_BUILT_SERVERS,
 	CUSTOMER_DETAILS_ON_COID,
 	CUST_ID_ON_COID,
-	CONT_ID_ON_CONTACT_DETAILS
+	CONT_ID_ON_CONTACT_DETAILS,
+	VM_SERVER_ID_ON_NAME
 };
 
 enum {			// SQL INSERT QUERIES
-	INSERT_CONTACTS = 0
+	INSERT_CONTACTS = 0,
+	INSERT_SERVER
 };
 
 typedef struct ailsa_sql_single_s {
@@ -100,7 +102,7 @@ typedef struct ailsa_sql_single_s {
 typedef struct ailsa_sql_query_s {
 	const char *query;
 	short int number;
-	short int fields[6];
+	short int fields[9];
 } ailsa_sql_query_s;
 
 extern const struct ailsa_sql_single_s server_table[];

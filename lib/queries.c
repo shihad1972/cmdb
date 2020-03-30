@@ -122,6 +122,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT cont_id FROM contacts WHERE name = ? AND phone = ? and email = ? and cust_id = ?",
 	4,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // VM_SERVER_ID_ON_NAME
+"SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
@@ -130,6 +135,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
 	6,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SERVER
+"INSERT INTO server (name, make, model, vendor, uuid, cust_id, vm_server_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	9,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

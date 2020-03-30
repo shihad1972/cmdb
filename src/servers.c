@@ -38,14 +38,45 @@
 #include "cmdb_data.h"
 #include "cmdb_cmdb.h"
 
+static int
+cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *server);
+
 int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
 	int retval = 0;
-	if (!(cm) || !(cc))
-		return AILSA_NO_DATA;
-		
-	return retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	if (!(cm) || !(cc)) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
+	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVER_DETAILS_ON_NAME, args, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if (server->total > 0) {
+		ailsa_syslog(LOG_ERR, "Server %s already in the database", cm->name);
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_server_details(cm, cc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Populate server details failed");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_SERVER, server);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(server);
+		my_free(args);
+		my_free(server);
+		return retval;
 }
 
 void
@@ -104,15 +135,15 @@ cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVER_DETAILS_ON_NAME, args, server))) {
+	if ((retval = ailsa_argument_query(cc, SERVER_DETAILS_ON_NAME, args, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, services))) {
+	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, services)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, hardware))) {
+	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, hardware)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
@@ -210,7 +241,7 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, results))) {
+	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, results)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
@@ -298,7 +329,7 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_hardware_for_server");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, results))) {
+	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, results)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
@@ -419,7 +450,7 @@ cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, VM_HOST_BUILT_SERVERS, args, results))) {
+	if ((retval = ailsa_argument_query(cc, VM_HOST_BUILT_SERVERS, args, results)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
@@ -454,3 +485,88 @@ cmdb_display_built_vms(AILLIST *list)
 	}
 }
 
+static int
+cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *server)
+{
+	if (!(cm) || !(cc) || !(server))
+		return AILSA_NO_DATA;
+	int retval;
+	uid_t uid = getuid();
+	AILLIST *args = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->name, HOST_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert name into server list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->make, HOST_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert make into server list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->model, MAC_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert model into server list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->vendor, HOST_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert vendor into server list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->uuid, HOST_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->coid, HOST_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot run query for cust_id");
+		goto cleanup;
+	}
+	if (cm->vmhost) {
+		my_free(data->data->text);
+		data->data->text = strndup(cm->vmhost, SQL_TEXT_MAX);
+		if ((retval = ailsa_list_insert(args, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert vmhost into list for VM_SERVER_ID_ON_NAME query");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, args, server)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot query for vmhost");
+			goto cleanup;
+		}
+	} else {
+		data = ailsa_db_lint_data_init();
+		data->data->number = 0;
+		if ((retval = ailsa_list_insert(server, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
+			goto cleanup;
+		}
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)uid;
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
+		goto cleanup;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)uid;
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_destroy(args);
+		my_free(args);
+		return retval;
+}
