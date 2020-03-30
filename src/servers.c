@@ -537,10 +537,6 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 	if (cm->vmhost) {
 		my_free(data->data->text);
 		data->data->text = strndup(cm->vmhost, SQL_TEXT_MAX);
-		if ((retval = ailsa_list_insert(args, data)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot insert vmhost into list for VM_SERVER_ID_ON_NAME query");
-			goto cleanup;
-		}
 		if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, args, server)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot query for vmhost");
 			goto cleanup;
