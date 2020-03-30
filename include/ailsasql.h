@@ -82,8 +82,15 @@ enum {			// SQL ARGUMENT QUERIES
 	HARDWARE_ON_SERVER,
 	SERVER_DETAILS_ON_NAME,
 	VM_HOST_BUILT_SERVERS,
-	CUSTOMER_DETAILS_ON_COID
+	CUSTOMER_DETAILS_ON_COID,
+	CUST_ID_ON_COID,
+	CONT_ID_ON_CONTACT_DETAILS
 };
+
+enum {			// SQL INSERT QUERIES
+	INSERT_CONTACTS = 0
+};
+
 typedef struct ailsa_sql_single_s {
 	const char *string;
 	short int type;
@@ -93,7 +100,7 @@ typedef struct ailsa_sql_single_s {
 typedef struct ailsa_sql_query_s {
 	const char *query;
 	short int number;
-	short int fields[3];
+	short int fields[6];
 } ailsa_sql_query_s;
 
 extern const struct ailsa_sql_single_s server_table[];
@@ -103,6 +110,8 @@ int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
 int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results);
+int
+ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

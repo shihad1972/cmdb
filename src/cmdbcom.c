@@ -210,12 +210,10 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		retval = DISPLAY_USAGE;
 	else if (comp->action == CVERSION)
 		retval = CVERSION;
-	else if ((comp->type == NONE) && (comp->action != NONE))
+	else if (comp->action == NONE)
+		retval = NO_ACTION;
+	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if ((comp->action == NONE) && (comp->type != NONE))
-		retval = NO_ACTION;
-	else if ((comp->action == NONE) && (comp->type == NONE))
-		retval = NO_ACTION;
 	else if (comp->action == LIST_OBJ) {
 		if (comp->type == CONTACT) {
 			if ((!(comp->id)) && (!(comp->coid)))
@@ -226,6 +224,17 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (comp->type == HARDWARE) {
 			if (!(comp->id) && !(comp->name))
 				retval = NO_NAME_OR_ID;
+		}
+	} else if (comp->action == ADD_TO_DB) {
+		if (comp->type == CONTACT) {
+			if (!(comp->name))
+				retval = NO_CONT_NAME;
+			if (!(comp->email))
+				retval = NO_EMAIL;
+			if (!(comp->phone))
+				retval = NO_PHONE;
+			if (!(comp->coid))
+				retval = NO_COID;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

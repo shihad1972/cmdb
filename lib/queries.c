@@ -112,6 +112,24 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT name, address, city, county, postcode, cuser, ctime, muser, mtime FROM customer WHERE coid = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // CUST_ID_ON_COID
+"SELECT cust_id FROM customer WHERE coid = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // CONT_ID_ON_CONTACT_DETAILS
+"SELECT cont_id FROM contacts WHERE name = ? AND phone = ? and email = ? and cust_id = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT }
+	}
+};
+
+const struct ailsa_sql_query_s insert_queries[] = {
+	{ // INSERT_CONTACTS
+"INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
@@ -120,6 +138,8 @@ static int
 ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
 int
 ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+int
+ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
 static int
@@ -135,6 +155,8 @@ static int
 ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
 int
 ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+int
+ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
 static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
 static int
@@ -152,7 +174,7 @@ ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 	const char *query = basic_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
-		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
 	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
 		retval = ailsa_basic_query_mysql(cmdb, query, results);
@@ -173,7 +195,7 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 	const struct ailsa_sql_query_s argument = argument_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
-		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
 	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
 		retval = ailsa_argument_query_mysql(cmdb, argument, args, results);
@@ -185,6 +207,27 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
 	return retval;	
+}
+
+int
+ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
+{
+	int retval;
+	const struct ailsa_sql_query_s query = insert_queries[query_no];
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		ailsa_syslog(LOG_ERR, "no dbtype set");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+		retval = ailsa_insert_query_mysql(cmdb, query, insert);
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+		retval = ailsa_insert_query_sqlite(cmdb, query, insert);
+#endif
+	else
+		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+	return retval;
 }
 
 #ifdef HAVE_MYSQL
@@ -291,6 +334,16 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 			my_free(res);
 		ailsa_mysql_cleanup(&sql);
 		return retval;
+}
+
+int
+ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert)
+{
+	if (!(cmdb) || !(insert))
+		return AILSA_NO_DATA;
+	int retval = 0;
+
+	return retval;
 }
 
 static void
@@ -536,6 +589,34 @@ ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s a
 	return retval;
 }
 
+int
+ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert)
+{
+	if (!(cmdb) || !(insert))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	sqlite3 *sql = NULL;
+	sqlite3_stmt *state = NULL;
+	const char *sql_query = query.query;
+	const char *file = cmdb->file;
+
+	ailsa_setup_rw_sqlite(sql_query, file, &sql, &state);
+	if ((retval = ailsa_bind_arguments_sqlite(state, query, insert)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
+		goto cleanup;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
+		retval = SQLITE_INSERT_FAILED;
+		goto cleanup;
+	}
+	cleanup:
+		if (retval == SQLITE_DONE)
+			retval = 0;
+		ailsa_sqlite_cleanup(sql, state);
+		return retval;
+}
+
 static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 {
@@ -585,7 +666,13 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s 
 	AILELEM *tmp = args->head;
 
 	for (i = 0; i < count; i++) {
-		data = (ailsa_data_s *)tmp->data;
+		if (tmp) {
+			data = tmp->data;
+		} else {
+			ailsa_syslog(LOG_ERR, "List stopped with %hi of %hi arguments bound for sqlite", i, count);
+			retval = CBC_DATA_WRONG_COUNT;
+			break;
+		}
 		switch (argu.fields[i]) {
 		case AILSA_DB_LINT:
 			if ((retval = sqlite3_bind_int64(state, i + 1, (sqlite3_int64)data->data->number)) != 0) {
@@ -611,6 +698,7 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s 
 			retval = AILSA_INVALID_DBTYPE;
 			goto cleanup;
 		}
+		tmp = tmp->next;
 	}
 	cleanup:
 		return retval;

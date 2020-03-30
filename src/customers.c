@@ -37,6 +37,9 @@
 #include "cmdb_data.h"
 #include "cmdb_cmdb.h"
 
+static int
+cmdb_populate_contact_details(cmdb_comm_line_s *cm, AILLIST *contacts, AILLIST *customer);
+
 int
 cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
@@ -46,6 +49,7 @@ cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 
 	return retval;
 }
+
 void
 cmdb_list_customers(ailsa_cmdb_s *cc)
 {
@@ -235,4 +239,110 @@ cmdb_display_contacts(AILLIST *list)
 			name = email->next;
 		}
 	}
+}
+
+int
+cmdb_add_contacts_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	int retval = 0;
+	uid_t user = getuid();
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *customer = ailsa_db_data_list_init();
+	AILLIST *contacts = ailsa_db_data_list_init();
+	AILLIST *check_contact = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	if (!(cc) || !(cm)) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
+	data->data->text = strndup(cm->coid, SQL_TEXT_MAX);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_contacts_for_customer");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, customer))) {
+		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_contact_details(cm, contacts, customer)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get new contact values");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CONT_ID_ON_CONTACT_DETAILS, contacts, check_contact)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check for contact in database");
+		goto cleanup;
+	}
+	if (check_contact->total > 0) {
+		ailsa_syslog(LOG_INFO, "Contact already in database");
+		goto cleanup;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)user;
+	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert cuser into contacts list");
+		goto cleanup;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)user;
+	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert muser into contacts list");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_CONTACTS, contacts);
+	cleanup:
+		ailsa_list_destroy(check_contact);
+		ailsa_list_destroy(customer);
+		ailsa_list_destroy(contacts);
+		ailsa_list_destroy(args);
+		my_free(check_contact);
+		my_free(customer);
+		my_free(contacts);
+		my_free(args);
+		return retval;
+}
+
+static int
+cmdb_populate_contact_details(cmdb_comm_line_s *cm, AILLIST *contacts, AILLIST *customer)
+{
+	if (!(cm) || !(contacts))
+		return AILSA_NO_DATA;
+	int retval;
+	unsigned long int cust_id = 0;
+	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILELEM *elem;
+	ailsa_data_s *some;
+
+	data->data->text = strndup(cm->name, HOST_LEN);
+	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert name into contacts list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->phone, MAC_LEN);
+	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert phone into contacts list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->email, HOST_LEN);
+	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert email into contacts list");
+		return retval;
+	}
+	if (customer->total > 0) {
+		elem = customer->head;
+		some = elem->data;
+		cust_id = some->data->number;
+		data = ailsa_db_lint_data_init();
+		data->data->number = cust_id;
+		if ((retval = ailsa_list_insert(contacts, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert cust_id into contacts list");
+			return retval;
+		}
+	} else {
+		ailsa_syslog(LOG_ERR, "Coid %s does not seem to exist\n", cm->coid);
+		return retval;
+	}
+	return retval;
 }

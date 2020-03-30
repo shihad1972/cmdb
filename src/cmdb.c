@@ -163,6 +163,9 @@ cmdb_contact_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (!(cm) | !(cc))
 		return AILSA_NO_DATA;
 	switch(cm->action) {
+	case ADD_TO_DB:
+		retval = cmdb_add_contacts_to_database(cm, cc);
+		break;
 	case LIST_OBJ:
 		cmdb_list_contacts_for_customer(cm, cc);
 		break;
