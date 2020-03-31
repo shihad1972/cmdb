@@ -137,6 +137,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT hard_type_id FROM hard_type WHERE type = ? AND class = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SERVER_ID_ON_NAME
+"SELECT server_id FROM server WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
@@ -160,6 +165,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO hard_type (type, class) VALUES (?, ?)",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // INSERT_VM_HOST
+"INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES (?, ?, ?, ?, ?)",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

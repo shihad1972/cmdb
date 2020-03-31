@@ -94,6 +94,9 @@ cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc);
 void
 cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
+int
+cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 void
 cmdb_display_built_vms(AILLIST *list);
 

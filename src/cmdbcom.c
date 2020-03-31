@@ -262,6 +262,11 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_CLASS;
 			else if (!(comp->shtype))
 				retval = NO_TYPE;
+		} else if (comp->type == VM_HOST) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if (!(comp->shtype))
+				retval = NO_VHOST_TYPE;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

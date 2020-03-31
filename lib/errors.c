@@ -273,6 +273,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No service provided on command line\n");
 	else if (retval == NO_DETAIL)
 		fprintf(stderr, "No detail provided on command line\n");
+	else if (retval == NO_VHOST_TYPE)
+		fprintf(stderr, "No virtual machine host type specified on command line\n");
 	else if (retval == NO_DOMAIN_NAME)
 		fprintf(stderr, "No domain specified on command line.\n");
 	else if (retval == NO_IP_ADDRESS)
@@ -406,7 +408,7 @@ display_cmdb_usage(void)
 	printf("-j: service types\n-z: hardware types\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
-	printf("-x: vmhost server name for adding a server\n");
+	printf("-x: vmhost server name for adding a vm server\n");
 	printf("Adding options:\n");
 	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
@@ -423,7 +425,7 @@ display_cmdb_usage(void)
 	printf("For Contact (with -i coid to specify customer)\n");
 	printf("-N: Name\t-P: Phone\t-E: email\n");
 	printf("For VM Host Server (with -n name to specify server)\n");
-	printf("-O: VM_Host_type\n");
+	printf("-y: VM Host type (e.g. libvirt. vmware)\n");
 }
 
 void

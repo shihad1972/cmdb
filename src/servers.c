@@ -63,7 +63,7 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	if (server->total > 0) {
-		ailsa_syslog(LOG_ERR, "Server %s already in the database", cm->name);
+		ailsa_syslog(LOG_INFO, "Server %s already in the database", cm->name);
 		goto cleanup;
 	}
 	if ((retval = cmdb_populate_server_details(cm, cc, server)) != 0) {
@@ -105,7 +105,7 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	if (results->total > 0) {
-		ailsa_syslog(LOG_ERR, "Service type is already in database");
+		ailsa_syslog(LOG_INFO, "Service type is already in database");
 		goto cleanup;
 	}
 	retval = ailsa_insert_query(cc, INSERT_SERVICE_TYPE, args);
@@ -143,7 +143,7 @@ cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	if (results->total > 0) {
-		ailsa_syslog(LOG_ERR, "Hardware type is already in the database");
+		ailsa_syslog(LOG_INFO, "Hardware type is already in the database");
 		goto cleanup;
 	}
 	retval = ailsa_insert_query(cc, INSERT_HARDWARE_TYPE, args);
@@ -152,6 +152,75 @@ cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_list_destroy(results);
 		my_free(args);
 		my_free(results);
+		return retval;
+}
+
+int
+cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	uid_t user = getuid();
+	AILLIST *vm = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->name, HOST_LEN);
+	if ((retval = ailsa_list_insert(vm, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, vm, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL argument returned %d", retval);
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		ailsa_syslog(LOG_INFO, "VM host %s already present in database", cm->name);
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->shtype, MAC_LEN);
+	if ((retval = ailsa_list_insert(vm, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->name, HOST_LEN);
+	if ((retval = ailsa_list_insert(server, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, vm)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL argument returned %d", retval);
+		goto cleanup;
+	}
+	if (vm->total < 3) {
+		ailsa_syslog(LOG_ERR, "server %s does not exist in database", cm->name);
+		goto cleanup;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)user;
+	if ((retval = ailsa_list_insert(vm, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+		goto cleanup;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)user;
+	if ((retval = ailsa_list_insert(vm, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_VM_HOST, vm);
+
+	cleanup:
+		ailsa_list_destroy(vm);
+		ailsa_list_destroy(results);
+		ailsa_list_destroy(server);
+		my_free(vm);
+		my_free(results);
+		my_free(server);
 		return retval;
 }
 
