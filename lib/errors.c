@@ -287,6 +287,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No make specified on command line.\n");
 	else if (retval == NO_MODEL)
 		fprintf(stderr, "No model specified on command line.\n");
+	else if (retval == NO_CLASS)
+		fprintf(stderr, "No hardware class specified on command line.\n");
 	else if (retval == NO_VENDOR)
 		fprintf(stderr, "No vendor specified on command line.\n");
 	else if (retval == CBC_NO_ADDRESS)
@@ -417,7 +419,7 @@ display_cmdb_usage(void)
 	printf("For hardware (with -n name to specify server)\n");
 	printf("-D: Detail\t-B: Device\t-I: hardware_id\n");
 	printf("For hardware types\n");
-	printf("-y: type\t-D detail\n");
+	printf("-y: type\t-H Description\n");
 	printf("For Contact (with -i coid to specify customer)\n");
 	printf("-N: Name\t-P: Phone\t-E: email\n");
 	printf("For VM Host Server (with -n name to specify server)\n");

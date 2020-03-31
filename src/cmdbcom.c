@@ -51,7 +51,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:m:x:y:V:M:O:C:U:A:T:Y:Z:N:P:E:D:L:B:I:S:H:adefhjlorstuvwz";
+	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefhjlorstuvwz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -88,6 +88,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"detail",		required_argument,	NULL,	'D'},
 		{"description",		required_argument,	NULL,	'D'},
 		{"email",		required_argument,	NULL,	'E'},
+		{"class",		required_argument,	NULL,	'H'},
 		{"id",			required_argument,	NULL,	'I'},
 		{"url",			required_argument,	NULL,	'L'},
 		{"make",		required_argument,	NULL,	'M'},
@@ -256,6 +257,11 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_DETAIL;
 			else if (!(comp->service))
 				retval = NO_SERVICE;
+		} else if (comp->type == HARDWARE_TYPE) {
+			if (!(comp->hclass))
+				retval = NO_CLASS;
+			else if (!(comp->shtype))
+				retval = NO_TYPE;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

@@ -55,7 +55,7 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	}
 	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_server_to_database");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, SERVER_DETAILS_ON_NAME, args, server)) != 0) {
@@ -91,13 +91,13 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 
 	data->data->text = strndup(cm->service, SERVICE_LEN);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_service_type_to_database");
 		goto cleanup;
 	}
 	data = ailsa_db_text_data_init();
 	data->data->text = strndup(cm->detail, SERVICE_LEN);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_service_type_to_database");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_DETAILS, args, results)) != 0) {
@@ -109,6 +109,44 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	retval = ailsa_insert_query(cc, INSERT_SERVICE_TYPE, args);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+		return retval;
+}
+
+int
+cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->shtype, MAC_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_hardware_type_to_database");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->hclass, MAC_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_hardware_type_to_database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_DETAILS, args, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL argument query returned %d", retval);
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		ailsa_syslog(LOG_ERR, "Hardware type is already in the database");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_HARDWARE_TYPE, args);
 	cleanup:
 		ailsa_list_destroy(args);
 		ailsa_list_destroy(results);

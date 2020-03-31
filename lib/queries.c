@@ -132,6 +132,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT service_type_id FROM service_type WHERE service = ? AND detail = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // HARDWARE_TYPE_ID_ON_DETAILS
+"SELECT hard_type_id FROM hard_type WHERE type = ? AND class = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -148,6 +153,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	},
 	{ // INSERT_SERVICE_TYPE
 "INSERT INTO service_type (service, detail) VALUES (?, ?)",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // INSERT_HARDWARE_TYPE
+"INSERT INTO hard_type (type, class) VALUES (?, ?)",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}

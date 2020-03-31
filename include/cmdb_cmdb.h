@@ -82,6 +82,9 @@ cmdb_display_services(AILLIST *list);
 void
 cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
+int
+cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 void
 cmdb_display_hardware(AILLIST *list);
 
