@@ -251,6 +251,11 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				ailsa_syslog(LOG_INFO, "Auto generating UUID for server");
 				comp->uuid = ailsa_gen_uuid_str();
 			}
+		} else if (comp->type == SERVICE_TYPE) {
+			if (!(comp->detail))
+				retval = NO_DETAIL;
+			else if (!(comp->service))
+				retval = NO_SERVICE;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

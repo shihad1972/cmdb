@@ -271,6 +271,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "Unknown command line option.\n");
 	else if (retval == NO_SERVICE)
 		fprintf(stderr, "No service provided on command line\n");
+	else if (retval == NO_DETAIL)
+		fprintf(stderr, "No detail provided on command line\n");
 	else if (retval == NO_DOMAIN_NAME)
 		fprintf(stderr, "No domain specified on command line.\n");
 	else if (retval == NO_IP_ADDRESS)
@@ -411,7 +413,7 @@ display_cmdb_usage(void)
 	printf("For services (with -i COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t\t[ -I service_id | -S service ]\n");
 	printf("For service types\n");
-	printf("-y: type\t-D detail\n");
+	printf("-D detail\t-S service\n");
 	printf("For hardware (with -n name to specify server)\n");
 	printf("-D: Detail\t-B: Device\t-I: hardware_id\n");
 	printf("For hardware types\n");

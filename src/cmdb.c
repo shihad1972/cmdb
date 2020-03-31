@@ -244,6 +244,9 @@ cmdb_service_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case LIST_OBJ:
 		cmdb_list_service_types(cc);
 		break;
+	case ADD_TO_DB:
+		retval = cmdb_add_service_type_to_database(cm, cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;

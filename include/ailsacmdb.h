@@ -43,6 +43,7 @@
 #  define NI_MAXHOST 1025
 # endif // NI_MAXHOST so I do not have to use __GNU_SOURCE. grrrr 
 enum {                  // Buffer lengths
+	SERVICE_LEN = 16,
 	MAC_LEN = 32,
 	HOST_LEN = 64,
 	CONFIG_LEN = 256,

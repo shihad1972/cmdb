@@ -97,6 +97,9 @@ cmdb_display_built_vms(AILLIST *list);
 void
 cmdb_list_service_types(ailsa_cmdb_s *cc);
 
+int
+cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 void
 cmdb_list_hardware_types(ailsa_cmdb_s *cc);
 

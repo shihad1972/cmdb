@@ -127,6 +127,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT vm_server_id FROM vm_server_hosts WHERE vm_server = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // SERVICE_TYPE_ID_ON_DETAILS
+"SELECT service_type_id FROM service_type WHERE service = ? AND detail = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -140,6 +145,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO server (name, make, model, vendor, uuid, cust_id, vm_server_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	9,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SERVICE_TYPE
+"INSERT INTO service_type (service, detail) VALUES (?, ?)",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 

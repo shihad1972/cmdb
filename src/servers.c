@@ -79,6 +79,44 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return retval;
 }
 
+int
+cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->service, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->detail, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_DETAILS, args, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL argument query returned %d", retval);
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		ailsa_syslog(LOG_ERR, "Service type is already in database");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_SERVICE_TYPE, args);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(results);
+		my_free(args);
+		my_free(results);
+		return retval;
+}
+
 void
 cmdb_list_servers(ailsa_cmdb_s *cc)
 {
