@@ -525,6 +525,11 @@ ailsa_validate_input(char *input, int test);
 int
 ailsa_validate_string(const char *input, const char *re_test);
 
+// Various data functions
+
+int
+cmdb_populate_cuser_muser(AILLIST *list);
+
 // Various struct data functions
 
 // struct data init functions

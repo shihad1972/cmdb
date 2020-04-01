@@ -152,6 +152,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT hard_id FROM hardware WHERE server_id = ? AND hard_type_id = ? AND detail = ? AND device = ?",
 	4,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SERVICE_TYPE_ID_ON_SERVICE
+"SELECT service_type_id FROM service_type WHERE service = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SERVICE_ID_ON_DETAILS
+"SELECT service_id FROM services WHERE server_id = ? AND cust_id = ? AND service_type_id = ? AND detail = ? AND url = ?",
+	5,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -185,6 +195,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO hardware (server_id, hard_type_id, detail, device, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
 	6,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SERVICE
+"INSERT INTO services (server_id, cust_id, service_type_id, detail, url, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	7,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

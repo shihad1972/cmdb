@@ -414,7 +414,7 @@ display_cmdb_usage(void)
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
 	printf("For customer (with -u; need -n for name)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
-	printf("For services (with -i COID for customer, -n name for server)\n");
+	printf("For services (with -C COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t\t[ -I service id | -S service ]\n");
 	printf("For service types\n");
 	printf("-D detail\t-S service\n");

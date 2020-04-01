@@ -45,7 +45,7 @@ static int
 cmdb_populate_hardware_details(cmdb_comm_line_s *cm, AILLIST *list);
 
 static int
-cmdb_add_hard_type_id_to_list(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_populate_service_details(cmdb_comm_line_s *cm, AILLIST *list);
 
 int
 cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
@@ -167,7 +167,6 @@ cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (!(cm) || !(cc))
 		return AILSA_NO_DATA;
 	int retval = 0;
-	uid_t user = getuid();
 	AILLIST *vm = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
@@ -206,18 +205,8 @@ cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "server %s does not exist in database", cm->name);
 		goto cleanup;
 	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)user;
-	if ((retval = ailsa_list_insert(vm, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+	if ((retval = cmdb_populate_cuser_muser(vm)) != 0)
 		goto cleanup;
-	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)user;
-	if ((retval = ailsa_list_insert(vm, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
-		goto cleanup;
-	}
 	retval = ailsa_insert_query(cc, INSERT_VM_HOST, vm);
 
 	cleanup:
@@ -250,8 +239,17 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL argument returned %d", retval);
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_hard_type_id_to_list(cm, cc, hardware)) != 0)
-		goto cleanup;
+	if (cm->sid) {
+		data = ailsa_db_lint_data_init();
+		results = ailsa_db_data_list_init();
+		if ((retval = ailsa_list_insert(hardware, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert hard type into list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_hard_type_id_to_list(cm->hclass, cc, hardware)) != 0)
+			goto cleanup;
+	}
 	if ((retval = cmdb_populate_hardware_details(cm, hardware)) != 0)
 		goto cleanup;
 	if ((retval = ailsa_argument_query(cc, HARDWARE_ID_ON_DETAILS, hardware, results)) != 0) {
@@ -268,6 +266,41 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_list_destroy(results);
 		my_free(hardware);
 		my_free(server);
+		my_free(results);
+		return retval;
+}
+
+int
+cmdb_add_services_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *service = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_server_id_to_list(cm->name, cc, service)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_cust_id_to_list(cm->coid, cc, service)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_service_type_id_to_list(cm->service, cc, service)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_service_details(cm, service)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cc, SERVICE_ID_ON_DETAILS, service, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "SERVICE_ID_ON_DETAILS query failed");
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		ailsa_syslog(LOG_ERR, "Service %s already exists for %s", cm->service, cm->name);
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_SERVICE, service);
+
+	cleanup:
+		ailsa_list_destroy(service);
+		ailsa_list_destroy(results);
+		my_free(service);
 		my_free(results);
 		return retval;
 }
@@ -684,7 +717,6 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 	if (!(cm) || !(cc) || !(server))
 		return AILSA_NO_DATA;
 	int retval;
-	uid_t uid = getuid();
 	AILLIST *args = ailsa_db_data_list_init();
 	ailsa_data_s *data = ailsa_db_text_data_init();
 
@@ -742,18 +774,7 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 			goto cleanup;
 		}
 	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)uid;
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
-		goto cleanup;
-	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)uid;
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
-		goto cleanup;
-	}
+	retval = cmdb_populate_cuser_muser(server);
 	cleanup:
 		ailsa_list_destroy(args);
 		my_free(args);
@@ -764,7 +785,6 @@ static int
 cmdb_populate_hardware_details(cmdb_comm_line_s *cm, AILLIST *list)
 {
 	int retval;
-	uid_t uid = getuid();
 	ailsa_data_s *data = ailsa_db_text_data_init();
 
 	data->data->text = strndup(cm->detail, HOST_LEN);
@@ -778,70 +798,26 @@ cmdb_populate_hardware_details(cmdb_comm_line_s *cm, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert device into hardware list");
 		return retval;
 	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)uid;
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert cuser into hardware list");
-		return retval;
-	}
-	data = ailsa_db_lint_data_init();
-	data->data->number = (unsigned long int)uid;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert muser into hardware list");
+	retval = cmdb_populate_cuser_muser(list);
 	return retval;
 }
 
 static int
-cmdb_add_hard_type_id_to_list(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_populate_service_details(cmdb_comm_line_s *cm, AILLIST *list)
 {
-	if (!(cm) || !(cc) || !(list))
-		return AILSA_NO_DATA;
-	AILLIST *hard, *results;
-	AILELEM *res;
-	ailsa_data_s *data = NULL, *tmp;
-	int retval = 0;
-
-	if (cm->sid) {
-		data = ailsa_db_lint_data_init();
-		data->data->number = cm->sid;
-		if ((retval = ailsa_list_insert(list, data)) != 0)
-			ailsa_syslog(LOG_ERR, "Cannot insert hard type into list");
+	int retval;
+	ailsa_data_s *data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->detail, HOST_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert detail into service list");
 		return retval;
 	}
-	if (cm->hclass) {
-		hard = ailsa_db_data_list_init();
-		results = ailsa_db_data_list_init();
-		data = ailsa_db_text_data_init();
-		data->data->text = strndup(cm->hclass, MAC_LEN);
-		if ((retval = ailsa_list_insert(hard, data)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot insert class name into list");
-			goto cleanup;
-		}
-		if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_CLASS, hard, results)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot run SQL query: %d", retval);
-			goto cleanup;
-		}
-		if (results->total > 1) {
-			ailsa_syslog(LOG_INFO, "More than 1 hard type id returned. Using first one");
-		} else if (results->total < 1) {
-			ailsa_syslog(LOG_INFO, "No hard type's returned.");
-			retval = NO_HARDWARE_TYPES;
-			goto cleanup;
-		}
-		res = results->head;
-		tmp = res->data;
-		data = ailsa_db_lint_data_init();
-		data->data->number = tmp->data->number;
-		if ((retval = ailsa_list_insert(list, data)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot insert hard type id into list");
-			goto cleanup;
-		}
-		cleanup:
-			ailsa_list_destroy(hard);
-			ailsa_list_destroy(results);
-			my_free(hard);
-			my_free(results);
-			return retval;
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->url, DOMAIN_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert url into service list");
+		return retval;
 	}
-	return NO_HARDWARE_TYPES;
+	retval = cmdb_populate_cuser_muser(list);
+	return retval;
 }

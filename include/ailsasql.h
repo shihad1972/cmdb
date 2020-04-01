@@ -90,7 +90,9 @@ enum {			// SQL ARGUMENT QUERIES
 	HARDWARE_TYPE_ID_ON_DETAILS,
 	SERVER_ID_ON_NAME,
 	HARDWARE_TYPE_ID_ON_CLASS,
-	HARDWARE_ID_ON_DETAILS
+	HARDWARE_ID_ON_DETAILS,
+	SERVICE_TYPE_ID_ON_SERVICE,
+	SERVICE_ID_ON_DETAILS
 };
 
 enum {			// SQL INSERT QUERIES
@@ -99,7 +101,8 @@ enum {			// SQL INSERT QUERIES
 	INSERT_SERVICE_TYPE,
 	INSERT_HARDWARE_TYPE,
 	INSERT_VM_HOST,
-	INSERT_HARDWARE
+	INSERT_HARDWARE,
+	INSERT_SERVICE
 };
 
 typedef struct ailsa_sql_single_s {
@@ -119,21 +122,40 @@ extern size_t server_fields;
 
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
+
 int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results);
+
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
+// Some helper functions
+
+int
+cmdb_add_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list);
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
 ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql);
+
 int
 ailsa_mysql_query_with_checks(MYSQL *mycmdb, const char *query);
+
 int
 ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
+
 void
 ailsa_mysql_cleanup(MYSQL *cmdb);
+
 void
 ailsa_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 
@@ -143,9 +165,12 @@ ailsa_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 #  include <sqlite3.h>
 void
 ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
+
 void
 ailsa_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
+
 void
 ailsa_sqlite_cleanup(sqlite3 *cmdb, sqlite3_stmt *stmt);
+
 # endif // HAVE_SQLITE3
 #endif

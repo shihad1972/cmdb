@@ -276,6 +276,17 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_DEVICE;
 			else if (!(comp->hclass) && !(comp->sid))
 				retval = NO_ID_OR_CLASS;
+		} else if (comp->type == SERVICE) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if (!(comp->coid))
+				retval = NO_COID;
+			else if (!(comp->detail))
+				retval = NO_DETAIL;
+			else if (!(comp->url))
+				retval = NO_SERVICE_URL;
+			else if (!(comp->service))
+				retval = NO_SERVICE;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

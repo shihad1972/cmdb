@@ -620,3 +620,22 @@ ailsa_db_lint_data_init(void)
 	data->type = AILSA_DB_LINT;
 	return data;
 }
+
+int
+cmdb_populate_cuser_muser(AILLIST *list)
+{
+	int retval;
+	uid_t uid = getuid();
+	ailsa_data_s *data = ailsa_db_lint_data_init();
+
+	data->data->number = (unsigned long int)uid;
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert cuser into list");
+		return retval;
+	}
+	data = ailsa_db_lint_data_init();
+	data->data->number = (unsigned long int)uid;
+	if ((retval = ailsa_list_insert(list, data)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert muser into list");
+	return retval;
+}
