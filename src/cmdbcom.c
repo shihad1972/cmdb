@@ -274,7 +274,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_DETAIL;
 			else if (!(comp->device))
 				retval = NO_DEVICE;
-			else if (!(comp->hclass) && !(comp->id))
+			else if (!(comp->hclass) && !(comp->sid))
 				retval = NO_ID_OR_CLASS;
 		}
 	} else if (comp->action == DISPLAY) {

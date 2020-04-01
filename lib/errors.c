@@ -1,6 +1,6 @@
 /* 
  *
- *  cmdb: Configuration Management Database
+ *  libailsacmdb: Configuration Management Database
  *  Copyright (C) 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,11 +21,7 @@
  * 
  *  Error reporting functions.
  * 
- *  enum constants defined in cmdb_dnsa.h
- * 
- *  Part of the CMDB program
- * 
- *  (C) Iain M Conochie 2012 - 2016
+ *  (C) Iain M Conochie 2012 - 2020
  * 
  */
 #include <config.h>
@@ -419,11 +415,11 @@ display_cmdb_usage(void)
 	printf("For customer (with -u; need -n for name)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
 	printf("For services (with -i COID for customer, -n name for server)\n");
-	printf("-D: Detail\t-L: URL\t\t[ -I service_id | -S service ]\n");
+	printf("-D: Detail\t-L: URL\t\t[ -I service id | -S service ]\n");
 	printf("For service types\n");
 	printf("-D detail\t-S service\n");
 	printf("For hardware (with -n name to specify server)\n");
-	printf("-D: Detail\t-B: Device\t-I: hardware_id\n");
+	printf("-D: Detail\t-B: Device\t[ -I: hardware id | -H hardware class ]\n");
 	printf("For hardware types\n");
 	printf("-y: type\t-H Description\n");
 	printf("For Contact (with -i coid to specify customer)\n");

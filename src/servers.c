@@ -801,9 +801,9 @@ cmdb_add_hard_type_id_to_list(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *l
 	ailsa_data_s *data = NULL, *tmp;
 	int retval = 0;
 
-	if (cm->id) {
+	if (cm->sid) {
 		data = ailsa_db_lint_data_init();
-		data->data->number = strtoul(cm->id, NULL, 10);
+		data->data->number = cm->sid;
 		if ((retval = ailsa_list_insert(list, data)) != 0)
 			ailsa_syslog(LOG_ERR, "Cannot insert hard type into list");
 		return retval;
