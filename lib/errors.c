@@ -48,7 +48,7 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "base_sql.h"
+#include "cmdb_sql.h"
 
 void
 report_error(int error, const char *errstr)
@@ -273,8 +273,12 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No service provided on command line\n");
 	else if (retval == NO_DETAIL)
 		fprintf(stderr, "No detail provided on command line\n");
+	else if (retval == NO_DEVICE)
+		fprintf(stderr, "No device provided on command line\n");
 	else if (retval == NO_VHOST_TYPE)
 		fprintf(stderr, "No virtual machine host type specified on command line\n");
+	else if (retval == NO_ID_OR_CLASS)
+		fprintf(stderr, "No hardware ID or class was specified on command line\n");
 	else if (retval == NO_DOMAIN_NAME)
 		fprintf(stderr, "No domain specified on command line.\n");
 	else if (retval == NO_IP_ADDRESS)
@@ -889,11 +893,27 @@ Unable to perform requested action on ");
 	} else if (type == SERVICE) {
 		strncat(message, "service\n", MAC_S);
 		fprintf(stderr, "%s", message);
+	} else if (type == HARDWARE) {
+		strncat(message, "hardware\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == HARDWARE_TYPE) {
+		strncat(message, "hardware type\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == SERVICE_TYPE) {
+		strncat(message, "service type\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == SERVER_TYPE) {
+		strncat(message, "server type\n", MAC_S);
+		fprintf(stderr, "%s", message);
+	} else if (type == VM_HOST) {
+		strncat(message, "virtual machine host\n", MAC_S);
+		fprintf(stderr, "%s", message);
 	} else {
 		strncat(message, "unknown type ", MAC_S);
 		fprintf(stderr, "%s", message);
 		fprintf(stderr, "%d\n", type);
 	}
+	my_free(message);
 }
 
 const char *
