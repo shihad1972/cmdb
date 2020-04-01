@@ -529,6 +529,8 @@ cmdb_list_service_types(ailsa_cmdb_s *cc)
 			one = name->data;
 			if (type)
 				two = type->data;
+			else
+				return;
 			printf(" %s\t\t%s\n", one->data->text, two->data->text);
 			name = type->next;
 		}
@@ -617,6 +619,8 @@ cmdb_list_hardware_types(ailsa_cmdb_s *cc)
 			one = class->data;
 			if (type)
 				two = type->data;
+			else
+				return;
 			printf(" %s\t\t%s\n", one->data->text, two->data->text);
 			class = type->next;
 		}
@@ -650,6 +654,8 @@ cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc)
 			one = name->data;
 			if (type)
 				two = type->data;
+			else
+				return;
 			printf(" %s, type %s\n", one->data->text, two->data->text);
 			name = type->next;
 		}
