@@ -205,6 +205,9 @@ cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case LIST_OBJ:
 		cmdb_list_hardware_for_server(cm, cc);
 		break;
+	case ADD_TO_DB:
+		cmdb_add_hardware_to_database(cm, cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;

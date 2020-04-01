@@ -142,6 +142,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT server_id FROM server WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // HARDWARE_TYPE_ID_ON_CLASS
+"SELECT hard_type_id FROM hard_type WHERE class = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{  // HARDWARE_ID_ON_DETAILS
+"SELECT hard_id FROM hardware WHERE server_id = ? AND hard_type_id = ? AND detail = ? AND device = ?",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -170,6 +180,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO vm_server_hosts (vm_server, type, server_id, cuser, muser) VALUES (?, ?, ?, ?, ?)",
 	5,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_HARDWARE
+"INSERT INTO hardware (server_id, hard_type_id, detail, device, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
