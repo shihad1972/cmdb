@@ -67,7 +67,7 @@ enum {                  // Buffer lengths
 
 // Temporary
 # define BASEDIR "/var/lib/cmdb/data/"
-# define AILSAVERSION "0.1"
+# define AILSAVERSION "0.3"
 
 // Data Definitions
 

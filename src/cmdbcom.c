@@ -48,6 +48,9 @@
 static int
 check_cmdb_comm_options(cmdb_comm_line_s *comp);
 
+static int
+validate_cmdb_comm_line(cmdb_comm_line_s *comp);
+
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
@@ -197,7 +200,9 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			return DISPLAY_USAGE;
 	}
 
-	retval = check_cmdb_comm_options(comp);
+	if ((retval = check_cmdb_comm_options(comp)) != 0)
+		return retval;
+	retval = validate_cmdb_comm_line(comp);
 	return retval;
 }
 
@@ -331,6 +336,75 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		}
 	}
 	return retval;
+}
+
+static int
+validate_cmdb_comm_line(cmdb_comm_line_s *comp)
+{
+	if (!(comp))
+		return AILSA_NO_DATA;
+
+	if (comp->vmhost)
+		if ((ailsa_validate_input(comp->vmhost, DOMAIN_REGEX) != 0) &&
+		    (ailsa_validate_input(comp->vmhost, NAME_REGEX) != 0))
+			return USER_INPUT_INVALID;
+	if (comp->vendor)
+		if (ailsa_validate_input(comp->vendor, CUSTOMER_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->make)
+		if (ailsa_validate_input(comp->make, CUSTOMER_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->model)
+		if (ailsa_validate_input(comp->model, CUSTOMER_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->uuid)
+		if (ailsa_validate_input(comp->uuid, UUID_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->name)
+		if (ailsa_validate_input(comp->name, NAME_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->address)
+		if (ailsa_validate_input(comp->address, ADDRESS_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->city)
+		if (ailsa_validate_input(comp->city, ADDRESS_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->email)
+		if (ailsa_validate_input(comp->email, EMAIL_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->detail)
+		if ((ailsa_validate_input(comp->detail, MAC_REGEX) != 0) &&
+		    (ailsa_validate_input(comp->detail, ADDRESS_REGEX) != 0) &&
+		    (ailsa_validate_input(comp->detail, CUSTOMER_REGEX) != 0))
+			return USER_INPUT_INVALID;
+	if (comp->hclass)
+		if (ailsa_validate_input(comp->hclass, NAME_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->url)
+		if (ailsa_validate_input(comp->url, URL_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->device)
+		if (ailsa_validate_input(comp->device, DEV_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->phone)
+		if (ailsa_validate_input(comp->phone, PHONE_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->postcode)
+		if (ailsa_validate_input(comp->postcode, POSTCODE_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->county)
+		if (ailsa_validate_input(comp->county, ADDRESS_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->coid)
+		if (ailsa_validate_input(comp->coid, COID_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->service)
+		if (ailsa_validate_input(comp->service, NAME_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	if (comp->shtype)
+		if (ailsa_validate_input(comp->shtype, ADDRESS_REGEX) != 0)
+			return USER_INPUT_INVALID;
+	return 0;
 }
 
 void

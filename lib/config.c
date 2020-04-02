@@ -86,7 +86,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		switch(opt) {
 		case 'n':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "name trimmed to 255 characters`n");
+				ailsa_syslog(LOG_INFO, "name trimmed to 255 characters`n");
 			if (!(vm->name))
 				vm->name = strndup(optarg, CONFIG_LEN);
 			else
@@ -94,7 +94,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'l':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "volume group name trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "volume group name trimmed to 255 characters\n");
 			if (!(vm->logvol))
 				vm->logvol = strndup(optarg, CONFIG_LEN);
 			else
@@ -102,7 +102,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'u':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "uri trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "uri trimmed to 255 characters\n");
 			if (!(vm->uri))
 				vm->uri = strndup(optarg, CONFIG_LEN);
 			else
@@ -110,7 +110,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'p':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "path trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "path trimmed to 255 characters\n");
 			if (!(vm->path))
 				vm->path = strndup(optarg, CONFIG_LEN);
 			else
@@ -132,7 +132,7 @@ parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			vm->action = AILSA_VERSION;
 			break;
 		default:
-			fprintf(stderr, "Unknown option %c\n", opt);
+			ailsa_syslog(LOG_ERR, "Unknown option %c\n", opt);
 			return 1;
 			break;
 		}
@@ -205,7 +205,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'n':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "hostname trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "hostname trimmed to 255 characters\n");
 			if (!(vm->name))
 				vm->name = strndup(optarg, CONFIG_LEN);
 			else
@@ -213,7 +213,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'p':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "pool namd trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "pool namd trimmed to 255 characters\n");
 			if (!(vm->pool))
 				vm->pool = strndup(optarg, CONFIG_LEN);
 			else
@@ -221,7 +221,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'u':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "uri trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "uri trimmed to 255 characters\n");
 			if (!(vm->uri))
 				vm->uri = strndup(optarg, CONFIG_LEN);
 			else
@@ -229,7 +229,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'k':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "network trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "network trimmed to 255 characters\n");
 			if (!(vm->network))
 				vm->network = strndup(optarg, CONFIG_LEN);
 			else
@@ -237,7 +237,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			break;
 		case 'b':
 			if (strlen(optarg) >= CONFIG_LEN)
-				fprintf(stderr, "netdev trimmed to 255 characters\n");
+				ailsa_syslog(LOG_INFO, "netdev trimmed to 255 characters\n");
 			if (vm->netdev)
 				my_free(vm->netdev);
 			vm->netdev = strndup(optarg, CONFIG_LEN);
@@ -255,7 +255,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			vm->action = AILSA_CMDB_ADD;
 			break;
 		default:
-			fprintf(stderr, "Unknown option %c\n", opt);
+			ailsa_syslog(LOG_ERR, "Unknown option %c\n", opt);
 			return 1;
 			break;
 		}
@@ -297,7 +297,7 @@ parse_system_mkvm_config(ailsa_mkvm_s *vm)
 
 	if (!(conf = fopen(path, "r"))) {
 #ifdef DEBUG
-		fprintf(stderr, "Cannot open file %s\n", path);
+		ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", path);
 #endif
 		goto cleanup;
 	}
@@ -322,7 +322,7 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 		uconf = p.we_wordv;
 		if (!(conf = fopen(*uconf, "r"))) {
 #ifdef DEBUG
-			fprintf(stderr, "Cannot open file %s\n", *uconf);
+			ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", *uconf);
 #endif
 			goto cleanup;
 		}
@@ -333,12 +333,12 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 		int len;
 		home = getenv("HOME");	// Need to sanatise this input.
 		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.mkvm.conf", home)) >= CONFIG_LEN) {
-			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+			ailsa_syslog(LOG_ERR, "Output path to config file truncated! Longer than 255 bytes\n");
 			goto cleanup;
 		}
 		if (!(conf = fopen(wpath, "r"))) {
 #ifdef DEBUG
-			fprintf(stderr, "Cannot open file %s\n", wpath);
+			ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", wpath);
 #endif
 			goto cleanup;
 		}
@@ -535,20 +535,20 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 		int len;
 		home = getenv("HOME");	// Need to sanatise this input.
 		if ((len = snprintf(wpath, CONFIG_LEN, "%s/.cmdb.conf", home)) >= CONFIG_LEN) {
-			fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+			ailsa_syslog(LOG_INFO, "Output path to config file truncated! Longer than 255 bytes\n");
 			goto cleanup;
 		}
 		if (!(conf = fopen(wpath, "r"))) {
 #ifdef DEBUG
-			fprintf(stderr, "Cannot open file %s\n", wpath);
+			ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", wpath);
 #endif
 			if ((len = snprintf(wpath, CONFIG_LEN, "%s/.dnsa.conf", home)) >= CONFIG_LEN) {
-				fprintf(stderr, "Output to config file truncated! Longer than 255 bytes\n");
+				ailsa_syslog(LOG_INFO, "Output path to config file truncated! Longer than 255 bytes\n");
 				goto cleanup;
 			}
 			if (!(conf = fopen(wpath, "r"))) {
 #ifdef DEBUG
-				fprintf(stderr, "Cannot open file %s\n", wpath);
+				ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", wpath);
 #endif
 				goto cleanup;
 			}
