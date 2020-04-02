@@ -287,6 +287,19 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_SERVICE_URL;
 			else if (!(comp->service))
 				retval = NO_SERVICE;
+		} else if (comp->type == CUSTOMER) {
+			if (!(comp->name))
+				retval = NO_NAME;
+			else if (!(comp->coid))
+				retval = NO_COID;
+			else if (!(comp->county))
+				retval = NO_COUNTY;
+			else if (!(comp->address))
+				retval = CBC_NO_ADDRESS;
+			else if (!(comp->city))
+				retval = NO_CITY;
+			else if (!(comp->postcode))
+				retval = NO_POSTCODE;
 		}
 	} else if (comp->action == DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

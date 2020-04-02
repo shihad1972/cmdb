@@ -40,14 +40,43 @@
 static int
 cmdb_populate_contact_details(cmdb_comm_line_s *cm, AILLIST *contacts, AILLIST *customer);
 
+static int
+cmdb_populate_customer_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *customer);
+
 int
 cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 {
-	int retval = 0;
 	if (!(cm) || !(cc))
 		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *customer = ailsa_db_data_list_init();
+	AILLIST *args = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	return retval;
+	data->data->text = strndup(cm->coid, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert coid into list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, customer)) != 0) {
+		ailsa_syslog(LOG_ERR, "CUST_ID_ON_COID query failed");
+		goto cleanup;
+	}
+	if (customer->total > 0) {
+		ailsa_syslog(LOG_INFO, "Customer with coid %s already in the database");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_customer_details(cm, cc, customer)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate customer details");
+		goto cleanup;
+	}
+	retval = ailsa_insert_query(cc, INSERT_CUSTOMER, customer);
+	cleanup:
+		ailsa_list_destroy(args);
+		ailsa_list_destroy(customer);
+		my_free(args);
+		my_free(customer);
+		return retval;
 }
 
 void
@@ -289,7 +318,7 @@ cmdb_add_contacts_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Cannot insert muser into contacts list");
 		goto cleanup;
 	}
-	retval = ailsa_insert_query(cc, INSERT_CONTACTS, contacts);
+	retval = ailsa_insert_query(cc, INSERT_CONTACT, contacts);
 	cleanup:
 		ailsa_list_destroy(check_contact);
 		ailsa_list_destroy(customer);
@@ -344,5 +373,52 @@ cmdb_populate_contact_details(cmdb_comm_line_s *cm, AILLIST *contacts, AILLIST *
 		ailsa_syslog(LOG_ERR, "Coid %s does not seem to exist\n", cm->coid);
 		return retval;
 	}
+	return retval;
+}
+
+static int
+cmdb_populate_customer_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *customer)
+{
+	if (!(cm) || !(cc) || !(customer))
+		return AILSA_NO_DATA;
+	int retval;
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(cm->name, HOST_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer name into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->address, HOST_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer address into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->city, MAC_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer city into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->county, MAC_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer county into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->postcode, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer postcode into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(cm->coid, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(customer, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert customer coid into list");
+		return retval;
+	}
+	retval = cmdb_populate_cuser_muser(customer);
 	return retval;
 }

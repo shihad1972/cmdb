@@ -166,7 +166,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
-	{ // INSERT_CONTACTS
+	{ // INSERT_CONTACT
 "INSERT INTO contacts (name, phone, email, cust_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
 	6,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
@@ -200,6 +200,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO services (server_id, cust_id, service_type_id, detail, url, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
 	7,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_CUSTOMER
+"INSERT INTO customer (name, address, city, county, postcode, coid, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	8,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
