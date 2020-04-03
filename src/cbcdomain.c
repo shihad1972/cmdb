@@ -59,10 +59,10 @@ main(int argc, char *argv[])
 {
 	char *config;
 	int retval = NONE;
-	cbc_config_s *cmc;
+	ailsa_cmdb_s *cmc;
 	cbcdomain_comm_line_s *cdcl;
 
-	if (!(cmc = malloc(sizeof(cbc_config_s))))
+	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
 		report_error(MALLOC_FAIL, "cmc in cbcdomain main");
 	if (!(cdcl = malloc(sizeof(cbcdomain_comm_line_s))))
 		report_error(MALLOC_FAIL, "cdcl in cbcdomain main");
@@ -113,7 +113,7 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 }
 
 void
-init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl)
+init_cbcdomain_config(ailsa_cmdb_s *cmc, cbcdomain_comm_line_s *cdcl)
 {
 	init_cbc_config_values(cmc);
 	init_cbcdomain_comm_line(cdcl);
@@ -244,7 +244,7 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 }
 
 int
-list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
 		return CBC_NO_DATA;
@@ -282,7 +282,7 @@ list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 }
 
 int
-add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
 		return CBC_NO_DATA;
@@ -366,7 +366,7 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 }
 
 int
-remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
 		return CBC_NO_DATA;
@@ -391,7 +391,7 @@ remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 }
 
 int
-modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
+modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
 		return CBC_NO_DATA;
@@ -414,7 +414,7 @@ modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 }
 
 int
-write_dhcp_net_config(cbc_config_s *cbs)
+write_dhcp_net_config(ailsa_cmdb_s *cbs)
 {
 	if (!(cbs))
 		return CBC_NO_DATA;
@@ -454,7 +454,7 @@ write_dhcp_net_config(cbc_config_s *cbs)
 }
 
 void
-display_bdom_servers(cbc_config_s *cbs, char *domain)
+display_bdom_servers(ailsa_cmdb_s *cbs, char *domain)
 {
 	if (!(cbs) || !(domain))
 		return;
@@ -551,7 +551,7 @@ fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
 }
 
 void
-check_bdom_overlap(cbc_config_s *cbs, cbc_build_domain_s *bdom)
+check_bdom_overlap(ailsa_cmdb_s *cbs, cbc_build_domain_s *bdom)
 {
 	int retval;
 	cbc_s *cbc;

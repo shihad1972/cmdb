@@ -682,7 +682,7 @@ const unsigned int cbc_search_field_types[][11] = {
 };
 
 int
-cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -701,7 +701,7 @@ cbc_run_query(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -720,7 +720,7 @@ cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -739,7 +739,7 @@ cbc_run_insert(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
+cbc_run_delete(ailsa_cmdb_s *ccs, dbdata_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
@@ -758,7 +758,7 @@ cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type)
 }
 
 int
-cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
+cbc_run_search(ailsa_cmdb_s *ccs, dbdata_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(ccs->dbtype, "none", RANGE_S) == 0))
@@ -777,7 +777,7 @@ cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type)
 }
 
 int
-cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
+cbc_run_update(ailsa_cmdb_s *ccs, dbdata_s *base, int type)
 {
 	int retval = 0;
 	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
@@ -796,7 +796,7 @@ cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type)
 }
 /*
 int
-cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id)
+cbc_set_default(ailsa_cmdb_s *ccs, char *table, unsigned long int id)
 {
 	int retval = 0;
 	if (strncmp(ccs->dbtype, "none", COMM_S) == 0)
@@ -884,7 +884,7 @@ cbc_get_query(int type, const char **query, unsigned int *fields)
 #ifdef HAVE_MYSQL
 
 void
-cbc_mysql_init(cbc_config_s *dc, MYSQL *cbc_mysql)
+cbc_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
 
@@ -899,7 +899,7 @@ cbc_mysql_init(cbc_config_s *dc, MYSQL *cbc_mysql)
 }
 
 int
-cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query_mysql(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_RES *cbc_res;
@@ -932,7 +932,7 @@ cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert_mysql(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	MYSQL cbc;
 	MYSQL_BIND my_bind[cbc_insert_fields[type]];
@@ -952,7 +952,7 @@ cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query_mysql(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -1020,7 +1020,7 @@ cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_delete_mysql(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
 	MYSQL_BIND mybind[cbc_delete_args[type]];
@@ -1042,7 +1042,7 @@ cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 }
 /*
 int
-cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
+cbc_set_default_mysql(ailsa_cmdb_s *ccs, char *table, unsigned long int id)
 {
 	MYSQL cbc;
 	MYSQL_STMT *cbc_stmt;
@@ -1052,7 +1052,7 @@ cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id)
 } */
 
 int
-cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_search_mysql(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
 	MYSQL_STMT *cbc_stmt;
@@ -1111,7 +1111,7 @@ cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
 }
 
 int
-cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_update_mysql(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	MYSQL cbc;
 	MYSQL_BIND args[cbc_update_args[type]];
@@ -2225,7 +2225,7 @@ cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i)
 #ifdef HAVE_SQLITE3
 
 int
-cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_query_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	const char *query, *file;
 	int retval = 0, i = 0;
@@ -2251,7 +2251,7 @@ cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_insert_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	const char *query, *file = NULL;
 	int retval;
@@ -2281,7 +2281,7 @@ cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
+cbc_run_multiple_query_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -2349,7 +2349,7 @@ cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type)
 }
 
 int
-cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_delete_sqlite(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	const char *query = cbc_sql_delete[type], *file = NULL;
 	int retval = 0;
@@ -2395,7 +2395,7 @@ cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 }
 
 int
-cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_search_sqlite(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	const char *query = cbc_sql_search[type], *file = NULL;
 	int retval = 0, i;
@@ -2428,7 +2428,7 @@ cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
 }
 
 int
-cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *data, int type)
+cbc_run_update_sqlite(ailsa_cmdb_s *ccs, dbdata_s *data, int type)
 {
 	const char *query = cbc_sql_update[type], *file = ccs->file;
 	int retval = NONE, i;

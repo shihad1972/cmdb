@@ -71,7 +71,7 @@ void
 print_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
 
 void
-init_cbcdomain_config(cbc_config_s *cmc, cbcdomain_comm_line_s *cdcl);
+init_cbcdomain_config(ailsa_cmdb_s *cmc, cbcdomain_comm_line_s *cdcl);
 
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);
@@ -83,22 +83,22 @@ int
 split_network_args(cbcdomain_comm_line_s *cdl, char *optarg);
 
 int
-list_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl);
+list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
 
 int
-add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl);
+add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
 
 int
-remove_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl);
+remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
 
 int
-modify_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl);
+modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
 
 int
-write_dhcp_net_config(cbc_config_s *cbs);
+write_dhcp_net_config(ailsa_cmdb_s *cbs);
 
 void
-display_bdom_servers(cbc_config_s *cbs, char *domain);
+display_bdom_servers(ailsa_cmdb_s *cbs, char *domain);
 
 int
 fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
@@ -107,7 +107,7 @@ void
 fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
 
 void
-check_bdom_overlap(cbc_config_s *cbs, cbc_build_domain_s *bdom);
+check_bdom_overlap(ailsa_cmdb_s *cbs, cbc_build_domain_s *bdom);
 
 int
 build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *new);

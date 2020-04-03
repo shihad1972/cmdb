@@ -57,7 +57,7 @@ typedef struct cbcos_comm_line_s {
 } cbcos_comm_line_s;
 
 static void
-init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col);
+init_cbcos_config(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static void
 init_cbcos_comm_line(cbcos_comm_line_s *col);
@@ -66,37 +66,37 @@ static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col);
 
 static int
-list_cbc_build_os(cbc_config_s *cmc);
+list_cbc_build_os(ailsa_cmdb_s *cmc);
 
 static int
-display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
-add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
-remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col);
+remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
-cbcos_grab_boot_files(cbc_config_s *cmc, cbcos_comm_line_s *col);
+cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
-check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id);
+check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id);
 
 static void
-copy_new_os_profile(cbc_config_s *cmc, char *oss[]);
+copy_new_os_profile(ailsa_cmdb_s *cmc, char *oss[]);
 
 static int
-cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[]);
+cbc_choose_os_to_copy(ailsa_cmdb_s *cbc, uli_t *id, char *oss[]);
 
 static void
-copy_new_build_os(cbc_config_s *cbc, uli_t *id);
+copy_new_build_os(ailsa_cmdb_s *cbc, uli_t *id);
 /*
 static void
-copy_locale_for_os(cbc_config_s *cbc, uli_t *id); */
+copy_locale_for_os(ailsa_cmdb_s *cbc, uli_t *id); */
 
 static void
-copy_packages_for_os(cbc_config_s *cbc, uli_t *id);
+copy_packages_for_os(ailsa_cmdb_s *cbc, uli_t *id);
 
 static void
 cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
@@ -112,10 +112,10 @@ main (int argc, char *argv[])
 {
 	char error[URL_S], *config;
 	int retval = NONE;
-	cbc_config_s *cmc;
+	ailsa_cmdb_s *cmc;
 	cbcos_comm_line_s *cocl;
 
-	if (!(cmc = malloc(sizeof(cbc_config_s))))
+	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
 		report_error(MALLOC_FAIL, "cmc in cbcos main");
 	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
 		report_error(MALLOC_FAIL, "cocl in cbcos main");
@@ -176,7 +176,7 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 }
 
 static void
-init_cbcos_config(cbc_config_s *cmc, cbcos_comm_line_s *col)
+init_cbcos_config(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	init_cbc_config_values(cmc);
 	init_cbcos_comm_line(col);
@@ -281,7 +281,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 }
 
 static int
-list_cbc_build_os(cbc_config_s *cmc)
+list_cbc_build_os(ailsa_cmdb_s *cmc)
 {
 	char *oalias, *talias;
 	int retval = 0;
@@ -319,7 +319,7 @@ list_cbc_build_os(cbc_config_s *cmc)
 }
 
 static int
-display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	char *name = col->os;
 	int retval = 0, i = 0;
@@ -371,7 +371,7 @@ display_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 }
 
 static int
-add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	char *oss[3];
 	int retval = NONE;
@@ -423,7 +423,7 @@ add_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 }
 
 static int
-remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
+remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
 		return CBC_NO_DATA;
@@ -458,7 +458,7 @@ remove_cbc_build_os(cbc_config_s *cmc, cbcos_comm_line_s *col)
 }
 
 static int
-check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
+check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id)
 {
 	int retval, query = BUILD_ID_ON_OS_ID, i;
 	char *name;
@@ -493,7 +493,7 @@ check_for_build_os_in_use(cbc_config_s *cbc, unsigned long int os_id)
 }
 
 static void
-copy_new_os_profile(cbc_config_s *cmc, char *oss[])
+copy_new_os_profile(ailsa_cmdb_s *cmc, char *oss[])
 {
 	char alias[RANGE_S];
 	int retval;
@@ -521,7 +521,7 @@ copy_new_os_profile(cbc_config_s *cmc, char *oss[])
 }
 
 static int
-cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
+cbc_choose_os_to_copy(ailsa_cmdb_s *cbc, uli_t *id, char *oss[])
 {
 	if (!(cbc) || !(oss) || !(id))
 		return CBC_NO_DATA;
@@ -563,7 +563,7 @@ cbc_choose_os_to_copy(cbc_config_s *cbc, uli_t *id, char *oss[])
 }
 
 static void
-copy_new_build_os(cbc_config_s *cbc, uli_t *id)
+copy_new_build_os(ailsa_cmdb_s *cbc, uli_t *id)
 {
 	if (!(cbc) || !(id)) {
 		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
@@ -573,7 +573,7 @@ copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 }
 
 static void
-copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
+copy_packages_for_os(ailsa_cmdb_s *cbc, uli_t *id)
 {
 	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
 	unsigned int max;
@@ -630,7 +630,7 @@ copy_packages_for_os(cbc_config_s *cbc, uli_t *id)
 }
 
 static int
-cbcos_grab_boot_files(cbc_config_s *cmc, cbcos_comm_line_s *col)
+cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	int retval = 0;
 	int test = 0;

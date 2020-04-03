@@ -57,7 +57,7 @@
 #endif /* HAVE_DNSA */
 
 int
-create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
 	int retval = 0;
 	cbc_s *cbc;
@@ -106,7 +106,7 @@ create_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 }
 
 int
-check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build)
+check_for_existing_build(ailsa_cmdb_s *cbc, cbc_build_s *build)
 {
 	int retval = 0, query = BUILD_ID_ON_SERVER_ID;
 	unsigned int max;
@@ -123,7 +123,7 @@ check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build)
 }
 
 int
-cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = MAC_ON_SERVER_ID_DEV;
 	unsigned int max;
@@ -158,7 +158,7 @@ cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build
 }
 
 int
-cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_varient(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = VARIENT_ID_ON_VARIENT;
 	dbdata_s *data;
@@ -189,7 +189,7 @@ cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_os(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = OS_ID_ON_NAME;
 	unsigned int max;
@@ -233,7 +233,7 @@ cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_locale(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0;
 	int query = GET_DEFAULT_LOCALE;
@@ -254,7 +254,7 @@ cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_partition_scheme(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
 	dbdata_s *data;
@@ -280,7 +280,7 @@ cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *b
 }
 
 int
-cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0;
 	cbc_s *cbc;
@@ -341,7 +341,7 @@ cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_search_for_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = IP_ID_ON_SERVER_ID;
 	dbdata_s *data;
@@ -360,7 +360,7 @@ cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_check_in_use_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *ip)
+cbc_check_in_use_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *ip)
 {
 	int retval = 0, query = IP_ON_BD_ID;
 	unsigned long int dnsip;
@@ -418,7 +418,7 @@ cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data)
 }
 
 int
-cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
+cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 {
 	int retval = 0, query = BUILD_DOM_IP_RANGE;
 	unsigned int max;
@@ -451,7 +451,7 @@ cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
 }
 
 int
-cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = DISK_DEV_ON_SERVER_ID_DEV;
 	unsigned int max;
@@ -503,7 +503,7 @@ cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
+cbc_search_for_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 {
 	int retval = 0, query = BASIC_PART;
 	unsigned int max;
@@ -523,7 +523,7 @@ cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 }
 
 int
-modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
 	char *os[3];
 	int retval = NONE, type = NONE;
@@ -582,7 +582,7 @@ modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
 }
 
 int
-remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
 #ifndef CLEAN_REMOVE_BUILD_CONFIG
 # define CLEAN_REMOVE_BUILD_CONFIG(retval) { \

@@ -67,7 +67,7 @@ const int spvar_no = 5;
 const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
 
 static void
-check_for_gb_keyboard(cbc_config_s *cbc, unsigned long int server_id, char *key);
+check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
 
 static void
 fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf);
@@ -91,13 +91,13 @@ static void
 fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
 
 static int
-fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
+fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
 
 static int
-fill_kick_partitions(cbc_config_s *cbc, cbc_comm_line_s *cmc, string_len_s *build);
+fill_kick_partitions(ailsa_cmdb_s *cbc, cbc_comm_line_s *cmc, string_len_s *build);
 
 static int
-fill_kick_part_header(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
+fill_kick_part_header(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
 
 static void
 fill_kick_network_info(dbdata_s *data, string_len_s *build);
@@ -106,16 +106,16 @@ static void
 fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 static void
-fill_build_scripts(cbc_config_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
+fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
 
 static int
-fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 static int
-fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 int
-display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml)
+display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
 	int retval, query;
 	cbc_s *cbc, *details;
@@ -318,7 +318,7 @@ print_build_config(cbc_s *details)
 }
 
 void
-list_build_servers(cbc_config_s *cmc)
+list_build_servers(ailsa_cmdb_s *cmc)
 {
 	int retval = NONE, type = SERVERS_WITH_BUILD;
 	unsigned int max;
@@ -339,7 +339,7 @@ list_build_servers(cbc_config_s *cmc)
 }
 
 int
-write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
@@ -391,7 +391,7 @@ write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 
 int
-write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char *ip, line[RBUFF_S];
 	int retval = NONE, type = DHCP_DETAILS;
@@ -481,7 +481,7 @@ fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
 }
 
 int
-write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char out[BUFF_S], pxe[RBUFF_S];
 	int retval = NONE, type = BUILD_IP_ON_SERVER_ID;
@@ -516,7 +516,7 @@ write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 
 int
-write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S];
 	int retval = NONE, type = NET_BUILD_DETAILS;
@@ -581,7 +581,7 @@ write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 
 int
-write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE, type = KICK_BASE;
@@ -689,7 +689,7 @@ write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml)
 }
 #endif /* PRINT_STRING_WITH_LENGTH_CHECK */
 int
-write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml)
+write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char *server, line[TBUFF_S], *pos;
 	int retval = NONE, type, query = SCRIPT_CONFIG;
@@ -759,7 +759,7 @@ chmod 755 motd.sh\n\
 }
 
 static void
-fill_build_scripts(cbc_config_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
+fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
 {
 	if (!(list))
 		return;
@@ -1070,7 +1070,7 @@ d-i clock-setup/ntp-server string %s\n\
 }
 
 static int
-fill_partition(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char *pos, line[FILE_S];
 	int retval = NONE, type = BASIC_PART;
@@ -1253,7 +1253,7 @@ d-i partman/mount_style select uuid\n\
 }
 
 int
-add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm)
+add_pre_parts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm)
 {
 	char *pos, line[BUFF_S], *fs, *mnt, *lv, *opt;
 	int retval = 0, query = FULL_PART, optno, i;
@@ -1326,7 +1326,7 @@ add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, shor
 }
 
 int
-get_pre_part_options(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts)
+get_pre_part_options(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts)
 {
 	int retval, query = PART_OPT_ON_SCHEME_ID;
 
@@ -1360,7 +1360,7 @@ add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
 }
 
 static int
-fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	int retval, type = SYSP_INFO_ON_BD_ID;
 	char *package = NULL;
@@ -1403,7 +1403,7 @@ fill_system_packages(cbc_config_s *cmc, cbc_comm_line_s *cml, string_len_s *buil
 }
 
 void
-add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data)
+add_system_package_line(ailsa_cmdb_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data)
 {
 	char *buff, *arg, *tmp;
 	size_t blen, slen;
@@ -1431,7 +1431,7 @@ add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build,
 }
 
 char *
-cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg)
+cbc_complete_arg(ailsa_cmdb_s *cbc, uli_t server_id, char *arg)
 {
 	char *tmp, *new = 0, *pre, *post;
 	int i, retval;
@@ -1518,7 +1518,7 @@ get_replaced_syspack_arg(dbdata_s *data, int loop)
 }
 
 static int
-fill_kick_base(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char buff[FILE_S], *key, *loc, *tim;
 	int retval, type = KICK_BASE;
@@ -1572,7 +1572,7 @@ install\n\
 }
 
 static int
-fill_kick_partitions(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+fill_kick_partitions(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char line[TBUFF_S], *fs, *lv, *mount, *opts, *pos;
 	int retval, query = FULL_PART;
@@ -1633,7 +1633,7 @@ Sorry, we have already added a boot partition\n");
 }
 
 char *
-get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt)
+get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt)
 {	
 	int retval;
 	char *opts = 0, *pos;
@@ -1660,7 +1660,7 @@ get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt)
 }
 
 static int
-fill_kick_part_header(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+fill_kick_part_header(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
 {
 	char *device, *pos, line[FILE_S];
 	int retval, type = BASIC_PART;
@@ -1878,7 +1878,7 @@ chmod 755 kick-final.sh\n\
 }
 
 int
-get_build_id(cbc_config_s *cmc, uli_t id, char *name, uli_t *build_id)
+get_build_id(ailsa_cmdb_s *cmc, uli_t id, char *name, uli_t *build_id)
 {
 	int retval = NONE, type;
 	unsigned int max;
@@ -1974,7 +1974,7 @@ cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
 
 // Static functions
 void
-check_for_gb_keyboard(cbc_config_s *cbc, unsigned long int server_id, char *key)
+check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key)
 {
 	if (!(cbc) || !(key) || !(server_id))
 		return;

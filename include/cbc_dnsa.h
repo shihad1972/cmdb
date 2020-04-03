@@ -41,19 +41,19 @@ void
 fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc);
 
 void
-copy_cbc_into_dnsa(ailsa_cmdb_s *dc, cbc_config_s *cbc);
+copy_cbc_into_dnsa(ailsa_cmdb_s *dc, ailsa_cmdb_s *cbc);
 
 int
-get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data);
+get_dns_ip_list(ailsa_cmdb_s *cbt, uli_t *ip, dbdata_s *data);
 
 void
 prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, uli_t *ip);
 
 int
-check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
+check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, cbc_config_s *cbt, record_row_s *rec);
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, ailsa_cmdb_s *cbt, record_row_s *rec);
 
 void
 fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *cml, cbc_s *cbc);
@@ -68,7 +68,7 @@ void
 write_zone_and_reload_nameserver(cbc_comm_line_s *cml);
 
 void
-remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data);
+remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data);
 
 # endif /* HAVE_DNSA */
 

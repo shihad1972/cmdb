@@ -26,6 +26,7 @@
 #ifndef __CMDB_CBC_H__
 # define __CMDB_CBC_H__
 # include <config.h>
+# include <ailsacmdb.h>
 # include "cbc_data.h"
 
 typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
@@ -61,7 +62,7 @@ typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
 } cbc_dhcp_config_s;
 
 void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt);
+init_all_config(ailsa_cmdb_s *cct, cbc_comm_line_s *cclt);
 
 void
 print_cbc_command_line_values(cbc_comm_line_s *command_line);
@@ -70,16 +71,16 @@ int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
 
 int
-parse_cbc_config_file(cbc_config_s *dc, const char *config);
+parse_cbc_config_file(ailsa_cmdb_s *dc, const char *config);
 
 void
-init_cbc_config_values(cbc_config_s *dc);
+init_cbc_config_values(ailsa_cmdb_s *dc);
 
 void
 parse_cbc_config_error(int error);
 
 void
-print_cbc_config(cbc_config_s *cbc);
+print_cbc_config(ailsa_cmdb_s *cbc);
 
 int
 query_config();

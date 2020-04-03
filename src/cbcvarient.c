@@ -63,7 +63,7 @@ typedef struct cbcvari_comm_line_s {
 } cbcvari_comm_line_s;
 
 static void
-init_cbcvari_config(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+init_cbcvari_config(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static void
 init_cbcvari_comm_line(cbcvari_comm_line_s *cvl);
@@ -72,25 +72,25 @@ static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl);
 
 static int
-list_cbc_build_varient(cbc_config_s *cmc);
+list_cbc_build_varient(ailsa_cmdb_s *cmc);
 
 static int
-display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
-add_cbc_build_varient(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+add_cbc_build_varient(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl);
 
 static int
-add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl);
 
 static int
-remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl);
+remove_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl);
 
 static int
-remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl);
+remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
-check_build_os(cbc_config_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl);
+check_build_os(ailsa_cmdb_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl);
 
 static int
 display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
@@ -111,16 +111,16 @@ static int
 cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id);
 
 static cbc_package_s *
-build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack);
+build_package_list(ailsa_cmdb_s *cbc, unsigned long int *os, int nos, char *pack);
 
 static dbdata_s *
-build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack);
+build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack);
 
 static void
-copy_packages_from_base_varient(cbc_config_s *cbc, char *varient);
+copy_packages_from_base_varient(ailsa_cmdb_s *cbc, char *varient);
 
 static int
-build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id);
+build_copy_package_list(ailsa_cmdb_s *cbc, cbc_s *base, uli_t bid, uli_t id);
 
 static void
 add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
@@ -130,10 +130,10 @@ main(int argc, char *argv[])
 {
 	char error[URL_S], *config;
 	int retval = NONE;
-	cbc_config_s *cmc;
+	ailsa_cmdb_s *cmc;
 	cbcvari_comm_line_s *cvcl;
 
-	if (!(cmc = malloc(sizeof(cbc_config_s))))
+	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
 		report_error(MALLOC_FAIL, "cmc in cbcvarient main");
 	if (!(cvcl = malloc(sizeof(cbcvari_comm_line_s))))
 		report_error(MALLOC_FAIL, "cvcl in cbcvarient main");
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
 }
 
 static void
-init_cbcvari_config(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+init_cbcvari_config(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	init_cbc_config_values(cmc);
 	init_cbcvari_comm_line(cvl);
@@ -322,7 +322,7 @@ You need to supply both a varient name and valias when adding\n");
 }
 
 static int
-list_cbc_build_varient(cbc_config_s *cmc)
+list_cbc_build_varient(ailsa_cmdb_s *cmc)
 {
 	int retval = NONE;
 	cbc_s *base = NULL;
@@ -376,7 +376,7 @@ list_cbc_build_varient(cbc_config_s *cmc)
 }
 
 static int
-display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
 	unsigned long int id;
@@ -411,7 +411,7 @@ display_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 }
 
 static int
-add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	int retval = NONE;
 	cbc_s *base;
@@ -458,7 +458,7 @@ add_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 }
 
 static int
-remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
+remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	char varient[HOST_S];
 	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
@@ -497,7 +497,7 @@ remove_cbc_build_varient(cbc_config_s *cmc, cbcvari_comm_line_s *cvl)
 }
 
 static int
-check_build_os(cbc_config_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl)
+check_build_os(ailsa_cmdb_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl)
 {
 	int retval = 0;
 	int flag = 0;
@@ -654,7 +654,7 @@ get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
 }
 
 static void
-copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
+copy_packages_from_base_varient(ailsa_cmdb_s *cbc, char *varient)
 {
 	char *bvar; 
 	int retval, packs = 0;
@@ -692,7 +692,7 @@ copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
 }
 
 static int
-add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
+add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 {
 	char *varient;
 	int retval = 0, os, packs = 0;
@@ -736,7 +736,7 @@ add_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
 }
 
 static int
-remove_cbc_package(cbc_config_s *cbc, cbcvari_comm_line_s *cvl)
+remove_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 {
 	char *varient;
 	int retval = 0, os, packs = 0;
@@ -884,7 +884,7 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 }
 
 static cbc_package_s *
-build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack)
+build_package_list(ailsa_cmdb_s *cbc, unsigned long int *os, int nos, char *pack)
 {
 	int i;
 	unsigned long int *osid, vid;
@@ -921,7 +921,7 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 }
 
 static dbdata_s *
-build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *pack)
+build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack)
 {
 	int retval, i, query = PACK_ID_ON_DETAILS;
 	unsigned int max;
@@ -966,7 +966,7 @@ build_rem_pack_list(cbc_config_s *cbc, unsigned long int *ids, int noids, char *
 }
 
 static int
-build_copy_package_list(cbc_config_s *cbc, cbc_s *base, uli_t bid, uli_t id)
+build_copy_package_list(ailsa_cmdb_s *cbc, cbc_s *base, uli_t bid, uli_t id)
 {
 	int retval, query = PACKAGE_OS_ID_ON_VID;
 	unsigned int max;

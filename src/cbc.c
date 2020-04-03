@@ -36,12 +36,12 @@
 int
 main(int argc, char *argv[])
 {
-	cbc_config_s *cmc;
+	ailsa_cmdb_s *cmc;
 	cbc_comm_line_s *cml;
 	char sretval[CONF_S], conf[CONF_S];
 	int retval = NONE;
 	
-	if (!(cmc = malloc(sizeof(cbc_config_s))))
+	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
 		report_error(MALLOC_FAIL, "cmc in cbc.c");
 	if (!(cml = malloc(sizeof(cbc_comm_line_s))))
 		report_error(MALLOC_FAIL, "cml in cbc.c");

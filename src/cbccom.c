@@ -245,7 +245,7 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 }
 
 void
-init_all_config(cbc_config_s *cct, cbc_comm_line_s *cclt)
+init_all_config(ailsa_cmdb_s *cct, cbc_comm_line_s *cclt)
 {
 	init_cbc_config_values(cct);
 	init_cbc_comm_values(cclt);

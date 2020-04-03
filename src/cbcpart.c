@@ -67,7 +67,7 @@ typedef struct cbcpart_comm_line_s {
 } cbcpart_comm_line_s;
 
 static void
-init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+init_cbcpart_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static void
 init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
@@ -85,16 +85,16 @@ static int
 validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc);
 
 static int
-list_seed_schemes(cbc_config_s *cbc);
+list_seed_schemes(ailsa_cmdb_s *cbc);
 
 static int
-display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+add_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
 check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm);
@@ -103,53 +103,53 @@ static int
 check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl);
 
 static int
-add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+add_new_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
 add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
 
 static void
-cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
+cbcpart_add_part_option(ailsa_cmdb_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
 
 static int
-add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+remove_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+remove_partition_from_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 /*
 static int
-mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+mod_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl);
+modify_partition_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl); */
+modify_scheme_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl); */
 
 static void
 cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt);
 
 static void
-get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt);
+get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt);
 
 int
 main (int argc, char *argv[])
 {
 	char *config;
 	int retval = NONE;
-	cbc_config_s *cmc;
+	ailsa_cmdb_s *cmc;
 	cbcpart_comm_line_s *cpl;
 	
-	cmc = ailsa_calloc(sizeof(cbc_config_s), "main");
+	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "main");
 	cpl = ailsa_calloc(sizeof(cbcpart_comm_line_s), "main");
 	config = ailsa_calloc(CONF_S, "config in main");
 	get_config_file_location(config);
@@ -187,7 +187,7 @@ main (int argc, char *argv[])
 }
 
 static void
-init_cbcpart_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+init_cbcpart_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	init_cbc_config_values(cbc);
 	init_cbcpart_comm_line(cpl);
@@ -397,7 +397,7 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 }
 
 static int
-list_seed_schemes(cbc_config_s *cbc)
+list_seed_schemes(ailsa_cmdb_s *cbc)
 {
 	int retval = NONE;
 	cbc_s *base;
@@ -423,7 +423,7 @@ list_seed_schemes(cbc_config_s *cbc)
 }
 
 static int
-display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	char *opt;
 	int retval = NONE, i = 0;
@@ -493,7 +493,7 @@ printf("%s\t%s\t%lu\t%lu\t%s\n", p[0], p[1], part->min, part->max, p[2]);
 }
 
 static int
-add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+add_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
 
@@ -509,7 +509,7 @@ add_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 static int
-remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+remove_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
 
@@ -525,7 +525,7 @@ remove_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 /*
 static int
-mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+mod_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
 
@@ -539,7 +539,7 @@ mod_scheme_part(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 */
 static int
-add_partition_to_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
 	short int lvm = 0;
@@ -646,7 +646,7 @@ part->log_vol, cpl->scheme);
 }
 
 static int
-add_new_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+add_new_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = NONE;
 	cbc_seed_scheme_s *scheme;
@@ -707,7 +707,7 @@ add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
 }
 
 static void
-cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl)
+cbcpart_add_part_option(ailsa_cmdb_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl)
 {
 	cbc_part_opt_s *opt;
 
@@ -726,7 +726,7 @@ cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl
 }
 
 static int
-add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	cbc_s *base;
 	int retval = 0;
@@ -740,7 +740,7 @@ add_new_partition_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 static int
-remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+remove_partition_from_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0, type;
 	unsigned int max;
@@ -778,7 +778,7 @@ remove_partition_from_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 static int
-remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
 	dbdata_s *data;
@@ -805,7 +805,7 @@ remove_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 static int
-remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
 	dbdata_s *data;
@@ -825,7 +825,7 @@ remove_part_option(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 /*
 static int
-modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+modify_partition_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
 	short int lvm;
@@ -845,7 +845,7 @@ modify_partition_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 
 static int
-modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
+modify_scheme_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
 
@@ -853,7 +853,7 @@ modify_scheme_config(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 }
 */
 static void
-get_opts_for_part(cbc_config_s *cbc, cbc_pre_part_s *part, char *opt)
+get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt)
 {
 	char *newopt, *optpos;
 	int retval = 0, query = PART_OPT_ON_SCHEME_ID;

@@ -25,6 +25,7 @@
 #ifndef __CBC_BASE_SQL_H
 # define __CBC_BASE_SQL_H
 # include <config.h>
+# include <ailsacmdb.h>
 # include "base_sql.h"
 # include "cmdb_cbc.h"
 # include "cbc_data.h"
@@ -198,54 +199,54 @@ extern const int cbc_mysql_inserts[][24];
 # endif /* HAVE_MYSQL */
 
 int
-cbc_run_query(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_query(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_multiple_query(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_multiple_query(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_insert(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_insert(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
 cbc_get_query(int type, const char **query, unsigned int *fields);
 
 int
-cbc_run_search(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_delete(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_update(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_update(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_set_default(cbc_config_s *ccs, char *table, unsigned long int id);
+cbc_set_default(ailsa_cmdb_s *ccs, char *table, unsigned long int id);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
-cbc_mysql_init(cbc_config_s *dc, MYSQL *cmdb_mysql);
+cbc_mysql_init(ailsa_cmdb_s *dc, MYSQL *cmdb_mysql);
 
 int
-cbc_run_query_mysql(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_query_mysql(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_insert_mysql(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_insert_mysql(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_multiple_query_mysql(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_multiple_query_mysql(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_delete_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete_mysql(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_search_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search_mysql(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_update_mysql(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_update_mysql(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_set_default_mysql(cbc_config_s *ccs, char *table, unsigned long int id);
+cbc_set_default_mysql(ailsa_cmdb_s *ccs, char *table, unsigned long int id);
 
 void
 cbc_store_result_mysql(MYSQL_ROW row, cbc_s *base, int type, unsigned int fields);
@@ -379,22 +380,22 @@ cbc_setup_bind_mysql_servers(void **buffer, cbc_s *base, unsigned int i);
 #  include <sqlite3.h>
 
 int
-cbc_run_query_sqlite(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_query_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_insert_sqlite(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_insert_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_multiple_query_sqlite(cbc_config_s *config, cbc_s *base, int type);
+cbc_run_multiple_query_sqlite(ailsa_cmdb_s *config, cbc_s *base, int type);
 
 int
-cbc_run_delete_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_delete_sqlite(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_search_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_search_sqlite(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
-cbc_run_update_sqlite(cbc_config_s *ccs, dbdata_s *base, int type);
+cbc_run_update_sqlite(ailsa_cmdb_s *ccs, dbdata_s *base, int type);
 
 int
 set_cbc_search_sqlite(sqlite3_stmt *state, dbdata_s *list, int type, int i);

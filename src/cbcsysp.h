@@ -59,35 +59,35 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs);
 // List functions
 
 int
-list_cbc_syspackage(cbc_config_s *cbc);
+list_cbc_syspackage(ailsa_cmdb_s *cbc);
 
 int
-list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css);
+list_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *css);
 
 int
-list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css);
+list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css);
 
 // Add functions
 
 int
-add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbs);
+add_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs);
 
 int
-add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbs);
+add_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs);
 
 int
-add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
 
 // Remove functions
 
 int
-rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+rem_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
 
 int
-rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+rem_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
 
 int
-rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs);
+rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
 
 // Helper funtions
 
@@ -101,6 +101,6 @@ void
 pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs);
 
 int
-get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query);
+get_syspack_ids(ailsa_cmdb_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query);
 
 #endif // __CBCSYSP_H__

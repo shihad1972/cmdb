@@ -30,13 +30,13 @@
 # include "cmdb_cbc.h"
 
 int
-display_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
+display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
 int
 cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
 
 int
-create_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+create_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
@@ -44,69 +44,69 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 // New functions for new create_build_config
 
 int
-check_for_existing_build(cbc_config_s *cbc, cbc_build_s *build);
+check_for_existing_build(ailsa_cmdb_s *cbc, cbc_build_s *build);
 
 int
-cbc_get_network_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_get_varient(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_varient(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_get_os(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_os(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_get_locale(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_locale(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_get_partition_scheme(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_partition_scheme(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_get_ip_info(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_search_for_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_search_for_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_check_in_use_ip(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *ip);
+cbc_check_in_use_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *ip);
 
 int
 cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data);
 
 int
-cbc_get_build_dom_info(cbc_config_s *cbt, cbc_comm_line_s *cml, uli_t *bd);
+cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *bd);
 
 int
-cbc_add_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int
-cbc_search_for_disk(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
+cbc_search_for_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 // End of new functions
 
 void
-list_build_servers(cbc_config_s *cbt);
+list_build_servers(ailsa_cmdb_s *cbt);
 
 int
-write_build_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_dhcp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_tftp_config(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_preseed_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_kickstart_build_file(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_pre_host_script(cbc_config_s *cmc, cbc_comm_line_s *cml);
+write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-get_build_id(cbc_config_s *cbc, uli_t id, char *name, uli_t *build_id);
+get_build_id(ailsa_cmdb_s *cbc, uli_t id, char *name, uli_t *build_id);
 
 int
 get_modify_query(unsigned long int ids[]);
@@ -118,7 +118,7 @@ void
 print_build_config(cbc_s *details);
 
 char *
-get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt);
+get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt);
 
 void
 add_kick_base_script(dbdata_s *data, string_len_s *build);
@@ -130,27 +130,27 @@ char *
 add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk);
 
 int
-add_pre_parts(cbc_config_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm);
+add_pre_parts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm);
 
 int
-get_pre_part_options(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts);
+get_pre_part_options(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts);
 
 void
 add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *disk);
 
 void
-add_system_package_line(cbc_config_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data);
+add_system_package_line(ailsa_cmdb_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data);
 
 char *
-cbc_complete_arg(cbc_config_s *cbc, uli_t server_id, char *arg);
+cbc_complete_arg(ailsa_cmdb_s *cbc, uli_t server_id, char *arg);
 
 char *
 get_replaced_syspack_arg(dbdata_s *data, int loop);
 
 int
-modify_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
+modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
 int
-remove_build_config(cbc_config_s *cbt, cbc_comm_line_s *cml);
+remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
 #endif /* __CBC_BUILD_H__ */

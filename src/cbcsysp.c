@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 {
 	int retval;
 	char *config = ailsa_calloc(CONF_S, "config in main");
-	cbc_config_s *cbc = ailsa_calloc(sizeof(cbc_config_s), "cbc in main");
+	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 	cbc_sysp_s *cbs = ailsa_calloc(sizeof(cbc_sysp_s), "cbs in main");
 
 	init_cbc_config_values(cbc);
@@ -256,7 +256,7 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs)
 // List functions
 
 int
-list_cbc_syspackage(cbc_config_s *cbc)
+list_cbc_syspackage(ailsa_cmdb_s *cbc)
 {
 	int retval = 0;
 	cbc_s *cbs;
@@ -276,7 +276,7 @@ list_cbc_syspackage(cbc_config_s *cbc)
 }
 
 int
-list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
+list_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 {
 	char *package = NULL;
 	int retval = 0, query;
@@ -336,7 +336,7 @@ list_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *css)
 }
 
 int
-list_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *css)
+list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 {
 	int retval = 0, count = 0;
 	dbdata_s *data = 0;
@@ -383,7 +383,7 @@ There are no arguments configured in the database for any package\n");
 // Add functions
 
 int
-add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+add_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0;
 	cbc_s *cbs;
@@ -402,7 +402,7 @@ add_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 }
 
 int
-add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+add_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0;
 	unsigned long int spack_id;
@@ -427,7 +427,7 @@ add_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 }
 
 int
-add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0;
 	unsigned long int spack_id, sconf_id, bd_id;
@@ -461,7 +461,7 @@ add_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 // Remove functions
 
 int
-rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+rem_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0, query = SYSP_PACKAGE;
 	unsigned int args = cbc_delete_args[query];
@@ -481,7 +481,7 @@ rem_cbc_syspackage(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 }
 
 int
-rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+rem_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0, query = SYSP_ARG;
 	unsigned int args = cbc_delete_args[query];
@@ -504,7 +504,7 @@ rem_cbc_syspackage_arg(cbc_config_s *cbc, cbc_sysp_s *cbcs)
 }
 
 int
-rem_cbc_syspackage_conf(cbc_config_s *cbc, cbc_sysp_s *cbcs)
+rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
 	int retval = 0, query = SYS_PACK_CONF_ID;
 	unsigned int args = cbc_search_args[query];
@@ -562,7 +562,7 @@ pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs)
 }
 
 int
-get_syspack_ids(cbc_config_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
+get_syspack_ids(ailsa_cmdb_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
 {
 	int retval = 0;
 	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)

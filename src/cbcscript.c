@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 	int retval = 0;
 	char *config = ailsa_calloc(CONF_S, "config in main");
 	cbc_syss_s *scr = ailsa_calloc(sizeof(cbc_syss_s), "scr in main");
-	cbc_config_s *cbc = ailsa_calloc(sizeof(cbc_config_s), "cbc in main");
+	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 
 	init_cbc_config_values(cbc);
 	get_config_file_location(config);
@@ -230,7 +230,7 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 }
 
 int
-pack_script_arg(cbc_config_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
+pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 {
 	int retval = 0;
 	if (scr->name) {
@@ -275,7 +275,7 @@ pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
 // Add functions
 
 int
-cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 	cbc_s *cbs;
@@ -295,7 +295,7 @@ cbc_script_add_script(cbc_config_s *cbc, cbc_syss_s *scr)
 }
 
 int
-cbc_script_add_script_arg(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 	cbc_s *cbs;
@@ -320,7 +320,7 @@ cbc_script_add_script_arg(cbc_config_s *cbc, cbc_syss_s *scr)
 // Remove functions
 
 int
-cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_rm_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 	dbdata_s *data;
@@ -345,7 +345,7 @@ cbc_script_rm_script(cbc_config_s *cbc, cbc_syss_s *scr)
 }
 
 int
-cbc_script_rm_arg(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_rm_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 	dbdata_s *data;
@@ -377,7 +377,7 @@ cbc_script_rm_arg(cbc_config_s *cbc, cbc_syss_s *scr)
 // List functions
 
 int
-cbc_script_list_script(cbc_config_s *cbc)
+cbc_script_list_script(ailsa_cmdb_s *cbc)
 {
 	int retval = 0;
 	cbc_s *cbs;
@@ -419,7 +419,7 @@ cbc_script_list_script(cbc_config_s *cbc)
 }
 
 int
-cbc_script_list_args(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_list_args(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 
@@ -435,7 +435,7 @@ cbc_script_list_args(cbc_config_s *cbc, cbc_syss_s *scr)
 }
 
 int
-cbc_script_args_list_all(cbc_config_s *cbc)
+cbc_script_args_list_all(ailsa_cmdb_s *cbc)
 {
 	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPT | SCRIPTA;
 	int i, j, k;	// counters
@@ -501,7 +501,7 @@ cbc_script_args_list_all(cbc_config_s *cbc)
 }
 
 int
-cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_args_list_all_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPTA;
 	unsigned long int systscr_id;
@@ -566,7 +566,7 @@ cbc_script_args_list_all_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 }
 
 int
-cbc_script_args_list_one_domain(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_args_list_one_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_TYPE | SCRIPT | SCRIPTA;
 	int i, j, k;	// counters
@@ -628,7 +628,7 @@ cbc_script_args_list_one_domain(cbc_config_s *cbc, cbc_syss_s *scr)
 }
 
 int
-cbc_script_args_list_one_script(cbc_config_s *cbc, cbc_syss_s *scr)
+cbc_script_args_list_one_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0, query = BUILD_TYPE | SCRIPTA;
 	int i, j, k = 0;	// counters

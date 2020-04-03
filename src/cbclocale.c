@@ -59,25 +59,25 @@ static void
 validate_locale_comm_line(locale_comm_line_s *cl);
 
 static int
-list_locales(cbc_config_s *ccs);
+list_locales(ailsa_cmdb_s *ccs);
 
 static int
-display_locales(cbc_config_s *ccs, locale_comm_line_s *cl);
+display_locales(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
-add_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
-remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+remove_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
-set_default_locale(cbc_config_s *ccs, locale_comm_line_s *cl);
+set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static void
 fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
 
 static void
-print_locale(cbc_config_s *ccs, cbc_locale_s *loc);
+print_locale(ailsa_cmdb_s *ccs, cbc_locale_s *loc);
 
 int
 main(int argc, char *argv[])
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	char conf[CONF_S];
 	int retval = 0;
 	locale_comm_line_s *cl = ailsa_calloc(sizeof(locale_comm_line_s), "cl in main");
-	cbc_config_s *ccs = ailsa_calloc(sizeof(cbc_config_s), "ccs in main");
+	ailsa_cmdb_s *ccs = ailsa_calloc(sizeof(ailsa_cmdb_s), "ccs in main");
 	init_locale_comm_line(cl);
 	init_cbc_config_values(ccs);
 	if ((retval = parse_locale_comm_line(argc, argv, cl)) != 0) {
@@ -244,7 +244,7 @@ init_locale_comm_line(locale_comm_line_s *cl)
 }
 
 static int
-list_locales(cbc_config_s *ccs)
+list_locales(ailsa_cmdb_s *ccs)
 {
 	int retval = 0;
 	unsigned long int isdefault = 0;
@@ -271,7 +271,7 @@ list_locales(cbc_config_s *ccs)
 }
 
 static void
-print_locale(cbc_config_s *ccs, cbc_locale_s *locale)
+print_locale(ailsa_cmdb_s *ccs, cbc_locale_s *locale)
 {
 	cbc_locale_s *loc = locale;
 	unsigned long int isdefault = 0;
@@ -293,7 +293,7 @@ print_locale(cbc_config_s *ccs, cbc_locale_s *locale)
 }
 
 static int
-display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
+display_locales(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	int retval = 0;
 	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in display_locales");
@@ -315,7 +315,7 @@ display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
 }
 
 static int
-add_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	int retval;
 	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in add_locale");
@@ -347,7 +347,7 @@ fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl)
 }
 
 static int
-remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+remove_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	if (!(ccs) || !(cl))
 		report_error(CBC_NO_DATA, "remove_locale");
@@ -370,7 +370,7 @@ remove_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
 }
 
 static int
-set_default_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
+set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	int retval = 0;
 	int query = UP_DEFAULT_LOCALE;

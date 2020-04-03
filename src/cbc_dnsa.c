@@ -69,7 +69,7 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc)
 }
 
 void
-copy_cbc_into_dnsa(ailsa_cmdb_s *dc, cbc_config_s *cbc)
+copy_cbc_into_dnsa(ailsa_cmdb_s *dc, ailsa_cmdb_s *cbc)
 {
 	snprintf(dc->dbtype, RANGE_S, "%s", cbc->dbtype);
 	snprintf(dc->file, CONF_S, "%s", cbc->file);
@@ -83,7 +83,7 @@ copy_cbc_into_dnsa(ailsa_cmdb_s *dc, cbc_config_s *cbc)
 }
 
 int
-get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data)
+get_dns_ip_list(ailsa_cmdb_s *cbt, uli_t *ip, dbdata_s *data)
 {
 	int retval = NONE;
 	size_t dclen = sizeof(ailsa_cmdb_s);
@@ -141,7 +141,7 @@ prep_dnsa_ip_list(dbdata_s *data, dnsa_s *dnsa, uli_t *ip)
 }
 
 int
-check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
+check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 {
 	int retval = NONE;
 	unsigned int a = dnsa_extended_search_args[RECORDS_ON_ZONE];
@@ -182,7 +182,7 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 }
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, cbc_config_s *cbt, record_row_s *rec)
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, ailsa_cmdb_s *cbt, record_row_s *rec)
 {
 	init_zone_struct(zone);
 	init_record_struct(rec);
@@ -308,7 +308,7 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 }
 
 void
-remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
+remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 {
 	int retval, type;
 	unsigned long int bip, server_id;

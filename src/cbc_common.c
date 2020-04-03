@@ -49,10 +49,10 @@
 #include "cbc_common.h"
 
 static int
-read_cbc_config_values(cbc_config_s *cbc, FILE *cnf);
+read_cbc_config_values(ailsa_cmdb_s *cbc, FILE *cnf);
 
 static int
-read_cbc_config_values(cbc_config_s *cbc, FILE *cnf)
+read_cbc_config_values(ailsa_cmdb_s *cbc, FILE *cnf)
 {
 	int retval = 0;
 	unsigned long int portno;
@@ -114,7 +114,7 @@ read_cbc_config_values(cbc_config_s *cbc, FILE *cnf)
 	return retval;
 }
 int
-check_for_package(cbc_config_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
+check_for_package(ailsa_cmdb_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
 {
 	int retval;
 	unsigned int type = cbc_search_args[PACK_ID_ON_DETAILS];
@@ -157,7 +157,7 @@ check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 }
 
 int
-get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id)
+get_default_id(ailsa_cmdb_s *cbc, int query, char *name, unsigned long int *id)
 {
 	int retval = 0;
 	dbdata_s *data;
@@ -185,7 +185,7 @@ get_default_id(cbc_config_s *cbc, int query, char *name, unsigned long int *id)
 }
 
 int
-get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id)
+get_server_id(ailsa_cmdb_s *cbc, char *server, unsigned long int *id)
 {
 	int retval = 0, query = SERVER_ID_ON_SNAME;
 	unsigned int max;
@@ -209,7 +209,7 @@ get_server_id(cbc_config_s *cbc, char *server, unsigned long int *id)
 }
 
 int
-get_varient_id(cbc_config_s *cmc, char *var, unsigned long int *varient_id)
+get_varient_id(ailsa_cmdb_s *cmc, char *var, unsigned long int *varient_id)
 {
 	int retval = NONE, type;
 	unsigned int max;
@@ -245,7 +245,7 @@ get_varient_id(cbc_config_s *cmc, char *var, unsigned long int *varient_id)
 }
 
 int
-get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id)
+get_build_domain_id(ailsa_cmdb_s *cbc, char *domain, uli_t *id)
 {
 	int retval;
 	dbdata_s *data;
@@ -266,7 +266,7 @@ get_build_domain_id(cbc_config_s *cbc, char *domain, uli_t *id)
 }
 
 int
-get_system_package_id(cbc_config_s *cbc, char *package, uli_t *id)
+get_system_package_id(ailsa_cmdb_s *cbc, char *package, uli_t *id)
 {
 	int retval;
 	dbdata_s *data;
@@ -287,7 +287,7 @@ get_system_package_id(cbc_config_s *cbc, char *package, uli_t *id)
 }
 
 int
-get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id)
+get_syspack_arg_id(ailsa_cmdb_s *cbc, char *field, uli_t sp_id, uli_t *id)
 {
 	int retval, query = SPARG_ON_SPID_AND_FIELD;
 	dbdata_s *data;
@@ -311,7 +311,7 @@ get_syspack_arg_id(cbc_config_s *cbc, char *field, uli_t sp_id, uli_t *id)
 }
 
 int
-get_system_script_id(cbc_config_s *cbc, char *script, uli_t *id)
+get_system_script_id(ailsa_cmdb_s *cbc, char *script, uli_t *id)
 {
 	int retval, query = SCR_ID_ON_NAME;
 	dbdata_s *data;
@@ -333,7 +333,7 @@ get_system_script_id(cbc_config_s *cbc, char *script, uli_t *id)
 }
 
 int
-get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id)
+get_build_type_id(ailsa_cmdb_s *cbc, char *os, uli_t *id)
 {
 	int retval = 0, query = BUILD_TYPE_ID_ON_ALIAS;
 	dbdata_s *data;
@@ -355,7 +355,7 @@ get_build_type_id(cbc_config_s *cbc, char *os, uli_t *id)
 }
 
 int
-get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
+get_partition_id(ailsa_cmdb_s *cbc, char *name, char *mount, uli_t *id)
 {
 	int retval = 0, query = DEFP_ID_ON_SCHEME_PART;
 	dbdata_s *data;
@@ -381,7 +381,7 @@ get_partition_id(cbc_config_s *cbc, char *name, char *mount, uli_t *id)
 }
 
 int
-get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id)
+get_scheme_id_from_build(ailsa_cmdb_s *cbc, uli_t server_id, uli_t *id)
 {
 	int retval = 0, query = DEF_SCHEME_ID_FROM_BUILD;
 	dbdata_s *data;
@@ -406,7 +406,7 @@ get_scheme_id_from_build(cbc_config_s *cbc, uli_t server_id, uli_t *id)
 }
 
 int
-get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
+get_scheme_id(ailsa_cmdb_s *cbc, char *name, uli_t *id)
 {
 	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
 	dbdata_s *data;
@@ -429,7 +429,7 @@ get_scheme_id(cbc_config_s *cbc, char *name, uli_t *id)
 }
 
 int
-get_locale_id(cbc_config_s *cbc, char *name, uli_t *id)
+get_locale_id(ailsa_cmdb_s *cbc, char *name, uli_t *id)
 {
 	int retval = 0;
 	int query = LOCALE_ID_ON_NAME;
@@ -453,7 +453,7 @@ get_locale_id(cbc_config_s *cbc, char *name, uli_t *id)
 }
 
 int
-get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
+get_scheme_name(ailsa_cmdb_s *cbc, uli_t server_id, char *name)
 {
 	int retval = 0, query = SCHEME_NAME_ON_SERVER_ID;
 	dbdata_s *data;
@@ -476,7 +476,7 @@ get_scheme_name(cbc_config_s *cbc, uli_t server_id, char *name)
 }
 
 int
-get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
+get_part_opt_id(ailsa_cmdb_s *cbc, char *name, char *part, char *opt, uli_t *id)
 {
 	int retval = 0, query = PART_OPT_ID;
 	dbdata_s *data;
@@ -505,7 +505,7 @@ get_part_opt_id(cbc_config_s *cbc, char *name, char *part, char *opt, uli_t *id)
 }
 
 int
-set_scheme_updated(cbc_config_s *cbc, char *scheme)
+set_scheme_updated(ailsa_cmdb_s *cbc, char *scheme)
 {
 	int retval;
 	unsigned long int scheme_id;
@@ -528,7 +528,7 @@ set_scheme_updated(cbc_config_s *cbc, char *scheme)
 }
 // Should get rid of the uli_id *id in this function
 void
-set_build_domain_updated(cbc_config_s *cbt, char *domain)
+set_build_domain_updated(ailsa_cmdb_s *cbt, char *domain)
 {
 	int retval, query = UP_BDOM_MUSER;
 	dbdata_s *data;
@@ -556,7 +556,7 @@ set_build_domain_updated(cbc_config_s *cbt, char *domain)
 }
 // Should be passing the varient name to this function
 void
-cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
+cbc_set_varient_updated(ailsa_cmdb_s *cbc, unsigned long int vid)
 {
 	int query = UP_VARIENT, retval;
 	dbdata_s *data;
@@ -574,7 +574,7 @@ cbc_set_varient_updated(cbc_config_s *cbc, unsigned long int vid)
 }
 
 int
-get_os_id(cbc_config_s *cmc, char *os[], unsigned long int *os_id)
+get_os_id(ailsa_cmdb_s *cmc, char *os[], unsigned long int *os_id)
 {
 	int retval = NONE, type = OS_ID_ON_NAME;
 	unsigned int max;
@@ -640,7 +640,7 @@ fill_dbdata_os_search(dbdata_s *data, char *os[])
 }
 
 int
-get_os_alias(cbc_config_s *cbc, char *os, char *alias)
+get_os_alias(ailsa_cmdb_s *cbc, char *os, char *alias)
 {
 	int retval, type = OS_ALIAS_ON_OS;
 	unsigned int max;
@@ -670,7 +670,7 @@ check_for_alias(char **what, char *name, char *alias)
 }
 
 int
-cbc_add_server(cbc_config_s *cbc, char *name, long unsigned int *server_id)
+cbc_add_server(ailsa_cmdb_s *cbc, char *name, long unsigned int *server_id)
 {
 	int retval = 0;
 	cbc_server_s *server;
@@ -693,9 +693,9 @@ cbc_add_server(cbc_config_s *cbc, char *name, long unsigned int *server_id)
 }
 
 void
-init_cbc_config_values(cbc_config_s *cbc)
+init_cbc_config_values(ailsa_cmdb_s *cbc)
 {
-	memset(cbc, 0, sizeof(cbc_config_s));
+	memset(cbc, 0, sizeof(ailsa_cmdb_s));
 	sprintf(cbc->db, "cmdb");
 	sprintf(cbc->dbtype, "none");
 	sprintf(cbc->user, "root");
@@ -714,7 +714,7 @@ init_cbc_config_values(cbc_config_s *cbc)
 }
 
 int
-parse_cbc_config_file(cbc_config_s *cbc, const char *config)
+parse_cbc_config_file(ailsa_cmdb_s *cbc, const char *config)
 {
 	FILE *cnf;
 	int retval;
@@ -780,7 +780,7 @@ parse_cbc_config_error(int error)
 }
 
 void
-print_cbc_config(cbc_config_s *cbc)
+print_cbc_config(ailsa_cmdb_s *cbc)
 {
 	fprintf(stderr, "########\nConfig Values\n");
 	fprintf(stderr, "DB: %s\n", cbc->db);

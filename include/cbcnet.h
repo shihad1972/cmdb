@@ -30,6 +30,7 @@
 # include <netdb.h>
 # include <arpa/inet.h>
 # include <netinet/in.h>
+# include <ailsacmdb.h>
 # define MAXDATASIZE     1048576    // Maximum buffer length
 
 extern const char *fed_tld;
@@ -67,7 +68,7 @@ int
 decode_http_header(FILE *rx, unsigned long int *len);
 
 int
-cbc_get_boot_files(cbc_config_s *cbc, char *os, char *ver, char *arch, char *vail);
+cbc_get_boot_files(ailsa_cmdb_s *cbc, char *os, char *ver, char *arch, char *vail);
 
 #endif /* __CBC_NET_H */
 

@@ -341,7 +341,7 @@ decode_http_header(FILE *rx, unsigned long int *len)
 }
 
 int
-cbc_get_boot_files(cbc_config_s *cmc, char *os, char *ver, char *arch, char *vail)
+cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail)
 {
 	int retval = 0;
 	int type = BOOT_FILES_MIRROR_DETAILS;
