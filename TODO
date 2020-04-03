@@ -10,6 +10,7 @@ Reworking the SQL code:
 27/02/2019
 Need to add a generic logging function, that can handle both console
 output and also logging to syslog.
+	*** Done: ailsa_syslog function does this ***
 
 09/11/2018
 Deleting SRV records is tricky; it seems to delete all SRV records
