@@ -39,6 +39,7 @@
 # include <sqlite3.h>
 #endif /*HAVE_SQLITE3 */
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "base_sql.h"
 
@@ -69,22 +70,45 @@ ailsa_mysql_query_with_checks(MYSQL *mycmdb, const char *query)
 }
 
 int
-ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query)
+ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const struct ailsa_sql_query_s argu, AILLIST *args)
 {
 	int retval = NONE;
-	MYSQL_STMT *stmt;
+	const char *query = argu.query;
+	MYSQL_STMT *stmt = NULL;
+	if (!(cmdb) || !(args))
+		return -1;
 
-	if (!(stmt = mysql_stmt_init(cmdb)))
-		report_error(MY_STATEMENT_FAIL, mysql_error(cmdb));
-	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
-	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0)
-		report_error(MY_BIND_FAIL, mysql_stmt_error(stmt));
-	if ((retval = mysql_stmt_execute(stmt)) != 0)
-		report_error(MY_STATEMENT_FAIL, mysql_stmt_error(stmt));
+	if (!(stmt = mysql_stmt_init(cmdb))) {
+		ailsa_syslog(LOG_ERR, "%s", mysql_error(cmdb));
+		retval = -1;
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0) {
+		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
+		retval = -1;
+		goto cleanup;
+	}
+	if ((retval = ailsa_bind_params_mysql(stmt, &my_bind, argu, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot bind paramaters for sql query");
+		retval = -1;
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0) {
+		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
+		retval = -1;
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_execute(stmt)) != 0) {
+		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
+		retval = -1;
+		goto cleanup;
+	}
 	retval = (int)mysql_stmt_affected_rows(stmt);
-	mysql_stmt_close(stmt);
-	return retval;
+	my_free(my_bind);
+	cleanup:
+		if (stmt)
+			mysql_stmt_close(stmt);
+		return retval;
 }
 
 void

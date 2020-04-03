@@ -101,7 +101,7 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->detail, SERVICE_LEN);
+	data->data->text = strndup(cm->detail, MAC_LEN);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_service_type_to_database");
 		goto cleanup;
@@ -621,7 +621,10 @@ cmdb_list_hardware_types(ailsa_cmdb_s *cc)
 				two = type->data;
 			else
 				return;
-			printf(" %s\t\t%s\n", one->data->text, two->data->text);
+			if (strlen(one->data->text) > 6)
+				printf(" %s\t%s\n", one->data->text, two->data->text);
+			else
+				printf(" %s\t\t%s\n", one->data->text, two->data->text);
 			class = type->next;
 		}
 	} else {

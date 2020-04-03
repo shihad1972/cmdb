@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -361,6 +362,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No logical volume name supplied\n");
 	else if (retval == NO_OPTION)
 		fprintf(stderr, "Partition option specified but no option supplied\n");
+	else if (retval == USER_INPUT_INVALID)
+		ailsa_syslog(LOG_ERR, "User input was not validated.");
 	else if (retval == CVERSION)
 		fprintf(stderr, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
@@ -412,14 +415,14 @@ display_cmdb_usage(void)
 	printf("Adding options:\n");
 	printf("For server (with -s; need to add -n for name and -m for vm_host (if required))\n");
 	printf("-V: Vendor\t-M: Make\t-O: Model\t-U: UUID\t-C: COID\n");
-	printf("For customer (with -u; need -n for name)\n");
+	printf("For customer (with -u; need -N for name)\n");
 	printf("-A: Address\t-T: City\t-Y: County\t-Z: Postcode\t-C: COID\n");
 	printf("For services (with -C COID for customer, -n name for server)\n");
 	printf("-D: Detail\t-L: URL\t\t[ -I service id | -S service ]\n");
 	printf("For service types\n");
 	printf("-D detail\t-S service\n");
 	printf("For hardware (with -n name to specify server)\n");
-	printf("-D: Detail\t-B: Device\t[ -I: hardware id | -H hardware class ]\n");
+	printf("-D: Detail\t-B: Device\t[ -I: hardware id | -H hardware description ]\n");
 	printf("For hardware types\n");
 	printf("-y: type\t-H Description\n");
 	printf("For Contact (with -i coid to specify customer)\n");

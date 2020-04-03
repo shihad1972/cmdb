@@ -217,12 +217,6 @@ int
 ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
-static int
-ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_sql_query_s argu, AILLIST *args);
-static int
-ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results);
-static int
-ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -412,13 +406,22 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 }
 
 int
-ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert)
+ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s insert, AILLIST *list)
 {
-	if (!(cmdb) || !(insert))
+	if (!(cmdb) || !(list))
 		return AILSA_NO_DATA;
-	int retval = 0;
+	int retval;
+	MYSQL sql;
+	MYSQL_BIND *bind = NULL;
+	const char *query = insert.query;
 
-	return retval;
+	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_run_mysql_stmt(&sql, bind, insert, list)) == 0)
+		ailsa_syslog(LOG_INFO, "No affected rows for %s", query);
+	else if (retval < 0)
+		ailsa_syslog(LOG_ERR, "Statement failed: %s", query);
+	ailsa_mysql_cleanup(&sql);
+	return 0;
 }
 
 static void
@@ -454,7 +457,7 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 	}
 }
 
-static int
+int
 ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_sql_query_s argument, AILLIST *args)
 {
 	if (!(stmt) || !(args))
@@ -483,7 +486,7 @@ ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_
 }
 
 
-static int
+int
 ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results)
 {
 	if (!(stmt) || !(results))
@@ -524,7 +527,7 @@ ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results)
 		return retval;
 }
 
-static int
+int
 ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields)
 {
 	if (!(bind) || !(data))

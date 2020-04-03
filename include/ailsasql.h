@@ -152,7 +152,16 @@ int
 ailsa_mysql_query_with_checks(MYSQL *mycmdb, const char *query);
 
 int
-ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const char *query);
+ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const struct ailsa_sql_query_s argu, AILLIST *args);
+
+int
+ailsa_bind_params_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, const struct ailsa_sql_query_s argu, AILLIST *args);
+
+int
+ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results);
+
+int
+ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields);
 
 void
 ailsa_mysql_cleanup(MYSQL *cmdb);

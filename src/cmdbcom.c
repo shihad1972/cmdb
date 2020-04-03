@@ -179,7 +179,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'Z')
 			comp->postcode = strndup(optarg, RANGE_S);
 		else if (opt == 'N')
-			comp->name = strndup(optarg, HOST_S);
+			comp->fullname = strndup(optarg, HOST_S);
 		else if (opt == 'P')
 			comp->phone = strndup(optarg, MAC_S);
 		else if (opt == 'E')
@@ -234,7 +234,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		}
 	} else if (comp->action == ADD_TO_DB) {
 		if (comp->type == CONTACT) {
-			if (!(comp->name))
+			if (!(comp->fullname))
 				retval = NO_CONT_NAME;
 			else if (!(comp->email))
 				retval = NO_EMAIL;
@@ -293,7 +293,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			else if (!(comp->service))
 				retval = NO_SERVICE;
 		} else if (comp->type == CUSTOMER) {
-			if (!(comp->name))
+			if (!(comp->fullname))
 				retval = NO_NAME;
 			else if (!(comp->coid))
 				retval = NO_COID;
@@ -363,6 +363,9 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp)
 	if (comp->name)
 		if (ailsa_validate_input(comp->name, NAME_REGEX) != 0)
 			return USER_INPUT_INVALID;
+	if (comp->fullname)
+		if (ailsa_validate_input(comp->fullname, CUSTOMER_REGEX) != 0)
+			return USER_INPUT_INVALID;
 	if (comp->address)
 		if (ailsa_validate_input(comp->address, ADDRESS_REGEX) != 0)
 			return USER_INPUT_INVALID;
@@ -378,7 +381,7 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp)
 		    (ailsa_validate_input(comp->detail, CUSTOMER_REGEX) != 0))
 			return USER_INPUT_INVALID;
 	if (comp->hclass)
-		if (ailsa_validate_input(comp->hclass, NAME_REGEX) != 0)
+		if (ailsa_validate_input(comp->hclass, CUSTOMER_REGEX) != 0)
 			return USER_INPUT_INVALID;
 	if (comp->url)
 		if (ailsa_validate_input(comp->url, URL_REGEX) != 0)
@@ -438,6 +441,7 @@ clean_cmdb_comm_line(cmdb_comm_line_s *list)
 	CLEAN_COMM_LIST(list, service);
 	CLEAN_COMM_LIST(list, uuid);
 	CLEAN_COMM_LIST(list, county);
+	CLEAN_COMM_LIST(list, fullname);
 	free(list);
 }
 

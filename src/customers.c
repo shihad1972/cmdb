@@ -63,7 +63,7 @@ cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	if (customer->total > 0) {
-		ailsa_syslog(LOG_INFO, "Customer with coid %s already in the database");
+		ailsa_syslog(LOG_INFO, "Customer with coid %s already in the database", cm->coid);
 		goto cleanup;
 	}
 	if ((retval = cmdb_populate_customer_details(cm, cc, customer)) != 0) {
@@ -134,8 +134,12 @@ cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "SQL Argument query returned %d", retval);
 		goto cleanup;
 	}
-	printf("Contacts for COID %s\n", cm->coid);
-	cmdb_display_contacts(results);
+	if (results->total > 0) {
+		printf("Contacts for COID %s\n", cm->coid);
+		cmdb_display_contacts(results);
+	} else {
+		ailsa_syslog(LOG_INFO, "COID %s has no contacts", cm->coid);
+	}
 	cleanup:
 		ailsa_list_destroy(results);
 		ailsa_list_destroy(args);
@@ -156,7 +160,7 @@ cmdb_display_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	data->data->text = strndup(cm->coid, SQL_TEXT_MAX);
 	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_contacts_for_customer");
+		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_customer");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, CUSTOMER_DETAILS_ON_COID, args, customer))) {
@@ -342,7 +346,7 @@ cmdb_populate_contact_details(cmdb_comm_line_s *cm, AILLIST *contacts, AILLIST *
 	AILELEM *elem;
 	ailsa_data_s *some;
 
-	data->data->text = strndup(cm->name, HOST_LEN);
+	data->data->text = strndup(cm->fullname, HOST_LEN);
 	if ((retval = ailsa_list_insert(contacts, data)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert name into contacts list");
 		return retval;
@@ -384,7 +388,7 @@ cmdb_populate_customer_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *
 	int retval;
 	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->name, HOST_LEN);
+	data->data->text = strndup(cm->fullname, HOST_LEN);
 	if ((retval = ailsa_list_insert(customer, data)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert customer name into list");
 		return retval;
