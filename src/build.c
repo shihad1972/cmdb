@@ -38,6 +38,7 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -1643,7 +1644,7 @@ get_kick_part_opts(cbc_config_s *cbc, cbc_comm_line_s *cml, char *mnt)
 		clean_dbdata_struct(data);
 		return opts;
 	}
-	opts = cmdb_malloc(HOST_S, "opts in get_kick_part_opts");
+	opts = ailsa_calloc(HOST_S, "opts in get_kick_part_opts");
 	snprintf(opts, HOST_S, "%s", data->fields.text);
 	list = data->next;
 	retval--;

@@ -54,7 +54,7 @@
 
 
 void
-fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
+fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc)
 {
 	snprintf(zone->name, RBUFF_S, "%s", domain);
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
@@ -69,7 +69,7 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc)
 }
 
 void
-copy_cbc_into_dnsa(dnsa_config_s *dc, cbc_config_s *cbc)
+copy_cbc_into_dnsa(ailsa_cmdb_s *dc, cbc_config_s *cbc)
 {
 	snprintf(dc->dbtype, RANGE_S, "%s", cbc->dbtype);
 	snprintf(dc->file, CONF_S, "%s", cbc->file);
@@ -86,12 +86,12 @@ int
 get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data)
 {
 	int retval = NONE;
-	size_t dclen = sizeof(dnsa_config_s);
+	size_t dclen = sizeof(ailsa_cmdb_s);
 	dnsa_s *dnsa;
-	dnsa_config_s *dc = NULL;
+	ailsa_cmdb_s *dc = NULL;
 
-	dc = cmdb_malloc(dclen, "dc in get_dns_ip_list");
-	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in get_dns_ip_list");
+	dc = ailsa_calloc(dclen, "dc in get_dns_ip_list");
+	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in get_dns_ip_list");
 	copy_cbc_into_dnsa(dc, cbt);
 	if ((retval = dnsa_run_query(dc, dnsa, ALL_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
@@ -147,16 +147,16 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	unsigned int a = dnsa_extended_search_args[RECORDS_ON_ZONE];
 	unsigned int f = dnsa_extended_search_fields[RECORDS_ON_ZONE];
 	unsigned int max = cmdb_get_max(a, f);
-	size_t dclen = sizeof(dnsa_config_s);
+	size_t dclen = sizeof(ailsa_cmdb_s);
 	dbdata_s *data;
-	dnsa_config_s *dc;
+	ailsa_cmdb_s *dc;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	record_row_s *rec;
 
-	dc = cmdb_malloc(dclen, "dc in check_for_build_ip_in_dns");
-	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in check_for_build_ip_in_dns");
-	zone = cmdb_malloc(sizeof(zone_info_s), "zone in check_for_build_ip_in_dns");
+	dc = ailsa_calloc(dclen, "dc in check_for_build_ip_in_dns");
+	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in check_for_build_ip_in_dns");
+	zone = ailsa_calloc(sizeof(zone_info_s), "zone in check_for_build_ip_in_dns");
 	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in check_for_build_ip_in_dns");
 	setup_dnsa_build_ip_structs(zone, dnsa, dc, cbt, rec);
@@ -182,13 +182,13 @@ check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 }
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, dnsa_config_s *dc, cbc_config_s *cbt, record_row_s *rec)
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, cbc_config_s *cbt, record_row_s *rec)
 {
 	init_zone_struct(zone);
 	init_record_struct(rec);
 	dnsa->zones = zone;
 	dnsa->records = rec;
-	dnsa_init_config_values(dc);
+	parse_cmdb_config(dc);
 	copy_cbc_into_dnsa(dc, cbt);
 }
 
@@ -237,7 +237,7 @@ fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *
 }
 
 int
-add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa)
+add_build_host_to_dns(ailsa_cmdb_s *dc, dnsa_s *dnsa)
 {
 	int retval = NONE;
 	char *host = dnsa->records->host, *zone = dnsa->zones->name;
@@ -267,15 +267,15 @@ write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
 {
 	char config[NAME_S], *buff;
 	int retval = NONE;
-	size_t dclen = sizeof(dnsa_config_s);
-	dnsa_config_s *dc;
+	size_t dclen = sizeof(ailsa_cmdb_s);
+	ailsa_cmdb_s *dc;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 
 	buff = config;
 	get_config_file_location(buff);
-	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in write_zone_and_reload_nameserver");
-	dc = cmdb_malloc(dclen, "dc in write_zone_and_reload_nameserver");
+	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in write_zone_and_reload_nameserver");
+	dc = ailsa_calloc(dclen, "dc in write_zone_and_reload_nameserver");
 	if ((retval = parse_dnsa_config_file(dc, config)) != 0) {
 		fprintf(stderr, "Unable to parse config file??\n");
 		goto cleanup;
@@ -314,11 +314,11 @@ remove_ip_from_dns(cbc_config_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 	unsigned long int bip, server_id;
 	unsigned int max;
 	uint32_t ip_addr;
-	dnsa_config_s *dnsa = NULL;
+	ailsa_cmdb_s *dnsa = NULL;
 	dbdata_s *dns = NULL;
 
 	server_id = data->args.number;	// save server_id so we can use this data struct.
-	dnsa = cmdb_malloc(sizeof(dnsa_config_s), "dnsa in remove_ip_from_dns");
+	dnsa = ailsa_calloc(sizeof(ailsa_cmdb_s), "dnsa in remove_ip_from_dns");
 	type = RECORD_ID_ON_IP_DEST_DOM;
 	max = cmdb_get_max(dnsa_extended_search_fields[type], dnsa_extended_search_args[type]);
 	init_multi_dbdata_struct(&dns, max);

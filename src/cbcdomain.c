@@ -66,7 +66,7 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcdomain main");
 	if (!(cdcl = malloc(sizeof(cbcdomain_comm_line_s))))
 		report_error(MALLOC_FAIL, "cdcl in cbcdomain main");
-	config = cmdb_malloc(CONF_S, "config in main");
+	config = ailsa_calloc(CONF_S, "config in main");
 	get_config_file_location(config);
 	init_cbcdomain_config(cmc, cdcl);
 	if ((retval = parse_cbcdomain_comm_line(argc, argv, cdcl)) != 0) {
@@ -305,23 +305,19 @@ add_cbc_build_domain(cbc_config_s *cbs, cbcdomain_comm_line_s *cdl)
 	fill_bdom_values(bdom, cdl);
 	check_bdom_overlap(cbs, bdom);
 #ifdef HAVE_DNSA
-	size_t dclen = sizeof(dnsa_config_s);
-	dnsa_config_s *dc;
+	size_t dclen = sizeof(ailsa_cmdb_s);
+	ailsa_cmdb_s *dc;
 	dnsa_s *dnsa;
 	dbdata_s *user;
 	zone_info_s *zone;
 
-	dc = cmdb_malloc(dclen, "dc in add_cbc_build_domain");
-	dnsa = cmdb_malloc(sizeof(dnsa_s), "dnsa in add_cbc_build_domain");
-	zone = cmdb_malloc(sizeof(zone_info_s), "zone in add_cbc_build_domain");
+	dc = ailsa_calloc(dclen, "dc in add_cbc_build_domain");
+	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_cbc_build_domain");
+	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_cbc_build_domain");
 	init_multi_dbdata_struct(&user, 1);
-	dnsa_init_config_values(dc);
 	init_zone_struct(zone);
 	dnsa->zones = zone;
-	if ((retval = parse_dnsa_config_file(dc, cdl->config)) != 0) {
-		fprintf(stderr, "Error in config file %s\n", cdl->config);
-		goto dnsa_cleanup;
-	}
+	parse_cmdb_config(dc);
 	fill_cbc_fwd_zone(zone, bdom->domain, dc);
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
 		printf("Zone %s already in DNS\n", bdom->domain);

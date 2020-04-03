@@ -235,7 +235,7 @@ const unsigned int dnsa_delete_arg_type[][1] = {
 };
 
 int
-dnsa_run_query(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_query(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -254,7 +254,7 @@ dnsa_run_query(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_multiple_query(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_multiple_query(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -273,7 +273,7 @@ dnsa_run_multiple_query(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_search(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_search(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval = 0;
 
@@ -293,7 +293,7 @@ dnsa_run_search(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_extended_search(dnsa_config_s *config, dbdata_s *base, int type)
+dnsa_run_extended_search(ailsa_cmdb_s *config, dbdata_s *base, int type)
 {
 	int retval = 0;
 
@@ -313,7 +313,7 @@ dnsa_run_extended_search(dnsa_config_s *config, dbdata_s *base, int type)
 }
 
 int
-dnsa_run_insert(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_insert(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -332,7 +332,7 @@ dnsa_run_insert(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_update(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_update(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -351,7 +351,7 @@ dnsa_run_update(dnsa_config_s *config, dbdata_s *data, int type)
 }
 
 int
-dnsa_run_delete(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_delete(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	int retval = 0;
 	if ((strncmp(config->dbtype, "none", RANGE_S) == 0))
@@ -430,7 +430,7 @@ dnsa_get_search(int type, size_t *fields, size_t *args, void **input, void **out
 
 #ifdef HAVE_MYSQL
 void
-dnsa_mysql_init(dnsa_config_s *dc, MYSQL *dnsa_mysql)
+dnsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *dnsa_mysql)
 {
 	const char *unix_socket;
 
@@ -446,7 +446,7 @@ dnsa_mysql_init(dnsa_config_s *dc, MYSQL *dnsa_mysql)
 }
 
 int
-dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_query_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_RES *dnsa_res;
@@ -476,7 +476,7 @@ dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_multiple_query_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -804,7 +804,7 @@ dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *base)
 }
 
 int
-dnsa_run_search_mysql(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_search_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -862,7 +862,7 @@ and int for result, which is OK when searching on name and returning id
 }
 
 int
-dnsa_run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type)
+dnsa_run_extended_search_mysql(ailsa_cmdb_s *config, dbdata_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_STMT *dnsa_stmt;
@@ -912,7 +912,7 @@ dnsa_run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type)
 }
 
 int
-dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_insert_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_insert_fields[type]];
@@ -933,7 +933,7 @@ dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_update_mysql(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_update_args[type]];
@@ -957,7 +957,7 @@ dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type)
 }
 
 int
-dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_delete_mysql(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	MYSQL dnsa;
 	MYSQL_BIND my_bind[dnsa_delete_args[type]];
@@ -1224,7 +1224,7 @@ dnsa_setup_insert_mysql_bind_buff_glue(void **input, dnsa_s *base, unsigned int 
 #ifdef HAVE_SQLITE3
 
 int
-dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_query_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1246,7 +1246,7 @@ dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_multiple_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_multiple_query_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	int retval;
 	retval = NONE;
@@ -1620,7 +1620,7 @@ dnsa_store_glue_sqlite(sqlite3_stmt *state, dnsa_s *base)
 }
 
 int
-dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_search_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1658,7 +1658,7 @@ dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
+dnsa_run_extended_search_sqlite(ailsa_cmdb_s *config, dbdata_s *base, int type)
 {
 	const char *query, *file;
 	int i;
@@ -1685,7 +1685,7 @@ dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type)
 }
 
 int
-dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
+dnsa_run_insert_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1711,7 +1711,7 @@ dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type)
 }
 
 int
-dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_update_sqlite(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	const char *query, *file;
 	int retval;
@@ -1756,7 +1756,7 @@ dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
 }
 
 int
-dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type)
+dnsa_run_delete_sqlite(ailsa_cmdb_s *config, dbdata_s *data, int type)
 {
 	const char *query, *file;
 	int retval;

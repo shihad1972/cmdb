@@ -34,24 +34,19 @@
 int main(int argc, char *argv[])
 {
 	dnsa_comm_line_s *cm;
-	dnsa_config_s *dc;
+	ailsa_cmdb_s *dc;
 	char *domain = NULL;
 	int retval;
 
-	cm = cmdb_malloc(sizeof(dnsa_comm_line_s), "cm in main");
+	cm = ailsa_calloc(sizeof(dnsa_comm_line_s), "cm in main");
 	dnsa_init_comm_line_struct(cm);
 	if ((retval = parse_dnsa_command_line(argc, argv, cm)) != 0) {
 		cmdb_free(cm, sizeof(dnsa_comm_line_s));
 		display_command_line_error(retval, argv[0]);
 	}
-	dc = cmdb_malloc(sizeof(dnsa_config_s), "dc in main");
-	dnsa_init_config_values(dc);
-	get_config_file_location(cm->config);
-	if ((retval = parse_dnsa_config_file(dc, cm->config)) != 0) {
-		parse_dnsa_config_error(retval);
-		goto cleanup;
-	}
-	domain = cmdb_malloc(CONF_S, "domain in main");
+	dc = ailsa_calloc(sizeof(ailsa_cmdb_s), "dc in main");
+	parse_cmdb_config(dc);
+	domain = ailsa_calloc(CONF_S, "domain in main");
 	if (!(strncpy(domain, cm->domain, CONF_S - 1)))
 		goto cleanup;
 	if (cm->type == FORWARD_ZONE) {
@@ -115,6 +110,6 @@ int main(int argc, char *argv[])
 		if (domain)
 			cmdb_free(domain, CONF_S);
 		cmdb_free(cm, sizeof(dnsa_comm_line_s));
-		cmdb_free(dc, sizeof(dnsa_config_s));
+		cmdb_free(dc, sizeof(ailsa_cmdb_s));
 		exit(retval);
 }

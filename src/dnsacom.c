@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <syslog.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
 #endif // HAVE_WORDEXP_H
@@ -234,7 +235,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 }
 
 int
-parse_dnsa_config_file(dnsa_config_s *dc, char *config)
+parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config)
 {
 	int retval = 0;
 	FILE *cnf;
@@ -273,7 +274,7 @@ parse_dnsa_config_file(dnsa_config_s *dc, char *config)
 }
 
 int
-read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf)
+read_dnsa_config_values(ailsa_cmdb_s *dc, FILE *cnf)
 {
 	char buff[RBUFF_S] = "";
 	char port[RANGE_S] = "";
@@ -490,7 +491,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 	ilen = strlen(regexps[IP_REGEX]);
 	if ((ilen + dlen + 4) > RBUFF_S)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
-	regex = cmdb_malloc(RBUFF_S, "regex in validate_glue_comm_line");
+	regex = ailsa_calloc(RBUFF_S, "regex in validate_glue_comm_line");
 	if (strchr(comm->glue_ip, ',')) {
 		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
@@ -634,7 +635,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 }
 
 int
-set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
+set_slave_name_servers(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
 {
 	int retval = 0;
 

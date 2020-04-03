@@ -49,9 +49,9 @@ int
 main(int argc, char *argv[])
 {
 	int retval = 0;
-	char *config = cmdb_malloc(CONF_S, "config in main");
-	cbc_syss_s *scr = cmdb_malloc(sizeof(cbc_syss_s), "scr in main");
-	cbc_config_s *cbc = cmdb_malloc(sizeof(cbc_config_s), "cbc in main");
+	char *config = ailsa_calloc(CONF_S, "config in main");
+	cbc_syss_s *scr = ailsa_calloc(sizeof(cbc_syss_s), "scr in main");
+	cbc_config_s *cbc = ailsa_calloc(sizeof(cbc_config_s), "cbc in main");
 
 	init_cbc_config_values(cbc);
 	get_config_file_location(config);

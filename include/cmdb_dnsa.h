@@ -46,9 +46,9 @@ int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
 /* Grab config values from file */
 int
-parse_dnsa_config_file(dnsa_config_s *dc, char *config);
+parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config);
 int
-read_dnsa_config_values(dnsa_config_s *dc, FILE *cnf);
+read_dnsa_config_values(ailsa_cmdb_s *dc, FILE *cnf);
 void
 parse_dnsa_config_error(int error);
 int
@@ -61,23 +61,23 @@ void
 validate_rev_comm_line(dnsa_comm_line_s *comm);
 /* Zone action Functions */
 int
-add_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-add_rev_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-add_glue_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-commit_fwd_zones(dnsa_config_s *dc, char *zone);
+commit_fwd_zones(ailsa_cmdb_s *dc, char *zone);
 int
-commit_rev_zones(dnsa_config_s *dc, char *name);
+commit_rev_zones(ailsa_cmdb_s *dc, char *name);
 int
-add_host(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-display_multi_a_records(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+display_multi_a_records(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-mark_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-build_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 get_correct_rev_zone_and_preferred_records(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 /* Added 06/03/2013 */
@@ -94,17 +94,17 @@ get_fqdn_for_record_dest(dnsa_s *dnsa, record_row_s *fwd, char *fqdn);
 int
 get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
-get_record_id_and_delete(dnsa_config_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm);
+get_record_id_and_delete(ailsa_cmdb_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
-delete_reverse_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-delete_glue_zone (dnsa_config_s *dc, dnsa_comm_line_s *cm);
+delete_glue_zone (ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End addition 06/03/2013 */
 /* Added 07/03/2013 */
 int
 check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm);
 int
-delete_fwd_zone(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 void
 split_fwd_record_list(zone_info_s *zone, record_row_s *list, record_row_s **fwd, record_row_s **other);
 /* End addition 07/03/2013 */
@@ -116,11 +116,11 @@ int
 get_rev_records_for_range(rev_record_row_s **rev, rev_zone_info_s *zone);
 /* Zone display functions */
 void
-list_zones(dnsa_config_s *dc);
+list_zones(ailsa_cmdb_s *dc);
 void
-list_rev_zones(dnsa_config_s *dc);
+list_rev_zones(ailsa_cmdb_s *dc);
 void
-display_zone(char *domain, dnsa_config_s *dc);
+display_zone(char *domain, ailsa_cmdb_s *dc);
 void
 print_zone(dnsa_s *dnsa, char *domain);
 void
@@ -128,22 +128,22 @@ print_record(record_row_s *rec, char *zname);
 /*int
 get_port_number(record_row_s *rec, char *name, unsigned short int *port); */
 void
-display_rev_zone(char *domain, dnsa_config_s *dc);
+display_rev_zone(char *domain, ailsa_cmdb_s *dc);
 void
 print_rev_zone(dnsa_s *dnsa, char *domain);
 void
-print_multiple_a_records(dnsa_config_s *dc, dbdata_s *data, dnsa_s *dnsa);
+print_multiple_a_records(ailsa_cmdb_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int
-get_preferred_a_record(dnsa_config_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
+get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
-list_glue_zones(dnsa_config_s *dc);
+list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 unsigned long int
 get_zone_serial(void);
 int
-check_for_zone_in_db(dnsa_config_s *dc, dnsa_s *dnsa, short int type);
+check_for_zone_in_db(ailsa_cmdb_s *dc, dnsa_s *dnsa, short int type);
 void
 select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
@@ -168,17 +168,17 @@ void
 add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo);
 /* Added 05/03/2013 */
 int
-delete_preferred_a(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
-delete_record(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End add 05/03/2013 */
 /* Forward zone functions */
 int
-check_zone(char *domain, dnsa_config_s *dc);
+check_zone(char *domain, ailsa_cmdb_s *dc);
 int
-create_and_write_fwd_zone(dnsa_s *dnsa, dnsa_config_s *dc, zone_info_s *zone);
+create_and_write_fwd_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, zone_info_s *zone);
 int
-create_fwd_config(dnsa_config_s *dc, zone_info_s *zone, string_len_s *config);
+create_fwd_config(ailsa_cmdb_s *dc, zone_info_s *zone, string_len_s *config);
 void
 create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, string_len_s *zonefile);
 void
@@ -186,32 +186,32 @@ add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zo
 void
 check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent, dnsa_s *dnsa);
 int
-create_and_write_fwd_config(dnsa_config_s *dc, dnsa_s *dnsa);
+create_and_write_fwd_config(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 void
-check_for_updated_fwd_zone(dnsa_config_s *dc, zone_info_s *zone);
+check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone);
 int
-validate_fwd_zone(dnsa_config_s *dc, zone_info_s *zone, dnsa_s *dnsa);
+validate_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone, dnsa_s *dnsa);
 void
-fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc);
+fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
 void 
 print_rev_zone_info(rev_zone_info_s *zone);
 int
-create_and_write_rev_zone(dnsa_s *dnsa, dnsa_config_s *dc, rev_zone_info_s *zone);
+create_and_write_rev_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, rev_zone_info_s *zone);
 void
 create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile);
 void
 add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
 int
-create_rev_config(dnsa_config_s *dc, rev_zone_info_s *zone, string_len_s *config);
+create_rev_config(ailsa_cmdb_s *dc, rev_zone_info_s *zone, string_len_s *config);
 void
-fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, dnsa_config_s *dc);
+fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 int
-validate_rev_zone(dnsa_config_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
+validate_rev_zone(ailsa_cmdb_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
 int
-create_and_write_rev_config(dnsa_config_s *dc, dnsa_s *dnsa);
+create_and_write_rev_config(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 int
-set_slave_name_servers(dnsa_config_s *dc, dnsa_comm_line_s *cm, dbdata_s *data);
+set_slave_name_servers(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dbdata_s *data);
 /* 04/03/2013 functions add */
 void
 trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);
@@ -222,7 +222,7 @@ rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev);
 void
 insert_into_rev_del_list(rev_record_row_s *record, rev_record_row_s **rev);
 int
-add_cname_to_root_domain(dnsa_config_s *dc, dnsa_comm_line_s *cm);
+add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* Updated / modified functions */
 int
 rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev);
@@ -241,7 +241,7 @@ split_glue_ip(char *pri_ip, glue_zone_info_s *glue);
 void
 setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue);
 int
-get_glue_zone_parent(dnsa_config_s *dc, dnsa_s *dnsa);
+get_glue_zone_parent(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 void
 check_glue_zone_input(glue_zone_info_s *glue);
 void

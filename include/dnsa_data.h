@@ -22,6 +22,7 @@
 
 #ifndef __DNSA_DATA_H__
 # define __DNSA_DATA_H__
+# include <ailsacmdb.h>
 # include "base_sql.h"
 # include "cmdb.h"
 
@@ -41,34 +42,6 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	char glue_ip[MAC_S];
 	char glue_ns[TBUFF_S];
 } dnsa_comm_line_s;
-
-typedef struct dnsa_config_s { /* Hold DNSA configuration values */
-	char dbtype[RANGE_S];
-	char db[CONF_S];
-	char file[CONF_S];
-	char user[CONF_S];
-	char pass[CONF_S];
-	char host[CONF_S];
-	char dir[CONF_S];
-	char bind[CONF_S];
-	char dnsa[CONF_S];
-	char rev[CONF_S];
-	char rndc[CONF_S];
-	char chkz[CONF_S];
-	char chkc[CONF_S];
-	char socket[CONF_S];
-	char hostmaster[RBUFF_S];
-	char prins[RBUFF_S];
-	char secns[RBUFF_S];
-	char pridns[MAC_S];
-	char secdns[MAC_S];
-	unsigned long int refresh;
-	unsigned long int retry;
-	unsigned long int expire;
-	unsigned long int ttl;
-	unsigned int port;
-	unsigned long int cliflag;
-} dnsa_config_s;
 
 typedef struct record_row_s { /* Hold dns record */
 	struct record_row_s *next;
@@ -189,7 +162,7 @@ typedef struct zone_file_s {
 } zone_file_s;
 
 typedef struct dnsa_config_and_reverse_s {
-	dnsa_config_s *dc;
+	ailsa_cmdb_s *dc;
 	rev_record_row_s *record;
 	rev_zone_info_s *zone;
 } dnsa_config_and_reverse_s;
@@ -233,10 +206,10 @@ dnsa_clean_prefer(preferred_a_s *list);
 void
 dnsa_clean_glue(glue_zone_info_s *glu);
 void
-dnsa_init_config_values(dnsa_config_s *dc);
+dnsa_init_config_values(ailsa_cmdb_s *dc);
 void
 dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl);
 void
-dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl);
+dnsa_init_all_config(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl);
 
 #endif // __DNSA_DATA_H__

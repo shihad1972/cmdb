@@ -50,43 +50,43 @@ extern const int dnsa_mysql_inserts[][15];
 # endif /* HAVE_MYSQL */
 
 int
-dnsa_run_query(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_query(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_multiple_query(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_multiple_query(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
 dnsa_get_query(int type, const char **query, unsigned int *fields);
 void
 dnsa_get_search(int type, size_t *fields, size_t *args, void **input, void **ouput, dnsa_s *base);
 int
-dnsa_run_search(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_search(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_extended_search(dnsa_config_s *config, dbdata_s *base, int type);
+dnsa_run_extended_search(ailsa_cmdb_s *config, dbdata_s *base, int type);
 int
-dnsa_run_insert(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_insert(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_update(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_update(ailsa_cmdb_s *config, dbdata_s *data, int type);
 int
-dnsa_run_delete(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_delete(ailsa_cmdb_s *config, dbdata_s *data, int type);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 
 void
-dnsa_mysql_init(dnsa_config_s *dc, MYSQL *cmdb_mysql);
+dnsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cmdb_mysql);
 int
-dnsa_run_query_mysql(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_query_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_multiple_query_mysql(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_multiple_query_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_insert_mysql(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_insert_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_search_mysql(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_search_mysql(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_extended_search_mysql(dnsa_config_s *config, dbdata_s *base, int type);
+dnsa_run_extended_search_mysql(ailsa_cmdb_s *config, dbdata_s *base, int type);
 int
-dnsa_run_update_mysql(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_update_mysql(ailsa_cmdb_s *config, dbdata_s *data, int type);
 int
-dnsa_run_delete_mysql(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_delete_mysql(ailsa_cmdb_s *config, dbdata_s *data, int type);
 int
 dnsa_setup_insert_mysql_bind(MYSQL_BIND *bind, unsigned int i, int type, dnsa_s *base);
 void
@@ -132,19 +132,19 @@ dnsa_store_glue_mysql(MYSQL_ROW row, dnsa_s *dnsa);
 #  include <sqlite3.h>
 
 int
-dnsa_run_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_query_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_multiple_query_sqlite(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_multiple_query_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_insert_sqlite(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_insert_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_search_sqlite(dnsa_config_s *config, dnsa_s *base, int type);
+dnsa_run_search_sqlite(ailsa_cmdb_s *config, dnsa_s *base, int type);
 int
-dnsa_run_extended_search_sqlite(dnsa_config_s *config, dbdata_s *base, int type);
+dnsa_run_extended_search_sqlite(ailsa_cmdb_s *config, dbdata_s *base, int type);
 int
-dnsa_run_update_sqlite(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_update_sqlite(ailsa_cmdb_s *config, dbdata_s *data, int type);
 int
-dnsa_run_delete_sqlite(dnsa_config_s *config, dbdata_s *data, int type);
+dnsa_run_delete_sqlite(ailsa_cmdb_s *config, dbdata_s *data, int type);
 int
 dnsa_setup_insert_sqlite_bind(sqlite3_stmt *state, dnsa_s *base, int type);
 int

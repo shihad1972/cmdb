@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 	ckc_config_s *ckc;
 
 	retval = 0;
-	ckc = cmdb_malloc(sizeof (ckc_config_s), "ckc in main()");
+	ckc = ailsa_calloc(sizeof (ckc_config_s), "ckc in main()");
 	if (argc > 1)
 		if (parse_ckc_command_line(ckc, argc, argv) != 0)
 			fprintf(stderr, "Problem with command line options\n");
@@ -179,7 +179,7 @@ ckc_build_package_list(ckc_package_s **list, ckc_config_s *ckc)
 		*tmp = '\0';
 		tmp++;
 	}
-	new = cmdb_malloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
+	new = ailsa_calloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
 	*list = new;
 	new->package = strndup(line, strlen(line));
 	line = tmp;
@@ -187,7 +187,7 @@ ckc_build_package_list(ckc_package_s **list, ckc_config_s *ckc)
 		while ((tmp = strchr(line, ','))) {
 			*tmp = '\0';
 			tmp++;
-			new = cmdb_malloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
+			new = ailsa_calloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
 			new->package = strndup(line, strlen(line));
 			pack = *list;
 			while (pack->next)
@@ -195,7 +195,7 @@ ckc_build_package_list(ckc_package_s **list, ckc_config_s *ckc)
 			pack->next = new;
 			line = tmp;
 		}
-		new = cmdb_malloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
+		new = ailsa_calloc(sizeof(ckc_package_s), "new in ckc_build_package_list");
 		new->package = strndup(line, strlen(line));
 		pack = *list;
 		while (pack->next)

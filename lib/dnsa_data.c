@@ -40,23 +40,21 @@ init_dnsa_struct(dnsa_s *dnsa)
 }
 
 void
-dnsa_init_all_config(dnsa_config_s *dc, dnsa_comm_line_s *dcl)
+dnsa_init_all_config(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 {
 	dnsa_init_config_values(dc);
 	dnsa_init_comm_line_struct(dcl);
 }
 
 void
-dnsa_init_config_values(dnsa_config_s *dc)
+dnsa_init_config_values(ailsa_cmdb_s *dc)
 {
-	memset(dc, 0, sizeof(dnsa_config_s));
-	sprintf(dc->file, "/var/lib/cmdb/cmdb.sql");
-	sprintf(dc->dbtype, "sqlite");
-	sprintf(dc->db, "bind");
-	sprintf(dc->user, "root");
-	sprintf(dc->host, "localhost");
-	sprintf(dc->pass, "%s", "");
-	sprintf(dc->dir, "/var/named/");
+	memset(dc, 0, sizeof(ailsa_cmdb_s));
+	dc->file = strdup("/var/lib/cmdb/cmdb.sql");
+	dc->dbtype = strdup("sqlite");
+	dc->db = strdup("bind");
+	dc->user = strdup("root");
+	dc->dir = strdup("/var/named/");
 	sprintf(dc->bind, "/var/named/");
 	sprintf(dc->dnsa, "dnsa.conf");
 	sprintf(dc->rev, "dnsa-rev.conf");

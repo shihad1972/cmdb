@@ -119,7 +119,7 @@ main (int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcos main");
 	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
 		report_error(MALLOC_FAIL, "cocl in cbcos main");
-	config = cmdb_malloc(CONF_S, "config in main");
+	config = ailsa_calloc(CONF_S, "config in main");
 	get_config_file_location(config);
 	init_cbcos_config(cmc, cocl);
 	memset(error, 0, URL_S);
@@ -569,69 +569,8 @@ copy_new_build_os(cbc_config_s *cbc, uli_t *id)
 		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
 		return;
 	}
-//	copy_locale_for_os(cbc, id);
 	copy_packages_for_os(cbc, id);
 }
-/*
-static void
-copy_locale_for_os(cbc_config_s *cbc, uli_t *id)
-{
-	int retval = 0, query = LOCALE_DETAILS_ON_OS_ID, i = 0;
-	unsigned int max;
-	dbdata_s *data, *dlist;
-	cbc_s *base;
-	cbc_locale_s *loc, *llist = NULL, *next;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number =  id[2];
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		fprintf(stderr, "No locale for OS??\n");
-		clean_dbdata_struct(data);
-		return;
-	}
-	dlist = data;
-	if (check_data_length(dlist, max) != 0) {
-		fprintf(stderr, "dbdata count wrong in copy_locale_for_os");
-		clean_dbdata_struct(data);
-		return;
-	}
-	while (dlist) {
-		loc = cmdb_malloc(sizeof(cbc_locale_s), "loc in copy_local_for_os");
-		init_locale(loc);
-		loc->os_id = id[0];
-		loc->bt_id = id[1];
-		snprintf(loc->locale, MAC_S, "%s", dlist->fields.text);
-		snprintf(loc->country, RANGE_S, "%s", dlist->next->fields.text);
-		snprintf(loc->language, RANGE_S, "%s", dlist->next->next->fields.text);
-		snprintf(loc->keymap, RANGE_S, "%s", dlist->next->next->next->fields.text);
-		snprintf(loc->timezone, HOST_S, "%s", dlist->next->next->next->next->fields.text);
-		loc->cuser = loc->muser = (unsigned long int)getuid();
-		if (!(llist)) {
-			llist = loc;
-		} else {
-			next = llist;
-			while (next->next)
-				next = next->next;
-			next->next = loc;
-		}
-		dlist = move_down_list_data(dlist, max);
-	}
-	clean_dbdata_struct(data);
-	initialise_cbc_s(&base);
-	loc = llist;
-	while (loc) {
-		base->locale = loc;
-		if ((retval = cbc_run_insert(cbc, base, LOCALES)) != 0)
-			fprintf(stderr, "Locale not inserted!\n");
-		else
-			i++;
-		loc = loc->next;
-	}
-	printf("%d locale(s) inserted for new OS\n", i);
-	base->locale = llist;
-	clean_cbc_struct(base);
-} */
 
 static void
 copy_packages_for_os(cbc_config_s *cbc, uli_t *id)

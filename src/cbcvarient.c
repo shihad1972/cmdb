@@ -137,7 +137,7 @@ main(int argc, char *argv[])
 		report_error(MALLOC_FAIL, "cmc in cbcvarient main");
 	if (!(cvcl = malloc(sizeof(cbcvari_comm_line_s))))
 		report_error(MALLOC_FAIL, "cvcl in cbcvarient main");
-	config = cmdb_malloc(CONF_S, "config in main");
+	config = ailsa_calloc(CONF_S, "config in main");
 	get_config_file_location(config);
 	init_cbcvari_config(cmc, cvcl);
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
@@ -662,7 +662,7 @@ copy_packages_from_base_varient(cbc_config_s *cbc, char *varient)
 	cbc_s *base;
 	cbc_package_s *pack;
 
-	bvar = cmdb_malloc(COMM_S, "bvar in copy_packages_from_base_varient");
+	bvar = ailsa_calloc(COMM_S, "bvar in copy_packages_from_base_varient");
 	snprintf(bvar, COMM_S, "base");
 	if ((retval = get_varient_id(cbc, bvar, &bvid)) != 0) {
 		fprintf(stderr, "Cannot find base varient\n");
@@ -901,7 +901,7 @@ build_package_list(cbc_config_s *cbc, unsigned long int *os, int nos, char *pack
 			osid++;
 			continue;
 		}
-		tmp = cmdb_malloc(sizeof(cbc_package_s), "tmp in build_package_list");
+		tmp = ailsa_calloc(sizeof(cbc_package_s), "tmp in build_package_list");
 		init_package(tmp);
 		if (package) {
 			while (list->next)

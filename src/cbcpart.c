@@ -149,9 +149,9 @@ main (int argc, char *argv[])
 	cbc_config_s *cmc;
 	cbcpart_comm_line_s *cpl;
 	
-	cmc = cmdb_malloc(sizeof(cbc_config_s), "main");
-	cpl = cmdb_malloc(sizeof(cbcpart_comm_line_s), "main");
-	config = cmdb_malloc(CONF_S, "config in main");
+	cmc = ailsa_calloc(sizeof(cbc_config_s), "main");
+	cpl = ailsa_calloc(sizeof(cbcpart_comm_line_s), "main");
+	config = ailsa_calloc(CONF_S, "config in main");
 	get_config_file_location(config);
 	init_cbcpart_config(cmc, cpl);
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
@@ -277,7 +277,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'o') {
 			cpl->type = OPTION;
 		} else if (opt == 'f') {
-			cpl->fs = cmdb_malloc(RANGE_S, errmsg);
+			cpl->fs = ailsa_calloc(RANGE_S, errmsg);
 			snprintf(cpl->fs, RANGE_S, "%s", optarg);
 		}
 		else if (opt == 'g') {
@@ -285,16 +285,16 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 				fprintf(stderr, "LVM not set before logvol\n");
 				return DISPLAY_USAGE;
 			}
-			cpl->log_vol = cmdb_malloc(MAC_S, errmsg);
+			cpl->log_vol = ailsa_calloc(MAC_S, errmsg);
 			snprintf(cpl->log_vol, MAC_S, "%s", optarg);
 		} else if (opt == 'n') {
-			cpl->scheme = cmdb_malloc(CONF_S, errmsg);
+			cpl->scheme = ailsa_calloc(CONF_S, errmsg);
 			snprintf(cpl->scheme, CONF_S, "%s", optarg);
 		} else if (opt == 'b') {
-			cpl->option = cmdb_malloc(CONF_S, errmsg);
+			cpl->option = ailsa_calloc(CONF_S, errmsg);
 			snprintf(cpl->option, CONF_S, "%s", optarg);
 		} else if (opt == 't') {
-			cpl->partition = cmdb_malloc(RBUFF_S, errmsg);
+			cpl->partition = ailsa_calloc(RBUFF_S, errmsg);
 			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
@@ -445,7 +445,7 @@ display_full_seed_scheme(cbc_config_s *cbc, cbcpart_comm_line_s *cpl)
 		free(base);
 		return retval;
 	}
-	opt = cmdb_malloc(RBUFF_S, "display_full_seed_scheme");
+	opt = ailsa_calloc(RBUFF_S, "display_full_seed_scheme");
 	seed = base->sscheme;
 	while (seed) {
 		part = base->dpart;
@@ -716,7 +716,7 @@ cbcpart_add_part_option(cbc_config_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl
 	if (get_partition_id(cbc, cpl->scheme, cpl->partition, &(opt->def_part_id)) != 0)
 		return;
 	opt->def_scheme_id = cpl->scheme_id;
-	opt->option = cmdb_malloc(MAC_S, "cbcpart_add_part_option");
+	opt->option = ailsa_calloc(MAC_S, "cbcpart_add_part_option");
 	snprintf(opt->option, MAC_S, "%s", cpl->option);
 	opt->cuser = opt->muser = (unsigned long int)getuid();
 	if (cbc_run_insert(cbc, base, PARTOPTS) != 0)

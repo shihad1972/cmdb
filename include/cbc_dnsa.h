@@ -38,10 +38,10 @@
 #  include "build.h"
 
 void
-fill_cbc_fwd_zone(zone_info_s *zone, char *domain, dnsa_config_s *dc);
+fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc);
 
 void
-copy_cbc_into_dnsa(dnsa_config_s *dc, cbc_config_s *cbc);
+copy_cbc_into_dnsa(ailsa_cmdb_s *dc, cbc_config_s *cbc);
 
 int
 get_dns_ip_list(cbc_config_s *cbt, uli_t *ip, dbdata_s *data);
@@ -53,7 +53,7 @@ int
 check_for_build_ip_in_dns(cbc_config_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, dnsa_config_s *dc, cbc_config_s *cbt, record_row_s *rec);
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, cbc_config_s *cbt, record_row_s *rec);
 
 void
 fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *cml, cbc_s *cbc);
@@ -62,7 +62,7 @@ int
 do_build_ip_dns_check(cbc_build_ip_s *bip, dbdata_s *data);
 
 int
-add_build_host_to_dns(dnsa_config_s *dc, dnsa_s *dnsa);
+add_build_host_to_dns(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 
 void
 write_zone_and_reload_nameserver(cbc_comm_line_s *cml);

@@ -84,8 +84,8 @@ main(int argc, char *argv[])
 {
 	char conf[CONF_S];
 	int retval = 0;
-	locale_comm_line_s *cl = cmdb_malloc(sizeof(locale_comm_line_s), "cl in main");
-	cbc_config_s *ccs = cmdb_malloc(sizeof(cbc_config_s), "ccs in main");
+	locale_comm_line_s *cl = ailsa_calloc(sizeof(locale_comm_line_s), "cl in main");
+	cbc_config_s *ccs = ailsa_calloc(sizeof(cbc_config_s), "ccs in main");
 	init_locale_comm_line(cl);
 	init_cbc_config_values(ccs);
 	if ((retval = parse_locale_comm_line(argc, argv, cl)) != 0) {
@@ -248,7 +248,7 @@ list_locales(cbc_config_s *ccs)
 {
 	int retval = 0;
 	unsigned long int isdefault = 0;
-	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in list_locales");
+	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in list_locales");
 	cbc_locale_s *loc;
 
 	if ((retval = get_default_id(ccs, GET_DEFAULT_LOCALE, NULL, &isdefault)) != 0)
@@ -296,7 +296,7 @@ static int
 display_locales(cbc_config_s *ccs, locale_comm_line_s *cl)
 {
 	int retval = 0;
-	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in display_locales");
+	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in display_locales");
 	cbc_locale_s *loc;
 
 	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
@@ -318,8 +318,8 @@ static int
 add_locale(cbc_config_s *ccs, locale_comm_line_s *cl)
 {
 	int retval;
-	cbc_s *cbc = cmdb_malloc(sizeof(cbc_s), "cbc in add_locale");
-	cbc_locale_s *loc = cmdb_malloc(sizeof(cbc_locale_s), "loc in add_locale");
+	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in add_locale");
+	cbc_locale_s *loc = ailsa_calloc(sizeof(cbc_locale_s), "loc in add_locale");
 
 	cbc->locale = loc;
 	fill_locale(loc, cl);

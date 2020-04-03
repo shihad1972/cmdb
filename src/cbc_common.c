@@ -676,8 +676,8 @@ cbc_add_server(cbc_config_s *cbc, char *name, long unsigned int *server_id)
 	cbc_server_s *server;
 	cbc_s *base;
 
-	server = cmdb_malloc(sizeof(cbc_server_s), "server in cbc_add_server");
-	base = cmdb_malloc(sizeof(cbc_s), "base in cbc_add_server");
+	server = ailsa_calloc(sizeof(cbc_server_s), "server in cbc_add_server");
+	base = ailsa_calloc(sizeof(cbc_s), "base in cbc_add_server");
 	base->server = server;
 	snprintf(server->name, HOST_S, "%s", name);
 	server->cuser = server->muser = (unsigned long int)getuid();
