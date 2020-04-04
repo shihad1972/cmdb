@@ -84,8 +84,7 @@ main(int argc, char *argv[])
 		printf("Unknown Action type\n");
 
 	my_free(cdcl);
-	cmdbd_clean_config(cmc);
-	my_free(cmc);
+	ailsa_clean_cmdb(cmc);
 	if (retval > 0)
 		report_error(retval, argv[0]);
 	exit(retval);

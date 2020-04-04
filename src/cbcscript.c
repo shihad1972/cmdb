@@ -84,8 +84,7 @@ main(int argc, char *argv[])
 	} else {
 		retval = WRONG_ACTION;
 	}
-	cmdbd_clean_config(cbc);
-	free(cbc);
+	ailsa_clean_cmdb(cbc);
 	clean_cbc_syss_s(scr);
 	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))

@@ -151,8 +151,7 @@ main (int argc, char *argv[])
 		retval = remove_scheme_part(cmc, cpl);
 	if (retval == WRONG_TYPE)
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
-	cmdbd_clean_config(cmc);
-	free(cmc);
+	ailsa_clean_cmdb(cmc);
 	clean_cbcpart_comm_line(cpl);
 	exit (retval);
 }

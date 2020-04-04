@@ -90,7 +90,7 @@ main(int argc, char *argv[])
 	if (retval == WRONG_ACTION)
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
-	cmdbd_clean_config(cbc);
+	ailsa_clean_cmdb(cbc);
 	my_free(cbc);
 	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))

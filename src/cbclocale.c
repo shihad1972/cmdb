@@ -105,8 +105,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
 	}
-	cmdbd_clean_config(ccs);
-	my_free(ccs);
+	ailsa_clean_cmdb(ccs);
 	my_free(cl);
 	return retval;
 }

@@ -173,8 +173,7 @@ main(int argc, char *argv[])
 		report_error(retval, error);
 	}
 	cleanup:
-		cmdbd_clean_config(cmc);
-		free(cmc);
+		ailsa_clean_cmdb(cmc);
 		free(cvcl);
 		exit (retval);
 }

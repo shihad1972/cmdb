@@ -107,20 +107,18 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
 int
 main (int argc, char *argv[])
 {
-	char error[URL_S], *config;
+	char error[URL_S];
 	int retval = NONE;
 	ailsa_cmdb_s *cmc;
 	cbcos_comm_line_s *cocl;
 
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
-	config = ailsa_calloc(CONF_S, "config in main");
 	init_cbcos_comm_line(cocl);
 	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
-		free(config);
 		free(cocl);
-		free(cmc);
+		ailsa_clean_cmdb(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
@@ -143,10 +141,8 @@ main (int argc, char *argv[])
 		free(cocl);
 		report_error(retval, error);
 	}
-	cmdbd_clean_config(cmc);
-	my_free(cmc);
+	ailsa_clean_cmdb(cmc);
 	my_free(cocl);
-	my_free(config);
 	exit(retval);
 }
 

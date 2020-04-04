@@ -70,8 +70,8 @@ main(int argc, char *argv[])
 		ailsa_show_error(retval);
 		if (retval > 0)
 			display_mkvm_usage();
-		ailsa_clean_mkvm((void *)vm);
-		ailsa_clean_cmdb((void *)cmdb);
+		ailsa_clean_mkvm(vm);
+		ailsa_clean_cmdb(cmdb);
 		return retval;
 }
 

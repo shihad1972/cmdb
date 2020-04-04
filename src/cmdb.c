@@ -100,9 +100,8 @@ main(int argc, char *argv[])
 	}
 
 	cleanup:
-		cmdbd_clean_config(cc);
+		ailsa_clean_cmdb(cc);
 		clean_cmdb_comm_line(cm);
-		my_free(cc);
 		if (retval != 0)
 			display_command_line_error(retval, argv[0]);
 		return retval;
