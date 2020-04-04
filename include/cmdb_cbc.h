@@ -71,18 +71,6 @@ int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
 
 int
-parse_cbc_config_file(ailsa_cmdb_s *dc, const char *config);
-
-void
-init_cbc_config_values(ailsa_cmdb_s *dc);
-
-void
-parse_cbc_config_error(int error);
-
-void
-print_cbc_config(ailsa_cmdb_s *cbc);
-
-int
 query_config();
 
 
