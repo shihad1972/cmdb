@@ -486,7 +486,6 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 	cleanup:
 		if (tx) {
 			fclose(tx);
-			shutdown(fileno(tx), SHUT_RDWR);
 		}
 		if (rx)
 			fclose(rx);

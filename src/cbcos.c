@@ -35,10 +35,12 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <syslog.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -48,21 +50,18 @@
 #include "cbcnet.h"
 
 typedef struct cbcos_comm_line_s {
-	char alias[MAC_S];
-	char arch[RANGE_S];
-	char os[MAC_S];
-	char ver_alias[MAC_S];
-	char version[MAC_S];
+	char *alias;
+	char *arch;
+	char *os;
+	char *ver_alias;
+	char *version;
 	short int action;
 } cbcos_comm_line_s;
-
-static void
-init_cbcos_comm_line(cbcos_comm_line_s *col);
 
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col);
 
-static int
+static void
 list_cbc_build_os(ailsa_cmdb_s *cmc);
 
 static int
@@ -99,31 +98,31 @@ static void
 cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
 
 static void
-cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *os, int *test);
+cbcos_check_for_os(cbcos_comm_line_s *col, AILELEM *head, int *test);
 
 static void
 cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
+
+static void
+cbcos_clean_comm_line(cbcos_comm_line_s *cl);
 
 int
 main (int argc, char *argv[])
 {
 	char error[URL_S];
 	int retval = NONE;
-	ailsa_cmdb_s *cmc;
-	cbcos_comm_line_s *cocl;
+	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
+	cbcos_comm_line_s *cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
 
-	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
-	cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
-	init_cbcos_comm_line(cocl);
 	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
-		free(cocl);
+		cbcos_clean_comm_line(cocl);
 		ailsa_clean_cmdb(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
 	if (cocl->action == LIST_CONFIG)
-		retval = list_cbc_build_os(cmc);
+		list_cbc_build_os(cmc);
 	else if (cocl->action == DISPLAY_CONFIG)
 		retval = display_cbc_build_os(cmc, cocl);
 	else if (cocl->action == ADD_CONFIG)
@@ -138,19 +137,20 @@ main (int argc, char *argv[])
 		printf("Unknown action type\n");
 	if (retval != 0) {
 		cbcos_get_os_string(error, cocl);
-		free(cocl);
+		cbcos_clean_comm_line(cocl);
+		ailsa_clean_cmdb(cmc);
 		report_error(retval, error);
 	}
 	ailsa_clean_cmdb(cmc);
-	my_free(cocl);
+	cbcos_clean_comm_line(cocl);
 	exit(retval);
 }
 
 static void
 cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 {
-	if (strncasecmp(cocl->version, "NULL", COMM_S) != 0) {
-		if (strncasecmp (cocl->arch, "NULL", COMM_S))
+	if (cocl->version) {
+		if (cocl->arch)
 			snprintf(error, URL_S, "%s %s %s",
 			 cocl->os, cocl->version, cocl->arch);
 		else
@@ -160,21 +160,10 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 	}
 }
 
-static void
-init_cbcos_comm_line(cbcos_comm_line_s *col)
-{
-	col->action = 0;
-	snprintf(col->alias, MAC_S, "NULL");
-	snprintf(col->arch, RANGE_S, "NULL");
-	snprintf(col->os, MAC_S, "NULL");
-	snprintf(col->ver_alias, MAC_S, "NULL");
-	snprintf(col->version, MAC_S, "NULL");
-}
-
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
-	const char *optstr = "ade:ghlmn:o:rs:t:v";
+	const char *optstr = "ade:ghln:o:rs:t:v";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -185,7 +174,6 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		{"download",		no_argument,		NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"list",		no_argument,		NULL,	'l'},
-		{"modify",		no_argument,		NULL,	'm'},
 		{"name",		required_argument,	NULL,	'n'},
 		{"os",			required_argument,	NULL,	'n'},
 		{"os-version",		required_argument,	NULL,	'o'},
@@ -212,8 +200,6 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = LIST_CONFIG;
 		else if (opt == 'r')
 			col->action = RM_CONFIG;
-		else if (opt == 'm')
-			col->action = MOD_CONFIG;
 		else if (opt == 'v')
 			col->action = CVERSION;
 		else if (opt == 'g')
@@ -221,15 +207,15 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'e')
-			snprintf(col->ver_alias, MAC_S, "%s", optarg);
+			col->ver_alias = strndup(optarg, MAC_S);
 		else if (opt == 'n')
-			snprintf(col->os, MAC_S, "%s", optarg);
+			col->os = strndup(optarg, MAC_S);
 		else if (opt == 'o')
-			snprintf(col->version, MAC_S, "%s", optarg);
+			col->version = strndup(optarg, MAC_S);
 		else if (opt == 's')
-			snprintf(col->alias, MAC_S, "%s", optarg);
+			col->alias = strndup(optarg, MAC_S);
 		else if (opt == 't')
-			snprintf(col->arch, RANGE_S, "%s", optarg);
+			col->arch = strndup(optarg, RANGE_S);
 		else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
@@ -244,108 +230,118 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		return NO_ACTION;
 	}
 	if (col->action == ADD_CONFIG && (
-		strncasecmp(col->version, "NULL", COMM_S) == 0 ||
-		strncasecmp(col->os, "NULL", COMM_S) == 0 ||
-		strncasecmp(col->arch, "NULL", COMM_S) == 0)) {
+		(!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}
 	if ((col->action != LIST_CONFIG && col->action != DOWNLOAD) && 
-		(strncasecmp(col->os, "NULL", COMM_S) == 0)) {
+		!((col->os))) {
 		printf("No OS name was provided\n");
 		return DISPLAY_USAGE;
 	}
 	return NONE;
 }
 
-static int
+static void
 list_cbc_build_os(ailsa_cmdb_s *cmc)
 {
-	char *oalias, *talias;
-	int retval = 0;
-	cbc_s *base;
-	cbc_build_os_s *os;
-	cbc_build_type_s *type;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *name;
+	ailsa_data_s *one;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_os");
-	init_cbc_struct(base);
-	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | BUILD_TYPE)) != 0) {
-		clean_cbc_struct(base);
-		return retval;
+	if (!(cmc))
+		goto cleanup;
+	if ((retval = ailsa_basic_query(cmc, BUILD_OS_NAME_TYPE, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
+		goto cleanup;
 	}
-	type = base->btype;
-	printf("Operating Systems\n");
-	while (type) {
-		os = base->bos;
-		talias = type->alias;
-		oalias = os->alias;
-		while (os) {
-			if (strncasecmp(talias, oalias, MAC_S) != 0) {
-				os = os->next;
-				oalias = os->alias;
-			} else {
-				printf("%s\n", os->os);
-				os = os->next;
-				break;
-			}
-		}	
-		type = type->next;
+	name = list->head;
+	if (list->total > 0) {
+		printf("Operating Systems\n");
+	} else {
+		ailsa_syslog(LOG_INFO, "No build operating systems were found");
+		goto cleanup;
 	}
-	clean_cbc_struct(base);
-	return retval;
+	while (name) {
+		one = (ailsa_data_s *)name->data;
+		printf("%s\n", one->data->text);
+		name = name->next;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 }
 
 static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *elem;
+	ailsa_data_s *one, *two, *three, *four, *five, *six;
+	if (!(cmc) || !(col))
+		goto cleanup;
 	char *name = col->os;
-	int retval = 0, i = 0;
-	time_t create;
-	cbc_s *base;
-	cbc_build_os_s *os;
 
-	initialise_cbc_s(&base);
-	if ((retval = cbc_run_query(cmc, base, BUILD_OS)) != 0) {
-		if (retval == 6) {
-			fprintf(stderr, "No build OS's\n");
-			clean_cbc_struct(base);
-			return retval;
-		}
-		clean_cbc_struct(base);
-		return MY_QUERY_FAIL;
+	int i = 0;
+
+	if ((retval = ailsa_basic_query(cmc, BUILD_OSES, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL query returned %d", retval );
+		goto cleanup;
 	}
-	os = base->bos;
-	while (os) {
-		if (strncasecmp(os->os, name, MAC_S) == 0) {
+	elem = list->head;
+	while (elem) {
+		one = (ailsa_data_s *)elem->data;
+		if (elem->next)
+			elem = elem->next;
+		two = (ailsa_data_s *)elem->data;
+		if (elem->next)
+			elem = elem->next;
+		three = (ailsa_data_s *)elem->data;
+		if (elem->next)
+			elem = elem->next;
+		four = (ailsa_data_s *)elem->data;
+		if (elem->next)
+			elem = elem->next;
+		if (elem->next)
+			elem = elem->next;
+		five = (ailsa_data_s *)elem->data;
+		if (elem->next)
+			elem = elem->next;
+		six = (ailsa_data_s *)elem->data;
+		elem = elem->next;
+		if (five == six)
+			break;
+		if (strncasecmp(one->data->text, name, MAC_S) == 0) {
 			if (i == 0) {
 				printf("Operating System %s\n", name);
 				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 			}
 			i++;
-			create = (time_t)os->ctime;
-			if (strncasecmp(os->ver_alias, "none", COMM_S) == 0) {
+			if (strncasecmp(three->data->text, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
-				     os->version, os->arch);
+				     two->data->text, four->data->text);
 			} else {
-				if (strlen(os->ver_alias) < 8)
+				if (strlen(two->data->text) < 8)
 					printf("%s\t%s\t\t%s\t\t",
-					     os->version, os->ver_alias, os->arch);
+					     two->data->text, three->data->text, four->data->text);
 				else
 					printf("%s\t%s\t%s\t\t",
-					     os->version, os->ver_alias, os->arch);
+					     two->data->text, three->data->text, four->data->text);
 			}
-			if (strlen(get_uname(os->cuser < 8)))
-				printf("%s\t\t%s", get_uname(os->cuser), ctime(&create));
+			if (strlen(get_uname(five->data->number)) < 8)
+				printf("%s\t\t%s\n", get_uname(five->data->number), six->data->text);
 			else
-				printf("%s\t%s", get_uname(os->cuser), ctime(&create));
+				printf("%s\t%s\n", get_uname(five->data->number), six->data->text);
 		}
-		os = os->next;
 	}
 	if (i == 0)
 		retval =  OS_NOT_FOUND;
-	clean_cbc_struct(base);
-	return retval;
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+		return retval;
 }
 
 static int
@@ -613,42 +609,68 @@ cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	int retval = 0;
 	int test = 0;
 	int count = 0;
-	cbc_s *cbc = NULL;
-	cbc_build_os_s *bos;
+	char *os, *alias, *version, *arch, *ver_alias;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *elem = NULL, *head;
+	ailsa_data_s *data;
 
 	cbcos_check_for_null_in_comm_line(col, &test);
-	initialise_cbc_s(&cbc);
-	if ((retval = cbc_run_query(cmc, cbc, BUILD_OS)) != 0) {
-		fprintf(stderr, "Build os query failed\n");
+	if ((retval = ailsa_basic_query(cmc, BUILD_OSES, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
 		goto cleanup;
 	}
-	bos = cbc->bos;
-	cbcos_check_for_null_in_comm_line(col, &test);
-	while (bos) {
+	elem = list->head;
+	if (list->total < 1)
+		goto cleanup;
+	while (elem) {
+		head = elem;
+		data = elem->data;
+		os = data->data->text;
+		if (elem->next)
+			elem = elem->next;
+		data = elem->data;
+		version = data->data->text;
+		if (elem->next)
+			elem = elem->next;
+		data = elem->data;
+		alias = data->data->text;
+		if (elem->next)
+			elem = elem->next;
+		data = elem->data;
+		arch = data->data->text;
+		if (elem->next)
+			elem = elem->next;
+		data = elem->data;
+		ver_alias = data->data->text;
+		if (ver_alias == arch)
+			break;
 		if ((test & 7) == 7) {
-			printf("Will download OS %s, version %s, arch %s\n",
-			 bos->os, bos->version, bos->arch);
+			printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
 			count++;
-			if ((retval = cbc_get_boot_files(cmc, bos->alias, bos->version, bos->arch, bos->ver_alias)) != 0)
+			if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
 				fprintf(stderr, "Error downloading OS\n");
 		} else {
-			cbcos_check_for_os(col, bos, &test);
+			cbcos_check_for_os(col, head, &test);
 			if ((test & 56) == 56) {
-				printf("Will download OS %s, version %s, arch %s\n",
-				 bos->os, bos->version, bos->arch);
+				printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
 				count ++;
-				if ((retval = cbc_get_boot_files(cmc, bos->alias, bos->version, bos->arch, bos->ver_alias)) != 0)
+				if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
 					fprintf(stderr, "Error downloading OS\n");
 			}
 		}
-		bos = bos->next;
+		if (elem->next)
+			elem = elem->next;
+		if (elem->next)
+			elem = elem->next;
+		if (elem->next)
+			elem = elem->next;
 		test = test & 7;
 	}
 	if (count == 0)
 		fprintf(stderr, "No OS found to download\n");
 	cleanup:
-		if (cbc)
-			clean_cbc_struct(cbc);
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
 }
 
@@ -657,28 +679,80 @@ cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test)
 {
 	*test = 0;	// Sanity
 /* Set bit fields from command line input */
-	if (strncasecmp(col->arch, "NULL", RANGE_S) == 0)
+	if (!(col->arch))
 		*test = *test | 1;
-	if ((strncasecmp(col->version, "NULL", MAC_S) == 0) &&
-	    (strncasecmp(col->ver_alias, "NULL", MAC_S) == 0))
+	if (!(col->version) && !(col->ver_alias))
 		*test = *test | 2;
-	if ((strncasecmp(col->os, "NULL", MAC_S) == 0) &&
-	    (strncasecmp(col->alias, "NULL", MAC_S) == 0))
+	if (!(col->os) && !(col->alias))
 		*test = *test | 4;
 }
 
 static void
-cbcos_check_for_os(cbcos_comm_line_s *col, cbc_build_os_s *cbos, int *test)
+cbcos_check_for_os(cbcos_comm_line_s *col, AILELEM *head, int *test)
 {
-	if (((*test & 1) == 1 ) || (strncasecmp(col->arch, cbos->arch, RANGE_S) == 0))
-		*test = *test | 8;
-	if (((*test & 2) == 2) ||
-	    (strncasecmp(col->version, cbos->version, MAC_S) == 0) ||
-	    (strncasecmp(col->ver_alias, cbos->ver_alias, MAC_S) == 0))
-		*test = *test | 16;
-	if (((*test & 4) == 4) ||
-	    (strncasecmp(col->os, cbos->os, MAC_S) == 0) ||
-	    (strncasecmp(col->alias, cbos->alias, MAC_S) == 0))
+	if (!(col) || !(head) || !(test))
+		return;
+	AILELEM *elem = head;
+	ailsa_data_s *data = elem->data;
+	char *os, *alias, *arch, *version, *ver_alias;
+
+	os = data->data->text;
+	if (elem->next)
+		elem = elem->next;
+	data = elem->data;
+	version = data->data->text;
+	if (elem->next)
+		elem = elem->next;
+	data = elem->data;
+	alias = data->data->text;
+	if (elem->next)
+		elem = elem->next;
+	data = elem->data;
+	arch = data->data->text;
+	if (elem->next)
+		elem = elem->next;
+	data = elem->data;
+	ver_alias = data->data->text;
+	if (ver_alias == arch)
+		return;
+	if ((*test & 4) == 4) {
 		*test = *test | 32;
+	} else if (col->os) {
+		if (strncasecmp(col->os, os, MAC_S) == 0)
+			*test = *test | 32;
+	} else if (col->alias) {
+		if (strncasecmp(col->alias, alias, MAC_S) == 0)
+			*test = *test | 32;
+	}
+	if ((*test & 1) == 1)
+		*test = *test | 8;
+	else if (strncasecmp(col->arch, arch, RANGE_S) == 0)
+		*test = *test | 8;
+	if ((*test & 2) == 2) {
+		*test = *test | 16;
+	} else if (col->version) {
+		if (strncasecmp(col->version, version, MAC_S) == 0)
+			*test = *test | 16;
+	} else if (col->ver_alias) {
+		if (strncasecmp(col->ver_alias, ver_alias, MAC_S) == 0)
+			*test = *test | 16;
+	}
 }
 
+static void
+cbcos_clean_comm_line(cbcos_comm_line_s *cl)
+{
+	if (!(cl))
+		return;
+	if (cl->alias)
+		my_free(cl->alias);
+	if (cl->arch)
+		my_free(cl->arch);
+	if (cl->os)
+		my_free(cl->os);
+	if (cl->ver_alias)
+		my_free(cl->ver_alias);
+	if (cl->version)
+		my_free(cl->version);
+	my_free(cl);
+}

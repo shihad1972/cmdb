@@ -1,5 +1,5 @@
 /*
- *
+ cmdb*
  *  alisacmdb: Alisatech Configuration Management Database library
  *  Copyright (C) 2015 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
@@ -67,6 +67,8 @@ const char *basic_queries[] = {
 "SELECT vm_server, type FROM vm_server_hosts", // VM_SERVERS
 "SELECT service, detail FROM service_type", // SERVICE_TYPES_ALL
 "SELECT type, class FROM hard_type", // HARDWARE_TYPES_ALL
+"SELECT DISTINCT bo.os FROM build_os bo JOIN build_type bt ON bt.alias=bo.alias", // BUILD_OS_NAME_TYPE
+"SELECT os, os_version, alias, arch, ver_alias, cuser, ctime FROM build_os", // BUILD_OSES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -447,6 +449,10 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 		case MYSQL_TYPE_LONG:
 			tmp->data->number = strtoul(row[i - 1], NULL, 10);
 			tmp->type = AILSA_DB_LINT;
+			break;
+		case MYSQL_TYPE_TIMESTAMP:
+			tmp->data->text = strndup(row[i - 1], SQL_TEXT_MAX);
+			tmp->type = AILSA_DB_TEXT;
 			break;
 		default:
 			ailsa_syslog(LOG_ERR, "Unknown mysql type %u", p[i]);
