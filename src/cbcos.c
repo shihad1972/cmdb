@@ -57,9 +57,6 @@ typedef struct cbcos_comm_line_s {
 } cbcos_comm_line_s;
 
 static void
-init_cbcos_config(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
-
-static void
 init_cbcos_comm_line(cbcos_comm_line_s *col);
 
 static int
@@ -115,13 +112,10 @@ main (int argc, char *argv[])
 	ailsa_cmdb_s *cmc;
 	cbcos_comm_line_s *cocl;
 
-	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
-		report_error(MALLOC_FAIL, "cmc in cbcos main");
-	if (!(cocl = malloc(sizeof(cbcos_comm_line_s))))
-		report_error(MALLOC_FAIL, "cocl in cbcos main");
+	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
+	cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
 	config = ailsa_calloc(CONF_S, "config in main");
-	get_config_file_location(config);
-	init_cbcos_config(cmc, cocl);
+	init_cbcos_comm_line(cocl);
 	memset(error, 0, URL_S);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
 		free(config);
@@ -129,13 +123,7 @@ main (int argc, char *argv[])
 		free(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
-	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
-		free(config);
-		free(cocl);
-		free(cmc);
-		parse_cbc_config_error(retval);
-		exit(retval);
-	}
+	parse_cmdb_config(cmc);
 	if (cocl->action == LIST_CONFIG)
 		retval = list_cbc_build_os(cmc);
 	else if (cocl->action == DISPLAY_CONFIG)
@@ -150,14 +138,15 @@ main (int argc, char *argv[])
 		retval = cbcos_grab_boot_files(cmc, cocl);
 	else
 		printf("Unknown action type\n");
-	free(cmc);
 	if (retval != 0) {
 		cbcos_get_os_string(error, cocl);
 		free(cocl);
 		report_error(retval, error);
 	}
-	free(cocl);
-	free(config);
+	cmdbd_clean_config(cmc);
+	my_free(cmc);
+	my_free(cocl);
+	my_free(config);
 	exit(retval);
 }
 
@@ -173,13 +162,6 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 	} else {
 		snprintf(error, URL_S, "%s", cocl->os);
 	}
-}
-
-static void
-init_cbcos_config(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
-{
-	init_cbc_config_values(cmc);
-	init_cbcos_comm_line(col);
 }
 
 static void

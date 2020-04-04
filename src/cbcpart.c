@@ -67,12 +67,6 @@ typedef struct cbcpart_comm_line_s {
 } cbcpart_comm_line_s;
 
 static void
-init_cbcpart_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
-
-static void
-init_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
-
-static void
 clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl);
 
 static int
@@ -125,15 +119,6 @@ remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
 remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
-/*
-static int
-mod_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
-
-static int
-modify_partition_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
-
-static int
-modify_scheme_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl); */
 
 static void
 cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt);
@@ -144,59 +129,32 @@ get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt);
 int
 main (int argc, char *argv[])
 {
-	char *config;
 	int retval = NONE;
 	ailsa_cmdb_s *cmc;
 	cbcpart_comm_line_s *cpl;
 	
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "main");
 	cpl = ailsa_calloc(sizeof(cbcpart_comm_line_s), "main");
-	config = ailsa_calloc(CONF_S, "config in main");
-	get_config_file_location(config);
-	init_cbcpart_config(cmc, cpl);
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
-		free(config);
 		free(cmc);
 		free(cpl);
 		display_command_line_error(retval, argv[0]);
 	}
-
-	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
-		free(config);
-		free (cpl);
-		free (cmc);
-		parse_cbc_config_error(retval);
-		exit(retval);
-	}
+	parse_cmdb_config(cmc);
 	if (cpl->action == ADD_CONFIG)
 		retval = add_scheme_part(cmc, cpl);
 	else if (cpl->action == DISPLAY_CONFIG)
 		retval = display_full_seed_scheme(cmc, cpl);
-/*	else if (cpl->action == MOD_CONFIG)
-		retval = mod_scheme_part(cmc, cpl); */
 	else if (cpl->action == LIST_CONFIG)
 		retval = list_seed_schemes(cmc);
 	else if (cpl->action == RM_CONFIG)
 		retval = remove_scheme_part(cmc, cpl);
 	if (retval == WRONG_TYPE)
 		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
+	cmdbd_clean_config(cmc);
 	free(cmc);
 	clean_cbcpart_comm_line(cpl);
-	free(config);
 	exit (retval);
-}
-
-static void
-init_cbcpart_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
-{
-	init_cbc_config_values(cbc);
-	init_cbcpart_comm_line(cpl);
-}
-
-static void
-init_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
-{
-	memset(cpl, 0, sizeof(cbcpart_comm_line_s));
 }
 
 static void
@@ -523,21 +481,7 @@ remove_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = WRONG_TYPE;
 	return retval;
 }
-/*
-static int
-mod_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
-{
-	int retval = NONE;
 
-	if (cpl->type == PARTITION)
-		retval = modify_partition_config(cbc, cpl);
-	else if (cpl->type == SCHEME)
-		retval = modify_scheme_config(cbc, cpl);
-	else
-		retval = WRONG_TYPE;
-	return retval;
-}
-*/
 static int
 add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
@@ -823,35 +767,7 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	clean_dbdata_struct(data);
 	return 0;
 }
-/*
-static int
-modify_partition_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
-{
-	int retval = 0;
-	short int lvm;
-	dbdata_s *data;
 
-	if (!(cpl->scheme))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = get_scheme_id(cbc, cpl->scheme, &(data->args.number))) != 0)
-		goto cleanup;
-	if ((retval = cbc_run_search(cbc, data, LVM_ON_DEF_SCHEME_ID)) != 0)
-		goto cleanup;
-	lvm = data->fields.small;
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-static int
-modify_scheme_config(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
-{
-	int retval = 0;
-
-	return retval;
-}
-*/
 static void
 get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt)
 {

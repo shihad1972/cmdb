@@ -53,21 +53,13 @@ main(int argc, char *argv[])
 	cbc_syss_s *scr = ailsa_calloc(sizeof(cbc_syss_s), "scr in main");
 	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 
-	init_cbc_config_values(cbc);
-	get_config_file_location(config);
 	if ((retval = parse_cbc_script_comm_line(argc, argv, scr)) != 0) {
 		clean_cbc_syss_s(scr);
 		free(cbc);
 		free(config);
 		display_command_line_error(retval, argv[0]);
 	}
-	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
-		clean_cbc_syss_s(scr);
-		free(cbc);
-		free(config);
-		parse_cbc_config_error(retval);
-		exit(retval);
-	}
+	parse_cmdb_config(cbc);
 	if (scr->action == ADD_CONFIG) {
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_add_script(cbc, scr);
@@ -92,6 +84,7 @@ main(int argc, char *argv[])
 	} else {
 		retval = WRONG_ACTION;
 	}
+	cmdbd_clean_config(cbc);
 	free(cbc);
 	clean_cbc_syss_s(scr);
 	free(config);

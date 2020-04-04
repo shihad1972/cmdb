@@ -53,19 +53,12 @@ main(int argc, char *argv[])
 	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 	cbc_sysp_s *cbs = ailsa_calloc(sizeof(cbc_sysp_s), "cbs in main");
 
-	init_cbc_config_values(cbc);
-	get_config_file_location(config);
 	if ((retval = parse_cbc_sysp_comm_line(argc, argv, cbs)) != 0) {
 		clean_cbcsysp_s(cbs);
 		free(cbc);
 		display_command_line_error(retval, argv[0]);
 	}
-	if ((retval = parse_cbc_config_file(cbc, config)) != 0) {
-		clean_cbcsysp_s(cbs);
-		free(cbc);
-		parse_cbc_config_error(retval);
-		exit(retval);
-        }
+	parse_cmdb_config(cbc);
 	if (cbs->what == SPACKAGE) {
 		if (cbs->action == LIST_CONFIG)
 			retval = list_cbc_syspackage(cbc);
@@ -97,7 +90,8 @@ main(int argc, char *argv[])
 	if (retval == WRONG_ACTION)
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
-	free(cbc);
+	cmdbd_clean_config(cbc);
+	my_free(cbc);
 	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");

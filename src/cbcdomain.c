@@ -57,32 +57,20 @@
 int
 main(int argc, char *argv[])
 {
-	char *config;
 	int retval = NONE;
 	ailsa_cmdb_s *cmc;
 	cbcdomain_comm_line_s *cdcl;
 
-	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
-		report_error(MALLOC_FAIL, "cmc in cbcdomain main");
-	if (!(cdcl = malloc(sizeof(cbcdomain_comm_line_s))))
-		report_error(MALLOC_FAIL, "cdcl in cbcdomain main");
-	config = ailsa_calloc(CONF_S, "config in main");
-	get_config_file_location(config);
-	init_cbcdomain_config(cmc, cdcl);
+	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
+	cdcl = ailsa_calloc(sizeof(cbcdomain_comm_line_s), "cdcl in main");
+	init_cbcdomain_comm_line(cdcl);
 	if ((retval = parse_cbcdomain_comm_line(argc, argv, cdcl)) != 0) {
 		free(cdcl);
 		free(cmc);
-		free(config);
 		display_command_line_error(retval, argv[0]);
 	}
-	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
-		free(cdcl);
-		free(cmc);
-		free(config);
-		parse_cbc_config_error(retval);
-		exit(retval);
-	}
-	else if (cdcl->action == LIST_CONFIG)
+	parse_cmdb_config(cmc);
+	if (cdcl->action == LIST_CONFIG)
 		retval = list_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == ADD_CONFIG)
 		retval = add_cbc_build_domain(cmc, cdcl);
@@ -95,9 +83,9 @@ main(int argc, char *argv[])
 	else
 		printf("Unknown Action type\n");
 
-	free(cdcl);
-	free(cmc);
-	free(config);
+	my_free(cdcl);
+	cmdbd_clean_config(cmc);
+	my_free(cmc);
 	if (retval > 0)
 		report_error(retval, argv[0]);
 	exit(retval);
@@ -110,13 +98,6 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
 	get_config_file_location(cdcl->config);
 	snprintf(cdcl->domain, COMM_S, "NULL");
 	snprintf(cdcl->ntpserver, COMM_S, "NULL");
-}
-
-void
-init_cbcdomain_config(ailsa_cmdb_s *cmc, cbcdomain_comm_line_s *cdcl)
-{
-	init_cbc_config_values(cmc);
-	init_cbcdomain_comm_line(cdcl);
 }
 
 void

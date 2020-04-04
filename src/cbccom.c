@@ -47,9 +47,6 @@
 static void
 validate_cbc_comm_line(cbc_comm_line_s *cml);
 
-static void
-init_cbc_comm_values(cbc_comm_line_s *cbt);
-
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
@@ -245,13 +242,6 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 }
 
 void
-init_all_config(ailsa_cmdb_s *cct, cbc_comm_line_s *cclt)
-{
-	init_cbc_config_values(cct);
-	init_cbc_comm_values(cclt);
-}
-
-static void
 init_cbc_comm_values(cbc_comm_line_s *cbt)
 {
 	memset(cbt, 0, sizeof(cbc_comm_line_s));

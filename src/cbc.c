@@ -36,17 +36,12 @@
 int
 main(int argc, char *argv[])
 {
-	ailsa_cmdb_s *cmc;
-	cbc_comm_line_s *cml;
-	char sretval[CONF_S], conf[CONF_S];
+	char sretval[CONF_S];
 	int retval = NONE;
-	
-	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
-		report_error(MALLOC_FAIL, "cmc in cbc.c");
-	if (!(cml = malloc(sizeof(cbc_comm_line_s))))
-		report_error(MALLOC_FAIL, "cml in cbc.c");
+	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
+	cbc_comm_line_s *cml = ailsa_calloc(sizeof(cbc_comm_line_s), "cml in main");
 
-	init_all_config(cmc, cml);
+	init_cbc_comm_values(cml);
 	if ((retval = parse_cbc_command_line(argc, argv, cml)) != 0) {
 		free(cmc);
 		free(cml);
@@ -54,15 +49,8 @@ main(int argc, char *argv[])
 	}
 	if (cml->action == QUERY_CONFIG)
 		retval = query_config();
-	else {
-		get_config_file_location(conf);
-		if ((retval = parse_cbc_config_file(cmc, conf)) > 1) {
-			parse_cbc_config_error(retval);
-			free(cml);
-			free(cmc);
-			exit(retval);
-		}
-	}
+	else
+		parse_cmdb_config(cmc);
 	if (cml->action == DISPLAY_CONFIG)
 		retval = display_build_config(cmc, cml);
 	else if (cml->action == LIST_CONFIG)

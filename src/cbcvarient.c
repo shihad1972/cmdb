@@ -63,9 +63,6 @@ typedef struct cbcvari_comm_line_s {
 } cbcvari_comm_line_s;
 
 static void
-init_cbcvari_config(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
-
-static void
 init_cbcvari_comm_line(cbcvari_comm_line_s *cvl);
 
 static int
@@ -128,18 +125,14 @@ add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
 int
 main(int argc, char *argv[])
 {
-	char error[URL_S], *config;
+	char error[URL_S];
 	int retval = NONE;
 	ailsa_cmdb_s *cmc;
 	cbcvari_comm_line_s *cvcl;
 
-	if (!(cmc = malloc(sizeof(ailsa_cmdb_s))))
-		report_error(MALLOC_FAIL, "cmc in cbcvarient main");
-	if (!(cvcl = malloc(sizeof(cbcvari_comm_line_s))))
-		report_error(MALLOC_FAIL, "cvcl in cbcvarient main");
-	config = ailsa_calloc(CONF_S, "config in main");
-	get_config_file_location(config);
-	init_cbcvari_config(cmc, cvcl);
+	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in cbcvarient main");
+	cvcl = ailsa_calloc(sizeof(cbcvari_comm_line_s), "cvcl in cbcvarient main");
+	init_cbcvari_comm_line(cvcl);
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
 		free(cvcl);
@@ -149,12 +142,7 @@ main(int argc, char *argv[])
 		snprintf(error, URL_S, "name %s", cvcl->varient);
 	else if (strncmp(cvcl->valias, "NULL", COMM_S) != 0)
 		snprintf(error, URL_S, "alias %s", cvcl->valias);
-	if ((retval = parse_cbc_config_file(cmc, config)) != 0) {
-		free(cvcl);
-		free(cmc);
-		parse_cbc_config_error(retval);
-		exit(retval);
-	}
+	parse_cmdb_config(cmc);
 	if (cvcl->action == LIST_CONFIG)
 		retval = list_cbc_build_varient(cmc);
 	else if (cvcl->action == DISPLAY_CONFIG)
@@ -178,25 +166,17 @@ main(int argc, char *argv[])
 			else if (strncmp(cvcl->alias, "NULL", COMM_S) != 0)
 				snprintf(error, HOST_S, "alias %s", cvcl->alias);
 		} else if (retval == NO_RECORDS) {
-			free(cmc);
-			free(cvcl);
-			exit (retval);
+			goto cleanup;
 		}
 		free(cmc);
 		free(cvcl);
 		report_error(retval, error);
 	}
-	free(config);
-	free(cmc);
-	free(cvcl);
-	exit (retval);
-}
-
-static void
-init_cbcvari_config(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
-{
-	init_cbc_config_values(cmc);
-	init_cbcvari_comm_line(cvl);
+	cleanup:
+		cmdbd_clean_config(cmc);
+		free(cmc);
+		free(cvcl);
+		exit (retval);
 }
 
 static void

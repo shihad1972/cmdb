@@ -42,20 +42,8 @@ enum {			/* cbcdomain modify types */
 typedef struct cbcdomain_comm_line_s {
 	char domain[RBUFF_S];
 	char ntpserver[RBUFF_S];
-/*	char basedn[NAME_S];
-	char binddn[NAME_S];
-	char ldapserver[RBUFF_S];
-	char logserver[RBUFF_S];
-	char nfsdomain[RBUFF_S];
-	char smtpserver[RBUFF_S];
-	char xymonserver[RBUFF_S]; */
 	char config[RBUFF_S];
 	short int action;
-/*	short int confldap;
-	short int ldapssl;
-	short int conflog;
-	short int confsmtp;
-	short int confxymon; */
 	short int confntp;
 	unsigned long int start_ip;
 	unsigned long int end_ip;
@@ -69,9 +57,6 @@ init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
 
 void
 print_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
-
-void
-init_cbcdomain_config(ailsa_cmdb_s *cmc, cbcdomain_comm_line_s *cdcl);
 
 int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);

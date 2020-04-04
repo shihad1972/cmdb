@@ -82,21 +82,15 @@ print_locale(ailsa_cmdb_s *ccs, cbc_locale_s *loc);
 int
 main(int argc, char *argv[])
 {
-	char conf[CONF_S];
 	int retval = 0;
 	locale_comm_line_s *cl = ailsa_calloc(sizeof(locale_comm_line_s), "cl in main");
 	ailsa_cmdb_s *ccs = ailsa_calloc(sizeof(ailsa_cmdb_s), "ccs in main");
 	init_locale_comm_line(cl);
-	init_cbc_config_values(ccs);
 	if ((retval = parse_locale_comm_line(argc, argv, cl)) != 0) {
 		free(cl);
 		display_command_line_error(retval, argv[0]);
 	}
-	get_config_file_location(conf);
-	if ((retval = parse_cbc_config_file(ccs, conf)) != 0) {
-		parse_cbc_config_error(retval);
-		goto cleanup;
-	}
+	parse_cmdb_config(ccs);
 	if (cl->action == LIST_CONFIG)
 		retval = list_locales(ccs);
 	else if (cl->action == DISPLAY_CONFIG)
@@ -111,11 +105,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
 	}
-
-	cleanup:
-		free(ccs);
-		free(cl);
-		return retval;
+	cmdbd_clean_config(ccs);
+	my_free(ccs);
+	my_free(cl);
+	return retval;
 }
 
 static int

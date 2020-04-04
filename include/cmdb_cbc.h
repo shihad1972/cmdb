@@ -62,7 +62,7 @@ typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
 } cbc_dhcp_config_s;
 
 void
-init_all_config(ailsa_cmdb_s *cct, cbc_comm_line_s *cclt);
+init_cbc_comm_values(cbc_comm_line_s *cbt);
 
 void
 print_cbc_command_line_values(cbc_comm_line_s *command_line);

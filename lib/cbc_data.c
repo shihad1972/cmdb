@@ -37,75 +37,70 @@
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cbc_data.h"
 
 void
 initialise_cbc_s(cbc_s **cbc)
 {
-	*cbc = cmdb_malloc(sizeof(cbc_s), "cbc in initialise_cbc_s");
+	*cbc = ailsa_calloc(sizeof(cbc_s), "cbc in initialise_cbc_s");
 	init_cbc_struct(*cbc);
 }
 
 void
 initialise_cbc_package_s(cbc_package_s **pack)
 {
-	*pack = cmdb_malloc(sizeof(cbc_package_s), "pack in initialise_cbc_package_s");
+	*pack = ailsa_calloc(sizeof(cbc_package_s), "pack in initialise_cbc_package_s");
 	init_package(*pack);
 }
 
 void
 initialise_cbc_os_s(cbc_build_os_s **os)
 {
-	*os = cmdb_malloc(sizeof(cbc_build_os_s), "os in initialise_cbc_os_s");
+	*os = ailsa_calloc(sizeof(cbc_build_os_s), "os in initialise_cbc_os_s");
 	init_build_os(*os);
 }
 
 void
 initialise_cbc_syspack(cbc_syspack_s **spack)
 {
-	if (!(*spack = malloc(sizeof(cbc_syspack_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_s");
+	*spack = ailsa_calloc(sizeof(cbc_syspack_s), "spack in initialise_cbc_syspack");
 	init_cbc_syspack(*spack);
 }
 
 void
 initialise_cbc_syspack_conf(cbc_syspack_conf_s **cpsc)
 {
-	if (!(*cpsc = malloc(sizeof(cbc_syspack_conf_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	*cpsc = ailsa_calloc(sizeof(cbc_syspack_conf_s), "cpsc in initialise_cbc_syspack_conf");
 	init_cbc_syspack_conf(*cpsc);
 }
 
 void
 initialise_cbc_syspack_arg(cbc_syspack_arg_s **cpsa)
 {
-	if (!(*cpsa = malloc(sizeof(cbc_syspack_arg_s))))
-		report_error(MALLOC_FAIL, "cbc_syspack_arg_s");
+	*cpsa = ailsa_calloc(sizeof(cbc_syspack_arg_s), "cpsa in initialise_cbc_syspack_arg");
 	init_cbc_syspack_arg(*cpsa);
 }
 
 void
 initialise_cbc_scripts(cbc_script_s **scripts)
 {
-	if (!(*scripts = malloc(sizeof(cbc_script_s))))
-		report_error(MALLOC_FAIL, "cbc_script_s");
+	*scripts = ailsa_calloc(sizeof(cbc_script_s), "scripts in initialise_cbc_scripts");
 	init_cbc_scripts(*scripts);
 }
 
 void
 initialise_cbc_script_args(cbc_script_arg_s **args)
 {
-	if (!(*args = malloc(sizeof(cbc_script_arg_s))))
-		report_error(MALLOC_FAIL, "cbc_script_arg_s");
+	*args = ailsa_calloc(sizeof(cbc_script_arg_s), "args in initialise_cbc_script_args");
 	init_cbc_script_args(*args);
 }
 
 void
 initialise_cbc_part_opt(cbc_part_opt_s **opt)
 {
-	if (!(*opt = malloc(sizeof(cbc_part_opt_s))))
-		report_error(MALLOC_FAIL, "cbc_part_opt_s");
+	*opt = ailsa_calloc(sizeof(cbc_part_opt_s), "opt in initialise_cbc_part_opt");
 	init_cbc_part_opt(*opt);
 }
 
@@ -239,8 +234,8 @@ init_cbc_dhcp(cbc_dhcp_s *dh)
 {
 	const char *msg = "init_cbc_dhcp";
 	memset(dh, 0, sizeof(cbc_dhcp_s));
-	dh->iname = cmdb_malloc(RBUFF_S, msg);
-	dh->dname = cmdb_malloc(RBUFF_S, msg);
+	dh->iname = ailsa_calloc(RBUFF_S, msg);
+	dh->dname = ailsa_calloc(RBUFF_S, msg);
 	memset(dh->iname, 0, RBUFF_S);
 	memset(dh->dname, 0, RBUFF_S);
 }
@@ -250,7 +245,7 @@ init_cbc_iface(cbc_iface_s *ifa)
 {
 	const char *msg = "init_cbc_iface";
 	memset(ifa, 0, sizeof(cbc_iface_s));
-	ifa->name = cmdb_malloc(RBUFF_S, msg);
+	ifa->name = ailsa_calloc(RBUFF_S, msg);
 	memset(ifa->name, 0, RBUFF_S);
 }
 
@@ -335,8 +330,6 @@ clean_cbc_struct (cbc_s *cbc)
 		clean_cbc_scripts(cbc->scripts);
 	if (cbc->part_opt)
 		clean_cbc_part_opt(cbc->part_opt);
-	if (cbc->scripts)
-		clean_cbc_scripts(cbc->scripts);
 	if (cbc->script_arg)
 		clean_cbc_script_args(cbc->script_arg);
 	free(cbc);
