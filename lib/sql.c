@@ -170,7 +170,7 @@ ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlit
 }
 
 void
-ailsa_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
+ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
 {
 	int retval, sqlret = 0;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
@@ -181,7 +181,7 @@ ailsa_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlit
 		ailsa_syslog(LOG_ERR, "Cannot enable foreign key support in sqlite");
 	if (sqlret == 0)
 		ailsa_syslog(LOG_ERR, "Did not enable foreign key support");
-	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
+	if ((retval = sqlite3_prepare_v2(*cmdb, query, (int)len, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
 		exit(SQLITE_STATEMENT_FAILED);

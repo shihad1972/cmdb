@@ -242,7 +242,7 @@ cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	elem = results->head;
 	tmp = elem->data;
-	data = ailsa_db_text_data_init();
+	data = ailsa_db_lint_data_init();
 	data->data->number = tmp->data->number;
 	if ((retval = ailsa_list_insert(list, data)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot insert build_type_id into list");

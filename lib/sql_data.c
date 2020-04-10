@@ -46,7 +46,7 @@ cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data)
 {
 	if (!(data))
 		return;
-	if (!(data->query))
+	if (data->query)
 		my_free(data->query);
 	if (data->fields)
 		my_free(data->fields);

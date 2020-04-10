@@ -36,6 +36,7 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <errno.h>
+#include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbcnet.h"
@@ -280,7 +281,7 @@ int
 decode_http_header(FILE *rx, unsigned long int *len)
 {
 	char *buf, *t;
-	int retval = 1;
+	int retval = CANNOT_DOWNLOAD_BOOT_FILES;
 	unsigned long int code;
 
 	if (!(buf = malloc(MAXDATASIZE))) {
@@ -336,7 +337,7 @@ decode_http_header(FILE *rx, unsigned long int *len)
 	}
 
 	cleanup:
-		free(buf);
+		my_free(buf);
 		return retval;
 }
 

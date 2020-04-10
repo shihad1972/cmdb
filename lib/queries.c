@@ -1,5 +1,5 @@
 /*
- cmdb*
+ *
  *  alisacmdb: Alisatech Configuration Management Database library
  *  Copyright (C) 2015 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
@@ -286,7 +286,7 @@ static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
 
 static int
-ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s argu, AILLIST *args);
+ailsa_bind_arguments_sqlite(sqlite3_stmt *state, AILLIST *args, unsigned int t, const unsigned int *f);
 
 static unsigned int
 ailsa_set_my_type(unsigned int type);
@@ -860,9 +860,11 @@ ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s a
 	sqlite3_stmt *state = NULL;
 	const char *query = argument.query;
 	const char *file = cmdb->file;
+	unsigned int t = argument.number;
+	const unsigned int *f = argument.fields;
 
 	ailsa_setup_ro_sqlite(query, file, &sql, &state);
-	if ((retval = ailsa_bind_arguments_sqlite(state, argument, args)) != 0) {
+	if ((retval = ailsa_bind_arguments_sqlite(state, args, t, f)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		return retval;
 	}
@@ -884,9 +886,11 @@ ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 	sqlite3_stmt *state = NULL;
 	const char *sql_query = query.query;
 	const char *file = cmdb->file;
+	unsigned int t = query.number;
+	const unsigned int *f = query.fields;
 
-	ailsa_setup_rw_sqlite(sql_query, file, &sql, &state);
-	if ((retval = ailsa_bind_arguments_sqlite(state, query, insert)) != 0) {
+	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state);
+	if ((retval = ailsa_bind_arguments_sqlite(state, insert, t, f)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		goto cleanup;
 	}
@@ -908,8 +912,26 @@ ailsa_multiple_insert_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, A
 	if (!(cmdb) || !(sql) || !(insert))
 		return AILSA_NO_DATA;
 	int retval = 0;
+	sqlite3 *lite = NULL;
+	sqlite3_stmt *state = NULL;
+	const char *sql_query = sql->query;
+	const char *file = cmdb->file;
 
-	return retval;
+	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &lite, &state);
+	if ((retval = ailsa_bind_arguments_sqlite(state, insert, sql->total, sql->fields)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: error %d", retval);
+		goto cleanup;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
+		retval = SQLITE_INSERT_FAILED;
+		goto cleanup;
+	}
+	cleanup:
+		if (retval == SQLITE_DONE)
+			retval = 0;
+		ailsa_sqlite_cleanup(lite, state);
+		return retval;
 }
 
 static void
@@ -950,26 +972,25 @@ ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 }
 
 static int
-ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s argu, AILLIST *args)
+ailsa_bind_arguments_sqlite(sqlite3_stmt *state, AILLIST *args, unsigned int t, const unsigned int *f)
 {
 	if (!(state) || !(args))
 		return AILSA_NO_DATA;
 	const char *text = NULL;
 	int retval = 0;
-	unsigned int count = argu.number;
 	int i = 0;
 	ailsa_data_s *data;
 	AILELEM *tmp = args->head;
 
-	for (i = 0; (unsigned int)i < count; i++) {
+	for (i = 0; (unsigned int)i < t; i++) {
 		if (tmp) {
 			data = tmp->data;
 		} else {
-			ailsa_syslog(LOG_ERR, "List stopped with %hi of %hi arguments bound for sqlite", i, count);
+			ailsa_syslog(LOG_ERR, "List stopped with %hi of %hi arguments bound for sqlite", i, t);
 			retval = CBC_DATA_WRONG_COUNT;
 			break;
 		}
-		switch (argu.fields[i]) {
+		switch (f[i]) {
 		case AILSA_DB_LINT:
 			if ((retval = sqlite3_bind_int64(state, i + 1, (sqlite3_int64)data->data->number)) != 0) {
 				ailsa_syslog(LOG_ERR, "Unable to bind integer value in loop %hi", i);
@@ -990,7 +1011,7 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s 
 			}
 			break;
 		default:
-			ailsa_syslog(LOG_ERR, "Unknown SQL type %hi", argu.fields[i]);
+			ailsa_syslog(LOG_ERR, "Unknown SQL type %hi", f[i]);
 			retval = AILSA_INVALID_DBTYPE;
 			goto cleanup;
 		}

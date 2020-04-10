@@ -210,7 +210,7 @@ void
 ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 
 void
-ailsa_setup_rw_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
+ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 
 void
 ailsa_sqlite_cleanup(sqlite3 *cmdb, sqlite3_stmt *stmt);

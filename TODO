@@ -1,3 +1,7 @@
+10/04/202
+When grabbing kernel and initrd boot files, a summary of download speed
+should be printed. I think I need to optimise this
+
 04/04/2020
 Programs moved to new AILLIST database model:
 	cmdb  **Done**

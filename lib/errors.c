@@ -239,6 +239,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "No device or detail in %s\n", errstr);
 	} else if (error == WRONG_LENGTH_LIST) {
 		fprintf(stderr, "A list of incorrect length was passed to a function");
+	} else if (error == CANNOT_DOWNLOAD_BOOT_FILES) {
+		fprintf(stderr, "Cannot download boot files\n");
 	} else if (error == NO_ARG) {
 		fprintf(stderr, "Argument does not exist\n");
 	} else {
