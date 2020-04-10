@@ -19,9 +19,7 @@
  *
  *  helper.c
  *
- *
  *  Helper functions for libailsasql
- *
  *
  */
 #include <config.h>
@@ -42,7 +40,6 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "base_sql.h"
-
 
 int
 cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list)
@@ -199,7 +196,7 @@ cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
 		goto cleanup;
 	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than one customer with coid %s. Using first one");
+		ailsa_syslog(LOG_INFO, "More than one customer with coid %s. Using first one", coid);
 	}
 	element = results->head;
 	tmp = element->data;
@@ -212,6 +209,93 @@ cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_list_destroy(customer);
 		ailsa_list_destroy(results);
 		my_free(customer);
+		my_free(results);
+		return retval;
+}
+
+int
+cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(alias) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILELEM *elem;
+	ailsa_data_s *tmp;
+
+	data->data->text = strndup(alias, MAC_LEN);
+	if ((retval = ailsa_list_insert(build, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert build alias into list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, BT_ID_ON_ALIAS, build, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_TYPE_ID_ON_ALIAS query failed");
+		goto cleanup;
+	}
+	if (results->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find build type with alias %s", alias);
+		goto cleanup;
+	} else if (results->total > 1) {
+		ailsa_syslog(LOG_INFO, "More than one build type with alias %s. Using first one", alias);
+	}
+	elem = results->head;
+	tmp = elem->data;
+	data = ailsa_db_text_data_init();
+	data->data->number = tmp->data->number;
+	if ((retval = ailsa_list_insert(list, data)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert build_type_id into list");
+
+	cleanup:
+		ailsa_list_destroy(build);
+		ailsa_list_destroy(results);
+		my_free(build);
+		my_free(results);
+		return retval;
+}
+
+int
+cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
+{
+	int retval = 0;
+	if (!(cc) || !(os) || !(arch) || !(version ))
+		return retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(os, MAC_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
+		retval = -1;
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(arch, MAC_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS architecture into list");
+		retval = -1;
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(version, MAC_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
+		retval = -1;
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, list, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
+		retval = -1;
+		goto cleanup;
+	}
+	retval = (int)results->total;
+
+	cleanup:
+		ailsa_list_destroy(list);
+		ailsa_list_destroy(results);
+		my_free(list);
 		my_free(results);
 		return retval;
 }

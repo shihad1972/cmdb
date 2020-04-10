@@ -80,21 +80,6 @@ static int
 check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id);
 
 static void
-copy_new_os_profile(ailsa_cmdb_s *cmc, char *oss[]);
-
-static int
-cbc_choose_os_to_copy(ailsa_cmdb_s *cbc, uli_t *id, char *oss[]);
-
-static void
-copy_new_build_os(ailsa_cmdb_s *cbc, uli_t *id);
-/*
-static void
-copy_locale_for_os(ailsa_cmdb_s *cbc, uli_t *id); */
-
-static void
-copy_packages_for_os(ailsa_cmdb_s *cbc, uli_t *id);
-
-static void
 cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
 
 static void
@@ -105,6 +90,18 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
 
 static void
 cbcos_clean_comm_line(cbcos_comm_line_s *cl);
+
+static int
+cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os);
+
+static int
+cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os);
+
+static int
+cbcos_insert_os_id_user_into_list(AILLIST *pack, unsigned long int id);
+
+static int
+ailsa_insert_cuser_muser(AILLIST *list, AILELEM *elem);
 
 int
 main (int argc, char *argv[])
@@ -347,53 +344,44 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 static int
 add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
-	char *oss[3];
-	int retval = NONE;
-	unsigned long int id;
-	cbc_s *cbc;
-	cbc_build_os_s *os;
-	dbdata_s *data = NULL;
+	int retval;
+	AILLIST *os = ailsa_db_data_list_init();
 
-	initialise_cbc_s(&cbc);
-	initialise_cbc_os_s(&os);
-	cbc->bos = os;
-	if (strncasecmp(col->ver_alias, "NULL", COMM_S) == 0)
-		snprintf(col->ver_alias, COMM_S, "none");
-	if (strncasecmp(col->alias, "NULL", MAC_S) == 0) {
+	if (!(col->ver_alias))
+		col->version = strdup("none");
+	if (!(col->alias)) {
+		col->alias = ailsa_calloc(SERVICE_LEN, "col->alias in add_cbc_build_os");
 		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
-			clean_cbc_struct(cbc);
-			return OS_NOT_FOUND;
+			goto cleanup;
 		}
 	}
-	if ((retval = get_build_type_id(cmc, col->alias, &(os->bt_id))) != 0) {
-		clean_cbc_struct(cbc);
-		return BUILD_TYPE_NOT_FOUND;
+	if ((retval = cmdb_check_for_os(cmc, col->os, col->arch, col->version)) > 0) {
+		retval = 0;
+		ailsa_syslog(LOG_ERR, "Build OS already in database");
+		goto cleanup;
+	} else if (retval < 0) {
+		goto cleanup;
 	}
-/* Check to make sure this OS not already in DB */
-	oss[0] = col->arch;
-	oss[1] = col->version;
-	oss[2] = col->os;
-	if ((retval = get_os_id(cmc, oss, &id)) != OS_NOT_FOUND) {
-		fprintf(stderr, "OS %s already in database\n", col->os);
-		clean_cbc_struct(cbc);
-		return BUILD_OS_EXISTS;
+
+	if ((retval = cmdb_fill_os_details(cmc, col, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to fill in OS details");
+		goto cleanup;
 	}
-	snprintf(os->alias, MAC_S, "%s", col->alias);
-	snprintf(os->os, MAC_S, "%s", col->os);
-	snprintf(os->version, MAC_S, "%s", col->version);
-	snprintf(os->ver_alias, MAC_S, "%s", col->ver_alias);
-	snprintf(os->arch, RANGE_S, "%s", col->arch);
-	os->cuser = os->muser = (unsigned long int)getuid();
-	if ((retval = cbc_run_insert(cmc, cbc, BUILD_OSS)) != 0)
-		printf("Unable to add build os to database\n");
-	else
-		printf("Build os added to database\n");
-	copy_new_os_profile(cmc, oss);
+	if ((retval = ailsa_insert_query(cmc, INSERT_BUILD_OS, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert os %s into database", col->os);
+		goto cleanup;
+	}
+	if ((retval = cbcos_create_os_profile(cmc, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot create new OS build profile");
+		goto cleanup;
+	}
 	if ((retval = cbc_get_boot_files(cmc, col->alias, col->version, col->arch, col->ver_alias)) != 0)
 		fprintf(stderr, "Unable to download boot files\n");
-	clean_dbdata_struct(data);
-	clean_cbc_struct(cbc);
-	return retval;
+
+	cleanup:
+		ailsa_list_destroy(os);
+		my_free(os);
+		return retval;
 }
 
 static int
@@ -464,143 +452,6 @@ check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id)
 	}
 	clean_dbdata_struct(data);
 	return retval;
-}
-
-static void
-copy_new_os_profile(ailsa_cmdb_s *cmc, char *oss[])
-{
-	char alias[RANGE_S];
-	int retval;
-	unsigned long int id[3]; //os_id = 0, bt_id = 1, id to copy from = 2
-
-	memset(id, 0, sizeof(id));
-	if ((retval = get_os_id(cmc, oss, &id[0])) != 0) {
-		fprintf(stderr, "Cannot find OS? %s, %s, %s\n", oss[0], oss[1], oss[2]);
-		return;
-	}
-	if ((retval = get_os_alias(cmc, oss[2], alias)) != 0) {
-		fprintf(stderr, "Cannot find alias for os %s\n", oss[2]);
-		return;
-	}
-	if ((retval = get_build_type_id(cmc, alias, &id[1])) != 0) {
-		fprintf(stderr, "Cannot find build type for alias %s\n", alias);
-		return;
-	}
-	if ((retval = cbc_choose_os_to_copy(cmc, id, oss)) != 0) {
-		fprintf(stderr, "Cannot choose an os to copy??\n");
-		return;
-	}
-	copy_new_build_os(cmc, id);
-	return;
-}
-
-static int
-cbc_choose_os_to_copy(ailsa_cmdb_s *cbc, uli_t *id, char *oss[])
-{
-	if (!(cbc) || !(oss) || !(id))
-		return CBC_NO_DATA;
-	char *arch = oss[0];
-	int retval = 0, query = OS_DETAIL_ON_BT_ID;
-	unsigned int max;
-	unsigned long int time = 0, ctime;
-	dbdata_s *data, *list;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = *(id + 1);
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		fprintf(stderr, "Cannot find any previous os for %s\n", oss[2]);
-		clean_dbdata_struct(data);
-		return OS_NOT_FOUND;
-	}
-	if (check_data_length(data, max) != 0) {
-		clean_dbdata_struct(data);
-		return CBC_DATA_WRONG_COUNT;
-	}
-	list = data;
-	while (data) {
-		if ((strncasecmp(arch, data->next->next->fields.text, RBUFF_S) == 0) &&
-		    (data->fields.number != id[0])) {
-			convert_time(data->next->fields.text, &ctime);
-			if (ctime > time) {
-				id[2] = data->fields.number;
-				time = ctime; 
-			}
-		}
-		data = move_down_list_data(data, max);
-	}
-	clean_dbdata_struct(list);
-	if (id[2] == 0)
-		return 1;
-	else
-		return 0;
-}
-
-static void
-copy_new_build_os(ailsa_cmdb_s *cbc, uli_t *id)
-{
-	if (!(cbc) || !(id)) {
-		fprintf(stderr, "No data passed to copy_new_build_os\nNo Copy performed\n");
-		return;
-	}
-	copy_packages_for_os(cbc, id);
-}
-
-static void
-copy_packages_for_os(ailsa_cmdb_s *cbc, uli_t *id)
-{
-	int retval = 0, query = PACKAGE_VID_ON_OS_ID, i = 0;
-	unsigned int max;
-	dbdata_s *data, *dlist;
-	cbc_s *base;
-	cbc_package_s *pack, *plist = NULL, *next;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = id[2];
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		fprintf(stderr, "No packages for OS?\n");
-		clean_dbdata_struct(data);
-		return;
-	}
-	dlist = data;
-	if (check_data_length(dlist, max) != 0) {
-		fprintf(stderr, "dbdata count wrong in copy_packages_for_os");
-		clean_dbdata_struct(data);
-		return;
-	}
-	initialise_cbc_s(&base);
-	data = dlist;
-	while (data) {
-		initialise_cbc_package_s(&pack);
-		snprintf(pack->package, HOST_S, "%s", data->fields.text);
-		pack->vari_id = data->next->fields.number;
-		pack->os_id = id[0];
-		pack->cuser = pack->muser = (unsigned long int)getuid();
-		if (!(plist)) {
-			plist = pack;
-		} else {
-			next = plist;
-			while (next->next)
-				next = next->next;
-			next->next = pack;
-		}
-		data = move_down_list_data(data, max);
-	}
-	pack = plist;
-	clean_dbdata_struct(dlist);
-	while (pack) {
-		base->package = pack;
-		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) != 0) {
-			fprintf(stderr, "Cannot insert package %s\n", pack->package);
-		} else {
-			i++;
-		}
-		pack = pack->next;
-	}
-	printf("%d package(s) inserted\n", i);
-	base->package = plist;
-	clean_cbc_struct(base);
 }
 
 static int
@@ -756,3 +607,170 @@ cbcos_clean_comm_line(cbcos_comm_line_s *cl)
 		my_free(cl->version);
 	my_free(cl);
 }
+
+static int
+cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
+{
+	int retval;
+	if (!(cmc) || !(col) || !(os))
+		return AILSA_NO_DATA;
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(col->os, MAC_LEN);
+	if ((retval = ailsa_list_insert(os, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(col->version, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(os, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(col->alias, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(os, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS alias into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(col->ver_alias, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(os, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS version alias into list");
+		return retval;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(col->arch, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(os, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS architecture into list");
+		return retval;
+	}
+	if ((retval = cmdb_add_build_type_id_to_list(col->alias, cmc, os)) != 0)
+		return BUILD_TYPE_NOT_FOUND;
+	retval = cmdb_populate_cuser_muser(os);
+	return retval;
+}
+
+static int
+cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
+{
+	if (!(cmc) || !(os))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	unsigned long int new_os_id;
+	void *ptr;
+	if (os->total != 8)
+		return WRONG_LENGTH_LIST;
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	AILELEM *text = os->head;
+	text = text->next->next->next->next;
+	AILELEM *id = text->next;
+	ailsa_data_s *tmp = id->data;
+	ailsa_data_s *data = ailsa_db_lint_data_init();
+
+	data->data->number = tmp->data->number;
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert bt_id into query list in cbcos_create_os_profile");
+		goto cleanup;
+	}
+	tmp = text->data;
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(tmp->data->text, SERVICE_LEN);
+	if ((retval = ailsa_list_insert(list, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert arch into query list in cbcos_create_os_profile");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, OS_FROM_BUILD_TYPE_AND_ARCH, list, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "SQL query for os_id failed with %d", retval);
+		goto cleanup;
+	}
+	id = results->head;
+	tmp = id->data;
+	new_os_id = tmp->data->number;
+	if ((retval = ailsa_list_remove(results, id, &ptr)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot remove member from os_id list");
+		goto cleanup;
+	}
+	data = ptr;
+	ailsa_clean_data(data);
+	if ((retval = ailsa_argument_query(cmc, PACKAGE_DETAIL_ON_OS_ID, results, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "PACKAGE_DETAIL_ON_OS_ID query failed: %d", retval);
+		goto cleanup;
+	}
+	if (pack->total == 0) {
+		ailsa_syslog(LOG_ERR, "Unable to get package info for previous varients");
+		ailsa_syslog(LOG_ERR, "You will have to manually create the varients for this OS");
+		goto cleanup;
+	}
+	if ((retval = cbcos_insert_os_id_user_into_list(pack, new_os_id)) != 0) {
+		ailsa_syslog(LOG_ERR, "Inserting new os_id into list failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_multiple_insert_query(cmc, INSERT_BUILD_PACKAGE, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert build packages into database: %d", retval);
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_destroy(pack);
+		ailsa_list_destroy(list);
+		ailsa_list_destroy(results);
+		my_free(pack);
+		my_free(list);
+		my_free(results);
+		return retval;
+}
+
+static int
+cbcos_insert_os_id_user_into_list(AILLIST *pack, unsigned long int id)
+{
+	if (!(pack) || (id == 0))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	size_t i, total;
+	AILELEM *p = pack->head;
+	ailsa_data_s *data;
+
+	total = pack->total / 2;
+	p = p->next;
+	for (i = 0; i < total; i++) {
+		data = ailsa_db_lint_data_init();
+		data->data->number = id;
+		if ((retval = ailsa_list_ins_next(pack, p, (void *)data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert os id into list");
+			goto cleanup;
+		}
+		p = p->next;
+		if ((retval = ailsa_insert_cuser_muser(pack, p)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert cuser and muser into list");
+			goto cleanup;
+		}
+		if (p->next->next->next)
+			p = p->next->next->next->next;
+	}
+	cleanup:
+		return retval;
+}
+
+static int
+ailsa_insert_cuser_muser(AILLIST *list, AILELEM *elem)
+{
+	if (!(list) || !(elem))
+		return AILSA_NO_DATA;
+	int i, retval;
+	uid_t uid = getuid();
+	ailsa_data_s *data;
+	AILELEM *p = elem;
+	for (i = 0; i < 2; i++) {
+		data = ailsa_db_lint_data_init();
+		data->data->number = (unsigned long int)uid;
+		if ((retval = ailsa_list_ins_next(list, p, (void *)data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert user id into list round %d", i);
+			return retval;
+		}
+		p = p->next;
+	}
+	return retval;
+}
+

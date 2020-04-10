@@ -111,6 +111,30 @@ ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const struct ailsa_sql_qu
 		return retval;
 }
 
+int
+ailsa_bind_parameters_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *list, unsigned int total, unsigned int *f)
+{
+	if (!(stmt) || !(list) || !(f) || (total == 0))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	unsigned int i;
+	MYSQL_BIND *tmp = ailsa_calloc(sizeof(MYSQL_BIND) * (size_t)total, "tmp in ailsa_bind_parameters_mysql");
+	AILELEM *elem = list->head;
+	ailsa_data_s *data;
+	for (i = 0; i < total; i++) {
+		data = elem->data;
+		if ((retval = ailsa_set_bind_mysql(&(tmp[i]), data, f[i])) != 0) {
+			my_free(tmp);
+			return retval;
+		}
+		elem = elem->next;
+	}
+	*bind = tmp;
+	if ((retval = mysql_stmt_bind_param(stmt, tmp)) != 0)
+		ailsa_syslog(LOG_ERR, "Unable to bind parameters: %s", mysql_stmt_error(stmt));
+	return retval;
+}
+
 void
 ailsa_mysql_cleanup(MYSQL *cmdb)
 {

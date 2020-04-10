@@ -164,6 +164,26 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT service_id FROM services WHERE server_id = ? AND cust_id = ? AND service_type_id = ? AND detail = ? AND url = ?",
 	5,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // BT_ID_ON_ALIAS
+"SELECT bt_id FROM build_type WHERE alias = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // CHECK_BUILD_OS
+"SELECT os_id FROM build_os WHERE os = ? AND arch = ? AND os_version = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // OS_FROM_BUILD_TYPE_AND_ARCH
+"SELECT os_id FROM build_os WHERE bt_id = ? AND arch = ? ORDER BY ctime DESC LIMIT 2",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // PACKAGE_DETAIL_ON_OS_ID
+"SELECT package, varient_id FROM packages WHERE os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
 	}
 };
 
@@ -207,35 +227,73 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO customer (name, address, city, county, postcode, coid, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 	8,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD_OS
+"INSERT INTO build_os (os, os_version, alias, ver_alias, arch, bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	8,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD_PACKAGE
+"INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES (?, ?, ?, ?, ?)",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
+static int
+cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t total);
+
+static char *
+cmdb_create_value_string(unsigned int query);
+
+static unsigned int *
+cmdb_insert_fields_array(unsigned int n, size_t tot, const unsigned int *f);
+
 #ifdef HAVE_MYSQL
+
 static int
 ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
+
 int
 ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+
 int
 ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
+
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
+
+int
+ailsa_multiple_insert_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
+
 #endif
 
 #ifdef HAVE_SQLITE3
+
 static int
 ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results);
+
 int
 ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+
 int
 ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
+
+int
+ailsa_multiple_insert_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
+
 static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
+
 static int
 ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s argu, AILLIST *args);
+
 static unsigned int
 ailsa_set_my_type(unsigned int type);
+
 static void
 ailsa_remove_empty_results_mysql(MYSQL_STMT *stmt, AILLIST *results);
+
 #endif
 
 int
@@ -299,6 +357,104 @@ ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
 	return retval;
+}
+
+int
+ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
+{
+	int retval;
+	ailsa_sql_multi_s *sql = ailsa_calloc(sizeof(ailsa_sql_multi_s), "sql in ailsa_multiple_insert_query");
+
+	if ((retval = cmdb_create_multi_insert(sql, query_no, insert->total)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to create multiple insert struct");
+		goto cleanup;
+	}
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		ailsa_syslog(LOG_ERR, "no dbtype set");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+		retval = ailsa_multiple_insert_query_mysql(cmdb, sql, insert);
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+		retval = ailsa_multiple_insert_query_sqlite(cmdb, sql, insert);
+#endif
+	else
+		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+
+	cleanup:
+		cmdb_clean_ailsa_sql_multi(sql);
+		return retval;
+}
+
+static int
+cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t total)
+{
+	if (!(sql) || (query == 0) || (total == 0))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	unsigned int *u = NULL;
+	unsigned int n = insert_queries[query].number;
+	const unsigned int *f = insert_queries[query].fields;
+	size_t i, len_s, len_q, len_t, tot;
+	char *values = NULL, *q = NULL;
+
+	len_q = strlen(insert_queries[query].query);
+	values = cmdb_create_value_string(query);
+	len_s = strlen(values);
+	len_t = total / (size_t)n;
+	tot = (len_s * len_t) + len_q;
+	u = cmdb_insert_fields_array(n, total, f);
+	q = ailsa_calloc(tot, "q in cmdb_create_multi_insert");
+	sprintf(q, "%s", insert_queries[query].query);
+	for (i = 1; i < len_t; i++) {
+		sprintf(q + len_q, "%s", values);
+		len_q += len_s;
+	}
+	sql->query = q;
+	sql->fields = u;
+	sql->total = (unsigned int)total;
+	sql->number = n;
+	free(values);
+	return retval;
+}
+
+static char *
+cmdb_create_value_string(unsigned int query)
+{
+	char *value = NULL;
+	unsigned int count = insert_queries[query].number;
+	unsigned int i;
+	size_t len = (size_t)count * 3;
+	len += 4;
+	value = ailsa_calloc(len, "value in cmdb_create_value_string");
+	sprintf(value, ", (");
+	for (i = 0; i < count; i++) {
+		len = strlen(value);
+		sprintf(value + len, "?, ");
+	}
+	len = strlen(value);
+	sprintf(value + len - 2, ")");
+	return value;
+}
+
+static unsigned int *
+cmdb_insert_fields_array(unsigned int n, size_t tot, const unsigned int *f)
+{
+	unsigned int *m = ailsa_calloc(sizeof(unsigned int) * tot, "i in cmdb_insert_fields_array");
+	unsigned int u = (unsigned int)tot / n;
+	unsigned int i, j, k;
+	for (i = 0; i < u; i++) {
+		for (j = 0; j< n; j++) {
+			if (i > 0)
+				k = (i * n) + j;
+			else
+				k = j;
+			m[k] = f[j];
+		}
+	}
+	return m;
 }
 
 #ifdef HAVE_MYSQL
@@ -426,6 +582,51 @@ ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s inse
 	return 0;
 }
 
+int
+ailsa_multiple_insert_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *insert, AILLIST *list)
+{
+	if (!(cmdb) || !(insert) || !(list))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	const char *query = insert->query;
+	unsigned int t = insert->total;
+	unsigned int *f = insert->fields;
+	unsigned int rows;
+	MYSQL sql;
+	MYSQL_STMT *stmt;
+	MYSQL_BIND *bind = NULL;
+
+	ailsa_mysql_init(cmdb, &sql);
+	if (!(stmt = mysql_stmt_init(&sql))) {
+		ailsa_syslog(LOG_ERR, "MySQL stmt failed: %s", mysql_error(&sql));
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0) {
+		ailsa_syslog(LOG_ERR, "MySQL stmt failed: %s", mysql_stmt_error(stmt));
+		goto cleanup;
+	}
+	if ((retval = ailsa_bind_parameters_mysql(stmt, &bind, list, t, f)) != 0) {
+		ailsa_syslog(LOG_ERR, "MySQL bind failed");
+		goto cleanup;
+	}
+	if ((retval = mysql_stmt_execute(stmt)) != 0) {
+		ailsa_syslog(LOG_ERR, "MySQL stmt failed: %s", mysql_stmt_error(stmt));
+		goto cleanup;
+	}
+	rows = (unsigned int)mysql_stmt_affected_rows(stmt);
+	t = insert->total / insert->number;
+	if (t != rows) {
+		ailsa_syslog(LOG_ERR, "Inserted %u rows, should have been %u", rows, t);
+	}
+	cleanup:
+		if (bind)
+			my_free(bind);
+		if (stmt)
+			mysql_stmt_close(stmt);
+		ailsa_mysql_cleanup(&sql);
+		return retval;
+}
+
 static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 {
@@ -518,7 +719,7 @@ ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results)
 			return retval;
 		field = mysql_fetch_field_direct(res, i);
 		type = ailsa_set_my_type(field->type);
-		if ((retval = ailsa_set_bind_mysql(&(tmp[i]), data, (short int)type)) != 0) {
+		if ((retval = ailsa_set_bind_mysql(&(tmp[i]), data, type)) != 0) {
 			my_free(tmp);
 			goto cleanup;
 		}
@@ -534,7 +735,7 @@ ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results)
 }
 
 int
-ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields)
+ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, unsigned int fields)
 {
 	if (!(bind) || !(data))
 		return AILSA_NO_DATA;
@@ -701,6 +902,16 @@ ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 		return retval;
 }
 
+int
+ailsa_multiple_insert_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert)
+{
+	if (!(cmdb) || !(sql) || !(insert))
+		return AILSA_NO_DATA;
+	int retval = 0;
+
+	return retval;
+}
+
 static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 {
@@ -745,11 +956,12 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, const struct ailsa_sql_query_s 
 		return AILSA_NO_DATA;
 	const char *text = NULL;
 	int retval = 0;
-	short int i = 0, count = argu.number;
+	unsigned int count = argu.number;
+	int i = 0;
 	ailsa_data_s *data;
 	AILELEM *tmp = args->head;
 
-	for (i = 0; i < count; i++) {
+	for (i = 0; (unsigned int)i < count; i++) {
 		if (tmp) {
 			data = tmp->data;
 		} else {

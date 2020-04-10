@@ -310,7 +310,7 @@ ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
 	str->len = 0;
-	str->string = ailsa_calloc(FILE_LEN, "string->string in ailsa_init_string");
+	str->string = ailsa_calloc(FILE_LEN, "str->string in ailsa_init_string");
 }
 
 void

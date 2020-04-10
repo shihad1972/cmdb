@@ -237,6 +237,8 @@ report_error(int error, const char *errstr)
 		;
 	} else if (error == NO_DEVICE_OR_DETAIL) {
 		fprintf(stderr, "No device or detail in %s\n", errstr);
+	} else if (error == WRONG_LENGTH_LIST) {
+		fprintf(stderr, "A list of incorrect length was passed to a function");
 	} else if (error == NO_ARG) {
 		fprintf(stderr, "Argument does not exist\n");
 	} else {

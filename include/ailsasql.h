@@ -94,7 +94,11 @@ enum {			// SQL ARGUMENT QUERIES
 	HARDWARE_TYPE_ID_ON_CLASS,
 	HARDWARE_ID_ON_DETAILS,
 	SERVICE_TYPE_ID_ON_SERVICE,
-	SERVICE_ID_ON_DETAILS
+	SERVICE_ID_ON_DETAILS,
+	BT_ID_ON_ALIAS,
+	CHECK_BUILD_OS,
+	OS_FROM_BUILD_TYPE_AND_ARCH,
+	PACKAGE_DETAIL_ON_OS_ID
 };
 
 enum {			// SQL INSERT QUERIES
@@ -105,7 +109,9 @@ enum {			// SQL INSERT QUERIES
 	INSERT_VM_HOST,
 	INSERT_HARDWARE,
 	INSERT_SERVICE,
-	INSERT_CUSTOMER
+	INSERT_CUSTOMER,
+	INSERT_BUILD_OS,
+	INSERT_BUILD_PACKAGE
 };
 
 typedef struct ailsa_sql_single_s {
@@ -116,9 +122,16 @@ typedef struct ailsa_sql_single_s {
 
 typedef struct ailsa_sql_query_s {
 	const char *query;
-	short int number;
-	short int fields[9];
+	unsigned int number;
+	unsigned int fields[9];
 } ailsa_sql_query_s;
+
+typedef struct ailsa_sql_multi_s {
+	char *query;
+	unsigned int number;
+	unsigned int total;
+	unsigned int *fields;
+} ailsa_sql_multi_s;
 
 extern const struct ailsa_sql_single_s server_table[];
 extern size_t server_fields;
@@ -131,6 +144,9 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
+
+int
+ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
 // Some helper functions
 
@@ -145,6 +161,18 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version);
+
+// Data manipulation functions
+
+void
+cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void
@@ -163,7 +191,10 @@ int
 ailsa_bind_results_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *results);
 
 int
-ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, short int fields);
+ailsa_bind_parameters_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *list, unsigned int total, unsigned int *f);
+
+int
+ailsa_set_bind_mysql(MYSQL_BIND *bind, ailsa_data_s *data, unsigned int fields);
 
 void
 ailsa_mysql_cleanup(MYSQL *cmdb);
