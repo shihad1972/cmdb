@@ -472,7 +472,7 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 		goto cleanup;
 	}
 	buff = calloc(size, 1);
-	fprintf(stderr, "Grabbing initrd. Size %lu...\n", size);
+	fprintf(stderr, "Grabbing initrd. Size: %lu...\n", size);
 	if ((len = fread(buff, 1, size, rx)) != size)
 		fprintf(stderr, "Only read %zu bytes of %lu\n", len, size);
 	fprintf(stderr, "Got it\n");

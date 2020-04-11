@@ -98,7 +98,8 @@ enum {			// SQL ARGUMENT QUERIES
 	BT_ID_ON_ALIAS,
 	CHECK_BUILD_OS,
 	OS_FROM_BUILD_TYPE_AND_ARCH,
-	PACKAGE_DETAIL_ON_OS_ID
+	PACKAGE_DETAIL_ON_OS_ID,
+	SERVERS_WITH_BUILDS_ON_OS_ID
 };
 
 enum {			// SQL INSERT QUERIES
@@ -112,6 +113,10 @@ enum {			// SQL INSERT QUERIES
 	INSERT_CUSTOMER,
 	INSERT_BUILD_OS,
 	INSERT_BUILD_PACKAGE
+};
+
+enum {			// SQL DELETE QUERIES
+	DELETE_BUILD_OS = 0
 };
 
 typedef struct ailsa_sql_single_s {
@@ -143,6 +148,9 @@ int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results);
 
 int
+ailsa_delete_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *remove);
+
+int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
 int
@@ -166,7 +174,13 @@ int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version);
+
+int
+check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list);
 
 // Data manipulation functions
 

@@ -56,6 +56,7 @@ typedef struct cbcos_comm_line_s {
 	char *ver_alias;
 	char *version;
 	short int action;
+	short int force;
 } cbcos_comm_line_s;
 
 static int
@@ -75,9 +76,6 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
 cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
-
-static int
-check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id);
 
 static void
 cbcos_check_for_null_in_comm_line(cbcos_comm_line_s *col, int *test);
@@ -103,6 +101,9 @@ cbcos_insert_os_id_user_into_list(AILLIST *pack, unsigned long int id);
 static int
 ailsa_insert_cuser_muser(AILLIST *list, AILELEM *elem);
 
+static void
+display_server_name_for_build_os_id(AILLIST *list);
+
 int
 main (int argc, char *argv[])
 {
@@ -126,8 +127,6 @@ main (int argc, char *argv[])
 		retval = add_cbc_build_os(cmc, cocl);
 	else if (cocl->action == RM_CONFIG)
 		retval = remove_cbc_build_os(cmc, cocl);
-	else if (cocl->action == MOD_CONFIG)
-		printf("Cowardly refusal to modify Operating Systems\n");
 	else if (cocl->action == DOWNLOAD)
 		retval = cbcos_grab_boot_files(cmc, cocl);
 	else
@@ -388,70 +387,71 @@ static int
 remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
-		return CBC_NO_DATA;
-	char *name = col->os;
-	char *version = col->version, *arch = col->arch;
-	char *oss[3];
-	int retval = NONE;
+		return AILSA_NO_DATA;
+	char *os = col->os, *version = col->version, *arch = col->arch;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+	int retval;
 	unsigned long int id;
-	dbdata_s *data = NULL;
+	AILELEM *element;
+	ailsa_data_s *data;
 
-	oss[0] = col->arch;
-	oss[1] = col->version;
-	oss[2] = col->os;
-	if ((retval = get_os_id(cmc, oss, &id)) != 0)
-		return OS_NOT_FOUND;
-	if ((retval = check_for_build_os_in_use(cmc, id)) != 0)
-		return BUILD_OS_IN_USE;
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in remove_cbc_build_os");
-	data->next = NULL;
-	data->args.number = id;
-	if ((retval = cbc_run_delete(cmc, data, BOS_DEL_BOS_ID)) != 1) {
-		fprintf(stderr, "%d oses deleted for %s %s %s\n",
-			retval, name, version, arch);
-		retval = MULTIPLE_OS;
-	} else {
-		printf("OS %s %s %s deleted from db\n", name, version, arch);
-		retval = NONE;
+	if ((retval = cmdb_add_os_id_to_list(os, arch, version, cmc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get OS id");
+		retval = OS_NOT_FOUND;
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
-	return retval;
+	if (list->total == 0) {
+		retval = OS_NOT_FOUND;
+		goto cleanup;
+	}
+	element = list->head;
+	data = element->data;
+	id = data->data->number;
+	if ((retval = check_builds_for_os_id(cmc, id, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check for server builds with this OS");
+		goto cleanup;
+	}
+	if (build->total > 0) {
+		display_server_name_for_build_os_id(build);
+		if (col->force == 0) {
+			ailsa_syslog(LOG_ERR, "Build OS in use. If you want to delete, use -f");
+			retval = BUILD_OS_IN_USE;
+			goto cleanup;
+		}
+	}
+	if ((retval = ailsa_delete_query(cmc, DELETE_BUILD_OS, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_BUILD_OS query failed");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		ailsa_list_destroy(build);
+		my_free(list);
+		my_free(build);
+		return retval;
 }
 
-static int
-check_for_build_os_in_use(ailsa_cmdb_s *cbc, unsigned long int os_id)
+static void
+display_server_name_for_build_os_id(AILLIST *list)
 {
-	int retval, query = BUILD_ID_ON_OS_ID, i;
-	char *name;
-	unsigned int max;
-	dbdata_s *data, *list;
+	if (!(list))
+		return;
+	size_t i;
+	AILELEM *element;
+	ailsa_data_s *data;
 
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = os_id;
-	if ((retval = cbc_run_search(cbc, data, query)) != 0) {
-		clean_dbdata_struct(data->next);
-		data->next = NULL;
-		memset(data->fields.text, 0, RBUFF_S);
-		retval = cbc_run_search(cbc, data, SERVERS_USING_BUILD_OS);
-		printf("%d server(s) ", retval);
-		list = data;
-		for (i = 0; i < retval; i++) {
-			name = list->fields.text;
-			if (i + 1 == retval)
-				printf("%s ", name);
-			else
-				printf("%s, ", name);
-			if (list->next)
-				list = list->next;
-			else
-				break;
-		}
-		printf("are using build os.\n");
+	element = list->head;
+
+	printf("The following servers are using the build os:");
+	for (i = 0; i < list->total; i++) {
+		if (!(element))
+			break;
+		data = element->data;
+		printf(" %s", data->data->text);
+		element = element->next;
 	}
-	clean_dbdata_struct(data);
-	return retval;
+	printf("\n");
 }
 
 static int

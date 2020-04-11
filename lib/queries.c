@@ -184,6 +184,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT package, varient_id FROM packages WHERE os_id = ?",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // SERVERS_WITH_BUILDS_ON_OS_ID
+"SELECT s.name FROM server s LEFT JOIN build b ON b.server_id = s.server_id LEFT JOIN build_os bo ON bo.os_id = b.os_id WHERE bo.os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
 	}
 };
 
@@ -240,6 +245,14 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	}
 };
 
+const struct ailsa_sql_query_s delete_queries[] = {
+	{ // DELETE_BUILD_OS
+"DELETE FROM build_os WHERE os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	}
+};
+
 static int
 cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t total);
 
@@ -256,6 +269,9 @@ ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 
 int
 ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+
+int
+ailsa_delete_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete);
 
 int
 ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
@@ -275,6 +291,9 @@ ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results
 
 int
 ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s argument, AILLIST *args, AILLIST *results);
+
+int
+ailsa_delete_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete);
 
 int
 ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
@@ -336,6 +355,27 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
 	return retval;	
+}
+
+int
+ailsa_delete_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *delete)
+{
+	int retval;
+	const struct ailsa_sql_query_s query = delete_queries[query_no];
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		ailsa_syslog(LOG_ERR, "no dbtype set");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+		retval = ailsa_delete_query_mysql(cmdb, query, delete);
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+		retval = ailsa_delete_query_sqlite(cmdb, query, delete);
+#endif
+	else
+		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+	return retval;
 }
 
 int
@@ -561,6 +601,27 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 			my_free(res);
 		ailsa_mysql_cleanup(&sql);
 		return retval;
+}
+
+int
+ailsa_delete_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s delete, AILLIST *list)
+{
+	if (!(cmdb) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	MYSQL sql;
+	MYSQL_BIND *bind = NULL;
+	const char *query = delete.query;
+
+	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_run_mysql_stmt(&sql, bind, delete, list)) == 0)
+		ailsa_syslog(LOG_INFO, "No affected rows for %s", query);
+	else if (retval < 0)
+		ailsa_syslog(LOG_ERR, "Statement failed: %s", query);
+	else
+		retval = 0;
+	ailsa_mysql_cleanup(&sql);
+	return retval;
 }
 
 int
@@ -874,6 +935,36 @@ ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s a
 	if (retval == SQLITE_DONE)
 		retval = 0;
 	return retval;
+}
+
+int
+ailsa_delete_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete)
+{
+	if (!(cmdb) || !(delete))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	sqlite3 *sql = NULL;
+	sqlite3_stmt *state = NULL;
+	const char *sql_query = query.query;
+	const char *file = cmdb->file;
+	unsigned int t = query.number;
+	const unsigned int *f = query.fields;
+
+	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state);
+	if ((retval = ailsa_bind_arguments_sqlite(state, delete, t, f)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
+		goto cleanup;
+	}
+	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
+		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
+		retval = SQLITE_INSERT_FAILED;
+		goto cleanup;
+	}
+	cleanup:
+		if (retval == SQLITE_DONE)
+			retval = 0;
+		ailsa_sqlite_cleanup(sql, state);
+		return retval;
 }
 
 int
