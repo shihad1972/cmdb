@@ -318,7 +318,7 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 int
 check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list)
 {
-	if (!(cc) || !(list) || (id = 0))
+	if (!(cc) || !(list) || (id == 0))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();

@@ -159,7 +159,7 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
-	const char *optstr = "ade:ghln:o:rs:t:v";
+	const char *optstr = "ade:fghln:o:rs:t:v";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -167,6 +167,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		{"add",			no_argument,		NULL,	'a'},
 		{"display",		no_argument,		NULL,	'd'},
 		{"version-alias",	required_argument,	NULL,	'e'},
+		{"force",		no_argument,		NULL,	'f'},
 		{"download",		no_argument,		NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"list",		no_argument,		NULL,	'l'},
@@ -204,6 +205,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			return DISPLAY_USAGE;
 		else if (opt == 'e')
 			col->ver_alias = strndup(optarg, MAC_S);
+		else if (opt == 'f')
+			col->force = 1;
 		else if (opt == 'n')
 			col->os = strndup(optarg, MAC_S);
 		else if (opt == 'o')
@@ -443,7 +446,7 @@ display_server_name_for_build_os_id(AILLIST *list)
 
 	element = list->head;
 
-	printf("The following servers are using the build os:");
+	printf("The following servers are using the build os:\n\t");
 	for (i = 0; i < list->total; i++) {
 		if (!(element))
 			break;
