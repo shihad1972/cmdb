@@ -393,6 +393,8 @@ static void
 parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 {
 	char buff[CONFIG_LEN], temp[CONFIG_LEN];
+	memset(buff, 0, CONFIG_LEN);
+	memset(temp, 0, CONFIG_LEN);
 
 	GET_CONFIG_OPTION("DBTYPE=%s", cmdb->dbtype);
 	GET_CONFIG_OPTION("DB=%s", cmdb->db);
