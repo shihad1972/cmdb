@@ -53,14 +53,12 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval = 0;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
 	if (!(cm) || !(cc)) {
 		retval = AILSA_NO_DATA;
 		goto cleanup;
 	}
-	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->name, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_server_to_database");
 		goto cleanup;
 	}
@@ -74,6 +72,10 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	}
 	if ((retval = cmdb_populate_server_details(cm, cc, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Populate server details failed");
+		goto cleanup;
+	}
+	if (server->total != 9) {
+		ailsa_syslog(LOG_ERR, "Only %zu members in insert list", server->total);
 		goto cleanup;
 	}
 	retval = ailsa_insert_query(cc, INSERT_SERVER, server);
@@ -93,16 +95,12 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval = 0;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->service, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->service, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_service_type_to_database");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->detail, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->detail, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_service_type_to_database");
 		goto cleanup;
 	}
@@ -131,16 +129,12 @@ cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval = 0;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->shtype, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->shtype, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_hardware_type_to_database");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->hclass, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->hclass, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_hardware_type_to_database");
 		goto cleanup;
 	}
@@ -170,11 +164,9 @@ cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *vm = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->name, HOST_LEN);
-	if ((retval = ailsa_list_insert(vm, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+	if ((retval = cmdb_add_string_to_list(cm->name, vm)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert vm name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, vm, results)) != 0) {
@@ -185,16 +177,12 @@ cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_INFO, "VM host %s already present in database", cm->name);
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->shtype, MAC_LEN);
-	if ((retval = ailsa_list_insert(vm, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+	if ((retval = cmdb_add_string_to_list(cm->shtype, vm)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert vm type into list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->name, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_add_vm_host_to_database");
+	if ((retval = cmdb_add_string_to_list(cm->name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, vm)) != 0) {
@@ -228,11 +216,9 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *hardware = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->name, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert into data list: cmdb_add_hardware_to_database");
+	if ((retval = cmdb_add_string_to_list(cm->name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, hardware)) != 0) {
@@ -240,9 +226,7 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	if (cm->sid) {
-		data = ailsa_db_lint_data_init();
-		results = ailsa_db_data_list_init();
-		if ((retval = ailsa_list_insert(hardware, data)) != 0) {
+		if ((retval = cmdb_add_number_to_list(cm->sid, hardware)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot insert hard type into list");
 			goto cleanup;
 		}
@@ -352,12 +336,10 @@ cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *services = ailsa_db_data_list_init();
 	AILLIST *hardware = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
 	if (!(cm) || !(cc))
 		goto cleanup;
-	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->name, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_display_server");
 		goto cleanup;
 	}
@@ -458,13 +440,11 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
 	if (!(cm) || !(cc))
 		goto cleanup;
-	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
+	if ((retval = cmdb_add_string_to_list(cm->name, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, SERVICES_ON_SERVER, args, results)) != 0) {
@@ -548,13 +528,11 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
 	if (!(cm) || !(cc))
 		goto cleanup;
-	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_hardware_for_server");
+	if ((retval = cmdb_add_string_to_list(cm->name, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, HARDWARE_ON_SERVER, args, results)) != 0) {
@@ -678,11 +656,9 @@ cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	int retval;
 	AILLIST *results = ailsa_db_data_list_init();
 	AILLIST *args = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->name, SQL_TEXT_MAX);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert data into list in cmdb_list_services_for_server");
+	if ((retval = cmdb_add_string_to_list(cm->name, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, VM_HOST_BUILT_SERVERS, args, results)) != 0) {
@@ -727,58 +703,52 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->name, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->name, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert name into server list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->make, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->make, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert make into server list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->model, MAC_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->model, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert model into server list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->vendor, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->vendor, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert vendor into server list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->uuid, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->uuid, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->coid, HOST_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
+	if ((retval = cmdb_add_string_to_list(cm->coid, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert coid into server list");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot run query for cust_id");
 		goto cleanup;
 	}
+	if (server->total == 5) {
+		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", cm->coid);
+		goto cleanup;
+	}
 	if (cm->vmhost) {
-		my_free(data->data->text);
-		data->data->text = strndup(cm->vmhost, SQL_TEXT_MAX);
+		ailsa_list_destroy(args);
+		ailsa_list_init(args, ailsa_clean_data);
+		if ((retval = cmdb_add_string_to_list(cm->vmhost, args)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert vm hostname into list");
+			goto cleanup;
+		}
 		if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, args, server)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot query for vmhost");
 			goto cleanup;
 		}
 	} else {
-		data = ailsa_db_lint_data_init();
-		data->data->number = 0;
-		if ((retval = ailsa_list_insert(server, data)) != 0) {
+		if ((retval = cmdb_add_number_to_list(0, server)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");
 			goto cleanup;
 		}
@@ -794,16 +764,12 @@ static int
 cmdb_populate_hardware_details(cmdb_comm_line_s *cm, AILLIST *list)
 {
 	int retval;
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(cm->detail, HOST_LEN);
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->detail, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert detail into hardware list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->device, MAC_LEN);
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->device, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert device into hardware list");
 		return retval;
 	}
@@ -815,15 +781,12 @@ static int
 cmdb_populate_service_details(cmdb_comm_line_s *cm, AILLIST *list)
 {
 	int retval;
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->detail, HOST_LEN);
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+
+	if ((retval = cmdb_add_string_to_list(cm->detail, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert detail into service list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(cm->url, DOMAIN_LEN);
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cm->url, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert url into service list");
 		return retval;
 	}

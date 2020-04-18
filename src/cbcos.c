@@ -615,34 +615,24 @@ cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 	int retval;
 	if (!(cmc) || !(col) || !(os))
 		return AILSA_NO_DATA;
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(col->os, MAC_LEN);
-	if ((retval = ailsa_list_insert(os, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(col->os, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(col->version, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(os, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(col->version, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(col->alias, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(os, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(col->alias, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS alias into list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(col->ver_alias, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(os, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(col->ver_alias, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS version alias into list");
 		return retval;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(col->arch, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(os, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(col->arch, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS architecture into list");
 		return retval;
 	}
@@ -669,17 +659,13 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 	text = text->next->next->next->next;
 	AILELEM *id = text->next;
 	ailsa_data_s *tmp = id->data;
-	ailsa_data_s *data = ailsa_db_lint_data_init();
 
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+	if ((retval = cmdb_add_number_to_list(tmp->data->number, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert bt_id into query list in cbcos_create_os_profile");
 		goto cleanup;
 	}
 	tmp = text->data;
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(tmp->data->text, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(tmp->data->text, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert arch into query list in cbcos_create_os_profile");
 		goto cleanup;
 	}
@@ -694,8 +680,7 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 		ailsa_syslog(LOG_ERR, "Cannot remove member from os_id list");
 		goto cleanup;
 	}
-	data = ptr;
-	ailsa_clean_data(data);
+	ailsa_clean_data((ailsa_data_s *)ptr);
 	if ((retval = ailsa_argument_query(cmc, PACKAGE_DETAIL_ON_OS_ID, results, pack)) != 0) {
 		ailsa_syslog(LOG_ERR, "PACKAGE_DETAIL_ON_OS_ID query failed: %d", retval);
 		goto cleanup;

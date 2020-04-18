@@ -702,7 +702,7 @@ cmdb_add_string_to_list(char *str, AILLIST *list)
 int
 cmdb_add_number_to_list(unsigned long int number, AILLIST *list)
 {
-	if (!(list) || (number == 0))
+	if (!(list))
 		return AILSA_NO_DATA;
 	int retval;
 	ailsa_data_s *d = ailsa_db_lint_data_init();
