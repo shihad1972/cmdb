@@ -31,12 +31,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -49,21 +51,75 @@ enum {
 	CVARIENT = 1,
 	CPACKAGE = 2
 };
+
+enum {
+	NONEV = 0,
+	OSV = 1,
+	VERSIONV = 2,
+	ARCHV = 4
+};
+
 typedef struct cbcvari_comm_line_s {
-	char alias[MAC_S];
-	char arch[RANGE_S];
-	char os[MAC_S];
-	char ver_alias[MAC_S];
-	char version[MAC_S];
-	char varient[HOST_S];
-	char valias[MAC_S];
-	char package[HOST_S];
+	char *alias;
+	char *arch;
+	char *os;
+	char *ver_alias;
+	char *version;
+	char *varient;
+	char *valias;
+	char *package;
 	short int action;
 	short int type;
 } cbcvari_comm_line_s;
 
+const struct ailsa_sql_query_s varient_queries[] = {
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? ORDER BY o.os, o.os_version, o.arch",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os = ? OR o.alias = ?) ORDER BY o.os, o.os_version, o.arch",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os_version = ? OR o.ver_alias = ?) ORDER BY o.os, o.os_version, o.arch",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os = ? OR o.alias = ?) AND (o.os_version = ? OR o.ver_alias = ?) ORDER BY o.os, o.os_version, o.arch",
+	5,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND o.arch = ? ORDER BY o.os, o.os_version, o.arch",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os = ? OR o.alias = ?) AND o.arch = ? ORDER BY o.os, o.os_version, o.arch",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os_version = ? OR o.ver_alias = ?) AND o.arch = ? ORDER BY o.os, o.os_version, o.arch",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? AND (o.os = ? OR o.alias = ?) AND (o.os_version = ? OR o.ver_alias = ?) AND o.arch = ? ORDER BY o.os, o.os_version, o.arch",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	}
+};
+
 static void
-init_cbcvari_comm_line(cbcvari_comm_line_s *cvl);
+clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl);
+
+static void
+varient_get_display_query(cbcvari_comm_line_s *cvl, AILLIST *list, ailsa_sql_query_s *query);
 
 static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl);
@@ -87,21 +143,6 @@ static int
 remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
-check_build_os(ailsa_cmdb_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl);
-
-static int
-display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
-
-static int
-display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl);
-
-static int
-display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid);
-
-static unsigned long int
-get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl);
-
-static int
 cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id);
 
 static int
@@ -122,6 +163,12 @@ build_copy_package_list(ailsa_cmdb_s *cbc, cbc_s *base, uli_t bid, uli_t id);
 static void
 add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
 
+static void
+print_varient_details(AILLIST *list);
+
+static int
+compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char *sarch);
+
 int
 main(int argc, char *argv[])
 {
@@ -132,15 +179,14 @@ main(int argc, char *argv[])
 
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in cbcvarient main");
 	cvcl = ailsa_calloc(sizeof(cbcvari_comm_line_s), "cvcl in cbcvarient main");
-	init_cbcvari_comm_line(cvcl);
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
 		free(cvcl);
 		display_command_line_error(retval, argv[0]);
 	}
-	if (strncmp(cvcl->varient, "NULL", COMM_S) != 0)
+	if (!(cvcl->varient))
 		snprintf(error, URL_S, "name %s", cvcl->varient);
-	else if (strncmp(cvcl->valias, "NULL", COMM_S) != 0)
+	else if (!(cvcl->valias))
 		snprintf(error, URL_S, "alias %s", cvcl->valias);
 	parse_cmdb_config(cmc);
 	if (cvcl->action == LIST_CONFIG)
@@ -159,37 +205,44 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Cowardly refusal to modify varients\n");
 	else
 		printf("Unknown action type\n");
-	if (retval != 0) {
-		if (retval == OS_NOT_FOUND) {
-			if (strncmp(cvcl->os, "NULL", COMM_S) != 0)
-				snprintf(error, HOST_S, "%s", cvcl->os);
-			else if (strncmp(cvcl->alias, "NULL", COMM_S) != 0)
-				snprintf(error, HOST_S, "alias %s", cvcl->alias);
-		} else if (retval == NO_RECORDS) {
-			goto cleanup;
-		}
-		free(cmc);
-		free(cvcl);
-		report_error(retval, error);
+	if (retval == OS_NOT_FOUND) {
+		if (cvcl->os)
+			snprintf(error, HOST_S, "%s", cvcl->os);
+		else if (cvcl->alias)
+			snprintf(error, HOST_S, "alias %s", cvcl->alias);
+	} else if (retval == NO_RECORDS) {
+		goto cleanup;
 	}
 	cleanup:
 		ailsa_clean_cmdb(cmc);
-		free(cvcl);
-		exit (retval);
+		clean_cbcvarient_comm_line(cvcl);
+		if (retval > 0)
+			report_error(retval, error);
+		exit(retval);
 }
 
 static void
-init_cbcvari_comm_line(cbcvari_comm_line_s *cvl)
+clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl)
 {
-	memset(cvl, 0, sizeof(cbcvari_comm_line_s));
-	snprintf(cvl->alias, MAC_S, "NULL");
-	snprintf(cvl->arch, RANGE_S, "NULL");
-	snprintf(cvl->os, MAC_S, "NULL");
-	snprintf(cvl->ver_alias, MAC_S, "NULL");
-	snprintf(cvl->version, MAC_S, "NULL");
-	snprintf(cvl->varient, HOST_S, "NULL");
-	snprintf(cvl->valias, MAC_S, "NULL");
-	snprintf(cvl->package, HOST_S, "NULL");
+	if (!(cvl))
+		return;
+	if (cvl->alias)
+		my_free(cvl->alias);
+	if (cvl->arch)
+		my_free(cvl->arch);
+	if (cvl->os)
+		my_free(cvl->os);
+	if (cvl->version)
+		my_free(cvl->version);
+	if (cvl->ver_alias)
+		my_free(cvl->ver_alias);
+	if (cvl->varient)
+		my_free(cvl->varient);
+	if (cvl->valias)
+		my_free(cvl->valias);
+	if (cvl->package)
+		my_free(cvl->package);
+	my_free(cvl);
 }
 
 static int
@@ -247,21 +300,21 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		else if (opt == 'j')
 			cvl->type = CVARIENT;
 		else if (opt == 'e')
-			snprintf(cvl->ver_alias, MAC_S, "%s", optarg);
+			cvl->ver_alias = strndup(optarg, MAC_S);
 		else if (opt == 'k')
-			snprintf(cvl->valias, MAC_S, "%s", optarg);
+			cvl->valias = strndup(optarg, MAC_S);
 		else if (opt == 'n')
-			snprintf(cvl->os, MAC_S, "%s", optarg);
+			cvl->os = strndup(optarg, MAC_S);
 		else if (opt == 'o')
-			snprintf(cvl->version, MAC_S, "%s", optarg);
+			cvl->version = strndup(optarg, MAC_S);
 		else if (opt == 'p')
-			snprintf(cvl->package, HOST_S, "%s", optarg);
+			cvl->package = strndup(optarg, HOST_S);
 		else if (opt == 's')
-			snprintf(cvl->alias, MAC_S, "%s", optarg);
+			cvl->alias = strndup(optarg, MAC_S);
 		else if (opt == 't')
-			snprintf(cvl->arch, RANGE_S, "%s", optarg);
+			cvl->arch = strndup(optarg, RANGE_S);
 		else if (opt == 'x')
-			snprintf(cvl->varient, HOST_S, "%s", optarg);
+			cvl->varient = strndup(optarg, HOST_S);
 		else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
@@ -275,26 +328,21 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return NO_ACTION;
 	if (cvl->type == 0 && cvl->action != LIST_CONFIG)
 		return NO_TYPE;
-	if (cvl->action != LIST_CONFIG &&
-		(strncmp(cvl->varient, "NULL", COMM_S) == 0) &&
-		(strncmp(cvl->valias, "NULL", COMM_S) == 0))
+	if (cvl->action != LIST_CONFIG && !(cvl->varient) && !(cvl->valias))
 		return NO_VARIENT;
-	if (cvl->action == ADD_CONFIG && (cvl->type == CVARIENT) &&
-		((strncmp(cvl->varient, "NULL", COMM_S) == 0) ||
-		 (strncmp(cvl->valias, "NULL", COMM_S) == 0))) {
+	if ((cvl->action == ADD_CONFIG) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
 		fprintf(stderr, "\
 You need to supply both a varient name and valias when adding\n");
 		return DISPLAY_USAGE;
 	}
 	if (cvl->type == CPACKAGE) {
-		if (strncmp(cvl->package, "NULL", COMM_S) == 0)
+		if (!(cvl->package))
 			return NO_PACKAGE;
 		if ((cvl->action != ADD_CONFIG) && (cvl->action != RM_CONFIG)) {
 			fprintf(stderr, "Can only add or remove packages\n");
 			return WRONG_ACTION;
 		}
-		if ((strncmp(cvl->os, "NULL", MAC_S) == 0) &&
-		    (strncmp(cvl->alias, "NULL", MAC_S) == 0))
+		if (!(cvl->os) && !(cvl->alias))
 			return NO_OS_COMM;
 	}
 	return NONE;
@@ -303,90 +351,158 @@ You need to supply both a varient name and valias when adding\n");
 static int
 list_cbc_build_varient(ailsa_cmdb_s *cmc)
 {
-	int retval = NONE;
-	cbc_s *base = NULL;
-	cbc_varient_s *list = NULL;
-	time_t create;
+	if (!(cmc))
+		return AILSA_NO_DATA;
+	int retval;
+	char *text;
+	unsigned long int id;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *element;
+	ailsa_data_s *data;
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in list_cbc_build_varient");
-	init_cbc_struct(base);
-	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
-		if (retval == 6)
-			fprintf(stderr, "No build varients in DB\n");
-		clean_cbc_struct(base);
+	if ((retval = ailsa_basic_query(cmc, BUILD_VARIENTS, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_VARIENTS query failed");
+		goto cleanup;
+	}
+	if (list->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build varients found");
+		goto cleanup;
+	}
+	element = list->head;
+	printf("Alias\t\tName\t\t\tCreated By\tLast Modified\n");
+	while (element) {
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		data = element->data;
+		text = data->data->text;
+		if (strlen(text) < 8)
+			printf("%s\t\t", text);
+		else if (strlen(text) < 16)
+			printf("%s\t", text);
+		else
+			printf("%s\n\t\t\t\t", text);
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		data = element->data;
+		text = data->data->text;
+		if (strlen(text) < 8)
+			printf("%s\t\t\t", text);
+		else if (strlen(text) < 16)
+			printf("%s\t\t", text);
+		else if (strlen(text) < 24)
+			printf("%s\t", text);
+		else
+			printf("%s\n\t\t\t\t\t", text);
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		data = element->data;
+		id = data->data->number;
+		if (strlen(get_uname(id)) < 8)
+			printf("%s\t\t", get_uname(id));
+		else if (strlen(get_uname(id)) < 16)
+			printf("%s\t", get_uname(id));
+		else
+			printf("%s\n\t\t\t\t\t\t", get_uname(id));
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		if (element->next)
+			element = element->next;
+		else
+			break;
+		data = element->data;
+#ifdef HAVE_MYSQL
+		if (data->type == AILSA_DB_TIME)
+			printf("%04u-%02u-%02u %02u:%02u:%02u\n",
+				data->data->time->year, data->data->time->month, data->data->time->day,
+				data->data->time->hour, data->data->time->minute, data->data->time->second);
+		else
+#endif
+			printf("%s\n", data->data->text);
+		element = element->next;
+	}
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
-	}
-	if (base->varient) {
-		list = base->varient;
-	} else {
-		printf("No build varients??\n");
-		clean_cbc_struct(base);
-		return VARIENT_NOT_FOUND;
-	}
-	printf("Alias\t\tName\t\t\tUser\t\tLast Modified\n");
-	while (list) {
-		create = (time_t)list->mtime;
-		if (strlen(list->valias) < 8)
-			printf("%s\t\t", list->valias);
-		else if (strlen(list->valias) < 16)
-			printf("%s\t", list->valias);
-		else
-			printf("%s\n\t\t\t\t", list->valias);
-		if (strlen(list->varient) < 8)
-			printf("%s\t\t\t", list->varient);
-		else if (strlen(list->varient) < 16)
-			printf("%s\t\t", list->varient);
-		else if (strlen(list->varient) < 24)
-			printf("%s\t", list->varient);
-		else
-			printf("%s\n\t\t\t\t\t", list->varient);
-		if (strlen(get_uname(list->cuser)) < 8)
-			printf("%s\t\t", get_uname(list->cuser));
-		else if (strlen(get_uname(list->cuser)) < 16)
-			printf("%s\t", get_uname(list->cuser));
-		else
-			printf("%s\n\t\t\t\t\t\t", get_uname(list->cuser));
-		printf("%s", ctime(&create));
-		list = list->next;
-	}
-	clean_cbc_struct(base);
-	return retval;
 }
 
 static int
 display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE;
-	unsigned long int id;
-	cbc_s *base;
+  /* If we are given an input here of an OS that does not exist, then
+   * we will find no build packages and the error output will say as much.
+   * Once we get defined OS types and use build_os to just store versions,
+   * we can check if the OS exists and if not, tell the user then */
+	if (!(cmc) || !(cvl))
+		return AILSA_NO_DATA;
+	int retval = NO_VARIENT;
+	char *varient;
+	ailsa_sql_query_s *query = ailsa_calloc(sizeof(ailsa_sql_query_s), "query in display_cbc_build_varient");
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *v = ailsa_db_data_list_init();
 
-	if ((strncmp(cvl->varient, "NULL", COMM_S)) != 0) {
-		if ((retval = get_varient_id(cmc, cvl->varient, &id)) != 0)
-			return retval;
-	} else if ((strncmp(cvl->valias, "NULL", COMM_S)) != 0) {
-		if ((retval = get_varient_id(cmc, cvl->valias, &id)) != 0)
-			return retval;
-	}
-	initialise_cbc_s(&base);
-	if ((retval = cbc_run_multiple_query(cmc, base, BUILD_OS | BPACKAGE | BUILD_TYPE)) != 0) {
-		clean_cbc_struct(base);
-		return MY_QUERY_FAIL;
-	}
-	if ((retval = check_build_os(cmc, base, cvl)) != 0)
-		return retval;
-	if (!(base->package)) {
-		clean_cbc_struct(base);
-		return NO_BUILD_PACKAGES;
-	}
-	if ((strncmp(cvl->os, "NULL", COMM_S) == 0) &&
-	    (strncmp(cvl->alias, "NULL", COMM_S) == 0))
-		retval = display_all_os_packages(base, id, cvl);
+	if ((cvl->varient))
+		varient = cvl->varient;
+	else if ((cvl->valias))
+		varient = cvl->valias;
 	else
-		retval = display_one_os_packages(base, id, cvl);
+		goto cleanup;
+	if ((retval = cmdb_add_varient_id_to_list(varient, cmc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+		goto cleanup;
+	} else if (list->total > 1) {	// FIXME
+		ailsa_syslog(LOG_ERR, "Multiple varients returned");
+		goto cleanup;
+	}
+	varient_get_display_query(cvl, list, query);
+	if ((retval = ailsa_individual_query(cmc, query, list, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "PACKAGE_DETAILS_FOR_VARIENT query failed");
+		goto cleanup;
+	}
+	if (v->total > 0)
+		print_varient_details(v);
+	else
+		ailsa_syslog(LOG_INFO, "No packages found for build varient!");
+	cleanup:
+		ailsa_list_destroy(list);
+		ailsa_list_destroy(v);
+		my_free(list);
+		my_free(v);
+		my_free(query);
+		return retval;
+}
 
-	clean_cbc_struct(base);
-	return retval;
+static void
+varient_get_display_query(cbcvari_comm_line_s *cvl, AILLIST *list, ailsa_sql_query_s *query)
+{
+	int flag = 0;
+	if (!(cvl) || !(list) || !(query))
+		return;
+	if ((cvl->os) || (cvl->alias)) {
+		flag = flag | OSV;
+		cmdb_add_os_name_or_alias_to_list(cvl->os, cvl->alias, list);
+	}
+	if ((cvl->version) || (cvl->ver_alias)) {
+		flag = flag | VERSIONV;
+		cmdb_add_os_version_or_alias_to_list(cvl->version, cvl->ver_alias, list);
+	}
+	if (cvl->arch) {
+		flag = flag | ARCHV;
+		cmdb_add_string_to_list(cvl->arch, list);
+	}
+	memcpy(query, &varient_queries[flag], sizeof(ailsa_sql_query_s));
 }
 
 static int
@@ -473,163 +589,6 @@ remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	free(data);
 	return retval;
-}
-
-static int
-check_build_os(ailsa_cmdb_s *cbc, cbc_s *base, cbcvari_comm_line_s *cvl)
-{
-	int retval = 0;
-	int flag = 0;
-	cbc_build_type_s *bt;
-
-	if (strncmp(cvl->alias, "NULL", COMM_S) == 0) {
-		if (strncmp(cvl->os, "NULL", COMM_S) == 0)
-			return retval;		// No OS specified
-		if ((retval = get_os_alias(cbc, cvl->os, cvl->alias)) != 0)
-			return retval;
-	}
-	if (base->btype) {
-		bt = base->btype;
-	} else {
-		fprintf(stderr, "No build types in database?\n");
-		exit(BUILD_TYPE_NOT_FOUND);
-	}
-	while (bt) {
-		if (strncmp(bt->alias, cvl->alias, MAC_S) == 0) {
-			flag = 1;
-			break;
-		}
-		bt = bt->next;
-	}
-	if (flag == 0)
-		retval = BUILD_TYPE_NOT_FOUND;
-	return retval;
-}
-
-
-static int
-display_all_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
-{
-	int retval = 0;
-	cbc_build_type_s *bt = base->btype;
-
-	if (strncmp(cvl->version, "NULL", COMM_S) != 0)
-		return OS_NO_VERSION;
-	printf("Displaying all OS build packages\n");
-	while (bt) {
-		snprintf(cvl->alias, MAC_S, "%s", bt->alias);
-		retval = display_one_os_packages(base, id, cvl);
-		if ((retval != 0) && (retval != SERVER_PACKAGES_NOT_FOUND))
-			return retval;
-		bt = bt->next;
-	}
-	if (retval == SERVER_PACKAGES_NOT_FOUND)
-		retval = 0;
-	return retval;
-}
-
-static int
-display_one_os_packages(cbc_s *base, unsigned long int id, cbcvari_comm_line_s *cvl)
-{
-	int retval = 0;
-	int flag = 0;
-	unsigned long int osid;
-	cbc_build_os_s *bos = base->bos;
-
-	if (!(bos))
-		return OS_NOT_FOUND;
-	printf("Displaying build packages for os %s\n\n", cvl->alias);
-	if ((strncmp(cvl->version, "NULL", COMM_S) != 0) ||
-	    (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0)) {	// version set
-		if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {	// arch set
-			printf("Version: %s\tArch: %s\n\t", cvl->version, cvl->arch);
-			if ((osid = get_single_os_id(base, cvl)) == 0) {
-				return OS_NOT_FOUND;
-			}
-			if ((retval = display_specific_os_packages(base, id, osid)) == SERVER_PACKAGES_NOT_FOUND)
-				fprintf(stderr, "Os has no packages\n");
-		} else {					// arch not set
-			while (bos) {
-				if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
-				   ((strncmp(cvl->version, bos->version, MAC_S) == 0) ||
-                                    (strncmp(cvl->ver_alias, bos->ver_alias, MAC_S) == 0))) {
-					flag = 1;
-					printf("\
-Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
-						fprintf(stderr, "Os has no packages\n");
-				}
-				bos = bos->next;
-			}
-		}
-	} else {
-		if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {	// arch set
-			while (bos) {
-				if ((strncmp(cvl->alias, bos->alias, MAC_S) == 0) &&
-				    (strncmp(cvl->arch, bos->arch, MAC_S) == 0)) {
-					flag = 1;
-					printf("\
-Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
-						fprintf(stderr, "Os has no packages\n");
-				}
-				bos = bos->next;
-			}
-		} else {					// arch not set
-			while (bos) {
-				if (strncmp(cvl->alias, bos->alias, MAC_S) == 0) {
-					flag = 1;
-					printf("\
-Version: %s\tArch: %s\n\t", bos->version, bos->arch);
-					if ((retval = display_specific_os_packages(base, id, bos->os_id)) == SERVER_PACKAGES_NOT_FOUND)
-						fprintf(stderr, "Os has no packages\n");
-				}
-				bos = bos->next;
-			}
-		}
-	}
-	if (flag == 0)
-		printf("\tNo build varient for os %s\n", cvl->alias);
-	else
-		flag = 0;
-	if (retval == SERVER_PACKAGES_NOT_FOUND)
-		retval = 0;
-	return retval;
-}
-
-static int
-display_specific_os_packages(cbc_s *base, unsigned long int id, unsigned long int osid)
-{
-	int i = 0;
-	cbc_package_s *pack = base->package;
-
-	while (pack) {
-		if (id == pack->vari_id && osid == pack->os_id) {
-			i++;
-			printf("%s ", pack->package);
-		}
-		pack = pack->next;
-	}
-	printf("\n");
-	if (i == 0)
-		return SERVER_PACKAGES_NOT_FOUND;
-	return NONE;
-}
-
-static unsigned long int
-get_single_os_id(cbc_s *base, cbcvari_comm_line_s *cvl)
-{
-	cbc_build_os_s *bos = base->bos;
-	if (!(bos))
-		return NONE;
-	while (bos) {
-		if ((strncmp(bos->alias, cvl->alias, MAC_S) == 0) &&
-		    (strncmp(bos->version, cvl->version, MAC_S) == 0) &&
-		    (strncmp(bos->arch, cvl->arch, RANGE_S) == 0))
-			return bos->os_id;
-		bos = bos->next;
-	}
-	return NONE;
 }
 
 static void
@@ -987,3 +946,63 @@ add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id)
 		list->next = pack;
 	}
 }
+
+static void
+print_varient_details(AILLIST *list)
+{
+	if (!(list))
+		return;
+	if (list->total % 4 != 0)
+		return;
+	size_t i, n;
+	char *pack, *os, *version, *arch;
+	char *sav_os, *sav_ver, *sav_arch;
+
+	pack = cmdb_get_string_from_data_list(list, 1);
+	sav_os = os = cmdb_get_string_from_data_list(list, 2);
+	sav_ver = version = cmdb_get_string_from_data_list(list, 3);
+	sav_arch = arch = cmdb_get_string_from_data_list(list, 4);
+	if (!(pack) || !(os) || !(version) || !(arch)) {
+		ailsa_syslog(LOG_ERR, "Cannot get package details in print_varient_details");
+		return;
+	}
+	for (i = 0; i < list->total / 4; i++) {
+		if (i == 0) {
+			printf("OS: %s, Version: %s, arch %s\n", os, version, arch);
+			printf("  %s", pack);
+		} else {
+			if (compare_os_details(os, version, arch, sav_os, sav_ver, sav_arch) == 0) {
+				printf(" %s", pack);
+			} else {
+				printf("\n\nOS: %s, Version: %s, arch %s\n", os, version, arch);
+				printf("  %s", pack);
+				sav_os = os;
+				sav_ver = version;
+				sav_arch = arch;
+			}
+		}
+		n = (i + 1) * 4;
+		pack = cmdb_get_string_from_data_list(list, 1 + n);
+		os = cmdb_get_string_from_data_list(list, 2 + n);
+		version = cmdb_get_string_from_data_list(list, 3 + n);
+		arch = cmdb_get_string_from_data_list(list, 4 + n);
+	}
+	puts("\n");
+}
+
+static int
+compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char *sarch)
+{
+	int retval = -1;
+	if (!(os) || !(ver) || !(arch) || !(sos) || !(sver) || !(sarch))
+		return retval;
+	retval = 0;
+	if (strcmp(os, sos) != 0)
+		retval = retval | 1;
+	if (strcmp(ver, sver) != 0)
+		retval = retval | 2;
+	if (strcmp(arch, sarch) != 0)
+		retval = retval | 4;
+	return retval;
+}
+

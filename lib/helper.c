@@ -214,6 +214,37 @@ cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
+{
+ /* Doing it like this (directly adding into the list) does not protect
+  * against coronavirus^W multiple insertions into the list. Calling
+  * function will have to check */
+	if (!(varient) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	ailsa_data_s *data = ailsa_db_text_data_init();
+
+	data->data->text = strndup(varient, HOST_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+		goto cleanup;
+	}
+	data = ailsa_db_text_data_init();
+	data->data->text = strndup(varient, HOST_LEN);
+	if ((retval = ailsa_list_insert(args, data)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
+		ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
+	cleanup:
+		ailsa_list_destroy(args);
+		my_free(args);
+		return retval;
+}
+
+int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(alias) || !(cc) || !(list))

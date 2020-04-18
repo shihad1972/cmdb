@@ -75,7 +75,8 @@ enum {			// SQL BASIC QUERIES
 	SERVICE_TYPES_ALL,
 	HARDWARE_TYPES_ALL,
 	BUILD_OS_NAME_TYPE,
-	BUILD_OSES
+	BUILD_OSES,
+	BUILD_VARIENTS
 };
 
 enum {			// SQL ARGUMENT QUERIES
@@ -99,7 +100,9 @@ enum {			// SQL ARGUMENT QUERIES
 	CHECK_BUILD_OS,
 	OS_FROM_BUILD_TYPE_AND_ARCH,
 	PACKAGE_DETAIL_ON_OS_ID,
-	SERVERS_WITH_BUILDS_ON_OS_ID
+	SERVERS_WITH_BUILDS_ON_OS_ID,
+	VARIENT_ID_ON_VARIANT_OR_VALIAS,
+	PACKAGE_DETAILS_FOR_VARIENT
 };
 
 enum {			// SQL INSERT QUERIES
@@ -141,11 +144,15 @@ typedef struct ailsa_sql_multi_s {
 extern const struct ailsa_sql_single_s server_table[];
 extern size_t server_fields;
 
+extern const ailsa_sql_query_s varient_queries[];
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
 
 int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results);
+
+int
+ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLIST *args, AILLIST *results);
 
 int
 ailsa_delete_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *remove);
@@ -169,6 +176,9 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list);

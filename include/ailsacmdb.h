@@ -143,8 +143,8 @@ typedef struct ailsa_list_s {
 	size_t 	total;
 	int 	(*cmp)(const void *key1, const void *key2);
 	void 	(*destroy)(void *data);
-	void 	*head;
-	void 	*tail;
+	AILELEM	*head;
+	AILELEM	*tail;
 } AILLIST;
 
 // Hash table types
@@ -378,6 +378,7 @@ typedef struct ailsa_data_s {
 
 // SQL types
 
+/*
 typedef struct ailsa_db_value_s {
 	char *name;
 	unsigned int type;
@@ -388,7 +389,7 @@ typedef struct ailsa_simple_select_s {
 	AILLIST	*args;
 	char *query;
 } AILSS;
-
+*/
 // library version info
 
 void
@@ -412,6 +413,8 @@ int
 ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
 int
 ailsa_list_ins_prev(AILLIST *list, AILELEM *element, void *data);
+AILELEM *
+ailsa_list_get_element(AILLIST *list, size_t number);
 int
 ailsa_list_insert(AILLIST *list, void *data);
 int
@@ -530,16 +533,31 @@ ailsa_validate_string(const char *input, const char *re_test);
 int
 cmdb_populate_cuser_muser(AILLIST *list);
 
+void
+cmdb_add_os_name_or_alias_to_list(char *os, char *alias, AILLIST *list);
+
+void
+cmdb_add_os_version_or_alias_to_list(char *ver, char *valias, AILLIST *list);
+
+void
+cmdb_add_string_to_list(char *str, AILLIST *list);
+
+char *
+cmdb_get_string_from_data_list(AILLIST *list, size_t n);
+
 // Various struct data functions
 
 // struct data init functions
 
 int
 ailsa_init_client_info(struct client_info *ci);
+
 AILLIST *
 ailsa_db_data_list_init(void);
+
 ailsa_data_s *
 ailsa_db_text_data_init(void);
+
 ailsa_data_s *
 ailsa_db_lint_data_init(void);
 

@@ -4,12 +4,12 @@ should be printed.
 
 04/04/2020
 Programs moved to new AILLIST database model:
-	cmdb  **Done**
+	cmdb		**Done**
 	dnsa
 	cbc
 	cbcvarient
 	cbcdomain
-	cbcos
+	cbcos		**Done**
 	cbcsysp
 	cbcscript
 	cbcpart

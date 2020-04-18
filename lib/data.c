@@ -639,3 +639,80 @@ cmdb_populate_cuser_muser(AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert muser into list");
 	return retval;
 }
+
+	// The following functions should probably be moved into the ailsasql library
+void
+cmdb_add_os_name_or_alias_to_list(char *os, char *alias, AILLIST *list)
+{
+	if ((!(os) && !(alias)) || !(list))
+		return;
+	ailsa_data_s *d = ailsa_db_text_data_init();
+	char *name;
+	if (os)
+		name = os;
+	else
+		name = alias;
+	d->data->text = strndup(name, MAC_LEN);
+	if (ailsa_list_insert(list, d) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert name into list");
+		return;
+	}
+	d = ailsa_db_text_data_init();
+	d->data->text = strndup(name, MAC_LEN);
+	if (ailsa_list_insert(list, d) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert alias into list");
+	return;
+}
+
+void
+cmdb_add_os_version_or_alias_to_list(char *ver, char *valias, AILLIST *list)
+{
+	if ((!(ver) && !(valias)) || !(list))
+		return;
+	ailsa_data_s *d = ailsa_db_text_data_init();
+	char *version;
+	if (ver)
+		version = ver;
+	else
+		version = valias;
+	d->data->text = strndup(version, SERVICE_LEN);
+	if (ailsa_list_insert(list, d) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert version into list");
+		return;
+	}
+	d = ailsa_db_text_data_init();
+	d->data->text = strndup(version, SERVICE_LEN);
+	if (ailsa_list_insert(list, d) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert valias into list");
+	return;
+}
+
+void
+cmdb_add_string_to_list(char *str, AILLIST *list)
+{
+	if (!(str) || !(list))
+		return;
+	ailsa_data_s *d = ailsa_db_text_data_init();
+	d->data->text = strndup(str, CONFIG_LEN);
+	if (ailsa_list_insert(list, d) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert string into list");
+	return;
+}
+
+char *
+cmdb_get_string_from_data_list(AILLIST *list, size_t n)
+{
+	char *str = NULL;
+	AILELEM *element = NULL;
+	ailsa_data_s *data = NULL;
+	if (!(list) || (n == 0))
+		return str;
+	if (n > list->total)
+		return str;
+	if (!(element = ailsa_list_get_element(list, n)))
+		return str;
+	data = element->data;
+	if (data->type == AILSA_DB_TEXT)
+		str = data->data->text;
+	return str;
+}

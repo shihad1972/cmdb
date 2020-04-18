@@ -166,3 +166,18 @@ ailsa_list_remove(AILLIST *list, AILELEM *element, void **data)
 	return 0;
 }
 
+AILELEM *
+ailsa_list_get_element(AILLIST *list, size_t number)
+{
+	if (!(list) || (number == 0))
+		return NULL;
+	if (number > list->total)
+		return NULL;
+	AILELEM *element = list->head;
+	size_t i;
+
+	for (i = 1; i < number; i++) {
+		element = element->next;
+	}
+	return element;
+}

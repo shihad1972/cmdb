@@ -69,6 +69,7 @@ const char *basic_queries[] = {
 "SELECT type, class FROM hard_type", // HARDWARE_TYPES_ALL
 "SELECT DISTINCT bo.os FROM build_os bo JOIN build_type bt ON bt.alias=bo.alias", // BUILD_OS_NAME_TYPE
 "SELECT os, os_version, alias, arch, ver_alias, cuser, ctime FROM build_os", // BUILD_OSES
+"SELECT varient_id, valias, varient, cuser, muser, ctime, mtime FROM varient", // BUILD_VARIENTS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -187,6 +188,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	},
 	{ // SERVERS_WITH_BUILDS_ON_OS_ID
 "SELECT s.name FROM server s LEFT JOIN build b ON b.server_id = s.server_id LEFT JOIN build_os bo ON bo.os_id = b.os_id WHERE bo.os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // VARIENT_ID_ON_VARIANT_OR_VALIAS
+"SELECT varient_id FROM varient WHERE varient = ? OR valias = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // PACKAGE_DETAILS_FOR_VARIENT
+"SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? ORDER BY o.os, o.os_version, o.arch",
 	1,
 	{ AILSA_DB_LINT }
 	}
@@ -318,7 +329,7 @@ ailsa_remove_empty_results_mysql(MYSQL_STMT *stmt, AILLIST *results);
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 {
-	int retval = 0;
+	int retval = DB_TYPE_INVALID;
 	const char *query = basic_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
@@ -339,7 +350,7 @@ ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results)
 {
-	int retval;
+	int retval = DB_TYPE_INVALID;
 	const struct ailsa_sql_query_s argument = argument_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
@@ -355,6 +366,26 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
 	return retval;	
+}
+
+int
+ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLIST *args, AILLIST *results)
+{
+	int retval = DB_TYPE_INVALID;
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		ailsa_syslog(LOG_ERR, "no dbtype set");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+		retval = ailsa_argument_query_mysql(cmdb, *query, args, results);
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+		retval = ailsa_argument_query_sqlite(cmdb, *query, args, results);
+#endif
+	else
+		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+	return retval;
 }
 
 int
