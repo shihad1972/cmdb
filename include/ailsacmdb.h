@@ -533,17 +533,24 @@ ailsa_validate_string(const char *input, const char *re_test);
 int
 cmdb_populate_cuser_muser(AILLIST *list);
 
+// These should probably be moved to ailsasql.h
+
 void
 cmdb_add_os_name_or_alias_to_list(char *os, char *alias, AILLIST *list);
 
 void
 cmdb_add_os_version_or_alias_to_list(char *ver, char *valias, AILLIST *list);
 
-void
+int
 cmdb_add_string_to_list(char *str, AILLIST *list);
+
+int
+cmdb_add_number_to_list(unsigned long int number, AILLIST *list);
 
 char *
 cmdb_get_string_from_data_list(AILLIST *list, size_t n);
+
+// End probably ;)
 
 // Various struct data functions
 

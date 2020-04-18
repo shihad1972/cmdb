@@ -148,8 +148,11 @@ cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id)
 static int
 cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id);
 
-static cbc_package_s *
-build_package_list(ailsa_cmdb_s *cbc, unsigned long int *os, int nos, char *pack);
+static int
+build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch);
+
+static int
+get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch);
 
 static dbdata_s *
 build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack);
@@ -500,7 +503,8 @@ varient_get_display_query(cbcvari_comm_line_s *cvl, AILLIST *list, ailsa_sql_que
 	}
 	if (cvl->arch) {
 		flag = flag | ARCHV;
-		cmdb_add_string_to_list(cvl->arch, list);
+		if (cmdb_add_string_to_list(cvl->arch, list) != 0)
+			ailsa_syslog(LOG_ERR, "Cannot add arch to list");
 	}
 	memcpy(query, &varient_queries[flag], sizeof(ailsa_sql_query_s));
 }
@@ -632,45 +636,40 @@ copy_packages_from_base_varient(ailsa_cmdb_s *cbc, char *varient)
 static int
 add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 {
-	char *varient;
-	int retval = 0, os, packs = 0;
-	unsigned long int *osid, vid;
-	cbc_s *base;
-	cbc_package_s *pack;
+	if (!(cbc) || !(cvl))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	char *varient, *os, *version, *arch, *pack;
+	AILLIST *list = ailsa_db_data_list_init();
 
-	initialise_cbc_s(&base);
-	if ((retval = cbc_run_multiple_query(cbc, base, BUILD_OS | VARIENT)) != 0) {
-		fprintf(stderr, "Cannot run os and / or varient query\n");
-		clean_cbc_struct(base);
+	if (cvl->valias)
+		varient = cvl->valias;
+	else if (cvl->varient)
+		varient = cvl->varient;
+	else
+		return AILSA_NO_DATA;
+	if (cvl->os)
+		os = cvl->os;
+	else if (cvl->alias)
+		os = cvl->alias;
+	else
+		return AILSA_NO_DATA;
+	if (cvl->version)
+		version = cvl->version;
+	else 
+		version = cvl->ver_alias;
+	arch = cvl->arch;
+	pack = cvl->package;
+	if ((retval = build_package_list(cbc, list, pack, varient, os, version, arch)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot build package list to insert");
+		goto cleanup;
+	}
+	if ((retval = ailsa_multiple_insert_query(cbc, INSERT_BUILD_PACKAGE, list)) != 0 )
+		ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
-	}
-	check_for_alias(&varient, cvl->varient, cvl->valias);
-	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
-		return retval;
-// This will setup the array of osid's in osid if we have more than one version / arch
-	if ((os = cbc_get_os(base->bos, cvl, &osid)) == 0)
-		return OS_NOT_FOUND;
-// Set the last to the varient_id
-	*(osid + (unsigned long int)os) = vid;
-	if (!(pack = build_package_list(cbc, osid, os, cvl->package))) {
-		fprintf(stderr, "No packages to add\n");
-		free(osid);
-		clean_cbc_struct(base);
-		return NONE;
-	}
-	base->package = pack;
-	while (base->package) {
-		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) == 0)
-			packs++;
-		base->package = base->package->next;
-	}
-	printf("Inserted %d packages\n", packs);
-	if (packs > 0)
-		cbc_set_varient_updated(cbc, vid);
-	base->package = pack;
-	free(osid);
-	clean_cbc_struct(base);
-	return retval;
 }
 
 static int
@@ -821,41 +820,102 @@ cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int 
 	return retval;
 }
 
-static cbc_package_s *
-build_package_list(ailsa_cmdb_s *cbc, unsigned long int *os, int nos, char *pack)
+static int
+build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch)
 {
-	int i;
-	unsigned long int *osid, vid;
-	cbc_package_s *package, *list = NULL, *tmp;
+	if (!(cbc) || !(list) || !(pack) || !(vari) || !(os))
+		return AILSA_NO_DATA;
+	AILLIST *build_os = ailsa_db_data_list_init();
+	AILLIST *scratch = ailsa_db_data_list_init();
+	AILELEM *e;
+	unsigned long int vid;
+	unsigned int query_no;
+	size_t i;
+	int retval = 0;
 
-	if (!(os))
-		return list;
-	else
-		osid = os;
-	vid = *(osid + (unsigned long int)nos);
-	package = list;
-	for (i = 0; i < nos; i++) {
-		if (check_for_package(cbc, *osid, vid, pack) > 0) {
-			osid++;
-			continue;
-		}
-		tmp = ailsa_calloc(sizeof(cbc_package_s), "tmp in build_package_list");
-		init_package(tmp);
-		if (package) {
-			while (list->next)
-				list = list->next;
-			list->next = tmp;
-		} else {
-			package = list = tmp;
-		}
-		snprintf(tmp->package, HOST_S, "%s", pack);
-		tmp->vari_id = vid;
-		tmp->os_id = *osid;
-		tmp->cuser = tmp->muser = (unsigned long int)getuid();
-		osid++;
-		list = package;
+	if ((retval = cmdb_add_varient_id_to_list(vari, cbc, scratch)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get varient id");
+		goto cleanup;
 	}
-	return list;
+	if (scratch->total > 1)
+		ailsa_syslog(LOG_INFO, "Multiple varients returned. Using first one returned");
+	vid = ((ailsa_data_s *)scratch->head->data)->data->number;
+	ailsa_list_destroy(scratch);
+	ailsa_list_init(scratch, ailsa_clean_data);
+	if ((retval = get_build_os_query(scratch, &query_no, os, vers, arch)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get build_os query");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, query_no, scratch, build_os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Build OS query failed");
+		goto cleanup;
+	}
+	e = build_os->head;
+	for (i = 0; i < build_os->total; i++) {
+		if ((retval = cmdb_add_string_to_list(pack, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert package name into list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_number_to_list(vid, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert varient id into list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)e->data)->data->number, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert os id into list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_populate_cuser_muser(list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+			goto cleanup;
+		}
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_destroy(build_os);
+		ailsa_list_destroy(scratch);
+		my_free(build_os);
+		my_free(scratch);
+		return retval;
+}
+
+static int
+get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch)
+{
+	if (!(list) || !(query) || !(os))
+		return AILSA_NO_DATA;
+	unsigned int offset = 0;
+	int retval;
+
+	if (vers)
+		offset = offset | 1;
+	if (arch)
+		offset = offset | 2;
+	if ((retval = cmdb_add_string_to_list(os, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(os, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert OS alias into list");
+		return retval;
+	}
+	if (offset & 1) {
+		if ((retval = cmdb_add_string_to_list(vers, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
+			return retval;
+		}
+		if ((retval = cmdb_add_string_to_list(vers, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert OS version alias into list");
+			return retval;
+		}
+	}
+	if (offset & 2) {
+		if ((retval = cmdb_add_string_to_list(arch, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert OS arch into list");
+			return retval;
+		}
+	}
+	*query = offset + BUILD_OS_ON_NAME_OR_ALIAS;
+	return retval;
 }
 
 static dbdata_s *

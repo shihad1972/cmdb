@@ -687,16 +687,28 @@ cmdb_add_os_version_or_alias_to_list(char *ver, char *valias, AILLIST *list)
 	return;
 }
 
-void
+int
 cmdb_add_string_to_list(char *str, AILLIST *list)
 {
 	if (!(str) || !(list))
-		return;
+		return AILSA_NO_DATA;
+	int retval;
 	ailsa_data_s *d = ailsa_db_text_data_init();
 	d->data->text = strndup(str, CONFIG_LEN);
-	if (ailsa_list_insert(list, d) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert string into list");
-	return;
+	retval = ailsa_list_insert(list, d);
+	return retval;
+}
+
+int
+cmdb_add_number_to_list(unsigned long int number, AILLIST *list)
+{
+	if (!(list) || (number == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	ailsa_data_s *d = ailsa_db_lint_data_init();
+	d->data->number = number;
+	retval = ailsa_list_insert(list, d);
+	return retval;
 }
 
 char *

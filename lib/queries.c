@@ -176,6 +176,26 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	3,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
+	{ // BUILD_OS_ON_NAME_OR_ALIAS
+"SELECT os_id FROM build_os WHERE (os = ? OR alias = ?)",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_ON_NAME_VERSION
+"SELECT os_id FROM build_os WHERE (os = ? OR alias = ?) AND (os_version = ? OR ver_alias = ?)",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_ON_NAME_ARCH
+"SELECT os_id FROM build_os WHERE (os = ? OR ALIAS = ?) AND arch = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_ON_ALL
+"SELECT os_id FROM build_os WHERE (os = ? OR alias = ?) AND (os_version = ? OR ver_alias = ?) AND arch = ?",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
 	{ // OS_FROM_BUILD_TYPE_AND_ARCH
 "SELECT os_id FROM build_os WHERE bt_id = ? AND arch = ? ORDER BY ctime DESC LIMIT 2",
 	2,
