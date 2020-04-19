@@ -547,9 +547,6 @@ void
 display_disk_dev(cbc_s *base);
 
 void
-display_locale(cbc_s *base);
-
-void
 display_package(cbc_s *base);
 
 void

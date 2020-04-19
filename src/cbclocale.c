@@ -26,12 +26,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 #include <sys/types.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -40,17 +42,17 @@
 #include "cbc_base_sql.h"
 
 typedef struct locale_comm_line_s {
-	char country[RANGE_S];
-	char keymap[RANGE_S];
-	char language[RANGE_S];
-	char locale[MAC_S];
-	char name[HOST_S];
-	char timezone[HOST_S];
+	char *country;
+	char *keymap;
+	char *language;
+	char *locale;
+	char *name;
+	char *timezone;
 	short int action;
 } locale_comm_line_s;
 
-static void
-init_locale_comm_line(locale_comm_line_s *cl);
+static int
+get_default_locale(ailsa_cmdb_s *ccs, unsigned long int *lid);
 
 static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl);
@@ -62,7 +64,7 @@ static int
 list_locales(ailsa_cmdb_s *ccs);
 
 static int
-display_locales(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
+display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
 add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
@@ -76,16 +78,12 @@ set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 static void
 fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
 
-static void
-print_locale(ailsa_cmdb_s *ccs, cbc_locale_s *loc);
-
 int
 main(int argc, char *argv[])
 {
 	int retval = 0;
 	locale_comm_line_s *cl = ailsa_calloc(sizeof(locale_comm_line_s), "cl in main");
 	ailsa_cmdb_s *ccs = ailsa_calloc(sizeof(ailsa_cmdb_s), "ccs in main");
-	init_locale_comm_line(cl);
 	if ((retval = parse_locale_comm_line(argc, argv, cl)) != 0) {
 		free(cl);
 		display_command_line_error(retval, argv[0]);
@@ -94,7 +92,7 @@ main(int argc, char *argv[])
 	if (cl->action == LIST_CONFIG)
 		retval = list_locales(ccs);
 	else if (cl->action == DISPLAY_CONFIG)
-		retval = display_locales(ccs, cl);
+		retval = display_locale(ccs, cl);
 	else if (cl->action == ADD_CONFIG)
 		retval = add_locale(ccs, cl);
 	else if (cl->action == RM_CONFIG)
@@ -146,51 +144,49 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 			cl->action = ADD_CONFIG;
 		else if (opt == 'd')
 			cl->action = DISPLAY_CONFIG;
-		else if (opt == 'g')
-			snprintf(cl->language, RANGE_S, "%s", optarg);
-		else if (opt == 'k')
-			snprintf(cl->keymap, RANGE_S, "%s", optarg);
 		else if (opt == 'l')
 			cl->action = LIST_CONFIG;
-		else if (opt == 'o')
-			snprintf(cl->locale, MAC_S, "%s", optarg);
-		else if (opt == 'n')
-			snprintf(cl->name, HOST_S, "%s", optarg);
 		else if (opt == 'r')
 			cl->action = RM_CONFIG;
-		else if (opt == 't')
-			snprintf(cl->timezone, HOST_S, "%s", optarg);
-		else if (opt == 'u')
-			snprintf(cl->country, HOST_S, "%s", optarg);
 		else if (opt == 'v')
 			return CVERSION;
 		else if (opt == 'x')
 			cl->action = SET_DEFAULT;
+		else if (opt == 'g')
+			cl->language = strndup(optarg, RANGE_S);
+		else if (opt == 'k')
+			cl->keymap = strndup(optarg, RANGE_S);
+		else if (opt == 'o')
+			cl->locale = strndup(optarg, MAC_S);
+		else if (opt == 'n')
+			cl->name = strndup(optarg, HOST_S);
+		else if (opt == 't')
+			cl->timezone = strndup(optarg, HOST_S);
+		else if (opt == 'u')
+			cl->country = strndup(optarg, HOST_S);
 		else
 			return DISPLAY_USAGE;
 	}
 	if ((cl->action == CVERSION) || (cl->action == LIST_CONFIG))
 		return retval;
-	if (((cl->action == RM_CONFIG) || (cl->action == DISPLAY_CONFIG) ||
-	    (cl->action == ADD_CONFIG) || (cl->action == SET_DEFAULT)) &&
-	    (strncmp(cl->name, "NULL", COMM_S) == 0))
+	if ((cl->action != LIST_CONFIG) && (!(cl->name)))
 		return NO_NAME;
 	if (cl->action == 0)
 		return NO_ACTION;
 	if (cl->action == ADD_CONFIG) {
-		if (strncmp(cl->language, "NULL", COMM_S) == 0) {
+		if (!(cl->language)) {
 			fprintf(stderr, "No language specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (strncmp(cl->keymap, "NULL", COMM_S) == 0) {
+		} else if (!(cl->keymap)) {
 			fprintf(stderr, "No keymap specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (strncmp(cl->locale, "NULL", COMM_S) == 0) {
+		} else if (!(cl->locale)) {
 			fprintf(stderr, "No locale specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (strncmp(cl->timezone, "NULL", COMM_S) == 0) {
+		} else if (!(cl->timezone)) {
 			fprintf(stderr, "No timezone specified\n\n");
 			return DISPLAY_USAGE;
-		} else if (strncmp(cl->country, "NULL", COMM_S) == 0) {
+		} else if (!(cl->country)) {
 			fprintf(stderr, "No country specified\n\n");
 			return DISPLAY_USAGE;
 		}
@@ -202,37 +198,46 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 static void
 validate_locale_comm_line(locale_comm_line_s *cl)
 {
-	if (strncmp(cl->language, "NULL", COMM_S) != 0)
+	if (cl->language)
 		if (ailsa_validate_input(cl->language, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "language");
-	if (strncmp(cl->keymap, "NULL", COMM_S) != 0)
+	if (cl->keymap)
 		if (ailsa_validate_input(cl->keymap, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "keymap");
-	if (strncmp(cl->locale, "NULL", COMM_S) != 0)
+	if (cl->locale)
 		if (ailsa_validate_input(cl->locale, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "locale");
-	if (strncmp(cl->name, "NULL", COMM_S) != 0)
+	if (cl->name)
 		if (ailsa_validate_input(cl->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
-	if (strncmp(cl->timezone, "NULL", COMM_S) != 0)
+	if (cl->timezone)
 		if (ailsa_validate_input(cl->timezone, TIMEZONE_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "timezone");
-	if (strncmp(cl->country, "NULL", COMM_S) != 0)
+	if (cl->country)
 		if (ailsa_validate_input(cl->country, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "country");
 }
 
-static void
-init_locale_comm_line(locale_comm_line_s *cl)
+static int
+get_default_locale(ailsa_cmdb_s *ccs, unsigned long int *lid)
 {
-	if (!(cl))
-		return;
-	snprintf(cl->language, COMM_S, "NULL");
-	snprintf(cl->keymap, COMM_S, "NULL");
-	snprintf(cl->locale, COMM_S, "NULL");
-	snprintf(cl->name, COMM_S, "NULL");
-	snprintf(cl->timezone, COMM_S, "NULL");
-	snprintf(cl->country, COMM_S, "NULL");
+	if (!(ccs) || !(lid))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *d = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_basic_query(ccs, DEFAULT_LOCALE, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_LOCALE query failed");
+		goto cleanup;
+	}
+	if (d->total == 0)
+		*lid = 0;
+	else
+		*lid = ((ailsa_data_s *)d->head->data)->data->number;
+	cleanup:
+		ailsa_list_destroy(d);
+		my_free(d);
+		return retval;
 }
 
 static int
@@ -240,69 +245,86 @@ list_locales(ailsa_cmdb_s *ccs)
 {
 	int retval = 0;
 	unsigned long int isdefault = 0;
-	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in list_locales");
-	cbc_locale_s *loc;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	if ((retval = get_default_id(ccs, GET_DEFAULT_LOCALE, NULL, &isdefault)) != 0)
-		fprintf(stderr, "Cannot find default locale!\n");
-	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
-		fprintf(stderr, "DB query error %d\n", retval);
+	if ((retval = get_default_locale(ccs, &isdefault)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get default locale");
 		goto cleanup;
 	}
-	loc = cbc->locale;
-	while (loc) {
-		printf("%s", loc->name);
-		if (loc->locale_id == isdefault)
-			printf(" *");
+	if ((retval = ailsa_basic_query(ccs, LOCALE_NAMES, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "ALL_LOCALES query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "No locales in database?");
+		goto cleanup;
+	}
+	e = l->head;
+	while (e) {
+		if (e->next)
+			if (((ailsa_data_s *)e->next->data)->type == AILSA_DB_TEXT)
+				printf("%s", ((ailsa_data_s *)e->next->data)->data->text);
+		if (((ailsa_data_s *)e->data)->type == AILSA_DB_LINT)
+			if (((ailsa_data_s *)e->data)->data->number == isdefault)
+				printf(" *");
 		printf("\n");
-		loc = loc->next;
+		e = e->next->next;
 	}
 	cleanup:
-		clean_cbc_struct(cbc);
+		ailsa_list_destroy(l);
+		my_free(l);
 		return retval;
 }
 
-static void
-print_locale(ailsa_cmdb_s *ccs, cbc_locale_s *locale)
-{
-	cbc_locale_s *loc = locale;
-	unsigned long int isdefault = 0;
-	int retval;
-
-	if (!(loc) || !(ccs))
-		return;
-	if ((retval = get_default_id(ccs, GET_DEFAULT_LOCALE, NULL, &isdefault)) != 0)
-		fprintf(stderr, "Cannot find default locale!\n");
-	printf("Locale %s", loc->name);
-	if (loc->locale_id == isdefault)
-		printf(" * Default");
-	printf("\n\n");
-	printf("Keymap:\t\t%s\n", loc->keymap);
-	printf("Language:\t%s\n", loc->language);
-	printf("Country:\t%s\n", loc->country);
-	printf("Locale:\t\t%s\n", loc->locale);
-	printf("Timezone:\t%s\n", loc->timezone);
-}
-
 static int
-display_locales(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
+display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
+	if (!(ccs) || !(cl))
+		return AILSA_NO_DATA;
 	int retval = 0;
-	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in display_locales");
-	cbc_locale_s *loc;
+	unsigned long int isdefault = 0;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	if ((retval = cbc_run_query(ccs, cbc, LOCALE)) != 0) {
-		fprintf(stderr, "DB query error %d\n", retval);
+	if ((retval = get_default_locale(ccs, &isdefault)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get default locale");
 		goto cleanup;
 	}
-	loc = cbc->locale;
-	while (loc) {
-		if (strncmp(loc->name, cl->name, HOST_S) == 0)
-			print_locale(ccs, loc);
-		loc = loc->next;
+	if ((retval = cmdb_add_string_to_list(cl->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot name into local list");
+		goto cleanup;
 	}
+	if ((retval = ailsa_argument_query(ccs, LOCALE_ON_NAME, l, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "LOCALE_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (r->total != 8) {
+		ailsa_syslog(LOG_ERR, "Should have 8 in list; got %zu", r->total);
+		goto cleanup;
+	}
+	e = r->head;
+	printf("Locale: %s", cl->name);
+	if (isdefault == ((ailsa_data_s *)e->data)->data->number)
+		printf("  * Default");
+	printf("\n");
+	e = e->next;
+	printf("  Locale:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+	e = e->next;
+	printf("  Country:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+	e = e->next;
+	printf("  Language:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+	e = e->next;
+	printf("  Keymap:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+	e = e->next;
+	printf("  Timezone:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+
 	cleanup:
-		clean_cbc_struct(cbc);
+		ailsa_list_destroy(l);
+		ailsa_list_destroy(r);
+		my_free(l);
+		my_free(r);
 		return retval;
 }
 

@@ -58,6 +58,8 @@ const char *basic_queries[] = {
 "SELECT DISTINCT alias FROM build_os",	// BUILD_OS_ALIASES
 "SELECT p.package, p.os_id FROM packages p LEFT JOIN varient v ON v.varient_id = p.varient_id \
   WHERE valias = 'base' OR varient = 'base'", // BASE_VARIENT_PACKAGES
+"SELECT locale_id FROM default_locale WHERE locale_id > 0", // DEFAULT_LOCALE
+"SELECT locale_id, name FROM locale", // LOCALE_NAMES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -208,6 +210,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT p.package, o.os, o.os_version, o.arch FROM packages p JOIN build_os o ON p.os_id = o.os_id WHERE p.varient_id = ? ORDER BY o.os, o.os_version, o.arch",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // LOCALE_ON_NAME
+"SELECT locale_id, locale, country, language, keymap, timezone, cuser, ctime FROM locale WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
