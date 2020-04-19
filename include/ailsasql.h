@@ -148,10 +148,10 @@ typedef struct ailsa_sql_multi_s {
 	unsigned int *fields;
 } ailsa_sql_multi_s;
 
-extern const struct ailsa_sql_single_s server_table[];
-extern size_t server_fields;
 
 extern const ailsa_sql_query_s varient_queries[];
+extern const ailsa_sql_query_s delete_queries[];
+
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
 
@@ -162,7 +162,7 @@ int
 ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLIST *args, AILLIST *results);
 
 int
-ailsa_delete_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *remove);
+ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *remove);
 
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);

@@ -421,7 +421,7 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 			goto cleanup;
 		}
 	}
-	if ((retval = ailsa_delete_query(cmc, DELETE_BUILD_OS, list)) != 0) {
+	if ((retval = ailsa_delete_query(cmc, delete_queries[DELETE_BUILD_OS], list)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_BUILD_OS query failed");
 		goto cleanup;
 	}

@@ -46,21 +46,6 @@
 #include <cmdb.h>
 #include <base_sql.h>
 
-const struct ailsa_sql_single_s server_table[12] = {
-	{ .string = "name", .type = AILSA_DB_TEXT, .length = HOST_S },
-	{ .string = "make", .type = AILSA_DB_TEXT, .length = HOST_S },
-	{ .string = "uuid", .type = AILSA_DB_TEXT, .length = HOST_S },
-	{ .string = "vendor", .type = AILSA_DB_TEXT, .length = HOST_S },
-	{ .string = "model", .type = AILSA_DB_TEXT, .length = MAC_LEN },
-	{ .string = "server_id", .type = AILSA_DB_LINT, .length = 0 },
-	{ .string = "cust_id", .type = AILSA_DB_LINT, .length = 0 },
-	{ .string = "vm_server_id", .type = AILSA_DB_LINT, .length = 0 },
-	{ .string = "cuser", .type = AILSA_DB_LINT, .length = 0 },
-	{ .string = "muser", .type = AILSA_DB_LINT, .length = 0 },
-	{ .string = "ctime", .type = AILSA_DB_TIME, .length = 0 },
-	{ .string = "mtime", .type = AILSA_DB_TIME, .length = 0 }
-};
-
 const char *basic_queries[] = {
 "SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
 "SELECT coid, name, city FROM customer ORDER BY coid", // COID_NAME_CITY
@@ -417,10 +402,9 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 }
 
 int
-ailsa_delete_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *delete)
+ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete)
 {
 	int retval;
-	const struct ailsa_sql_query_s query = delete_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
