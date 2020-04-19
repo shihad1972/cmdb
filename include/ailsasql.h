@@ -126,7 +126,8 @@ enum {			// SQL INSERT QUERIES
 };
 
 enum {			// SQL DELETE QUERIES
-	DELETE_BUILD_OS = 0
+	DELETE_BUILD_OS = 0,
+	DELETE_VARIENT
 };
 
 typedef struct ailsa_sql_single_s {

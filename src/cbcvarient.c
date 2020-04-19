@@ -115,6 +115,49 @@ const struct ailsa_sql_query_s varient_queries[] = {
 	}
 };
 
+const struct ailsa_sql_query_s package_deletes[] = {
+	{ // RM_PACKAGE_ON_OS
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE alias = ? OR os = ?)",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_VERSION
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND (os_version = ? OR ver_alias = ?))",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_ARCH
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND arch = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_VERSION_ARCH
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND (os_version = ? OR ver_alias = ?) AND arch = ?)",
+	6,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_VARIENT
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE alias = ? OR os = ?) AND varient_id IN (SELECT varient_id FROM varient WHERE varient = ? OR valias = ?)",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_VERSION_VARIENT
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND (os_version = ? OR ver_alias = ?)) AND varient_id IN (SELECT varient_id FROM varient WHERE varient = ? OR valias = ?)",
+	7,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_ARCH_VARIENT
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND arch = ? AND varient_id IN (SELECT varient_id FROM varient WHERE varient = ? OR valias = ?)",
+	6,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RM_PACKAGE_ON_OS_VERSION_ARCH_VARIENT
+"DELETE FROM packages WHERE package = ? AND os_id IN (SELECT os_id FROM build_os WHERE (alias = ? OR os = ?) AND (os_version = ? OR ver_alias = ?) AND arch = ?) AND varient_id IN (SELECT varient_id FROM varient WHERE varient = ? OR valias = ?)",
+	8,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	}
+};
+
 static void
 clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl);
 
@@ -143,19 +186,13 @@ static int
 remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
-cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id);
-
-static int
-cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id);
-
-static int
 build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch);
 
 static int
 get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch);
 
-static dbdata_s *
-build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack);
+static int
+get_delete_package_query(AILLIST *list, unsigned int *query, char *pack, char *os, char *vers, char *arch, char *vari);
 
 static void
 print_varient_details(AILLIST *list);
@@ -593,40 +630,32 @@ add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 static int
 remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	char varient[HOST_S];
-	int retval = NONE, type = VARIENT_ID_ON_VALIAS;
-	unsigned int max;
-	dbdata_s *data = NULL;
+	int retval = AILSA_NO_DATA;
+	if (!(cmc) || !(cvl))
+		return retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	char *varient;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if (strncmp(cvl->varient, "NULL", COMM_S) != 0) {
-		snprintf(data->args.text, HOST_S, "%s", cvl->varient);
-		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VARIENT);
-		if (retval != 1) {
-			clean_dbdata_struct(data);
-			return VARIENT_NOT_FOUND;
-		}
-	} else if (strncmp(cvl->valias, "NULL", COMM_S) != 0) {
-		snprintf(data->args.text, HOST_S, "%s", cvl->valias);
-		retval = cbc_run_search(cmc, data, VARIENT_ID_ON_VALIAS);
-		if (retval != 1) {
-			clean_dbdata_struct(data);
-			return VARIENT_NOT_FOUND;
-		}
+	if (cvl->varient)
+		varient = cvl->varient;
+	else if (cvl->valias)
+		varient = cvl->valias;
+	else
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list(varient, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+		goto cleanup;
 	}
-	snprintf(varient, HOST_S, "%s", data->args.text);
-	data->args.number = data->fields.number;
-	if ((retval = cbc_run_delete(cmc, data, VARI_DEL_VARI_ID)) != 1) {
-		fprintf(stderr, "%d varients deleted for %s\n",
-			retval, varient);
-		retval = MULTIPLE_VARIENTS;
-	} else {
-		printf("Varient %s deleted\n", varient);
-		retval = NONE;
+	if ((retval = cmdb_add_string_to_list(varient, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+		goto cleanup;
 	}
-	free(data);
-	return retval;
+	if ((retval = ailsa_delete_query(cmc, delete_queries[DELETE_VARIENT], list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot remove varient %s from database", varient);
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+		return retval;
 }
 
 static int
@@ -667,153 +696,40 @@ add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 		my_free(list);
 		return retval;
 }
-
 static int
 remove_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 {
+	if (!(cbc) || !(cvl))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	char *os;
+	char *os_ver;
 	char *varient;
-	int retval = 0, os, packs = 0;
-	unsigned long int *osid, vid, packid;
-	cbc_s *base;
-	dbdata_s *data, *list;
+	unsigned int query = 0;
+	AILLIST *list = ailsa_db_data_list_init();
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in remove_cbc_package");
-	init_cbc_struct(base);
-	if ((retval = cbc_run_multiple_query(cbc, base, BUILD_OS | VARIENT)) != 0) {
-		fprintf(stderr, "Cannot run os and / or varient query\n");
-		clean_cbc_struct(base);
+	if (!(cvl->os))
+		os = cvl->alias;
+	else
+		os = cvl->os;
+	if (!(cvl->version))
+		os_ver = cvl->ver_alias;
+	else
+		os_ver = cvl->version;
+	if (!(cvl->varient))
+		varient = cvl->valias;
+	else
+		varient = cvl->varient;
+	if ((retval = get_delete_package_query(list, &query, cvl->package, os, os_ver, cvl->arch, varient)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get delete package query");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, package_deletes[query], list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot delete build packages");
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
-	}
-	check_for_alias(&varient, cvl->varient, cvl->valias);
-	if ((retval = get_varient_id(cbc, varient, &vid)) != 0)
-		return retval;
-// This will setup the array of osid's in osid if we have more than one version / arch
-	if ((os = cbc_get_os(base->bos, cvl, &osid)) == 0) {
-		clean_cbc_struct(base);
-		return OS_NOT_FOUND;
-	}
-// Set the last to the varient_id
-	*(osid + (unsigned long int)os) = vid;
-	if (!(data = build_rem_pack_list(cbc, osid, os, cvl->package))) {
-		fprintf(stderr, "No packages to remove\n");
-		free(osid);
-		clean_cbc_struct(base);
-		return NONE;
-	}
-	list = data;
-	while (list) {
-		packid = list->fields.number;
-		list->args.number = packid;
-		if ((retval = cbc_run_delete(cbc, list, PACK_DEL_PACK_ID)) > 1)
-			fprintf(stderr, "Multiple packages deleted on pack id %lu\n", packid);
-		else if (retval == 0)
-			fprintf(stderr, "Cannot delete package id %lu\n", packid);
-		packs += retval;
-		list = list->next;
-	}
-	printf("%d packages deleted\n", packs);
-	if (packs > 0)
-		cbc_set_varient_updated(cbc, vid);
-	free(osid);
-	clean_cbc_struct(base);
-	clean_dbdata_struct(data);
-	return 0;
-}
-
-static int
-cbc_get_os(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int **id)
-{
-	int retval = NONE;
-	unsigned long int *os_id = NULL;
-
-	if ((retval = cbc_get_os_list(os, cvl, os_id)) == 0)
-		return retval;
-	if (!(os_id = calloc((size_t)retval + 1, sizeof(unsigned long int))))
-		report_error(MALLOC_FAIL, "os_id in cbc_get_os");
-	retval = cbc_get_os_list(os, cvl, os_id);
-	*id = os_id;
-	return retval;
-}
-
-static int
-cbc_get_os_list(cbc_build_os_s *os, cbcvari_comm_line_s *cvl, unsigned long int *id)
-{
-	int retval = NONE;
-	cbc_build_os_s *list;
-	unsigned long int *os_id = id;
-
-	list = os;
-	while (list) {
-		if (strncmp(cvl->version, "NULL", COMM_S) != 0) {
-			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
-				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
-				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
-				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
-					retval++;
-					if (id) {
-						*os_id = list->os_id;
-						os_id++;
-					}
-				}
-			} else {
-				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
-				     (strncmp(cvl->version, list->version, MAC_S) == 0)) {
-					retval++;
-					if (id) {
-						*os_id = list->os_id;
-						os_id++;
-					}
-				}
-			}
-		} else if (strncmp(cvl->ver_alias, "NULL", COMM_S) != 0) {
-			if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
-				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-                                     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
-				     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0) &&
-				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
-					retval++;
-					if (id) {
-						*os_id = list->os_id;
-						os_id++;
-					}
-				}
-			} else {
-				if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-				     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
-				     (strncasecmp(cvl->ver_alias, list->ver_alias, MAC_S) == 0)) {
-					retval++;
-					if (id) {
-						*os_id = list->os_id;
-						os_id++;
-					}
-				}
-			}
-		} else if (strncmp(cvl->arch, "NULL", COMM_S) != 0) {
-			if (((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-			     (strncasecmp(cvl->os, list->os, MAC_S) == 0)) &&
-			     (strncasecmp(cvl->arch, list->arch, RANGE_S) == 0)) {
-				retval++;
-				if (id) {
-					*os_id = list->os_id;
-					os_id++;
-				}
-			}
-		} else {
-			if ((strncasecmp(cvl->alias, list->alias, MAC_S) == 0) ||
-			    (strncasecmp(cvl->os, list->os, MAC_S) == 0)) {
-				retval++;
-				if (id) {
-					*os_id = list->os_id;
-					os_id++;
-				}
-			}
-		}
-		list = list->next;
-	}
-	return retval;
 }
 
 static int
@@ -833,8 +749,12 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 		ailsa_syslog(LOG_ERR, "Cannot get varient id");
 		goto cleanup;
 	}
-	if (scratch->total > 1)
+	if (scratch->total > 1) {
 		ailsa_syslog(LOG_INFO, "Multiple varients returned. Using first one returned");
+	} else if (scratch->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find varient %s", vari);
+		goto cleanup;
+	}
 	vid = ((ailsa_data_s *)scratch->head->data)->data->number;
 	ailsa_list_destroy(scratch);
 	ailsa_list_init(scratch, ailsa_clean_data);
@@ -914,49 +834,40 @@ get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, cha
 	return retval;
 }
 
-static dbdata_s *
-build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack)
+static int
+get_delete_package_query(AILLIST *list, unsigned int *query, char *pack, char *os, char *vers, char *arch, char *vari)
 {
-	int retval, i, query = PACK_ID_ON_DETAILS;
-	unsigned int max;
-	unsigned long int vid, *id_list;
-	dbdata_s *data, *list = NULL, *dlist;
-	if (!(ids))
-		return list;
-	if (!(pack))
-		return list;
-	id_list = ids;
-	vid = *(ids + (unsigned long)noids);
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	for (i = 0; i < noids; i++) {
-		init_multi_dbdata_struct(&data, max);
-		snprintf(data->args.text, RBUFF_S, "%s", pack);
-		data->next->args.number = vid;
-		data->next->next->args.number = *id_list;
-		if ((retval = cbc_run_search(cbc, data, query)) > 0) {
-			dlist = list;
-			if (dlist) {
-				while (dlist->next)
-					dlist = dlist->next;
-				dlist->next = data;
-			} else {
-				list = data;
-			}
-			if (retval < 3) {
-				if (retval > 1) {
-					clean_dbdata_struct(data->next->next);
-					data->next->next = NULL;
-				} else {
-					clean_dbdata_struct(data->next);
-					data->next = NULL;
-				}
-			}
-		} else {
-			clean_dbdata_struct(data);
-		}
-		id_list++;
+	if (!(list) || !(query) || !(os))
+		return AILSA_NO_DATA;
+
+	unsigned int offset = 0;
+	int retval;
+	if (vers)
+		offset = offset | 1;
+	if (arch)
+		offset = offset | 2;
+	if (vari)
+		offset = offset | 4;
+	if ((retval = cmdb_add_string_to_list(pack, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert package name into list");
+		return retval;
 	}
-	return list;
+	if ((retval = get_build_os_query(list, query, os, vers, arch)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert os details into list");
+		return retval;
+	}
+	if (offset & 4) {
+		if ((retval = cmdb_add_string_to_list(vari, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert varient into list");
+			return retval;
+		}
+		if ((retval = cmdb_add_string_to_list(vari, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert valias into list");
+			return retval;
+		}
+	}
+	*query = offset;
+	return retval;
 }
 
 static void

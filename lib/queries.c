@@ -274,6 +274,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM build_os WHERE os_id = ?",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_VARIENT
+"DELETE FROM varient WHERE varient = ? OR valias = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
