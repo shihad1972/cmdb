@@ -1,4 +1,8 @@
-10/04/202
+19/04/2020
+ When adding packages, I need to check if the package already exists for
+that particular varient and OS combination.
+
+10/04/2020
 When grabbing kernel and initrd boot files, a summary of download speed
 should be printed.
 
@@ -7,7 +11,7 @@ Programs moved to new AILLIST database model:
 	cmdb		**Done**
 	dnsa
 	cbc
-	cbcvarient
+	cbcvarient	**Done**
 	cbcdomain
 	cbcos		**Done**
 	cbcsysp
@@ -23,11 +27,6 @@ definition language for the daemon too.
 Reworking the SQL code:
   - allow inserts of multiple entries
   - condense cmdb dnsa and cbc sql into 1 set of functions
-
-27/02/2019
-Need to add a generic logging function, that can handle both console
-output and also logging to syslog.
-	*** Done: ailsa_syslog function does this ***
 
 09/11/2018
 Deleting SRV records is tricky; it seems to delete all SRV records
@@ -77,11 +76,6 @@ we need to page the terminal and also rerun the query on the database using
 the LIMIT clause in the SQL statement. This can be used in the prepared
 statements but probably not the base queries, so I will have to fix the whole
 DB access :(
-
-26/11/2014
-Would be nice if I could create a VM xml file to use for libvirt.
-Not too sure if I need to use the libvirt API or not.
-	** DONE!!!!! ** 0.2.26.1 can create a VM using libvirt API
 
 21/11/2014
 Check the auditd source code for a cool way to read a config file.
