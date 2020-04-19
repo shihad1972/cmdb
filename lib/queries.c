@@ -70,6 +70,9 @@ const char *basic_queries[] = {
 "SELECT DISTINCT bo.os FROM build_os bo JOIN build_type bt ON bt.alias=bo.alias", // BUILD_OS_NAME_TYPE
 "SELECT os, os_version, alias, arch, ver_alias, cuser, ctime FROM build_os", // BUILD_OSES
 "SELECT varient_id, valias, varient, cuser, muser, ctime, mtime FROM varient", // BUILD_VARIENTS
+"SELECT DISTINCT alias FROM build_os",	// BUILD_OS_ALIASES
+"SELECT p.package, p.os_id FROM packages p LEFT JOIN varient v ON v.varient_id = p.varient_id \
+  WHERE valias = 'base' OR varient = 'base'", // BASE_VARIENT_PACKAGES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -273,6 +276,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO packages (package, varient_id, os_id, cuser, muser) VALUES (?, ?, ?, ?, ?)",
 	5,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_VARIENT
+"INSERT INTO varient(varient, valias, cuser, muser) VALUES (?, ?, ?, ?)",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

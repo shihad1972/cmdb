@@ -19,8 +19,8 @@
  *
  *  cbcvarient.c
  * 
- *  Functions to get configuration values and also parse command line arguments
- * 
+ *  Static code for the cbcvarient program.
+ *
  *  part of the cbcvarient program
  * 
  */
@@ -156,15 +156,6 @@ get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, cha
 
 static dbdata_s *
 build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *pack);
-
-static void
-copy_packages_from_base_varient(ailsa_cmdb_s *cbc, char *varient);
-
-static int
-build_copy_package_list(ailsa_cmdb_s *cbc, cbc_s *base, uli_t bid, uli_t id);
-
-static void
-add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id);
 
 static void
 print_varient_details(AILLIST *list);
@@ -512,48 +503,91 @@ varient_get_display_query(cbcvari_comm_line_s *cvl, AILLIST *list, ailsa_sql_que
 static int
 add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
-	int retval = NONE;
-	cbc_s *base;
-	cbc_varient_s *vari, *dbvari;
+	if (!(cmc) || !(cvl))
+		return AILSA_NO_DATA;
+	int retval;
+	unsigned long int vid;
+	size_t i;
+	AILELEM *e;
+	AILLIST *v = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in add_cbc_build_varient");
-	if (!(vari = malloc(sizeof(cbc_varient_s))))
-		report_error(MALLOC_FAIL, "vari in add_cbc_build_varient");
-	init_cbc_struct(base);
-	init_varient(vari);
-	if ((retval = cbc_run_query(cmc, base, VARIENT)) != 0) {
-		if (retval == 6) {
-			fprintf(stderr, "No build varients in DB\n");
-		} else {
-			clean_cbc_struct(base);
-			clean_varient(vari);
-			return retval;
+	if ((retval = cmdb_add_string_to_list(cvl->varient, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cvl->valias, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, VARIENT_ID_ON_VARIANT_OR_VALIAS, v, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS query failed");
+		goto cleanup;
+	}
+	if (r->total > 0) {
+		ailsa_syslog(LOG_INFO, "Varient %s already in the database", cvl->varient);
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(v)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to new varient list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cmc, INSERT_VARIENT, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert varient into database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, VARIENT_ID_ON_VARIANT_OR_VALIAS, v, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find newly inserted varient?");
+		goto cleanup;
+	}
+	vid = ((ailsa_data_s *)r->head->data)->data->number;
+	ailsa_list_destroy(r);
+	ailsa_list_init(r, ailsa_clean_data);
+	ailsa_list_destroy(v);
+	ailsa_list_init(v, ailsa_clean_data);
+	if ((retval = ailsa_basic_query(cmc, BASE_VARIENT_PACKAGES, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to get list of packages for base varient");
+		goto cleanup;
+	}
+	if (r->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find any packages for base varient");
+		ailsa_syslog(LOG_ERR, "You will have to create a package list from scratch");
+		goto cleanup;
+	}
+	e = r->head;
+	for (i = 0; i < (r->total / 2); i++) {
+		if (!(e))
+			break;
+		if ((retval = cmdb_add_string_to_list(((ailsa_data_s *)e->data)->data->text, v)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add package name to list");
+			goto cleanup;
 		}
-	}
-	dbvari = base->varient;
-	while (dbvari) {
-		if ((strncmp(dbvari->varient, cvl->varient, MAC_S) == 0) ||
-		    (strncmp(dbvari->valias, cvl->valias, MAC_S) == 0)) {
-			clean_cbc_struct(base);
-			clean_varient(vari);
-			return VARIENT_EXISTS;
+		if (e->next)
+			e = e->next;
+		else
+			break;
+		if ((retval = cmdb_add_number_to_list(vid, v)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+			goto cleanup;
 		}
-		dbvari = dbvari->next;
+		if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)e->data)->data->number, v)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add os id to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_populate_cuser_muser(v)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+			goto cleanup;
+		}
+		e = e->next;
 	}
-	clean_varient(base->varient);
-	snprintf(vari->varient, HOST_S, "%s", cvl->varient);
-	snprintf(vari->valias, MAC_S, "%s", cvl->valias);
-	base->varient = vari;
-	vari->cuser = vari->muser = (unsigned long int)getuid();
-	if ((retval = cbc_run_insert(cmc, base, VARIENTS)) != 0) {
-		printf("Unable to add varient %s to database\n", cvl->varient);
-	} else {
-		printf("Varient %s added to database\n", cvl->varient);
-	}
-	copy_packages_from_base_varient(cmc, cvl->varient);
-	clean_cbc_struct(base);
-	return retval;
+	if ((retval = ailsa_multiple_insert_query(cmc, INSERT_BUILD_PACKAGE, v)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert build packages for new varient");
+	cleanup:
+		ailsa_list_destroy(v);
+		ailsa_list_destroy(r);
+		my_free(v);
+		my_free(r);
+		return retval;
 }
 
 static int
@@ -593,44 +627,6 @@ remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	free(data);
 	return retval;
-}
-
-static void
-copy_packages_from_base_varient(ailsa_cmdb_s *cbc, char *varient)
-{
-	char *bvar; 
-	int retval, packs = 0;
-	unsigned long int vid, bvid;
-	cbc_s *base;
-	cbc_package_s *pack;
-
-	bvar = ailsa_calloc(COMM_S, "bvar in copy_packages_from_base_varient");
-	snprintf(bvar, COMM_S, "base");
-	if ((retval = get_varient_id(cbc, bvar, &bvid)) != 0) {
-		fprintf(stderr, "Cannot find base varient\n");
-		free(bvar);
-		return;
-	}
-	free(bvar);
-	if ((retval = get_varient_id(cbc, varient, &vid)) != 0) {
-		fprintf(stderr, "Cannot get varient_id for %s\n", varient);
-		return;
-	}
-	initialise_cbc_s(&base);
-	if ((retval = build_copy_package_list(cbc, base, bvid, vid)) != 0) {
-		fprintf(stderr, "Cannot build package copy list\n");
-		clean_cbc_struct(base);
-		return;
-	}
-	pack = base->package;
-	while (base->package) {
-		if ((retval = cbc_run_insert(cbc, base, BPACKAGES)) == 0)
-			packs++;
-		base->package = base->package->next;
-	}
-	printf("Inserted %d packages\n", packs);
-	base->package = pack;
-	clean_cbc_struct(base);
 }
 
 static int
@@ -961,50 +957,6 @@ build_rem_pack_list(ailsa_cmdb_s *cbc, unsigned long int *ids, int noids, char *
 		id_list++;
 	}
 	return list;
-}
-
-static int
-build_copy_package_list(ailsa_cmdb_s *cbc, cbc_s *base, uli_t bid, uli_t id)
-{
-	int retval, query = PACKAGE_OS_ID_ON_VID;
-	unsigned int max;
-	dbdata_s *data, *list;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = bid;
-	if ((retval = cbc_run_search(cbc, data, query)) > 0) {
-		list = data;
-		while (list) {
-			add_package_to_list(base, list, id);
-			list = move_down_list_data(list, max);
-		}
-	}
-	clean_dbdata_struct(data);
-	if (retval > 0)
-		return 0;
-	else
-		return 1;
-}
-
-static void
-add_package_to_list(cbc_s *base, dbdata_s *data, unsigned long int id)
-{
-	cbc_package_s *pack, *list;
-
-	initialise_cbc_package_s(&pack);
-	snprintf(pack->package, HOST_S, "%s", data->fields.text);
-	pack->os_id = data->next->fields.number;
-	pack->vari_id = id;
-	pack->muser = pack->cuser = (unsigned long int)getuid();
-	if (!(base->package)) {
-		base->package = pack;
-	} else {
-		list = base->package;
-		while (list->next)
-			list = list->next;
-		list->next = pack;
-	}
 }
 
 static void
