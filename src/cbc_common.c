@@ -48,23 +48,6 @@
 #include "cbc_base_sql.h"
 #include "cbc_common.h"
 
-
-int
-check_for_package(ailsa_cmdb_s *cbc, unsigned long int osid, unsigned long int vid, char *pack)
-{
-	int retval;
-	unsigned int type = cbc_search_args[PACK_ID_ON_DETAILS];
-	dbdata_s *data;
-
-	init_multi_dbdata_struct(&data, type);
-	snprintf(data->args.text, RBUFF_S, "%s", pack);
-	data->next->args.number = vid;
-	data->next->next->args.number = osid;
-	retval = cbc_run_search(cbc, data, PACK_ID_ON_DETAILS);
-	clean_dbdata_struct(data);
-	return retval;
-}
-
 void
 check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain)
 {
@@ -594,15 +577,6 @@ get_os_alias(ailsa_cmdb_s *cbc, char *os, char *alias)
 	snprintf(alias, MAC_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
 	return 0;
-}
-
-void
-check_for_alias(char **what, char *name, char *alias)
-{
-	if (strncmp(name, "NULL", COMM_S) != 0)
-		*what = name;
-	else
-		*what = alias;
 }
 
 int

@@ -34,9 +34,6 @@ get_varient_id(ailsa_cmdb_s *cmc, char *vari, unsigned long int *varient_id);
 void 
 cbc_set_varient_updated(ailsa_cmdb_s *cbc, unsigned long int vid);
 
-int
-check_for_package(ailsa_cmdb_s *cbc, unsigned long int osid, unsigned long int vid, char *pack);
-
 void
 check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
 
@@ -93,9 +90,6 @@ set_scheme_updated(ailsa_cmdb_s *cbc, char *scheme);
 
 void
 fill_dbdata_os_search(dbdata_s *data, char *os[]);
-
-void
-check_for_alias(char **what, char *name, char *alias);
 
 int
 cbc_add_server(ailsa_cmdb_s *cbc, char *name, long unsigned int *server_id);
