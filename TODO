@@ -1,3 +1,6 @@
+20/04/2020
+ When adding a locale, need to check if that locale already exists
+
 19/04/2020
  When adding packages, I need to check if the package already exists for
 that particular varient and OS combination.
@@ -17,7 +20,7 @@ Programs moved to new AILLIST database model:
 	cbcsysp
 	cbcscript
 	cbcpart
-	cbclocale
+	cbclocale	**Done**
 
 31/10/2016
 Add support for a YAML data file, so we do not have the unwieldy command
