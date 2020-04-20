@@ -273,6 +273,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO varient(varient, valias, cuser, muser) VALUES (?, ?, ?, ?)",
 	4,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_LOCALE
+"INSERT INTO locale(locale, country, language, keymap, timezone, name, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	8,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
@@ -286,6 +291,19 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM varient WHERE varient = ? OR valias = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // DELETE_LOCALE
+"DELETE FROM locale WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	}
+};
+
+const struct ailsa_sql_query_s update_queries[] = {
+	{ // SET_DEFAULT_LOCALE
+"UPDATE default_locale SET locale_id = (SELECT locale_id FROM locale WHERE name = ?), muser = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT }
 	}
 };
 
@@ -427,6 +445,26 @@ ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AIL
 #ifdef HAVE_SQLITE3
 	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
 		retval = ailsa_delete_query_sqlite(cmdb, query, delete);
+#endif
+	else
+		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
+	return retval;
+}
+
+int
+ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *update)
+{
+	int retval;
+
+	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+		ailsa_syslog(LOG_ERR, "no dbtype set");
+#ifdef HAVE_MYSQL
+	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+		retval = ailsa_delete_query_mysql(cmdb, query, update);
+#endif // HAVE_MYSQL
+#ifdef HAVE_SQLITE3
+	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+		retval = ailsa_delete_query_sqlite(cmdb, query, update);
 #endif
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);

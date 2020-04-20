@@ -76,7 +76,7 @@ static int
 set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static void
-fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl);
+clean_cbc_local_comm_line(locale_comm_line_s *cl);
 
 int
 main(int argc, char *argv[])
@@ -85,7 +85,8 @@ main(int argc, char *argv[])
 	locale_comm_line_s *cl = ailsa_calloc(sizeof(locale_comm_line_s), "cl in main");
 	ailsa_cmdb_s *ccs = ailsa_calloc(sizeof(ailsa_cmdb_s), "ccs in main");
 	if ((retval = parse_locale_comm_line(argc, argv, cl)) != 0) {
-		free(cl);
+		ailsa_clean_cmdb(ccs);
+		clean_cbc_local_comm_line(cl);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(ccs);
@@ -104,7 +105,7 @@ main(int argc, char *argv[])
 		retval = DISPLAY_USAGE;
 	}
 	ailsa_clean_cmdb(ccs);
-	my_free(cl);
+	clean_cbc_local_comm_line(cl);
 	return retval;
 }
 
@@ -205,7 +206,7 @@ validate_locale_comm_line(locale_comm_line_s *cl)
 		if (ailsa_validate_input(cl->keymap, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "keymap");
 	if (cl->locale)
-		if (ailsa_validate_input(cl->locale, NAME_REGEX) < 0)
+		if (ailsa_validate_input(cl->locale, LOGVOL_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "locale");
 	if (cl->name)
 		if (ailsa_validate_input(cl->name, NAME_REGEX) < 0)
@@ -216,6 +217,26 @@ validate_locale_comm_line(locale_comm_line_s *cl)
 	if (cl->country)
 		if (ailsa_validate_input(cl->country, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "country");
+}
+
+static void
+clean_cbc_local_comm_line(locale_comm_line_s *cl)
+{
+	if (!(cl))
+		return;
+	if (cl->country)
+		my_free(cl->country);
+	if (cl->keymap)
+		my_free(cl->keymap);
+	if (cl->language)
+		my_free(cl->language);
+	if (cl->locale)
+		my_free(cl->locale);
+	if (cl->name)
+		my_free(cl->name);
+	if (cl->timezone)
+		my_free(cl->timezone);
+	my_free(cl);
 }
 
 static int
@@ -332,78 +353,86 @@ static int
 add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	int retval;
-	cbc_s *cbc = ailsa_calloc(sizeof(cbc_s), "cbc in add_locale");
-	cbc_locale_s *loc = ailsa_calloc(sizeof(cbc_locale_s), "loc in add_locale");
+	AILLIST *l = ailsa_db_data_list_init();
 
-	cbc->locale = loc;
-	fill_locale(loc, cl);
-	if ((retval = cbc_run_insert(ccs, cbc, LOCALES)) != 0)
-		fprintf(stderr, "Unable to insert locale %s into database", loc->name);
-	else
-		printf("Locale %s added to DB\n", loc->name);
-	clean_cbc_struct(cbc);
-	return retval;
-}
-
-static void
-fill_locale(cbc_locale_s *loc, locale_comm_line_s *cl)
-{
-	if (!(loc) || !(cl))
-		report_error(CBC_NO_DATA, "fill_locale");
-	snprintf(loc->country, RANGE_S, "%s", cl->country);
-	snprintf(loc->language, RANGE_S, "%s", cl->language);
-	snprintf(loc->keymap, RANGE_S, "%s", cl->keymap);
-	snprintf(loc->locale, MAC_S, "%s", cl->locale);
-	snprintf(loc->timezone, HOST_S, "%s", cl->timezone);
-	snprintf(loc->name, HOST_S, "%s", cl->name);
-	loc->cuser = (unsigned long int)getuid();
-	loc->muser = (unsigned long int)getuid();
+	if ((retval = cmdb_add_string_to_list(cl->locale, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cl->country, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add country into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cl->language, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add language into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cl->keymap, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add keymap into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cl->timezone, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add keymap into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cl->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add name into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(ccs, INSERT_LOCALE, l)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert locale into database");
+	cleanup:
+		ailsa_list_destroy(l);
+		my_free(l);
+		return retval;
 }
 
 static int
 remove_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	if (!(ccs) || !(cl))
-		report_error(CBC_NO_DATA, "remove_locale");
-	char *name = cl->name;
-	unsigned long int id;
+		return AILSA_NO_DATA;
 	int retval;
-	dbdata_s *data;
+	AILLIST *l = ailsa_db_data_list_init();
 
-	if ((retval = get_locale_id(ccs, name, &id)) != 0)
+	if ((retval = cmdb_add_string_to_list(cl->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(ccs, delete_queries[DELETE_LOCALE], l)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot delete locale %s\n", cl->name);
+	cleanup:
+		ailsa_list_destroy(l);
+		my_free(l);
 		return retval;
-	init_multi_dbdata_struct(&data, 1);
-	data->args.number = id;
-	if ((retval = cbc_run_delete(ccs, data, LOCALE_ON_ID)) == 0)
-		fprintf(stderr, "Unable to delete locale %s\n", name);
-	else if (retval == 1)
-		printf("Locale %s deleted\n", name);
-	else
-		printf("%d locales deleted for %s\n", retval, name);
-	return 0;
 }
 
 static int
 set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
+	if (!(ccs) || !(cl))
+		return AILSA_NO_DATA;
 	int retval = 0;
-	int query = UP_DEFAULT_LOCALE;
-	unsigned long int locale_id;
-	dbdata_s *data;
+	AILLIST *u = ailsa_db_data_list_init();
+	unsigned long int user_id = (unsigned long int)getuid();
 
-	if ((retval = get_default_id(ccs, LOCALE_ID_ON_NAME, cl->name, &locale_id)) != 0) {
-		fprintf(stderr, "Cannot find locale %s\n", cl->name);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(cl->name, u)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale name into list");
+		goto cleanup;
 	}
-	init_multi_dbdata_struct(&data, 1);
-	data->args.number = locale_id;
-	if ((retval = cbc_run_update(ccs, data, query)) == 0)
-		fprintf(stderr, "Unable to set default locale\n");
-	else if (retval > 1)
-		fprintf(stderr, "Multiple default locales updated\n");
-	else
-		printf("Default locale set to %s\n", cl->name);
-	clean_dbdata_struct(data);
-	return retval;
+	if ((retval = cmdb_add_number_to_list(user_id, u)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add user id into list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(ccs, update_queries[SET_DEFAULT_LOCALE], u)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot set default locale");
+	cleanup:
+		ailsa_list_destroy(u);
+		my_free(u);
+		return retval;
 }
 

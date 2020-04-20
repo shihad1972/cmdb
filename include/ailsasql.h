@@ -125,12 +125,18 @@ enum {			// SQL INSERT QUERIES
 	INSERT_CUSTOMER,
 	INSERT_BUILD_OS,
 	INSERT_BUILD_PACKAGE,
-	INSERT_VARIENT
+	INSERT_VARIENT,
+	INSERT_LOCALE
 };
 
 enum {			// SQL DELETE QUERIES
 	DELETE_BUILD_OS = 0,
-	DELETE_VARIENT
+	DELETE_VARIENT,
+	DELETE_LOCALE
+};
+
+enum {			// SQL UPDATE QUERIES
+	SET_DEFAULT_LOCALE = 0
 };
 
 typedef struct ailsa_sql_single_s {
@@ -155,6 +161,7 @@ typedef struct ailsa_sql_multi_s {
 
 extern const ailsa_sql_query_s varient_queries[];
 extern const ailsa_sql_query_s delete_queries[];
+extern const ailsa_sql_query_s update_queries[];
 
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
@@ -167,6 +174,9 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 
 int
 ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *remove);
+
+int
+ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *update);
 
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
