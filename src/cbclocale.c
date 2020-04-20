@@ -35,11 +35,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
-#include "cbc_data.h"
-#include "cbc_common.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 
 typedef struct locale_comm_line_s {
 	char *country;
@@ -154,17 +149,17 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else if (opt == 'x')
 			cl->action = SET_DEFAULT;
 		else if (opt == 'g')
-			cl->language = strndup(optarg, RANGE_S);
+			cl->language = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'k')
-			cl->keymap = strndup(optarg, RANGE_S);
+			cl->keymap = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'o')
-			cl->locale = strndup(optarg, MAC_S);
+			cl->locale = strndup(optarg, MAC_LEN);
 		else if (opt == 'n')
-			cl->name = strndup(optarg, HOST_S);
+			cl->name = strndup(optarg, HOST_LEN);
 		else if (opt == 't')
-			cl->timezone = strndup(optarg, HOST_S);
+			cl->timezone = strndup(optarg, HOST_LEN);
 		else if (opt == 'u')
-			cl->country = strndup(optarg, HOST_S);
+			cl->country = strndup(optarg, HOST_LEN);
 		else
 			return DISPLAY_USAGE;
 	}

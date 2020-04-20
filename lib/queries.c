@@ -60,6 +60,7 @@ const char *basic_queries[] = {
   WHERE valias = 'base' OR varient = 'base'", // BASE_VARIENT_PACKAGES
 "SELECT locale_id FROM default_locale WHERE locale_id > 0", // DEFAULT_LOCALE
 "SELECT locale_id, name FROM locale", // LOCALE_NAMES
+"SELECT scheme_name, lvm from seed_schemes", // PARTITION_SCHEME_NAMES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {

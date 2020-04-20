@@ -23,8 +23,6 @@
  * 
  *  Part of the cbcpart program
  * 
- *  (C) Iain M. Conochie 2012 - 2013
- * 
  */
 #include <config.h>
 #include <configmake.h>
@@ -32,12 +30,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -136,8 +136,8 @@ main (int argc, char *argv[])
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "main");
 	cpl = ailsa_calloc(sizeof(cbcpart_comm_line_s), "main");
 	if ((retval = parse_cbcpart_comm_line(argc, argv, cpl)) != 0) {
-		free(cmc);
-		free(cpl);
+		ailsa_clean_cmdb(cmc);
+		clean_cbcpart_comm_line(cpl);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
@@ -160,16 +160,16 @@ static void
 clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 {
 	if (cpl->fs)
-		free(cpl->fs);
+		my_free(cpl->fs);
 	if (cpl->scheme)
-		free(cpl->scheme);
+		my_free(cpl->scheme);
 	if (cpl->option)
-		free(cpl->option);
+		my_free(cpl->option);
 	if (cpl->log_vol)
-		free(cpl->log_vol);
+		my_free(cpl->log_vol);
 	if (cpl->partition)
-		free(cpl->partition);
-	free(cpl);
+		my_free(cpl->partition);
+	my_free(cpl);
 }
 
 static int
@@ -356,27 +356,36 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 static int
 list_seed_schemes(ailsa_cmdb_s *cbc)
 {
-	int retval = NONE;
-	cbc_s *base;
-	cbc_seed_scheme_s *seeds;
+	if (!(cbc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	initialise_cbc_s(&base);
-	if ((retval = cbc_run_query(cbc, base, SSCHEME)) != 0) {
-		if (retval == 6)
-			fprintf(stderr, "No Partition schemes in DB\n");
-		else
-			fprintf(stderr, "Seed scheme query failed\n");
-		free(base);
+	if ((retval = ailsa_basic_query(cbc, PARTITION_SCHEME_NAMES, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "PARTITION_SCHEME_NAMES query failed");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		printf("Partition Schemes\n");
+		printf(" LVM\tName\n");
+	} else {
+		ailsa_syslog(LOG_INFO, "No partition schemes are defined");
+		goto cleanup;
+	}
+	e = l->head;
+	while (e) {
+		if (!(e->next))
+			break;
+		if (((ailsa_data_s *)e->next->data)->data->small > 0)
+			printf ("  *");
+		printf("\t%s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next->next;
+	}
+	cleanup:
+		ailsa_list_destroy(l);
+		my_free(l);
 		return retval;
-	}
-	seeds = base->sscheme;
-	printf("Partition Schemes\n");
-	while (seeds) {
-		printf("\t%s\n", seeds->name);
-		seeds = seeds->next;
-	}
-	clean_cbc_struct(base);
-	return retval;
 }
 
 static int

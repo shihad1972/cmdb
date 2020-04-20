@@ -42,8 +42,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
-#include "cbc_data.h"
 #include "cbc_common.h"
 #include "cbcnet.h"
 
@@ -348,7 +346,7 @@ add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	AILLIST *os = ailsa_db_data_list_init();
 
 	if (!(col->ver_alias))
-		col->version = strdup("none");
+		col->ver_alias = strdup("none");
 	if (!(col->alias)) {
 		col->alias = ailsa_calloc(SERVICE_LEN, "col->alias in add_cbc_build_os");
 		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
