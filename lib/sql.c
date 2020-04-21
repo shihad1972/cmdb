@@ -45,6 +45,8 @@
 
 #ifdef HAVE_MYSQL
 
+char mysql_time[MAC_LEN];
+
 void
 ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql)
 {
@@ -149,6 +151,17 @@ ailsa_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res)
         mysql_close(cmdb);
         mysql_library_end();
 }
+
+char *
+ailsa_convert_mysql_time(MYSQL_TIME *time)
+{
+	memset(mysql_time, 0, MAC_LEN);
+	if (!(time))
+		return mysql_time;
+	sprintf(mysql_time, "%04u-%02u-%02u %02u:%02u:%02u", time->year, time->month, time->day, time->hour, time->minute, time->second);
+	return mysql_time;
+}
+
 
 #endif // HAVE_MYSQL
 

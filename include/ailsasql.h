@@ -248,6 +248,9 @@ ailsa_mysql_cleanup(MYSQL *cmdb);
 void
 ailsa_mysql_cleanup_full(MYSQL *cmdb, MYSQL_RES *res);
 
+char *
+ailsa_convert_mysql_time(MYSQL_TIME *time);
+
 # endif // HAVE_MYSQL
 
 # ifdef HAVE_SQLITE3

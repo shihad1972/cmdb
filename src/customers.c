@@ -220,9 +220,7 @@ cmdb_display_customer_details(AILLIST *list)
 	two = second->data;
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %04u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
-			two->data->time->year, two->data->time->month, two->data->time->day,
-			two->data->time->hour, two->data->time->minute, two->data->time->second);
+		printf("  Created by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
 		printf("  Created by %s @ %s\n", get_uname(one->data->number), two->data->text);
@@ -232,9 +230,7 @@ cmdb_display_customer_details(AILLIST *list)
 	two = second->data;
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Modified by %s @ %04u-%02u-%02u %02u:%02u:%02u\n", get_uname(one->data->number),
-			two->data->time->year, two->data->time->month, two->data->time->day,
-			two->data->time->hour, two->data->time->minute, two->data->time->second);
+		printf("  Modified by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
 		printf("  Modified by %s @ %s\n", get_uname(one->data->number), two->data->text);

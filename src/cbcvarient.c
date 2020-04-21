@@ -453,9 +453,7 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 		data = element->data;
 #ifdef HAVE_MYSQL
 		if (data->type == AILSA_DB_TIME)
-			printf("%04u-%02u-%02u %02u:%02u:%02u\n",
-				data->data->time->year, data->data->time->month, data->data->time->day,
-				data->data->time->hour, data->data->time->minute, data->data->time->second);
+			printf("%s\n", ailsa_convert_mysql_time(data->data->time));
 		else
 #endif
 			printf("%s\n", data->data->text);
