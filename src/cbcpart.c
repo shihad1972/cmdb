@@ -120,12 +120,6 @@ remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 static int
 remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
-static void
-cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt);
-
-static void
-get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt);
-
 int
 main (int argc, char *argv[])
 {
@@ -391,71 +385,119 @@ list_seed_schemes(ailsa_cmdb_s *cbc)
 static int
 display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	char *opt;
-	int retval = NONE, i = 0;
-	unsigned long int def_id = 0;
-	size_t num = 4, j;
-	char *p[num];
-	size_t len[num];
-	time_t create;
-	cbc_s *base;
-	cbc_seed_scheme_s *seed;
-	cbc_pre_part_s *part;
-
-	initialise_cbc_s(&base);
-	for (j = 0; j < num; j++)
-		len[j] = RBUFF_S;
-	initialise_string_array(p, num, len);
-	if ((retval = cbc_run_multiple_query(cbc, base, SSCHEME | DPART)) != 0) {
-		fprintf(stderr, "Seed scheme and default part query failed\n");
-		free(base);
-		return retval;
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	if (!(cpl->scheme))
+		return AILSA_NO_DATA;
+	AILLIST *p = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+	AILLIST *a = ailsa_db_data_list_init();
+	AILLIST *o = ailsa_db_data_list_init();
+	AILELEM *e, *g;
+	size_t parts, i, len;
+	int retval;
+	short int lvm;
+	char *str;
+	void *data;
+	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+		goto cleanup;
 	}
-	opt = ailsa_calloc(RBUFF_S, "display_full_seed_scheme");
-	seed = base->sscheme;
-	while (seed) {
-		part = base->dpart;
-		if (strncmp(seed->name, cpl->scheme, CONF_S) == 0) {
-			i++;
-			def_id = seed->def_scheme_id;
-			printf("Scheme %s partitions; ", cpl->scheme);
-			if (seed->lvm > 0)
-				printf("with LVM\n");
-			else
-				printf("No LVM\n");
-			create = (time_t)seed->ctime;
-			printf("Created by %s on %s", get_uname(seed->cuser), ctime(&create));
-			create = (time_t)seed->mtime;
-			printf("Modified by %s on %s", get_uname(seed->muser), ctime(&create));
-			printf("Mount\t\tFS\tMin\tMax\tOptions\t\t");
-			if (seed->lvm > 0)
-				printf("\tVolume\n");
-			else
-				printf("\n");
+	if ((retval = ailsa_argument_query(cbc, SEED_SCHEME_ON_NAME, a, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "SEED_SCHEME_ON_NAME query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, PARTITIONS_ON_SCHEME_NAME, a, p)) != 0) {
+		ailsa_syslog(LOG_ERR, "PARTITIONS_ON_SCHEME_NAME query failed");
+		goto cleanup;
+	}
+	if ((s->total != 4) || ((p->total % 6) != 0)) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
+	parts = p->total / 6;
+	printf("Partitioning scheme: %s, ", cpl->scheme);
+	lvm = ((ailsa_data_s *)s->head->next->data)->data->small;
+	if (lvm > 0)
+		printf("with LVM,");
+	else
+		printf("no LVM,");
+#ifdef HAVE_MYSQL
+	if (((ailsa_data_s *)s->head->next->next->next->data)->type == AILSA_DB_TIME)
+		printf("  Created by: %s @ %s\n\n", get_uname(((ailsa_data_s *)s->head->next->next->data)->data->number),
+		  ailsa_convert_mysql_time(((ailsa_data_s *)s->head->next->next->next->data)->data->time));
+	else
+#endif
+		printf("  Created by: %s @ %s\n\n", get_uname(((ailsa_data_s *)s->head->next->next->data)->data->number),
+		  ((ailsa_data_s *)s->head->next->next->next->data)->data->text);
+	printf("Mount\t\tFS\tMin\tMax\tOptions\t\t");
+	if (lvm > 0)
+		printf("\tVolume\n");
+	else
+		printf("\n");
+	e = p->head;
+	for (i = 0; i< parts; i++) {
+		str = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
+		while (a->total > 1) {
+			g = a->tail;
+			ailsa_list_remove(a, g, &data);
+			ailsa_clean_data(data);
+		}
+		if ((retval = cmdb_add_string_to_list(str, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add partition name into list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cbc, PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION, a, o)) != 0) {
+			ailsa_syslog(LOG_ERR, "PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION query failed");
+			goto cleanup;
+		}
+		printf("%s\t", str);
+		if (strlen(str) < 7)
+			printf("\t");
+		else if (strlen(str) > 15)
+			printf("\n\t\t");
+		str = ((ailsa_data_s *)e->next->next->next->data)->data->text;
+		printf("%s\t", str);
+		printf("%lu\t%lu\t", ((ailsa_data_s *)e->next->data)->data->number,
+		  ((ailsa_data_s *)e->next->next->data)->data->number);
+		g = o->head;
+		len = 0;
+		if (o->total == 0) {
+			printf("none\t\t\t");
 		} else {
-			seed = seed->next;
-			continue;
-		}
-		while (part) {
-			if (def_id == part->link_id.def_scheme_id) {
-				get_opts_for_part(cbc, part, opt);
-				cbcp_setup_parts(p, part, opt);
-				if (seed->lvm > 0)
-printf("%s\t%s\t%lu\t%lu\t%s\t%s\n", p[0], p[1], part->min, part->max, p[2], p[3]);
-				else
-printf("%s\t%s\t%lu\t%lu\t%s\n", p[0], p[1], part->min, part->max, p[2]);
+			while (g) {
+				if (len > 0)
+					printf(",");
+				len += strlen(((ailsa_data_s *)g->data)->data->text);
+				printf("%s", ((ailsa_data_s *)g->data)->data->text);
+				g = g->next;
 			}
-			part = part->next;
+			if (len > 16)
+				printf("\t");
+			else if (len > 8 )
+				printf("\t\t");
+			else
+				printf("\t\t\t");
+			ailsa_list_destroy(o);
+			ailsa_list_init(o, ailsa_clean_data);
 		}
-		seed = seed->next;
+		if (lvm > 0) {
+			str = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
+			printf("%s", str);
+		}
+		printf("\n");
+		e = e->next->next->next->next->next->next;
 	}
-	if (i == 0) {
-		retval = SCHEME_NOT_FOUND;
-		printf("No scheme with name %s found\n", cpl->scheme);
-	}
-	clean_cbc_struct(base);
-	free(opt);
-	return retval;
+	cleanup:
+		ailsa_list_destroy(p);
+		ailsa_list_destroy(s);
+		ailsa_list_destroy(a);
+		ailsa_list_destroy(o);
+		my_free(p);
+		my_free(s);
+		my_free(a);
+		my_free(o);
+		return retval;
 }
 
 static int
@@ -774,65 +816,4 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		fprintf(stderr, "No options removed from DB\n");
 	clean_dbdata_struct(data);
 	return 0;
-}
-
-static void
-get_opts_for_part(ailsa_cmdb_s *cbc, cbc_pre_part_s *part, char *opt)
-{
-	char *newopt, *optpos;
-	int retval = 0, query = PART_OPT_ON_SCHEME_ID;
-	unsigned int max = 0;
-	size_t len, size;
-	dbdata_s *data, *list;
-
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = part->id.def_part_id;
-	data->next->args.number = part->link_id.def_scheme_id;
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		snprintf(opt, MAC_S, "none");
-		clean_dbdata_struct(data);
-		return;
-	} else {
-		retval = 0;
-		list = data;
-		while (list) {
-			if (retval == 0) {
-				snprintf(opt, MAC_S, "%s", list->fields.text);
-	//			list = list->next;
-			} else {
-				newopt = list->fields.text;
-				size = strlen(opt);
-				len = strlen(newopt);
-				optpos = opt + size;
-				if (len > 0) {
-					if  ((len + size) < RBUFF_S)
-						snprintf(optpos, len + 2, ",%s", newopt);
-					else
-						fprintf(stderr, "Too many options!\n");
-				}
-			}
-			retval++;
-			list = list->next;
-		}
-	}
-}
-
-static void
-cbcp_setup_parts(char *p[], cbc_pre_part_s *part, char *opt)
-{
-	if (strlen(part->mount) >= 16)
-		snprintf(p[0], RBUFF_S, "%s\n\t", part->mount);
-	else if (strlen(part->mount) >= 8)
-		snprintf(p[0], RBUFF_S, "%s", part->mount);
-	else
-		snprintf(p[0], RBUFF_S, "%s\t", part->mount);
-	snprintf(p[1], RBUFF_S, "%s", part->fs);
-	if (strlen(opt) >= 16)
-		snprintf(p[2], RBUFF_S, "%s", opt);
-	else if (strlen(opt) >= 8)
-		snprintf(p[2], RBUFF_S, "%s\t", opt);
-	else
-		snprintf(p[2], RBUFF_S, "%s\t\t", opt);
-	snprintf(p[3], RBUFF_S, "%s", part->log_vol);
 }

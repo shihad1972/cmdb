@@ -216,6 +216,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT locale_id, locale, country, language, keymap, timezone, cuser, ctime FROM locale WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // PARTITIONS_ON_SCHEME_NAME
+"SELECT priority, minimum, maximum, filesystem, logical_volume, mount_point FROM default_part dp LEFT JOIN seed_schemes ss ON ss.def_scheme_id = dp.def_scheme_id WHERE ss.scheme_name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SEED_SCHEME_ON_NAME
+"SELECT def_scheme_id, lvm, cuser, ctime from seed_schemes where scheme_name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION
+"SELECT poption FROM part_options po LEFT JOIN default_part dp ON po.def_part_id = dp.def_part_id LEFT JOIN seed_schemes ss ON ss.def_scheme_id = dp.def_scheme_id WHERE scheme_name = ? and mount_point = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -1146,6 +1161,9 @@ ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 		case SQLITE_FLOAT:
 			tmp->data->point = sqlite3_column_double(state, (int)i);
 			tmp->type = AILSA_DB_FLOAT;
+			break;
+		case SQLITE_NULL:
+			tmp->type = AILSA_DB_NULL;
 			break;
 		default:
 			ailsa_syslog(LOG_ERR, "Unknown sqlite type %d", type);
