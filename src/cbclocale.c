@@ -349,7 +349,21 @@ add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 {
 	int retval;
 	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *a = ailsa_db_data_list_init();
 
+	if ((retval = cmdb_add_string_to_list(cl->name, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale name into list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(ccs, LOCALE_ON_NAME, a, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "LOCALE_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (r->total > 0) {
+		ailsa_syslog(LOG_ERR, "Locale %s already in database", cl->locale);
+		goto cleanup;
+	}
 	if ((retval = cmdb_add_string_to_list(cl->locale, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add locale into list");
 		goto cleanup;
@@ -371,7 +385,7 @@ add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 		goto cleanup;
 	}
 	if ((retval = cmdb_add_string_to_list(cl->name, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add name into list");
+		ailsa_syslog(LOG_ERR, "Cannot add locale name into list");
 		goto cleanup;
 	}
 	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
@@ -382,7 +396,11 @@ add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 		ailsa_syslog(LOG_ERR, "Cannot insert locale into database");
 	cleanup:
 		ailsa_list_destroy(l);
+		ailsa_list_destroy(r);
+		ailsa_list_destroy(a);
 		my_free(l);
+		my_free(r);
+		my_free(a);
 		return retval;
 }
 
