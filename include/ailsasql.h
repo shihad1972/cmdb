@@ -116,7 +116,12 @@ enum {			// SQL ARGUMENT QUERIES
 	LOCALE_ON_NAME,
 	PARTITIONS_ON_SCHEME_NAME,
 	SEED_SCHEME_ON_NAME,
-	PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION
+	PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION,
+	IDENTIFY_PARTITION,
+	SCHEME_LVM_INFO,
+	SCHEME_ID_ON_NAME,
+	PARTITION_ID_ON_SEED_MOUNT,
+	IDENTIFY_PART_OPTION
 };
 
 enum {			// SQL INSERT QUERIES
@@ -131,7 +136,10 @@ enum {			// SQL INSERT QUERIES
 	INSERT_BUILD_OS,
 	INSERT_BUILD_PACKAGE,
 	INSERT_VARIENT,
-	INSERT_LOCALE
+	INSERT_LOCALE,
+	INSERT_SEED_SCHEME,
+	INSERT_PARTITION,
+	INSERT_PART_OPTION
 };
 
 enum {			// SQL DELETE QUERIES
@@ -141,7 +149,8 @@ enum {			// SQL DELETE QUERIES
 };
 
 enum {			// SQL UPDATE QUERIES
-	SET_DEFAULT_LOCALE = 0
+	SET_DEFAULT_LOCALE = 0,
+	SET_PART_SCHEME_UPDATED
 };
 
 typedef struct ailsa_sql_single_s {
@@ -210,6 +219,12 @@ int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
@@ -217,6 +232,9 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version);
 
 int
 check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list);
+
+int
+set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
 // Data manipulation functions
 

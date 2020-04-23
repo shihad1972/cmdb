@@ -547,6 +547,9 @@ cmdb_add_string_to_list(char *str, AILLIST *list);
 int
 cmdb_add_number_to_list(unsigned long int number, AILLIST *list);
 
+int
+cmdb_add_short_to_list(short int small, AILLIST *list);
+
 char *
 cmdb_get_string_from_data_list(AILLIST *list, size_t n);
 
@@ -567,6 +570,9 @@ ailsa_db_text_data_init(void);
 
 ailsa_data_s *
 ailsa_db_lint_data_init(void);
+
+ailsa_data_s *
+ailsa_db_sint_data_init(void);
 
 // Struct data clean functions to be used with AILLIST destroy()
 

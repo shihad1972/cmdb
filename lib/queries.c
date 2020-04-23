@@ -231,6 +231,31 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT poption FROM part_options po LEFT JOIN default_part dp ON po.def_part_id = dp.def_part_id LEFT JOIN seed_schemes ss ON ss.def_scheme_id = dp.def_scheme_id WHERE scheme_name = ? and mount_point = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // IDENTIFY_PARTITION
+"SELECT def_part_id, ss.def_scheme_id FROM seed_schemes ss LEFT JOIN default_part dp ON ss.def_scheme_id = dp.def_scheme_id WHERE scheme_name = ? AND mount_point = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SCHEME_LVM_INFO
+"SELECT lvm FROM seed_schemes WHERE scheme_name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SCHEME_ID_ON_NAME
+"SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // PARTITION_ID_ON_SEED_MOUNT
+"SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id WHERE scheme_name = ? AND mount_point = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // IDENTIFY_PART_OPTION
+"SELECT part_options_id FROM part_options WHERE def_scheme_id = ? AND def_part_id = ? AND poption = ?",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT }
 	}
 };
 
@@ -294,6 +319,21 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO locale(locale, country, language, keymap, timezone, name, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 	8,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SEED_SCHEME
+"INSERT INTO seed_schemes (scheme_name, lvm, cuser, muser) VALUES (?, ?, ?, ?)",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_PARTITION
+"INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	9,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_PART_OPTION
+"INSERT INTO part_options (def_scheme_id, def_part_id, poption, cuser, muser) VALUES (?, ?, ?, ?, ?)",
+	5,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
@@ -320,6 +360,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE default_locale SET locale_id = (SELECT locale_id FROM locale WHERE name = ?), muser = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // SET_PART_SCHEME_UPDATED
+"UPDATE seed_schemes SET muser = ? WHERE scheme_name = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	}
 };
 
@@ -1210,6 +1255,12 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, AILLIST *args, unsigned int t, 
 		case AILSA_DB_FLOAT:
 			if ((retval = sqlite3_bind_double(state, i + 1, data->data->point)) != 0) {
 				ailsa_syslog(LOG_ERR, "Unable to bind double value %g", data->data->point);
+				goto cleanup;
+			}
+			break;
+		case AILSA_DB_SINT:
+			if ((retval = sqlite3_bind_int(state, i + 1, data->data->small)) != 0) {
+				ailsa_syslog(LOG_ERR, "Unable to bind small value in loop %hi", i);
 				goto cleanup;
 			}
 			break;

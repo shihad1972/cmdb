@@ -621,6 +621,15 @@ ailsa_db_lint_data_init(void)
 	return data;
 }
 
+ailsa_data_s *
+ailsa_db_sint_data_init(void)
+{
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_init_data(data);
+	data->type = AILSA_DB_SINT;
+	return data;
+}
+
 int
 cmdb_populate_cuser_muser(AILLIST *list)
 {
@@ -707,6 +716,18 @@ cmdb_add_number_to_list(unsigned long int number, AILLIST *list)
 	int retval;
 	ailsa_data_s *d = ailsa_db_lint_data_init();
 	d->data->number = number;
+	retval = ailsa_list_insert(list, d);
+	return retval;
+}
+
+int
+cmdb_add_short_to_list(short int small, AILLIST *list)
+{
+	if (!(list))
+		return AILSA_NO_DATA;
+	int retval;
+	ailsa_data_s *d = ailsa_db_sint_data_init();
+	d->data->small = small;
 	retval = ailsa_list_insert(list, d);
 	return retval;
 }

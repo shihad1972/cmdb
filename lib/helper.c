@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
+#include <sys/types.h>
 #ifdef HAVE_STDBOOL_H
 # include <stdbool.h>
 #endif // HAVE_STDBOOL_H
@@ -245,6 +247,50 @@ cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(scheme) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *s = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(scheme, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
+		ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
+	cleanup:
+		ailsa_list_destroy(s);
+		my_free(s);
+		return retval;
+}
+
+int
+cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(scheme) || !(partition) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *part = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(scheme, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(partition, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, PARTITION_ID_ON_SEED_MOUNT, part, list)) != 0)
+		ailsa_syslog(LOG_ERR, "PARTITION_ID_ON_SEED_MOUNT query failed");
+	cleanup:
+		ailsa_list_destroy(part);
+		my_free(part);
+		return retval;
+}
+
+int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(alias) || !(cc) || !(list))
@@ -367,5 +413,38 @@ check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list)
 	cleanup:
 		ailsa_list_destroy(args);
 		my_free(args);
+		return retval;
+}
+
+int
+set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
+{
+	if (!(cc) || (query == 0) || (!(name) && number == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *a = ailsa_db_data_list_init();
+	unsigned long int user = (unsigned long int)getuid();
+
+	if ((retval = cmdb_add_number_to_list(user, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+		goto cleanup;
+	}
+	if (name) {
+		if ((retval = cmdb_add_string_to_list(name, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add name to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list(number, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add number to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = ailsa_update_query(cc, update_queries[query], a)) != 0)
+		ailsa_syslog(LOG_ERR, "Update query for %s failed", name);
+
+	cleanup:
+		ailsa_list_destroy(a);
+		my_free(a);
 		return retval;
 }

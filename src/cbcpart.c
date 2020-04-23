@@ -91,19 +91,7 @@ static int
 add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
-check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm);
-
-static int
-check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl);
-
-static int
 add_new_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
-
-static int
-add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part);
-
-static void
-cbcpart_add_part_option(ailsa_cmdb_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl);
 
 static int
 add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
@@ -535,202 +523,192 @@ remove_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 static int
 add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = NONE;
-	short int lvm = 0;
-	unsigned long int scheme_id = 0;
-	cbc_pre_part_s *part, *dpart;
-	cbc_s *base;
-	dbdata_s *data;
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	AILLIST *a = ailsa_db_data_list_init();
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+	size_t total;
+	unsigned long int scheme_id;
 
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = get_scheme_id(cbc, cpl->scheme, &(scheme_id))) != 0) {
-		clean_dbdata_struct(data);
-		return retval;
-	}
-	data->args.number = scheme_id;
-
-	if ((retval = cbc_run_search(cbc, data, LVM_ON_DEF_SCHEME_ID)) > 1)
-		fprintf(stderr, "More than one scheme_id %lu in DB>??\n", scheme_id);
-	else if (retval != 1)
-		fprintf(stderr, "Cannot find scheme_id %lu in DB??\n", scheme_id);
-	lvm = data->fields.small;
-	clean_dbdata_struct(data);
-
-	initialise_cbc_s(&base);
-	if (!(part = malloc(sizeof(cbc_pre_part_s))))
-		report_error(MALLOC_FAIL, "part in add_part_to_scheme");
-	init_pre_part(part);
-
-	if ((retval = check_cbcpart_lvm(cpl, lvm)) != 0)
-		goto cleanup;
-	if ((retval = cbc_run_query(cbc, base, DPART)) != 0) {
-		if (retval != 6) {
-			fprintf(stderr, "Unable to get partitions from DB\n");
-			goto cleanup;
-		}
-	}
-	dpart = base->dpart;
-	part->link_id.def_scheme_id = scheme_id;
-	if (cpl->log_vol)
-		snprintf(part->log_vol, MAC_S, "%s", cpl->log_vol);
-	else
-		snprintf(part->log_vol, MAC_S, "none");
-
-	if ((retval = add_part_info(cpl, part)) != 0) {
-		fprintf(stderr, "Unable to add part info for DB insert\n");
+	if (!(cpl->log_vol))
+		cpl->log_vol = strdup("none");
+	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
 		goto cleanup;
 	}
-	cpl->scheme_id = scheme_id;
-	if ((retval = check_cbcpart_names(dpart, part, cpl)) != 0)
+	if ((retval = ailsa_argument_query(cbc, SCHEME_LVM_INFO, a, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "SCHEME_LVM_INFO query failed");
 		goto cleanup;
-	clean_pre_part(base->dpart);
-	base->dpart = part;
-	if ((retval = cbc_run_insert(cbc, base, DPARTS)) != 0)
-		printf("Unable to add partition to DB\n");
-	else
-		printf("Partition added to DB\n");
-	if (cpl->option)
-		cbcpart_add_part_option(cbc, base, cpl);
-	if (retval == 0) 
-		retval = set_scheme_updated(cbc, cpl->scheme);
-	base->dpart = NULL;
-	goto cleanup;
+	}
+	if (((ailsa_data_s *)l->head->data)->data->small > 0 && !(cpl->log_vol)) {
+		ailsa_syslog(LOG_ERR, "Scheme %s is an LVM scheme. Need a logical volume name!", cpl->scheme);
+		goto cleanup;
+	}
+	total = l->total;
+	if ((retval = ailsa_argument_query(cbc, SEED_SCHEME_ON_NAME, a, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "SEED_SCHEME_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (l->total == total) {
+		ailsa_syslog(LOG_ERR, "Cannot find partition scheme %s in database", cpl->scheme);
+		goto cleanup;
+	} else {
+		scheme_id = ((ailsa_data_s *)l->head->next->data)->data->number;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->partition, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add mount point to list");
+		goto cleanup;
+	}
+	total = l->total;
+	if ((retval = ailsa_argument_query(cbc, IDENTIFY_PARTITION, a, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "IDENTIFY_PARTITION query failed");
+		goto cleanup;
+	}
+	if (l->total > total) {
+		ailsa_syslog(LOG_INFO, "Partition %s is already in the scheme %s\n", cpl->partition, cpl->scheme);
+		goto cleanup;
+	}
+	ailsa_list_destroy(l);
+	ailsa_list_init(l, ailsa_clean_data);
+	if ((retval = cmdb_add_number_to_list(cpl->min, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add minimum to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cpl->max, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add maximum to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cpl->pri, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add priority to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->partition, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->fs, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add filesystem to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(scheme_id, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add priority to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->log_vol, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add logical volume to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_PARTITION, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_PARTITION query failed");
+		goto cleanup;
+	}
+	if ((retval = set_db_row_updated(cbc, SET_PART_SCHEME_UPDATED, cpl->scheme, 0)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot update the partition scheme in the database");
 	cleanup:
-		free(part);
-		clean_cbc_struct(base);
+		ailsa_list_destroy(a);
+		ailsa_list_destroy(l);
+		my_free(a);
+		my_free(l);
 		return retval;
-}
-
-static int
-check_cbcpart_lvm(cbcpart_comm_line_s *cpl, short int lvm)
-{
-	if ((lvm > 0) && (cpl->lvm < 1)) {
-		printf("Logical volume defined for scheme %s\n", cpl->scheme);
-		printf("Please supply logical volume details\n");
-		return NO_LOG_VOL;
-	}
-	if ((lvm < 1) && (cpl->lvm > 0)) {
-		printf("You have defined a logical volume, but this ");
-		printf("scheme %s does not use it\n", cpl->scheme);
-		return EXTRA_LOG_VOL;
-	}
-	return 0;
-}
-
-static int
-check_cbcpart_names(cbc_pre_part_s *dpart, cbc_pre_part_s *part, cbcpart_comm_line_s *cpl)
-{
-	while (dpart) {
-		if (cpl->scheme_id == dpart->link_id.def_scheme_id) {
-			if (strncmp(part->mount, dpart->mount, RANGE_S) == 0) {
-				fprintf(stderr, "Partition %s already defined in %s\n",
-part->mount, cpl->scheme);
-			 	return PARTITION_EXISTS;
-			}
-			if ((strncmp(part->log_vol, dpart->log_vol, MAC_S) == 0) &&
-				cpl->lvm > 0) {
-				fprintf(stderr, "Logical volume %s already used in %s\n",
-part->log_vol, cpl->scheme);
-				return LOG_VOL_EXISTS;
-			}
-		}
-		dpart = dpart->next;
-	}
-	return NONE;
 }
 
 static int
 add_new_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = NONE;
-	cbc_seed_scheme_s *scheme;
-	cbc_s *base;
-	dbdata_s *data;
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *a = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
 
-	if (!(base = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "base in add_new_scheme");
-	if (!(scheme = malloc(sizeof(cbc_seed_scheme_s))))
-		report_error(MALLOC_FAIL, "scheme in add_new_scheme");
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in add_new_scheme");
-	init_dbdata_struct(data);
-	init_cbc_struct(base);
-	init_seed_scheme(scheme);
-	base->sscheme = scheme;
-	snprintf(data->args.text, RBUFF_S, "%s", cpl->scheme);
-	retval = cbc_run_search(cbc, data, DEF_SCHEME_ID_ON_SCH_NAME);
-	if (retval > 0) {
-		fprintf(stderr, "Scheme %s already in database\n", cpl->scheme);
-		clean_dbdata_struct(data);
-		clean_cbc_struct(base);
-		return SCHEME_EXISTS;
+	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+		goto cleanup;
 	}
-	scheme->lvm = cpl->lvm;
-	scheme->cuser = scheme->muser = (unsigned long int)getuid();
-	strncpy(scheme->name, cpl->scheme, CONF_S);
-	if ((retval = cbc_run_insert(cbc, base, SSCHEMES)) != 0) 
-		printf("Unable to add seed scheme to the database\n");
-	else
-		printf("Added seed scheme %s to database\n", scheme->name);
-	clean_dbdata_struct(data);
-	clean_cbc_struct(base);
-	return retval;
-}
-
-static int
-add_part_info(cbcpart_comm_line_s *cpl, cbc_pre_part_s *part)
-{
-	int retval = NONE;
-
-	part->min = cpl->min;
-	part->max = cpl->max;
-	part->pri = cpl->pri;
-	if (cpl->partition) {
-		snprintf(part->mount, HOST_S, "%s", cpl->partition);
-	} else {
-		fprintf(stderr, "No Partition??\n");
-		return NO_PARTITION_INFO;
+	if ((retval = ailsa_argument_query(cbc, SEED_SCHEME_ON_NAME, a, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "SEED_SCHEME_ON_NAME failed");
+		goto cleanup;
 	}
-	if (cpl->fs) {
-		snprintf(part->fs, RANGE_S, "%s", cpl->fs);
-	} else {
-		fprintf(stderr, "No Filesystem??\n");
-		return NO_FILE_SYSTEM;
+	if (r->total > 0) {
+		ailsa_syslog(LOG_INFO, "Scheme %s already in database", cpl->scheme);
+		goto cleanup;
 	}
-	return retval;
-}
-
-static void
-cbcpart_add_part_option(ailsa_cmdb_s *cbc, cbc_s *base, cbcpart_comm_line_s *cpl)
-{
-	cbc_part_opt_s *opt;
-
-	initialise_cbc_part_opt(&opt);
-	base->part_opt = opt;
-	if (get_partition_id(cbc, cpl->scheme, cpl->partition, &(opt->def_part_id)) != 0)
-		return;
-	opt->def_scheme_id = cpl->scheme_id;
-	opt->option = ailsa_calloc(MAC_S, "cbcpart_add_part_option");
-	snprintf(opt->option, MAC_S, "%s", cpl->option);
-	opt->cuser = opt->muser = (unsigned long int)getuid();
-	if (cbc_run_insert(cbc, base, PARTOPTS) != 0)
-		fprintf(stderr, "Cannot add partition option to database\n");
-	else
-		printf("Partition option added to database\n");
+	if ((retval = cmdb_add_short_to_list(cpl->lvm, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add lvm flag to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SEED_SCHEME, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_SEED_SCHEME query failed");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_destroy(a);
+		ailsa_list_destroy(r);
+		my_free(a);
+		my_free(r);
+		return retval;
 }
 
 static int
 add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	cbc_s *base;
-	int retval = 0;
-
-	if ((retval = get_scheme_id(cbc, cpl->scheme, &(cpl->scheme_id))) != 0)
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	if ((retval = cmdb_add_scheme_id_to_list(cpl->scheme, cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
+		goto cleanup;
+	}
+	if (list->total != 1) {
+		ailsa_syslog(LOG_ERR, "Scheme list total is not 1?");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition id to list");
+		goto cleanup;
+	}
+	if (list->total != 2) {
+		ailsa_syslog(LOG_ERR, "Partition list total is not 2?");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->option, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition option to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, IDENTIFY_PART_OPTION, list, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "IDENTIFY_PART_OPTION query failed");
+		goto cleanup;
+	}
+	if (results->total > 0) {
+		ailsa_syslog(LOG_INFO, "Partition option %s already in database for scheme %s, partition %s",
+		  cpl->option, cpl->scheme, cpl->partition);
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser and cuser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_PART_OPTION, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_PART_OPTION query failed");
+		goto cleanup;
+	}
+	if ((retval = set_db_row_updated(cbc, SET_PART_SCHEME_UPDATED, cpl->scheme, 0)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot update the partition scheme in the database");
+	cleanup:
+		ailsa_list_destroy(list);
+		ailsa_list_destroy(results);
+		my_free(list);
+		my_free(results);
 		return retval;
-	initialise_cbc_s(&base);
-	cbcpart_add_part_option(cbc, base, cpl);
-	clean_cbc_struct(base);
-	return 0;
 }
 
 static int
