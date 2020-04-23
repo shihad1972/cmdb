@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.3.2.5], [iain@thargoid.co.uk])
+AC_INIT([cmdb], [0.3.2.6], [iain@thargoid.co.uk])
 AC_CONFIG_SRCDIR([src/cpc.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([include/config.h])

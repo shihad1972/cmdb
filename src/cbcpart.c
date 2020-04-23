@@ -322,6 +322,8 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 		if (cpl->type == PARTITION) {
 			if ((cpl->min == 0) && (cpl->max > 0))
 				cpl->min = cpl->max;
+			if ((cpl->max == 0) && (cpl->min > 0))
+				cpl->max = cpl->min;
 			if (cpl->pri == 0)
 				cpl->pri = 100;
 			if (!(cpl->fs))
@@ -661,6 +663,8 @@ add_new_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 static int
 add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
@@ -714,84 +718,72 @@ add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 static int
 remove_partition_from_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = 0, type;
-	unsigned int max;
-	dbdata_s *data;
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
 
-	type = DEFP_ID_ON_SCHEME_PART;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, CONF_S, "%s", cpl->scheme);
-	snprintf(data->next->args.text, RBUFF_S, "%s", cpl->partition);
-	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
-		fprintf(stderr, "Cannot find partition %s in scheme %s\n",
-		 data->next->args.text, data->args.text);
-		clean_dbdata_struct(data);
-		return PARTITON_NOT_FOUND;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple partitions found\n");
-	clean_dbdata_struct(data->next);
-	data->next = NULL;
-	memset(data->args.text, 0, RBUFF_S);
-	data->args.number = data->fields.number;
-	if ((retval = cbc_run_delete(cbc, data, DEF_PART_ON_PART_ID)) == 0) {
-		fprintf(stderr, "Partition %s in scheme %s not deleted\n",
-		 cpl->partition, cpl->scheme);
-		return DB_DELETE_FAILED;
-	} else if (retval > 1 ) {
-		fprintf(stderr, "Multiple partitions deleted??\n");
-	} else {
-		printf("Partition %s deleted from scheme %s\n", cpl->partition,
-		 cpl->scheme);
+	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get def_part_id for partition");
+		goto cleanup;
 	}
-	retval = set_scheme_updated(cbc, cpl->scheme);
-	clean_dbdata_struct(data);
-	return retval;
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_PARTITION], list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot delete partition %s in scheme %s", cpl->partition, cpl->scheme);
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+		return retval;
 }
 
 static int
 remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
 	int retval = 0;
-	dbdata_s *data;
+	AILLIST *list = ailsa_db_data_list_init();
 
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = get_scheme_id(cbc, cpl->scheme, &(data->args.number))) != 0) {
-		clean_dbdata_struct(data);
+	if ((retval = cmdb_add_string_to_list(cpl->scheme, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to add scheme name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SCHEME_ON_NAME], list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot delete scheme %s from database", cpl->scheme);
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
-	}
-/*	retval = cbc_run_delete(cbc, data, DEF_PART_ON_DEF_ID);
-	printf("Removed %d partition(s)\n", retval); */
-	if ((retval = cbc_run_delete(cbc, data, SEED_SCHEME_ON_DEF_ID)) == 0) {
-		fprintf(stderr, "No scheme removed\n");
-		retval = DB_DELETE_FAILED;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple schemes removed\n");
-		retval = 0;
-	} else {
-		printf("Scheme %s removed\n", cpl->scheme);
-		retval = 0;
-	}
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 static int
 remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 {
-	int retval = 0;
-	dbdata_s *data;
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = get_part_opt_id(cbc, cpl->scheme, cpl->partition, cpl->option, &(data->args.number))) != 0) {
-		clean_dbdata_struct(data);
-		return retval;
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	if ((retval = cmdb_add_scheme_id_to_list(cpl->scheme, cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
+		goto cleanup;
 	}
-	if ((retval = cbc_run_delete(cbc, data, PART_OPT_ON_ID)) > 1)
-		printf("Removed %d options\n", retval);
-	else if (retval == 1)
-		printf("Remove 1 option\n");
-	else
-		fprintf(stderr, "No options removed from DB\n");
-	clean_dbdata_struct(data);
-	return 0;
+	if (list->total != 1) {
+		ailsa_syslog(LOG_ERR, "Scheme list total is not 1?");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition id to list");
+		goto cleanup;
+	}
+	if (list->total != 2) {
+		ailsa_syslog(LOG_ERR, "Partition list total is not 2?");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cpl->option, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition option to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_PART_OPTION], list)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_PART_OPTION query failed");
+	cleanup:
+		ailsa_list_destroy(list);
+		my_free(list);
+		return retval;
 }

@@ -352,6 +352,21 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM locale WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // DELETE_PART_OPTION
+"DELETE FROM part_options WHERE def_scheme_id = ? AND def_part_id = ? and poption = ?",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // DELETE_PARTITION
+"DELETE FROM default_part WHERE def_part_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_SCHEME_ON_NAME
+"DELETE FROM seed_schemes WHERE scheme_name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
