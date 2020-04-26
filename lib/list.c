@@ -181,3 +181,24 @@ ailsa_list_get_element(AILLIST *list, size_t number)
 	}
 	return element;
 }
+
+void
+ailsa_list_full_clean(AILLIST *l)
+{
+	ailsa_list_destroy(l);
+	my_free(l);
+}
+
+AILELEM *
+ailsa_move_down_list(AILELEM *element, size_t number)
+{
+	if (!(element))
+		return NULL;
+	size_t i;
+	AILELEM *e = element;
+	for (i = 0; i < number; i++) {
+		if (e)
+			e = e->next;
+	}
+	return e;
+}

@@ -393,6 +393,8 @@ static void
 parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 {
 	char buff[CONFIG_LEN], temp[CONFIG_LEN];
+	char *tmp;
+	int at = '@';
 	memset(buff, 0, CONFIG_LEN);
 	memset(temp, 0, CONFIG_LEN);
 
@@ -428,6 +430,26 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 	GET_CONFIG_INT("EXPIRE=%lu", cmdb->expire);
 	GET_CONFIG_INT("TTL=%lu", cmdb->ttl);
 	GET_CONFIG_INT("CLIFLAG=%lu", cmdb->cliflag);
+	if ((tmp = strchr(cmdb->hostmaster, at)))
+		*tmp = '.';
+	if (ailsa_add_trailing_dot(cmdb->hostmaster) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add . to end of hostmaster");
+	if (ailsa_add_trailing_slash(cmdb->dir) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of DIR");
+	if (ailsa_add_trailing_slash(cmdb->bind) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of BIND");
+	if (ailsa_add_trailing_slash(cmdb->tmpdir) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of TMPDIR");
+	if (ailsa_add_trailing_slash(cmdb->tftpdir) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of FTFPDIR");
+	if (ailsa_add_trailing_slash(cmdb->toplevelos) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of TOPLEVELOS");
+	if (ailsa_add_trailing_slash(cmdb->dhcpconf) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of DHCPCONF");
+	if (ailsa_add_trailing_slash(cmdb->preseed) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of PRESEED");
+	if (ailsa_add_trailing_slash(cmdb->kickstart) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of KICKSTART");
 }
 
 void

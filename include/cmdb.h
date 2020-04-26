@@ -107,6 +107,7 @@ enum {			/* dnsa error codes */
 	NO_GLUE_ZONE = 44,
 	NO_PREFIX = 45,
 	UNKNOWN_ZONE_TYPE = 46,
+	NAME_TO_IP_FAIL = 47,
 	MALLOC_FAIL = 50,
 	BUFFER_FULL = 51,
 	USER_INPUT_INVALID = 52,

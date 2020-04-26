@@ -82,7 +82,9 @@ enum {			// SQL BASIC QUERIES
 	BASE_VARIENT_PACKAGES,
 	DEFAULT_LOCALE,
 	LOCALE_NAMES,
-	PARTITION_SCHEME_NAMES
+	PARTITION_SCHEME_NAMES,
+	ALL_BUILD_DOMAINS,
+	FWD_ZONE_CONFIG
 };
 
 enum {			// SQL ARGUMENT QUERIES
@@ -121,7 +123,15 @@ enum {			// SQL ARGUMENT QUERIES
 	SCHEME_LVM_INFO,
 	SCHEME_ID_ON_NAME,
 	PARTITION_ID_ON_SEED_MOUNT,
-	IDENTIFY_PART_OPTION
+	IDENTIFY_PART_OPTION,
+	BUILD_DOMAIN_ID_ON_DOMAIN,
+	BUILD_DOMAIN_OVERLAP,
+	FWD_ZONE_ID_ON_ZONE_NAME,
+	REV_ZONE_ID_ON_RANGE,
+	NAME_SERVERS_ON_NAME,
+	ZONE_SOA_ON_NAME,
+	NS_MX_SRV_RECORDS,
+	ZONE_RECORDS_ON_NAME
 };
 
 enum {			// SQL INSERT QUERIES
@@ -139,7 +149,9 @@ enum {			// SQL INSERT QUERIES
 	INSERT_LOCALE,
 	INSERT_SEED_SCHEME,
 	INSERT_PARTITION,
-	INSERT_PART_OPTION
+	INSERT_PART_OPTION,
+	INSERT_BUILD_DOMAIN,
+	INSERT_BUILD_DOMAIN_ZONE
 };
 
 enum {			// SQL DELETE QUERIES
@@ -165,7 +177,7 @@ typedef struct ailsa_sql_single_s {
 typedef struct ailsa_sql_query_s {
 	const char *query;
 	unsigned int number;
-	unsigned int fields[9];
+	unsigned int fields[10];
 } ailsa_sql_query_s;
 
 typedef struct ailsa_sql_multi_s {
@@ -229,6 +241,12 @@ cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc
 
 int
 cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);
 
 int
 cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version);

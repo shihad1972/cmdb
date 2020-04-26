@@ -40,9 +40,9 @@ enum {			/* cbcdomain modify types */
 };
 
 typedef struct cbcdomain_comm_line_s {
-	char domain[RBUFF_S];
-	char ntpserver[RBUFF_S];
-	char config[RBUFF_S];
+	char *domain;
+	char *ntpserver;
+	char *config;
 	short int action;
 	short int confntp;
 	unsigned long int start_ip;
@@ -51,9 +51,6 @@ typedef struct cbcdomain_comm_line_s {
 	unsigned long int gateway;
 	unsigned long int ns;
 } cbcdomain_comm_line_s;
-
-void
-init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
 
 void
 print_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl);
@@ -90,14 +87,5 @@ fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
 
 void
 fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
-
-void
-check_bdom_overlap(ailsa_cmdb_s *cbs, cbc_build_domain_s *bdom);
-
-int
-build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *new);
-
-void
-fill_bdom_values(cbc_build_domain_s *bdom, cbcdomain_comm_line_s *cdl);
 
 #endif /* __CBCDOMAIN_H__ */

@@ -26,25 +26,10 @@
 # include "cmdb.h"
 # include "dnsa_data.h"
 
-enum {			/* zone types; use NONE from action codes */
-	FORWARD_ZONE = 1,
-	REVERSE_ZONE = 2,
-	GLUE_ZONE = 3
-};
-
-enum {			/* record types; use NONE from action codes */
-	A = 1,
-	CNAME = 2,
-	SRV = 3,
-	NS = 4,
-	MX = 5,
-	TXT = 6
-};
-
-/* Get command line args and pass them. Put actions into the struct */
+// Get command line args and pass them. Put actions into the struct
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
-/* Grab config values from file */
+// Grab config values from file
 int
 parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config);
 int
@@ -59,7 +44,7 @@ void
 validate_glue_comm_line(dnsa_comm_line_s *comm);
 void
 validate_rev_comm_line(dnsa_comm_line_s *comm);
-/* Zone action Functions */
+// Zone action Functions
 int
 add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int

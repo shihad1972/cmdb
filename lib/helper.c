@@ -373,6 +373,56 @@ cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AI
 }
 
 int
+cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(zone) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name %s to list", zone);
+		goto cleanup;
+	}
+	switch (type) {
+	case FORWARD_ZONE:
+		if ((retval = ailsa_argument_query(cc, FWD_ZONE_ID_ON_ZONE_NAME, l, list)) != 0)
+			ailsa_syslog(LOG_ERR, "FWD_ZONE_ID_ON_ZONE_NAME query failed");
+		break;
+	case REVERSE_ZONE:
+		if ((retval = ailsa_argument_query(cc, REV_ZONE_ID_ON_RANGE, l, list)) != 0)
+			ailsa_syslog(LOG_ERR, "REV_ZONE_ID_ON_RANGE query failed");
+		break;
+	default:
+		retval = UNKNOWN_ZONE_TYPE;
+		break;
+	}
+	cleanup:
+		ailsa_list_destroy(l);
+		my_free(l);
+		return retval;
+}
+
+int
+cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
+{
+	if (!(cc) || !(zone))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_zone_id_to_list(zone, FORWARD_ZONE, cc, l)) != 0) {
+		retval = -1;
+		goto cleanup;
+	}
+	retval = (int)l->total;
+	cleanup:
+		ailsa_list_destroy(l);
+		my_free(l);
+		return retval;
+}
+
+int
 cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 {
 	int retval = 0;

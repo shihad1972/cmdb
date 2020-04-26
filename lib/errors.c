@@ -469,7 +469,7 @@ display_cbcdomain_usage(void)
 	printf("-a: add build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
-	printf("All actions apart from -l and -w need -b <domain name>\n\n");
+	printf("All actions apart from -l and -w need -n <domain name>\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("NTP server configuration:\n");

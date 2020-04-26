@@ -42,8 +42,6 @@
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 
 enum {
 	PARTITION = 1,

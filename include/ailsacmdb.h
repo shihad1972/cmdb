@@ -131,6 +131,21 @@ enum {                  // Error codes
 	AILSA_NO_FIELDS = 305
 };
 
+enum {			// zone types; use NONE from action codes
+	FORWARD_ZONE = 1,
+	REVERSE_ZONE = 2,
+	GLUE_ZONE = 3
+};
+
+enum {			// record types; use NONE from action codes
+	A = 1,
+	CNAME = 2,
+	SRV = 3,
+	NS = 4,
+	MX = 5,
+	TXT = 6
+};
+
 // Linked List data types
 
 typedef struct ailsa_element_s {
@@ -419,7 +434,10 @@ int
 ailsa_list_insert(AILLIST *list, void *data);
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
-
+void
+ailsa_list_full_clean(AILLIST *l);
+AILELEM *
+ailsa_move_down_list(AILELEM *element, size_t number);
 // Hash Table
 
 unsigned int
@@ -471,6 +489,9 @@ ailsa_gen_uuid_str(void);
 // Network functions
 int
 ailsa_gen_mac(char *mac, int type);
+
+int
+cmdb_getaddrinfo(char *name, char *ip, int *type);
 
 // Config and command line parsing
 
@@ -528,10 +549,24 @@ ailsa_validate_input(char *input, int test);
 int
 ailsa_validate_string(const char *input, const char *re_test);
 
+// Some zone functions
+
+int
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone);
+
+int
+cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);
+
 // Various data functions
 
 int
 cmdb_populate_cuser_muser(AILLIST *list);
+
+unsigned long int
+generate_zone_serial(void);
+
+int
+cmdb_get_port_number(char *proto, char *service, int *port);
 
 // These should probably be moved to ailsasql.h
 

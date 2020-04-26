@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -41,6 +42,7 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -54,6 +56,21 @@
 # include "cbc_dnsa.h"
 #endif // HAVE_DNSA 
 
+static void
+cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc);
+
+static int
+check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static int
+add_ips_to_list(unsigned long i, unsigned long int j, AILLIST *l);
+
+static int
+cbc_populate_zone(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *zone);
+
+static int
+cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *domain);
+
 int
 main(int argc, char *argv[])
 {
@@ -63,10 +80,9 @@ main(int argc, char *argv[])
 
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cdcl = ailsa_calloc(sizeof(cbcdomain_comm_line_s), "cdcl in main");
-	init_cbcdomain_comm_line(cdcl);
 	if ((retval = parse_cbcdomain_comm_line(argc, argv, cdcl)) != 0) {
-		free(cdcl);
-		free(cmc);
+		cbcdomain_clean_comm_line(cdcl);
+		ailsa_clean_cmdb(cmc);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
@@ -83,29 +99,37 @@ main(int argc, char *argv[])
 	else
 		printf("Unknown Action type\n");
 
-	my_free(cdcl);
+	cbcdomain_clean_comm_line(cdcl);
 	ailsa_clean_cmdb(cmc);
 	if (retval > 0)
 		report_error(retval, argv[0]);
 	exit(retval);
 }
 
-void
-init_cbcdomain_comm_line(cbcdomain_comm_line_s *cdcl)
+static void
+cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc)
 {
-	memset(cdcl, 0, sizeof (cbcdomain_comm_line_s));
-	get_config_file_location(cdcl->config);
-	snprintf(cdcl->domain, COMM_S, "NULL");
-	snprintf(cdcl->ntpserver, COMM_S, "NULL");
+	if (!(cdc))
+		return;
+	if (cdc->domain)
+		my_free(cdc->domain);
+	if (cdc->ntpserver)
+		my_free(cdc->ntpserver);
+	if (cdc->config)
+		my_free(cdc->config);
+	my_free(cdc);
 }
 
 void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
-	if (strncmp(cdl->ntpserver, "NULL", COMM_S) != 0)
+	if (cdl->ntpserver)
 		if (ailsa_validate_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
 			if (ailsa_validate_input(cdl->ntpserver, IP_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "ntp server");
+	if (cdl->domain)
+		if (ailsa_validate_input(cdl->domain, DOMAIN_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "domain");
 }
 
 int
@@ -119,12 +143,13 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int index;
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
-		{"build-domain",	required_argument,	NULL,	'b'},
-		{"domain",		required_argument,	NULL,	'b'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"network-info",	required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"modify",		no_argument,		NULL,	'm'},
+		{"build-domain",	required_argument,	NULL,	'n'},
+		{"domain",		required_argument,	NULL,	'n'},
+		{"name",		required_argument,	NULL,	'n'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"ntp-server",		required_argument,	NULL,	't'},
@@ -150,10 +175,10 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = WRITE_CONFIG;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'b') {
-			snprintf(cdl->domain, RBUFF_S, "%s", optarg);
+		} else if (opt == 'n') {
+			cdl->domain = strndup(optarg, RBUFF_S);
 		} else if (opt == 't') {
-			snprintf(cdl->ntpserver, RBUFF_S, "%s", optarg);
+			cdl->ntpserver = strndup(optarg, RBUFF_S);
 			cdl->confntp = 1;
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;
@@ -172,7 +197,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	if (cdl->action == NONE)
 		return NO_ACTION;
 	if (cdl->action != LIST_CONFIG && cdl->action != WRITE_CONFIG &&
-	     strncmp(cdl->domain, "NULL", COMM_S) == 0)
+	     !(cdl->domain))
 		return NO_DOMAIN_NAME;
 	if ((cdl->action == MOD_CONFIG) && ((cdl->start_ip != 0) ||
 		                            (cdl->end_ip != 0) ||
@@ -190,14 +215,12 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 {
 	unsigned long int ips[4];
 	char *ip, *tmp;
-	const char *network = netinfo;
 	int retval = NONE, delim = ',', i;
 	uint32_t ip_addr;
 
-/* This is taken from the calling function */
-	ip = optarg;
+	ip = netinfo;
 	for (i = 0; i < 4; i++) {
-		if ((tmp = strchr(network, delim))) {
+		if ((tmp = strchr(ip, delim))) {
 			*tmp = '\0';
 			tmp++;
 		} else {
@@ -209,7 +232,7 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		else
 			report_error(USER_INPUT_INVALID, "network");
-		network = ip = tmp;
+		ip = tmp;
 	}
 	cdl->start_ip = ips[0];
 	cdl->end_ip = ips[1];
@@ -227,37 +250,27 @@ int
 list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return CBC_NO_DATA;
-	char *domain = cdl->domain;
-	int retval = 0, i = 0;
-	cbc_s *cbc;
-	cbc_build_domain_s *bdom;
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *elem;
 
-	initialise_cbc_s(&cbc);
-	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0)
+	if ((retval = ailsa_basic_query(cbs, ALL_BUILD_DOMAINS, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "ALL_BUILD_DOMAINS query failed");
 		goto cleanup;
-	bdom = cbc->bdom;
-	if (strncmp(cdl->domain, "NULL", COMM_S) != 0) {
-		while (bdom) {
-			if (strncmp(bdom->domain, domain, RBUFF_S) == 0) {
-				display_build_domain(bdom);
-				i++;
-				display_bdom_servers(cbs, domain);
-			}
-			bdom = bdom->next;
-		}
-		if (i == 0)
-			printf("Build domain %s not found\n", cdl->domain);
-	} else {
-		while (bdom) {
-			printf("%s\n", bdom->domain);
-			bdom = bdom->next;
-		}
 	}
-	goto cleanup;
-
+	elem = list->head;
+	if (list->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build domains found");
+		goto cleanup;
+	}
+	while (elem) {
+		printf("%s\n", ((ailsa_data_s *)elem->data)->data->text);
+		elem = elem->next;
+	}
 	cleanup:
-		clean_cbc_struct(cbc);
+		ailsa_list_destroy(list);
+		my_free(list);
 		return retval;
 }
 
@@ -265,25 +278,67 @@ int
 add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return CBC_NO_DATA;
+		return AILSA_NO_DATA;
+	AILLIST *d = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+#ifdef HAVE_DNSA
+	AILLIST *z = ailsa_db_data_list_init();
+#endif // HAVE_DNSA
 	char *domain = cdl->domain;
 	int retval = 0;
-	cbc_s *base;
-	cbc_build_domain_s *bdom;
-	dbdata_s *data;
 
-	initialise_cbc_s(&base);
-	if (!(bdom = malloc(sizeof(cbc_build_domain_s))))
-		report_error(MALLOC_FAIL, "bdom in add_cbc_build_domain");
-	init_build_domain(bdom);
-	base->bdom = bdom;
-	if ((retval = get_build_domain_id(cbs, domain, &(bdom->bd_id))) == 0) {
-		clean_cbc_struct(base);
-		report_error(BUILD_DOMAIN_EXISTS, domain);
+	if (!(cdl->ntpserver))
+		cdl->ntpserver = strdup("none");
+	if ((retval = cmdb_add_string_to_list(domain, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
 	}
-	init_multi_dbdata_struct(&data, 1);
-	fill_bdom_values(bdom, cdl);
-	check_bdom_overlap(cbs, bdom);
+	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_ID_ON_DOMAIN, r, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
+		goto cleanup;
+	}
+	if (d->total > 0) {
+		ailsa_syslog(LOG_ERR, "Build domain %s already exists in database", domain);
+		goto cleanup;
+	}
+	if ((retval = check_for_bdom_overlap(cbs, cdl)) != 0) {
+		ailsa_syslog(LOG_ERR, "IP's in this range overlap with existing build domain");
+		goto cleanup;
+	}
+	if ((retval = cbc_populate_domain(cbs, cdl, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate build domain values");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
+		goto cleanup;
+	}
+#ifdef HAVE_DNSA
+	if ((retval = cmdb_check_for_fwd_zone(cbs, domain)) > 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s already in dnsa database", domain);
+	} else if (retval == -1) {
+		goto cleanup;
+	} else {
+		if ((retval = cbc_populate_zone(cbs, cdl, z)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate zone list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN_ZONE, z)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN_ZONE query failed");
+			goto cleanup;
+		}
+		if ((retval = cmdb_validate_zone(cbs, FORWARD_ZONE, domain)) != 0)
+			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", domain);
+	}
+#endif // HAVE_DNSA
+	cleanup:
+#ifdef HAVE_DNSA
+		ailsa_list_full_clean(z);
+#endif // HAVE_DNSA
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(d);
+		return retval;
+/*	
 #ifdef HAVE_DNSA
 	size_t dclen = sizeof(ailsa_cmdb_s);
 	ailsa_cmdb_s *dc;
@@ -341,8 +396,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		clean_dbdata_struct(data);
 		clean_dbdata_struct(user);
 		clean_cbc_struct(base);
-		return retval;
-#endif // HAVE_DNSA
+#endif // HAVE_DNSA */
 }
 
 int
@@ -530,58 +584,143 @@ fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
 	inet_ntop(AF_INET, &ip_addr, dst->ip, INET6_ADDRSTRLEN);
 }
 
-void
-check_bdom_overlap(ailsa_cmdb_s *cbs, cbc_build_domain_s *bdom)
+static int
+check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
+	if (!(cbs) || !(cdl))
+		return AILSA_NO_DATA;
 	int retval;
-	cbc_s *cbc;
-	cbc_build_domain_s *list = NULL;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
 
-	initialise_cbc_s(&cbc);
-	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0) {
-		if (retval != NO_RECORDS)
-			fprintf(stderr, "Build domain query failed\n");
+	if ((retval = add_ips_to_list(cdl->start_ip, cdl->end_ip, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP's to list");
 		goto cleanup;
 	}
-	list = cbc->bdom;
-	while (list) {
-		if ((retval = build_dom_overlap(list, bdom)) != 0) {
-			clean_cbc_struct(cbc);
-			report_error(retval, bdom->domain);
-		} else
-			list = list->next;
+	if ((retval = add_ips_to_list(cdl->start_ip, cdl->start_ip, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add start IP's to list");
+		goto cleanup;
 	}
-	goto cleanup;
-
+	if ((retval = add_ips_to_list(cdl->end_ip, cdl->end_ip, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add end IP's to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_OVERLAP, l, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_OVERLAP query failed");
+		goto cleanup;
+	}
+	if (r->total > 0)
+		retval = BDOM_OVERLAP;
 	cleanup:
-		clean_cbc_struct(cbc);
-		return;
+		ailsa_list_destroy(l);
+		ailsa_list_destroy(r);
+		my_free(l);
+		my_free(r);
+		return retval;
 }
 
-int
-build_dom_overlap(cbc_build_domain_s *list, cbc_build_domain_s *new)
+static int
+add_ips_to_list(unsigned long i, unsigned long int j, AILLIST *l)
 {
-	int retval = 0;
+	int retval;
 
-	if (((new->start_ip >= list->start_ip) && (new->start_ip <= list->end_ip)) ||
-	   ((new->end_ip >= list->start_ip) && (new->end_ip <= list->end_ip )))
-		retval = BDOM_OVERLAP;
+	if ((retval = cmdb_add_number_to_list(i, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert first IP address into list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(j, l)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot insert second IP address into list");
 	return retval;
 }
 
-void
-fill_bdom_values(cbc_build_domain_s *bdom, cbcdomain_comm_line_s *cdl)
+static int
+cbc_populate_zone(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *zone)
 {
-	if (cdl->confntp > 0) {
-		bdom->config_ntp = 1;
-		snprintf(bdom->ntp_server, RBUFF_S, "%s", cdl->ntpserver);
+	if (!(cbs) || !(cdl) || !(zone))
+		return AILSA_NO_DATA;
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(cdl->domain, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
+		return retval;
 	}
-	bdom->start_ip = cdl->start_ip;
-	bdom->end_ip = cdl->end_ip;
-	bdom->netmask = cdl->netmask;
-	bdom->gateway = cdl->gateway;
-	bdom->ns = cdl->ns;
-	snprintf(bdom->domain, RBUFF_S, "%s", cdl->domain);
-	bdom->cuser = bdom->muser = (unsigned long int)getuid();
+	if ((retval = cmdb_add_string_to_list(cbs->prins, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add primary DNS server to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(cbs->secns, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add secondary DNS server to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->refresh, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add refresh value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->retry, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add retry value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->expire, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add expire value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->ttl, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add ttl value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone serial to list");
+		return retval;
+	}
+	if ((retval = cmdb_populate_cuser_muser(zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		return retval;
+	}
+	return retval;
 }
 
+static int
+cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *dom)
+{
+	if (!(cbs) || !(cdl) || !(dom))
+		return AILSA_NO_DATA;
+	int retval;
+
+	if ((retval = cmdb_add_number_to_list(cdl->start_ip, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add start IP to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cdl->end_ip, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add end IP to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cdl->ns, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot nameserver to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cdl->gateway, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add gateway to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cdl->netmask, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add netmask to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(cdl->domain, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_short_to_list(cdl->confntp, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add config ntp to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(cdl->ntpserver, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add ntp server name to list");
+		return retval;
+	}
+	if ((retval = cmdb_populate_cuser_muser(dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		return retval;
+	}
+	return retval;
+}

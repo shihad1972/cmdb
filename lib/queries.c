@@ -61,6 +61,8 @@ const char *basic_queries[] = {
 "SELECT locale_id FROM default_locale WHERE locale_id > 0", // DEFAULT_LOCALE
 "SELECT locale_id, name FROM locale", // LOCALE_NAMES
 "SELECT scheme_name, lvm from seed_schemes", // PARTITION_SCHEME_NAMES
+"SELECT domain FROM build_domain", // ALL_BUILD_DOMAINS
+"SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -256,6 +258,46 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT part_options_id FROM part_options WHERE def_scheme_id = ? AND def_part_id = ? AND poption = ?",
 	3,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // BUILD_DOMAIN_ID_ON_DOMAIN
+"SELECT bd_id FROM build_domain WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_DOMAIN_OVERLAP
+"SELECT bd_id FROM build_domain WHERE (start_ip >= ? AND end_ip <= ?) OR (start_ip <= ? AND end_ip >= ?) OR (start_ip <= ? AND end_ip >= ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // FWD_ZONE_ID_ON_ZONE_NAME
+"SELECT id FROM zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // REV_ZONE_ID_ON_RANGE
+"SELECT rev_zone_id FROM rev_zones WHERE net_range = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // NAME_SERVERS_ON_NAME
+"SELECT pri_dns, sec_dns FROM zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // ZONE_SOA_ON_NAME
+"SELECT ttl, serial, refresh, retry, expire FROM zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // NS_MX_SRV_RECORDS
+"SELECT type, host, protocol, service, pri, destination FROM records WHERE zone = (SELECT id FROM zones WHERE name = ?) AND (type = 'NS' OR type = 'MX' OR type = 'SRV')",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // ZONE_RECORDS_ON_NAME
+"SELECT type, host, destination FROM records WHERE type != 'NS' AND type != 'MX' AND type != 'SRV' AND zone = (SELECT id FROM zones WHERE name = ?) ORDER BY type, host",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
@@ -334,6 +376,16 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO part_options (def_scheme_id, def_part_id, poption, cuser, muser) VALUES (?, ?, ?, ?, ?)",
 	5,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD_DOMAIN
+"INSERT INTO build_domain (start_ip, end_ip, ns, gateway, netmask, domain, config_ntp, ntp_server, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	10,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD_DOMAIN_ZONE
+"INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	10,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

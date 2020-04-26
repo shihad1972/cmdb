@@ -91,7 +91,7 @@ ailsa_add_trailing_slash(char *member)
 	
 	retval = 0;
 	len = strlen(member);
-	if ((member[len - 1] != '/') && len < 127) {
+	if ((member[len - 1] != '/') && len < 254) {
 		member[len] = '/';
 		member[len + 1] = '\0';
 	} else if (member[len - 1] == '/') {
