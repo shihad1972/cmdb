@@ -926,8 +926,12 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 		switch(p[i]) {
 		case MYSQL_TYPE_VAR_STRING:
 		case MYSQL_TYPE_VARCHAR:
-			tmp->data->text = strndup(row[i - 1], SQL_TEXT_MAX);
-			tmp->type = AILSA_DB_TEXT;
+			if (row[i - 1]) {
+				tmp->data->text = strndup(row[i - 1], SQL_TEXT_MAX);
+				tmp->type = AILSA_DB_TEXT;
+			} else {
+				tmp->type = AILSA_DB_NULL;
+			}
 			break;
 		case MYSQL_TYPE_LONG:
 			tmp->data->number = strtoul(row[i - 1], NULL, 10);
