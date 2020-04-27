@@ -49,18 +49,44 @@
 #include "cbc_common.h"
 #include "cbcnet.h"
 #include "cbc_base_sql.h"
-#include "cbcdomain.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 # include "dnsa_base_sql.h"
 # include "cbc_dnsa.h"
 #endif // HAVE_DNSA 
 
+static int
+parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);
+
+static void
+validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl);
+
+static int
+display_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static void
+display_bdom_servers(ailsa_cmdb_s *cbs, char *domain);
+
+static int
+list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static int
+add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static int
+remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static int
+modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
 static void
 cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc);
 
 static int
 check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
+static int
+split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo);
 
 static int
 add_ips_to_list(unsigned long i, unsigned long int j, AILLIST *l);
@@ -70,6 +96,15 @@ cbc_populate_zone(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *zone);
 
 static int
 cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *domain);
+
+static int
+write_dhcp_net_config(ailsa_cmdb_s *cbs);
+
+static int
+fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
+
+static void
+fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
 
 int
 main(int argc, char *argv[])
@@ -88,6 +123,8 @@ main(int argc, char *argv[])
 	parse_cmdb_config(cmc);
 	if (cdcl->action == LIST_CONFIG)
 		retval = list_cbc_build_domain(cmc, cdcl);
+	else if (cdcl->action == DISPLAY_CONFIG)
+		retval = display_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == ADD_CONFIG)
 		retval = add_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == RM_CONFIG)
@@ -120,7 +157,7 @@ cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc)
 	my_free(cdc);
 }
 
-void
+static void
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
 	if (cdl->ntpserver)
@@ -132,10 +169,10 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 			report_error(USER_INPUT_INVALID, "domain");
 }
 
-int
+static int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
-	const char *optstr = "ab:k:lmn:rt:vw";
+	const char *optstr = "abd:k:lmn:rt:vw";
 	int opt, retval;
 
 	retval = NONE;
@@ -165,6 +202,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	{
 		if (opt == 'a') {
 			cdl->action = ADD_CONFIG;
+		} else if (opt == 'd') {
+			cdl->action = DISPLAY_CONFIG;
 		} else if (opt == 'l') {
 			cdl->action = LIST_CONFIG;
 		} else if (opt == 'm') {
@@ -210,7 +249,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	return retval;
 }
 
-int
+static int
 split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 {
 	unsigned long int ips[4];
@@ -246,7 +285,7 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 	return retval;
 }
 
-int
+static int
 list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
@@ -274,7 +313,18 @@ list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		return retval;
 }
 
-int
+static int
+display_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	if (!(cbs) || !(cdl))
+		return AILSA_NO_DATA;
+	int retval;
+
+	cleanup:
+		return retval;
+}
+
+static int
 add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
@@ -340,7 +390,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		return retval;
 }
 
-int
+static int
 remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
@@ -365,7 +415,7 @@ remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		return retval;
 }
 
-int
+static int
 modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
@@ -388,7 +438,7 @@ modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	return 0;
 }
 
-int
+static int
 write_dhcp_net_config(ailsa_cmdb_s *cbs)
 {
 	if (!(cbs))
@@ -428,7 +478,7 @@ write_dhcp_net_config(ailsa_cmdb_s *cbs)
 		return retval;
 }
 
-void
+static void
 display_bdom_servers(ailsa_cmdb_s *cbs, char *domain)
 {
 	if (!(cbs) || !(domain))
@@ -468,7 +518,7 @@ display_bdom_servers(ailsa_cmdb_s *cbs, char *domain)
 		return;
 }
 
-int
+static int
 fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
 {
 	char *buff, *pos;
@@ -508,7 +558,7 @@ fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
 	return retval;
 }
 
-void
+static void
 fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
 {
 	uint32_t ip_addr;

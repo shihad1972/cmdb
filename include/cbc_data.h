@@ -34,6 +34,31 @@
 # include "netinet/in.h"
 # include "cmdb.h"
 
+enum {			/* cbcdomain modify types */
+	BASEDN = 1,
+	BINDDN = 2,
+	LDAPSERV = 4,
+	LDAPSSL = 8,
+	NFSDOM = 16,
+	NTPSERV = 32,
+	SMTPSERV = 64,
+	XYMONSERV = 128,
+	LOGSERV = 256
+};
+
+typedef struct cbcdomain_comm_line_s {
+	char *domain;
+	char *ntpserver;
+	char *config;
+	short int action;
+	short int confntp;
+	unsigned long int start_ip;
+	unsigned long int end_ip;
+	unsigned long int netmask;
+	unsigned long int gateway;
+	unsigned long int ns;
+} cbcdomain_comm_line_s;
+
 typedef struct cbc_boot_line_s {
 	struct cbc_boot_line_s *next;
 	char os[MAC_S];
@@ -562,4 +587,3 @@ display_varient(cbc_s *base);
 display_vm_hosts(cbc_s *base); */
 
 #endif /* __CBC_DATA_H__ */
-
