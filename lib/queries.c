@@ -562,7 +562,7 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 int
 ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete)
 {
-	int retval;
+	int retval = DB_TYPE_INVALID;
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -582,7 +582,7 @@ ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AIL
 int
 ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *update)
 {
-	int retval;
+	int retval = DB_TYPE_INVALID;
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -602,7 +602,7 @@ ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AIL
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
 {
-	int retval;
+	int retval = DB_TYPE_INVALID;
 	const struct ailsa_sql_query_s query = insert_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
@@ -630,7 +630,7 @@ ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *
 		ailsa_syslog(LOG_ERR, "Unable to create multiple insert struct");
 		goto cleanup;
 	}
-
+	retval = DB_TYPE_INVALID;
 	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL

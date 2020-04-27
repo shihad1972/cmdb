@@ -424,22 +424,22 @@ generate_zone_serial(void)
 {
         time_t now;
         struct tm *lctime;
-        char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[MAC_S];
+        char sday[SERVICE_LEN], smonth[SERVICE_LEN], syear[SERVICE_LEN], sserial[HOST_LEN];
         unsigned long int serial;
 
         now = time(0);
         if (!(lctime = localtime(&now)))
                 report_error(GET_TIME_FAILED, strerror(errno));
-        snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
+        snprintf(syear, SERVICE_LEN, "%d", lctime->tm_year + 1900);
         if (lctime->tm_mon < 9)
-                snprintf(smonth, COMM_S, "0%d", lctime->tm_mon + 1);
+                snprintf(smonth, SERVICE_LEN, "0%d", lctime->tm_mon + 1);
         else
-                snprintf(smonth, COMM_S, "%d", lctime->tm_mon + 1);
+                snprintf(smonth, SERVICE_LEN, "%d", lctime->tm_mon + 1);
         if (lctime->tm_mday < 10)
-                snprintf(sday, COMM_S, "0%d", lctime->tm_mday);
+                snprintf(sday, SERVICE_LEN, "0%d", lctime->tm_mday);
         else
-                snprintf(sday, COMM_S, "%d", lctime->tm_mday);
-        snprintf(sserial, MAC_S, "%s%s%s01",
+                snprintf(sday, SERVICE_LEN, "%d", lctime->tm_mday);
+        snprintf(sserial, HOST_LEN, "%s%s%s01",
                  syear,
                  smonth,
                  sday);

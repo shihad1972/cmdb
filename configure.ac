@@ -24,7 +24,6 @@ LT_INIT
 # Checks for libraries.
 AX_LIB_MYSQL
 AX_LIB_SQLITE3
-AX_LIB_UUID
 AC_CHECK_LIB([sqlite3], [sqlite3_errstr],
   [AC_DEFINE([HAVE_SQLITE3_ERRSTR], [], [Have function sqlite3_errstr in sqlite3 library])])
 AX_LIB_GCRYPT([auto])
