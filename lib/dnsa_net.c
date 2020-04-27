@@ -424,7 +424,7 @@ generate_zone_serial(void)
 {
         time_t now;
         struct tm *lctime;
-        char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[RANGE_S];
+        char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[MAC_S];
         unsigned long int serial;
 
         now = time(0);
@@ -439,7 +439,7 @@ generate_zone_serial(void)
                 snprintf(sday, COMM_S, "0%d", lctime->tm_mday);
         else
                 snprintf(sday, COMM_S, "%d", lctime->tm_mday);
-        snprintf(sserial, RANGE_S, "%s%s%s01",
+        snprintf(sserial, MAC_S, "%s%s%s01",
                  syear,
                  smonth,
                  sday);

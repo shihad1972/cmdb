@@ -568,7 +568,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			++tmp;
 			len = strlen(tmp);
 			strncat(in_addr, tmp, len);
-			strncat(in_addr, ".", 1);
+			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
@@ -582,7 +582,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			++tmp;
 			len = strlen(tmp);
 			strncat(in_addr, tmp, len);
-			strncat(in_addr, ".", 1);
+			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
@@ -598,7 +598,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			++tmp;
 			len = strlen(tmp);
 			strncat(in_addr, tmp, len);
-			strncat(in_addr, ".", 1);
+			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
@@ -610,7 +610,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		++tmp;
 		len = strlen(tmp);
 		strncat(in_addr, tmp, len);
-		strncat(in_addr, ".", 1);
+		strcat(in_addr, ".");
 		--tmp;
 		*tmp = '\0';
 		snprintf(classless, CONF_S, "/%lu.", prefix);
@@ -620,7 +620,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			++tmp;
 			len = strlen(tmp);
 			strncat(in_addr, tmp, len);
-			strncat(in_addr, ".", 1);
+			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
