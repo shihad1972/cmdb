@@ -338,65 +338,6 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(d);
 		return retval;
-/*	
-#ifdef HAVE_DNSA
-	size_t dclen = sizeof(ailsa_cmdb_s);
-	ailsa_cmdb_s *dc;
-	dnsa_s *dnsa;
-	dbdata_s *user;
-	zone_info_s *zone;
-
-	dc = ailsa_calloc(dclen, "dc in add_cbc_build_domain");
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_cbc_build_domain");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_cbc_build_domain");
-	init_multi_dbdata_struct(&user, 1);
-	init_zone_struct(zone);
-	dnsa->zones = zone;
-	parse_cmdb_config(dc);
-	fill_cbc_fwd_zone(zone, bdom->domain, dc);
-	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
-		printf("Zone %s already in DNS\n", bdom->domain);
-		retval = NONE;
-	} else {
-		if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
-			fprintf(stderr, "Unable to add zone %s to dns\n", zone->name);
-			retval = 0;
-		} else {
-			fprintf(stderr, "Added zone %s\n", zone->name);
-		}
-	}
-	if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0)
-		goto dnsa_cleanup;
-	data->args.number = zone->id;
-	user->args.number = (unsigned long int)getuid();
-	user->next = data;
-	if ((retval = dnsa_run_update(dc, user, ZONE_VALID_YES)) != 0)
-		printf("Unable to mark zone as valid in database\n");
-	else
-		printf("Zone marked as valid in the database\n");
-	user->next = NULL;
-	clean_dbdata_struct(user);
-	dnsa_clean_list(dnsa);
-	cmdb_free(dc, dclen);
-#endif // HAVE_DNSA
-	if ((retval = cbc_run_insert(cbs, base, BUILD_DOMAINS)) != 0) {
-		fprintf(stderr, "Unable to add build domain %s\n", domain);
-	} else {
-		printf("Build domain %s added\n", domain);
-		if ((retval = write_dhcp_net_config(cbs)) != 0)
-			fprintf(stderr, "Cannot write dhcpd.networks!!\n");
-	}
-	clean_cbc_struct(base);
-	clean_dbdata_struct(data);
-	return retval;
-#ifdef HAVE_DNSA
-	dnsa_cleanup:
-		dnsa_clean_list(dnsa);
-		cmdb_free(dc, dclen);
-		clean_dbdata_struct(data);
-		clean_dbdata_struct(user);
-		clean_cbc_struct(base);
-#endif // HAVE_DNSA */
 }
 
 int
