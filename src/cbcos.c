@@ -104,7 +104,7 @@ int
 main (int argc, char *argv[])
 {
 	char error[URL_S];
-	int retval = NONE;
+	int retval;
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbcos_comm_line_s *cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
 

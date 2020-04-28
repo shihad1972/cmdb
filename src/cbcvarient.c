@@ -214,9 +214,9 @@ main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	if (!(cvcl->varient))
-		snprintf(error, URL_S, "name %s", cvcl->varient);
-	else if (!(cvcl->valias))
 		snprintf(error, URL_S, "alias %s", cvcl->valias);
+	else if (!(cvcl->valias))
+		snprintf(error, URL_S, "name %s", cvcl->varient);
 	parse_cmdb_config(cmc);
 	if (cvcl->action == LIST_CONFIG)
 		retval = list_cbc_build_varient(cmc);
