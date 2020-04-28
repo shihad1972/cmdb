@@ -269,6 +269,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	6,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // BUILD_DOMAIN_DETAILS_ON_NAME
+"SELECT start_ip, end_ip, netmask, gateway, ns, config_ntp, ntp_server, cuser, ctime, muser, mtime FROM build_domain WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_DETAILS_ON_DOMAIN
+"SELECT hostname, ip, varient FROM varient v LEFT JOIN build b ON v.varient_id = b.varient_id LEFT JOIN build_ip bi on bi.ip_id = b.ip_id LEFT JOIN build_domain bd ON bi.bd_id = bd.bd_id WHERE bd.domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 	{ // FWD_ZONE_ID_ON_ZONE_NAME
 "SELECT id FROM zones WHERE name = ?",
 	1,

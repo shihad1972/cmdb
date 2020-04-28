@@ -65,7 +65,10 @@ static int
 display_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
 
 static void
-display_bdom_servers(ailsa_cmdb_s *cbs, char *domain);
+display_build_domain_details(AILLIST *domain);
+
+static void
+display_build_domain_servers(AILLIST *domain);
 
 static int
 list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
@@ -172,7 +175,7 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 static int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
-	const char *optstr = "abd:k:lmn:rt:vw";
+	const char *optstr = "abdk:lmn:rt:vw";
 	int opt, retval;
 
 	retval = NONE;
@@ -180,6 +183,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	int index;
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
+		{"display",		no_argument,		NULL,	'd'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"network-info",	required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
@@ -319,9 +323,132 @@ display_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	if (!(cbs) || !(cdl))
 		return AILSA_NO_DATA;
 	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+	AILLIST *bld = ailsa_db_data_list_init();
 
+	if ((retval = cmdb_add_string_to_list(cdl->domain, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_DETAILS_ON_NAME, dom, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_DETAILS_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (res->total == 0) {
+		ailsa_syslog(LOG_INFO, "Build domain %s does not exist", cdl->domain);
+		goto cleanup;
+	}
+	printf("Details for build domain: %s\n", cdl->domain);
+	display_build_domain_details(res);
+	if ((retval = ailsa_argument_query(cbs, BUILD_DETAILS_ON_DOMAIN, dom, bld)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS_ON_DOMAIN query failed");
+		goto cleanup;
+	}
+	printf("\nServers build in domain: %s\n", cdl->domain);
+	printf("Server Name\tIP Address\tBuild Varient\n");
+	display_build_domain_servers(bld);
 	cleanup:
+		ailsa_list_full_clean(dom);
+		ailsa_list_full_clean(res);
+		ailsa_list_full_clean(bld);
 		return retval;
+}
+
+static void
+display_build_domain_details(AILLIST *d)
+{
+	if (!(d))
+		return;
+	if (d->total != 11)
+		return;
+	char ip[SERVICE_LEN];
+	uint32_t ip_addr;
+	AILELEM *e = d->head;
+
+	printf("\nNetwork Configuration:\n");
+	memset(ip, 0, SERVICE_LEN);
+	ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+	printf("\tStart IP: %s\n", ip);
+	e = e->next;
+	memset(ip, 0, SERVICE_LEN);
+	ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+	printf("\tEnd IP: %s\n", ip);
+	e = e->next;
+	memset(ip, 0, SERVICE_LEN);
+	ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+	printf("\tNetmask: %s\n", ip);
+	e = e->next;
+	memset(ip, 0, SERVICE_LEN);
+	ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+	printf("\tGateway: %s\n", ip);
+	e = e->next;
+	memset(ip, 0, SERVICE_LEN);
+	ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+	printf("\tName Server: %s\n", ip);
+	e = e->next;
+	if (((ailsa_data_s *)e->data)->data->small > 0) {
+		e = e->next;
+		printf("NTP Server: %s\n", ((ailsa_data_s *)e->data)->data->text);
+	} else {
+		e = e->next;
+		printf("No NTP configuration\n");
+	}
+	e = e->next;
+	printf("Created by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	e = e->next;
+#ifdef HAVE_MYSQL
+	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
+		printf(" @ %s\n", ailsa_convert_mysql_time(((ailsa_data_s *)e->data)->data->time));
+	else
+#endif
+		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
+	e = e->next;
+	printf("Modified by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	e = e->next;
+#ifdef HAVE_MYSQL
+	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
+		printf(" @ %s\n", ailsa_convert_mysql_time(((ailsa_data_s *)e->data)->data->time));
+	else
+#endif
+		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
+}
+
+static void
+display_build_domain_servers(AILLIST *b)
+{
+	if (!(b))
+		return;
+	size_t members = 3;
+	if ((b->total % members) != 0)
+		return;
+	size_t len;
+	char *ptr;
+	char ip[SERVICE_LEN];
+	uint32_t ip_addr;
+	AILELEM *e = b->head;
+	while (e) {
+		memset(ip, 0, SERVICE_LEN);
+		ptr = ((ailsa_data_s *)e->data)->data->text;
+		len = strlen(ptr);
+		if (len < 8)
+			printf("%s\t\t", ptr);
+		else
+			printf("%s\t", ptr);
+		e = e->next;
+		ip_addr = htonl((uint32_t)((ailsa_data_s *)e->data)->data->number);
+		inet_ntop(AF_INET, &ip_addr, ip, SERVICE_LEN);
+		printf("%s\t", ip);
+		e = e->next;
+		ptr = ((ailsa_data_s *)e->data)->data->text;
+		printf("%s\n", ptr);
+		e = e->next;
+	}
 }
 
 static int
@@ -476,46 +603,6 @@ write_dhcp_net_config(ailsa_cmdb_s *cbs)
 		clean_cbc_struct(cbc);
 		clean_string_len(conf);
 		return retval;
-}
-
-static void
-display_bdom_servers(ailsa_cmdb_s *cbs, char *domain)
-{
-	if (!(cbs) || !(domain))
-		return;
-	dbdata_s *data, *list;
-	char *ip;
-	int query = BUILD_DOM_SERVERS, retval;
-	uint32_t ip_addr;
-	unsigned int max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-
-	if (!(ip = malloc(RANGE_S)))
-		report_error(MALLOC_FAIL, "ip in display_bdom_servers");
-	init_multi_dbdata_struct(&data, max);
-	list = data;
-	if ((retval = get_build_domain_id(cbs, domain, &(data->args.number))) != 0)
-		goto cleanup;
-	if ((retval = cbc_run_search(cbs, data, query)) == 0) {
-		printf("Build domain %s has no servers\n", domain);
-	} else {
-		printf("Built Servers\tIP\n");
-		while (list) {
-			memset(ip, 0, RANGE_S);
-			ip_addr = htonl((uint32_t)list->next->fields.number);
-			inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-			if (strlen(list->fields.text) > 7)
-				printf("%s\t%s\n", list->fields.text, ip);
-			else
-				printf("%s\t\t%s\n", list->fields.text, ip);
-			list = list->next->next;
-		}
-	}
-	goto cleanup;
-
-	cleanup:
-		free(ip);
-		clean_dbdata_struct(data);
-		return;
 }
 
 static int
