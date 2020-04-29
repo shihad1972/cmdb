@@ -1,5 +1,5 @@
 pipeline {
-    agent { docker { image 'shihad/cmdb' } }
+    agent { any }
     stages {
         stage('build') {
             steps {
