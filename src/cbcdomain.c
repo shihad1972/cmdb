@@ -281,6 +281,8 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 	cdl->end_ip = ips[1];
 	cdl->gateway = ips[2];
 	cdl->netmask = ips[3];
+	if (ailsa_validate_input(ip, IP_REGEX) < 0)
+		report_error(USER_INPUT_INVALID, "network");
 	if (inet_pton(AF_INET, ip, &ip_addr)) {
 		cdl->ns = (unsigned long int) htonl(ip_addr);
 	} else {
@@ -490,9 +492,12 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
 		goto cleanup;
 	}
+	if ((retval = write_dhcp_net_config(cbs)) != 0)
+		fprintf(stderr, "Cannot write new dhcpd.networks file\n");
 #ifdef HAVE_DNSA
 	if ((retval = cmdb_check_for_fwd_zone(cbs, domain)) > 0) {
 		ailsa_syslog(LOG_INFO, "Zone %s already in dnsa database", domain);
+		retval = 0;
 	} else if (retval == -1) {
 		goto cleanup;
 	} else {
@@ -521,24 +526,23 @@ static int
 remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return CBC_NO_DATA;
-	char *domain = cdl->domain;
-	int retval = 0;
-	dbdata_s *data;
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
 
-	if (!(data = calloc(sizeof(dbdata_s), 1)))
-		report_error(MALLOC_FAIL, "data in remove_cbc_build_domain");
-	unsigned long int *bd_id = &(data->args.number);
-	if ((retval = get_build_domain_id(cbs, domain, bd_id)) != 0)
+	if ((retval = cmdb_add_string_to_list(cdl->domain, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain %s to list", cdl->domain);
 		goto cleanup;
-	retval = cbc_run_delete(cbs, data, BDOM_DEL_DOM_ID);
-	printf ("%d build domain(s) deleted for %s\n", retval, domain);
+	}
+	if ((retval = ailsa_delete_query(cbs, delete_queries[DELETE_BUILD_DOMAIN_ON_NAME], dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_BUILD_DOMAIN_ON_NAME query failed");
+		goto cleanup;
+	}
 	if ((retval = write_dhcp_net_config(cbs)) != 0)
 		fprintf(stderr, "Cannot write new dhcpd.networks file\n");
-	goto cleanup;
 
 	cleanup:
-		free(data);
+		ailsa_list_full_clean(dom);
 		return retval;
 }
 
@@ -546,23 +550,28 @@ static int
 modify_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 {
 	if (!(cbs) || !(cdl))
-		return CBC_NO_DATA;
-	char *domain = cdl->domain;
-	int retval = 0, query = UP_DOM_NTP;
-	unsigned long int *bd_id;
-	dbdata_s *data;
+		return AILSA_NO_DATA;
+	int retval;
+	unsigned long int uid = (unsigned long int)getuid();
+	AILLIST *dom = ailsa_db_data_list_init();
 
-	init_multi_dbdata_struct(&data, cbc_update_args[query]);
-	snprintf(data->args.text, RBUFF_S, "%s", cdl->ntpserver);
-	data->next->args.number = (unsigned long int)getuid();
-	bd_id = &(data->next->next->args.number);
-	if ((retval = get_build_domain_id(cbs, domain, bd_id)) != 0) {
-		clean_dbdata_struct(data);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(cdl->ntpserver, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add NTP server to list");
+		goto cleanup;
 	}
-	retval = cbc_run_update(cbs, data, query);
-	printf("%d domains modified\n", retval);
-	return 0;
+	if ((retval = cmdb_add_number_to_list(uid, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cdl->domain, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbs, update_queries[UPDATE_BUILD_DOMAIN], dom)) != 0)
+		ailsa_syslog(LOG_ERR, "UPDATE_BUILD_DOMAIN query failed");
+	cleanup:
+		ailsa_list_full_clean(dom);
+		return 0;
 }
 
 static int

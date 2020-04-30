@@ -429,6 +429,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM seed_schemes WHERE scheme_name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // DELETE_BUILD_DOMAIN_ON_NAME
+"DELETE FROM build_domain WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
@@ -442,6 +447,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE seed_schemes SET muser = ? WHERE scheme_name = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // UPDATE_BUILD_DOMAIN
+"UPDATE build_domain SET ntp_server = ?, muser = ? WHERE domain = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT }
 	}
 };
 
