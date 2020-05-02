@@ -559,9 +559,6 @@ cmdb_get_port_number(char *proto, char *service, int *port);
 int
 ailsa_get_iface_list(AILLIST *list);
 
-int
-ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
-
 // These should probably be moved to ailsasql.h
 
 void

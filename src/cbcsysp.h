@@ -45,9 +45,6 @@ typedef struct cbc_sysp_s {
 } cbc_sysp_s;
 
 void
-init_cbcsysp_s(cbc_sysp_s *cbcs);
-
-void
 clean_cbcsysp_s(cbc_sysp_s *cbcs);
 
 int

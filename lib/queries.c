@@ -64,6 +64,7 @@ const char *basic_queries[] = {
 "SELECT domain FROM build_domain", // BUILD_DOMAIN_NAMES
 "SELECT domain, ns, start_ip, gateway, netmask from build_domain", // BUILD_DOMAIN_NETWORKS
 "SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
+"SELECT name FROM system_packages", // SYSTEM_PACKAGE_NAMES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -307,6 +308,26 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	},
 	{ // ZONE_RECORDS_ON_NAME
 "SELECT type, host, destination FROM records WHERE type != 'NS' AND type != 'MX' AND type != 'SRV' AND zone = (SELECT id FROM zones WHERE name = ?) ORDER BY type, host",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SYS_PACK_DETAILS_ON_DOMAIN
+"SELECT name, field, type, arg from system_packages sp LEFT JOIN system_package_conf spc ON sp.syspack_id = spc.syspack_id LEFT JOIN build_domain bd  ON bd.bd_id = spc.bd_id LEFT JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SYS_PACK_DETAILS_ON_NAME_DOMAIN
+"SELECT name, field, type, arg from system_packages sp LEFT JOIN system_package_conf spc ON sp.syspack_id = spc.syspack_id LEFT JOIN build_domain bd  ON bd.bd_id = spc.bd_id LEFT JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id WHERE domain = ? AND name = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYS_PACK_DETAILS_MIN
+"SELECT name, field, type, arg from system_packages sp LEFT JOIN system_package_conf spc ON sp.syspack_id = spc.syspack_id LEFT JOIN build_domain bd  ON bd.bd_id = spc.bd_id LEFT JOIN system_package_args spa ON spa.syspack_arg_id = spc.syspack_arg_id WHERE domain = ? AND name = ? AND field = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYS_PACK_ARGS_ON_NAME
+"SELECT field, type FROM system_package_args spa LEFT JOIN system_packages sp ON sp.syspack_id = spa.syspack_id WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
 	}

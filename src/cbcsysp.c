@@ -31,12 +31,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -91,7 +93,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	ailsa_clean_cmdb(cbc);
-	my_free(cbc);
 	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
@@ -151,25 +152,15 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 			cbcs->action = CVERSION;
 			retval = CVERSION;
 		} else if (opt == 'b') {
-			if (!(cbcs->domain = calloc(RBUFF_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "cbcs->domain in parse_cbc_sysp_comm_line");
-			snprintf(cbcs->domain, RBUFF_S, "%s", optarg);
+			cbcs->domain = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'f') {
-			if (!(cbcs->field = calloc(URL_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "cbcs->field in parse_cbc_sysp_comm_line");
-			snprintf(cbcs->field, URL_S, "%s", optarg);
+			cbcs->field = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'g') {
-			if (!(cbcs->arg = calloc(RBUFF_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "cbcs->arg in parse_cbc_sysp_comm_line");
-			snprintf(cbcs->arg, RBUFF_S, "%s", optarg);
+			cbcs->arg = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'n') {
-			if (!(cbcs->name = calloc(URL_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "cbcs->name in parse_cbc_sysp_comm_line");
-			snprintf(cbcs->name, URL_S, "%s", optarg);
+			cbcs->name = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 't') {
-			if (!(cbcs->type = calloc(MAC_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "cbcs->type in parse_cbc_sysp_comm_line");
-			snprintf(cbcs->type, MAC_S, "%s", optarg);
+			cbcs->type = strndup(optarg, DOMAIN_LEN);
 		} else
 			retval = DISPLAY_USAGE;
 	}
@@ -224,12 +215,6 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 }
 
 void
-init_cbcsysp_s(cbc_sysp_s *cbcs)
-{
-	memset(cbcs, 0, sizeof(cbc_sysp_s));
-}
-
-void
 clean_cbcsysp_s(cbc_sysp_s *cbcs)
 {
 	if (!(cbcs))
@@ -252,125 +237,151 @@ clean_cbcsysp_s(cbc_sysp_s *cbcs)
 int
 list_cbc_syspackage(ailsa_cmdb_s *cbc)
 {
-	int retval = 0;
-	cbc_s *cbs;
-	cbc_syspack_s *list;
+	if (!(cbc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *sysp = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_query(cbc, cbs, SYSPACK)) == 0) {
-		list = cbs->syspack;
-		while (list) {
-			printf("%s\n", list->name);
-			list = list->next;
-		}
-	} else if (retval == 6)
-		fprintf(stderr, "No system packages to display\n");
-	clean_cbc_struct(cbs);
-	return retval;
+	if ((retval = ailsa_basic_query(cbc, SYSTEM_PACKAGE_NAMES, sysp)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGE_NAMES query failed");
+		goto cleanup;
+	}
+	if (sysp->total == 0) {
+		ailsa_syslog(LOG_ERR, "No packages returned");
+		goto cleanup;
+	}
+	e = sysp->head;
+	while (e) {
+		printf("%s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(sysp);
+		return retval;
 }
 
 int
 list_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 {
-	char *package = NULL;
-	int retval = 0, query;
-	unsigned int max;
-	dbdata_s *data = 0, *list;
+	char *package = NULL, *tmp = NULL;
+	int retval;
+	unsigned int query;
+	size_t total = 4;
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	if ((css->field) && (css->name))
-		query = SYSP_INFO_SYS_AND_BD_ID;
-	else if (css->name)
-		query = SYSP_INFO_ARG_AND_BD_ID;
-	else
-		query = SYSP_INFO_ON_BD_ID;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	if ((retval = get_syspack_ids(cbc, css, data, query)) != 0) {
-		if (retval == NO_BD_CONFIG)
-			goto cleanup;
-		else if ((retval = NO_BUILD_PACKAGES) && (css->name))
-			goto cleanup;
-		else if ((retval = NO_PACKAGE_CONFIG) && (css->name) && (css->field))
-			goto cleanup;
-	}
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		fprintf(stderr,
-"Build domain %s has no configured packages\n", css->domain);
-		retval = NO_RECORDS;
+	if ((retval = cmdb_add_string_to_list(css->domain, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
 		goto cleanup;
 	}
-	retval = 0;
-	list = data;
-	printf("System package config for build domain %s\n", css->domain);
-	while (list) {
-		if (!(package)) {
-			printf("\n%s\n", list->fields.text);
-			package = list->fields.text;
-		} else if (strncmp(package, list->fields.text, URL_S) != 0) {
-			printf("\n%s\n", list->fields.text);
-			package = list->fields.text;
+	query = SYS_PACK_DETAILS_ON_DOMAIN;
+	if (css->name) {
+		if ((retval = cmdb_add_string_to_list(css->name, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add package name to list");
+			goto cleanup;
 		}
-		list = list->next;
-		if (strlen(list->fields.text) > 23)
-		printf("\t%s\t%s\t%s\n", list->fields.text, list->next->fields.text,
-		 list->next->next->fields.text);
-		else if (strlen(list->fields.text) > 15)
-		printf("\t%s\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
-		 list->next->next->fields.text);
-		else
-		printf("\t%s\t\t\t%s\t%s\n", list->fields.text, list->next->fields.text,
-		 list->next->next->fields.text);
-		list = list->next->next->next;
+		query = SYS_PACK_DETAILS_ON_NAME_DOMAIN;
 	}
-	goto cleanup;
-
+	if (css->field) {
+		if ((retval = cmdb_add_string_to_list(css->field, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add package field to list");
+			goto cleanup;
+		}
+		query = SYS_PACK_DETAILS_MIN;
+	}
+	if ((retval = ailsa_argument_query(cbc, query, pack, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "System package query %u failed", query);
+		goto cleanup;
+	}
+	if (res->total == 0) {
+		ailsa_syslog(LOG_INFO, "Build domain %s has no configured packages\n", css->domain);
+		retval = NO_RECORDS;
+		goto cleanup;
+	} else if ((res->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Query returned wrong number of elements?");
+		goto cleanup;
+	}
+	printf("System package config for build domain %s\n", css->domain);
+	e = res->head;
+	while (e) {
+		if (!(package)) {
+			package = ((ailsa_data_s *)e->data)->data->text;
+			printf("\n%s\n", package);
+		} else if (strncmp(package, ((ailsa_data_s *)e->data)->data->text, DOMAIN_LEN) != 0) {
+			package = ((ailsa_data_s *)e->data)->data->text;
+			printf("\n%s\n", package);
+		}
+		tmp = ((ailsa_data_s *)e->next->data)->data->text;
+		if (strlen(tmp) > 23)
+			printf("\t%s\t%s\t%s\n", tmp, ((ailsa_data_s *)e->next->next->data)->data->text,
+			  ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		else if (strlen(tmp) > 15)
+			printf("\t%s\t\t%s\t%s\n", tmp, ((ailsa_data_s *)e->next->next->data)->data->text,
+			  ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		else
+			printf("\t%s\t\t\t%s\t%s\n", tmp, ((ailsa_data_s *)e->next->next->data)->data->text,
+			  ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		e = ailsa_move_down_list(e, total);
+	}
 	cleanup:
-		clean_dbdata_struct(data);
+		ailsa_list_full_clean(pack);
+		ailsa_list_full_clean(res);
 		return retval;
 }
 
 int
 list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 {
-	int retval = 0, count = 0;
-	dbdata_s *data = 0;
-	cbc_s *cbs;
-	cbc_syspack_arg_s *cspa, *list;
+	if (!(cbc) || !(css))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = 2;
+	size_t len;
+	char *package = css->name;
+	char *type, *field;
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack_arg(&cspa);
-	cbs->sysarg = cspa;
-// First run query for arguments
-	if ((retval = cbc_run_query(cbc, cbs, SYSARG)) == NO_RECORDS) {
-		fprintf(stderr, "\
-There are no arguments configured in the database for any package\n");
+	if ((retval = cmdb_add_string_to_list(package, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package name to list");
 		goto cleanup;
-	} else if (retval != 0)
-		goto cleanup;
-	init_multi_dbdata_struct(&data, 1);
-	snprintf(data->args.text, URL_S, "%s", css->name);
-	if ((retval = cbc_run_search(cbc, data, SYSPACK_ID_ON_NAME)) == 0) {
-		fprintf(stderr, "Package %s not in the database?\n", css->name);
-		retval = NO_RECORDS;
-		goto cleanup;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple id's for package %s??\n", css->name);
 	}
-	retval = 0;
-	list = cspa;
-	while (list) {
-		if (list->syspack_id == data->fields.number) {
-			printf("%s\t%s\t%s\n", css->name, list->field, list->type);
-			count++;
-		}
-		list = list->next;
+	if ((retval = ailsa_argument_query(cbc, SYS_PACK_ARGS_ON_NAME, pack, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYS_PACK_ARGS_ON_NAME query failed");
+		goto cleanup;
 	}
-	if (count == 0)
-		printf("Package %s has no arguments in the database\n", css->name);
-	goto cleanup;
+	if (res->total == 0) {
+		ailsa_syslog(LOG_INFO, "No arguments configured for package %s", package);
+		goto cleanup;
+	}
+	if ((res->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Query returned wrong number of elements?");
+		goto cleanup;
+	}
+	e = res->head;
+	printf("Arguments available for package %s\n", package);
+	printf("Argument\t\tType\n");
+	while (e) {
+		field = ((ailsa_data_s *)e->data)->data->text;
+		type = ((ailsa_data_s *)e->next->data)->data->text;
+		len = strlen(field);
+		if (len > 23)
+			printf("%s\n\t\t\t%s\n", field, type);
+		else if (len > 15)
+			printf("%s\t%s\n", field, type);
+		else if (len > 7)
+			printf("%s\t\t%s\n", field, type);
+		else
+			printf("%s\t\t\t%s\n", field, type);
+		e = ailsa_move_down_list(e, total);
+	}
 	cleanup:
-		clean_dbdata_struct(data);
-		clean_cbc_struct(cbs);
+		ailsa_list_full_clean(pack);
+		ailsa_list_full_clean(res);
 		return retval;
 }
 

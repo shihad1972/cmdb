@@ -85,7 +85,8 @@ enum {			// SQL BASIC QUERIES
 	PARTITION_SCHEME_NAMES,
 	BUILD_DOMAIN_NAMES,
 	BUILD_DOMAIN_NETWORKS,
-	FWD_ZONE_CONFIG
+	FWD_ZONE_CONFIG,
+	SYSTEM_PACKAGE_NAMES
 };
 
 enum {			// SQL ARGUMENT QUERIES
@@ -134,7 +135,11 @@ enum {			// SQL ARGUMENT QUERIES
 	NAME_SERVERS_ON_NAME,
 	ZONE_SOA_ON_NAME,
 	NS_MX_SRV_RECORDS,
-	ZONE_RECORDS_ON_NAME
+	ZONE_RECORDS_ON_NAME,
+	SYS_PACK_DETAILS_ON_DOMAIN,
+	SYS_PACK_DETAILS_ON_NAME_DOMAIN,
+	SYS_PACK_DETAILS_MIN,
+	SYS_PACK_ARGS_ON_NAME
 };
 
 enum {			// SQL INSERT QUERIES
@@ -266,6 +271,9 @@ set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned lo
 
 void
 cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data);
+
+int
+ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

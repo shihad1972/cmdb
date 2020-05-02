@@ -217,9 +217,9 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
 		} else if (opt == 'n') {
-			cdl->domain = strndup(optarg, RBUFF_S);
+			cdl->domain = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 't') {
-			cdl->ntpserver = strndup(optarg, RBUFF_S);
+			cdl->ntpserver = strndup(optarg, DOMAIN_LEN);
 			cdl->confntp = 1;
 		} else if (opt == 'v') {
 			cdl->action = CVERSION;
