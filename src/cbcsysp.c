@@ -47,6 +47,9 @@
 #include "cbc_base_sql.h"
 #include "cbcsysp.h"
 
+static int
+validate_cbcsysp_comm_line(cbc_sysp_s *cbs);
+
 int
 main(int argc, char *argv[])
 {
@@ -167,7 +170,48 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	if (argc == 1)
 		retval = DISPLAY_USAGE;
 	if ((retval != DISPLAY_USAGE) && (retval != CVERSION))
-		retval = check_sysp_comm_line_for_errors(cbcs);
+		if ((retval = validate_cbcsysp_comm_line(cbcs)) != 0)
+			return retval;
+	return check_sysp_comm_line_for_errors(cbcs);
+}
+
+static int
+validate_cbcsysp_comm_line(cbc_sysp_s *cbs)
+{
+	if (!(cbs))
+		return AILSA_NO_DATA;
+	int retval = 0;
+
+	if (cbs->domain) {
+		if (ailsa_validate_input(cbs->domain, DOMAIN_REGEX)) {
+			ailsa_syslog(LOG_ERR, "Domain invalid");
+			return USER_INPUT_INVALID;
+		}
+	}
+	if (cbs->field) {
+		if (ailsa_validate_input(cbs->field, PACKAGE_FIELD_REGEX)) {
+			ailsa_syslog(LOG_ERR, "Field invalid");
+			return USER_INPUT_INVALID;
+		}
+	}
+	if (cbs->arg) {
+		if (ailsa_validate_input(cbs->arg, DOMAIN_REGEX)) {
+			ailsa_syslog(LOG_ERR, "Args invalid");
+			return USER_INPUT_INVALID;
+		}
+	}
+	if (cbs->name) {
+		if (ailsa_validate_input(cbs->name, DOMAIN_REGEX)) {
+			ailsa_syslog(LOG_ERR, "Name invalid");
+			return USER_INPUT_INVALID;
+		}
+	}
+	if (cbs->type) {
+		if (ailsa_validate_input(cbs->type, DOMAIN_REGEX)) {
+			ailsa_syslog(LOG_ERR, "Type invalid");
+			return USER_INPUT_INVALID;
+		}
+	}
 	return retval;
 }
 
@@ -207,7 +251,7 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 			retval = DISPLAY_USAGE;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
-			fprintf(stderr, "Need both package name and field to list config\n\n");
+			fprintf(stderr, "Need both package name and field to add or remove config\n\n");
 			retval = DISPLAY_USAGE;
 		}
 	}
@@ -364,19 +408,23 @@ list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 	}
 	e = res->head;
 	printf("Arguments available for package %s\n", package);
-	printf("Argument\t\tType\n");
+	printf("Argument\t\t\t\tType\n");
 	while (e) {
 		field = ((ailsa_data_s *)e->data)->data->text;
 		type = ((ailsa_data_s *)e->next->data)->data->text;
 		len = strlen(field);
-		if (len > 23)
-			printf("%s\n\t\t\t%s\n", field, type);
-		else if (len > 15)
+		if (len > 39)
+			printf("%s\n\t\t\t\t%s\n", field, type);
+		else if (len > 31)
 			printf("%s\t%s\n", field, type);
-		else if (len > 7)
+		else if (len > 23)
 			printf("%s\t\t%s\n", field, type);
-		else
+		else if (len > 15)
 			printf("%s\t\t\t%s\n", field, type);
+		else if (len > 7)
+			printf("%s\t\t\t\t%s\n", field, type);
+		else
+			printf("%s\t\t\t\t\t%s\n", field, type);
 		e = ailsa_move_down_list(e, total);
 	}
 	cleanup:

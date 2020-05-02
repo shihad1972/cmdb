@@ -96,7 +96,8 @@ enum {			/* regex search codes */
 	TXTRR_REGEX,
 	CN_REGEX,
 	DC_REGEX,
-	TIMEZONE_REGEX
+	TIMEZONE_REGEX,
+	PACKAGE_FIELD_REGEX
 };
 
 enum {			// Client commands
