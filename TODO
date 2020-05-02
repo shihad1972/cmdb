@@ -15,7 +15,7 @@ Programs moved to new AILLIST database model:
 	dnsa
 	cbc
 	cbcvarient	**Done**
-	cbcdomain
+	cbcdomain	**Done**
 	cbcos		**Done**
 	cbcsysp
 	cbcscript

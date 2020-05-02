@@ -355,6 +355,12 @@ typedef struct cbc_dhcp_s { // Info for a dhcp network
         struct cbc_dhcp_s *next;
 } cbc_dhcp_s;
 
+typedef struct cbc_iface_s { // Info about interface
+        char *name;
+        uint32_t ip, sip, fip, nm, bc, nw;
+        struct cbc_iface_s *next;
+} cbc_iface_s;
+
 typedef struct cbc_dhcp_string_s {
 	char domain[RBUFF_S];
 	char ns[INET6_ADDRSTRLEN];
@@ -364,12 +370,6 @@ typedef struct cbc_dhcp_string_s {
 	char ip[INET6_ADDRSTRLEN];
 	struct cbc_dhcp_string_s *next;
 } cbc_dhcp_string_s;
-
-typedef struct cbc_iface_s { // Info about interface
-        char *name;
-        uint32_t ip, sip, fip, nm, bc, nw;
-        struct cbc_iface_s *next;
-} cbc_iface_s;
 
 // Initialiser functions
 

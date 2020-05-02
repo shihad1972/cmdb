@@ -32,8 +32,9 @@
 #include <pwd.h>
 #include <errno.h>
 #include <syslog.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
 #include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
@@ -91,24 +92,6 @@ ailsa_clean_hard(void *hard)
 	free(h);
 }
 
-void
-ailsa_clean_iface(void *iface)
-{
-	CMDBIFACE *i;
-
-	i = iface;
-	if (i->name)
-		my_free(i->name);
-	if (i->type)
-		my_free(i->type);
-	if (i->ip)
-		my_free(i->ip);
-	if (i->nm)
-		my_free(i->nm);
-	if (i->mac)
-		my_free(i->mac);
-	free(i);
-}
 void
 ailsa_clean_mkvm(void *vm)
 {
@@ -303,6 +286,38 @@ ailsa_clean_data(void *data)
 #endif
 	my_free(tmp->data);
 	my_free(tmp);
+}
+
+void
+ailsa_clean_dhcp(void *dhcp)
+{
+	if (!(dhcp))
+		return;
+	ailsa_dhcp_s *data = dhcp;
+	if (data->iname)
+		my_free(data->iname);
+	if (data->dname)
+		my_free(data->dname);
+	if (data->network)
+		my_free(data->network);
+	if (data->nameserver)
+		my_free(data->nameserver);
+	if (data->gateway)
+		my_free(data->gateway);
+	if (data->netmask)
+		my_free(data->netmask);
+	my_free(data);
+}
+
+void
+ailsa_clean_iface(void *iface)
+{
+	if (!(iface))
+		return;
+	ailsa_iface_s *data = iface;
+	if (data->name)
+		my_free(data->name);
+	my_free(data);
 }
 
 void
@@ -603,6 +618,22 @@ ailsa_db_data_list_init(void)
 	return list;
 }
 
+AILLIST *
+ailsa_dhcp_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	ailsa_list_init(list, ailsa_clean_dhcp);
+	return list;
+}
+
+AILLIST *
+ailsa_iface_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	ailsa_list_init(list, ailsa_clean_iface);
+	return list;
+}
+
 ailsa_data_s *
 ailsa_db_text_data_init(void)
 {
@@ -748,4 +779,97 @@ cmdb_get_string_from_data_list(AILLIST *list, size_t n)
 	if (data->type == AILSA_DB_TEXT)
 		str = data->data->text;
 	return str;
+}
+
+int
+ailsa_get_iface_list(AILLIST *list)
+{
+/* This function completely ignores IPv6 addresses. In fact, many areas of
+ * this software collection ignore the existance of IPv6. *sigh*
+ */
+
+	if (!(list))
+		return AILSA_NO_DATA;
+	int retval;
+	struct ifaddrs *iface, *p;
+	ailsa_iface_s *ice;
+
+	if ((retval = getifaddrs(&iface)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get interface list: %s", strerror(errno));
+		goto cleanup;
+	}
+
+	p = iface;
+	while (p) {
+		if (p->ifa_addr->sa_family == AF_INET) {
+			ice = ailsa_calloc(sizeof(ailsa_iface_s), "ice in ailsa_get_iface_list");
+			ice->name = strndup(p->ifa_name, SERVICE_LEN);
+			ice->ip = ntohl(((struct sockaddr_in *)p->ifa_addr)->sin_addr.s_addr);
+			ice->nm = ntohl(((struct sockaddr_in *)p->ifa_netmask)->sin_addr.s_addr);
+			ice->nw = ice->ip & ice->nm;
+			ice->bc = ice->nw | (~ice->nm);
+			ice->sip = ice->nw + 1;
+			ice->fip = ice->bc - 1;
+			if ((retval = ailsa_list_insert(list, ice)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot insert iface into list");
+				goto cleanup;
+			}
+		}
+		p = p->ifa_next;
+	}
+	cleanup:
+		if (iface)
+			freeifaddrs(iface);
+		return retval;
+}
+
+int
+ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list)
+{
+	if (!(cbs) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = 5;
+	uint32_t ip;
+	ailsa_dhcp_s *dhcp;
+	AILLIST *dom = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = ailsa_basic_query(cbs, BUILD_DOMAIN_NETWORKS, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NETWORKS query failed");
+		goto cleanup;
+	}
+	if ((dom->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NETWORKS returned wrong number of items?");
+		goto cleanup;
+	}
+	e = dom->head;
+	while (e) {
+		dhcp = ailsa_calloc(sizeof(ailsa_dhcp_s), "dhcp in ailsa_get_bdom_list");
+		dhcp->network = ailsa_calloc(INET6_ADDRSTRLEN, "dhcp->network in ailsa_get_bdom_list");
+		dhcp->gateway = ailsa_calloc(INET6_ADDRSTRLEN, "dhcp->gateway in ailsa_get_bdom_list");
+		dhcp->netmask = ailsa_calloc(INET6_ADDRSTRLEN, "dhcp->netmask in ailsa_get_bdom_list");
+		dhcp->nameserver = ailsa_calloc(INET6_ADDRSTRLEN, "dhcp->nameserver in ailsa_get_bdom_list");
+		dhcp->dname = strndup(((ailsa_data_s *)e->data)->data->text, DOMAIN_LEN);
+		dhcp->ns = ((ailsa_data_s *)e->next->data)->data->number;
+		dhcp->gw = ((ailsa_data_s *)e->next->next->next->data)->data->number;
+		dhcp->nm = ((ailsa_data_s *)e->next->next->next->next->data)->data->number;
+		dhcp->nw = ((ailsa_data_s *)e->next->next->data)->data->number & dhcp->nm;
+		ip = htonl((uint32_t)dhcp->ns);
+		inet_ntop(AF_INET, &ip, dhcp->nameserver, INET6_ADDRSTRLEN);
+		ip = htonl((uint32_t)dhcp->gw);
+		inet_ntop(AF_INET, &ip, dhcp->gateway, INET6_ADDRSTRLEN);
+		ip = htonl((uint32_t)dhcp->nm);
+		inet_ntop(AF_INET, &ip, dhcp->netmask, INET6_ADDRSTRLEN);
+		ip = htonl((uint32_t)dhcp->nw);
+		inet_ntop(AF_INET, &ip, dhcp->network, INET6_ADDRSTRLEN);
+		if ((retval = ailsa_list_insert(list, dhcp)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert into dhcp list");
+			goto cleanup;
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+	cleanup:
+		ailsa_list_full_clean(dom);
+		return retval;
 }

@@ -22,6 +22,7 @@
 #ifndef __AILSACMDB_H__
 # define __AILSACMDB_H__
 # include <stdlib.h>
+# include <stdint.h>
 # include <time.h>
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
@@ -180,25 +181,6 @@ enum {			// DB Query Types
 	DBINSERT,
 	DBUPDATE
 };
-
-typedef union ailsa_dbdata_u {
-	char *string;
-	unsigned long int number;
-	short int small;
-	char tiny;
-	double point;
-} AILDATAU;
-
-typedef struct ailsa_dbdata_s {
-	AILDATAU *fields;
-	AILDATAU *args;
-} AILDATA;
-
-typedef struct ailsa_db_s {
-	char *query;
-	AILLIST *data;
-	char type;
-} AILSADB;
 
 enum {			// MAC Address generation types
 	AILSA_ESX = 1,
@@ -391,20 +373,22 @@ typedef struct ailsa_data_s {
 	unsigned int type;
 } ailsa_data_s;
 
-// SQL types
+typedef struct ailsa_dhcp_s {
+	char *iname;    // Interface Name
+	char *dname;    // Domain Name
+	char *network;
+	char *gateway;
+	char *nameserver;
+	char *netmask;
+	unsigned long int gw, nw, nm, ns, ip;
+} ailsa_dhcp_s;
 
-/*
-typedef struct ailsa_db_value_s {
+typedef struct ailsa_iface_s {
 	char *name;
-	unsigned int type;
-} AILDBV;
+	int flag;
+	uint32_t ip, sip, fip, nm, bc, nw;
+} ailsa_iface_s;
 
-typedef struct ailsa_simple_select_s {
-	AILLIST	*fields;
-	AILLIST	*args;
-	char *query;
-} AILSS;
-*/
 // library version info
 
 void
@@ -466,6 +450,10 @@ void
 ailsa_init_data(ailsa_data_s *data);
 void
 ailsa_clean_data(void *data);
+void
+ailsa_clean_dhcp(void *data);
+void
+ailsa_clean_iface(void *data);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -568,6 +556,12 @@ generate_zone_serial(void);
 int
 cmdb_get_port_number(char *proto, char *service, int *port);
 
+int
+ailsa_get_iface_list(AILLIST *list);
+
+int
+ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
+
 // These should probably be moved to ailsasql.h
 
 void
@@ -600,6 +594,12 @@ ailsa_init_client_info(struct client_info *ci);
 AILLIST *
 ailsa_db_data_list_init(void);
 
+AILLIST *
+ailsa_iface_list_init(void);
+
+AILLIST *
+ailsa_dhcp_list_init(void);
+
 ailsa_data_s *
 ailsa_db_text_data_init(void);
 
@@ -613,8 +613,6 @@ ailsa_db_sint_data_init(void);
 
 void
 ailsa_clean_hard(void *hard);
-void
-ailsa_clean_iface(void *iface);
 void
 ailsa_clean_route(void *route);
 void

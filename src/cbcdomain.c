@@ -31,11 +31,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-/* For freeBSD ?? */
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-/* End freeBSD */
 #include <arpa/inet.h>
 #ifdef HAVE_GETOPT_H
 # define _GNU_SOURCE
@@ -103,11 +104,8 @@ cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *doma
 static int
 write_dhcp_net_config(ailsa_cmdb_s *cbs);
 
-static int
-fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh);
-
 static void
-fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst);
+write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom);
 
 int
 main(int argc, char *argv[])
@@ -300,8 +298,8 @@ list_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *elem;
 
-	if ((retval = ailsa_basic_query(cbs, ALL_BUILD_DOMAINS, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "ALL_BUILD_DOMAINS query failed");
+	if ((retval = ailsa_basic_query(cbs, BUILD_DOMAIN_NAMES, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NAMES query failed");
 		goto cleanup;
 	}
 	elem = list->head;
@@ -578,97 +576,75 @@ static int
 write_dhcp_net_config(ailsa_cmdb_s *cbs)
 {
 	if (!(cbs))
-		return CBC_NO_DATA;
-	int retval = 0;
-	char filename[CONF_S];
-	cbc_s *cbc;
-	cbc_dhcp_s *dhcp = 0;
-// Why am I bothering to use string_len_s here?
-	string_len_s *conf = 0;
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *ice = ailsa_iface_list_init();
+	AILLIST *dom = ailsa_dhcp_list_init();
 
-	if (!(conf = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "conf in write_dhcp_net_config");
-	initialise_cbc_s(&cbc);
-	init_string_len(conf);
-	if (snprintf(filename, CONF_S, "%s/dhcpd.networks", cbs->dhcpconf) >= CONF_S)
-		fprintf(stderr, "filename for dhcpd.networks truncated!\n");
-	if ((retval = cbc_run_query(cbs, cbc, BUILD_DOMAIN)) != 0) {
-		if (retval == NO_RECORDS)
-			printf("No build domains configured\n");
-		else
-			printf("Build domain query failed\n");
+	if ((retval = ailsa_get_iface_list(ice)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get interface list");
 		goto cleanup;
 	}
-	if ((retval = get_net_list_for_dhcp(cbc->bdom, &dhcp)) != 0)
+	if ((retval = ailsa_get_bdom_list(cbs, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get domain list");
 		goto cleanup;
-	if ((retval = fill_dhcp_net_config(conf, dhcp)) != 0)
-		goto cleanup;
-	retval = write_file(filename, conf->string);
-	goto cleanup;
-
+	}
+	write_dhcp_config_file(cbs, ice, dom);
 	cleanup:
-		if (dhcp)
-			clean_cbc_dhcp(dhcp);
-		clean_cbc_struct(cbc);
-		clean_string_len(conf);
+		ailsa_list_full_clean(ice);
+		ailsa_list_full_clean(dom);
 		return retval;
 }
 
-static int
-fill_dhcp_net_config(string_len_s *conf, cbc_dhcp_s *dh)
-{
-	char *buff, *pos;
-	int retval = 0;
-	size_t len;
-	cbc_dhcp_s *list;
-	cbc_dhcp_string_s val;
-
-	if (!(conf) || !(dh))
-		return NULL_POINTER_PASSED;
-	if (!(buff = malloc(BUFF_S * 2)))
-		report_error(MALLOC_FAIL, "buff in fill_dhcp_net_config");
-	list = dh;
-	while(list) {
-		fill_dhcp_val(list, &val);
-		snprintf(buff, (BUFF_S * 2), "\
-  shared-network %s {\n\
-        option domain-name-servers %s;\n\
-        option domain-search \"%s\";\n\
-        option routers %s;\n\
-        subnet %s netmask %s {\n\
-                authoratative;\n\
-                next-server %s;\n\
-                filename \"pxelinux.0\";\n\
-        }\n\
-}\n\n", list->dname, val.ns, list->dom_search->string, val.gw, val.sn,
-        val.nm, val.ns);
-		len = strlen(buff);
-		if ((len + conf->size) > conf->len)
-			resize_string_buff(conf);
-		pos = conf->string + conf->size;
-		snprintf(pos, len + 1, "%s", buff);
-		conf->size += len;
-		list = list->next;
-	}
-	free(buff);
-	return retval;
-}
-
 static void
-fill_dhcp_val(cbc_dhcp_s *src, cbc_dhcp_string_s *dst)
+write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom)
 {
-	uint32_t ip_addr;
+	if (!(cbs) || !(ice) || !(dom))
+		return;
+	int flags, fd;
+	char *name = ailsa_calloc(DOMAIN_LEN, "name in cmdb_validate_fwd_zone");
+	ailsa_dhcp_s *dhcp;
+	ailsa_iface_s *iface;
+	mode_t um, mask;
+	AILELEM *d, *i;
 
-	ip_addr = htonl((uint32_t)src->ns);
-	inet_ntop(AF_INET, &ip_addr, dst->ns, INET6_ADDRSTRLEN);
-	ip_addr = htonl((uint32_t)src->gw);
-	inet_ntop(AF_INET, &ip_addr, dst->gw, INET6_ADDRSTRLEN);
-	ip_addr = htonl((uint32_t)src->nw);
-	inet_ntop(AF_INET, &ip_addr, dst->sn, INET6_ADDRSTRLEN);
-	ip_addr = htonl((uint32_t)src->nm);
-	inet_ntop(AF_INET, &ip_addr, dst->nm, INET6_ADDRSTRLEN);
-	ip_addr = htonl((uint32_t)src->ip);
-	inet_ntop(AF_INET, &ip_addr, dst->ip, INET6_ADDRSTRLEN);
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((snprintf(name, DOMAIN_LEN, "%s/dhcpd.networks", cbs->dhcpconf)) >= DOMAIN_LEN)
+		ailsa_syslog(LOG_ERR, "path truncated in write_dhcp_config_file");
+	if ((fd = open(name, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open file dhcpd.networks: %s\n", strerror(errno));
+		goto cleanup;
+	}
+	d = dom->head;
+	while (d) {
+		i = ice->head;
+		dhcp = d->data;
+		while (i) {
+			iface = i->data;
+			if ((iface->nw == dhcp->nw) && (iface->flag == 0)) {
+				iface->flag = 1;
+				dprintf(fd, "\
+  shared-network %s {\n\
+	option domain-name-servers %s;\n\
+	option domain-search \"%s\";\n\
+	option routers %s;\n\
+	subnet %s netmask %s {\n\
+		authoratative;\n\
+		next-server %s;\n\
+		filename \"pxelinux.0\";\n\
+	}\n\
+}\n\n", dhcp->dname, dhcp->nameserver, dhcp->dname, dhcp->gateway, dhcp->network, dhcp->netmask, dhcp->gateway);
+			}
+			i = i->next;
+		}
+		d = d->next;
+	}
+	close(fd);
+	mask = umask(um);
+	cleanup:
+		my_free(name);
 }
 
 static int

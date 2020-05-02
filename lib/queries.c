@@ -61,7 +61,8 @@ const char *basic_queries[] = {
 "SELECT locale_id FROM default_locale WHERE locale_id > 0", // DEFAULT_LOCALE
 "SELECT locale_id, name FROM locale", // LOCALE_NAMES
 "SELECT scheme_name, lvm from seed_schemes", // PARTITION_SCHEME_NAMES
-"SELECT domain FROM build_domain", // ALL_BUILD_DOMAINS
+"SELECT domain FROM build_domain", // BUILD_DOMAIN_NAMES
+"SELECT domain, ns, start_ip, gateway, netmask from build_domain", // BUILD_DOMAIN_NETWORKS
 "SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
 };
 
@@ -1287,7 +1288,7 @@ ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results)
 		type = sqlite3_column_type(state, (int)i);
 		switch(type) {
 		case SQLITE_INTEGER:
-			tmp->data->number = (unsigned long int)sqlite3_column_int(state, (int)i);
+			tmp->data->number = (unsigned long int)sqlite3_column_int64(state, (int)i);
 			tmp->type = AILSA_DB_LINT;
 			break;
 	 	case SQLITE_TEXT:  // Can use sqlite3_column_bytes() to get size
