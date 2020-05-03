@@ -374,7 +374,7 @@ add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		goto cleanup;
 	}
 	if ((retval = cbc_get_boot_files(cmc, col->alias, col->version, col->arch, col->ver_alias)) != 0)
-		fprintf(stderr, "Unable to download boot files\n");
+		ailsa_syslog(LOG_ERR, "Unable to download boot files\n");
 
 	cleanup:
 		ailsa_list_destroy(os);
@@ -498,14 +498,14 @@ cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 			printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
 			count++;
 			if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
-				fprintf(stderr, "Error downloading OS\n");
+				ailsa_syslog(LOG_ERR, "Error downloading OS\n");
 		} else {
 			cbcos_check_for_os(col, head, &test);
 			if ((test & 56) == 56) {
 				printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
 				count ++;
 				if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
-					fprintf(stderr, "Error downloading OS\n");
+					ailsa_syslog(LOG_ERR, "Error downloading OS\n");
 			}
 		}
 		if (elem->next)
@@ -517,7 +517,7 @@ cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		test = test & 7;
 	}
 	if (count == 0)
-		fprintf(stderr, "No OS found to download\n");
+		ailsa_syslog(LOG_ERR, "No OS found to download\n");
 	cleanup:
 		ailsa_list_destroy(list);
 		my_free(list);

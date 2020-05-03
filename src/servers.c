@@ -321,7 +321,7 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 				coid = name->next;
 		}
 	} else {
-		fprintf(stderr, "No servers found in the database\n");
+		ailsa_syslog(LOG_INFO, "No servers found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -371,7 +371,7 @@ cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 			printf("No Hardware\n");
 		}
 	} else {
-		fprintf(stderr, "Cannot find server %s\n", cm->name);
+		ailsa_syslog(LOG_ERR, "Cannot find server %s\n", cm->name);
 	}
 
 	cleanup:
@@ -451,7 +451,7 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		printf("Services for server %s:\n", cm->name);
 		cmdb_display_services(results);
 	} else {
-		fprintf(stderr, "No Services for server %s\n", cm->name);
+		ailsa_syslog(LOG_ERR, "No Services for server %s\n", cm->name);
 	}
 	cleanup:
 		ailsa_list_destroy(args);
@@ -511,7 +511,7 @@ cmdb_list_service_types(ailsa_cmdb_s *cc)
 			name = type->next;
 		}
 	} else {
-		fprintf(stderr, "No service types found in database\n");
+		ailsa_syslog(LOG_ERR, "No service types found in database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -539,7 +539,7 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		printf("Hardware for server %s:\n", cm->name);
 		cmdb_display_hardware(results);
 	} else {
-		fprintf(stderr, "No hardware for server %s\n", cm->name);
+		ailsa_syslog(LOG_ERR, "No hardware for server %s\n", cm->name);
 	}
 	cleanup:
 		ailsa_list_destroy(args);
@@ -602,7 +602,7 @@ cmdb_list_hardware_types(ailsa_cmdb_s *cc)
 			class = type->next;
 		}
 	} else {
-		fprintf(stderr, "No hardware types found in the database\n");
+		ailsa_syslog(LOG_ERR, "No hardware types found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -637,7 +637,7 @@ cmdb_list_vm_server_hosts(ailsa_cmdb_s *cc)
 			name = type->next;
 		}
 	} else {
-		fprintf(stderr, "No virtual machine hosts found in the database\n");
+		ailsa_syslog(LOG_ERR, "No virtual machine hosts found in the database\n");
 	}
 	cleanup:
 		ailsa_list_destroy(list);
@@ -665,7 +665,7 @@ cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		printf("VM host %s built virtual machines:\n", cm->name);
 		cmdb_display_built_vms(results);
 	} else {
-		fprintf(stderr, "VM Host has no built virtual machines\n");
+		ailsa_syslog(LOG_ERR, "VM Host has no built virtual machines\n");
 	}
 	cleanup:
 		ailsa_list_destroy(args);

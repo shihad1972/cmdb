@@ -231,7 +231,7 @@ main(int argc, char *argv[])
 	else if (cvcl->action == RM_CONFIG && cvcl->type == CPACKAGE)
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
-		fprintf(stderr, "Cowardly refusal to modify varients\n");
+		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
 	else
 		printf("Unknown action type\n");
 	if (retval == OS_NOT_FOUND) {
@@ -360,15 +360,14 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 	if (cvl->action != LIST_CONFIG && !(cvl->varient) && !(cvl->valias))
 		return NO_VARIENT;
 	if ((cvl->action == ADD_CONFIG) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
-		fprintf(stderr, "\
-You need to supply both a varient name and valias when adding\n");
+		ailsa_syslog(LOG_ERR, "You need to supply both a varient name and valias when adding\n");
 		return DISPLAY_USAGE;
 	}
 	if (cvl->type == CPACKAGE) {
 		if (!(cvl->package))
 			return NO_PACKAGE;
 		if ((cvl->action != ADD_CONFIG) && (cvl->action != RM_CONFIG)) {
-			fprintf(stderr, "Can only add or remove packages\n");
+			ailsa_syslog(LOG_ERR, "Can only add or remove packages\n");
 			return WRONG_ACTION;
 		}
 		if (!(cvl->os) && !(cvl->alias))

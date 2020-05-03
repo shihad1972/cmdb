@@ -96,7 +96,7 @@ main(int argc, char *argv[])
 	else if (cl->action == SET_DEFAULT)
 		retval = set_default_locale(ccs, cl);
 	else {
-		fprintf(stderr, "Action not yet implemented\n");
+		ailsa_syslog(LOG_ERR, "Action not yet implemented\n");
 		retval = DISPLAY_USAGE;
 	}
 	ailsa_clean_cmdb(ccs);
@@ -171,19 +171,19 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		return NO_ACTION;
 	if (cl->action == ADD_CONFIG) {
 		if (!(cl->language)) {
-			fprintf(stderr, "No language specified\n\n");
+			ailsa_syslog(LOG_ERR, "No language specified\n\n");
 			return DISPLAY_USAGE;
 		} else if (!(cl->keymap)) {
-			fprintf(stderr, "No keymap specified\n\n");
+			ailsa_syslog(LOG_ERR, "No keymap specified\n\n");
 			return DISPLAY_USAGE;
 		} else if (!(cl->locale)) {
-			fprintf(stderr, "No locale specified\n\n");
+			ailsa_syslog(LOG_ERR, "No locale specified\n\n");
 			return DISPLAY_USAGE;
 		} else if (!(cl->timezone)) {
-			fprintf(stderr, "No timezone specified\n\n");
+			ailsa_syslog(LOG_ERR, "No timezone specified\n\n");
 			return DISPLAY_USAGE;
 		} else if (!(cl->country)) {
-			fprintf(stderr, "No country specified\n\n");
+			ailsa_syslog(LOG_ERR, "No country specified\n\n");
 			return DISPLAY_USAGE;
 		}
 	}

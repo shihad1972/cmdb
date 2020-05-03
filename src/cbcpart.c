@@ -130,7 +130,7 @@ main (int argc, char *argv[])
 	else if (cpl->action == RM_CONFIG)
 		retval = remove_scheme_part(cmc, cpl);
 	if (retval == WRONG_TYPE)
-		fprintf(stderr, "Wrong type specified. Neither partition or scheme?\n");
+		ailsa_syslog(LOG_ERR, "Wrong type specified. Neither partition or scheme?\n");
 	ailsa_clean_cmdb(cmc);
 	clean_cbcpart_comm_line(cpl);
 	exit (retval);
@@ -219,7 +219,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		}
 		else if (opt == 'g') {
 			if (cpl->lvm < 1) {
-				fprintf(stderr, "LVM not set before logvol\n");
+				ailsa_syslog(LOG_ERR, "LVM not set before logvol\n");
 				return DISPLAY_USAGE;
 			}
 			cpl->log_vol = ailsa_calloc(MAC_S, errmsg);
@@ -235,19 +235,19 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
 		} else if (opt == 'i') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				fprintf(stderr, "minimum not a number?\n");
+				ailsa_syslog(LOG_ERR, "minimum not a number?\n");
 				return USER_INPUT_INVALID;
 			}
 			cpl->min = strtoul(optarg, NULL, 10);
 		} else if (opt == 'x') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				fprintf(stderr, "maximum not a number?\n");
+				ailsa_syslog(LOG_ERR, "maximum not a number?\n");
 				return USER_INPUT_INVALID;
 			}
 			cpl->max = strtoul(optarg, NULL, 10);
 		} else if (opt == 'y') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				fprintf(stderr, "priority not a number?\n");
+				ailsa_syslog(LOG_ERR, "priority not a number?\n");
 				return USER_INPUT_INVALID;
 			}
 			cpl->pri = strtoul(optarg, NULL, 10);
@@ -271,27 +271,27 @@ validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 
 	if (cpl->fs) {
 		if ((ailsa_validate_input(cpl->fs, FS_REGEX)) < 0) {
-			fprintf(stderr, "filesystem (-f) invalid!\n");
+			ailsa_syslog(LOG_ERR, "filesystem (-f) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->log_vol) {
 		if ((ailsa_validate_input(cpl->log_vol, LOGVOL_REGEX)) < 0) {
-			fprintf(stderr, "logical volume name (-g) invalid!\n");
+			ailsa_syslog(LOG_ERR, "logical volume name (-g) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->partition) {
 		if ((ailsa_validate_input(cpl->partition, PATH_REGEX)) < 0) {
-			fprintf(stderr, "path (-t) invalid!\n");
+			ailsa_syslog(LOG_ERR, "path (-t) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->option) {
 		if ((ailsa_validate_input(cpl->option, FS_REGEX)) < 0) {
-			fprintf(stderr, "partition option (-o) invalid!\n");
+			ailsa_syslog(LOG_ERR, "partition option (-o) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	} else if (cpl->scheme) {
 		if ((ailsa_validate_input(cpl->scheme, NAME_REGEX)) < 0) {
-			fprintf(stderr, "partition scheme name (-n) invalid!\n");
+			ailsa_syslog(LOG_ERR, "partition scheme name (-n) invalid!\n");
 			return USER_INPUT_INVALID;
 		}
 	}

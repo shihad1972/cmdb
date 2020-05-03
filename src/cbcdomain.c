@@ -491,7 +491,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		goto cleanup;
 	}
 	if ((retval = write_dhcp_net_config(cbs)) != 0)
-		fprintf(stderr, "Cannot write new dhcpd.networks file\n");
+		ailsa_syslog(LOG_ERR, "Cannot write new dhcpd.networks file\n");
 #ifdef HAVE_DNSA
 	if ((retval = cmdb_check_for_fwd_zone(cbs, domain)) > 0) {
 		ailsa_syslog(LOG_INFO, "Zone %s already in dnsa database", domain);
@@ -537,7 +537,7 @@ remove_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		goto cleanup;
 	}
 	if ((retval = write_dhcp_net_config(cbs)) != 0)
-		fprintf(stderr, "Cannot write new dhcpd.networks file\n");
+		ailsa_syslog(LOG_ERR, "Cannot write new dhcpd.networks file\n");
 
 	cleanup:
 		ailsa_list_full_clean(dom);
