@@ -46,6 +46,23 @@ enum {			/* cbcdomain modify types */
 	LOGSERV = 256
 };
 
+
+enum {
+        SPACKAGE = 1,
+        SPACKARG = 2,
+        SPACKCNF = 3
+};
+
+typedef struct cbc_sysp_s {
+	char *arg;
+	char *domain;
+	char *field;
+	char *name;
+	char *type;
+	short int action;
+	short int what;
+} cbc_sysp_s;
+
 typedef struct cbcdomain_comm_line_s {
 	char *domain;
 	char *ntpserver;

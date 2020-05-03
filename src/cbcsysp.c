@@ -45,10 +45,45 @@
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "cbcsysp.h"
 
 static int
 validate_cbcsysp_comm_line(cbc_sysp_s *cbs);
+
+static void
+clean_cbcsysp_s(cbc_sysp_s *cbcs);
+
+static int
+parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs);
+
+static int
+check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs);
+
+static int
+list_cbc_syspackage(ailsa_cmdb_s *cbc);
+
+static int
+list_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *css);
+
+static int
+list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css);
+
+static int
+add_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs);
+
+static int
+add_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs);
+
+static int
+add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
+
+static int
+rem_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
+
+static int
+rem_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
+
+static int
+rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs);
 
 int
 main(int argc, char *argv[])
@@ -615,51 +650,5 @@ rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 		retval = 0;
 	}
 	clean_dbdata_struct(data);
-	return retval;
-}
-
-// Helper functions
-
-void
-pack_syspack(cbc_syspack_s *spack, cbc_sysp_s *cbs)
-{
-	snprintf(spack->name, URL_S, "%s", cbs->name);
-	spack->cuser = spack->muser = (unsigned long int)getuid();
-}
-
-void
-pack_sysarg(cbc_syspack_arg_s *cpsa, cbc_sysp_s *cbs)
-{
-	snprintf(cpsa->type, MAC_S, "%s", cbs->type);
-	snprintf(cpsa->field, URL_S, "%s", cbs->field);
-	cpsa->cuser = cpsa->muser = (unsigned long int)getuid();
-}
-
-void
-pack_sysconf(cbc_syspack_conf_s *cbcs, cbc_sysp_s *cbs)
-{
-	snprintf(cbcs->arg, RBUFF_S, "%s", cbs->arg);
-	cbcs->cuser = cbcs->muser = (unsigned long int)getuid();
-}
-
-int
-get_syspack_ids(ailsa_cmdb_s *cbc, cbc_sysp_s *css, dbdata_s *data, int query)
-{
-	int retval = 0;
-	if ((retval = get_build_domain_id(cbc, css->domain, &(data->args.number))) != 0)
-		return NO_BD_CONFIG;
-	if (query != SYSP_INFO_ON_BD_ID) {
-		if ((retval = get_system_package_id(cbc, css->name, &(data->next->args.number))) != 0) {
-			fprintf(stderr, "Cannot find package %s\n", css->name);
-			return NO_BUILD_PACKAGES;
-		}
-	}
-	if (query == SYSP_INFO_SYS_AND_BD_ID) {
-		if ((retval = get_syspack_arg_id(cbc, css->field, data->next->args.number,
-					&(data->next->next->args.number))) != 0) {
-			fprintf(stderr, "Cannot find package field %s\n", css->field);
-			return NO_PACKAGE_CONFIG;
-		}
-	}
 	return retval;
 }
