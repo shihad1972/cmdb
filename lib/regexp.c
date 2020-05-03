@@ -54,7 +54,7 @@ const char *regexps[] = {
 	"^cn\\=[a-zA-Z0-9]*(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
 	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
 	"^[a-zA-Z]*[a-zA-Z0-9]*[\\-/]*[a-zA-Z0-9]*$",
-	"^[a-zA-Z]+[a-zA-Z0-9]*([\\-][a-zA-Z0-9])*(/[a-zA-Z0-9]+([\\_a-zA-Z0-9]*))"
+	"^[a-zA-Z]+[a-zA-Z0-9]*[\\-]?[a-zA-Z0-9]*/[a-zA-Z0-9]+([\\_\\-]?[a-zA-Z0-9])*$"
 };
 
 int

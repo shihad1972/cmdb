@@ -139,7 +139,9 @@ enum {			// SQL ARGUMENT QUERIES
 	SYS_PACK_DETAILS_ON_DOMAIN,
 	SYS_PACK_DETAILS_ON_NAME_DOMAIN,
 	SYS_PACK_DETAILS_MIN,
-	SYS_PACK_ARGS_ON_NAME
+	SYS_PACK_ARGS_ON_NAME,
+	SYSTEM_PACKAGE_ID,
+	SYSTEM_PACKAGE_ARG_ID
 };
 
 enum {			// SQL INSERT QUERIES
@@ -159,7 +161,10 @@ enum {			// SQL INSERT QUERIES
 	INSERT_PARTITION,
 	INSERT_PART_OPTION,
 	INSERT_BUILD_DOMAIN,
-	INSERT_BUILD_DOMAIN_ZONE
+	INSERT_BUILD_DOMAIN_ZONE,
+	INSERT_SYSTEM_PACKAGE,
+	INSERT_SYSTEM_PACKAGE_ARGS,
+	INSERT_SYSTEM_PACKAGE_CONF
 };
 
 enum {			// SQL DELETE QUERIES
@@ -241,6 +246,9 @@ int
 cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
@@ -251,6 +259,12 @@ cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc
 
 int
 cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_sys_pack_arg_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);

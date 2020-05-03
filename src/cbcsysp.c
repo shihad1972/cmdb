@@ -247,12 +247,16 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		}
 	} else if (cbcs->what == SPACKCNF) {
 		if (!(cbcs->domain))  {
-			fprintf(stderr, "No build domain supplied\n\n");
-			retval = DISPLAY_USAGE;
+			ailsa_syslog(LOG_ERR, "No build domain supplied");
+			return DISPLAY_USAGE;
 		}
 		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
-			fprintf(stderr, "Need both package name and field to add or remove config\n\n");
-			retval = DISPLAY_USAGE;
+			ailsa_syslog(LOG_ERR, "Need both package name and field to add or remove config");
+			return DISPLAY_USAGE;
+		}
+		if ((cbcs->action != LIST_CONFIG) && !(cbcs->arg)) {
+			ailsa_syslog(LOG_ERR, "Need a package argument to add or delete a config");
+			return DISPLAY_USAGE;
 		}
 	}
 	return retval;
@@ -438,77 +442,101 @@ list_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 int
 add_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
-	int retval = 0;
-	cbc_s *cbs;
-	cbc_syspack_s *spack;
+	if (!(cbc) || !(cbcs))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *pack = ailsa_db_data_list_init();
 
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack(&spack);
-	cbs->syspack = spack;
-	pack_syspack(spack, cbcs);
-	if ((retval = cbc_run_insert(cbc, cbs, SYSPACKS)) != 0)
-		fprintf(stderr, "Cannot insert system package into DB\n");
-	else
-		printf("Package %s inserted into db\n", spack->name);
-	clean_cbc_struct(cbs);
-	return retval;
+	if ((retval = cmdb_add_string_to_list(cbcs->name, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package name to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SYSTEM_PACKAGE, pack)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SYSTEM_PACKAGE query failed");
+		
+	cleanup:
+		ailsa_list_full_clean(pack);
+		return retval;
 }
 
 int
 add_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
 {
-	int retval = 0;
-	unsigned long int spack_id;
-	cbc_s *cbs;
-	cbc_syspack_arg_s *cpsa;
-
 	if (!(cbc) || !(cbcs))
-		return CBC_NO_DATA;
-	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(cbcs->field, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add field to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cbcs->type, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add type to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_id_to_list(cbcs->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package id to list");
+		goto cleanup;
+	}
+	if (l->total != 3) {
+		ailsa_syslog(LOG_ERR, "List has wrong number? Should be 3, got %u", l->total);
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SYSTEM_PACKAGE_ARGS, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SYSTEM_PACKAGE_ARGS query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
 		return retval;
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack_arg(&cpsa);
-	cbs->sysarg = cpsa;
-	cpsa->syspack_id = spack_id;
-	pack_sysarg(cpsa, cbcs);
-	if ((retval = cbc_run_insert(cbc, cbs, SYSARGS)) != 0)
-		fprintf(stderr, "Cannot insert system package into DB\n");
-	else
-		printf("Package args for package %s inserted into DB\n", cbcs->name);
-	clean_cbc_struct(cbs);
-	return retval;
 }
 
 int
-add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
+add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs)
 {
-	int retval = 0;
-	unsigned long int spack_id, sconf_id, bd_id;
-	cbc_s *cbs;
-	cbc_syspack_conf_s *cpsc;
+	if (!(cbc) || !(cbs))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	char **args = ailsa_calloc((sizeof(char *) * 2), "args in add_cbc_syspackage_conf");
 
-	if (!(cbc) || !(cbcs))
-		return CBC_NO_DATA;
-	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
+	args[0] = cbs->name;
+	args[1] = cbs->field;
+	if ((retval = cmdb_add_string_to_list(cbs->arg, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add arg to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_id_to_list(cbs->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system package id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_arg_id_to_list(args, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system package arg id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_domain_id_to_list(cbs->domain, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SYSTEM_PACKAGE_CONF, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SYSTEM_PACKAGE_CONF query failed");
+
+	cleanup:
+		my_free(args);
+		ailsa_list_full_clean(l);
 		return retval;
-	if ((retval = get_build_domain_id(cbc, cbcs->domain, &bd_id)) != 0)
-		return retval;
-	if ((retval = get_syspack_arg_id(cbc, cbcs->field, spack_id, &sconf_id)) != 0)
-		return retval;
-	initialise_cbc_s(&cbs);
-	initialise_cbc_syspack_conf(&cpsc);
-	cbs->sysconf = cpsc;
-	cpsc->syspack_id = spack_id;
-	cpsc->syspack_arg_id = sconf_id;
-	cpsc->bd_id = bd_id;
-	pack_sysconf(cpsc, cbcs);
-	if ((retval = cbc_run_insert(cbc, cbs, SYSCONFS)) != 0)
-		fprintf(stderr, "Cannot insert syspack config into DB\n");
-	else
-		printf("Package config for package %s, domain %s inserted into DB\n",
-		 cbcs->name, cbcs->domain);
-	clean_cbc_struct(cbs);
-	return retval;
 }
 
 // Remove functions

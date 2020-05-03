@@ -327,9 +327,19 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 	{ // SYS_PACK_ARGS_ON_NAME
-"SELECT field, type FROM system_package_args spa LEFT JOIN system_packages sp ON sp.syspack_id = spa.syspack_id WHERE name = ?",
+"SELECT field, type FROM system_package_args spa LEFT JOIN system_packages sp ON sp.syspack_id = spa.syspack_id WHERE name = ? ORDER BY field",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_PACKAGE_ID
+"SELECT syspack_id FROM system_packages WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_PACKAGE_ARG_ID
+"SELECT syspack_arg_id FROM system_package_args spa LEFT JOIN system_packages sp ON sp.syspack_id = spa.syspack_id WHERE sp.name = ? AND spa.field = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	}
 };
 
@@ -418,6 +428,21 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	10,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SYSTEM_PACKAGE
+"INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SYSTEM_PACKAGE_ARGS
+"INSERT INTO system_package_args (field, type, syspack_id, cuser, muser) VALUES (?, ?, ?, ?, ?)",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SYSTEM_PACKAGE_CONF
+"INSERT INTO system_package_conf (arg, syspack_id, syspack_arg_id, bd_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

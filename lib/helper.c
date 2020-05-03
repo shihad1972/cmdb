@@ -174,6 +174,26 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(domain) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(domain, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, BUILD_DOMAIN_ID_ON_DOMAIN, dom, list)) != 0)
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
+
+	cleanup:
+		ailsa_list_full_clean(dom);
+		return retval;
+}
+
+int
 cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(coid) || !(cc) || !(list))
@@ -285,8 +305,7 @@ cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc
 	if ((retval = ailsa_argument_query(cc, PARTITION_ID_ON_SEED_MOUNT, part, list)) != 0)
 		ailsa_syslog(LOG_ERR, "PARTITION_ID_ON_SEED_MOUNT query failed");
 	cleanup:
-		ailsa_list_destroy(part);
-		my_free(part);
+		ailsa_list_full_clean(part);
 		return retval;
 }
 
@@ -325,10 +344,8 @@ cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert build_type_id into list");
 
 	cleanup:
-		ailsa_list_destroy(build);
-		ailsa_list_destroy(results);
-		my_free(build);
-		my_free(results);
+		ailsa_list_full_clean(build);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -362,13 +379,10 @@ cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AI
 		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, args, list)) != 0) {
+	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, args, list)) != 0)
 		ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
-		goto cleanup;
-	}
 	cleanup:
-		ailsa_list_destroy(args);
-		my_free(args);
+		ailsa_list_full_clean(args);
 		return retval;
 }
 
@@ -398,8 +412,53 @@ cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
 		break;
 	}
 	cleanup:
-		ailsa_list_destroy(l);
-		my_free(l);
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(pack) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(pack, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SYSTEM_PACKAGE_ID, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGE_ARG_ID query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_sys_pack_arg_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	char *name = args[0];
+	char *field = args[1];
+	int retval = 0;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package name into list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(field, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package field into list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SYSTEM_PACKAGE_ARG_ID, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGE_ARG_ID query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
 		return retval;
 }
 

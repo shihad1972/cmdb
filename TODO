@@ -1,3 +1,15 @@
+03/05/2020
+Need to fix the error returns, as report_error does not free memory in use
+before exiting. The error report function should only report an error.
+The error code should be able to 'bubble up' from whatever function had an
+error, and get back to main, so we can free memory there
+
+03/05/2020
+Adding a system package in cbcsysp should not automatically configure the
+package. Indeed, it should check if the package is in the varient. This will
+obviously fail for packaes that are part of a base install, and so those
+packages should be added to the base varient.
+
 20/04/2020
  When adding a locale, need to check if that locale already exists
 
@@ -8,6 +20,7 @@ that particular varient and OS combination.
 10/04/2020
 When grabbing kernel and initrd boot files, a summary of download speed
 should be printed.
+	** This is hipster bullshit. Fuck off! **
 
 04/04/2020
 Programs moved to new AILLIST database model:
