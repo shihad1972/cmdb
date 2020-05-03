@@ -481,6 +481,21 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM build_domain WHERE domain = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // DELETE_SYS_PACK_CONF
+"DELETE FROM system_package_conf WHERE arg = ? AND syspack_id = ? AND syspack_arg_id = ? AND bd_id = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // DELETE_SYS_PACK_ARG
+"DELETE FROM system_package_args WHERE field = ? AND syspack_id = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // DELETE_SYSTEM_PACKAGE
+"DELETE FROM system_packages WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 

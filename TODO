@@ -30,7 +30,7 @@ Programs moved to new AILLIST database model:
 	cbcvarient	**Done**
 	cbcdomain	**Done**
 	cbcos		**Done**
-	cbcsysp
+	cbcsysp		**Done**
 	cbcscript
 	cbcpart		**Done**
 	cbclocale	**Done**

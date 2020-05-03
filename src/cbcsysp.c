@@ -577,78 +577,81 @@ add_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs)
 // Remove functions
 
 int
-rem_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
+rem_cbc_syspackage(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs)
 {
-	int retval = 0, query = SYSP_PACKAGE;
-	unsigned int args = cbc_delete_args[query];
-	dbdata_s *data = 0;
-	
-	if (!(cbc) || !(cbcs))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, args);
-	if ((retval = get_system_package_id(cbc, cbcs->name, &(data->args.number))) != 0)
-		return retval;
-	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
-		fprintf(stderr, "Unable to delete system package\n");
-	else
-		printf("Package %s deleted\n", cbcs->name);
-	clean_dbdata_struct(data);
-	return 0;
-}
+	if (!(cbc) || !(cbs))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
 
-int
-rem_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
-{
-	int retval = 0, query = SYSP_ARG;
-	unsigned int args = cbc_delete_args[query];
-	dbdata_s *data = 0;
-	unsigned long int spack_id;
-
-	if (!(cbc) || !(cbcs))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, args);
-	if ((retval = get_system_package_id(cbc, cbcs->name, &spack_id)) != 0)
-		return retval;
-	if ((retval = get_syspack_arg_id(cbc, cbcs->field, spack_id, &(data->args.number))) != 0)
-		return retval;
-	if ((retval = cbc_run_delete(cbc, data, query)) == 0)
-		fprintf(stderr, "Unable to delete system package argument\n");
-	else
-		printf("Package %s, field %s deleted\n", cbcs->name, cbcs->field);
-	clean_dbdata_struct(data);
-	return 0;
-}
-
-int
-rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbcs)
-{
-	int retval = 0, query = SYS_PACK_CONF_ID;
-	unsigned int args = cbc_search_args[query];
-	unsigned int fields = cbc_search_fields[query];
-	unsigned int max = cmdb_get_max(args, fields);
-	dbdata_s *data = 0;
-
-	if (!(cbc) || !(cbcs))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, RBUFF_S, "%s", cbcs->domain);
-	snprintf(data->next->args.text, RBUFF_S, "%s", cbcs->name);
-	snprintf(data->next->next->args.text, RBUFF_S, "%s", cbcs->field);
-	if ((retval = cbc_run_search(cbc, data, SYS_PACK_CONF_ID)) == 0) {
-		fprintf(stderr, "Cannot find system package conf\n");
-		clean_dbdata_struct(data);
-		return NO_SYSPACK_CONF;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple system packages? Using 1st\n");
-	data->args.number = data->fields.number;
-	if ((retval = cbc_run_delete(cbc, data, SYSP_CONF)) == 0) {
-		fprintf(stderr, "Cannot remove syspack conf from DB\n");
-		retval = DB_DELETE_FAILED;
-	} else if (retval == 1) {
-		printf("Package config for package %s, domain %s removed from DB\n",
-		 cbcs->name, cbcs->domain);
-		retval = 0;
+	if ((retval = cmdb_add_string_to_list(cbs->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add package name to list");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
-	return retval;
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SYSTEM_PACKAGE], l)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_SYSTEM_PACKAGE query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+rem_cbc_syspackage_arg(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs)
+{
+	if (!(cbc) || !(cbs))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(cbs->field, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add field to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_id_to_list(cbs->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add syspack id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SYS_PACK_ARG], l)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_SYS_PACK_ARG query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+rem_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *cbs)
+{
+	if (!(cbc) || !(cbs))
+		return AILSA_NO_DATA;
+	int retval;
+	char **args = ailsa_calloc((sizeof(char *) * 2), "args in rem_cbc_syspackage_conf");
+	AILLIST *l = ailsa_db_data_list_init();
+
+	args[0] = cbs->name;
+	args[1] = cbs->field;
+	if ((retval = cmdb_add_string_to_list(cbs->arg, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add arg to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_id_to_list(cbs->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add syspack id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_sys_pack_arg_id_to_list(args, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add syspack arg id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_domain_id_to_list(cbs->domain, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SYS_PACK_CONF], l)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_SYS_PACK_CONF query failed");
+
+	cleanup:
+		my_free(args);
+		ailsa_list_full_clean(l);
+		return retval;
 }
