@@ -13,7 +13,7 @@ cbcos_SOURCES = cbcos.c $(CBC_COMBO)
 cbcpart_SOURCES = cbcpart.c $(CBC_COMBO)
 cbclocale_SOURCES = cbclocale.c $(CBC_COMBO)
 cbcvarient_SOURCES = cbcvarient.c $(CBC_COMBO)
-cbcsysp_SOURCES = cbcsysp.c cbcsysp.h $(CBC_COMBO)
+cbcsysp_SOURCES = cbcsysp.c $(CBC_COMBO)
 cbcscript_SOURCES = cbcscript.c cbcscript.h $(CBC_COMBO)
 
 if HAVE_CBC
