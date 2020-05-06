@@ -532,7 +532,17 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM system_packages WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
-	}
+	},
+	{ // DELETE_SYSTEM_SCRIPT_ARG
+"DELETE FROM system_scripts_args WHERE systscr_arg_id = ?",
+	1,
+	{ AILSA_DB_LINT } 
+	},
+	{ // DELETE_SYSTEM_SCRIPT
+"DELETE FROM system_scripts WHERE systscr_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {
@@ -678,7 +688,7 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 }
 
 int
-ailsa_delete_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *delete)
+ailsa_delete_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s query, AILLIST *delete)
 {
 	int retval = DB_TYPE_INVALID;
 

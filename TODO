@@ -1,3 +1,8 @@
+06/05/2020
+In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
+need to stop exiting in these functions. They should pass their error back up
+the function stack
+
 05/05/2020
 cbcscript is tightly tied into the build_type table; also the system_scripts_args
 table has too much information in it. It would be better to be like system
@@ -36,7 +41,7 @@ Programs moved to new AILLIST database model:
 	cbcdomain	**Done**
 	cbcos		**Done**
 	cbcsysp		**Done**
-	cbcscript
+	cbcscript	**Done**
 	cbcpart		**Done**
 	cbclocale	**Done**
 

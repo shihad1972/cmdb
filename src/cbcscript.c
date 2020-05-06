@@ -79,12 +79,6 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs);
 static int
 check_cbc_script_comm_line(cbc_syss_s *cbcs);
 
-static int
-pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr);
-
-static void
-pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg);
-
 int
 main(int argc, char *argv[])
 {
@@ -220,59 +214,12 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 				retval = NO_ALIAS;
 			else if (!(cbcs->domain))
 				retval = NO_BUILD_DOMAIN;
-			if (cbcs->action == CMDB_ADD) {
-				if (!(cbcs->arg))
-					retval = NO_ARG;
-			}
+			else if (!(cbcs->arg))
+				retval = NO_ARG;
 		}
 	}
 	return retval;
 }
-
-static int
-pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
-{
-	int retval = 0;
-	if (scr->name) {
-		if ((retval = get_system_script_id(cbc, scr->name, &(arg->systscr_id))) != 0)
-			return retval;
-	} else {
-		return NO_NAME;
-	}
-	if (scr->domain) {
-		if ((retval = get_build_domain_id(cbc, scr->domain, &(arg->bd_id))) != 0)
-			return retval;
-	} else {
-		return NO_DOMAIN;
-	}
-	if (scr->type) {
-		if ((retval = get_build_type_id(cbc, scr->type, &(arg->bt_id))) != 0)
-			return retval;
-	} else {
-		return CBC_NO_DATA;
-	}
-	if (scr->arg)
-		snprintf(arg->arg, CONF_S, "%s", scr->arg);
-	else if (scr->action == ADD_CONFIG)
-		return CBC_NO_DATA;
-	if (scr->no > 0)
-		arg->no = scr->no;
-	else
-		return CBC_NO_DATA;
-	arg->cuser = arg->muser = (unsigned long int)getuid();
-	return 0;
-}
-
-static void
-pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
-{
-	data->args.number = arg->bd_id;
-	data->next->args.number = arg->bt_id;
-	data->next->next->args.number = arg->systscr_id;
-	data->next->next->next->args.number = arg->no;
-}
-
-// Add functions
 
 static int
 cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
@@ -361,59 +308,77 @@ cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 static int
 cbc_script_rm_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0;
-	dbdata_s *data;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
 
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = get_system_script_id(cbc, scr->name, &(data->args.number))) != 0) {
-		clean_dbdata_struct(data);
+	if ((retval = cmdb_add_string_to_list(scr->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add script name to database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPT_ID_ON_NAME, l, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_ID_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (res->total == 0) {
+		ailsa_syslog(LOG_INFO, "System script %s not found in the database");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SYSTEM_SCRIPT], res)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_SYSTEM_SCRIPT query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(res);
 		return retval;
-	}
-	if ((retval = cbc_run_delete(cbc, data, CBCSCR_ON_ID)) == 0) {
-		fprintf(stderr, "Unable to remove script %s\n", scr->name);
-		retval = DB_DELETE_FAILED;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple scripts removed for %s\n", scr->name);
-		retval = 0;
-	} else {
-		printf("Script %s removed from database\n", scr->name);
-		retval = 0;
-	}
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 static int
 cbc_script_rm_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0;
-	dbdata_s *data;
-	cbc_script_arg_s *arg;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+	int retval;
 
-	if (!(arg = malloc(sizeof(cbc_script_arg_s))))
-		report_error(MALLOC_FAIL, "arg in cbc_script_rm_arg");
-	init_cbc_script_args(arg);
-	if ((retval = pack_script_arg(cbc, arg, scr)) != 0) {
-		clean_cbc_script_args(arg);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(scr->arg, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system script arg to list");
+		goto cleanup;
 	}
-	init_multi_dbdata_struct(&data, 4);
-	pack_script_arg_data(data, arg);
-	if ((retval = cbc_run_search(cbc, data, SCR_ARG_ID)) == 0) {
-		clean_dbdata_struct(data);
-		clean_cbc_script_args(arg);
-		return NO_ARG;
-	} else if (retval > 1)
-		fprintf(stderr, "More than one cbcscript was returned. Using 1st\n");
-	clean_dbdata_struct(data->next);
-	data->next = 0;
-	data->args.number = data->fields.number;
-	retval = cbc_run_delete(cbc, data, CBCSCRARG_ON_ID);
-	printf("%d args deleted\n", retval);
-	return 0;
+	if ((retval = cmdb_add_number_to_list(scr->no, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add number to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_system_script_id_to_list(scr->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system script id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_domain_id_to_list(scr->domain, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_type_id_to_list(scr->type, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build type id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPT_ARG_ID, l, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_ARG_ID query failed");
+		goto cleanup;
+	}
+	if (res->total == 0) {
+		ailsa_syslog(LOG_INFO, "System script arg %s for script %s not in database", scr->arg, scr->name);
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_SYSTEM_SCRIPT_ARG], res)) != 0)
+		ailsa_syslog(LOG_INFO, "DELETE_SYSTEM_SCRIPT_ARG query failed");
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(res);
+		return retval;
 }
-
-// List functions
 
 static int
 cbc_script_list_script(ailsa_cmdb_s *cbc)
