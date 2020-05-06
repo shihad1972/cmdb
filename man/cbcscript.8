@@ -1,4 +1,4 @@
-.TH cbcscript 8 "Version 0.2: 07 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcscript 8 "Version 0.2: 06 May 2020" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcscript \- Create Build Config Scripts
 .SH SYNOPSIS
@@ -34,6 +34,8 @@ Action and type switches do not take arguments.
 add
 .IP "-l,  --list"
 list
+.IP "-d,  --display"
+display
 .IP "-r,  --remove, --delete"
 remove
 .PP
@@ -66,20 +68,23 @@ build type operating system
 .PP
 .B To add an argument to a script
 .IP
-\fBcbcscript -a -f -b \fIdomain\fP -n \fIscript-name\fP -g \fIargument\fP -t \fIbuild-type-os\fP -o \fInumber\fR
+\fBcbcscript -a -f -b \fIdomain\fP -n \fIscript-name\fP -t \fIbuild-type-os\fP -g \fIargument\fP -o \fInumber\fR
 .PP
 .B To list scripts
 .IP
-\fBcbcscript -l -s\fP
+\fBcbcscript -l\fP
 .PP
-.B To list script configs for a domain
+.B To display script configs for a domain
 .IP
-\fBcbcscript -l -f -b \fIdomain\fR. You can also add more identifiers if you
-want a more specific listing
+\fBcbcscript -d -b \fIdomain\fR.
+.PP
+.B To display script configs for a script
+.IP
+\fBcbcscript -d -n \fIscript-name\fR.
 .PP
 .B To remove a script argument
 .IP
-\fBcbcscript -r -f -b \fIdomain\fP -n \fIscript-name\fP -t \fIbuild-type-os\fP -o \fInumber\fR
+\fBcbcscript -r -f -b \fIdomain\fP -n \fIscript-name\fP -t \fIbuild-type-os\fP -g \fIargument\fR -o \fInumber\fR
 .PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf
