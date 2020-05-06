@@ -463,6 +463,26 @@ cmdb_add_sys_pack_arg_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_system_script_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add script name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, SYSTEM_SCRIPT_ID_ON_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_ID_ON_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 {
 	if (!(cc) || !(zone))

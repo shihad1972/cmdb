@@ -359,13 +359,14 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No number was supplied\n");
 	else if (retval == NO_NTP_SERVER)
 		fprintf(stderr, "No ntp server was supplied\n");
-	else if ((retval == USER_INPUT_INVALID) &&
-		 (strncmp(program, "cbcdomain", RANGE_S)) == 0)
+	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
 	else if (retval == NO_FILE_SYSTEM)
 		fprintf(stderr, "No file system type was supplied\n");
 	else if (retval == NO_LOG_VOL)
 		fprintf(stderr, "No logical volume name supplied\n");
+	else if (retval == NO_ALIAS)
+		ailsa_syslog(LOG_ERR, "No build type alias was supplied");
 	else if (retval == NO_OPTION)
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
 	else if (retval == USER_INPUT_INVALID)

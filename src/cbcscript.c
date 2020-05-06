@@ -217,11 +217,11 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 			if (cbcs->no == 0)
 				retval = NO_NUMBER;
 			else if (!(cbcs->type))
-				retval = DISPLAY_USAGE;
+				retval = NO_ALIAS;
 			else if (!(cbcs->domain))
-				retval = DISPLAY_USAGE;
+				retval = NO_BUILD_DOMAIN;
 			if (cbcs->action == CMDB_ADD) {
-				if  (!(cbcs->arg))
+				if (!(cbcs->arg))
 					retval = NO_ARG;
 			}
 		}
@@ -277,43 +277,82 @@ pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
 static int
 cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0;
-	cbc_s *cbs;
-	cbc_script_s *cbcscr;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+	int retval;
 
-	initialise_cbc_s(&cbs);
-	initialise_cbc_scripts(&cbcscr);
-	cbs->scripts = cbcscr;
-	cbcscr->cuser = cbcscr->muser = (unsigned long int)getuid();
-	snprintf(cbcscr->name, CONF_S, "%s", scr->name);
-	if ((retval = cbc_run_insert(cbc, cbs, SCRIPTS)) != 0)
-		fprintf(stderr, "Unable to add script to database\n");
-	else
-		printf("Script %s added to database\n", scr->name);
-	clean_cbc_struct(cbs);
-	return retval;
+	if ((retval = cmdb_add_string_to_list(scr->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add script name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPT_ID_ON_NAME, l, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGE_ID query failed");
+		goto cleanup;
+	}
+	if (res->total > 0) {
+		ailsa_syslog(LOG_INFO, "Script %s already in the database");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SYSTEM_SCRIPT, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SYSTEM_SCRIPT query failed");
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(res);
+		return retval;
 }
 
 static int
 cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0;
-	cbc_s *cbs;
-	cbc_script_arg_s *arg;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
 
-	initialise_cbc_s(&cbs);
-	initialise_cbc_script_args(&arg);
-	cbs->script_arg = arg;
-	if ((retval = pack_script_arg(cbc, arg, scr)) != 0)
+	if ((retval = cmdb_add_string_to_list(scr->arg, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system script arg to list");
 		goto cleanup;
-	if ((retval = cbc_run_insert(cbc, cbs, SCRIPTAS)) != 0)
-		fprintf(stderr, "Unable to add args for script to db\n");
-	else
-		printf("Script args added into db\n");
-	goto cleanup;
-
+	}
+	if ((retval = cmdb_add_number_to_list(scr->no, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add number to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_system_script_id_to_list(scr->name, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add system script id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_domain_id_to_list(scr->domain, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_build_type_id_to_list(scr->type, cbc, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build type id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPT_ARG_ID, l, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_ARG_ID query failed");
+		goto cleanup;
+	}
+	if (res->total > 0) {
+		ailsa_syslog(LOG_INFO, "System script argument is already in the database");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbc, INSERT_SYSTEM_SCRIPT_ARGS, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SYSTEM_SCRIPT_ARGS query failed");
 	cleanup:
-		clean_cbc_struct(cbs);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(res);
 		return retval;
 }
 

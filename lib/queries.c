@@ -356,6 +356,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT name, alias, no, ssa.arg FROM system_scripts_args ssa LEFT JOIN build_domain bd ON ssa.bd_id = bd.bd_id LEFT JOIN build_type bt ON ssa.bt_id = bt.bt_id LEFT JOIN system_scripts ss ON ssa.systscr_id = ss.systscr_id WHERE domain = ? ORDER BY alias, name, no",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_SCRIPT_ID_ON_NAME
+"SELECT systscr_id FROM system_scripts WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_SCRIPT_ARG_ID
+"SELECT systscr_arg_id FROM system_scripts_args WHERE arg = ? AND no = ? AND systscr_id = ? AND bd_id = ? AND bt_id = ?",
+	5,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 
@@ -459,6 +469,16 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO system_package_conf (arg, syspack_id, syspack_arg_id, bd_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
 	6,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SYSTEM_SCRIPT
+"INSERT INTO system_scripts(name, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_SYSTEM_SCRIPT_ARGS
+"INSERT INTO system_scripts_args(arg, no, systscr_id, bd_id, bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	7,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	}
 };
 

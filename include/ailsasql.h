@@ -145,7 +145,9 @@ enum {			// SQL ARGUMENT QUERIES
 	SYSTEM_PACKAGE_ARG_ID,
 	SYSTEM_SCRIPTS_ON_NAME,
 	SYSTEM_SCRIPTS_ON_NAME_DOMAIN,
-	SYSTEM_SCRIPTS_ON_DOMAIN
+	SYSTEM_SCRIPTS_ON_DOMAIN,
+	SYSTEM_SCRIPT_ID_ON_NAME,
+	SYSTEM_SCRIPT_ARG_ID
 };
 
 enum {			// SQL INSERT QUERIES
@@ -168,7 +170,9 @@ enum {			// SQL INSERT QUERIES
 	INSERT_BUILD_DOMAIN_ZONE,
 	INSERT_SYSTEM_PACKAGE,
 	INSERT_SYSTEM_PACKAGE_ARGS,
-	INSERT_SYSTEM_PACKAGE_CONF
+	INSERT_SYSTEM_PACKAGE_CONF,
+	INSERT_SYSTEM_SCRIPT,
+	INSERT_SYSTEM_SCRIPT_ARGS
 };
 
 enum {			// SQL DELETE QUERIES
@@ -272,6 +276,9 @@ cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_sys_pack_arg_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_system_script_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);

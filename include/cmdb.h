@@ -306,7 +306,8 @@ enum {			/* command line error codes */
 	NO_BUILD_VARIENT = -32,
 	NO_BUILD_PARTITION = -33,
 	WRONG_TYPE_FOR_DISPLAY = -34,
-	NO_DOMAIN_OR_NAME = -35
+	NO_DOMAIN_OR_NAME = -35,
+	NO_ALIAS = -36
 };
 
 enum {			/* config file error codes */
