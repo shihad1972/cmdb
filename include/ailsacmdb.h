@@ -109,6 +109,11 @@ enum {			// Client commands
 };
 
 enum {                  // Action Codes
+	CMDB_ADD = 1,
+	CMDB_DISPLAY = 2,
+	CMDB_LIST = 3,
+	CMDB_RM = 4,
+	CMDB_MOD = 5,
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,

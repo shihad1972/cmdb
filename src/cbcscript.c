@@ -31,62 +31,96 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
 #include "cbc_common.h"
 #include "base_sql.h"
 #include "cbc_base_sql.h"
-#include "cbcscript.h"
+
+static int
+cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_rm_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_rm_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_display_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_list_script(ailsa_cmdb_s *cbc);
+
+static int
+cbc_script_args_display_all_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_args_display_one_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+cbc_script_args_display_one_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
+
+static int
+parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs);
+
+static int
+check_cbc_script_comm_line(cbc_syss_s *cbcs);
+
+static int
+pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr);
+
+static void
+pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg);
 
 int
 main(int argc, char *argv[])
 {
 	int retval = 0;
-	char *config = ailsa_calloc(CONF_S, "config in main");
 	cbc_syss_s *scr = ailsa_calloc(sizeof(cbc_syss_s), "scr in main");
 	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 
 	if ((retval = parse_cbc_script_comm_line(argc, argv, scr)) != 0) {
 		clean_cbc_syss_s(scr);
-		free(cbc);
-		free(config);
+		ailsa_clean_cmdb(cbc);
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cbc);
-	if (scr->action == ADD_CONFIG) {
+	if (scr->action == CMDB_ADD) {
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_add_script(cbc, scr);
 		else if (scr->what == CBCSCRARG)
 			retval = cbc_script_add_script_arg(cbc, scr);
 		else
 			retval = WRONG_TYPE;
-	} else if (scr->action == RM_CONFIG) {
+	} else if (scr->action == CMDB_RM) {
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_rm_script(cbc, scr);
 		else if (scr->what == CBCSCRARG)
 			retval = cbc_script_rm_arg(cbc, scr);
 		else
 			retval = WRONG_TYPE;
-	} else if (scr->action == LIST_CONFIG) {
-		if (scr->what == CBCSCRIPT)
-			retval = cbc_script_list_script(cbc);
-		else if (scr->what == CBCSCRARG)
-			retval = cbc_script_list_args(cbc, scr);
-		else
-			retval = WRONG_TYPE;
+	} else if (scr->action == CMDB_LIST) {
+		retval = cbc_script_list_script(cbc);
+	} else if (scr->action == CMDB_DISPLAY) {
+		retval = cbc_script_display_script(cbc, scr);
 	} else {
 		retval = WRONG_ACTION;
 	}
 	ailsa_clean_cmdb(cbc);
 	clean_cbc_syss_s(scr);
-	free(config);
 	if ((retval != 0) && (retval != NO_RECORDS))
 		report_error(retval, "");
 	return retval;
@@ -94,40 +128,10 @@ main(int argc, char *argv[])
 
 // Helper functions
 
-void
-initialise_cbc_scr(cbc_syss_s **scr)
-{
-	if (!(*scr = malloc(sizeof(cbc_syss_s))))
-		report_error(MALLOC_FAIL, "scr in main");
-	init_cbc_sys_script_s(*scr);
-}
-
-void
-init_cbc_sys_script_s(cbc_syss_s *scr)
-{
-	memset(scr, 0, sizeof(cbc_syss_s));
-}
-
-void
-clean_cbc_syss_s(cbc_syss_s *scr)
-{
-	if (!(scr))
-		return;
-	if (scr->name)
-		free(scr->name);
-	if (scr->arg)
-		free(scr->arg);
-	if (scr->domain)
-		free(scr->domain);
-	if (scr->type)
-		free(scr->type);
-	free(scr);
-}
-
-int
+static int
 parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 {
-	const char *optstr = "ab:fg:h:ln:o:rst:v";
+	const char *optstr = "ab:dfg:h:ln:o:rst:v";
 	int retval, opt;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -136,6 +140,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		{"add",			no_argument,		NULL,	'a'},
 		{"domain",		required_argument,	NULL,	'b'},
 		{"build-domain",	required_argument,	NULL,	'b'},
+		{"display",		no_argument,		NULL,	'd'},
 		{"script-arg",		no_argument,		NULL,	'f'},
 		{"argument",		required_argument,	NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
@@ -156,11 +161,13 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a')
-			cbcs->action = ADD_CONFIG;
+			cbcs->action = CMDB_ADD;
+		else if (opt == 'd')
+			cbcs->action = CMDB_DISPLAY;
 		else if (opt == 'l')
-			cbcs->action = LIST_CONFIG;
+			cbcs->action = CMDB_LIST;
 		else if (opt == 'r')
-			cbcs->action = RM_CONFIG;
+			cbcs->action = CMDB_RM;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'v')
@@ -171,19 +178,15 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 			cbcs->what = CBCSCRARG;
 		else if (opt == 'o')
 			cbcs->no = strtoul(optarg, NULL, 10);
-		else if (opt == 'b') {
-			if (!(cbcs->domain = strndup(optarg, (CONF_S -1))))
-				report_error(MALLOC_FAIL, "cbcs->domain");
-		} else if (opt == 'g') {
-			if (!(cbcs->arg = strndup(optarg, (CONF_S - 1))))
-				report_error(MALLOC_FAIL, "cbcs->arg");
-		} else if (opt == 'n') {
-			if (!(cbcs->name = strndup(optarg, (CONF_S - 1))))
-				report_error(MALLOC_FAIL, "cbcs->arg");
-		} else if (opt == 't') {
-			if (!(cbcs->type = strndup(optarg, (MAC_S - 1))))
-				report_error(MALLOC_FAIL, "cbcs->type");
-		} else
+		else if (opt == 'b')
+			cbcs->domain = strndup(optarg, (CONFIG_LEN));
+		else if (opt == 'g')
+			cbcs->arg = strndup(optarg, (CONF_S - 1));
+		else if (opt == 'n')
+			cbcs->name = strndup(optarg, (CONF_S - 1));
+		else if (opt == 't')
+			cbcs->type = strndup(optarg, (MAC_S - 1));
+		else
 			retval = DISPLAY_USAGE;
 	}
 	if (argc == 1)
@@ -193,18 +196,23 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 	return retval;
 }
 
-int
+static int
 check_cbc_script_comm_line(cbc_syss_s *cbcs)
 {
 	int retval = 0;
 
-	if (cbcs->action == 0)
+	if (cbcs->action == 0) {
 		retval = NO_ACTION;
-	else if (cbcs->what == 0)
-		retval = NO_TYPE;
-	else if (cbcs->action != LIST_CONFIG) {
+	} else if (cbcs->action == CMDB_DISPLAY) {
+		if (!(cbcs->domain) && !(cbcs->name))
+			retval = NO_DOMAIN_OR_NAME;
+	} else if (cbcs->action == CMDB_LIST) {
+		cbcs->what = CBCSCRIPT;	// Listing just args makes no sense
+	} else if (cbcs->action != CMDB_LIST) {
 		if (!(cbcs->name))
 			retval = NO_NAME;
+		else if (cbcs->what == 0)
+			retval = NO_TYPE;
 		else if (cbcs->what == CBCSCRARG) {
 			if (cbcs->no == 0)
 				retval = NO_NUMBER;
@@ -212,7 +220,7 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 				retval = DISPLAY_USAGE;
 			else if (!(cbcs->domain))
 				retval = DISPLAY_USAGE;
-			if (cbcs->action == ADD_CONFIG) {
+			if (cbcs->action == CMDB_ADD) {
 				if  (!(cbcs->arg))
 					retval = NO_ARG;
 			}
@@ -221,7 +229,7 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 	return retval;
 }
 
-int
+static int
 pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 {
 	int retval = 0;
@@ -255,7 +263,7 @@ pack_script_arg(ailsa_cmdb_s *cbc, cbc_script_arg_s *arg, cbc_syss_s *scr)
 	return 0;
 }
 
-void
+static void
 pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
 {
 	data->args.number = arg->bd_id;
@@ -266,7 +274,7 @@ pack_script_arg_data(dbdata_s *data, cbc_script_arg_s *arg)
 
 // Add functions
 
-int
+static int
 cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
@@ -286,7 +294,7 @@ cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 	return retval;
 }
 
-int
+static int
 cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
@@ -311,7 +319,7 @@ cbc_script_add_script_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 
 // Remove functions
 
-int
+static int
 cbc_script_rm_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
@@ -336,7 +344,7 @@ cbc_script_rm_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 	return retval;
 }
 
-int
+static int
 cbc_script_rm_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
@@ -368,313 +376,212 @@ cbc_script_rm_arg(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 
 // List functions
 
-int
+static int
 cbc_script_list_script(ailsa_cmdb_s *cbc)
 {
-	int retval = 0;
-	cbc_s *cbs;
-	cbc_script_s *script;
-	size_t len;
-	time_t create;
+	if (!(cbc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_query(cbc, cbs, SCRIPT)) != 0) {
-		clean_cbc_struct(cbs);
+	if ((retval = ailsa_basic_query(cbc, SYSTEM_SCRIPT_NAMES, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_NAMES query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "No system scripts to display");
+		goto cleanup;
+	}
+	e = l->head;
+	while (e) {
+		printf("%s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
 		return retval;
-	}
-	script = cbs->scripts;
-	if (script)
-		printf("Script\t\t\tCreation User\tCreation Time\n");
-	else
-		printf("No scripts in the database\n");
-	while (script) {
-		create = (time_t)script->ctime;
-		printf("%s", script->name);
-		len = strlen(script->name);
-		if (len < 8)
-			printf("\t\t\t");
-		else if (len < 16)
-			printf("\t\t");
-		else
-			printf("\t");
-		len = strlen(get_uname(script->cuser));
-		printf("%s", get_uname(script->cuser));
-		if (len < 8)
-			printf("\t\t");
-		else
-			printf("\t");
-		printf("%s", ctime(&create));
-		script = script->next;
-	}
-	clean_cbc_struct(cbs);
-	return retval;
 }
 
-int
-cbc_script_list_args(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
+static int
+cbc_script_display_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
 	int retval = 0;
 
-	if (!(scr->domain) && !(scr->name))
-		retval = cbc_script_args_list_all(cbc);
-	else if (!(scr->domain) && (scr->name))
-		retval = cbc_script_args_list_all_domain(cbc, scr);
+	if (!(scr->domain) && (scr->name))
+		retval = cbc_script_args_display_all_domain(cbc, scr);
 	else if ((scr->domain) && !(scr->name))
-		retval = cbc_script_args_list_one_domain(cbc, scr);
+		retval = cbc_script_args_display_one_domain(cbc, scr);
 	else
-		retval = cbc_script_args_list_one_script(cbc, scr);
+		retval = cbc_script_args_display_one_script(cbc, scr);
 	return retval;
 }
 
-int
-cbc_script_args_list_all(ailsa_cmdb_s *cbc)
+static int
+cbc_script_args_display_all_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPT | SCRIPTA;
-	int i, j, k;	// counters
-	char *domain, *build;
-	cbc_s *cbs;
-	cbc_build_domain_s *bdom;
-	cbc_script_s *script;
-	cbc_script_arg_s *arg;
-	cbc_build_type_s *type;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+	AILELEM *e;
+	size_t total = 4;
+	char *domain = NULL, *alias = NULL;
+	int retval, flag = 0;
 
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
-		clean_cbc_struct(cbs);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(scr->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add script name to list");
+		goto cleanup;
 	}
-	bdom = cbs->bdom;
-	while (bdom) {
-		domain = bdom->domain;
-		i = 0; // Mark for build domain
-		type = cbs->btype;
-		while (type) {
-			build = type->alias;
-			j = 0; // Mark for build type
-			script = cbs->scripts;
-			while (script) {
-				arg = cbs->script_arg;
-				k = 0;
-				while (arg) {
-					if ((bdom->bd_id == arg->bd_id) &&
-					    (script->systscr_id == arg->systscr_id) &&
-					    (type->bt_id == arg->bt_id)) {
-						i++;
-						j++;
-						k++;
-						if (i == 1)
-							printf("%s\n", domain);
-						if (j == 1)
-							printf("%s build\n", build);
-						printf("\t%s", script->name);
-						break;
-					}
-					arg = arg->next;
-				}
-				while (arg) {
-					if ((bdom->bd_id == arg->bd_id) &&
-					    (script->systscr_id == arg->systscr_id) &&
-					    (type->bt_id == arg->bt_id))
-						printf(" %s", arg->arg);
-					arg = arg->next;
-				}
-				if (k > 0) // We have a script
-					printf("\n");
-				script = script->next;
-			}
-			type = type->next;
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPTS_ON_NAME, l, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (s->total == 0) {
+		ailsa_syslog(LOG_INFO, "No system script in database with name %s", scr->name);
+		goto cleanup;
+	}
+	if ((s->total % total) != 0) {
+		ailsa_syslog(LOG_INFO, "Got wrong number of results. Got %zu, wanted multiple of %zu", s->total, total);
+		goto cleanup;
+	}
+	e = s->head;
+	while (e) {
+		flag = 0;
+		if (!(domain)) 
+			printf("Domain: %s", ((ailsa_data_s *)e->data)->data->text);
+		else if (strcmp(domain, ((ailsa_data_s *)e->data)->data->text) != 0)
+			printf("\n\nDomain: %s", ((ailsa_data_s *)e->data)->data->text);
+		domain = ((ailsa_data_s *)e->data)->data->text;
+		if (!(alias)) {
+			printf("\n %s build\n", ((ailsa_data_s *)e->next->data)->data->text);
+			flag = 1;
+		} else if (strcmp(alias, ((ailsa_data_s *)e->next->data)->data->text) != 0) {
+			printf("\n %s build\n", ((ailsa_data_s *)e->next->data)->data->text);
+			flag = 1;
 		}
-		if (i > 0)
-			printf("\n");
-		bdom = bdom->next;
+		alias = ((ailsa_data_s *)e->next->data)->data->text;
+		if (flag == 1)
+			printf("\t%s", scr->name);
+		printf(" %s", ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		e = ailsa_move_down_list(e, total);
 	}
-	clean_cbc_struct(cbs);
-	return retval;
+	printf("\n");
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(s);
+		return retval;
 }
 
-int
-cbc_script_args_list_all_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
+static int
+cbc_script_args_display_one_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0, query = BUILD_DOMAIN | BUILD_TYPE | SCRIPTA;
-	unsigned long int systscr_id;
-	int i, j, k = 0;	// counters
-	char *domain, *build;
-	cbc_s *cbs;
-	cbc_build_domain_s *bdom;
-	cbc_script_arg_s *arg;
-	cbc_build_type_s *type;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	int retval, flag;
+	size_t total = 4;
+	char *script = NULL, *build = NULL;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	if (!(scr->name))
-		return CBC_NO_DATA;
-	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)
-		return retval;
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
-		clean_cbc_struct(cbs);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(scr->domain, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN query failed");
+		goto cleanup;
 	}
-	bdom = cbs->bdom;
-	while (bdom) {
-		domain = bdom->domain;
-		i = 0; // Mark for build domain
-		type = cbs->btype;
-		while (type) {
-			build = type->alias;
-			j = 0; // Mark for build type
-			arg = cbs->script_arg;
-			while (arg) {
-				k = 0;
-				if ((bdom->bd_id == arg->bd_id) &&
-				    (systscr_id == arg->systscr_id) &&
-				    (type->bt_id == arg->bt_id)) {
-					i++;
-					j++;
-					k++;
-					if (i == 1)
-						printf("%s\n", domain);
-					if (j == 1)
-						printf("%s build\n", build);
-					printf("\t%s", scr->name);
-					break;
-				}
-				arg = arg->next;
-			}
-			while (arg) {
-				if ((bdom->bd_id == arg->bd_id) &&
-				    (systscr_id == arg->systscr_id) &&
-				    (type->bt_id == arg->bt_id))
-					printf(" %s", arg->arg);
-				arg = arg->next;
-			}
-			if (k > 0) // We have a script
-				printf("\n");
-			type = type->next;
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPTS_ON_DOMAIN, l, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN query failed");
+		goto cleanup;
+	}
+	if (s->total == 0) {
+		ailsa_syslog(LOG_INFO, "No system scripts configured for domain %s\n", scr->domain);
+		goto cleanup;
+	}
+	if ((s->total % total) != 0) {
+		ailsa_syslog(LOG_INFO, "Got wrong number of results. Got %zu, wanted mutiple of %zu", s->total, total);
+		goto cleanup;
+	}
+	e = s->head;
+	printf("Domain: %s\n", scr->domain);
+	while (e) {
+		flag = 0;
+		if (!(build)) {
+			printf(" %s build\n", (((ailsa_data_s *)e->next->data)->data->text));
+			flag = 1;
+		} else if (strcmp(build, ((ailsa_data_s *)e->next->data)->data->text) != 0) {
+			printf("\n %s build\n", (((ailsa_data_s *)e->next->data)->data->text));
+			flag = 1;
 		}
-		if (i > 0)
-			printf("\n");
-		bdom = bdom->next;
+		build = ((ailsa_data_s *)e->next->data)->data->text;
+		if (flag == 1)
+			printf("\t%s", ((ailsa_data_s *)e->data)->data->text);
+		else if (!(script))
+			printf("\t%s", ((ailsa_data_s *)e->data)->data->text);
+		else if (strcmp(script, ((ailsa_data_s *)e->data)->data->text) != 0)
+			printf("\n\t%s", ((ailsa_data_s *)e->data)->data->text);
+		script = ((ailsa_data_s *)e->data)->data->text;
+		printf(" %s", ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		e = ailsa_move_down_list(e, total);
 	}
-	return retval;
+	printf("\n");
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(s);
+		return retval;
 }
 
-int
-cbc_script_args_list_one_domain(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
+static int
+cbc_script_args_display_one_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
 {
-	int retval = 0, query = BUILD_TYPE | SCRIPT | SCRIPTA;
-	int i, j, k;	// counters
-	char *build;
-	unsigned long int bd_id;
-	cbc_s *cbs;
-	cbc_script_s *script;
-	cbc_script_arg_s *arg;
-	cbc_build_type_s *type;
+	if (!(cbc) || !(scr))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+	AILELEM *e;
+	char *build = NULL;
+	int retval, flag;
+	size_t total = 3;
 
-	if (!(scr->domain))
-		return CBC_NO_DATA;
-	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
-		return retval;
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
-		clean_cbc_struct(cbs);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(scr->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add script name to list");
+		goto cleanup;
 	}
-	type = cbs->btype;
-	i = 0; // Mark for domain
-	while (type) {
-		j = 0; // Mark for build
-		build = type->alias;
-		script = cbs->scripts;
-		while (script) {
-			arg = cbs->script_arg;
-			k = 0; // Mark for script
-			while (arg) {
-				if ((arg->bd_id == bd_id) &&
-				    (arg->bt_id == type->bt_id) &&
-				    (arg->systscr_id == script->systscr_id)) {
-					i++;
-					j++;
-					k++;
-					if (i == 1)
-						printf("%s\n", scr->domain);
-					if (j == 1)
-						printf("%s build\n", build);
-					printf("\t%s", script->name);
-					break;
-				}
-				arg = arg->next;
-			}
-			while (arg) {
-				if ((bd_id == arg->bd_id) &&
-				    (script->systscr_id == arg->systscr_id) &&
-				    (type->bt_id == arg->bt_id))
-					printf(" %s", arg->arg);
-				arg = arg->next;
-			}
-			if (k > 0) // We have a script
-				printf("\n");
-			script = script->next;
+	if ((retval = cmdb_add_string_to_list(scr->domain, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPTS_ON_NAME_DOMAIN, l, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_NAME_DOMAIN query failed");
+		goto cleanup;
+	}
+	if (s->total == 0) {
+		ailsa_syslog(LOG_INFO, "No script configuration found for %s in build domain %s\n", scr->name, scr->domain);
+		goto cleanup;
+	}
+	if ((s->total % total) != 0) {
+		ailsa_syslog(LOG_INFO, "Got wrong number of results. Got %zu, wanted mutiple of %zu", s->total, total);
+		goto cleanup;
+	}
+	e = s->head;
+	printf("Domain: %s\n", scr->domain);
+	while (e) {
+		flag = 0;
+		if (!(build)) {
+			flag = 1;
+			printf(" %s build\n", (((ailsa_data_s *)e->data)->data->text));
+		} else if (strcmp(build, (((ailsa_data_s *)e->data)->data->text)) != 0) {
+			flag = 1;
+			printf("\n %s build\n", (((ailsa_data_s *)e->data)->data->text));
 		}
-		type = type->next;
+		build = ((ailsa_data_s *)e->data)->data->text;
+		if (flag == 1)
+			printf("\t%s", scr->name);
+		printf(" %s", (((ailsa_data_s *)e->next->next->data)->data->text));
+		e = ailsa_move_down_list(e, total);
 	}
-	return retval;
+	printf("\n");
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(s);
+		return retval;
 }
-
-int
-cbc_script_args_list_one_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr)
-{
-	int retval = 0, query = BUILD_TYPE | SCRIPTA;
-	int i, j, k = 0;	// counters
-	char *build;
-	unsigned long int bd_id, systscr_id;
-	cbc_s *cbs;
-	cbc_script_arg_s *arg;
-	cbc_build_type_s *type;
-
-	if (!(scr->domain) || !(scr->name))
-		return CBC_NO_DATA;
-	if ((retval = get_build_domain_id(cbc, scr->domain, &bd_id)) != 0)
-		return retval;
-	if ((retval = get_system_script_id(cbc, scr->name, &systscr_id)) != 0)
-		return retval;
-	initialise_cbc_s(&cbs);
-	if ((retval = cbc_run_multiple_query(cbc, cbs, query)) != 0) {
-		clean_cbc_struct(cbs);
-		return retval;
-	}
-	type = cbs->btype;
-	i = 0;
-	while (type) {
-		j = 0;
-		build = type->alias;
-		arg = cbs->script_arg;
-		while (arg) {
-			k = 0;
-			if ((arg->bd_id == bd_id) &&
-			    (arg->bt_id == type->bt_id) &&
-			    (arg->systscr_id == systscr_id)) {
-				i++;
-				j++;
-				k++;
-				if (i == 1)
-					printf("%s\n", scr->domain);
-				if (j == 1)
-					printf("%s build\n", build);
-				printf("\t%s", scr->name);
-				break;
-			}
-			arg = arg->next;
-		}
-		while (arg) {
-			if ((bd_id == arg->bd_id) &&
-			    (systscr_id == arg->systscr_id) &&
-			    (type->bt_id == arg->bt_id))
-				printf(" %s", arg->arg);
-			arg = arg->next;
-		}
-		if (k > 0) // We have a script
-			printf("\n");
-		type = type->next;
-	}
-	return retval;
-}
-

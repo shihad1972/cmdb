@@ -329,6 +329,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "Cannot display this type in cmdb\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
 		fprintf(stderr, "Both domain name and IP given on command line.\n");
+	else if (retval == NO_DOMAIN_OR_NAME)
+		ailsa_syslog(LOG_ERR, "Neither build domaion nor script name was provided");
 	else if (retval == NO_PARTITION_INFO)
 		fprintf(stderr, "No partition information on command line.\n");
 	else if (retval == NO_SCHEME_INFO)
@@ -365,7 +367,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == NO_LOG_VOL)
 		fprintf(stderr, "No logical volume name supplied\n");
 	else if (retval == NO_OPTION)
-		fprintf(stderr, "Partition option specified but no option supplied\n");
+		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
 	else if (retval == USER_INPUT_INVALID)
 		ailsa_syslog(LOG_ERR, "User input was not validated.");
 	else if (retval == CVERSION)

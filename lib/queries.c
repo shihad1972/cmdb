@@ -65,6 +65,7 @@ const char *basic_queries[] = {
 "SELECT domain, ns, start_ip, gateway, netmask from build_domain", // BUILD_DOMAIN_NETWORKS
 "SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
 "SELECT name FROM system_packages", // SYSTEM_PACKAGE_NAMES
+"SELECT name FROM system_scripts", // SYSTEM_SCRIPT_NAMES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -340,6 +341,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT syspack_arg_id FROM system_package_args spa LEFT JOIN system_packages sp ON sp.syspack_id = spa.syspack_id WHERE sp.name = ? AND spa.field = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_SCRIPTS_ON_NAME
+"SELECT domain, alias, no, ssa.arg FROM system_scripts_args ssa LEFT JOIN build_domain bd ON ssa.bd_id = bd.bd_id LEFT JOIN build_type bt ON ssa.bt_id = bt.bt_id LEFT JOIN system_scripts ss ON ssa.systscr_id = ss.systscr_id WHERE name = ? ORDER BY domain, alias, no",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_SCRIPTS_ON_NAME_DOMAIN
+"SELECT alias, no, ssa.arg FROM system_scripts_args ssa LEFT JOIN build_domain bd ON ssa.bd_id = bd.bd_id LEFT JOIN build_type bt ON ssa.bt_id = bt.bt_id LEFT JOIN system_scripts ss ON ssa.systscr_id = ss.systscr_id WHERE name = ? AND domain = ? ORDER BY alias, no",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_SCRIPTS_ON_DOMAIN
+"SELECT name, alias, no, ssa.arg FROM system_scripts_args ssa LEFT JOIN build_domain bd ON ssa.bd_id = bd.bd_id LEFT JOIN build_type bt ON ssa.bt_id = bt.bt_id LEFT JOIN system_scripts ss ON ssa.systscr_id = ss.systscr_id WHERE domain = ? ORDER BY alias, name, no",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 

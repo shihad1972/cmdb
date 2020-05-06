@@ -48,10 +48,25 @@ enum {			/* cbcdomain modify types */
 
 
 enum {
-        SPACKAGE = 1,
-        SPACKARG = 2,
-        SPACKCNF = 3
+	SPACKAGE = 1,
+	SPACKARG = 2,
+	SPACKCNF = 3
 };
+
+enum {
+	CBCSCRIPT = 1,
+	CBCSCRARG = 2
+};
+
+typedef struct cbc_syss_s {
+	char *name;
+	char *arg;
+	char *domain;
+	char *type;
+	short int action;
+	short int what;
+	unsigned long int no;
+} cbc_syss_s;
 
 typedef struct cbc_sysp_s {
 	char *arg;
@@ -552,6 +567,9 @@ clean_cbc_syspack_conf(cbc_syspack_conf_s *spack);
 
 void
 clean_cbc_scripts(cbc_script_s *scripts);
+
+void
+clean_cbc_syss_s(cbc_syss_s *scr);
 
 void
 clean_cbc_script_args(cbc_script_arg_s *args);

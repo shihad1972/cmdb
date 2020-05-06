@@ -14,7 +14,7 @@ cbcpart_SOURCES = cbcpart.c $(CBC_COMBO)
 cbclocale_SOURCES = cbclocale.c $(CBC_COMBO)
 cbcvarient_SOURCES = cbcvarient.c $(CBC_COMBO)
 cbcsysp_SOURCES = cbcsysp.c $(CBC_COMBO)
-cbcscript_SOURCES = cbcscript.c cbcscript.h $(CBC_COMBO)
+cbcscript_SOURCES = cbcscript.c $(CBC_COMBO)
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript

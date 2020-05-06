@@ -1,3 +1,8 @@
+05/05/2020
+cbcscript is tightly tied into the build_type table; also the system_scripts_args
+table has too much information in it. It would be better to be like system
+packages where there is an args and a conf table.
+
 03/05/2020
 Need to fix the error returns, as report_error does not free memory in use
 before exiting. The error report function should only report an error.
