@@ -574,7 +574,7 @@ void
 cmdb_add_os_version_or_alias_to_list(char *ver, char *valias, AILLIST *list);
 
 int
-cmdb_add_string_to_list(char *str, AILLIST *list);
+cmdb_add_string_to_list(const char *str, AILLIST *list);
 
 int
 cmdb_add_number_to_list(unsigned long int number, AILLIST *list);

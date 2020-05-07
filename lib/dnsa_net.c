@@ -143,15 +143,22 @@ cmdb_validate_fwd_zone(ailsa_cmdb_s *cbc, char *zone)
 	}
 	if ((retval = cmdb_check_zone(cbc, zone)) != 0) {
 		ailsa_syslog(LOG_ERR, "Checking the zone failed");
+		if ((retval = cmdb_add_string_to_list("no", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add valid to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add invalid to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_write_fwd_zone_config(cbc)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot write out forward zone configuration");
-		goto cleanup;
-	}
-	snprintf(command, CONFIG_LEN, "%s reload", cbc->rndc);
-	if ((retval = system(command)) != 0)
-		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
+	if ((retval = ailsa_update_query(cbc, update_queries[FWD_ZONE_VALIDATE], l)) != 0)
+		ailsa_syslog(LOG_ERR, "FWD_ZONE_VALIDATE update query failed");
 	cleanup:
 		my_free(command);
 		ailsa_list_full_clean(l);

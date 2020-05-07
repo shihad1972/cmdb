@@ -560,7 +560,12 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE build_domain SET ntp_server = ?, muser = ? WHERE domain = ?",
 	3,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT }
-	}
+	},
+	{ // FWD_ZONE_VALIDATE
+"UPDATE zones SET valid = ? WHERE name = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
 };
 
 static int
