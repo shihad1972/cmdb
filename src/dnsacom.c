@@ -38,7 +38,7 @@
 #ifdef HAVE_GETOPT_H
 # define _GNU_SOURCE
 # include <getopt.h>
-#endif // HAVE_GETOPT_H
+#endif // H)AVE_GETOPT_H
 #include "cmdb.h"
 #include <ailsacmdb.h>
 #include "dnsa_data.h"
@@ -110,7 +110,6 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'l') {
 			comp->action = LIST_ZONES;
-			snprintf(comp->domain, COMM_S, "all");
 		} else if (opt == 'm') {
 			comp->action = ADD_CNAME_ON_ROOT;
 			comp->type = FORWARD_ZONE;
@@ -122,7 +121,6 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'w') {
 			comp->action = COMMIT_ZONES;
-			snprintf(comp->domain, COMM_S, "none");
 		} else if (opt == 'x') {
 			comp->action = DELETE_ZONE;
 		} else if (opt == 'z') {
@@ -134,51 +132,59 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'G') {
 			comp->type = GLUE_ZONE;
 		} else if (opt == 'S') {
-			snprintf(comp->ztype, COMM_S, "slave");
+			comp->ztype = strdup("slave");
 		} else if (opt == 'M') {
-			snprintf(comp->master, RBUFF_S, "%s", optarg);
+			comp->master = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'I') {
-			snprintf(comp->glue_ip, MAC_S, "%s", optarg);
+			comp->glue_ip = strndup(optarg, MAC_LEN);
 		} else if (opt == 'N') {
-			snprintf(comp->glue_ns, TBUFF_S, "%s", optarg);
+			comp->glue_ns = strndup(optarg, BUFFER_LEN);
 		} else if (opt == 'h') {
-			snprintf(comp->host, RBUFF_S, "%s", optarg);
+			comp->host = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'i') {
-			snprintf(comp->dest, RBUFF_S, "%s", optarg);
+			comp->dest = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'n') {
-			snprintf(comp->domain, CONF_S, "%s", optarg);
+			comp->domain = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'o') {
-			snprintf(comp->protocol, RANGE_S, "%s", optarg);
+			comp->protocol = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 'p') {
 			comp->prefix = strtoul(optarg, NULL, 10);
 		} else if (opt == 's') {
-			snprintf(comp->service, RANGE_S, "%s", optarg);
-			snprintf(comp->host, RANGE_S, "%s", optarg);
+			comp->service = strndup(optarg, SERVICE_LEN);
+			comp->host = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 't') {
-			snprintf(comp->rtype, RANGE_S, "%s", optarg);
+			comp->rtype = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 'v') {
 			comp->action = CVERSION;
 		}
 	}
-	if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
+	if (comp->rtype) {
+		if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
 /* Check if user has specified destination with -h and act accordingly */
-		if ((strncmp(comp->host, "NULL", COMM_S) != 0) &&
-		    (strncmp(comp->dest, "NULL", COMM_S) == 0))
-			snprintf(comp->dest, RBUFF_S, "%s", comp->host);
-		snprintf(comp->host, RANGE_S, "%s", comp->service);
-		if (strncmp(comp->protocol, "NULL", COMM_S) == 0) {
-			fprintf(stderr, "No protocol provided with -o. Setting to tcp!\n");
-			snprintf(comp->protocol, COMM_S, "tcp");
-		} else if (!((strncmp(comp->protocol, "tcp", COMM_S) == 0) ||
+			if ((comp->host) && (!(comp->dest)))
+				comp->dest = strndup(comp->host, DOMAIN_LEN);
+			comp->host = strndup(comp->service, SERVICE_LEN);
+			if (!(comp->protocol)) {
+				ailsa_syslog(LOG_INFO, "No protocol provided with -o. Setting to tcp!\n");
+				comp->protocol = strdup("tcp");
+			} else if (!((strncmp(comp->protocol, "tcp", COMM_S) == 0) ||
 			     (strncmp(comp->protocol, "udp", COMM_S) == 0)))
-			report_error(USER_INPUT_INVALID, "protocol");
-		if (comp->prefix == 0) {
-			fprintf(stderr, "No priority provided with -p. Setting to 100!\n");
+				report_error(USER_INPUT_INVALID, "protocol");
+			if (comp->prefix == 0) {
+				ailsa_syslog(LOG_INFO, "No priority provided with -p. Setting to 100!\n");
+				comp->prefix = 100;
+			}
+		}
+		if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
 			comp->prefix = 100;
+			fprintf(stderr, "No priority specified for MX record, using 100\n");
 		}
 	}
-	if ((comp->action == NONE) && (comp->type == NONE) &&
-	    (strncmp(comp->domain, "NULL", CONF_S) == 0))
+	if (comp->ztype) {
+		if ((strncmp(comp->ztype, "slave", COMM_S) == 0) && (!(comp->master)))
+			retval = NO_MASTER;
+	}
+	if ((comp->action == NONE) && (comp->type == NONE) && (!(comp->domain)))
 		retval = DISPLAY_USAGE;
 	else if (comp->action == CVERSION)
 		retval = CVERSION;
@@ -186,47 +192,27 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if ((strncmp(comp->domain, "NULL", CONF_S) == 0) && 
-		(comp->action != DELETE_RECORD) && 
-		(comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED))
+	else if ((!(comp->domain)) && (comp->action != LIST_ZONES) && (comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED))
 		retval = NO_DOMAIN_NAME;
-	else if ((comp->action == MULTIPLE_A) && 
-		(strncmp(comp->domain, "NULL", COMM_S) == 0) &&
-		(strncmp(comp->dest, "NULL", COMM_S) == 0))
+	else if ((comp->action == MULTIPLE_A) && (!(comp->domain)) && (!(comp->dest)))
 		retval = NO_DOMAIN_NAME;
-	else if ((comp->action == MULTIPLE_A) &&
-		(strncmp(comp->domain, "NULL", COMM_S) != 0) &&
-		(strncmp(comp->dest, "NULL", COMM_S) != 0))
+	else if ((comp->action == MULTIPLE_A) && (comp->domain) && (comp->dest))
 		retval = DOMAIN_AND_IP_GIVEN;
-	else if ((comp->action == ADD_HOST) && (strncmp(comp->dest, "NULL", RANGE_S) == 0))
+	else if ((comp->action == ADD_HOST) && (!(comp->dest)))
 		retval = NO_IP_ADDRESS;
 	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD) ||
-	      (comp->action == ADD_CNAME_ON_ROOT)) && (strncmp(comp->host, "NULL", RBUFF_S) == 0))
+	      (comp->action == ADD_CNAME_ON_ROOT)) && (!(comp->host)))
 		retval = NO_HOST_NAME;
-	else if ((comp->action == ADD_HOST && strncmp(comp->rtype, "NULL", RANGE_S) == 0))
+	else if (comp->action == ADD_HOST && (!(comp->rtype)))
 		retval = NO_RECORD_TYPE;
 	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
 		retval = NO_PREFIX;
-	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
-		 (strncmp(comp->master, "NULL", COMM_S) == 0))
-		retval = NO_MASTER;
-/*	else if ((strncmp(comp->ztype, "slave", COMM_S) == 0) &&
-		 (strncmp(comp->host, "NULL", COMM_S) == 0))
-		retval = NO_MASTER_NAME; */
-	else if ((comp->type == GLUE_ZONE) &&
-		 (strncmp(comp->glue_ip, "NULL", COMM_S) == 0) &&
-		 (comp->action == ADD_ZONE))
+	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ip)) && (comp->action == ADD_ZONE))
 		retval = NO_GLUE_IP;
-	else if ((comp->type == GLUE_ZONE) &&
-		 (strncmp(comp->glue_ns, "NULL", COMM_S) == 0) &&
-		 (comp->action == ADD_ZONE))
+	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ns)) && (comp->action == ADD_ZONE))
 		retval = NO_GLUE_NS;
-	else if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
-		comp->prefix = 100;
-		fprintf(stderr, "No priority specified for MX record, using 100\n");
-	}
 	if (retval == NO_GLUE_NS) {
-		snprintf(comp->glue_ns, CONF_S, "ns1,ns2");
+		comp->glue_ns = strdup("ns1,ns2");
 		retval = NONE;
 	}
 	if (retval == 0)
@@ -399,147 +385,161 @@ validate_comm_line(dnsa_comm_line_s *comm)
 	if ((comm->action == LIST_ZONES) || (comm->action == COMMIT_ZONES))
 		return retval;
 	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE))
-		validate_fwd_comm_line(comm);
+		retval = validate_fwd_comm_line(comm);
 	else if (comm->type == REVERSE_ZONE)
-		validate_rev_comm_line(comm);
+		retval = validate_rev_comm_line(comm);
 	else
 		report_error(UNKNOWN_ZONE_TYPE, "validate_comm_line");
 	return retval;
 }
 
-void
+int
 validate_fwd_comm_line(dnsa_comm_line_s *comm)
 {
 	char *host = NULL;
+	int retval = 0;
 
 	if (comm)
 		host = comm->host;
 	else
-		report_error(CBC_NO_DATA, "comm in validate_fwd_comm_line");
-	if (strlen(comm->rtype) != 0)
-		if (ailsa_validate_input(comm->rtype, FS_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "record type");
-	if (strncmp(comm->domain, "all", COMM_S) != 0)
+		return AILSA_NO_DATA;
+	if (comm->rtype)
+		if (ailsa_validate_input(comm->rtype, RESOURCE_TYPE_REGEX) < 0)
+			return RTYPE_INPUT_INVALID;
+	if (comm->domain)
 		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "domain");
+			return DOMAIN_INPUT_INVALID;
 /* Test values for different RR's. Still need to add check for AAAA */
-	if (strncmp(comm->rtype, "A", COMM_S) == 0) {
-		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "IP address");
-		if (strncmp(comm->host, "@", COMM_S) != 0)
-			if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
-				if (ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0)
-					report_error(USER_INPUT_INVALID, "host");
-	} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
-		   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
-		if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "server host name");
-		if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
-		    (strncmp(comm->host, "@", COMM_S) != 0))
-			if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "host");
-	} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
-		if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
-		    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
-			report_error(USER_INPUT_INVALID, "SRV destination");
-		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "SRV service");
-	} else if (strncmp(comm->rtype, "CNAME", COMM_S) == 0) {
-		if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
-		    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
-			report_error(USER_INPUT_INVALID, "CNAME destination");
-		if ((ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0) &&
-		    (ailsa_validate_input(comm->host, NAME_REGEX) < 0))
-			report_error(USER_INPUT_INVALID, "CNAME host");
-	} else if (comm->action == ADD_CNAME_ON_ROOT) {
+	if (comm->rtype) {
+		if (strncmp(comm->rtype, "A", COMM_S) == 0) {
+			if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
+				return DEST_INPUT_INVALID;
+			if (strncmp(comm->host, "@", COMM_S) != 0)
+				if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
+					if (ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0)
+						return HOST_INPUT_INVALID;
+		} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
+			   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
+			if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
+				return DEST_INPUT_INVALID;
+			if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
+			    (strncmp(comm->host, "@", COMM_S) != 0))
+				if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
+						return HOST_INPUT_INVALID;
+		} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
+			if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+			    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
+				return DEST_INPUT_INVALID;
+			if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
+				return SERVICE_INPUT_INVALID;
+		} else if (strncmp(comm->rtype, "CNAME", COMM_S) == 0) {
+			if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+			    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
+				return DEST_INPUT_INVALID;
+			if ((ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0) &&
+			    (ailsa_validate_input(comm->host, NAME_REGEX) < 0))
+				return HOST_INPUT_INVALID;
+		}
+	}
+	if (comm->action == ADD_CNAME_ON_ROOT) {
 		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "domain");
+			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "hostname");
+			return HOST_INPUT_INVALID;
 	} else {
 		if (ailsa_validate_input(comm->dest, TXTRR_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "Extended RR value");
-		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) ||
-		    (strncmp(comm->rtype, "NULL", COMM_S) == 0)) {
+			return DEST_INPUT_INVALID;
+		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) || (!(comm->rtype))) {
 			if (host[0] == '_') {
 				if (ailsa_validate_input(host + 1, NAME_REGEX) < 0)
-					report_error(USER_INPUT_INVALID, "hostname");
+					return HOST_INPUT_INVALID;
 			} else {
 				if (ailsa_validate_input(host, NAME_REGEX) < 0)
-					report_error(USER_INPUT_INVALID, "hostname");
+					return HOST_INPUT_INVALID;
 			}
 		} else {
 			if (ailsa_validate_input(host, NAME_REGEX) < 0)
 				if (ailsa_validate_input(host, DOMAIN_REGEX) < 0)
-					report_error(USER_INPUT_INVALID, "hostname");
+					return HOST_INPUT_INVALID;
 		}
 	}
 	if (strncmp(comm->service, "NULL", COMM_S) != 0)
 		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "service");
+			return SERVICE_INPUT_INVALID;
 	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
-		validate_glue_comm_line(comm);
+		retval = validate_glue_comm_line(comm);
+	return retval;
 }
 
-void
+int
 validate_glue_comm_line(dnsa_comm_line_s *comm)
 {
 	char *regex;
 	size_t dlen, ilen;
+	int retval = 0;
 
 	dlen = strlen(regexps[DOMAIN_REGEX]);
 	ilen = strlen(regexps[IP_REGEX]);
 	if ((ilen + dlen + 4) > RBUFF_S)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
 	regex = ailsa_calloc(RBUFF_S, "regex in validate_glue_comm_line");
-	if (strchr(comm->glue_ip, ',')) {
-		if (strncmp(comm->glue_ip, "NULL", COMM_S) != 0) {
+	if (comm->glue_ip) {
+		if (strchr(comm->glue_ip, ',')) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
 			strncat(regex, "\\,", 3);
 			strncat(regex, regexps[IP_REGEX] + 1, ilen);
-			if (ailsa_validate_string(comm->glue_ip, regex) < 0)
-				report_error(USER_INPUT_INVALID, "glue IP");
+			if (ailsa_validate_string(comm->glue_ip, regex) < 0) {
+				retval = GLUE_IP_INPUT_INVALID;
+				goto cleanup;
+			}
+		} else if (comm->action != DELETE_ZONE) {
+			if (ailsa_validate_input(comm->glue_ip, IP_REGEX) < 0) {
+				retval =  GLUE_IP_INPUT_INVALID;
+				goto cleanup;
+			}
 		}
-	} else if (comm->action != DELETE_ZONE) {
-		if (ailsa_validate_input(comm->glue_ip, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "glue IP");
 	}
 	memset(regex, 0, RBUFF_S);
-	if (strchr(comm->glue_ns, ',')) {
-		if (strncmp(comm->glue_ns, "NULL", COMM_S) != 0) {
+	if (comm->glue_ns) {
+		if (strchr(comm->glue_ns, ',')) {
 			snprintf(regex, dlen, "%s", regexps[DOMAIN_REGEX]);
 			strncat(regex, "\\,", 3);
 			strncat(regex, regexps[DOMAIN_REGEX] + 1, dlen);
-			if (ailsa_validate_string(comm->glue_ns, regex) < 0)
-				report_error(USER_INPUT_INVALID, "glue NS");
+			if (ailsa_validate_string(comm->glue_ns, regex) < 0) {
+				retval =  GLUE_NS_INPUT_INVALID;
+				goto cleanup;
+			}
+		} else {
+			if (ailsa_validate_input(comm->glue_ns, DOMAIN_REGEX) < 0) {
+				retval =  GLUE_NS_INPUT_INVALID;
+				goto cleanup;
+			}
 		}
-	} else {
-		if (ailsa_validate_input(comm->glue_ns, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "glue NS");
 	}
-	cmdb_free(regex, RBUFF_S);
+	cleanup:
+		cmdb_free(regex, RBUFF_S);
+		return retval;
 }
 
-void
+int
 validate_rev_comm_line(dnsa_comm_line_s *comm)
 {
-	if ((strncmp(comm->domain, "all", COMM_S) != 0) &&
-	   ((strncmp(comm->domain, "NULL", COMM_S) != 0) &&
-	   (comm->action != ADD_PREFER_A) &&
-	    (comm->action != DELETE_PREFERRED)))
+	int retval = 0;
+	if ((comm->domain) && (comm->action != ADD_PREFER_A) && (comm->action != DELETE_PREFERRED))
 		if (ailsa_validate_input(comm->domain, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "domain");
+			return DOMAIN_INPUT_INVALID;
 	if (comm->action == ADD_PREFER_A) {
 		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "domain");
+			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "IP address");
+			return DEST_INPUT_INVALID;
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "hostname");
+			return HOST_INPUT_INVALID;
 	}
 	if (comm->action == DELETE_PREFERRED)
 		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "IP address");
+			return DEST_INPUT_INVALID;
+	return retval;
 }
 
 void

@@ -31,24 +31,24 @@
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 
+static void
+clean_dnsa_comm_line(void *dcl);
+
 int main(int argc, char *argv[])
 {
-	dnsa_comm_line_s *cm;
-	ailsa_cmdb_s *dc;
 	char *domain = NULL;
 	int retval;
+	dnsa_comm_line_s *cm = ailsa_calloc(sizeof(dnsa_comm_line_s), "cm in main");
+	ailsa_cmdb_s *dc = ailsa_calloc(sizeof(ailsa_cmdb_s), "dc in main");
 
-	cm = ailsa_calloc(sizeof(dnsa_comm_line_s), "cm in main");
-	dnsa_init_comm_line_struct(cm);
 	if ((retval = parse_dnsa_command_line(argc, argv, cm)) != 0) {
-		cmdb_free(cm, sizeof(dnsa_comm_line_s));
+		ailsa_clean_cmdb(dc);
+		clean_dnsa_comm_line(cm);
 		display_command_line_error(retval, argv[0]);
 	}
-	dc = ailsa_calloc(sizeof(ailsa_cmdb_s), "dc in main");
 	parse_cmdb_config(dc);
-	domain = ailsa_calloc(CONF_S, "domain in main");
-	if (!(strncpy(domain, cm->domain, CONF_S - 1)))
-		goto cleanup;
+	if (cm->domain)
+		domain = cm->domain;
 	if (cm->type == FORWARD_ZONE) {
 		if (cm->action == LIST_ZONES) {
 			list_zones(dc);
@@ -106,10 +106,38 @@ int main(int argc, char *argv[])
 			printf("Action code %d not implemented\n", cm->action);
 	}
 
-	cleanup:
-		if (domain)
-			cmdb_free(domain, CONF_S);
-		cmdb_free(cm, sizeof(dnsa_comm_line_s));
-		cmdb_free(dc, sizeof(ailsa_cmdb_s));
-		exit(retval);
+	clean_dnsa_comm_line(cm);
+	ailsa_clean_cmdb(dc);
+	exit(retval);
+}
+
+static void
+clean_dnsa_comm_line(void *comm)
+{
+	if (!(comm))
+		return;
+	dnsa_comm_line_s *dcl = comm;
+        if (dcl->rtype)
+		my_free(dcl->rtype);
+        if (dcl->ztype)
+		my_free(dcl->ztype);
+        if (dcl->service)
+		my_free(dcl->service);
+        if (dcl->protocol)
+		my_free(dcl->protocol);
+        if (dcl->domain)
+		my_free(dcl->domain);
+	if (dcl->config)
+		my_free(dcl->config);
+        if (dcl->host)
+		my_free(dcl->host);
+        if (dcl->dest)
+		my_free(dcl->dest);
+        if (dcl->master)
+		my_free(dcl->master);
+        if (dcl->glue_ip)
+		my_free(dcl->glue_ip);
+        if (dcl->glue_ns)
+		my_free(dcl->glue_ns);
+	my_free(dcl);
 }

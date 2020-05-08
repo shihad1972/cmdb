@@ -97,7 +97,8 @@ enum {			/* regex search codes */
 	CN_REGEX,
 	DC_REGEX,
 	TIMEZONE_REGEX,
-	PACKAGE_FIELD_REGEX
+	PACKAGE_FIELD_REGEX,
+	RESOURCE_TYPE_REGEX
 };
 
 enum {			// Client commands
@@ -135,7 +136,28 @@ enum {                  // Error codes
 	AILSA_INVALID_DBTYPE = 302,
 	AILSA_NO_PARAMETERS = 303,
 	AILSA_NO_QUERY_NO = 304,
-	AILSA_NO_FIELDS = 305
+	AILSA_NO_FIELDS = 305,
+	UUID_REGEX_ERROR = 400,
+	NAME_REGEX_ERROR = 401,
+	ID_REGEX_ERROR = 402,
+	CUSTOMER_REGEX_ERROR = 403,
+	COID_REGEX_ERROR = 404,
+	MAC_REGEX_ERROR = 405,
+	IP_REGEX_ERROR = 406,
+	DOMAIN_REGEX_ERROR = 407,
+	FS_REGEX_ERROR = 410,
+	RESOURCE_TYPE_REGEX_ERROR = 424,
+	RTYPE_INPUT_INVALID = 600,
+	ZTYPE_INPUT_INVALID = 601,
+	SERVICE_INPUT_INVALID = 602,
+	PROTOCOL_INPUT_INVALID = 603,
+	DOMAIN_INPUT_INVALID = 604,
+	CONFIG_INPUT_INVALID = 605,
+	HOST_INPUT_INVALID = 606,
+	DEST_INPUT_INVALID = 607,
+	MASTER_INPUT_INVALID = 608,
+	GLUE_IP_INPUT_INVALID = 609,
+	GLUE_NS_INPUT_INVALID = 610
 };
 
 enum {			// zone types; use NONE from action codes
@@ -406,7 +428,8 @@ void
 ailsa_show_error(int retval);
 const char *
 ailsa_strerror(int type);
-
+const char *
+ailsa_comm_line_strerror(int error);
 // AIL_ data functions;
 
 // Linked List
@@ -542,6 +565,8 @@ int
 ailsa_validate_input(char *input, int test);
 int
 ailsa_validate_string(const char *input, const char *re_test);
+const char *
+ailsa_regex_error(int error);
 
 // Some zone functions
 

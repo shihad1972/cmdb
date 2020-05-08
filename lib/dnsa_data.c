@@ -40,13 +40,6 @@ init_dnsa_struct(dnsa_s *dnsa)
 }
 
 void
-dnsa_init_all_config(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
-{
-	dnsa_init_config_values(dc);
-	dnsa_init_comm_line_struct(dcl);
-}
-
-void
 dnsa_init_config_values(ailsa_cmdb_s *dc)
 {
 	memset(dc, 0, sizeof(ailsa_cmdb_s));
@@ -61,23 +54,6 @@ dnsa_init_config_values(ailsa_cmdb_s *dc)
 	sprintf(dc->rndc, "/usr/sbin/rndc");
 	sprintf(dc->chkz, "/usr/sbin/named-checkzone");
 	sprintf(dc->chkc, "/usr/sbin/named-checkconf");
-}
-
-void
-dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl)
-{
-	memset(dcl, 0, sizeof(dnsa_comm_line_s));
-	strncpy(dcl->domain, "NULL", COMM_S);
-	strncpy(dcl->dest, "NULL", COMM_S);
-	strncpy(dcl->rtype, "NULL", COMM_S);
-	strncpy(dcl->ztype, "NULL", COMM_S);
-	strncpy(dcl->host, "NULL", COMM_S);
-	strncpy(dcl->master, "NULL", COMM_S);
-	strncpy(dcl->service, "NULL", COMM_S);
-	strncpy(dcl->protocol, "NULL", COMM_S);
-	strncpy(dcl->glue_ip, "NULL", COMM_S);
-	strncpy(dcl->glue_ns, "NULL", COMM_S);
-	strncpy(dcl->config, "/etc/dnsa/dnsa.conf", CONF_S);
 }
 
 void

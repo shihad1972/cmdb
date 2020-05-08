@@ -38,11 +38,11 @@ void
 parse_dnsa_config_error(int error);
 int
 validate_comm_line(dnsa_comm_line_s *comm);
-void
+int
 validate_fwd_comm_line(dnsa_comm_line_s *comm);
-void
+int
 validate_glue_comm_line(dnsa_comm_line_s *comm);
-void
+int
 validate_rev_comm_line(dnsa_comm_line_s *comm);
 // Zone action Functions
 int

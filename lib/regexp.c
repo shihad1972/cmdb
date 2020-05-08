@@ -54,7 +54,8 @@ const char *regexps[] = {
 	"^cn\\=[a-zA-Z0-9]*(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
 	"^dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])(\\,dc\\=([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*$",
 	"^[a-zA-Z]*[a-zA-Z0-9]*[\\-/]*[a-zA-Z0-9]*$",
-	"^[a-zA-Z]+[a-zA-Z0-9]*[\\-]?[a-zA-Z0-9]*/[a-zA-Z0-9]+([\\_\\-]?[a-zA-Z0-9])*$"
+	"^[a-zA-Z]+[a-zA-Z0-9]*[\\-]?[a-zA-Z0-9]*/[a-zA-Z0-9]+([\\_\\-]?[a-zA-Z0-9])*$",
+	"^[a-zA-Z0-9]+$"
 };
 
 int
@@ -104,4 +105,42 @@ ailsa_validate_string(const char *input, const char *re_test)
 		retval = -1;
 	regfree(&re);
 	return retval;
+}
+
+const char *
+ailsa_regex_error(int error)
+{
+	switch(error) {
+	case UUID_REGEX_ERROR:
+		return "UUID failed validation";
+		break;
+	case NAME_REGEX_ERROR:
+		return "Name failed validation";
+		break;
+	case ID_REGEX_ERROR:
+		return "id failed validation";
+		break;
+	case CUSTOMER_REGEX_ERROR:
+		return "Customer name failed validation";
+		break;
+	case COID_REGEX_ERROR:
+		return "COID failed validation";
+		break;
+	case MAC_REGEX_ERROR:
+		return "MAC failed validation";
+		break;
+	case IP_REGEX_ERROR:
+		return "IP failed validation";
+		break;
+	case DOMAIN_REGEX_ERROR:
+		return "Domain name failed validation";
+		break;
+	case FS_REGEX_ERROR:
+		return "File system failed validation";
+		break;
+	default:
+		return "Unknown regex failed validation";
+		break;
+	}
+	return "Should never get here! ailsa_regex_error failed";
 }

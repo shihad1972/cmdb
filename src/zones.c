@@ -356,9 +356,17 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 	zone = dnsa->zones;
 	while (zone) {
 		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			if (((strlen(name) > 0) &&
-			     (strncmp(name, zone->name, RBUFF_S) == 0)) ||
-			     (strncmp(name, "none", COMM_S) == 0)) {
+			if (name) {
+				 if (strncmp(name, zone->name, RBUFF_S) == 0) {
+					check_for_updated_fwd_zone(dc, zone);
+					if ((retval = validate_fwd_zone(dc, zone, dnsa)) == CHKZONE_FAIL) {
+						printf("Zone %s invalid\n", zone->name);
+						retval = NONE;
+					} else if (retval != 0) {
+						goto cleanup;
+					}
+				}
+			} else {
 				check_for_updated_fwd_zone(dc, zone);
 				if ((retval = validate_fwd_zone(dc, zone, dnsa)) == CHKZONE_FAIL) {
 					printf("Zone %s invalid\n", zone->name);
@@ -1505,8 +1513,8 @@ add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_fwd_zone");
 	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_fwd_zone");
 	init_zone_struct(zone);
-	if ((strncmp(cm->ztype, "NULL", COMM_S)) == 0)
-		snprintf(cm->ztype, RANGE_S, "master");
+	if (!(cm->ztype))
+		cm->ztype = strdup("master");
 	fill_fwd_zone_info(zone, cm, dc);
 	dnsa->zones = zone;
 	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {

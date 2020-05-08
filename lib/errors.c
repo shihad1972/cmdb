@@ -365,6 +365,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No file system type was supplied\n");
 	else if (retval == NO_LOG_VOL)
 		fprintf(stderr, "No logical volume name supplied\n");
+	else if ((retval >= 600) && (retval < 700))
+		ailsa_syslog(LOG_ERR, "Input validation failed: %s", ailsa_comm_line_strerror(retval));
 	else if (retval == NO_ALIAS)
 		ailsa_syslog(LOG_ERR, "No build type alias was supplied");
 	else if (retval == NO_OPTION)
@@ -372,7 +374,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == USER_INPUT_INVALID)
 		ailsa_syslog(LOG_ERR, "User input was not validated.");
 	else if (retval == CVERSION)
-		fprintf(stderr, "%s: %s\n", program, VERSION);
+		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONF_S) == 0) || (strncmp(program, "cmdb2", CONF_S) == 0))
 			display_cmdb_usage();
@@ -403,6 +405,37 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		  program);
 	}
 	exit (retval);
+}
+
+const char *
+ailsa_comm_line_strerror(int error)
+{
+	switch(error) {
+	case RTYPE_INPUT_INVALID:
+		return "Resource type was invalid";
+	case ZTYPE_INPUT_INVALID:
+		return "Zone type was invalid";
+	case SERVICE_INPUT_INVALID:
+		return "Service was invalid";
+	case PROTOCOL_INPUT_INVALID:
+		return "Protocol was invalid";
+	case DOMAIN_INPUT_INVALID:
+		return "Domain name was invalid";
+	case CONFIG_INPUT_INVALID:
+		return "Config file location was invalid";
+	case HOST_INPUT_INVALID:
+		return "Hostname was invalid";
+	case DEST_INPUT_INVALID:
+		return "Destination was invalid";
+	case MASTER_INPUT_INVALID:
+		return "Master IP or hostname was invalid";
+	case GLUE_IP_INPUT_INVALID:
+		return "Glue IP address was invalid";
+	case GLUE_NS_INPUT_INVALID:
+		return "Glue hostname was invalid";
+	default:
+		return "Unknown command line error";
+	}
 }
 
 void

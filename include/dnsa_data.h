@@ -30,17 +30,17 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	short int action;
 	short int type;
 	unsigned long int prefix;
-	char rtype[RANGE_S];
-	char ztype[RANGE_S];
-	char service[RANGE_S];
-	char protocol[RANGE_S];
-	char domain[CONF_S];
-	char config[CONF_S];
-	char host[RBUFF_S];
-	char dest[RBUFF_S];
-	char master[RBUFF_S];
-	char glue_ip[MAC_S];
-	char glue_ns[TBUFF_S];
+	char *rtype;
+	char *ztype;
+	char *service;
+	char *protocol;
+	char *domain;
+	char *config;
+	char *host;
+	char *dest;
+	char *master;
+	char *glue_ip;
+	char *glue_ns;
 } dnsa_comm_line_s;
 
 typedef struct record_row_s { /* Hold dns record */
@@ -207,9 +207,5 @@ void
 dnsa_clean_glue(glue_zone_info_s *glu);
 void
 dnsa_init_config_values(ailsa_cmdb_s *dc);
-void
-dnsa_init_comm_line_struct(dnsa_comm_line_s *dcl);
-void
-dnsa_init_all_config(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl);
 
 #endif // __DNSA_DATA_H__
