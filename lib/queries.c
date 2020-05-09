@@ -66,6 +66,7 @@ const char *basic_queries[] = {
 "SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
 "SELECT name FROM system_packages", // SYSTEM_PACKAGE_NAMES
 "SELECT name FROM system_scripts", // SYSTEM_SCRIPT_NAMES
+"SELECT name, type FROM zones", // ZONE_NAME_TYPES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -366,6 +367,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT systscr_arg_id FROM system_scripts_args WHERE arg = ? AND no = ? AND systscr_id = ? AND bd_id = ? AND bt_id = ?",
 	5,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // GLUE_ZONE_ON_ZONE_NAME
+"SELECT g.name, g.pri_ns, g.sec_ns FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id WHERE z.name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // DESTINATION_ON_NAME_ZONE
+"SELECT r.destination FROM records r LEFT JOIN zones z ON r.zone = z.id WHERE z.name = ? AND r.host = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // ZONE_TYPE_ON_NAME
+"SELECT type FROM zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 

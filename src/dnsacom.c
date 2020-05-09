@@ -192,7 +192,9 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if ((!(comp->domain)) && (comp->action != LIST_ZONES) && (comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED))
+	else if ((!(comp->domain)) && (comp->action != LIST_ZONES)
+		  && (comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED)
+		  && (comp->action != COMMIT_ZONES))
 		retval = NO_DOMAIN_NAME;
 	else if ((comp->action == MULTIPLE_A) && (!(comp->domain)) && (!(comp->dest)))
 		retval = NO_DOMAIN_NAME;

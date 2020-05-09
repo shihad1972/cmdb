@@ -66,6 +66,9 @@ cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone);
 static int
 cmdb_check_zone(ailsa_cmdb_s *cbs, char *zone);
 
+static int
+write_glue_records(ailsa_cmdb_s *cbc, int fd, AILLIST *g, const char *zone);
+
 unsigned long int
 get_net_range(unsigned long int prefix)
 {
@@ -171,6 +174,7 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 	if (!(cbc) || !(zone))
 		return AILSA_NO_DATA;
 	AILLIST *a = ailsa_db_data_list_init();
+	AILLIST *g = ailsa_db_data_list_init();
 	AILLIST *n = ailsa_db_data_list_init();
 	AILLIST *s = ailsa_db_data_list_init();
 	AILLIST *hr = ailsa_db_data_list_init();
@@ -199,6 +203,10 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_ERR, "ZONE_RECORDS_ON_NAME query failed");
 		goto cleanup;
 	}
+	if ((retval = ailsa_argument_query(cbc, GLUE_ZONE_ON_ZONE_NAME, a, g)) != 0) {
+		ailsa_syslog(LOG_ERR, "GLUE_ZONE_ON_ZONE_NAME query failed");
+		goto cleanup;
+	}
 	um = umask(0);
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
@@ -206,17 +214,21 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_INFO, "Path truncated in cmdb_validate_fwd_zone");
 	if ((fd = open(name, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
-		return FILE_O_FAIL;
+		retval = FILE_O_FAIL;
+		goto cleanup;
 	}
 	write_zone_file_header(fd, n, s, cbc->hostmaster);
 	write_fwd_header_records(fd, hr, zone);
 	write_fwd_records(fd, r, zone);
+	if ((retval = write_glue_records(cbc, fd, g, zone)) != 0)
+		ailsa_syslog(LOG_ERR, "Writing glue records failed");
 /* Still need to add glue zones. However, this is only used by cbcdomain just now
  * so unlikely to need it. I guess I can add it in when I do dnsa */
 	close(fd);
 	mask = umask(um);
 	cleanup:
 		ailsa_list_full_clean(a);
+		ailsa_list_full_clean(g);
 		ailsa_list_full_clean(n);
 		ailsa_list_full_clean(s);
 		ailsa_list_full_clean(hr);
@@ -260,7 +272,8 @@ write_fwd_header_records(int fd, AILLIST *r, char *zone)
 		return;
 	char *dest, *proto, *service, *host;
 	size_t slen, len = 6;
-	int port, retval;
+	int retval;
+	unsigned int port;
 	unsigned long int pri;
 	if ((r->total % len) != 0) {
 		ailsa_syslog(LOG_ERR, "Wrong number of data objects in SOA records list: %zu", r->total);
@@ -303,9 +316,9 @@ write_fwd_header_records(int fd, AILLIST *r, char *zone)
 			dest = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
 			slen = strlen(dest);
 			if (dest[slen - 1] != '.') {
-				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%d\t%s.%s\n", host, proto, zone, pri, port, host, zone);
+				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
 			} else {
-				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%d\t%s\n", host, proto, zone, pri, port, host);
+				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%u\t%s\n", host, proto, zone, pri, port, dest);
 			}
 			e = ailsa_move_down_list(e, len);
 		}
@@ -332,11 +345,47 @@ write_fwd_records(int fd, AILLIST *r, char *zone)
 		dest = ((ailsa_data_s *)e->next->next->data)->data->text;
 		hlen = strlen(host);
 		if (hlen < 8)
-			dprintf(fd, "%s\t\tIN\t%s\n%s\n", host, type, dest);
+			dprintf(fd, "%s\t\tIN\t%s\t%s\n", host, type, dest);
 		else 
-			dprintf(fd, "%s\tIN\t%s\n%s\n", host, type, dest);
+			dprintf(fd, "%s\tIN\t%s\t%s\n", host, type, dest);
 		e = ailsa_move_down_list(e, len);
 	}
+}
+
+static int
+write_glue_records(ailsa_cmdb_s *cbc, int fd, AILLIST *g, const char *zone)
+{
+// This function could return void if we do not allow non-FQDN's in NS records
+	if (!(cbc) || (fd == 0) || !(g) || !(zone))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	size_t len = 3;
+	char *name, *pri, *sec;
+	AILELEM *e;
+
+	if ((g->total % len) != 0) {
+		ailsa_syslog(LOG_ERR, "List contains wrong factor: want %zu got total of %zu", len, g->total);
+		goto cleanup;
+	}
+	e = g->head;
+	while (e) {
+		name = ((ailsa_data_s *)e->data)->data->text;
+		pri = ((ailsa_data_s *)e->next->data)->data->text;
+		sec = ((ailsa_data_s *)e->next->next->data)->data->text;
+		dprintf(fd, "%s\tIN\tNS\t%s\n", name, pri);
+		if (sec)
+			if ((strlen(sec) > 0) && (strcmp(sec, "none") != 0))
+				dprintf(fd, "%s\tIN\tNS\t%s\n", name, sec);
+// At this point, we should check if the NS records are FQDNs. Alternatively,
+// do not allow non FQDN records
+		e = ailsa_move_down_list(e, len);
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		return retval;
 }
 
 static int
@@ -365,7 +414,7 @@ cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone)
 }
 
 int
-cmdb_get_port_number(char *proto, char *service, int *port)
+cmdb_get_port_number(char *proto, char *service, unsigned int *port)
 {
 	if (!(proto) || !(service) || !(port))
 		return AILSA_NO_DATA;
@@ -376,7 +425,7 @@ cmdb_get_port_number(char *proto, char *service, int *port)
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
 		retval = -1;
 	} else {
-		*port = res->s_port;
+		*port = ntohs((uint16_t)res->s_port);
 	}
 	return retval;
 }

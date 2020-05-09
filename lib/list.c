@@ -64,6 +64,22 @@ ailsa_list_destroy(AILLIST *list)
 	return;
 }
 
+void
+ailsa_list_clean(AILLIST *list)
+{
+	void *data;
+	int retval = 0;
+
+	if (!(list))
+		return;
+	while (list->total > 0) {
+		retval = ailsa_list_remove(list, list->tail, (void **)&data);
+		if (retval == 0 && list->destroy != NULL) {
+			list->destroy(data);
+		}
+	}
+}
+
 int
 ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data)
 {

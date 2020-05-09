@@ -437,6 +437,8 @@ void
 ailsa_list_init(AILLIST *list, void (*destory)(void *data));
 void
 ailsa_list_destroy(AILLIST *list);
+void
+ailsa_list_clean(AILLIST *list);
 int
 ailsa_list_ins_next(AILLIST *list, AILELEM *element, void *data);
 int
@@ -585,7 +587,7 @@ unsigned long int
 generate_zone_serial(void);
 
 int
-cmdb_get_port_number(char *proto, char *service, int *port);
+cmdb_get_port_number(char *proto, char *service, unsigned int *port);
 
 int
 ailsa_get_iface_list(AILLIST *list);

@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 /* For freeBSD ?? */
@@ -39,6 +40,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
@@ -340,61 +342,78 @@ check_zone(char *domain, ailsa_cmdb_s *dc)
 int
 commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 {
-	char *filename = NULL;
-	int retval = 0;
-	dnsa_s *dnsa;
-	string_len_s *config;
-	zone_info_s *zone;
+	if (!(dc))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t len = 2;
+	char *zone, *type;
+	char *command = ailsa_calloc(CONFIG_LEN, "command in commit_fwd_zones");
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILELEM *e;
 
-	if (!(config = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "config in commit_fwd_zones");
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in commit_fwd_zones");
-	filename = ailsa_calloc(TBUFF_S, "filename in commit_fwd_zones");
-	init_string_len(config);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0)
-		goto cleanup;
-	zone = dnsa->zones;
-	while (zone) {
-		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			if (name) {
-				 if (strncmp(name, zone->name, RBUFF_S) == 0) {
-					check_for_updated_fwd_zone(dc, zone);
-					if ((retval = validate_fwd_zone(dc, zone, dnsa)) == CHKZONE_FAIL) {
-						printf("Zone %s invalid\n", zone->name);
-						retval = NONE;
-					} else if (retval != 0) {
-						goto cleanup;
-					}
-				}
-			} else {
-				check_for_updated_fwd_zone(dc, zone);
-				if ((retval = validate_fwd_zone(dc, zone, dnsa)) == CHKZONE_FAIL) {
-					printf("Zone %s invalid\n", zone->name);
-					retval = NONE;
-				} else if (retval != 0) {
-					goto cleanup;
-				}
-			}
-		}
-		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
-			fprintf(stderr, "Cannot add %s to fwd config\n", zone->name);
+	if (name) {
+		zone = name;
+		if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
 			goto cleanup;
 		}
-		zone = zone->next;
+		if ((retval = ailsa_argument_query(dc, ZONE_TYPE_ON_NAME, l, r)) != 0) {
+			ailsa_syslog(LOG_ERR, "ZONE_TYPE_ON_NAME query failed");
+			goto cleanup;
+		}
+		if (r->total == 0) {
+			ailsa_syslog(LOG_INFO, "zone %s not found in database");
+			goto cleanup;
+		}
+		e = r->head;
+		type = ((ailsa_data_s *)e->data)->data->text;
+		if (strcmp(type, "master") == 0) {
+			if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
+				goto cleanup;
+			}
+		} else {
+			ailsa_syslog(LOG_INFO, "zone %s not master. %s", zone, type);
+			goto cleanup; // maybe go on to write the zone file anyway??
+		}
+	} else {
+		if ((retval = ailsa_basic_query(dc, ZONE_NAME_TYPES, r)) != 0) {
+			ailsa_syslog(LOG_ERR, "ZONE_NAME_TYPES query failed");
+			goto cleanup;
+		}
+		if (r->total == 0) {
+			ailsa_syslog(LOG_INFO, "No zones found in database");
+			goto cleanup;
+		}
+		if ((r->total % len) != 0) {
+			ailsa_syslog(LOG_ERR, "ZONE_NAME_TYPES wrong factor. wanted %zu got total %zu", len, r->total);
+			goto cleanup;
+		}
+		e = r->head;
+		while (e) {
+			zone = ((ailsa_data_s *)e->data)->data->text;
+			type = ((ailsa_data_s *)e->next->data)->data->text;
+			if (strcmp(type, "master") == 0) {
+				if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone)) != 0) {
+					ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
+				}
+			}
+			e = ailsa_move_down_list(e, len);
+		}
 	}
-	snprintf(filename, NAME_S, "%s%s", dc->bind, dc->dnsa);
-	if ((retval = write_file(filename, config->string)) != 0)
-		fprintf(stderr, "Unable to write config file %s\n", filename);
-	snprintf(filename, NAME_S, "%s reload", dc->rndc);
-	if ((retval = system(filename)) != 0)
-		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	free(config->string);
-	free(config);
-	goto cleanup;
+	if ((retval = cmdb_write_fwd_zone_config(dc)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write out forward zone configuration");
+		goto cleanup;
+	}
+	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(command)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
 
 	cleanup:
-		free(filename);
-		dnsa_clean_list(dnsa);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		my_free(command);
 		return retval;
 }
 
