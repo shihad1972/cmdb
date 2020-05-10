@@ -48,6 +48,9 @@
 static int
 write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone);
 
+static int
+ailsa_check_for_zone_update(ailsa_cmdb_s *cbc, AILLIST *l, char *zone);
+
 static void
 write_zone_file_header(int fd, AILLIST *n, AILLIST *s, char *master);
 
@@ -195,6 +198,10 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_ERR, "ZONE_SOA_ON_NAME query failed");
 		goto cleanup;
 	}
+	if ((retval = ailsa_check_for_zone_update(cbc, s, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Checking for zone updated failed");
+		goto cleanup;
+	}
 	if ((retval = ailsa_argument_query(cbc, NS_MX_SRV_RECORDS, a, hr)) != 0) {
 		ailsa_syslog(LOG_ERR, "NS_MX_SRV_RECORDS query failed");
 		goto cleanup;
@@ -222,8 +229,6 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 	write_fwd_records(fd, r, zone);
 	if ((retval = write_glue_records(cbc, fd, g, zone)) != 0)
 		ailsa_syslog(LOG_ERR, "Writing glue records failed");
-/* Still need to add glue zones. However, this is only used by cbcdomain just now
- * so unlikely to need it. I guess I can add it in when I do dnsa */
 	close(fd);
 	mask = umask(um);
 	cleanup:
@@ -237,11 +242,55 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		return retval;
 }
 
+static int
+ailsa_check_for_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
+{
+	if (!(l))
+		return AILSA_NO_DATA;
+	if ((l->total % 6) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. wanted 6 got %zu", l->total);
+		return WRONG_LENGTH_LIST;
+	}
+	int retval = 0;
+	AILLIST *s = ailsa_db_data_list_init();
+	AILELEM *e;
+	unsigned long int serial;
+
+	e = l->head;
+	if (strcmp("yes", ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text) == 0) {
+		serial = generate_zone_serial();
+		if (serial <= ((ailsa_data_s *)e->next->data)->data->number)
+			serial = ++((ailsa_data_s *)e->next->data)->data->number;
+		else
+			((ailsa_data_s *)e->next->data)->data->number = serial;
+		if ((retval = cmdb_add_number_to_list(serial, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add serial number to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(zone, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cbs, update_queries[FWD_ZONE_SERIAL_UPDATE], s)) != 0) {
+			ailsa_syslog(LOG_ERR, "FWD_ZONE_SERIAL_UPDATE query failed");
+			goto cleanup;
+		}
+	}
+
+	cleanup:
+		ailsa_list_full_clean(s);
+		return retval;
+}
+
 static void
 write_zone_file_header(int fd, AILLIST *n, AILLIST *s, char *master)
 {
 	if (!(n) || !(s) || !(master) || (fd == 0))
 		return;
+	if (s->total != 6) {
+		ailsa_syslog(LOG_ERR, "Cannot write zone file header");
+		return;
+	}
 	char *pri = ((ailsa_data_s *)n->head->data)->data->text;
 	char *sec = ((ailsa_data_s *)n->head->next->data)->data->text;
 	size_t plen = strlen(pri);
@@ -316,9 +365,9 @@ write_fwd_header_records(int fd, AILLIST *r, char *zone)
 			dest = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
 			slen = strlen(dest);
 			if (dest[slen - 1] != '.') {
-				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
+				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
 			} else {
-				dprintf(fd, "_%s._%s.%s\tIN\tSRV\t%lu\t0\t%u\t%s\n", host, proto, zone, pri, port, dest);
+				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s\n", host, proto, zone, pri, port, dest);
 			}
 			e = ailsa_move_down_list(e, len);
 		}

@@ -63,7 +63,7 @@ const char *basic_queries[] = {
 "SELECT scheme_name, lvm from seed_schemes", // PARTITION_SCHEME_NAMES
 "SELECT domain FROM build_domain", // BUILD_DOMAIN_NAMES
 "SELECT domain, ns, start_ip, gateway, netmask from build_domain", // BUILD_DOMAIN_NETWORKS
-"SELECT name, type, sec_dns, master FROM zones", // FWD_ZONE_CONFIG
+"SELECT name, type, sec_dns, master FROM zones WHERE valid = 'yes'", // FWD_ZONE_CONFIG
 "SELECT name FROM system_packages", // SYSTEM_PACKAGE_NAMES
 "SELECT name FROM system_scripts", // SYSTEM_SCRIPT_NAMES
 "SELECT name, type FROM zones", // ZONE_NAME_TYPES
@@ -299,7 +299,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // ZONE_SOA_ON_NAME
-"SELECT ttl, serial, refresh, retry, expire FROM zones WHERE name = ?",
+"SELECT ttl, serial, refresh, retry, expire, updated FROM zones WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
 	},
@@ -581,6 +581,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE zones SET valid = ? WHERE name = ?",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // FWD_ZONE_SERIAL_UPDATE
+"UPDATE zones SET serial = ?, updated = 'no' WHERE name = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	},
 };
 
