@@ -109,31 +109,58 @@ list_zones(ailsa_cmdb_s *dc)
 void
 list_rev_zones(ailsa_cmdb_s *dc)
 {
-	int retval = 0;
-	dnsa_s *dnsa;
-	rev_zone_info_s *rev;
-
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in list_rev_zones");
-	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
-		dnsa_clean_list(dnsa);
+	if (!(dc))
 		return;
+	int retval;
+	size_t total = 6;
+	size_t len;
+	char *range, *prefix, *valid, *type, *master;
+	unsigned long int serial;
+	AILLIST *r = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = ailsa_basic_query(dc, REV_ZONE_INFORMATION, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_ZONE_INFORMATION query failed");
+		goto cleanup;
 	}
-	rev = dnsa->rev_zones;
+	if (r->total == 0) {
+		ailsa_syslog(LOG_INFO, "No reverse zones in DB");
+		goto cleanup;
+	}
+	if ((r->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong factor in query. wanted %zu, got %zu", total, r->total);
+		goto cleanup;
+	}
+	e = r->head;
 	printf("Listing reverse zones from database %s on %s\n", dc->db, dc->dbtype);
 // asuming IPv4 address length for range
-	printf("Range\t\tprefix\tvalid\tType\tMaster\n");
-	while (rev) {
-		if ((strncmp(rev->master, "(null)", COMM_S)) == 0)
-			snprintf(rev->master, RANGE_S, "N/A");
-		printf("%s\t/%lu\t%s\t%s\t",
-rev->net_range, rev->prefix, rev->valid, rev->type);
-		printf("%s\n", rev->master);
-		if (rev->next)
-			rev = rev->next;
+	printf("Range\t\t\tvalid\tSerial\t\tType\tMaster\n");
+	while (e) {
+		range = ((ailsa_data_s *)e->data)->data->text;
+		prefix = ((ailsa_data_s *)e->next->data)->data->text;
+		valid = ((ailsa_data_s *)e->next->next->data)->data->text;
+		serial = ((ailsa_data_s *)e->next->next->next->data)->data->number;
+		type = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
+		master = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
+		len = strlen(range) + strlen(prefix) + 1;
+		printf("%s/%s", range, prefix);
+		if (len < 8)
+			printf("\t\t\t");
+		else if (len < 16)
+			printf("\t\t");
 		else
-			rev = NULL;
+			printf("\t");
+		printf("%s\t%lu\t%s\t", valid, serial, type);
+		if (master)
+			printf("%s", master);
+		else
+			printf("N/A");
+		printf("\n");
+		e = ailsa_move_down_list(e, total);
 	}
-	dnsa_clean_list(dnsa);
+	cleanup:
+		ailsa_list_full_clean(r);
+		return;
 }
 
 void

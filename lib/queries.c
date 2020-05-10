@@ -68,6 +68,7 @@ const char *basic_queries[] = {
 "SELECT name FROM system_scripts", // SYSTEM_SCRIPT_NAMES
 "SELECT name, type FROM zones", // ZONE_NAME_TYPES
 "SELECT name, valid, serial, type, master FROM zones", // ZONE_INFORMATION
+"SELECT net_range, prefix, valid, serial, type, master FROM rev_zones", // REV_ZONE_INFORMATION
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
