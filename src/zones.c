@@ -51,45 +51,59 @@
 void
 list_zones(ailsa_cmdb_s *dc)
 {
-	int retval = 0;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
+	int retval;
+	size_t total = 5;
 	size_t len;
-	
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in list_zones");
-	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
-		dnsa_clean_list(dnsa);
-		return;
+	AILLIST *z = ailsa_db_data_list_init();
+	AILELEM *e;
+	char *zone, *valid, *type, *master;
+	unsigned long int serial;
+
+	if ((retval = ailsa_basic_query(dc, ZONE_INFORMATION, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "ZONE_INFORMATION query failed");
+		goto cleanup;
 	}
-	zone = dnsa->zones;
+	if (z->total == 0) {
+		ailsa_syslog(LOG_INFO, "No forward zones found in the database");
+		goto cleanup;
+	}
+	if ((z->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wanted %zu list factor; list contains %zu", total, z->total);
+		goto cleanup;
+	}
+	e = z->head;
 	printf("Listing zones from database %s on %s\n", dc->db, dc->dbtype);
 	printf("Name\t\t\t\tValid\tSerial\t\tType\tMaster\n");
-	while (zone) {
-		len = strlen(zone->name);
-		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
-			snprintf(zone->master, RANGE_S, "N/A");
+	while (e) {
+		zone = ((ailsa_data_s *)e->data)->data->text;
+		valid = ((ailsa_data_s *)e->next->data)->data->text;
+		serial = ((ailsa_data_s *)e->next->next->data)->data->number;
+		type = ((ailsa_data_s *)e->next->next->next->data)->data->text;
+		master = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
+		len = strlen(zone);
+/*		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
+			snprintf(zone->master, RANGE_S, "N/A"); */
 		if (len < 8)
-			printf("%s\t\t\t\t", zone->name);
+			printf("%s\t\t\t\t", zone);
 		else if (len < 16)
-			printf("%s\t\t\t", zone->name);
+			printf("%s\t\t\t", zone);
 		else if (len < 24)
-			printf("%s\t\t", zone->name);
+			printf("%s\t\t", zone);
 		else if (len < 32)
-			printf("%s\t", zone->name);
+			printf("%s\t", zone);
 		else
-			printf("%s\n\t\t\t\t", zone->name);
-		printf("%s\t%lu\t%s\t", zone->valid, zone->serial, zone->type);
-		if (strlen(zone->master) < 8)
-			printf("%s\t\t", zone->master);
+			printf("%s\n\t\t\t\t", zone);
+		printf("%s\t%lu\t%s\t", valid, serial, type);
+		if (master)
+			printf("%s", master);
 		else
-			printf("%s\t", zone->master);
+			printf("N/A");
 		printf("\n");
-		if (zone->next)
-			zone = zone->next;
-		else
-			zone = NULL;
+		e = ailsa_move_down_list(e, total);
 	}
-	dnsa_clean_list(dnsa);
+	cleanup:
+		ailsa_list_full_clean(z);
+		return;
 }
 
 void

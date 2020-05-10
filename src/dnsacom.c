@@ -449,23 +449,27 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			return HOST_INPUT_INVALID;
 	} else {
-		if (ailsa_validate_input(comm->dest, TXTRR_REGEX) < 0)
-			return DEST_INPUT_INVALID;
-		if ((strncmp(comm->rtype, "TXT", COMM_S) == 0) || (!(comm->rtype))) {
-			if (host[0] == '_') {
-				if (ailsa_validate_input(host + 1, NAME_REGEX) < 0)
-					return HOST_INPUT_INVALID;
+		if (comm->dest) {
+			if (ailsa_validate_input(comm->dest, TXTRR_REGEX) < 0)
+				return DEST_INPUT_INVALID;
+		}
+		if ((comm->rtype) && (comm->host)) {
+			if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+				if (host[0] == '_') {
+					if (ailsa_validate_input(host + 1, NAME_REGEX) < 0)
+						return HOST_INPUT_INVALID;
+				} else {
+					if (ailsa_validate_input(host, NAME_REGEX) < 0)
+						return HOST_INPUT_INVALID;
+				}
 			} else {
 				if (ailsa_validate_input(host, NAME_REGEX) < 0)
-					return HOST_INPUT_INVALID;
+					if (ailsa_validate_input(host, DOMAIN_REGEX) < 0)
+						return HOST_INPUT_INVALID;
 			}
-		} else {
-			if (ailsa_validate_input(host, NAME_REGEX) < 0)
-				if (ailsa_validate_input(host, DOMAIN_REGEX) < 0)
-					return HOST_INPUT_INVALID;
 		}
 	}
-	if (strncmp(comm->service, "NULL", COMM_S) != 0)
+	if (comm->service)
 		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 			return SERVICE_INPUT_INVALID;
 	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
