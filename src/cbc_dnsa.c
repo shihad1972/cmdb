@@ -86,21 +86,15 @@ int
 get_dns_ip_list(ailsa_cmdb_s *cbt, uli_t *ip, dbdata_s *data)
 {
 	int retval = NONE;
-	size_t dclen = sizeof(ailsa_cmdb_s);
 	dnsa_s *dnsa;
-	ailsa_cmdb_s *dc = NULL;
 
-	dc = ailsa_calloc(dclen, "dc in get_dns_ip_list");
 	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in get_dns_ip_list");
-	copy_cbc_into_dnsa(dc, cbt);
-	if ((retval = dnsa_run_query(dc, dnsa, ALL_A_RECORD)) != 0) {
+	if ((retval = dnsa_run_query(cbt, dnsa, ALL_A_RECORD)) != 0) {
 		dnsa_clean_list(dnsa);
-		free(dc);
 		return retval;
 	}
 	prep_dnsa_ip_list(data, dnsa, ip);
 	dnsa_clean_list(dnsa);
-	cmdb_free(dc, dclen);
 	return retval;
 }
 
@@ -159,7 +153,7 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	zone = ailsa_calloc(sizeof(zone_info_s), "zone in check_for_build_ip_in_dns");
 	if (!(rec = malloc(sizeof(record_row_s))))
 		report_error(MALLOC_FAIL, "rec in check_for_build_ip_in_dns");
-	setup_dnsa_build_ip_structs(zone, dnsa, dc, cbt, rec);
+	setup_dnsa_build_ip_structs(zone, dnsa, cbt, rec);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(zone->name, RBUFF_S, "%s", cml->build_domain);
 	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
@@ -182,14 +176,13 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 }
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, ailsa_cmdb_s *cbt, record_row_s *rec)
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *cbt, record_row_s *rec)
 {
 	init_zone_struct(zone);
 	init_record_struct(rec);
 	dnsa->zones = zone;
 	dnsa->records = rec;
-	parse_cmdb_config(dc);
-	copy_cbc_into_dnsa(dc, cbt);
+	parse_cmdb_config(cbt);
 }
 
 int
@@ -314,15 +307,12 @@ remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 	unsigned long int bip, server_id;
 	unsigned int max;
 	uint32_t ip_addr;
-	ailsa_cmdb_s *dnsa = NULL;
 	dbdata_s *dns = NULL;
 
 	server_id = data->args.number;	// save server_id so we can use this data struct.
-	dnsa = ailsa_calloc(sizeof(ailsa_cmdb_s), "dnsa in remove_ip_from_dns");
 	type = RECORD_ID_ON_IP_DEST_DOM;
 	max = cmdb_get_max(dnsa_extended_search_fields[type], dnsa_extended_search_args[type]);
 	init_multi_dbdata_struct(&dns, max);
-	copy_cbc_into_dnsa(dnsa, cbc);
 	if ((retval = cbc_run_search(cbc, data, BUILD_IP_ON_SERVER_ID)) <= 0) {
 		fprintf(stderr, "Cannot find build ip for server %s\n", cml->name);
 	} else {
@@ -336,14 +326,14 @@ remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 		}
 		data->args.number = server_id;
 		memset(data->fields.text, 0, RBUFF_S);
-		if ((retval = dnsa_run_extended_search(dnsa, data, BUILD_DOM_ON_SERVER_ID)) <= 0) {
+		if ((retval = dnsa_run_extended_search(cbc, data, BUILD_DOM_ON_SERVER_ID)) <= 0) {
 			fprintf(stderr, "Cannot find build domain from server in build_ip table\n");
 			goto cleanup;
 		} else if (retval > 1) {
 			fprintf(stderr, "Multiple IP's. Using first one!\n");
 		}
 		snprintf(data->args.text, RBUFF_S, "%s", data->fields.text);
-		if ((retval = dnsa_run_extended_search(dnsa, data, FWD_ZONE_ID_ON_NAME)) <= 0) {
+		if ((retval = dnsa_run_extended_search(cbc, data, FWD_ZONE_ID_ON_NAME)) <= 0) {
 			fprintf(stderr, "Cannot find build domain %s\n", data->args.text);
 			goto cleanup;
 		} else if (retval > 1) {
@@ -351,18 +341,17 @@ remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 		}
 		dns->next->args.number = data->fields.number;
 		snprintf(dns->next->next->args.text, HOST_S, "%s", cml->name);
-		if ((retval = dnsa_run_extended_search(dnsa, dns, type)) <= 0) {
+		if ((retval = dnsa_run_extended_search(cbc, dns, type)) <= 0) {
 			fprintf(stderr, "Cannot find any dns entry for %s.%s @ %s\n", cml->name, cml->build_domain, dns->args.text);
 			goto cleanup;
 		}
 		data->args.number = dns->fields.number;
-		if ((retval = dnsa_run_delete(dnsa, data, RECORDS)) <= 0)
+		if ((retval = dnsa_run_delete(cbc, data, RECORDS)) <= 0)
 			fprintf(stderr, "No records deleted\n");
 		else
 			printf("%d records deleted\n", retval);
 	}
 	cleanup:
-		free(dnsa);
 		clean_dbdata_struct(dns);
 		data->args.number = server_id;
 }

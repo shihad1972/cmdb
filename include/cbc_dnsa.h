@@ -53,7 +53,7 @@ int
 check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *data);
 
 void
-setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *dc, ailsa_cmdb_s *cbt, record_row_s *rec);
+setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *cbt, record_row_s *rec);
 
 void
 fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *cml, cbc_s *cbc);
