@@ -98,7 +98,8 @@ enum {			/* regex search codes */
 	DC_REGEX,
 	TIMEZONE_REGEX,
 	PACKAGE_FIELD_REGEX,
-	RESOURCE_TYPE_REGEX
+	RESOURCE_TYPE_REGEX,
+	SYSTEM_PACKAGE_ARG_REGEX
 };
 
 enum {			// Client commands

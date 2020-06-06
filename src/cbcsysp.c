@@ -230,7 +230,7 @@ validate_cbcsysp_comm_line(cbc_sysp_s *cbs)
 		}
 	}
 	if (cbs->arg) {
-		if (ailsa_validate_input(cbs->arg, DOMAIN_REGEX)) {
+		if (ailsa_validate_input(cbs->arg, SYSTEM_PACKAGE_ARG_REGEX)) {
 			ailsa_syslog(LOG_ERR, "Args invalid");
 			return USER_INPUT_INVALID;
 		}
