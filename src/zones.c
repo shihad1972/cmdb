@@ -48,6 +48,15 @@
 #include "dnsa_base_sql.h"
 #include "dnsa_net.h"
 
+static void
+print_fwd_zone_records(AILLIST *r);
+
+static void
+print_fwd_ns_mx_srv_records(char *zone, AILLIST *m);
+
+static void
+print_glue_records(char *zone, AILLIST *g);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -164,33 +173,171 @@ list_rev_zones(ailsa_cmdb_s *dc)
 }
 
 void
-display_zone(char *domain, ailsa_cmdb_s *dc)
+display_zone(char *zone, ailsa_cmdb_s *dc)
 {
-	int retval = 0;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
-	
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in display_zone");
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD | GLUE)) != 0) {
-		if (retval == 1)
-			printf("There are either no zones or records in the database\n");
-		dnsa_clean_list(dnsa);
+	int retval;
+	if (!(zone) || !(dc))
+		return;
+	AILLIST *g = ailsa_db_data_list_init();
+	AILLIST *m = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(zone, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, ZONE_SERIAL_ON_NAME, z, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "ZONE_SERIAL_ON_NAME query failed");
+		goto cleanup;
+	}
+	if (s->total == 0) {
+		ailsa_syslog(LOG_INFO, "zone %s not found in DB", zone);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, ZONE_RECORDS_ON_NAME, z, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "ZONE_RECORDS_ON_NAME query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, NS_MX_SRV_RECORDS, z, m)) != 0) {
+		ailsa_syslog(LOG_ERR, "NS_MX_SRV_RECORDS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, GLUE_ZONE_ON_ZONE_NAME, z, g)) != 0) {
+		ailsa_syslog(LOG_ERR, "GLUE_ZONE_ON_ZONE_NAME query failed");
+		goto cleanup;
+	}
+	printf("%s.\t%s.\t%s\t%lu\n", zone, dc->prins, dc->hostmaster, ((ailsa_data_s *)s->head->data)->data->number);
+	print_fwd_zone_records(r);
+	print_fwd_ns_mx_srv_records(zone, m);
+	print_glue_records(zone, g);
+	cleanup:
+		ailsa_list_full_clean(g);
+		ailsa_list_full_clean(m);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(s);
+		ailsa_list_full_clean(z);
+		return;
+}
+
+static void
+print_glue_records(char *zone, AILLIST *g)
+{
+	if (!(g))
+		return;
+	char *name, *pri, *sec;
+	size_t total = 3;
+	size_t len;
+	AILELEM *e = g->head;
+
+	if (g->total == 0) {
+		ailsa_syslog(LOG_INFO, "No glue records for zone %s", zone);
 		return;
 	}
-	zone = dnsa->zones;
-	while (zone) {
-		if ((strncmp(zone->name, domain, RBUFF_S)) == 0) {
-			if ((strncmp(zone->type, "master", RANGE_S)) == 0)
-				print_zone(dnsa, domain);
-			else
-				printf("This is a slave zone. No records to display\n");
-			break;
-		}
-		zone = zone->next;
+	if ((g->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong factor. Wanted %zu got %zu", total, g->total);
+		return;
 	}
-	if (!(zone))
-		fprintf(stderr, "Zone %s not found\n", domain);
-	dnsa_clean_list(dnsa);
+	while (e) {
+		name = ((ailsa_data_s *)e->data)->data->text;
+		pri = ((ailsa_data_s *)e->next->data)->data->text;
+		sec = ((ailsa_data_s *)e->next->next->data)->data->text;
+		len = strlen(name);
+		if (len >= 15)
+			printf("%s.\tIN\tNS\t%s\n", name, pri);
+		else if (len >= 7)
+			printf("%s.\t\tIN\tNS\t%s\n", name, pri);
+		else
+			printf("%s.\t\t\tIN\tNS\t%s\n", name, pri);
+		if (sec) {
+			if (strcmp(sec, "none") != 0) {
+				if (len >= 15)
+					printf("%s.\tIN\tNS\t%s\n", name, sec);
+				else if (len >= 7)
+					printf("%s.\t\tIN\tNS\t%s\n", name, sec);
+				else
+					printf("%s.\t\t\tIN\tNS\t%s\n", name, sec);
+			}
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+}
+
+static void
+print_fwd_ns_mx_srv_records(char *zone, AILLIST *m)
+{
+	if (!(m))
+		return;
+	char *type, *dest, *proto, *service;
+	int retval;
+	size_t total = 6;
+	unsigned long int pri;
+	unsigned int port;
+	AILELEM *e = m->head;
+
+	if (m->total == 0) {
+		ailsa_syslog(LOG_INFO, "No MX NS or SRV for zone");
+		return;
+	}
+	if ((m->total % total) != 0) {
+		ailsa_syslog(LOG_INFO, "Wrong factor in query. Wanted %zu; got %zu", total, m->total);
+		return;
+	}
+	while (e) {
+		type = ((ailsa_data_s *)e->data)->data->text;
+		proto = ((ailsa_data_s *)e->next->next->data)->data->text;
+		service = ((ailsa_data_s *)e->next->next->next->data)->data->text;
+		pri = ((ailsa_data_s *)e->next->next->next->next->data)->data->number;
+		dest = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
+		if (strcmp(type, "SRV") == 0) {
+			if ((retval = cmdb_get_port_number(proto, service, &port)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot get port number for service %s", service);
+				return;
+			}
+			printf("_%s._%s.%s.\tIN\tSRV\t%lu 0 %u %s\n", service, proto, zone, pri, port, dest);
+		} else if (strcmp(type, "MX") == 0) {
+			printf("\t\t\tIN\tMX\t%lu  %s\n", pri, dest);
+		} else if (strcmp(type, "NS") == 0) {
+			printf("\t\t\tIN\tNS\t%s\n", dest);
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+}
+
+static void
+print_fwd_zone_records(AILLIST *r)
+{
+	if (!(r))
+		return;
+	size_t total = 3;
+	size_t len;
+	AILELEM *e = r->head;
+	char *type, *host, *dest;
+
+	if (r->total == 0) {
+		ailsa_syslog(LOG_INFO, "No forward records for this zone");
+		return;
+	}
+	if ((r->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong factor in list. wanted %zu, got %zu", total, r->total);
+		return;
+	}
+	while (e) {
+		type = ((ailsa_data_s *)e->data)->data->text;
+		host = ((ailsa_data_s *)e->next->data)->data->text;
+		dest = ((ailsa_data_s *)e->next->next->data)->data->text;
+		len = strlen(host);
+		if (len >= 24)
+			printf("%s\n\t\t\tIN\t%s\t%s\n", host, type, dest);
+		else if (len >= 16)
+			printf("%s\tIN\t%s\t%s\n", host, type, dest);
+		else if (len >= 8)
+			printf("%s\t\tIN\t%s\t%s\n", host, type, dest);
+		else
+			printf("%s\t\t\tIN\t%s\t%s\n", host, type, dest);
+		e = ailsa_move_down_list(e, total);
+	}
 }
 
 void
