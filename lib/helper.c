@@ -81,10 +81,8 @@ cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list)
 		goto cleanup;
 	}
 	cleanup:
-		ailsa_list_destroy(hard);
-		ailsa_list_destroy(results);
-		my_free(hard);
-		my_free(results);
+		ailsa_list_full_clean(hard);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -476,6 +474,26 @@ cmdb_add_system_script_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if ((retval = ailsa_argument_query(cc, SYSTEM_SCRIPT_ID_ON_NAME, l, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPT_ID_ON_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(name) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add vm server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "VM_SERVER_ID_ON_NAME query failed");
 
 	cleanup:
 		ailsa_list_full_clean(l);

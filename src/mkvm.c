@@ -54,10 +54,7 @@ main(int argc, char *argv[])
 		goto cleanup;
 	switch (vm->action) {
 	case AILSA_ADD:
-		retval = mkvm_create_vm(vm);
-		break;
-/*	case AILSA_CMDB_ADD:
-		retval = mkvm_add_to_cmdb(cmdb, vm); */
+		retval = mkvm_create_vm(cmdb, vm);
 		break;
 	case AILSA_HELP:
 		display_mkvm_usage();

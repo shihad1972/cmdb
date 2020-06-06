@@ -25,8 +25,12 @@
 #include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <syslog.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include <libvirt/libvirt.h>
 #include <libvirt/virterror.h>
 #include <libxml/parser.h>
@@ -41,6 +45,9 @@ typedef struct ailsa_virt_stor_s {
 
 
 // End of Storage
+
+static int
+mkvm_add_to_cmdb(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm);
 
 static int
 ailsa_connect_libvirt(virConnectPtr *conn, const char *uri);
@@ -60,6 +67,12 @@ ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm);
 static int
 ailsa_create_storage_pool_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom);
 
+static int
+mkvm_fill_server_list(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm, AILLIST *server);
+
+static int
+cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm);
+
 #ifndef DEBUG
 static void
 ailsa_custom_libvirt_err(void *data, virErrorPtr err)
@@ -70,7 +83,7 @@ ailsa_custom_libvirt_err(void *data, virErrorPtr err)
 #endif
 
 int
-mkvm_create_vm(ailsa_mkvm_s *vm)
+mkvm_create_vm(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	virConnectPtr conn;
@@ -129,6 +142,8 @@ mkvm_create_vm(ailsa_mkvm_s *vm)
 		retval = -1;
 		goto cleanup;
 	}
+	if (vm->cmdb > 0)
+		retval = mkvm_add_to_cmdb(cms, vm);
 	cleanup:
 		if (pool)
 			virStoragePoolFree(pool);
@@ -186,7 +201,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	char mac[MAC_LEN];
 	unsigned long int ram = 0;
 
-	if (!(vm))
+	if (!(vm) || !(dom))
 		return -1;
 	ram = vm->ram * 1024;
 	uuid = ailsa_gen_uuid_str();
@@ -194,6 +209,8 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	if ((retval = ailsa_gen_mac(mac, AILSA_KVM)) != 0)
 		goto cleanup;
 	if (!(vm->mac = strndup(mac, MAC_LEN)))
+		goto cleanup;
+	if (!(vm->uuid = strndup(uuid, UUID_LEN)))
 		goto cleanup;
 	snprintf(buf, FILE_LEN, "\
 <domain type='kvm'>\n\
@@ -339,7 +356,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	cleanup:
 		if (uuid)
 			my_free(uuid);
-	return retval;
+		return retval;
 }
 
 static int
@@ -395,54 +412,43 @@ ailsa_get_vol_type(virStorageVolInfoPtr info, ailsa_mkvm_s *vm)
 	vm->vtstr = str;
 	return retval;
 }
-/*
+
 int
 mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 {
-	int retval =  0;
-	size_t len;
-	AILSS *select = ailsa_calloc(sizeof(AILSS), "select in mkvm_add_to_cmdb");
-	AILDBV *fields = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmdb");
-	AILDBV *args = ailsa_calloc(sizeof(AILDBV), "fields in mkvm_add_to_cmdb");
-	AILLIST *results = ailsa_calloc(sizeof(AILLIST), "results in mkvm_add_to_cmdb");
-
 	if (!(cmdb) || !(vm))
 		return AILSA_NO_DATA;
-	ailsa_list_init(results, ailsa_clean_data);
-	if ((retval = ailsa_init_ss(select)) != 0) {
-		fprintf(stderr, "Cannot initialise AILSS select\n");
+	int retval =  0;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *res = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(vm->name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add VM name to list");
 		goto cleanup;
 	}
-	select->query = strndup("SELECT server_id FROM server WHERE name = ?", CONFIG_LEN);
-	fields->name = strdup("server_id");
-	fields->type = AILSA_DB_LINT;
-	if ((retval = ailsa_list_ins_next(select->fields, NULL, fields)) != 0) {
-		fprintf(stderr, "Cannot insert fields into list in mkvm_add_to_cmdb\n");
+	if ((retval = ailsa_argument_query(cmdb, SERVER_ID_ON_NAME, server, res)) != 0) {
+		ailsa_syslog(LOG_ERR, "SERVER_ID_ON_NAME query failed");
 		goto cleanup;
 	}
-	if ((len = strlen(vm->name)) >= CONFIG_LEN)
-		fprintf(stderr, "Name of vm trundated to 255 characters!\n");
-	args->name = strndup(vm->name, CONFIG_LEN);
-	args->type = AILSA_DB_TEXT;
-	if ((retval = ailsa_list_ins_next(select->args, NULL, args)) != 0) {
-		fprintf(stderr, "Cannot insert args into list in mkvm_add_to_cmdb\n");
+	if (res->total > 0) {
+		ailsa_syslog(LOG_INFO, "Server %s exists in database", vm->name);
 		goto cleanup;
 	}
-	if ((retval = ailsa_simple_select(cmdb, select, results)) < 0) {
-		fprintf(stderr, "Cannot get server_id from database in mkvm_add_to_cmdb\n");
-		goto cleanup;
-	} else if (retval > 0) {
-		fprintf(stderr, "VM %s exists in database\n", vm->name);
+	if ((retval = mkvm_fill_server_list(cmdb, vm, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill server list for database insert");
 		goto cleanup;
 	}
+	if ((retval = ailsa_insert_query(cmdb, INSERT_SERVER, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_SERVER query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_hardware_to_new_vm(cmdb, vm)) != 0)
+		goto cleanup;
 	cleanup:
-		ailsa_clean_ss(select);
-		if (results) {
-			ailsa_list_destroy(results);
-			my_free(results);
-		}
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(res);
 		return retval;
-} */
+}
 
 int
 mksp_create_storage_pool(ailsa_mkvm_s *sp)
@@ -548,5 +554,136 @@ ailsa_create_storage_pool_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 	ailsa_fill_string(dom, buf);
 
 	cleanup:
+		return retval;
+}
+
+static int
+mkvm_fill_server_list(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm, AILLIST *server)
+{
+	if (!(cmdb) || !(vm) || !(server))
+		return AILSA_NO_DATA;
+	int retval;
+	char *vm_server = ailsa_calloc(CONFIG_LEN, "vm_server in mkvm_fill_server_list");
+
+	if ((retval = cmdb_add_string_to_list("Virtual Machine", server)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list("x86_64", server)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list("KVM", server)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list(vm->uuid, server)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_cust_id_to_list(vm->coid, cmdb, server)) != 0) 
+		goto cleanup;
+	if (server->total != 6) {
+		ailsa_syslog(LOG_ERR, "Cannot get customer ID from coid %s", vm->coid);
+		goto cleanup;
+	}
+	if ((retval = gethostname(vm_server, CONFIG_LEN)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get hostname: %s", strerror(errno));
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_vm_server_id_to_list(vm_server, cmdb, server)) != 0)
+		goto cleanup;
+	if (server->total != 7) {
+		if ((retval = cmdb_add_number_to_list(0, server)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add 0 vm_server_id to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_populate_cuser_muser(server)) != 0)
+		goto cleanup;
+	if (server->total != 9) {
+		retval = -1;
+		ailsa_syslog(LOG_ERR, "Wrong number of elements in server list: %zu", server->total);
+		goto cleanup;
+	}
+	cleanup:
+		my_free(vm_server);
+		return retval;
+}
+
+static int
+cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
+{
+	if (!(cmdb) || !(vm))
+		return AILSA_NO_DATA;
+	int retval;
+	char buff[MAC_LEN];
+	unsigned long int server_id;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_server_id_to_list(vm->name, cmdb, l)) != 0)
+		goto cleanup;
+	if (l->total != 1) {
+		ailsa_syslog(LOG_ERR, "Cannot find server %s", vm->name);
+		goto cleanup;
+	}
+	server_id = ((ailsa_data_s *)l->head->data)->data->number;
+	sprintf(buff, "Network Card");
+	if ((retval = cmdb_add_hard_type_id_to_list(buff, cmdb, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((retval = cmdb_add_string_to_list(vm->mac, l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list("eth0", l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(server_id, l)) != 0)
+		goto cleanup;
+	sprintf(buff, "Hard Disk");
+	if ((retval = cmdb_add_hard_type_id_to_list(buff, cmdb, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((snprintf(buff, MAC_LEN, "%lu GB", vm->size)) >= MAC_LEN)
+		ailsa_syslog(LOG_ERR, "disk size buff truncated!");
+	if ((retval = cmdb_add_string_to_list(buff, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	sprintf(buff, "vda");
+	if ((retval = cmdb_add_string_to_list(buff, l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(server_id, l)) != 0)
+		goto cleanup;
+	sprintf(buff, "Virtual CPU");
+	if ((retval = cmdb_add_hard_type_id_to_list(buff, cmdb, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((snprintf(buff, MAC_LEN, "%lu vCPU", vm->cpus)) >= MAC_LEN)
+		ailsa_syslog(LOG_ERR, "cpu buff truncated!");
+	if ((retval = cmdb_add_string_to_list(buff, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((retval = cmdb_add_string_to_list("cpu", l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(server_id, l)) != 0)
+		goto cleanup;
+	sprintf(buff, "Virtual RAM");
+	if ((retval = cmdb_add_hard_type_id_to_list(buff, cmdb, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((snprintf(buff, MAC_LEN, "%lu RAM", vm->ram)) >= MAC_LEN)
+		ailsa_syslog(LOG_ERR, "cpu buff truncated!");
+	if ((retval = cmdb_add_string_to_list(buff, l)) != 0)
+		goto cleanup;
+	memset(buff, 0, MAC_LEN);
+	if ((retval = cmdb_add_string_to_list("ram", l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0)
+		goto cleanup;
+	if ((l->total % 6) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number in list? %lu", l->total);
+		goto cleanup;
+	}
+	if ((retval = ailsa_multiple_insert_query(cmdb, INSERT_HARDWARE, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_HARDWARE query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
 		return retval;
 }

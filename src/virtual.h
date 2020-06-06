@@ -23,7 +23,7 @@
  */
 
 int
-mkvm_create_vm(ailsa_mkvm_s *vm);
+mkvm_create_vm(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm);
 
 int
 mksp_create_storage_pool(ailsa_mkvm_s *sp);

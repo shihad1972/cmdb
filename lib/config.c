@@ -169,7 +169,7 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
 	int retval = 0;
 	int opt;
-	const char *optstr = "c:g:n:p:r:u:k:b:ahvC";
+	const char *optstr = "c:dg:n:p:r:u:k:b:ahvC:";
 
 #ifdef HAVE_GOTOPT_H
 	int index;
@@ -183,10 +183,11 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		{"uri",		required_argument,	NULL,	'u'},
 		{"network",	required_argument,	NULL,	'k'},
 		{"bridge",	required_argument,	NULL,	'b'},
+		{"coid",	required_argument,	NULL,	'C'},
 		{"add",		no_argument,		NULL,	'a'},
 		{"help",	no_argument,		NULL,	'h'},
 		{"version",	no_argument,		NULL,	'v'},
-		{"cmdb",	no_argument,		NULL,	'C'}
+		{"cmdb",	no_argument,		NULL,	'd'}
 	};
 	while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
 #else
@@ -252,7 +253,10 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 			vm->action = AILSA_VERSION;
 			break;
 		case 'C':
-			vm->action = AILSA_CMDB_ADD;
+			vm->coid = strndup(optarg, BYTE_LEN + 1);
+			break;
+		case 'd':
+			vm->cmdb = AILSA_CMDB_ADD;
 			break;
 		default:
 			ailsa_syslog(LOG_ERR, "Unknown option %c\n", opt);
@@ -272,6 +276,8 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		retval = AILSA_NO_DATA;
 	if (!(vm->network ) && !(vm->netdev))
 		retval = AILSA_NO_NETWORK;
+	if ((vm->cmdb > 0) && !(vm->coid))
+		retval = AILSA_NO_COID;
 	return retval;
 }
 
