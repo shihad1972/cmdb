@@ -117,7 +117,11 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->vtstr);
 	if (i->mac)
 		my_free(i->mac);
-	free(i);
+	if (i->uuid)
+		my_free(i->uuid);
+	if (i->coid)
+		my_free(i->coid);
+	my_free(i);
 }
 
 void

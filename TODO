@@ -1,3 +1,7 @@
+06/06/2020
+Should probably move all actions to the CMDB_ definitions. These are in
+ailsacmdb.h and will remove another dependency on cmdb.h
+
 06/05/2020
 In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
 need to stop exiting in these functions. They should pass their error back up

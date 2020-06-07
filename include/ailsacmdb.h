@@ -44,8 +44,10 @@
 #  define NI_MAXHOST 1025
 # endif // NI_MAXHOST so I do not have to use __GNU_SOURCE. grrrr 
 enum {                  // Buffer lengths
+	BYTE_LEN = 8,
 	SERVICE_LEN = 16,
 	MAC_LEN = 32,
+	UUID_LEN = 37,
 	HOST_LEN = 64,
 	CONFIG_LEN = 256,
 	DOMAIN_LEN = 256,
@@ -130,6 +132,7 @@ enum {                  // Error codes
 	AILSA_NO_DIRECTORY = 5,
 	AILSA_NO_POOL = 6,
 	AILSA_NO_NETWORK = 7,
+	AILSA_NO_COID = 8,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_QUERY = 300,
@@ -373,11 +376,14 @@ typedef struct ailsa_mkvm_s {
 	char *vtstr;
 	char *mac;
 	char *logvol;
+	char *uuid;
+	char *coid;
 	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
 	unsigned long int sptype;
 	short int action;
+	short int cmdb;
 } ailsa_mkvm_s;
 
 typedef struct ailsa_string_s {
