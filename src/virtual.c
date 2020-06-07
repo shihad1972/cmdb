@@ -252,6 +252,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
       <driver name='qemu' type='raw'/>\n\
       <source %s='%s'/>\n\
       <target dev='vda' bus='virtio'/>\n\
+      <boot order='2'/>\n\
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>\n\
     </disk>\n\
 ", vm->vt, vm->vtstr, vm->path);
