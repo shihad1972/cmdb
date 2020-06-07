@@ -57,6 +57,12 @@ print_fwd_ns_mx_srv_records(char *zone, AILLIST *m);
 static void
 print_glue_records(char *zone, AILLIST *g);
 
+static void
+print_rev_zone_info(char *domain, AILLIST *z);
+
+static void
+print_rev_zone_records(char *domain, AILLIST *r);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -435,38 +441,78 @@ srv, proto, zname, rec->pri, port, rec->dest);
 void
 display_rev_zone(char *domain, ailsa_cmdb_s *dc)
 {
-	int retval = 0;
-	time_t create;
-	dnsa_s *dnsa;
-	rev_zone_info_s *rev;
-	
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in display_rev_zone");
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
-		dnsa_clean_list(dnsa);
+	if (!(domain) || !(dc))
 		return;
-	}
-	rev = dnsa->rev_zones;
-	while (rev) {
-		if ((strncmp(rev->net_range, domain, RBUFF_S)) == 0)
-			break;
-		rev = rev->next;
-	}
-	if (!(rev)) {
-		fprintf(stderr, "Reverse zone %s not found\n", domain);
-		dnsa_clean_list(dnsa);
-		return;
-	}
-	if ((strncmp(rev->type, "master", RANGE_S)) == 0) {
-		print_rev_zone(dnsa, domain);
+	int retval;
+	char in_addr[MAC_LEN];
+	unsigned long int prefix;
+	AILLIST *i = ailsa_db_data_list_init();
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	memset(in_addr, 0, MAC_LEN);
+	if ((retval = cmdb_add_string_to_list(domain, l)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(dc, REV_ZONE_INFO_ON_RANGE, l, z)) != 0)
+		goto cleanup;
+	if (z->total == 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s does not exist", domain);
+		goto cleanup;
 	} else {
-		create = (time_t)rev->ctime;
-		printf("This is a slave reverse zone. No records to display\n");
-		if (get_uname(rev->cuser))
-			printf("Created by %s on %s", get_uname(rev->cuser), ctime(&create));
-		else
-			printf("Created by (unknown) on %s", ctime(&create));
+		e = z->head->next->next->next;
+		d = e->data;
+		if (strcmp("master", d->data->text) != 0) {
+			ailsa_syslog(LOG_INFO, "Zone %s not a master zone");
+			goto cleanup;
+		}
+		e = e->prev;
+		d = e->data;
 	}
-	dnsa_clean_list(dnsa);
+	prefix = strtoul(d->data->text, NULL, 10);
+	get_in_addr_string(in_addr, domain, prefix);
+	if ((retval = ailsa_argument_query(dc, REV_ZONE_ID_ON_RANGE, l, i)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_ZONE_ID, i, r)) != 0)
+		goto cleanup;
+	print_rev_zone_info(domain, z);
+	print_rev_zone_records(in_addr, r);
+	cleanup:
+		ailsa_list_full_clean(i);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(z);
+}
+
+void
+print_rev_zone_info(char *domain, AILLIST *z)
+{
+	if (!(domain) || !(z))
+		return;
+	AILELEM *e = z->head;
+
+	printf("%s\t", domain);
+	printf("%s\t%lu\n", ((ailsa_data_s *)e->next->data)->data->text, ((ailsa_data_s *)e->data)->data->number);
+}
+
+static void
+print_rev_zone_records(char *domain, AILLIST *r)
+{
+	if (!(domain) || !(r))
+		return;
+	AILELEM *e = r->head;
+	ailsa_data_s *d;
+
+	while (e) {
+		d = e->data;
+		printf("%s.%s\t", d->data->text, domain);
+		e = e->next;
+		d = e->data;
+		printf("%s\n", d->data->text);
+		e = e->next;
+	}
 }
 
 void

@@ -562,9 +562,9 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	len = strlen(range);
 	len++;/* Got to remember the terminating \0 :) */
 	if (!(line = calloc(len, sizeof(char))))
-		report_error(MALLOC_FAIL, "line in get_in_addr_string2");
+		report_error(MALLOC_FAIL, "line in get_in_addr_string");
 	if (!(classless = calloc(CONF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "classless in get_in_addr_string2");
+		report_error(MALLOC_FAIL, "classless in get_in_addr_string");
 
 	snprintf(line, len, "%s", range);
 	if (prefix == 24) {
@@ -651,27 +651,3 @@ set_slave_name_servers(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
 	snprintf(dc->prins, RBUFF_S, "%s", cm->host);
 	return retval;
 }
-
-void 
-print_rev_zone_info(rev_zone_info_s *rzi)
-{
-	printf("rev_zone-id: %lu\n", rzi->rev_zone_id);
-	printf("prefix: %lu\n", rzi->prefix);
-	printf("owner: %lu\n", rzi->owner);
-	printf("start_ip: %lu\n", rzi->start_ip);
-	printf("end_ip: %lu\n", rzi->end_ip);
-	printf("serial: %lu\n", rzi->serial);
-	printf("refresh: %lu\n", rzi->refresh);
-	printf("retry: %lu\n", rzi->retry);
-	printf("expire: %lu\n", rzi->expire);
-	printf("ttl: %lu\n", rzi->ttl);
-	printf("net_range: %s\n", rzi->net_range);
-	printf("net_start: %s\n", rzi->net_start);
-	printf("net_finish: %s\n", rzi->net_finish);
-	printf("pri_dns: %s\n", rzi->pri_dns);
-	printf("sec_dns: %s\n", rzi->sec_dns);
-	printf("valid: %s\n", rzi->valid);
-	printf("updated: %s\n", rzi->updated);
-	printf("hostmaster: %s\n", rzi->hostmaster);
-}
-

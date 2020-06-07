@@ -179,8 +179,6 @@ validate_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone, dnsa_s *dnsa);
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
-void 
-print_rev_zone_info(rev_zone_info_s *zone);
 int
 create_and_write_rev_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, rev_zone_info_s *zone);
 void

@@ -389,6 +389,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT serial FROM zones WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // REV_ZONE_INFO_ON_RANGE
+"SELECT serial, pri_dns, prefix, type FROM rev_zones WHERE net_range = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{  // REV_RECORDS_ON_ZONE_ID
+"SELECT host, destination FROM rev_records WHERE rev_zone = ?",
+	1,
+	{ AILSA_DB_LINT }
 	}
 };
 
