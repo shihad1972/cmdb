@@ -124,10 +124,8 @@ cmdb_add_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert server id into list");
 
 	cleanup:
-		ailsa_list_destroy(server);
-		ailsa_list_destroy(results);
-		my_free(server);
-		my_free(results);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -166,10 +164,8 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert service type id into list");
 
 	cleanup:
-		ailsa_list_destroy(st);
-		ailsa_list_destroy(results);
-		my_free(st);
-		my_free(results);
+		ailsa_list_full_clean(st);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -228,10 +224,8 @@ cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot insert cust id into list");
 
 	cleanup:
-		ailsa_list_destroy(customer);
-		ailsa_list_destroy(results);
-		my_free(customer);
-		my_free(results);
+		ailsa_list_full_clean(customer);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -261,8 +255,7 @@ cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 	if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
 		ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
 	cleanup:
-		ailsa_list_destroy(args);
-		my_free(args);
+		ailsa_list_full_clean(args);
 		return retval;
 }
 
@@ -281,8 +274,7 @@ cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
 	if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
 	cleanup:
-		ailsa_list_destroy(s);
-		my_free(s);
+		ailsa_list_full_clean(s);
 		return retval;
 }
 
@@ -496,8 +488,7 @@ cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 	}
 	retval = (int)l->total;
 	cleanup:
-		ailsa_list_destroy(l);
-		my_free(l);
+		ailsa_list_full_clean(l);
 		return retval;
 }
 
@@ -516,8 +507,7 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 	retval = (int)list->total;
 
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 
@@ -540,8 +530,7 @@ check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list)
 		goto cleanup;
 	}
 	cleanup:
-		ailsa_list_destroy(args);
-		my_free(args);
+		ailsa_list_full_clean(args);
 		return retval;
 }
 
@@ -573,7 +562,6 @@ set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned lo
 		ailsa_syslog(LOG_ERR, "Update query for %s failed", name);
 
 	cleanup:
-		ailsa_list_destroy(a);
-		my_free(a);
+		ailsa_list_full_clean(a);
 		return retval;
 }
