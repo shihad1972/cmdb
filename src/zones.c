@@ -3233,29 +3233,38 @@ delete_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 void
 list_glue_zones(ailsa_cmdb_s *dc)
 {
-	int retval = NONE;
-	dnsa_s *dnsa;
-	glue_zone_info_s *glue;
-	zone_info_s *zone;
-
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in list_glue_zones");
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | GLUE)) != 0) {
-		dnsa_clean_list(dnsa);
-		fprintf(stderr, "Cannot get list of zones and glue zones\n");
+	if (!(dc))
 		return;
+	int retval;
+	size_t total = 6;
+	AILLIST *g = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = ailsa_basic_query(dc, GLUE_ZONE_INFORMATION, g)) != 0) {
+		ailsa_syslog(LOG_ERR, "GLUE_ZONE_INFORMATION query failed");
+		goto cleanup;
 	}
-	glue = dnsa->glue;
-	zone = dnsa->zones;
-	if (glue)
-		printf("Glue zones\n");
-	else
-		printf("No glue zones\n");
-	while (glue) {
-		print_glue_zone(glue, zone);
-		retval++;
-		glue = glue->next;
+	if (g->total == 0) {
+		printf("There are no glue zones to list\n");
+		goto cleanup;
+	} else if ((g->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong list element number. Factor is %zu, got %zu", total, g->total);
+		goto cleanup;
+	} else {
+		printf("Glue zones\n\n");
 	}
-	dnsa_clean_list(dnsa);
+	e = g->head;
+	while (e) {
+		printf("%s\t", ((ailsa_data_s *)e->data)->data->text);
+		printf("%s\t", ((ailsa_data_s *)e->next->data)->data->text);
+		printf("%s,", ((ailsa_data_s *)e->next->next->data)->data->text);
+		printf("%s\t", ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		printf("%s,", ((ailsa_data_s *)e->next->next->next->data)->data->text);
+		printf("%s\n", ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text);
+		e = ailsa_move_down_list(e, total);
+	}
+	cleanup:
+		ailsa_list_full_clean(g);
 }
 
 void

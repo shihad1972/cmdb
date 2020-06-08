@@ -69,6 +69,8 @@ const char *basic_queries[] = {
 "SELECT name, type FROM zones", // ZONE_NAME_TYPES
 "SELECT name, valid, serial, type, master FROM zones", // ZONE_INFORMATION
 "SELECT net_range, prefix, valid, serial,type, master FROM rev_zones", // REV_ZONE_INFORMATION
+"SELECT z.name, g.name, g.pri_ns, g.sec_ns, g.pri_dns, g.sec_dns \
+ FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
