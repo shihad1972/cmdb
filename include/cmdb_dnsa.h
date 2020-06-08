@@ -107,15 +107,7 @@ list_rev_zones(ailsa_cmdb_s *dc);
 void
 display_zone(char *domain, ailsa_cmdb_s *dc);
 void
-print_zone(dnsa_s *dnsa, char *domain);
-void
-print_record(record_row_s *rec, char *zname);
-/*int
-get_port_number(record_row_s *rec, char *name, unsigned short int *port); */
-void
 display_rev_zone(char *domain, ailsa_cmdb_s *dc);
-void
-print_rev_zone(dnsa_s *dnsa, char *domain);
 void
 print_multiple_a_records(ailsa_cmdb_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int

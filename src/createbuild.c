@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <sys/stat.h>
 /* For freeBSD ?? */
@@ -320,7 +321,8 @@ cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
 	int dret = 0;
 	if ((dret = check_for_build_ip_in_dns(cbt, cml, cbc)) == 0) {
 		printf("Hostname added into dns\n");
-		write_zone_and_reload_nameserver(cml);
+		if ((dret = cmdb_validate_zone(cbt, FORWARD_ZONE, cml->build_domain)) != 0)
+			ailsa_syslog(LOG_INFO, "Cannot reload name server");
 	} else if (dret == 1)
 		printf("Unable to add IP to DNS\n");
 	else if (dret == 2)

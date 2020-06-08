@@ -141,14 +141,11 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	unsigned int a = dnsa_extended_search_args[RECORDS_ON_ZONE];
 	unsigned int f = dnsa_extended_search_fields[RECORDS_ON_ZONE];
 	unsigned int max = cmdb_get_max(a, f);
-	size_t dclen = sizeof(ailsa_cmdb_s);
 	dbdata_s *data;
-	ailsa_cmdb_s *dc;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
 	record_row_s *rec;
 
-	dc = ailsa_calloc(dclen, "dc in check_for_build_ip_in_dns");
 	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in check_for_build_ip_in_dns");
 	zone = ailsa_calloc(sizeof(zone_info_s), "zone in check_for_build_ip_in_dns");
 	if (!(rec = malloc(sizeof(record_row_s))))
@@ -156,22 +153,21 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	setup_dnsa_build_ip_structs(zone, dnsa, cbt, rec);
 	init_multi_dbdata_struct(&data, max);
 	snprintf(zone->name, RBUFF_S, "%s", cml->build_domain);
-	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
+	if ((retval = dnsa_run_search(cbt, dnsa, ZONE_ID_ON_NAME)) != 0)
 		goto cleanup;
 	data->args.number = zone->id;
 	fill_rec_with_build_info(rec, zone, cml, cbc);
-	retval = dnsa_run_extended_search(dc, data, RECORDS_ON_ZONE);
+	retval = dnsa_run_extended_search(cbt, data, RECORDS_ON_ZONE);
 	if (retval == 0) /* No hosts in zone so just add */ {
-		retval = add_build_host_to_dns(dc, dnsa);
+		retval = add_build_host_to_dns(cbt, dnsa);
 	} else {
 		retval = do_build_ip_dns_check(cbc->bip, data);
 		if (retval == 0)
-			retval = add_build_host_to_dns(dc, dnsa);
+			retval = add_build_host_to_dns(cbt, dnsa);
 	}
 	cleanup:
 		clean_dbdata_struct(data);
 		dnsa_clean_list(dnsa);
-		cmdb_free(dc, dclen);
 		return retval;
 }
 
