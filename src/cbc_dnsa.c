@@ -252,51 +252,6 @@ add_build_host_to_dns(ailsa_cmdb_s *dc, dnsa_s *dnsa)
 }
 
 void
-write_zone_and_reload_nameserver(cbc_comm_line_s *cml)
-{
-	char config[NAME_S], *buff;
-	int retval = NONE;
-	size_t dclen = sizeof(ailsa_cmdb_s);
-	ailsa_cmdb_s *dc;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
-
-	buff = config;
-	get_config_file_location(buff);
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in write_zone_and_reload_nameserver");
-	dc = ailsa_calloc(dclen, "dc in write_zone_and_reload_nameserver");
-	if ((retval = parse_dnsa_config_file(dc, config)) != 0) {
-		fprintf(stderr, "Unable to parse config file??\n");
-		goto cleanup;
-	}
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
-		fprintf(stderr, "Query for zones and records failed!\n");
-		goto cleanup;
-	}
-	zone = dnsa->zones;
-	while (zone) {
-		if (strncmp(zone->name, cml->build_domain, RBUFF_S) == 0) {
-			check_for_updated_fwd_zone(dc, zone);
-			/*create_and_write_fwd_zone(dnsa, dc, zone); */
-			if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0)
-				printf("Zone %s not valid\n", zone->name);
-		}
-		zone = zone->next;
-	}
-	snprintf(buff, NAME_S, "%s reload", dc->rndc);
-	if ((retval = system(buff)) != 0)
-		fprintf(stderr, "%s failed with %d\n", buff, retval);
-/* Here we need to be able to work out what the reverse zone is, build it in
- * the database, and commit it on the name server */
-	goto cleanup;
-
-	cleanup:
-		dnsa_clean_list(dnsa);
-		cmdb_free(dc, dclen);
-		return;
-}
-
-void
 remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 {
 	int retval, type;

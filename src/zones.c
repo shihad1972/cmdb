@@ -516,188 +516,6 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		return retval;
 }
 
-void
-create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, string_len_s *zonefile)
-{
-	char *buffer;
-	size_t len, blen = RBUFF_S + COMM_S;
-	unsigned long int id;
-	if (zone)
-		id = zone->id;
-	else
-		return;
-	buffer = ailsa_calloc(blen, "buffer in create_fwd_zone_header");
-	snprintf(zonefile->string, BUILD_S, "\
-$TTL %lu\n\
-@\tIN\tSOA\t%s\t%s (\n\
-\t\t\t\t%lu\t; Serial\n\
-\t\t\t\t%lu\t\t; Refresh\n\
-\t\t\t\t%lu\t\t; Retry\n\
-\t\t\t\t%lu\t\t; Expire\n\
-\t\t\t\t%lu\t\t); Cache TTL\n\
-;\n\
-\tIN\tNS\t%s\n",
-	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
-	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
-	zonefile->size = strlen(zonefile->string);
-	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
-	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
-	    (strnlen(zone->sec_dns, COMM_S) != 0)) {
-		snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n",
-			 zone->sec_dns);
-		len = strlen(buffer);
-		if ((len + zonefile->size) >= zonefile->len)
-			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
-		zonefile->size += len;
-	}
-	while (record) {
-		if
-((record->zone == id) && (strncmp(record->type, "MX", COMM_S) == 0)) {
-			add_mx_record(zonefile, record);
-		} else  if
-((record->zone == id) && (strncmp(record->type, "NS", COMM_S) == 0)) {
-			add_ns_record(zonefile, record);
-		} else if
-((record->zone == id) && (strncmp(record->type, "SRV", COMM_S) == 0)) {
-			add_srv_record(zonefile, record, zone);
-		}
-		record = record->next;
-	}
-	cmdb_free(buffer, blen);
-}
-
-void
-add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonef)
-{
-	char *buffer, *dot, name[HOST_S];
-	size_t blen = 0;
-	glue_zone_info_s *glue = dnsa->glue;
-	record_row_s *record = dnsa->records;
-	zone_info_s *zone = dnsa->zones;
-	
-	buffer = ailsa_calloc(BUFF_S, "buffer in add_records_to_fwd_zonefile");
-	while (record) {
-		if (record->zone != id)
-			record = record->next; // Skip if not in zone
-		else if ((strncmp(record->type, "MX", COMM_S) == 0) ||
-                         (strncmp(record->type, "NS", COMM_S) == 0) ||
-                         (strncmp(record->type, "SRV", COMM_S) == 0))
-			record = record->next; // Skip already added records
-		else { // OK - add this one
-			snprintf(buffer, BUFF_S, "\
-%s\tIN\t%s\t%s\n", record->host, record->type, record->dest);
-			blen = strlen(buffer);
-			if (blen + zonef->size >= zonef->len)
-				resize_string_buff(zonef);
-			snprintf(zonef->string + zonef->size, blen + 1, "%s", buffer);
-			record = record->next;
-			zonef->size += blen;
-		}
-	}
-	while (zone) { // Find zone
-		if (zone->id == id)
-			break;
-		zone = zone->next;
-	}
-	if (!(glue)) { // No glue zones - nothing to do
-		free(buffer);
-		return;
-	}
-	while (glue) {
-		if (glue->zone_id != id) {
-			glue = glue->next;
-		} else {
-			snprintf(name, HOST_S, "%s", glue->name);
-			dot = strchr(name, '.');
-			*dot = '\0'; // Get root of glue zone. Assumes only 1 level
-			if (strncmp(glue->sec_ns, "none", COMM_S) != 0)
-				snprintf(buffer, BUFF_S, "\
-\n%s\tIN\tNS\t%s\n%s\tIN\tNS\t%s\n\
-", name, glue->pri_ns, name, glue->sec_ns);
-			else
-				snprintf(buffer, BUFF_S, "\
-\n%s\tIN\tNS\t%s\n", name, glue->pri_ns);
-			blen = strlen(buffer);
-			if (blen + zonef->size >= zonef->len)
-				resize_string_buff(zonef);
-			snprintf(zonef->string + zonef->size, blen + 1, "%s", buffer);
-			zonef->size += blen;
-			check_a_record_for_ns(zonef, glue, zone->name, dnsa);
-			glue = glue->next;
-		}
-	}
-	cmdb_free(buffer, BUFF_S);
-}
-
-void
-check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent, dnsa_s *dnsa)
-{
-	char *host, *zone, *pns, *sns, *buff;
-	short int add = 0;
-	size_t len;
-	
-	if (!(glue))
-		return;
-	buff = ailsa_calloc(RBUFF_S, "buff in check_a_record_for_ns");
-	pns = strdup(glue->pri_ns);
-	sns = strdup(glue->sec_ns);
-	zone = strdup(parent);
-	if ((host = strstr(pns, zone))) {
-		host--;
-		*host = '\0';
-		add = 1;
-	} else {
-		len = strlen(pns);
-		host = pns + len - 1;
-		if (*host != '.')
-			add = 1;
-	}
-	if (add == 1) {
-		add = 0;
-		if (check_parent_for_a_record(glue->pri_ns, parent, dnsa) == 0) {
-			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", pns, glue->pri_dns);
-			len = strlen(buff);
-			if (zonefile) {
-				if ((len + zonefile->size) >= zonefile->len)
-					resize_string_buff(zonefile);
-				snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-				zonefile->size += len;
-			} else {
-				printf("%s", buff);
-			}
-		}
-	}
-	if ((host = strstr(sns, zone))) {
-		host--;
-		*host = '\0';
-		add = 1;
-	} else if (strncmp(glue->sec_dns, "none", COMM_S) != 0) {
-		len = strlen(sns);
-		host = sns + len - 1;
-		if (*host != '.')
-			add = 1;
-	}
-	if (add == 1) {
-		if (check_parent_for_a_record(glue->sec_ns, parent, dnsa) == 0) {
-			snprintf(buff, RBUFF_S, "%s\tIN\tA\t%s\n", sns, glue->sec_dns);
-			len = strlen(buff);
-			if (zonefile) {
-				if ((len + zonefile->size) >= zonefile->len)
-					resize_string_buff(zonefile);
-				snprintf(zonefile->string + zonefile->size, len + 1, "%s", buff);
-				zonefile->size += len;
-			} else {
-				printf("%s", buff);
-			}
-		}
-	}
-	cmdb_free(pns, strlen(pns));
-	cmdb_free(sns, strlen(sns));
-	cmdb_free(buff, RBUFF_S);
-	cmdb_free(zone, strlen(parent));
-}
-
 int
 check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 {
@@ -720,119 +538,6 @@ check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 			rec = rec->next;
 		}
 	}
-	return retval;
-}
-
-void
-add_mx_record(string_len_s *zone, record_row_s *rec)
-{
-	char *buffer;
-	size_t len, blen = RBUFF_S + COMM_S;
-
-	buffer = ailsa_calloc(blen, "buffer in add_mx_record");
-	snprintf(buffer, RBUFF_S + COMM_S, "\
-\tIN\tMX %lu\t%s\n", rec->pri, rec->dest);
-	len = strlen(buffer);
-	if ((len + zone->size) >= zone->len)
-		resize_string_buff(zone);
-	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
-	zone->size += len;
-	cmdb_free(buffer, blen);
-}
-
-void
-add_ns_record(string_len_s *zone, record_row_s *rec)
-{
-	char *buffer;
-	size_t len, blen = RBUFF_S + COMM_S;
-
-	buffer = ailsa_calloc(blen, "buffer in add_ns_record");
-	snprintf(buffer, RBUFF_S + COMM_S, "\tIN\tNS\t%s\n", rec->dest);
-	len = strlen(buffer);
-	if ((len + zone->size) >= zone->len)
-		resize_string_buff(zone);
-	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
-	zone->size += len;
-	cmdb_free(buffer, blen);
-}
-
-void
-add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo)
-{
-	char *buffer, *host, *zname;
-	int retval;
-	unsigned short int port = 0;
-	size_t len;
-	struct addrinfo hints, *srvinfo;
-	struct sockaddr_in *ipv4;
-
-	buffer = ailsa_calloc(RBUFF_S, "buffer in add_srv_record");
-	host = ailsa_calloc(RBUFF_S, "host in add_srv_record");
-	len = strlen(rec->dest);
-	if (rec->dest[len - 1] == '.')
-		snprintf(host, RBUFF_S, "%s", rec->dest);
-	else
-		snprintf(host, RBUFF_S, "%s.%s.", rec->dest, zinfo->name);
-	zname = zinfo->name;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	if ((strncmp("tcp", rec->protocol, RANGE_S)) == 0)
-		hints.ai_socktype = SOCK_STREAM;
-	else if ((strncmp("udp", rec->protocol, RANGE_S)) == 0)
-		hints.ai_socktype = SOCK_DGRAM;
-	else {
-		fprintf(stderr, "Unknown protocol type %s for %s: not tcp nor udp\n",
-		 rec->protocol, rec->host);
-		return;
-	}
-        hints.ai_flags = AI_PASSIVE;
-	if ((retval = getaddrinfo(host, rec->service, &hints, &srvinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		return;
-	}
-	if (srvinfo->ai_family == AF_INET) {
-		ipv4 = (struct sockaddr_in *)srvinfo->ai_addr;
-		port = (unsigned short int) htons((uint16_t)ipv4->sin_port);
-	} else {
-		report_error(WRONG_PROTO, "add_srv_record");
-	}
-	freeaddrinfo(srvinfo);
-	snprintf(buffer, BUFF_S, "\
-_%s._%s.%s. %lu IN SRV %lu 0 %u %s\n", rec->service, rec->protocol, zname,
-zinfo->ttl, rec->pri, port, host);
-	len = strlen(buffer);
-	if ((len + zone->size) >= zone->len)
-		resize_string_buff(zone);
-	snprintf(zone->string + zone->size, len + 1, "%s", buffer);
-	zone->size += len;
-	cmdb_free(buffer, RBUFF_S);
-	cmdb_free(host, RBUFF_S);
-}
-
-int
-create_and_write_fwd_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, zone_info_s *zone)
-{
-	int retval;
-	char *buffer, *filename;
-	string_len_s *zonefile;
-	
-	zonefile = ailsa_calloc(sizeof(string_len_s), "zonefile in create_and_write_fwd_zone");
-	zonefile->string = ailsa_calloc(BUFF_S, "zonefile->string in create_and_write_fwd_zone");
-	buffer = ailsa_calloc(TBUFF_S, "buffer in create_and_write_fwd_zone");
-	zonefile->len = BUFF_S;
-	filename = buffer;
-	retval = 0;
-	create_fwd_zone_header(dnsa->records, dc->hostmaster, zone, zonefile);
-	add_records_to_fwd_zonefile(dnsa, zone->id, zonefile);
-	snprintf(filename, NAME_S, "%s%s",
-		 dc->dir, zone->name);
-	if ((retval = write_file(filename, zonefile->string)) != 0)
-		printf("Unable to write %s zonefile\n",
-		       zone->name);
-	if (zonefile->string)
-		cmdb_free(zonefile->string, zonefile->len);
-	cmdb_free(zonefile, sizeof(string_len_s));
-	cmdb_free(buffer, TBUFF_S);
 	return retval;
 }
 
@@ -1623,6 +1328,7 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
+	char command[CONFIG_LEN];
 	int retval = 0;
 	dnsa_s *dnsa;
 	zone_info_s *zone;
@@ -1648,7 +1354,7 @@ add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		fprintf(stderr, "Added zone %s\n", zone->name);
 	}
 	if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-		if ((retval = validate_fwd_zone(dc, zone, dnsa)) != 0) {
+		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, cm->domain)) != 0) {
 			dnsa_clean_list(dnsa);
 			return retval;
 		}
@@ -1669,7 +1375,10 @@ add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		printf("Zone marked as valid in the database\n");
 	dnsa_clean_zones(zone);
 	dnsa->zones = NULL;
-	retval = create_and_write_fwd_config(dc, dnsa);
+	retval = cmdb_write_fwd_zone_config(dc);
+	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(command)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
 	dnsa_clean_list(dnsa);
 	return retval;
 }
@@ -1904,56 +1613,6 @@ create_and_write_rev_config(ailsa_cmdb_s *dc, dnsa_s *dnsa)
 	if ((retval = system(filename)) != 0)
 		fprintf(stderr, "%s failed with %d\n", filename, retval);
 	clean_string_len(config);
-	return retval;
-}
-
-int
-validate_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone, dnsa_s *dnsa)
-{
-	int retval = 0;
-	dbdata_s *data, user;
-
-	init_multi_dbdata_struct(&data, 1);
-	init_dbdata_struct(&user);
-	user.next = data;
-	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
-		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
-	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
-	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
-	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
-			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
-		printf("Unable to get ID of zone %s\n", zone->name);
-		clean_dbdata_struct(data);
-		return ID_INVALID;
-	}
-	if ((retval = create_and_write_fwd_zone(dnsa, dc, zone)) != 0) {
-		fprintf(stderr, "Unable to write the zonefile for %s\n",
-			zone->name);
-		clean_dbdata_struct(data);
-		return FILE_O_FAIL;
-	}
-	if ((retval = check_zone(zone->name, dc)) != 0) {
-		fprintf(stderr, "Checkzone of %s failed\n", zone->name);
-		data->args.number = zone->id;
-		if ((retval = dnsa_run_update(dc, data, ZONE_VALID_NO)) != 0)
-			fprintf(stderr, "Set zone not valid in DB failed\n");
-		clean_dbdata_struct(data);
-		return CHKZONE_FAIL;
-	} else {
-		data->args.number = zone->id;
-		user.args.number = (unsigned long int)getuid();
-		if (strncmp(zone->valid, "yes", COMM_S) != 0) {
-			if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0) {
-				fprintf(stderr, "Set zone valid in DB failed\n");
-				clean_dbdata_struct(data);
-				return retval;
-			}
-		snprintf(zone->valid, COMM_S, "yes");
-		}
-	}
-	clean_dbdata_struct(data);
 	return retval;
 }
 

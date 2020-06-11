@@ -613,7 +613,7 @@ write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom)
 	if (!(cbs) || !(ice) || !(dom))
 		return;
 	int flags, fd;
-	char *name = ailsa_calloc(DOMAIN_LEN, "name in cmdb_validate_fwd_zone");
+	char *name = ailsa_calloc(DOMAIN_LEN, "name in write_dhcp_config_file");
 	ailsa_dhcp_s *dhcp;
 	ailsa_iface_s *iface;
 	mode_t um, mask;

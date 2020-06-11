@@ -135,14 +135,6 @@ int
 add_int_ip_to_rev_records(dnsa_s *dnsa);
 int
 check_notify_ip(zone_info_s *zone, char **host);
-int
-check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa);
-void
-add_mx_record(string_len_s *zone, record_row_s *rec);
-void
-add_ns_record(string_len_s *zone, record_row_s *rec);
-void
-add_srv_record(string_len_s *zone, record_row_s *rec, zone_info_s *zinfo);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
@@ -153,21 +145,11 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 check_zone(char *domain, ailsa_cmdb_s *dc);
 int
-create_and_write_fwd_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, zone_info_s *zone);
-int
 create_fwd_config(ailsa_cmdb_s *dc, zone_info_s *zone, string_len_s *config);
-void
-create_fwd_zone_header(record_row_s *record, char *hostm, zone_info_s *zone, string_len_s *zonefile);
-void
-add_records_to_fwd_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
-void
-check_a_record_for_ns(string_len_s *zonefile, glue_zone_info_s *glue, char *parent, dnsa_s *dnsa);
 int
 create_and_write_fwd_config(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 void
 check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone);
-int
-validate_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone, dnsa_s *dnsa);
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
