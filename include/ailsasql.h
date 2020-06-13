@@ -181,7 +181,7 @@ enum {			// SQL INSERT QUERIES
 	INSERT_PARTITION,
 	INSERT_PART_OPTION,
 	INSERT_BUILD_DOMAIN,
-	INSERT_BUILD_DOMAIN_ZONE,
+	INSERT_FORWARD_ZONE,
 	INSERT_SYSTEM_PACKAGE,
 	INSERT_SYSTEM_PACKAGE_ARGS,
 	INSERT_SYSTEM_PACKAGE_CONF,
@@ -317,6 +317,9 @@ check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list);
 
 int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
+
+int
+dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone);
 
 // Data manipulation functions
 

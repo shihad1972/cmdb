@@ -989,3 +989,49 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	free(line);
 	free(classless);
 }
+
+int
+dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone)
+{
+	if (!(cbs) || !(domain) || !(zone))
+		return AILSA_NO_DATA;
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(domain, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(cbs->prins, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add primary DNS server to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_string_to_list(cbs->secns, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add secondary DNS server to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->refresh, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add refresh value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->retry, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add retry value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->expire, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add expire value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(cbs->ttl, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add ttl value to list");
+		return retval;
+	}
+	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone serial to list");
+		return retval;
+	}
+	if ((retval = cmdb_populate_cuser_muser(zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		return retval;
+	}
+	return retval;
+}

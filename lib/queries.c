@@ -497,7 +497,7 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	10,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
-	{ // INSERT_BUILD_DOMAIN_ZONE
+	{ // INSERT_FORWARD_ZONE
 "INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	10,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
