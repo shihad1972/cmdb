@@ -696,46 +696,47 @@ check_notify_ip(zone_info_s *zone, char **ipstr)
 int
 commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 {
-	char *buffer, *filename;
-	int retval = 0;
-	dnsa_s *dnsa;
-	string_len_s *config;
-	rev_zone_info_s *zone;
+	if (!(dc))
+		return AILSA_NO_DATA;
+	int retval;
+	char *comm = ailsa_calloc(DOMAIN_LEN, "comm in commit_rev_zones");
+	char *zone;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
 
-	config = ailsa_calloc(sizeof(string_len_s), "zonefile in commit_rev_zones");
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in commit_rev_zones");
-	buffer = ailsa_calloc(TBUFF_S, "buffer in commit_rev_zones");
-	filename = buffer;
-	init_string_len(config);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, REV_ZONE | REV_RECORD)) != 0) {
-		retval = MY_QUERY_FAIL;
+	if ((retval = ailsa_basic_query(dc, REV_ZONES_NET_RANGE, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_ZONES_NET_RANGE query failed");
 		goto cleanup;
 	}
-	zone = dnsa->rev_zones;
-	while (zone) {
-		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			if ((strlen(name) > 0) && (strncmp(zone->net_range, name, RANGE_S) == 0))
-				create_and_write_rev_zone(dnsa, dc, zone);
-			else if (strncmp(name, "none", COMM_S) == 0)
-				create_and_write_rev_zone(dnsa, dc, zone);
-		}
-		if ((retval = create_rev_config(dc, zone, config)) != 0) {
-			fprintf(stderr, "Error creating reverse config\n");
-			retval =  CREATE_FILE_FAIL;
-			goto cleanup;
-		}
-		zone = zone->next;
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "No reverse zones were found");
+		goto cleanup;
 	}
-	snprintf(filename, TBUFF_S, "%s%s", dc->bind, dc->rev);
-	if ((retval = write_file(filename, config->string)) != 0)
-		fprintf(stderr, "Writing %s failed with %d\n", buffer, retval);
-	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
-	if ((retval = system(buffer)) != 0)
-		fprintf(stderr, "%s failed with %d\n", buffer, retval);
+	e = l->head;
+	while (e) {
+		d = e->data;
+		zone = d->data->text;
+		if (name) {
+			if (strncmp(name, zone, DOMAIN_LEN) == 0)
+				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone)) != 0)
+					ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
+		} else {
+			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone)) != 0)
+				ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
+		}
+		e = e->next;
+	}
+	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to create reverse config");
+		goto cleanup;
+	}
+	snprintf(comm, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(comm)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
 	cleanup:
-		cmdb_free(buffer, TBUFF_S);
-		clean_string_len(config);
-		dnsa_clean_list(dnsa);
+		ailsa_list_full_clean(l);
+		my_free(comm);
 		return retval;
 }
 

@@ -585,6 +585,9 @@ cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone);
 int
 cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);
 
+int
+cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs);
+
 // Various data functions
 
 int

@@ -49,6 +49,9 @@ static int
 write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone);
 
 static int
+write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone);
+
+static int
 ailsa_check_for_zone_update(ailsa_cmdb_s *cbc, AILLIST *l, char *zone);
 
 static void
@@ -71,6 +74,12 @@ cmdb_check_zone(ailsa_cmdb_s *cbs, char *zone);
 
 static int
 write_glue_records(ailsa_cmdb_s *cbc, int fd, AILLIST *g, const char *zone);
+
+static void
+write_rev_zone_header(int fd, AILLIST *soa, char *hostmaster);
+
+static void
+write_rev_zone_records(int fd, AILLIST *soa);
 
 unsigned long int
 get_net_range(unsigned long int prefix)
@@ -184,7 +193,7 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 	AILLIST *r = ailsa_db_data_list_init();
 	int retval, flags, fd;
 	mode_t um, mask;
-	char *name = ailsa_calloc(DOMAIN_LEN, "name in cmdb_validate_fwd_zone");
+	char *name = ailsa_calloc(DOMAIN_LEN, "name in write_fwd_zone_file");
 
 	if ((retval = cmdb_add_string_to_list(zone, a)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add zone name to argument list");
@@ -218,7 +227,7 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	if ((snprintf(name, DOMAIN_LEN, "%s%s", cbc->dir, zone)) >= DOMAIN_LEN)
-		ailsa_syslog(LOG_INFO, "Path truncated in cmdb_validate_fwd_zone");
+		ailsa_syslog(LOG_INFO, "Path truncated in write_fwd_zone_file");
 	if ((fd = open(name, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
 		retval = FILE_O_FAIL;
@@ -459,7 +468,145 @@ cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone)
 {
 	if (!(cbc) || !(zone))
 		return AILSA_NO_DATA;
-	return 0;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = write_rev_zone_file(cbc, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write zone file for zone %s", zone);
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_zone(cbc, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Zone %s could not be validated");
+		if ((retval = cmdb_add_string_to_list("no", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add invalid to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add valid to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add rev zone name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbc, update_queries[REV_ZONE_VALIDATE], l)) != 0)
+		ailsa_syslog(LOG_ERR, "REV_ZONE_VALIDATE update query failed");
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
+{
+	if (!(cbc) || !(zone))
+		return AILSA_NO_DATA;
+	char *name = ailsa_calloc(DOMAIN_LEN, "name in write_rev_zone_file");
+	int retval, flags, fd;
+	mode_t um, mask;
+	AILLIST *a = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *s = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(zone, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone name to argument list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, REV_SOA_ON_NET_RANGE, a, s)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_SOA_ON_NET_RANGE query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, REV_RECORDS_ON_NET_RANGE, a, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_RECORDS_ON_NET_RANGE query failed");
+		goto cleanup;
+	}
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((snprintf(name, DOMAIN_LEN, "%s%s", cbc->dir, zone)) >= DOMAIN_LEN)
+		ailsa_syslog(LOG_INFO, "path truncated in write_rev_zone_file");
+	if ((fd = open(name, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open zone file for writing: %s", strerror(errno));
+		retval = FILE_O_FAIL;
+		goto cleanup;
+	}
+	write_rev_zone_header(fd, s, cbc->hostmaster);
+	write_rev_zone_records(fd, r);
+	close(fd);
+	mask = umask(um);
+	cleanup:
+		ailsa_list_full_clean(a);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(s);
+		my_free(name);
+		return retval;
+}
+
+static void
+write_rev_zone_header(int fd, AILLIST *soa, char *hostmaster)
+{
+	if (!(soa) || !(hostmaster) || (fd == 0))
+		return;
+	if (soa->total != 7) {
+		ailsa_syslog(LOG_ERR, "Wrong number in soa list in write_rev_zone_header: %zu", soa->total);
+		return;
+	}
+	char *pri = ((ailsa_data_s *)soa->head->next->data)->data->text;
+	char *sec = ((ailsa_data_s *)soa->head->next->next->data)->data->text;
+	size_t plen = strlen(pri);
+	size_t slen = strlen(sec);
+
+	dprintf(fd, "$TTL %lu\n", ((ailsa_data_s *)soa->head->data)->data->number);
+	if (pri[plen - 1] != '.')
+		dprintf(fd, "@\tIN\tSOA\t%s.\t%s (\n", pri, hostmaster);
+	else
+		dprintf(fd, "@\tIN\tSOA\t%s\t%s (\n", pri, hostmaster);
+	dprintf(fd, "\t\t\t\t%lu\t; Serial\n", ((ailsa_data_s *)soa->head->next->next->next->data)->data->number);
+	dprintf(fd, "\t\t\t\t%lu\t; Refresh\n",
+		((ailsa_data_s *)soa->head->next->next->next->next->data)->data->number);
+	dprintf(fd, "\t\t\t\t%lu\t; Retry\n",
+		((ailsa_data_s *)soa->head->next->next->next->next->next->data)->data->number);
+	dprintf(fd, "\t\t\t\t%lu\t; Expire\n",
+		((ailsa_data_s *)soa->head->next->next->next->next->next->next->data)->data->number);
+	dprintf(fd, "\t\t\t\t%lu\t); Cache TTL\n",
+		((ailsa_data_s *)soa->head->data)->data->number);
+	dprintf(fd, ";\n");
+	if (pri[plen - 1] != '.')
+		dprintf(fd, "\t\tIN\tNS\t%s.\n", pri);
+	else
+		dprintf(fd, "\t\tIN\tNS\t%s\n", pri);
+	if (sec[slen - 1] != '.')
+		dprintf(fd, "\t\tIN\tNS\t%s.\n", sec);
+	else
+		dprintf(fd, "\t\tIN\tNS\t%s\n", sec);
+}
+
+static void
+write_rev_zone_records(int fd, AILLIST *soa)
+{
+	if (!(soa) || (fd == 0))
+		return;
+	char *host;
+	char *dest;
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	if ((soa->total % 2) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number of elements in list: %zu", soa->total);
+		return;
+	}
+	e = soa->head;
+	while (e) {
+		d = e->data;
+		host = d->data->text;
+		e = e->next;
+		d = e->data;
+		dest = d->data->text;
+		dprintf(fd, "%s\tPTR\t%s\n", host, dest);
+		e = e->next;
+	}
 }
 
 int
@@ -561,7 +708,7 @@ cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs)
 	int t = 0;
 	size_t len = 4;
 	char *name, *type, *sec, *master;
-	char *filename = ailsa_calloc(DOMAIN_LEN, "name in cmdb_write_fwd_zone_config");
+	char *filename = ailsa_calloc(DOMAIN_LEN, "filename in cmdb_write_fwd_zone_config");
 	char *ip = ailsa_calloc(INET6_ADDRSTRLEN, "ip in cmdb_write_fwd_zone_config");
 	AILLIST *l = ailsa_db_data_list_init();
 	AILELEM *e;
@@ -617,6 +764,84 @@ zone \"%s\" {\n\
 		my_free(ip);
 		my_free(filename);
 		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs)
+{
+	if (!(cbs))
+		return AILSA_NO_DATA;
+	char *filename = ailsa_calloc(DOMAIN_LEN, "filename in cmdb_write_rev_zone_config");
+	char *ip = ailsa_calloc(INET6_ADDRSTRLEN, "ip in cmdb_write_rev_zone_config");
+	char *master_ip = ailsa_calloc(INET6_ADDRSTRLEN, "master_ip in cmdb_write_rev_zone_config");
+	char *type, *range, *master;
+	int retval, flags, iptype;
+	int fd = 0;
+	size_t total = 6;
+	unsigned long int prefix;
+	mode_t um, mask;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = ailsa_basic_query(cbs, REV_ZONE_CONFIG, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_ZONE_CONFIG query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "No reverse zones found in the database");
+		goto cleanup;
+	} else if ((l->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong factor. Expected 4 got total of %zu", l->total);
+		goto cleanup;
+	}
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((snprintf(filename, DOMAIN_LEN, "%s%s", cbs->bind, cbs->rev)) >= DOMAIN_LEN)
+		ailsa_syslog(LOG_INFO, "Path truncated in cmdb_write_rev_zone_config");
+	if ((fd = open(filename, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
+		return FILE_O_FAIL;
+	}
+	e = l->head;
+	while (e) {
+		memset(ip, 0, INET6_ADDRSTRLEN);
+		memset(master_ip, 0, INET6_ADDRSTRLEN);
+		type = ((ailsa_data_s *)e->data)->data->text;
+		range = ((ailsa_data_s *)e->next->data)->data->text;
+		master = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
+		prefix = strtoul(((ailsa_data_s *)e->next->next->next->next->next->data)->data->text, NULL, 10);
+		get_in_addr_string(ip, range, prefix);
+		if (strcmp(type, "master") == 0) {
+			dprintf(fd, "\
+zone \"%s\" {\n\
+\t\t\ttype master;\n\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n", ip, cbs->dir, range);
+		} else if (strcmp(type, "slave") == 0) {
+			if ((retval = cmdb_getaddrinfo(master, master_ip, &iptype)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot get IP address for name %s", master);
+				goto cleanup;
+			}
+			dprintf(fd, "\
+zone \"%s\" {\n\
+\t\t\ttype slave;\n\
+\t\t\tmasters { %s; };\n\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n", ip, master_ip, cbs->dir, range);
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+	cleanup:
+		if (fd > 0) {
+			close(fd);
+			mask = umask(um);
+		}
+		ailsa_list_full_clean(l);
+		my_free(filename);
+		my_free(ip);
+		my_free(master_ip);
 		return retval;
 }
 

@@ -71,6 +71,8 @@ const char *basic_queries[] = {
 "SELECT net_range, prefix, valid, serial,type, master FROM rev_zones", // REV_ZONE_INFORMATION
 "SELECT z.name, g.name, g.pri_ns, g.sec_ns, g.pri_dns, g.sec_dns \
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
+"SELECT net_range FROM rev_zones WHERE valid = 'yes' AND type = 'master'", // REV_ZONES_NET_RANGE
+"SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -397,10 +399,20 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
-	{  // REV_RECORDS_ON_ZONE_ID
+	{ // REV_RECORDS_ON_ZONE_ID
 "SELECT host, destination FROM rev_records WHERE rev_zone = ?",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // REV_SOA_ON_NET_RANGE
+"SELECT ttl, pri_dns, sec_dns, serial, refresh, retry, expire FROM rev_zones WHERE net_range = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // REV_RECORDS_ON_NET_RANGE
+"SELECT host, destination FROM rev_records WHERE rev_zone = (SELECT rev_zone_id FROM rev_zones WHERE net_range = ?)",
+	1,
+	{ AILSA_DB_TEXT }
 	}
 };
 
@@ -605,6 +617,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE zones SET serial = ?, updated = 'no' WHERE name = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // REV_ZONE_VALIDATE
+"UPDATE rev_zones SET valid = ? WHERE net_range = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 };
 
