@@ -54,6 +54,9 @@ write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone);
 static int
 ailsa_check_for_zone_update(ailsa_cmdb_s *cbc, AILLIST *l, char *zone);
 
+static int
+ailsa_check_for_rev_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone);
+
 static void
 write_zone_file_header(int fd, AILLIST *n, AILLIST *s, char *master);
 
@@ -254,7 +257,7 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 static int
 ailsa_check_for_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
 {
-	if (!(l))
+	if (!(l) || !(cbs) || !(zone))
 		return AILSA_NO_DATA;
 	if ((l->total % 6) != 0) {
 		ailsa_syslog(LOG_ERR, "Wrong number in list. wanted 6 got %zu", l->total);
@@ -286,6 +289,45 @@ ailsa_check_for_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
 		}
 	}
 
+	cleanup:
+		ailsa_list_full_clean(s);
+		return retval;
+}
+
+static int
+ailsa_check_for_rev_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
+{
+	if (!(cbs) || !(l) || !(zone))
+		return AILSA_NO_DATA;
+	if ((l->total % 8) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. wanted 8 got %zu", l->total);
+		return WRONG_LENGTH_LIST;
+	}
+	int retval = 0;
+	AILLIST *s = ailsa_db_data_list_init();
+	AILELEM *e;
+	unsigned long int serial;
+
+	e = l->head;
+	if (strcmp("yes", ((ailsa_data_s *)e->next->next->next->next->next->next->next->data)->data->text) == 0) {
+		serial = generate_zone_serial();
+		if (serial <= ((ailsa_data_s *)e->next->next->next->data)->data->number)
+			serial = ++((ailsa_data_s *)e->next->next->next->data)->data->number;
+		else
+			((ailsa_data_s *)e->next->next->next->data)->data->number = serial;
+		if ((retval = cmdb_add_number_to_list(serial, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add serial number to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(zone, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add net range to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cbs, update_queries[REV_ZONE_SERIAL_UPDATE], s)) != 0) {
+			ailsa_syslog(LOG_ERR, "REV_ZONE_SERIAL_UPDATE query failed");
+			goto cleanup;
+		}
+	}
 	cleanup:
 		ailsa_list_full_clean(s);
 		return retval;
@@ -518,6 +560,10 @@ write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_ERR, "REV_SOA_ON_NET_RANGE query failed");
 		goto cleanup;
 	}
+	if ((retval = ailsa_check_for_rev_zone_update(cbc, s, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check or set zone updated");
+		goto cleanup;
+	}
 	if ((retval = ailsa_argument_query(cbc, REV_RECORDS_ON_NET_RANGE, a, r)) != 0) {
 		ailsa_syslog(LOG_ERR, "REV_RECORDS_ON_NET_RANGE query failed");
 		goto cleanup;
@@ -549,7 +595,7 @@ write_rev_zone_header(int fd, AILLIST *soa, char *hostmaster)
 {
 	if (!(soa) || !(hostmaster) || (fd == 0))
 		return;
-	if (soa->total != 7) {
+	if (soa->total != 8) {
 		ailsa_syslog(LOG_ERR, "Wrong number in soa list in write_rev_zone_header: %zu", soa->total);
 		return;
 	}
