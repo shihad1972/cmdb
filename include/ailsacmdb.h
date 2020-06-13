@@ -602,6 +602,9 @@ cmdb_get_port_number(char *proto, char *service, unsigned int *port);
 int
 ailsa_get_iface_list(AILLIST *list);
 
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
+
 // These should probably be moved to ailsasql.h
 
 void

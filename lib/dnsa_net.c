@@ -942,3 +942,95 @@ cmdb_getaddrinfo(char *name, char *ip, int *type)
 			freeaddrinfo(results);
 		return retval;
 }
+
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
+{
+	size_t len;
+	char *tmp, *line, *classless;
+	char louisa[] = ".in-addr.arpa";
+	int c, i;
+
+	c = '.';
+	i = 0;
+	tmp = 0;
+	len = strlen(range);
+	len++;/* Got to remember the terminating \0 :) */
+	if (!(line = calloc(len, sizeof(char))))
+		report_error(MALLOC_FAIL, "line in get_in_addr_string");
+	if (!(classless = calloc(CONF_S, sizeof(char))))
+		report_error(MALLOC_FAIL, "classless in get_in_addr_string");
+
+	snprintf(line, len, "%s", range);
+	if (prefix == 24) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if (prefix == 16) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if(prefix == 8) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if (prefix == 25 || prefix == 26 || prefix == 27 || 
+		prefix == 28 || prefix == 29 || prefix == 30 ||
+		prefix == 31 || prefix == 32) {
+		tmp = strrchr(line, c);
+		++tmp;
+		len = strlen(tmp);
+		strncat(in_addr, tmp, len);
+		strcat(in_addr, ".");
+		--tmp;
+		*tmp = '\0';
+		snprintf(classless, CONF_S, "/%lu.", prefix);
+		len = strlen(classless);
+		strncat(in_addr, classless, len);
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			len = strlen(tmp);
+			strncat(in_addr, tmp, len);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	}
+	len = strlen(line);
+	strncat(in_addr, line, len);
+	len = strlen(louisa);
+	strncat(in_addr, louisa, len);
+	free(line);
+	free(classless);
+}

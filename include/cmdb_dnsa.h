@@ -115,8 +115,6 @@ get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
 list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
-void
-get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 unsigned long int
 get_zone_serial(void);
 int
