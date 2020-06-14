@@ -526,7 +526,12 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO system_scripts_args(arg, no, systscr_id, bd_id, bt_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
 	7,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
-	}
+	},
+	{ // INSERT_REVERSE_ZONE
+"INSERT INTO rev_zones (net_range, prefix, net_start, start_ip, net_finish, finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	17,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {

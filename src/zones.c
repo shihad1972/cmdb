@@ -62,6 +62,9 @@ print_rev_zone_info(char *domain, AILLIST *z);
 static void
 print_rev_zone_records(char *domain, AILLIST *r);
 
+static int
+dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -538,37 +541,6 @@ check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 		}
 	}
 	return retval;
-}
-
-void
-check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone)
-{
-	int retval;
-	unsigned long int serial;
-	dbdata_s serial_data, id_data, user_data;
-
-	retval = 0;
-	if (strncmp("yes", zone->updated, COMM_S) == 0) {
-		serial = get_zone_serial();
-		if (serial > zone->serial)
-			zone->serial = serial;
-		else
-			zone->serial++;
-		init_dbdata_struct(&serial_data);
-		init_dbdata_struct(&id_data);
-		init_dbdata_struct(&user_data);
-		serial_data.args.number = zone->serial;
-		id_data.args.number = zone->id;
-		user_data.args.number = (unsigned long int)getuid();
-		serial_data.next = &user_data;
-		user_data.next = &id_data;
-		if ((retval = dnsa_run_update(dc, &serial_data, ZONE_SERIAL)) != 0)
-			fprintf(stderr, "Cannot update zone serial in database!\n");
-		else
-			fprintf(stderr, "Serial number updated\n");
-		if ((retval = dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO)) != 0)
-			fprintf(stderr, "Cannot set zone as not updated in database!\n");
-	}
 }
 
 int
@@ -1254,62 +1226,48 @@ delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = 0;
-	dnsa_s *dnsa;
-	rev_zone_info_s *zone;
-	dbdata_s data, user;
-	
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_rev_zone");
-	zone = ailsa_calloc(sizeof(rev_zone_info_s), "zone in add_rev_zone");
-	init_rev_zone_struct(zone);
-	init_dbdata_struct(&data);
-	dnsa->rev_zones = zone;
-	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0) {
-		snprintf(data.fields.text, RBUFF_S, "%s", dc->prins);
-		if ((retval = set_slave_name_servers(dc, cm, &data)) != 0) {
-			dnsa_clean_list(dnsa);
-			return retval;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	char *command = ailsa_calloc(CONFIG_LEN, "command in add_rev_zone");
+	int retval;
+	AILLIST *rev = ailsa_db_data_list_init();
+	AILLIST *rid = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, REVERSE_ZONE, dc, rid)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add reverse zone id to list");
+		goto cleanup;
+	}
+	if (rid->total > 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s already in database", cm->domain);
+		goto cleanup;
+	}
+	if ((retval = dnsa_populate_rev_zone(dc, cm, rev)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot create list for DB insert");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(dc, INSERT_REVERSE_ZONE, rev)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_ZONE query failed");
+		goto cleanup;
+	}
+	if (!(cm->ztype)) {
+		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "Unable to validate new zone %s", cm->domain);
+			goto cleanup;
 		}
 	}
-	fill_rev_zone_info(zone, cm, dc);
-	if ((retval = check_for_zone_in_db(dc, dnsa, REVERSE_ZONE)) != 0) {
-		printf("Zone %s already exists in database\n", zone->net_range);
-		dnsa_clean_list(dnsa);
+	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write reverse zones configuration");
+		goto cleanup;
+	}
+	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(command)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed!");
+
+	cleanup:
+		my_free(command);
+		ailsa_list_full_clean(rev);
+		ailsa_list_full_clean(rid);
 		return retval;
-	}
-	if ((retval = dnsa_run_insert(dc, dnsa, REV_ZONES)) != 0) {
-		fprintf(stderr, "Unable to add zone %s\n", zone->net_range);
-		dnsa_clean_list(dnsa);
-		return CANNOT_INSERT_ZONE;
-	} else {
-		fprintf(stderr, "Added zone %s\n", zone->net_range);
-	}
-	if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-		if ((retval = validate_rev_zone(dc, zone, dnsa)) != 0) {
-			dnsa_clean_list(dnsa);
-			return retval;
-		}
-	} else {
-		if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
-		printf("Unable to get ID of zone %s\n", zone->net_range);
-		dnsa_clean_list(dnsa);
-		return ID_INVALID;
-		}
-	}
-	init_dbdata_struct(&data);
-	init_dbdata_struct(&user);
-	data.args.number = zone->rev_zone_id;
-	user.args.number = (unsigned long int)getuid();
-	user.next = &data;
-	if ((retval = dnsa_run_update(dc, &user, REV_ZONE_VALID_YES)) != 0)
-		printf("Unable to mark rev_zone %s as valid\n", zone->net_range);
-	else
-		printf("Rev zone %s marked as valid\n", zone->net_range);
-	dnsa_clean_rev_zones(zone);
-	dnsa->rev_zones = NULL;
-	retval = create_and_write_rev_config(dc, dnsa);
-	dnsa_clean_list(dnsa);
-	return retval;
 }
 
 int
@@ -2199,6 +2157,112 @@ fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc)
 	zone->expire = dc->expire;
 	zone->ttl = dc->ttl;
 	zone->cuser = zone->muser = (unsigned long int)getuid();
+}
+
+static int
+dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
+{
+	if (!(cbc) || !(dcl) || !(list))
+		return AILSA_NO_DATA;
+	char buff[CONFIG_LEN];
+	int retval;
+	uint32_t ip_addr;
+	unsigned long int range;
+
+	if ((retval = cmdb_add_string_to_list(dcl->domain, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add net_range to list");
+		goto cleanup;
+	}
+	memset(buff, 0, CONFIG_LEN);
+	snprintf(buff, CONFIG_LEN, "%lu", dcl->prefix);
+	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add prefix to list");
+		goto cleanup;
+	}
+	memset(buff, 0, CONFIG_LEN);
+	if ((retval = cmdb_add_string_to_list(dcl->domain, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add net_start to list");
+		goto cleanup;
+	}
+	inet_pton(AF_INET, dcl->domain, &ip_addr);
+	ip_addr = htonl(ip_addr);
+	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add start_ip to list");
+		goto cleanup;
+	}
+	range = get_net_range(dcl->prefix);
+	ip_addr += (uint32_t)range - 1;
+	inet_ntop(AF_INET, &ip_addr, buff, RANGE_S);
+	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add net_finish to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add finish_ip to list");
+		goto cleanup;
+	}
+	if (!(dcl->ztype)) {
+		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("NULL", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add NULL server to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone serial number to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cbc->refresh, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone refresh to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cbc->retry, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone retry to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cbc->expire, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone expire to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(cbc->ttl, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone ttl to list");
+		goto cleanup;
+	}
+	if (!(dcl->ztype)) {
+		if ((retval = cmdb_add_string_to_list("master", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone type to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list("NULL", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add NULL master to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(dcl->ztype, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone type to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(dcl->master, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add master to list");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_populate_cuser_muser(list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+	cleanup:
+		return retval;
 }
 
 void

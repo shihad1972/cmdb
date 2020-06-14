@@ -186,7 +186,8 @@ enum {			// SQL INSERT QUERIES
 	INSERT_SYSTEM_PACKAGE_ARGS,
 	INSERT_SYSTEM_PACKAGE_CONF,
 	INSERT_SYSTEM_SCRIPT,
-	INSERT_SYSTEM_SCRIPT_ARGS
+	INSERT_SYSTEM_SCRIPT_ARGS,
+	INSERT_REVERSE_ZONE
 };
 
 enum {			// SQL DELETE QUERIES
@@ -225,7 +226,7 @@ typedef struct ailsa_sql_single_s {
 typedef struct ailsa_sql_query_s {
 	const char *query;
 	unsigned int number;
-	unsigned int fields[10];
+	unsigned int fields[20];
 } ailsa_sql_query_s;
 
 typedef struct ailsa_sql_multi_s {

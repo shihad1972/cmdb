@@ -181,7 +181,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		}
 	}
 	if (comp->ztype) {
-		if ((strncmp(comp->ztype, "slave", COMM_S) == 0) && (!(comp->master)))
+		if (!(comp->master))
 			retval = NO_MASTER;
 	}
 	if ((comp->action == NONE) && (comp->type == NONE) && (!(comp->domain)))

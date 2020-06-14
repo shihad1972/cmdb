@@ -139,8 +139,6 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 check_zone(char *domain, ailsa_cmdb_s *dc);
 void
-check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone);
-void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
 int
