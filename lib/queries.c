@@ -590,6 +590,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_FWD_ZONE
+"DELETE FROM zones WHERE id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

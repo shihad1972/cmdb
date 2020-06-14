@@ -1337,72 +1337,39 @@ add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	char fqdn[RBUFF_S], *name;
-	int retval, i = 0;
-	dnsa_s *dnsa;
-	dbdata_s *data;
-	record_row_s *fwd, *other, *list;
-	zone_info_s *zone;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	char *command = ailsa_calloc(CONFIG_LEN, "command in delete_fwd_zone");
+	int retval;
+	AILLIST *z = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in delete_fwd_zone");
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0) {
-		printf("Database query for zones and records failed\n");
-		dnsa_clean_list(dnsa);
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
+		goto cleanup;
+	}
+	if (z->total == 0) {
+		ailsa_syslog(LOG_INFO, "Domain %s does not exist in the database", cm->domain);
+		goto cleanup;
+	} else if (z->total > 1) {
+		ailsa_syslog(LOG_INFO, "More than one domain for %s? Using first one", cm->domain);
+	}
+	// We are not checking if any of the records in this zone are in use. Beware!
+	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_FWD_ZONE], z)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_FWD_ZONE query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_write_fwd_zone_config(dc)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write forward zone's config");
+		goto cleanup;
+	}
+	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(command)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
+
+	cleanup:
+		ailsa_list_full_clean(z);
+		my_free(command);
 		return retval;
-	}
-	zone = dnsa->zones;
-	fwd = other = NULL;
-	name = fqdn;
-	while (zone) {
-		if (strncmp(cm->domain, zone->name, RBUFF_S) == 0)
-			break;
-		else
-			zone = zone->next;
-	}
-	if (!dnsa->records) {
-		printf("There are no forward records for this domain\n");
-	} else if (!zone) {
-		printf("The domain %s does not exist\n", cm->domain);
-		return NO_DOMAIN;
-	} else {
-		split_fwd_record_list(zone, dnsa->records, &fwd, &other);
-		dnsa->records = other;
-		list = fwd;
-		while (list) {
-			snprintf(name, RBUFF_S, "%s.%s.", list->host, cm->domain);
-			if ((retval = check_for_fwd_record_use(dnsa, name, cm)) != 0)
-				i++;
-			list = list->next;
-		}
-		if (i != 0) {
-			printf("\n\
-You seem to have some forward records for the domain %s\n\
-that are used elsewhere\n\
-These records have been displayed. \n\
-Please delete them and then try to delete the zone again.\n", cm->domain);
-			return retval;
-		}
-	}
-	data->args.number = zone->id;
-	if ((retval = dnsa_run_delete(dc, data, RECORDS_ON_FWD_ZONE)) == 0) {
-		printf("zone %s was empty\n", cm->domain);;
-	} else {
-		printf("%d Records for zone %s deleted\n", retval, cm->domain);
-	}
-	if ((retval = dnsa_run_delete(dc, data, ZONES)) == 0) {
-		retval = CANNOT_DELETE_ZONE;
-		printf("Unable to delete forward zone %s in database\n", cm->domain);
-	} else if (retval == 1) {
-		printf("Zone %s deleted\n", cm->domain);
-		retval = NONE;
-	} else {
-		printf("More than one zone deleted??\n");
-		retval = MULTIPLE_ZONE_DELETED;
-	}
-	dnsa_clean_list(dnsa);
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 int
@@ -2312,40 +2279,6 @@ get_fqdn_for_record_host(dnsa_s *dnsa, record_row_s *fwd, char *fqdn)
 			return;
 		}
 		zone = zone->next;
-	}
-}
-
-void
-split_fwd_record_list(zone_info_s *zone, record_row_s *rec, record_row_s **fwd, record_row_s **other)
-{
-	record_row_s *list, *next;
-
-	while (rec) {
-		next = rec->next;
-		if (rec->zone == zone->id) {
-			if (!(*fwd)) {
-				*fwd = rec;
-				rec->next = NULL;
-			} else {
-				list = *fwd;
-				while (list->next)
-					list = list->next;
-				list->next = rec;
-				rec->next = NULL;
-			}
-		} else {
-			if (!(*other)) {
-				*other = rec;
-				rec->next = NULL;
-			} else {
-				list = *other;
-				while (list->next)
-					list = list->next;
-				list->next = rec;
-				rec->next = NULL;
-			}
-		}
-		rec = next;
 	}
 }
 

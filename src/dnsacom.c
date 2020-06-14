@@ -416,10 +416,15 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 		if (strncmp(comm->rtype, "A", COMM_S) == 0) {
 			if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 				return DEST_INPUT_INVALID;
-			if (strncmp(comm->host, "@", COMM_S) != 0)
+			if (strncmp(comm->host, "@", COMM_S) == 0) {
 				if (ailsa_validate_input(comm->dest, NAME_REGEX) < 0)
 					if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
+						return DEST_INPUT_INVALID;
+			} else {
+				if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
+					if (ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0)
 						return HOST_INPUT_INVALID;
+			}
 		} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 			   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
 			if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)

@@ -90,8 +90,6 @@ int
 check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm);
 int
 delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
-void
-split_fwd_record_list(zone_info_s *zone, record_row_s *list, record_row_s **fwd, record_row_s **other);
 /* End addition 07/03/2013 */
 int
 get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
