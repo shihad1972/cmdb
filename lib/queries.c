@@ -595,6 +595,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_REV_ZONE
+"DELETE FROM rev_zones WHERE rev_zone_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

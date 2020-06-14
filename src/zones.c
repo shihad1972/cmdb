@@ -1436,34 +1436,38 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	char *command = ailsa_calloc(CONFIG_LEN, "command in delete_reverse_zone");
 	int retval;
-	dnsa_s *dnsa;
-	dbdata_s *data;
-	rev_zone_info_s *rev;
+	AILLIST *rev = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in delete_reverse_zone");
-	init_multi_dbdata_struct(&data, 1);
-	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0) {
-		printf("Query to get reverse zones from DB failed\n");
-		dnsa_clean_list(dnsa);
-		return NO_DOMAIN;
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, REVERSE_ZONE, dc, rev)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add reverse zone id to list");
+		goto cleanup;
 	}
-	rev = dnsa->rev_zones;
-	while (rev) {
-		if (strncmp(cm->domain, rev->net_range, RANGE_S) == 0) {
-			data->args.number = rev->rev_zone_id;
-		}
-		rev = rev->next;
+	if (rev->total == 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s does not exist to delete", cm->domain);
+		goto cleanup;
+	} else if (rev->total > 1) {
+		ailsa_syslog(LOG_INFO, "More than one zone for %s? Using first one", cm->domain);
 	}
-	printf("Deleting record from reverse zone %s\n", cm->domain);
-	retval = dnsa_run_delete(dc, data, REV_RECORDS_ON_REV_ZONE);
-	printf("%d records deleted\n\n", retval);
-	printf("Deleting reverse zone %s\n", cm->domain);
-	retval = dnsa_run_delete(dc, data, REV_ZONES);
-	printf("%d zone(s) deleted\n", retval);
-	clean_dbdata_struct(data);
-	dnsa_clean_list(dnsa);
-	return NONE;
+	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_REV_ZONE], rev)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_REV_ZONE query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write out reverse zone's config");
+		goto cleanup;
+	}
+	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+	if ((retval = system(command)) != 0)
+		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
+
+	cleanup:
+		ailsa_list_full_clean(rev);
+		my_free(command);
+		return retval;
 }
 
 int
