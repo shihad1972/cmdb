@@ -46,7 +46,6 @@
 #include "cmdb_dnsa.h"
 #include "base_sql.h"
 #include "dnsa_base_sql.h"
-#include "dnsa_net.h"
 
 static void
 print_fwd_zone_records(AILLIST *r);
@@ -1329,58 +1328,9 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	char command[CONFIG_LEN];
-	int retval = 0;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
-	dbdata_s data, user;
-	
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_fwd_zone");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_fwd_zone");
-	init_zone_struct(zone);
-	if (!(cm->ztype))
-		cm->ztype = strdup("master");
-	fill_fwd_zone_info(zone, cm, dc);
-	dnsa->zones = zone;
-	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) != 0) {
-		printf("Zone %s already exists in database\n", zone->name);
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-	if ((retval = dnsa_run_insert(dc, dnsa, ZONES)) != 0) {
-		fprintf(stderr, "Unable to add zone %s\n", zone->name);
-		dnsa_clean_list(dnsa);
-		return CANNOT_INSERT_ZONE;
-	} else {
-		fprintf(stderr, "Added zone %s\n", zone->name);
-	}
-	if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, cm->domain)) != 0) {
-			dnsa_clean_list(dnsa);
-			return retval;
-		}
-	} else {
-		if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0) {
-		printf("Unable to get ID of zone %s\n", zone->name);
-		return ID_INVALID;
-		}
-	}
-	init_dbdata_struct(&data);
-	init_dbdata_struct(&user);
-	data.args.number = zone->id;
-	user.args.number = (unsigned long int)getuid();
-	user.next = &data;
-	if ((retval = dnsa_run_update(dc, &user, ZONE_VALID_YES)) != 0)
-		printf("Unable to mark zone as valid in database\n");
-	else
-		printf("Zone marked as valid in the database\n");
-	dnsa_clean_zones(zone);
-	dnsa->zones = NULL;
-	retval = cmdb_write_fwd_zone_config(dc);
-	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
-	if ((retval = system(command)) != 0)
-		ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
-	dnsa_clean_list(dnsa);
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval = add_forward_zone(dc, cm->domain);
 	return retval;
 }
 

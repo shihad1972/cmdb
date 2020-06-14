@@ -41,6 +41,8 @@
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_common.h"

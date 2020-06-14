@@ -516,9 +516,6 @@ ailsa_gen_uuid_str(void);
 int
 ailsa_gen_mac(char *mac, int type);
 
-int
-cmdb_getaddrinfo(char *name, char *ip, int *type);
-
 // Config and command line parsing
 
 void
@@ -577,27 +574,7 @@ ailsa_validate_string(const char *input, const char *re_test);
 const char *
 ailsa_regex_error(int error);
 
-// Some zone functions
-
-int
-cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone);
-
-int
-cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);
-
-int
-cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs);
-
 // Various data functions
-
-int
-cmdb_populate_cuser_muser(AILLIST *list);
-
-unsigned long int
-generate_zone_serial(void);
-
-int
-cmdb_get_port_number(char *proto, char *service, unsigned int *port);
 
 int
 ailsa_get_iface_list(AILLIST *list);

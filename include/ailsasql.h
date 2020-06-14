@@ -329,6 +329,38 @@ cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data);
 int
 ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
 
+int
+cmdb_populate_cuser_muser(AILLIST *list);
+
+unsigned long int
+generate_zone_serial(void);
+
+int
+cmdb_get_port_number(char *proto, char *service, unsigned int *port);
+
+int
+cmdb_getaddrinfo(char *name, char *ip, int *type);
+
+unsigned long int
+get_net_range(unsigned long int prefix);
+
+int
+do_rev_lookup(char *ip, char *host, size_t len);
+
+// Some zone functions
+
+int
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone);
+
+int
+cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);
+
+int
+cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs);
+
+int
+add_forward_zone(ailsa_cmdb_s *dc, char *domain);
+
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
 void

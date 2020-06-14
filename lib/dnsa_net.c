@@ -43,7 +43,6 @@
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
-#include "dnsa_net.h"
 
 static int
 write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone);
@@ -942,4 +941,45 @@ dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone)
 		return retval;
 	}
 	return retval;
+}
+
+int
+add_forward_zone(ailsa_cmdb_s *dc, char *domain)
+{
+	if (!(dc) || !(domain))
+		return AILSA_NO_DATA;
+	char *command = ailsa_calloc(CONFIG_LEN, "command in add_fwd_zone");
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_for_fwd_zone(dc, domain)) > 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s already in database");
+		retval = 0;
+	} else if (retval == -1) {
+		goto cleanup;
+	} else {
+		if ((retval = dnsa_populate_zone(dc, domain, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate zone list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(dc, INSERT_FORWARD_ZONE, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_FORWARD_ZONE query failed");
+			goto cleanup;
+		}
+		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", domain);
+			goto cleanup;
+		}
+		if ((retval = cmdb_write_fwd_zone_config(dc)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot write forward zones config");
+			goto cleanup;
+		}
+		snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
+		if ((retval = system(command)) != 0)
+			ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		my_free(command);
+		return retval;
 }

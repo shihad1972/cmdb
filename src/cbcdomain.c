@@ -455,10 +455,6 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		return AILSA_NO_DATA;
 	AILLIST *d = ailsa_db_data_list_init();
 	AILLIST *r = ailsa_db_data_list_init();
-#ifdef HAVE_DNSA
-	AILLIST *z = ailsa_db_data_list_init();
-	char *command = ailsa_calloc(DOMAIN_LEN, "command in add_cbc_build_domain");
-#endif // HAVE_DNSA
 	char *domain = cdl->domain;
 	int retval = 0;
 
@@ -491,38 +487,12 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	if ((retval = write_dhcp_net_config(cbs)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot write new dhcpd.networks file\n");
 #ifdef HAVE_DNSA
-	if ((retval = cmdb_check_for_fwd_zone(cbs, domain)) > 0) {
-		ailsa_syslog(LOG_INFO, "Zone %s already in dnsa database", domain);
-		retval = 0;
-	} else if (retval == -1) {
+	if ((retval = add_forward_zone(cbs, cdl->domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add DNS domain %s to database", cdl->domain);
 		goto cleanup;
-	} else {
-		if ((retval = dnsa_populate_zone(cbs, cdl->domain, z)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot populate zone list");
-			goto cleanup;
-		}
-		if ((retval = ailsa_insert_query(cbs, INSERT_FORWARD_ZONE, z)) != 0) {
-			ailsa_syslog(LOG_ERR, "INSERT_FORWARD_ZONE query failed");
-			goto cleanup;
-		}
-		if ((retval = cmdb_validate_zone(cbs, FORWARD_ZONE, domain)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", domain);
-			goto cleanup;
-		}
-		if ((retval = cmdb_write_fwd_zone_config(cbs)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot write out forward zone configuration");
-			goto cleanup;
-		}
-		snprintf(command, CONFIG_LEN, "%s reload", cbs->rndc);
-		if ((retval = system(command)) != 0)
-			ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
 	}
 #endif // HAVE_DNSA
 	cleanup:
-#ifdef HAVE_DNSA
-		ailsa_list_full_clean(z);
-		my_free(command);
-#endif // HAVE_DNSA
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(d);
 		return retval;
