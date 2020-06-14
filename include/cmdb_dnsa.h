@@ -141,22 +141,10 @@ check_zone(char *domain, ailsa_cmdb_s *dc);
 void
 fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
-int
-create_and_write_rev_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, rev_zone_info_s *zone);
 void
 create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile);
 void
-add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile);
-int
-create_rev_config(ailsa_cmdb_s *dc, rev_zone_info_s *zone, string_len_s *config);
-void
 fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
-int
-validate_rev_zone(ailsa_cmdb_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa);
-int
-create_and_write_rev_config(ailsa_cmdb_s *dc, dnsa_s *dnsa);
-int
-set_slave_name_servers(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dbdata_s *data);
 /* 04/03/2013 functions add */
 void
 trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);

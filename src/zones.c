@@ -590,38 +590,6 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 		return retval;
 }
 
-int
-create_and_write_rev_zone(dnsa_s *dnsa, ailsa_cmdb_s *dc, rev_zone_info_s *zone)
-{
-	int retval;
-	char *buffer, *filename;
-	unsigned long int id;
-	string_len_s  *zonefile;
-	
-	if (!(zonefile = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "zonefile in create_and_write_rev_zone");
-	buffer = ailsa_calloc(TBUFF_S, "buffer in create_and_write_rev_zone");
-	init_string_len(zonefile);
-	filename = buffer;
-	retval = 0;
-	id = zone->rev_zone_id;
-	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-		create_rev_zone_header(
-			dnsa, dc->hostmaster, id, zonefile);
-		add_records_to_rev_zonefile(dnsa, id, zonefile);
-		snprintf(filename, NAME_S, "%s%s",
-			 dc->dir, zone->net_range);
-		if ((retval = write_file(filename, zonefile->string)) != 0)
-			printf("Unable to write %s zonefile\n",
-			       zone->net_range);
-		else if ((retval = check_zone(zone->net_range, dc)) != 0)
-			snprintf(zone->valid, COMM_S, "no");
-	}
-	clean_string_len(zonefile);
-	cmdb_free(buffer, TBUFF_S);
-	return (retval);
-}
-
 void
 create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile)
 {
@@ -657,70 +625,6 @@ $TTL %lu\n\
 		zonefile->size += len;
 	}
 	cmdb_free(buffer, blen);
-}
-
-void
-add_records_to_rev_zonefile(dnsa_s *dnsa, unsigned long int id, string_len_s *zonefile)
-{
-	char *buffer;
-	size_t len;
-	rev_record_row_s *record = dnsa->rev_records;
-	len = NONE;
-
-	buffer = ailsa_calloc(BUFF_S, "buffer in add_records_to_rev_zonefile");
-	while (record) {
-		if (record->rev_zone != id) {
-			record = record->next;
-		} else {
-			snprintf(buffer, BUFF_S, "\
-%s\tPTR\t%s\n", record->host, record->dest);
-			len = strlen(buffer);
-			if ((zonefile->size + len + 1) > zonefile->len)
-				resize_string_buff(zonefile);
-			snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
-			zonefile->size += len;
-			record = record->next;
-		}
-	}
-	cmdb_free(buffer, BUFF_S);
-}
-
-int
-create_rev_config(ailsa_cmdb_s *dc, rev_zone_info_s *zone, string_len_s *config)
-{
-	int retval = 0;
-	char *buffer, *in_addr;
-	size_t len = NONE;
-	
-	buffer = ailsa_calloc(TBUFF_S, "buffer in create_rev_config");
-	in_addr = ailsa_calloc(MAC_S, "in_addr in create_rev_config");
-	get_in_addr_string(in_addr, zone->net_range, zone->prefix);
-	if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-		if ((strncmp(zone->type, "slave", COMM_S)) != 0) {
-			snprintf(buffer, TBUFF_S, "\
-zone \"%s\" {\n\
-\t\t\ttype master;\n\
-\t\t\tfile \"%s%s\";\n\
-\t\t};\n\n", in_addr, dc->dir, zone->net_range);
-		} else {
-			snprintf(buffer, TBUFF_S, "\
-zone \"%s\" {\n\
-\t\t\ttype slave;\n\
-\t\t\tmasters { %s; };\n\
-\t\t\tfile \"%s%s\";\n\
-\t\t};\n\n", in_addr, zone->master, dc->dir, zone->net_range);
-		}
-		len = strlen(buffer);
-		if ((config->size + len + 1) > config->len)
-			resize_string_buff(config);
-		snprintf(config->string + config->size, len + 1, "%s", buffer);
-		config->size += len;
-	} else {
-		fprintf(stderr, "Zone %s invalid\n", zone->net_range);
-	}
-	cmdb_free(buffer, TBUFF_S);
-	cmdb_free(in_addr, MAC_S);
-	return retval;
 }
 
 int
@@ -1305,71 +1209,6 @@ delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_list_full_clean(rev);
 		my_free(command);
 		return retval;
-}
-
-int
-create_and_write_rev_config(ailsa_cmdb_s *dc, dnsa_s *dnsa)
-{
-	char *buffer, filename[NAME_S];
-	int retval = 0;
-	string_len_s *config;
-	rev_zone_info_s *zone;
-
-	config = ailsa_calloc(sizeof(string_len_s), "config in create_and_write_rev_config");
-	buffer = &filename[0];
-	init_string_len(config);
-	if ((retval = dnsa_run_query(dc, dnsa, REV_ZONE)) != 0)
-		return retval;
-	zone = dnsa->rev_zones;
-	while (zone) {
-		if ((retval = create_rev_config(dc, zone, config)) != 0) {
-			fprintf(stderr, "Cannot create reverse config\n");
-			free(config);
-			return CREATE_FILE_FAIL;
-		}
-		zone = zone->next;
-	}
-	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->rev);
-	if ((retval = write_file(filename, config->string)) != 0)
-		fprintf(stderr, "Unable to write config file %s\n", filename);
-	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
-	if ((retval = system(filename)) != 0)
-		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	clean_string_len(config);
-	return retval;
-}
-
-int
-validate_rev_zone(ailsa_cmdb_s *dc, rev_zone_info_s *zone, dnsa_s *dnsa)
-{
-	char command[NAME_S], *buffer;
-	int retval = 0;
-	
-	buffer = &command[0];
-	snprintf(zone->valid, COMM_S, "yes");
-	if ((retval = ailsa_add_trailing_dot(zone->pri_dns)) != 0)
-		fprintf(stderr, "Unable to add trailing dot to PRI_NS\n");
-	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
-	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
-	    (strnlen(zone->sec_dns, COMM_S) != 0))
-		if ((retval = ailsa_add_trailing_dot(zone->sec_dns)) != 0)
-			fprintf(stderr, "Unable to add trailing dot to SEC_NS\n");
-	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) != 0) {
-		printf("Unable to get ID of zone %s\n", zone->net_range);
-		return ID_INVALID;
-	}
-	if ((retval = create_and_write_rev_zone(dnsa, dc, zone)) != 0) {
-		fprintf(stderr, "Unable to write the zonefile for %s\n",
-			zone->net_range);
-		return FILE_O_FAIL;
-	}
-	snprintf(buffer, NAME_S, "%s %s %s%s", 
-		 dc->chkz, zone->net_range, dc->dir, zone->net_range);
-	if ((retval = system(command)) != 0) {
-		fprintf(stderr, "Checkzone of %s failed\n", zone->net_range);
-		return CHKZONE_FAIL;
-	}
-	return retval;
 }
 
 int

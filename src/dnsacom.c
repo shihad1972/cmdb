@@ -548,15 +548,3 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 			return DEST_INPUT_INVALID;
 	return retval;
 }
-
-int
-set_slave_name_servers(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dbdata_s *data)
-{
-	int retval = 0;
-
-	if ((retval = get_ip_from_hostname(data)) != 0)
-		return retval;
-	snprintf(dc->secns, RBUFF_S, "%s", data->fields.text);
-	snprintf(dc->prins, RBUFF_S, "%s", cm->host);
-	return retval;
-}
