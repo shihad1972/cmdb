@@ -540,53 +540,6 @@ check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
 	return retval;
 }
 
-int
-create_fwd_config(ailsa_cmdb_s *dc, zone_info_s *zone, string_len_s *config)
-{
-	int retval;
-	char *buffer, *buff, *host = NULL;
-	size_t len;
-	
-	buffer = ailsa_calloc(TBUFF_S, "buffer in create_fwd_config");
-	buff = ailsa_calloc(RBUFF_S, "buff in create_fwd_config");
-	retval = 0;
-	if (strncmp(zone->type, "master", COMM_S) == 0) {
-		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-			snprintf(buffer, TBUFF_S, "\
-zone \"%s\" {\n\
-\t\t\ttype master;\n\
-\t\t\tfile \"%s%s\";\n\
-", zone->name, dc->dir, zone->name);
-			if ((check_notify_ip(zone, &host)) == 0)
-				snprintf(buff, RBUFF_S, "\
-\t\t\tnotify-source %s;\n\
-\t\t};\n\n", host);
-			else
-				snprintf(buff, RBUFF_S, "\
-\t\t};\n\n");
-		}
-	} else if (strncmp(zone->type, "slave", COMM_S) == 0) {
-		if (strncmp(zone->valid, "yes", COMM_S) == 0) {
-			snprintf(buffer, TBUFF_S, "\
-zone \"%s\" {\n\
-\t\t\ttype slave;\n\
-\t\t\tmasters { %s; };\n\
-\t\t\tfile \"%s%s\";\n\
-\t\t};\n\n", zone->name, zone->master, dc->dir, zone->name);
-		}
-	}
-	len = strlen(buffer) + strlen(buff);
-	if ((config->size + len) > config->len)
-		resize_string_buff(config);
-	snprintf(config->string + config->size, len + 1, "%s%s", buffer, buff);
-	config->size += len;
-	cmdb_free(buffer, TBUFF_S);
-	cmdb_free(buff, RBUFF_S);
-	if (host)
-		cmdb_free(host, strlen(host));
-	return retval;
-}
-
 void
 check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone)
 {
@@ -616,80 +569,6 @@ check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone)
 		if ((retval = dnsa_run_update(dc, &id_data, ZONE_UPDATED_NO)) != 0)
 			fprintf(stderr, "Cannot set zone as not updated in database!\n");
 	}
-}
-
-int
-check_notify_ip(zone_info_s *zone, char **ipstr)
-{
-	char *host = NULL, *dhost = NULL, *dipstr = NULL;
-	int retval = NONE;
-	void *addr;
-	struct addrinfo hints, *srvnfo = NULL;
-	struct sockaddr_in *ipv4;
-
-	host = ailsa_calloc(RBUFF_S, "host in check_notify_ip");
-	dhost = strndup(zone->sec_dns, RBUFF_S);
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-	if ((retval = gethostname(host, RBUFF_S)) != 0) {
-		fprintf(stderr, "%s", strerror(errno));
-		free(host);
-		free(dhost);
-		return retval;
-	}
-	*ipstr = ailsa_calloc(INET6_ADDRSTRLEN, "*ipstr in check_notify_ip");
-	dipstr = ailsa_calloc(INET6_ADDRSTRLEN, "dipstr in check_notify_ip");
-	if ((retval = getaddrinfo(dhost, "http", &hints, &srvnfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		goto cleanup;
-	}
-/*
- * Although we _can_ support IPv6 here, we would need a way to pass this back
- * to the calling function that we would be providing an IPv6 IP address, as
- * the notify part of the bind config is IPv6 specific. This function is
- * called by create_fwd_config.
- */
-	if (srvnfo->ai_family == AF_INET) {
-		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
-		addr = &(ipv4->sin_addr);
-		if (!(inet_ntop(AF_INET, addr, *ipstr, INET_ADDRSTRLEN))) {
-			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-			retval = CANNOT_CONVERT;
-			goto cleanup;
-		}
-	} else {
-		report_error(WRONG_PROTO, "check_notify_ip");
-	}
-	freeaddrinfo(srvnfo);
-	if ((retval = getaddrinfo(host, "http", &hints, &srvnfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
-		goto cleanup;
-	}
-	if (srvnfo->ai_family == AF_INET) {
-		ipv4 = (struct sockaddr_in *)srvnfo->ai_addr;
-		addr = &(ipv4->sin_addr);
-		if (!(inet_ntop(AF_INET, addr, dipstr, INET_ADDRSTRLEN))) {
-			fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-			retval =  CANNOT_CONVERT;
-			goto cleanup;
-		}
-	} else {
-		report_error(WRONG_PROTO, "check_notify_ip");
-	}
-	if ((strncmp(*ipstr, dipstr, INET_ADDRSTRLEN)) == 0) {
-		free(*ipstr);
-		*ipstr = NULL;
-		retval = CANNOT_CONVERT;
-	}
-	cleanup:
-		free(dhost);
-		free(host);
-		free(dipstr);
-		if (srvnfo)
-			freeaddrinfo(srvnfo);
-		return retval;
 }
 
 int
@@ -1468,42 +1347,6 @@ delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_list_full_clean(rev);
 		my_free(command);
 		return retval;
-}
-
-int
-create_and_write_fwd_config(ailsa_cmdb_s *dc, dnsa_s *dnsa)
-{
-	char *buffer, filename[NAME_S];
-	int retval;
-	size_t clen = sizeof(string_len_s);
-	string_len_s *config;
-	zone_info_s *zone;
-
-	config = ailsa_calloc(clen, "config in create_and_write_fwd_config");
-	buffer = &filename[NONE];
-	retval = NONE;
-	init_string_len(config);
-	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0)
-		return retval;
-	zone = dnsa->zones;
-	while (zone) {
-		if ((retval = create_fwd_config(dc, zone, config)) != 0) {
-			free(config->string);
-			free(config);
-			fprintf(stderr, "Cannot add zone %s to config\n", zone->name);
-			return retval;
-		}
-		zone = zone->next;
-	}
-	snprintf(buffer, NAME_S, "%s%s", dc->bind, dc->dnsa);
-	if ((retval = write_file(filename, config->string)) != 0)
-		fprintf(stderr, "Unable to write config file %s\n", filename);
-	snprintf(buffer, NAME_S, "%s reload", dc->rndc);
-	if ((retval = system(filename)) != 0)
-		fprintf(stderr, "%s failed with %d\n", filename, retval);
-	cmdb_free(config->string, config->len);
-	cmdb_free(config, clen);
-	return retval;
 }
 
 int

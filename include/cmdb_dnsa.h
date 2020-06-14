@@ -129,8 +129,6 @@ void
 add_int_ip_to_fwd_records(record_row_s *records);
 int
 add_int_ip_to_rev_records(dnsa_s *dnsa);
-int
-check_notify_ip(zone_info_s *zone, char **host);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
@@ -140,10 +138,6 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* Forward zone functions */
 int
 check_zone(char *domain, ailsa_cmdb_s *dc);
-int
-create_fwd_config(ailsa_cmdb_s *dc, zone_info_s *zone, string_len_s *config);
-int
-create_and_write_fwd_config(ailsa_cmdb_s *dc, dnsa_s *dnsa);
 void
 check_for_updated_fwd_zone(ailsa_cmdb_s *dc, zone_info_s *zone);
 void
