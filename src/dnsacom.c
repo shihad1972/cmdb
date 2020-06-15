@@ -151,7 +151,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->prefix = strtoul(optarg, NULL, 10);
 		} else if (opt == 's') {
 			comp->service = strndup(optarg, SERVICE_LEN);
-			comp->host = strndup(optarg, SERVICE_LEN);
+			if (!(comp->host))
+				comp->host = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 't') {
 			comp->rtype = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 'v') {
@@ -163,7 +164,6 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 /* Check if user has specified destination with -h and act accordingly */
 			if ((comp->host) && (!(comp->dest)))
 				comp->dest = strndup(comp->host, DOMAIN_LEN);
-			comp->host = strndup(comp->service, SERVICE_LEN);
 			if (!(comp->protocol)) {
 				ailsa_syslog(LOG_INFO, "No protocol provided with -o. Setting to tcp!\n");
 				comp->protocol = strdup("tcp");

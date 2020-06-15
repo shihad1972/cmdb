@@ -65,6 +65,9 @@ print_rev_zone_records(char *domain, AILLIST *r);
 static int
 dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 
+static int
+dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -907,45 +910,119 @@ delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = 0;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
-	record_row_s *record;
-	dbdata_s data, user;
-	
-	if (!(record = malloc(sizeof(record_row_s))))
-		report_error(MALLOC_FAIL, "record in add_host");
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_host");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_host");
-	init_zone_struct(zone);
-	init_record_struct(record);
-// **FIXME: Should probably just muti init here
-	init_dbdata_struct(&data);
-	init_dbdata_struct(&user);
-	user.next = &data;
-	dnsa->zones = zone;
-	dnsa->records = record;
-	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME);
-// **FIXME: Need to search zone to see if record already exists
-	printf("Adding to zone %s, id %lu\n", zone->name, zone->id);
-	snprintf(record->dest, RBUFF_S, "%s", cm->dest);
-	snprintf(record->host, RBUFF_S, "%s", cm->host);
-	snprintf(record->type, RANGE_S, "%s", cm->rtype);
-	if (strncmp(cm->rtype, "SRV", COMM_S) == 0) {
-		snprintf(record->protocol, RANGE_S, "%s", cm->protocol);
-		snprintf(record->service, RANGE_S, "%s", cm->service);
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval;
+	unsigned int query;
+	void *data;
+	uid_t uid = getuid();
+	AILLIST *rec = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
+		goto cleanup;
 	}
-	record->zone = data.args.number = zone->id;
-	record->pri = cm->prefix;
-	record->cuser = user.args.number = record->muser = (unsigned long int)getuid();
-	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0)
-		fprintf(stderr, "Cannot insert record\n");
-	else
-		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
-			fprintf(stderr, "Cannot set zone as update\n");
-	dnsa_clean_list(dnsa);
-	return retval;
+	if (rec->total == 0) {
+		ailsa_syslog(LOG_INFO, "Zone %s does not exist", cm->domain);
+		goto cleanup;
+	} else if (rec->total > 1) {
+		ailsa_syslog(LOG_INFO, "More than one domain for %s? Using first one", cm->domain);
+		while (rec->total > 1) {
+			retval = ailsa_list_remove(rec, rec->tail, &data);
+			if (retval == 0 && rec->destroy != NULL)
+				rec->destroy(data);
+		}
+	}
+	if ((retval = dnsa_populate_record(dc, cm, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate list with record details");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_for_fwd_record(dc, rec)) < 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check for fwd record");
+		goto cleanup;
+	} else if (retval > 0) {
+		ailsa_syslog(LOG_INFO, "Record exists in database");
+		retval = 0;
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	switch (rec->total) {
+	case 6:
+		query = INSERT_RECORD_BASE;
+		break;
+	case 7:
+		query = INSERT_RECORD_MX;
+		break;
+	case 9:
+		query = INSERT_RECORD_SRV;
+		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Wrong number in list record list: %zu", rec->total);
+		retval = WRONG_LENGTH_LIST;
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(dc, query, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Insert record query %u failed", query);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)uid, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to update list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], z)) != 0)
+		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+
+	cleanup:
+		ailsa_list_full_clean(rec);
+		ailsa_list_full_clean(z);
+		return retval;
+}
+
+static int
+dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
+{
+	if (!(cbc) || !(dcl) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(dcl->rtype, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add record type to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(dcl->host, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(dcl->dest, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add destination to list");
+		goto cleanup;
+	}
+	if ((strcmp(dcl->rtype, "MX") == 0) || (strcmp(dcl->rtype, "SRV") == 0)) {
+		if ((retval = cmdb_add_number_to_list(dcl->prefix, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add priority to list");
+			goto cleanup;
+		}
+	}
+	if (strcmp(dcl->rtype, "SRV") == 0) {
+		if ((retval = cmdb_add_string_to_list(dcl->protocol, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add protocol to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(dcl->service, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add service to list");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		return retval;
 }
 
 int

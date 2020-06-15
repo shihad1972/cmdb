@@ -511,6 +511,48 @@ cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 }
 
 int
+cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec)
+{
+	if (!(cc) || !(rec))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	switch(rec->total) {
+	case 4:
+		if ((retval = ailsa_argument_query(cc, RECORD_ID_BASE, rec, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "RECORD_ID_BASE query failed");
+			retval = -1;
+			goto cleanup;
+		}
+		break;
+	case 5:
+		if ((retval = ailsa_argument_query(cc, RECORD_ID_MX, rec, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "RECORD_ID_MX query failed");
+			retval = -1;
+			goto cleanup;
+		}
+		break;
+	case 7:
+		if ((retval = ailsa_argument_query(cc, RECORD_ID_SRV, rec, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "RECORD_ID_SRV query failed");
+			retval = -1;
+			goto cleanup;
+		}
+		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Got %zu list total in cmdb_check_for_fwd_record");
+		retval = -1;
+		goto cleanup;
+		break;
+	}
+	retval = (int)l->total;
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
 cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 {
 	int retval = 0;

@@ -161,7 +161,10 @@ enum {			// SQL ARGUMENT QUERIES
 	REV_ZONE_INFO_ON_RANGE,
 	REV_RECORDS_ON_ZONE_ID,
 	REV_SOA_ON_NET_RANGE,
-	REV_RECORDS_ON_NET_RANGE
+	REV_RECORDS_ON_NET_RANGE,
+	RECORD_ID_BASE,
+	RECORD_ID_MX,
+	RECORD_ID_SRV
 };
 
 enum {			// SQL INSERT QUERIES
@@ -187,7 +190,10 @@ enum {			// SQL INSERT QUERIES
 	INSERT_SYSTEM_PACKAGE_CONF,
 	INSERT_SYSTEM_SCRIPT,
 	INSERT_SYSTEM_SCRIPT_ARGS,
-	INSERT_REVERSE_ZONE
+	INSERT_REVERSE_ZONE,
+	INSERT_RECORD_BASE,
+	INSERT_RECORD_MX,
+	INSERT_RECORD_SRV
 };
 
 enum {			// SQL DELETE QUERIES
@@ -214,7 +220,8 @@ enum {			// SQL UPDATE QUERIES
 	FWD_ZONE_VALIDATE,
 	FWD_ZONE_SERIAL_UPDATE,
 	REV_ZONE_VALIDATE,
-	REV_ZONE_SERIAL_UPDATE
+	REV_ZONE_SERIAL_UPDATE,
+	SET_FWD_ZONE_UPDATED
 };
 
 typedef struct ailsa_sql_single_s {
@@ -311,6 +318,9 @@ cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);
+
+int
+cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec);
 
 int
 cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version);

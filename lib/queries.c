@@ -413,7 +413,22 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT host, destination FROM rev_records WHERE rev_zone = (SELECT rev_zone_id FROM rev_zones WHERE net_range = ?)",
 	1,
 	{ AILSA_DB_TEXT }
-	}
+	},
+	{ // RECORD_ID_BASE
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND destination = ?",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RECORD_ID_MX
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND destination = ? AND pri = ?",
+	5,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // RECORD_ID_SRV
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND destination = ? AND pri = ? AND protocol = ? AND service = ?",
+	7,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
@@ -532,6 +547,21 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	17,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_RECORD_BASE
+"INSERT INTO records (zone, type, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_RECORD_MX
+"INSERT INTO records (zone, type, host, destination, pri, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	7,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_RECORD_SRV
+"INSERT INTO records (zone, type, host, destination, pri, protocol, service, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	9,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT },
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -642,6 +672,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE rev_zones SET serial = ?, updated = 'no' WHERE net_range = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // SET_FWD_ZONE_UPDATED
+"UPDATE zones SET muser = ?, updated = 'yes' WHERE id = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 
