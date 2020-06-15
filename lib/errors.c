@@ -587,7 +587,7 @@ display_dnsa_usage(void)
 	printf("\n\t-h -n -i\n");
 	printf("-g: remove preferred A record\n\t -i\n");
 	printf("-l: list zones\n\t[ -F | -R ]\n");
-	printf("-m: add CNAME to root domain\n\t-h -n\n");
+	printf("-m: add CNAME to root domain\n\t-h -n [ -j top-level domain ]\n");
 	printf("-r: remove record\n\t-h -n\n");
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[ -F | -R ]\n");

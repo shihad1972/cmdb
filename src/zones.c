@@ -68,6 +68,9 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 static int
 dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 
+static int
+check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *domain, char *top, char *host);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -522,31 +525,6 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 }
 
 int
-check_parent_for_a_record(char *dns, char *parent, dnsa_s *dnsa)
-{
-	int retval = 0;
-	unsigned long int zid = NONE;
-
-	if (!(dnsa) || !(dns) || !(parent))
-		return NONE;
-	zone_info_s *zone = dnsa->zones;
-	record_row_s *rec = dnsa->records;
-	while (zone) {
-		if (strncmp(parent, zone->name, RBUFF_S) == 0)
-			zid = zone->id;
-		zone = zone->next;
-	}
-	if (zid) {
-		while (rec) {
-			if ((zid == rec->zone) && (strncmp(dns, rec->host, RBUFF_S) == 0))
-				retval = 1;
-			rec = rec->next;
-		}
-	}
-	return retval;
-}
-
-int
 commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 {
 	if (!(dc))
@@ -591,43 +569,6 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 		ailsa_list_full_clean(l);
 		my_free(comm);
 		return retval;
-}
-
-void
-create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile)
-{
-	char *buffer;
-	size_t len, blen = RBUFF_S + COMM_S;
-	
-	buffer = ailsa_calloc(blen, "buffer in create_rev_zone_header");
-	rev_zone_info_s *zone = dnsa->rev_zones;
-	while (zone->rev_zone_id != id)
-		zone = zone->next;
-	snprintf(zonefile->string, BUILD_S, "\
-$TTL %lu\n\
-@\tIN\tSOA\t%s\t%s (\n\
-\t\t\t\t%lu\t; Serial\n\
-\t\t\t\t%lu\t\t; Refresh\n\
-\t\t\t\t%lu\t\t; Retry\n\
-\t\t\t\t%lu\t\t; Expire\n\
-\t\t\t\t%lu\t\t); Cache TTL\n\
-;\n\
-\t\tNS\t%s\n",
-	zone->ttl, zone->pri_dns, hostm, zone->serial, zone->refresh,
-	zone->retry, zone->expire, zone->ttl, zone->pri_dns);
-	zonefile->size = strlen(zonefile->string);
-	if ((strncmp(zone->sec_dns, "(null)", COMM_S) != 0) &&
-	    (strncmp(zone->sec_dns, "NULL", COMM_S) != 0) &&
-	    (strnlen(zone->sec_dns, COMM_S) != 0)) {
-		snprintf(buffer, RBUFF_S + COMM_S, "\t\tNS\t%s\n",
-			 zone->sec_dns);
-		len = strlen(buffer);
-		if ((zonefile->size + len) >= zonefile->len)
-			resize_string_buff(zonefile);
-		snprintf(zonefile->string + zonefile->size, len + 1, "%s", buffer);
-		zonefile->size += len;
-	}
-	cmdb_free(buffer, blen);
 }
 
 int
@@ -1028,82 +969,152 @@ dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
 int
 add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	char domain[RBUFF_S], *tmp, *tld;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	AILLIST *c = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *data;
+	char *domain = ailsa_calloc(DOMAIN_LEN, "domain in add_cname_to_root_domain");
+	char *tmp;
 	int retval;
-	unsigned long int zid = 0;
-	dnsa_s *dnsa;
-	dbdata_s *data;
-	zone_info_s *zone, *z;
-	record_row_s *rec, *r;
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_cname_to_root_domain");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_cname_to_root_domain");
-	rec = ailsa_calloc(sizeof(record_row_s), "zone in add_cname_to_root_domain");
-	init_dnsa_struct(dnsa);
-	init_zone_struct(zone);
-	init_record_struct(rec);
-	init_multi_dbdata_struct(&data, 2);
-	fill_fwd_zone_info(zone, cm, dc);
-	dnsa->zones = zone;
-// **FIXME: Why not just check the host exists, rather than on this server?
-	if ((retval = check_for_zone_in_db(dc, dnsa, FORWARD_ZONE)) == 0) {
-		retval = NO_DOMAIN;
-		printf("Zone %s not in database\n", zone->name);
+	if ((retval = check_for_zones_and_hosts(dc, cm->domain, cm->toplevel, cm->host)) != 0)
 		goto cleanup;
-	}
-	dnsa->zones = NULL;
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, ZONE | RECORD)) != 0)
-		goto cleanup;
-	if ((check_parent_for_a_record(cm->host, cm->domain, dnsa)) == 0) {
-		fprintf(stderr, "Host %s not found in domain %s\n", cm->host, cm->domain);
-		goto cleanup;
-	}
-	snprintf(domain, RBUFF_S, "%s", cm->domain);
-	tmp = domain;
-// **FIXME: This will NOT find the most top level domain. Perhaps test with strrchr
-	while ((tmp = strchr(tmp, '.'))) {
-		tmp++;
-		z = dnsa->zones;
-		while (z) {
-			if (strncmp(tmp, z->name, RBUFF_S) == 0) {
-				zid = z->id;
-				tld = z->name;
-				break;
+	if (!(cm->toplevel)) {
+		snprintf(domain, DOMAIN_LEN, "%s", cm->domain);
+		tmp = strchr(domain, '.');
+		if (tmp) {
+			tmp++;
+			if ((retval = cmdb_add_zone_id_to_list(tmp, FORWARD_ZONE, dc, c)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot search for domain %s", tmp);
+				goto cleanup;
 			}
-			z = z->next;
+		} else {
+			ailsa_syslog(LOG_ERR, "Cannot determine top level domain");
+			retval = AILSA_NO_TOP_LEVEL_DOMAIN;
+			goto cleanup;
+		}
+		cm->toplevel = strndup(tmp, DOMAIN_LEN);
+	} else {
+		if ((retval = cmdb_add_zone_id_to_list(cm->toplevel, FORWARD_ZONE, dc, c)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot get zone id for domain %s", domain);
+			goto cleanup;
 		}
 	}
-	if (zid == 0) {
-		fprintf(stderr, "Cannot find top level domain for %s\n", cm->domain);
-		retval = NO_DOMAIN;
+	if ((retval = cmdb_add_string_to_list("CNAME", c)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add CNAME type to list");
 		goto cleanup;
 	}
-	zone->next = dnsa->zones;
-	dnsa->zones = NULL;
-	r = dnsa->records;
-	snprintf(rec->dest, RBUFF_S, "%s.%s.", cm->host, cm->domain);
-	snprintf(rec->host, HOST_S, "%s", cm->host);
-	snprintf(rec->type, COMM_S, "CNAME");
-	rec->zone = zid;
-	rec->cuser = rec->muser = (unsigned long int)getuid();
-	dnsa->records = rec;
-	data->args.number = rec->cuser;
-	data->next->args.number = zid;
-	if ((retval = dnsa_run_insert(dc, dnsa, RECORDS)) != 0) {
-		fprintf(stderr, "Cannot insert into database");
-		retval = CANNOT_INSERT_RECORD;
-		rec->next = r;
-		dnsa->zones = zone;
+	if ((retval = cmdb_add_string_to_list(cm->host, c)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host to list");
 		goto cleanup;
-	} else {
-		printf("Host added as cname into zone %s\n", tld);
-		if ((retval = dnsa_run_update(dc, data, ZONE_UPDATED_YES)) != 0)
-			fprintf(stderr, "Cannot set zone as update\n");
+	}
+	snprintf(domain, DOMAIN_LEN, "%s.%s.", cm->host, cm->domain);
+	if ((retval = cmdb_add_string_to_list(domain, c)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add destination to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(c)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(dc, INSERT_RECORD_BASE, c)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_RECORD_BASE query failed");
+		goto cleanup;
+	}
+	e = c->head;
+	data = e->data;
+	if ((retval = set_db_row_updated(dc, SET_FWD_ZONE_UPDATED, NULL, data->data->number)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot set zone table updated");
+		goto cleanup;
 	}
 
 	cleanup:
-		dnsa_clean_list(dnsa);
-		clean_dbdata_struct(data);
+		ailsa_list_full_clean(c);
+		my_free(domain);
+		return retval;
+}
+
+static int
+check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *dom, char *top, char *host)
+{
+	if (!(dc) || !(dom) || !(host))
+		return AILSA_NO_DATA;
+	AILLIST *d = ailsa_db_data_list_init();
+	AILLIST *t = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
+	size_t total;
+	char *domain = ailsa_calloc(DOMAIN_LEN, "domain in add_cname_to_root_domain");
+	char *tmp;
+	int retval;
+
+	if ((retval = cmdb_add_zone_id_to_list(dom, FORWARD_ZONE, dc, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot search for domain %s", dom);
+		goto cleanup;
+	}
+	if (d->total == 0) {
+		ailsa_syslog(LOG_ERR, "Domain %s does not exist", dom);
+		goto cleanup;
+	}
+	if (top) {
+		if ((retval = cmdb_add_zone_id_to_list(top, FORWARD_ZONE, dc, t)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot search for domain %s", top);
+			goto cleanup;
+		}
+		if (t->total == 0) {
+			ailsa_syslog(LOG_ERR, "Domain %s does not exist", top);
+			goto cleanup;
+		}
+	} else {
+		snprintf(domain, DOMAIN_LEN, "%s", dom);
+		tmp = strchr(domain, '.');
+		if (tmp) {
+			tmp++;
+			if ((retval = cmdb_add_zone_id_to_list(tmp, FORWARD_ZONE, dc, t)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot search for domain %s", tmp);
+				goto cleanup;
+			}
+		} else {
+			ailsa_syslog(LOG_ERR, "Cannot determine top level domain");
+			retval = AILSA_NO_TOP_LEVEL_DOMAIN;
+			goto cleanup;
+		}
+		if (t->total == 0) {
+			ailsa_syslog(LOG_ERR, "Domain %s does not exist", tmp);
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_string_to_list(host, d)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host name to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(host, t)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, RECORD_ON_ZONE_AND_HOST_AND_A, d, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "RECORD_ON_ZONE_AND_HOST_AND_A query failed");
+		goto cleanup;
+	}
+	total = z->total;
+	if (total == 0) {
+		ailsa_syslog(LOG_ERR, "A record %s does not exist in %s", host, dom);
+		retval = AILSA_NO_HOST;
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, RECORD_ON_ZONE_AND_HOST, t, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "RECORD_ON_ZONE_AND_HOST query failed");
+		goto cleanup;
+	}
+	if (total != z->total) {
+		ailsa_syslog(LOG_ERR, "A record exists for host %s in domain %s", host, top);
+		retval = AILSA_HOST_EXISTS;
+	}
+	cleanup:
+		my_free(domain);
+		ailsa_list_full_clean(d);
+		ailsa_list_full_clean(t);
+		ailsa_list_full_clean(z);
 		return retval;
 }
 
@@ -2029,50 +2040,6 @@ get_zone_serial(void)
 		 sday);
 	serial = strtoul(sserial, NULL, 10);
 	return serial;
-}
-
-int
-check_for_zone_in_db(ailsa_cmdb_s *dc, dnsa_s *dnsa, short int type)
-{
-	int retval;
-
-	retval = 0;
-	if (type == FORWARD_ZONE) {
-		if ((retval = dnsa_run_search(dc, dnsa, ZONE_ID_ON_NAME)) != 0)
-			return retval;
-		else if (dnsa->zones->id != 0)
-			return ZONE_ALREADY_EXISTS;
-	} else if (type == REVERSE_ZONE) {
-		if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_ID_ON_NET_RANGE)) !=0)
-			return retval;
-		else if (dnsa->rev_zones->rev_zone_id != 0)
-			return ZONE_ALREADY_EXISTS;
-	}
-	return retval;
-}
-
-void
-fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc)
-{
-	int retval;
-	memset(zone, 0, sizeof(zone_info_s));
-	snprintf(zone->name, RBUFF_S, "%s", cm->domain);
-	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0) {
-		if ((retval = do_rev_lookup(cm->master, zone->pri_dns, RBUFF_S)) != 0)
-			snprintf(zone->pri_dns, RBUFF_S, "%s", cm->master);
-		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->prins);
-	} else {
-		snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-		snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
-	}
-	snprintf(zone->type, RANGE_S, "%s", cm->ztype);
-	snprintf(zone->master, RBUFF_S, "%s", cm->master);
-	zone->serial = get_zone_serial();
-	zone->refresh = dc->refresh;
-	zone->retry = dc->retry;
-	zone->expire = dc->expire;
-	zone->ttl = dc->ttl;
-	zone->cuser = zone->muser = (unsigned long int)getuid();
 }
 
 static int

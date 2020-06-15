@@ -35,6 +35,7 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	char *service;
 	char *protocol;
 	char *domain;
+	char *toplevel;
 	char *config;
 	char *host;
 	char *dest;

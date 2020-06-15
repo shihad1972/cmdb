@@ -48,7 +48,7 @@
 int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
-	const char *optstr = "abdeglmruvwxzFGI:M:N:RSh:i:n:o:p:s:t:";
+	const char *optstr = "abdeglmruvwxzFGI:M:N:RSh:i:j:n:o:p:s:t:";
 	int opt, retval;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -61,6 +61,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		{"delete-preferred-a",	no_argument,		NULL,	'g'},
 		{"host",		required_argument,	NULL,	'h'},
 		{"destination",		required_argument,	NULL,	'i'},
+		{"top-level",		required_argument,	NULL,	'j'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"add-cname",		no_argument,		NULL,	'm'},
 		{"zone-name",		required_argument,	NULL,	'n'},

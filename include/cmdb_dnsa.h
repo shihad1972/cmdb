@@ -115,8 +115,6 @@ list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
 unsigned long int
 get_zone_serial(void);
-int
-check_for_zone_in_db(ailsa_cmdb_s *dc, dnsa_s *dnsa, short int type);
 void
 select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
@@ -138,11 +136,7 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* Forward zone functions */
 int
 check_zone(char *domain, ailsa_cmdb_s *dc);
-void
-fill_fwd_zone_info(zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* Reverse zone functions */
-void
-create_rev_zone_header(dnsa_s *dnsa, char *hostm, unsigned long int id, string_len_s *zonefile);
 void
 fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* 04/03/2013 functions add */

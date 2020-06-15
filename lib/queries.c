@@ -429,6 +429,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	7,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
+	{ // RECORD_ON_ZONE_AND_HOST
+"SELECT id, type FROM records WHERE zone = ? AND host = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // RECORD_ON_ZONE_AND_HOST_AND_A
+"SELECT id FROM records WHERE zone = ? AND host = ? AND type = 'A'",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

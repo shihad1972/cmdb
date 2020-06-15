@@ -149,6 +149,9 @@ This option enables this. Specify the host and the sub-domain.
 The hostname you wish to cname
 .IP "-n,  --zone-name \fBdomain\fP"
 The sub-domain that contains the host record
+.IP "-j,  --top-level \fBtop-level domain\fP"
+The top level domain to add the cname to. Optional. dnsa will automatically
+try to use the zone one level up from the zone specified with \fB-n\fP
 .PP
 .SH FILES
 .I /etc/dnsa/dnsa.conf

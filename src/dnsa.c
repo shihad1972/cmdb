@@ -139,5 +139,7 @@ clean_dnsa_comm_line(void *comm)
 		my_free(dcl->glue_ip);
         if (dcl->glue_ns)
 		my_free(dcl->glue_ns);
+	if (dcl->toplevel)
+		my_free(dcl->toplevel);
 	my_free(dcl);
 }
