@@ -361,10 +361,20 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+	else if (retval == AILSA_INVALID_DBTYPE)
+		ailsa_syslog(LOG_ERR, "DB type was invalid in the query");
+	else if (retval == AILSA_NO_PRIORITY)
+		ailsa_syslog(LOG_ERR, "No priority was specified");
+	else if (retval == AILSA_NO_PROTOCOL)
+		ailsa_syslog(LOG_ERR, "No protocol was specified");
+	else if (retval == AILSA_NO_SERVICE)
+		ailsa_syslog(LOG_ERR, "No service was specified");
 	else if (retval == NO_FILE_SYSTEM)
-		fprintf(stderr, "No file system type was supplied\n");
+		ailsa_syslog(LOG_ERR, "No file system type was supplied");
+	else if (retval == NO_RTYPE)
+		ailsa_syslog(LOG_ERR, "No record type was specified");
 	else if (retval == NO_LOG_VOL)
-		fprintf(stderr, "No logical volume name supplied\n");
+		ailsa_syslog(LOG_ERR, "No logical volume name supplied");
 	else if ((retval >= 600) && (retval < 700))
 		ailsa_syslog(LOG_ERR, "Input validation failed: %s", ailsa_comm_line_strerror(retval));
 	else if (retval == NO_ALIAS)
@@ -588,7 +598,7 @@ display_dnsa_usage(void)
 	printf("-g: remove preferred A record\n\t -i\n");
 	printf("-l: list zones\n\t[ -F | -R ]\n");
 	printf("-m: add CNAME to root domain\n\t-h -n [ -j top-level domain ]\n");
-	printf("-r: remove record\n\t-h -n\n");
+	printf("-r: remove record\n\t-h -n -t\n");
 	printf("-u: display IP's with multiple A records\n\t-n\n");
 	printf("-w: commit valid zones on nameserver\n\t[ -F | -R ]\n");
 	printf("-x: remove zone\n\t[-F|-R] -n\n");

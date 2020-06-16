@@ -118,7 +118,8 @@ enum {			/* dnsa error codes */
 	WRONG_PROTO = 61,
 	CANNOT_UPDATE = 62,
 	RECORD_EXISTS = 63,
-	GET_TIME_FAILED = 64
+	GET_TIME_FAILED = 64,
+	NO_RTYPE = 65
 };
 
 enum {			/* Database Type errors */

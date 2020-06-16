@@ -290,7 +290,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // FWD_ZONE_ID_ON_ZONE_NAME
-"SELECT id FROM zones WHERE name = ?",
+"SELECT id FROM zones WHERE name = ? AND type = 'master'",
 	1,
 	{ AILSA_DB_TEXT }
 	},
@@ -438,6 +438,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT id FROM records WHERE zone = ? AND host = ? AND type = 'A'",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // RECORD_ID_ON_HOST_ZONE_TYPE
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ?",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // RECORD_IN_ON_PRI
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND pri = ?",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // RECORD_IN_ON_PROTOCOL
+"SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND pri = ? AND protocol = ? AND service = ?",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 };
 
@@ -644,6 +659,21 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM rev_zones WHERE rev_zone_id = ?",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_REC_TYPE_HOST
+"DELETE FROM records WHERE zone = ? AND type = ? AND host = ?",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // DELETE_REC_PRI
+"DELETE FROM records WHERE zone = ? AND type = ? AND host = ? AND pri = ?",
+	4,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT }
+	},
+	{ // DELETE_REC_PROTO
+"DELETE FROM records WHERE zone = ? AND type = ? AND host = ? AND pri = ? AND protocol = ? AND service = ?",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 };
 

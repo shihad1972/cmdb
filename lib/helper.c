@@ -519,6 +519,13 @@ cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec)
 	AILLIST *l = ailsa_db_data_list_init();
 
 	switch(rec->total) {
+	case 3:
+		if ((retval = ailsa_argument_query(cc, RECORD_ID_ON_HOST_ZONE_TYPE, rec, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "RECORD_ID_ON_HOST_ZONE_TYPE query failed");
+			retval = -1;
+			goto cleanup;
+		}
+		break;
 	case 4:
 		if ((retval = ailsa_argument_query(cc, RECORD_ID_BASE, rec, l)) != 0) {
 			ailsa_syslog(LOG_ERR, "RECORD_ID_BASE query failed");

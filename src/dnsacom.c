@@ -415,8 +415,9 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 /* Test values for different RR's. Still need to add check for AAAA */
 	if (comm->rtype) {
 		if (strncmp(comm->rtype, "A", COMM_S) == 0) {
-			if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
-				return DEST_INPUT_INVALID;
+			if (comm->dest)
+				if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
+					return DEST_INPUT_INVALID;
 			if (strncmp(comm->host, "@", COMM_S) == 0) {
 				if (ailsa_validate_input(comm->dest, NAME_REGEX) < 0)
 					if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
@@ -428,25 +429,41 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			}
 		} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
 			   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
-			if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
-				return DEST_INPUT_INVALID;
+			if (comm->dest)
+				if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
+					return DEST_INPUT_INVALID;
 			if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
 			    (strncmp(comm->host, "@", COMM_S) != 0))
 				if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 						return HOST_INPUT_INVALID;
 		} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
-			if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
-			    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
-				return DEST_INPUT_INVALID;
+			if (comm->dest)
+				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+			   	 (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
+					return DEST_INPUT_INVALID;
 			if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 				return SERVICE_INPUT_INVALID;
 		} else if (strncmp(comm->rtype, "CNAME", COMM_S) == 0) {
-			if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
-			    (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
-				return DEST_INPUT_INVALID;
+			if (comm->dest)
+				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
+			   	 (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
+					return DEST_INPUT_INVALID;
 			if ((ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0) &&
 			    (ailsa_validate_input(comm->host, NAME_REGEX) < 0))
 				return HOST_INPUT_INVALID;
+		}
+	}
+	if (comm->action == DELETE_RECORD) {
+		if (comm->protocol) {
+			if (!(comm->prefix))
+				return AILSA_NO_PRIORITY;
+			if (!(comm->service))
+				return AILSA_NO_SERVICE;
+		} else if (comm->service) {
+			if (!(comm->prefix))
+				return AILSA_NO_PRIORITY;
+			if (!(comm->protocol))
+				return AILSA_NO_PROTOCOL;
 		}
 	}
 	if (comm->action == ADD_CNAME_ON_ROOT) {
@@ -454,6 +471,8 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			return HOST_INPUT_INVALID;
+		if (!(comm->rtype))
+			return NO_RTYPE;
 	} else {
 		if ((comm->rtype) && (comm->host)) {
 			if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {

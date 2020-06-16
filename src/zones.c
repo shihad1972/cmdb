@@ -1121,51 +1121,74 @@ check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *dom, char *top, char *host)
 int
 delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	char fqdn[RBUFF_S], *name;
-	int retval = 0;
-	dnsa_s *dnsa;
-	dbdata_s data, user;
-	zone_info_s *zone;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval;
+	unsigned int query, delete;
+	AILLIST *rec = ailsa_db_data_list_init();
+	AILLIST *list = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in delete_record");
-// **FIXME: Should probably just multi init here
-	init_dbdata_struct(&data);
-	init_dbdata_struct(&user);
-	user.next = &data;
-	user.args.number = (unsigned long int)getuid();
-	if ((retval = dnsa_run_multiple_query(dc, dnsa, RECORD | ZONE)) != 0) {
-		printf("DB search failed with %d\n", retval);
-		dnsa_clean_list(dnsa);
-		return NO_RECORDS;
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
 	}
-	name = fqdn;
-	snprintf(name, RBUFF_S, "%s.%s.", cm->host, cm->domain);
-	zone = dnsa->zones;
-	while (zone) {
-		if ((strncmp(zone->name, cm->domain, RBUFF_S)) == 0)
-			break;
-		else
-			zone = zone->next;
+	if ((retval = cmdb_add_string_to_list(cm->rtype, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add record type to list");
+		goto cleanup;
 	}
-	if (zone)
-		data.args.number = zone->id;
-	if ((retval = check_for_fwd_record_use(dnsa, name, cm)) != 0) {
-		dnsa_clean_list(dnsa);
+	if ((retval = cmdb_add_string_to_list(cm->host, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host to list");
+		goto cleanup;
+	}
+	if (cm->prefix) {
+		if ((retval = cmdb_add_number_to_list(cm->prefix, rec)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add priority to list");
+			goto cleanup;
+		}
+	}
+	if (cm->protocol) {
+		if ((retval = cmdb_add_string_to_list(cm->protocol, rec)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add protocol to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(cm->service, rec)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add service to list");
+			goto cleanup;
+		}
+	}
+	switch (rec->total) {
+	case 3:
+		query = RECORD_ID_ON_HOST_ZONE_TYPE;
+		delete = DELETE_REC_TYPE_HOST;
+		break;
+	case 4:
+		query = RECORD_IN_ON_PRI;
+		delete = DELETE_REC_PRI;
+		break;
+	case 6:
+		query = RECORD_IN_ON_PROTOCOL;
+		delete = DELETE_REC_PROTO;
+		break;
+	default:
+		ailsa_syslog(LOG_INFO, "Got %zu numbers in list?");
+		retval = WRONG_LENGTH_LIST;
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, query, rec, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "query for record to delete failed");
+		goto cleanup;
+	}
+	if (list->total == 0) {
+		ailsa_syslog(LOG_INFO, "No records found to delete");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(dc, delete_queries[delete], rec)) != 0)
+		ailsa_syslog(LOG_ERR, "delete query failed");
+
+	cleanup:
+		ailsa_list_full_clean(rec);
+		ailsa_list_full_clean(list);
 		return retval;
-	}
-	if ((retval = get_record_id_and_delete(dc, dnsa, cm)) == 0) {
-		dnsa_clean_list(dnsa);
-		printf("Cannot find a record ID for %s.%s\n",
-		       cm->host, cm->domain);
-		return CANNOT_FIND_RECORD_ID;
-	}
-	printf("%d record(s) deleted\n", retval);
-/* That we do not return retval here is good, as this should return the 
- * number of updates to the database. However, for mysql this always
- * returns 0. For sqlite, this returns an error code! */
-	retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES);
-	dnsa_clean_list(dnsa);
-	return NONE;
 }
 
 int
