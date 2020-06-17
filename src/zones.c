@@ -595,7 +595,7 @@ display_multi_a_records(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		return retval;
 	}
 	init_multi_dbdata_struct(&start, max);
-	if (strncmp(cm->dest, "NULL", COMM_S) != 0) {
+	if (cm->dest) {
 		select_specific_ip(dnsa, cm);
 		if (!(dnsa->records))
 			fprintf(stderr, "No multiple A records for IP %s\n",
@@ -1323,35 +1323,6 @@ delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 }
 
 int
-check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
-{
-	int retval;
-/*
- * If the record we want to delete is marked as an NS record for any zone
- * then refuse to delete.
- * However, if we are trying to delete the zone it belongs to this is ok.
- */
-	if ((retval = compare_fwd_ns_records_with_host(dnsa, name, cm)) != 0) {
-		return retval;
-	}
-/*
- * If the record is a destination for any other record then refuse to delete
- */
-	if ((retval = compare_host_with_record_destination(dnsa, name)) != 0) {
-		return retval;
-	}
-/*
- * CNAMES that the destination is not a Fully Qualified Domain Name will have
- * been missed in the above search. So we need to search for them. If they
- * exist, refuse to delete
- */
-	if ((retval = compare_host_with_fqdn_cname(dnsa, name)) != 0) {
-		return retval;
-	}
-	return NONE;
-}
-
-int
 build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	int retval = 0, a_rec;
@@ -1910,133 +1881,6 @@ add_int_ip_to_rev_records(dnsa_s *dnsa)
 	return NONE;
 }
 
-int
-compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm)
-{
-	int retval = NONE;
-	zone_info_s *list;
-
-	if (dnsa->zones)
-		list = dnsa->zones;
-	else
-		return DOMAIN_LIST_FAIL;
-	while (list) {
-		if ((cm->action == DELETE_ZONE) && 
-		    (strncmp(cm->domain, list->name, RBUFF_S) == 0)) {
-			list = list->next;
-			continue;
-		}
-		if (strncmp(name, list->pri_dns, RBUFF_S) == 0) {
-			printf("\
-Zone %s has primary NS server of %s You want to delete %s\n",
-			  list->name, list->pri_dns, name);
-			retval = REFUSE_TO_DELETE_NS_RECORD;
-		}
-		if (strncmp(name, list->sec_dns, RBUFF_S) == 0) {
-			printf("\
-Zone %s has secondary NS server of %s You want to delete %s\n",
-			  list->name, list->sec_dns, name);
-			retval = REFUSE_TO_DELETE_NS_RECORD;
-		}
-		list = list->next;
-	}
-	return retval;
-}
-
-int
-compare_host_with_record_destination(dnsa_s *dnsa, char *name)
-{
-	record_row_s *list;
-
-	if (dnsa->records)
-		list = dnsa->records;
-	else
-		return NO_RECORDS;
-	while (list) {
-		if (strncmp(name, list->dest, RBUFF_S) == 0) {
-			printf("\
-We have a record type %s in zone ID %lu with destination %s\n",
-			       list->type, list->zone, name);
-			return REFUSE_TO_DELETE_A_RECORD_DEST;
-		}
-		list = list->next;
-	}
-	return NONE;
-}
-
-int
-compare_host_with_fqdn_cname(dnsa_s *dnsa, char *hname)
-{
-	char rfqdn[RBUFF_S], *rname;
-	record_row_s *list;
-
-	rname = rfqdn;
-	if (dnsa->records)
-		list = dnsa->records;
-	else
-		return NO_RECORDS;
-	while (list) {
-		get_fqdn_for_record_dest(dnsa, list, rname);
-		if (strncmp(rfqdn, hname, RBUFF_S) == 0) {
-			printf("\
-We have a record in zone id %lu whose destination FQDN is %s\n", list->zone, rname);
-			return REFUSE_TO_DELETE_A_RECORD_DEST;
-		}
-		list = list->next;
-	}
-	return NONE;
-}
-
-void
-get_fqdn_for_record_dest(dnsa_s *dnsa, record_row_s *fwd, char *fqdn)
-{
-	char *tmp;
-	int i;
-	zone_info_s *zone;
-
-	tmp = fqdn;
-	for (i = 0; i < RBUFF_S; i++) {
-		*tmp = '\0';
-		tmp++;
-	}
-	if (dnsa->zones)
-		zone = dnsa->zones;
-	else
-		return;
-	while (zone) {
-		if (zone->id == fwd->zone) {
-			snprintf(fqdn, RBUFF_S, "%s.%s.", fwd->dest, zone->name);
-			return;
-		}
-		zone = zone->next;
-	}
-}
-
-void
-get_fqdn_for_record_host(dnsa_s *dnsa, record_row_s *fwd, char *fqdn)
-{
-	char *tmp;
-	int i;
-	zone_info_s *zone;
-
-	tmp = fqdn;
-	for (i = 0; i < RBUFF_S; i++) {
-		*tmp = '\0';
-		tmp++;
-	}
-	if (dnsa->zones)
-		zone = dnsa->zones;
-	else
-		return;
-	while (zone) {
-		if (zone->id == fwd->zone) {
-			snprintf(fqdn, RBUFF_S, "%s.%s.", fwd->host, zone->name);
-			return;
-		}
-		zone = zone->next;
-	}
-}
-
 unsigned long int
 get_zone_serial(void)
 {
@@ -2200,39 +2044,10 @@ fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc
 	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
 	snprintf(zone->master, RBUFF_S, "%s", cm->master);
 	zone->cuser = zone->muser = (unsigned long int)getuid();
-	if ((strncmp(cm->ztype, "slave", COMM_S)) == 0)
+	if (cm->ztype)
 		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
 	else
 		snprintf(zone->type, COMM_S, "master");
-}
-
-int
-get_record_id_and_delete(ailsa_cmdb_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm)
-{
-	char hfqdn[RBUFF_S], rfqdn[RBUFF_S], *hname, *rname;
-	int retval = 0;
-	dbdata_s *data;
-	record_row_s *list;
-
-	init_multi_dbdata_struct(&data, 1);
-	hname = hfqdn;
-	rname = rfqdn;
-	snprintf(hname, RBUFF_S, "%s.%s.", cm->host, cm->domain);
-	if (dnsa->records)
-		list = dnsa->records;
-	else
-		return NO_RECORDS;
-	while (list) {
-		get_fqdn_for_record_host(dnsa, list, rname);
-		if (strncmp(rfqdn, hfqdn, RBUFF_S) == 0) {
-			printf("Deleting record ID %lu, type %s\n",
-			       list->id, list->type);
-			data->args.number = list->id;
-			retval += dnsa_run_delete(dc, data, RECORDS);
-		}
-		list = list->next;
-	}
-	return retval;
 }
 
 void

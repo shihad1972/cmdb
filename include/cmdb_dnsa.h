@@ -67,27 +67,13 @@ int
 get_correct_rev_zone_and_preferred_records(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 /* Added 06/03/2013 */
 int
-compare_fwd_ns_records_with_host(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm);
-int
-compare_host_with_record_destination(dnsa_s *dnsa, char *name);
-int
-compare_host_with_fqdn_cname(dnsa_s *dnsa, char *name);
-void
-get_fqdn_for_record_host(dnsa_s *dnsa, record_row_s *fwd, char *fqdn);
-void
-get_fqdn_for_record_dest(dnsa_s *dnsa, record_row_s *fwd, char *fqdn);
-int
 get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
-int
-get_record_id_and_delete(ailsa_cmdb_s *dc, dnsa_s *dnsa, dnsa_comm_line_s *cm);
 int
 delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 delete_glue_zone (ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End addition 06/03/2013 */
 /* Added 07/03/2013 */
-int
-check_for_fwd_record_use(dnsa_s *dnsa, char *name, dnsa_comm_line_s *cm);
 int
 delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End addition 07/03/2013 */
