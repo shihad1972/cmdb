@@ -454,6 +454,36 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	6,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
+	{ // DUP_IP_NET_RANGE
+"SELECT destination, count(*) c FROM records WHERE type = 'A' AND destination LIKE ? GROUP BY destination HAVING c > 1",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // DUP_IP_A_RECORD
+"SELECT destination, count(*) c FROM records WHERE type = 'A' AND destination = ? GROUP BY destination HAVING c > 1",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // A_RECORDS_WITH_IP
+"SELECT r.host, z.name FROM records r LEFT JOIN zones z ON r.zone = z.id WHERE destination = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // FQDN_PREF_A_ON_IP
+"SELECT fqdn FROM preferred_a WHERE ip = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // NET_START_FINISH_ON_RANGE
+"SELECT net_start, net_finish FROM rev_zones WHERE net_range = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // PREFIX_ON_NET_RANGE
+"SELECT prefix FROM rev_zones WHERE net_range = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

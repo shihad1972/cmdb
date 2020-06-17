@@ -63,6 +63,15 @@ static void
 print_rev_zone_records(char *domain, AILLIST *r);
 
 static int
+multi_a_range(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl);
+
+static int
+get_search_net_range(char *range, char *domain, unsigned long int prefix);
+
+static int
+multi_a_ip_address(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl);
+
+static int
 dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 
 static int
@@ -574,75 +583,142 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 int
 display_multi_a_records(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = 0, type = RECORDS_ON_DEST_AND_ID;
-	unsigned int f = dnsa_extended_search_fields[type];
-	unsigned int a = dnsa_extended_search_args[type];
-	unsigned int max = cmdb_get_max(a, f);
-	size_t len = sizeof(rev_zone_info_s);
-	dnsa_s *dnsa;
-	dbdata_s *start;
-	rev_zone_info_s *rzone;
-	record_row_s *records;
-	preferred_a_s *prefer;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval;
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in display_multi_a_records");
-	rzone = ailsa_calloc(len, "rzone in display_multi_a_records");
-	init_rev_zone_struct(rzone);
-	dnsa->rev_zones = rzone;
-	if ((retval = dnsa_run_multiple_query(
-		dc, dnsa, DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-	init_multi_dbdata_struct(&start, max);
-	if (cm->dest) {
-		select_specific_ip(dnsa, cm);
-		if (!(dnsa->records))
-			fprintf(stderr, "No multiple A records for IP %s\n",
-				cm->dest);
-		else
-			print_multiple_a_records(dc, start, dnsa);
-		clean_dbdata_struct(start);
-		dnsa_clean_list(dnsa);
-		return NONE;
-	}
-	snprintf(rzone->net_range, RANGE_S, "%s", cm->domain);
-	if ((retval = dnsa_run_search(dc, dnsa, REV_ZONE_PREFIX)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
-	}
-	cm->prefix = rzone->prefix;
-	fill_rev_zone_info(rzone, cm, dc);
-	if (rzone->prefix == NONE) {
-		printf("Net range %s does not exist in database\n", cm->domain);
-		dnsa_clean_list(dnsa);
-		clean_dbdata_struct(start);
-		return NO_DOMAIN;
-	}
-	get_a_records_for_range(&(dnsa->records), dnsa->rev_zones);
-	records = dnsa->records;
-	if (!records)
-		printf("No duplicate entries for range %s\n", cm->domain);
-	while (records) {
-		prefer = dnsa->prefer;
-		printf("Destination %s has %lu records",
-		       records->dest, records->id);
-		while (prefer) {
-			if (strncmp(prefer->ip, records->dest, RANGE_S) == 0)
-				printf("; preferred PTR is %s", prefer->fqdn);
-			prefer = prefer->next;
-		}
-		printf("\n");
-		records = records->next;
-	}
-	records = dnsa->records;
-	if (records) {
-		printf("If you want to see the A records for a specific IP use the ");
-		printf("-i option\nE.G. dnsa -u -i <IP-Address>\n");
-	}
-	clean_dbdata_struct(start);
-	dnsa_clean_list(dnsa);
+	if (cm->domain)
+		retval = multi_a_range(dc, cm);
+	else if (cm->dest)
+		retval = multi_a_ip_address(dc, cm);
 	return retval;
+}
+
+static int
+multi_a_range(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
+{
+	if (!(dc) || !(dcl))
+		return AILSA_NO_DATA;
+	char *range = ailsa_calloc(MAC_LEN, "range in multi_a_range");
+	int retval;
+	size_t total = 2;
+	unsigned long int prefix;
+	AILLIST *net = ailsa_db_data_list_init();
+	AILLIST *pre = ailsa_db_data_list_init();
+	AILLIST *mod = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_string_to_list(dcl->domain, net)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, PREFIX_ON_NET_RANGE, net, pre)) != 0) {
+		ailsa_syslog(LOG_ERR, "NET_START_FINISH_ON_RANGE query failed");
+		goto cleanup;
+	}
+	if (pre->total == 0) {
+		ailsa_syslog(LOG_INFO, "net_range %s not found in reverse zones", dcl->domain);
+		goto cleanup;
+	}
+	d = pre->head->data;
+	prefix = strtoul(d->data->text, NULL, 10);
+	if ((retval = get_search_net_range(range, dcl->domain, prefix)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get search range from %s/%lu");
+		goto cleanup;
+	}
+	ailsa_list_clean(net);
+	if ((retval = cmdb_add_string_to_list(range, net)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add range to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, DUP_IP_NET_RANGE, net, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "DUP_IP_NET_RANGE query failed");
+		goto cleanup;
+	}
+	if (ip->total == 0) {
+		ailsa_syslog(LOG_INFO, "No duplicate IP's in range %s", dcl->domain);
+		goto cleanup;
+	}
+	if ((ip->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. Expected factor of %zu, got %zu", total, ip->total);
+		goto cleanup;
+	}
+	e = ip->head;
+	printf("Destination\t#\thost\n");
+	while (e) {
+		d = e->data;
+		ailsa_list_clean(pre);
+		if ((retval = cmdb_add_string_to_list(d->data->text, pre)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add IP to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(dc, A_RECORDS_WITH_IP, pre, mod)) != 0) {
+			ailsa_syslog(LOG_ERR, "A_RECORDS_WITH_IP query failed");
+			goto cleanup;
+		}
+		if (strlen(d->data->text) < 8)
+			printf("%s\t\t", d->data->text);
+		else
+			printf("%s\t", d->data->text);
+		d = e->next->data;
+		printf("%lu\t", d->data->number);
+		d = mod->head->data;
+		printf("%s.", d->data->text);
+		d = mod->head->next->data;
+		printf("%s\n", d->data->text);
+		e = ailsa_move_down_list(e, total);
+		ailsa_list_clean(mod);
+	}
+	cleanup:
+		ailsa_list_full_clean(net);
+		ailsa_list_full_clean(pre);
+		ailsa_list_full_clean(mod);
+		ailsa_list_full_clean(ip);
+		my_free(range);
+		return retval;
+}
+
+static int
+get_search_net_range(char *range, char *domain, unsigned long int prefix)
+{
+	if (!(range) || !(domain) || (prefix == 0))
+		return AILSA_NO_DATA;
+	char *tmp;
+	int retval = 0;
+
+	if (snprintf(range, MAC_LEN, "%s", domain) >= MAC_LEN)
+		ailsa_syslog(LOG_ERR, "range truncated in get_search_net_range");
+	tmp = strrchr(range, '.');
+	if (!(tmp))
+		return AILSA_RANGE_ERROR;
+	if (prefix < 24) {
+		*tmp = '\0';
+		tmp = strrchr(range, '.');
+		if (!(tmp))
+			return AILSA_RANGE_ERROR;
+		if (prefix < 16) {
+			*tmp = '\0';
+			tmp = strrchr(range, '.');
+			if (!(tmp))
+				return AILSA_RANGE_ERROR;
+		}
+	}
+	tmp++;
+	sprintf(tmp, "%%");
+	return retval;
+}
+
+static int
+multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
+{
+	if (!(dc) || !(dcl))
+		return AILSA_NO_DATA;
+	int retval;
+
+	cleanup:
+		return retval;
 }
 
 void
@@ -1044,7 +1120,7 @@ check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *dom, char *top, char *host)
 	AILLIST *t = ailsa_db_data_list_init();
 	AILLIST *z = ailsa_db_data_list_init();
 	size_t total;
-	char *domain = ailsa_calloc(DOMAIN_LEN, "domain in add_cname_to_root_domain");
+	char *domain = ailsa_calloc(DOMAIN_LEN, "domain in check_for_zones_and_hosts");
 	char *tmp;
 	int retval;
 
