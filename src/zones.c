@@ -764,53 +764,6 @@ multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 		return retval;
 }
 
-void
-print_multiple_a_records(ailsa_cmdb_s *dc, dbdata_s *start, dnsa_s *dnsa)
-{
-	int i, j, k;
-	char name[RBUFF_S], *fqdn;
-	time_t create;
-	dbdata_s *dlist;
-	record_row_s *records = dnsa->records;
-	preferred_a_s *prefer = dnsa->prefer, *mark = NULL;
-	fqdn = &name[0];
-	while (records) {
-		dlist = start;
-		printf("Destination %s has %lu records; * denotes preferred PTR record\n",
-		records->dest, records->id);
-		snprintf(dlist->args.text, RANGE_S, "%s", records->dest);
-		i = dnsa_run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
-		for (j = 0; j < i; j++) {
-			snprintf(fqdn, RBUFF_S, "%s.%s",
-				 dlist->fields.text, dlist->next->fields.text);
-			prefer = dnsa->prefer;
-			k = 0;
-			while (prefer) {
-				if (strncmp(fqdn, prefer->fqdn, RBUFF_S) == 0) {
-					mark = prefer;
-					printf("     *  %s\n", fqdn);
-					k++;
-				}
-				prefer=prefer->next;
-			}
-			if (k == 0)
-				printf("\t%s\n", fqdn);
-			dlist = dlist->next->next->next;
-		}
-		printf("\n");
-		records = records->next;
-		dlist = start->next->next->next;
-		clean_dbdata_struct(dlist);
-		dlist = start->next->next;
-		dlist->next = NULL;
-	}
-	if (mark) {
-		create = (time_t)mark->ctime;
-		printf("Preferred A record created by %s on %s",
-get_uname(mark->cuser), ctime(&create));
-	}
-}
-
 int
 mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {

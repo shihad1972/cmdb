@@ -92,8 +92,6 @@ void
 display_zone(char *domain, ailsa_cmdb_s *dc);
 void
 display_rev_zone(char *domain, ailsa_cmdb_s *dc);
-void
-print_multiple_a_records(ailsa_cmdb_s *dc, dbdata_s *data, dnsa_s *dnsa);
 int
 get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
