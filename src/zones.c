@@ -715,9 +715,52 @@ multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 {
 	if (!(dc) || !(dcl))
 		return AILSA_NO_DATA;
+	char *hostname = ailsa_calloc(DOMAIN_LEN, "fqdn in multi_a_ip_address");
 	int retval;
+	size_t total = 2;
+	AILLIST *fqdn = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d, *h;
 
+	if ((retval = cmdb_add_string_to_list(dcl->dest, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP address to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, A_RECORDS_WITH_IP, ip, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "DUP_IP_A_RECORD query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "IP address %s has no records");
+		goto cleanup;
+	}
+	if ((l->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. Expected factor of %zu, got %zu", total, l->total);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, FQDN_PREF_A_ON_IP, ip, fqdn)) != 0) {
+		ailsa_syslog(LOG_ERR, "FQDN_PREF_A_ON_IP query failed");
+		goto cleanup;
+	}
+	e = l->head;
+	printf("Displaying A records with IP address %s. * indicates preferred A record\n\n", dcl->dest);
+	while (e) {
+		h = e->data;
+		d = e->next->data;
+		snprintf(hostname, DOMAIN_LEN, "%s.%s", h->data->text, d->data->text);
+		if (strncmp(hostname, ((ailsa_data_s *)fqdn->head->data)->data->text, DOMAIN_LEN) == 0)
+			printf("   *\t%s\n", hostname);
+		else
+			printf("\t%s\n", hostname);
+		e = ailsa_move_down_list(e, total);
+	}
 	cleanup:
+		my_free(hostname);
+		ailsa_list_full_clean(fqdn);
+		ailsa_list_full_clean(ip);
+		ailsa_list_full_clean(l);
 		return retval;
 }
 
