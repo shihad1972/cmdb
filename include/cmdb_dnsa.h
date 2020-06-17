@@ -63,8 +63,6 @@ int
 mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
-int
-get_correct_rev_zone_and_preferred_records(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 /* Added 06/03/2013 */
 int
 get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
@@ -81,8 +79,6 @@ int
 get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 void
 get_duplicate_a_records(dnsa_comm_line_s *cm, dnsa_s *dnsa);
-int
-get_rev_records_for_range(rev_record_row_s **rev, rev_zone_info_s *zone);
 /* Zone display functions */
 void
 list_zones(ailsa_cmdb_s *dc);
@@ -101,16 +97,8 @@ unsigned long int
 get_zone_serial(void);
 void
 select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
-int
-get_a_records_for_range(record_row_s **records, rev_zone_info_s *zone);
-int
-get_pref_a_for_range(preferred_a_s **prefer, rev_zone_info_s *rev);
-void
-add_int_ip_to_records(dnsa_s *dnsa);
 void
 add_int_ip_to_fwd_records(record_row_s *records);
-int
-add_int_ip_to_rev_records(dnsa_s *dnsa);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
@@ -124,24 +112,8 @@ check_zone(char *domain, ailsa_cmdb_s *dc);
 void
 fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* 04/03/2013 functions add */
-void
-trim_forward_record_list(dnsa_s *dnsa, record_row_s *rec);
-int
-check_dup_and_pref_list(record_row_s *list, record_row_s *fwd, dnsa_s *dnsa);
-int
-rev_records_to_delete(dnsa_s *dnsa, rev_record_row_s **rev);
-void
-insert_into_rev_del_list(rev_record_row_s *record, rev_record_row_s **rev);
 int
 add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
-/* Updated / modified functions */
-int
-rev_records_to_add(dnsa_s *dnsa, rev_record_row_s **rev);
-/* End 04/03/2013 */
-int
-insert_into_rev_add_list(dnsa_s *dnsa, record_row_s *fwd, rev_record_row_s **rev);
-void
-add_dup_to_prefer_list(dnsa_s *dnsa, record_row_s *fwd);
 int
 get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
 /* Glue zone functins */
