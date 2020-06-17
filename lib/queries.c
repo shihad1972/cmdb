@@ -1249,6 +1249,7 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 			}
 			break;
 		case MYSQL_TYPE_LONG:
+		case MYSQL_TYPE_LONGLONG:
 			tmp->data->number = strtoul(row[i - 1], NULL, 10);
 			tmp->type = AILSA_DB_LINT;
 			break;
@@ -1396,6 +1397,7 @@ ailsa_set_my_type(unsigned int type)
 		retval = AILSA_DB_TEXT;
 		break;
 	case MYSQL_TYPE_LONG:
+	case MYSQL_TYPE_LONGLONG:
 		retval = AILSA_DB_LINT;
 		break;
 	case MYSQL_TYPE_SHORT:

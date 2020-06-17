@@ -733,7 +733,7 @@ multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 		goto cleanup;
 	}
 	if (l->total == 0) {
-		ailsa_syslog(LOG_INFO, "IP address %s has no records");
+		ailsa_syslog(LOG_INFO, "IP address %s has no records", dcl->dest);
 		goto cleanup;
 	}
 	if ((l->total % total) != 0) {

@@ -563,7 +563,7 @@ validate_rev_comm_line(dnsa_comm_line_s *comm)
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			return HOST_INPUT_INVALID;
 	}
-	if (comm->action == DELETE_PREFERRED)
+	if (comm->dest)
 		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 			return DEST_INPUT_INVALID;
 	return retval;
