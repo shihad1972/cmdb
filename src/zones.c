@@ -1491,9 +1491,29 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0)
+	if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
-
+		goto cleanup;
+	}
+	if (rem->total > 0 || add->total > 0) {
+		ailsa_list_clean(net);
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), net)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(cm->domain, net)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add net range to update list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(dc, update_queries[SET_REV_ZONE_UPDATED], net)) != 0) {
+			ailsa_syslog(LOG_ERR, "Update query SET_REV_ZONE_UPDATED failed");
+			goto cleanup;
+		}
+		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", cm->domain);
+			goto cleanup;
+		}
+	}
 	cleanup:
 		ailsa_list_full_clean(add);
 		ailsa_list_full_clean(net);
@@ -1642,6 +1662,10 @@ cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *rem)
 			goto cleanup;
 		e = ailsa_move_down_list(e, total);
 	}
+	if ((retval = ailsa_multiple_query(dc, delete_queries[DELETE_REVERSE_RECORD], r)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
+		goto cleanup;
+	}
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(r);
@@ -1744,11 +1768,19 @@ cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
 			ailsa_syslog(LOG_ERR, "Cannot add FQDN to list");
 			goto cleanup;
 		}
+		if ((retval = cmdb_populate_cuser_muser(a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+			goto cleanup;
+		}
 		jump:
 			ailsa_list_clean(l);
 			ailsa_list_clean(rec);
 			e = ailsa_move_down_list(e, total);
 			memset(domain, 0, DOMAIN_LEN);
+	}
+	if ((retval = ailsa_multiple_query(dc, insert_queries[INSERT_REVERSE_RECORD], a)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_RECORD multi query failed");
+		goto cleanup;
 	}
 	cleanup:
 		my_free(domain);

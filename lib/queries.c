@@ -637,6 +637,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	9,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT },
 	},
+	{ // INSERT_REVERSE_RECORD
+"INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?)",
+	5,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	}
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -725,6 +730,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	6,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
+	{ // DELETE_REVERSE_RECORD
+"DELETE FROM rev_records WHERE rev_record_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {
@@ -767,6 +777,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE zones SET muser = ?, updated = 'yes' WHERE id = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // SET_REV_ZONE_UPDATED
+"UPDATE rev_zones SET muser = ?, updated = 'yes' WHERE net_range = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	},
 };
 
