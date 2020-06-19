@@ -612,7 +612,7 @@ add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 		}
 		e = e->next;
 	}
-	if ((retval = ailsa_multiple_insert_query(cmc, INSERT_BUILD_PACKAGE, v)) != 0)
+	if ((retval = ailsa_multiple_query(cmc, insert_queries[INSERT_BUILD_PACKAGE], v)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot insert build packages for new varient");
 	cleanup:
 		ailsa_list_destroy(v);
@@ -684,7 +684,7 @@ add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 		ailsa_syslog(LOG_ERR, "Cannot build package list to insert");
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_insert_query(cbc, INSERT_BUILD_PACKAGE, list)) != 0 )
+	if ((retval = ailsa_multiple_query(cbc, insert_queries[INSERT_BUILD_PACKAGE], list)) != 0 )
 		ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
 	cleanup:
 		ailsa_list_destroy(list);

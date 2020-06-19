@@ -265,6 +265,7 @@ typedef struct ailsa_sql_multi_s {
 extern const ailsa_sql_query_s varient_queries[];
 extern const ailsa_sql_query_s delete_queries[];
 extern const ailsa_sql_query_s update_queries[];
+extern const ailsa_sql_query_s insert_queries[];
 
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results);
@@ -285,7 +286,7 @@ int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
 int
-ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
+ailsa_multiple_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
 
 // Some helper functions
 

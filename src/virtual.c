@@ -681,7 +681,7 @@ cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 		ailsa_syslog(LOG_ERR, "Wrong number in list? %lu", l->total);
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_insert_query(cmdb, INSERT_HARDWARE, l)) != 0)
+	if ((retval = ailsa_multiple_query(cmdb, insert_queries[INSERT_HARDWARE], l)) != 0)
 		ailsa_syslog(LOG_ERR, "INSERT_HARDWARE query failed");
 
 	cleanup:

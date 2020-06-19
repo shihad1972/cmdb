@@ -771,10 +771,10 @@ const struct ailsa_sql_query_s update_queries[] = {
 };
 
 static int
-cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t total);
+cmdb_create_multi(ailsa_sql_multi_s *sql, const struct ailsa_sql_query_s query, size_t total);
 
 static char *
-cmdb_create_value_string(unsigned int query);
+cmdb_create_value_string(const struct ailsa_sql_query_s query);
 
 static unsigned int *
 cmdb_insert_fields_array(unsigned int n, size_t tot, const unsigned int *f);
@@ -797,7 +797,7 @@ static void
 ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields);
 
 int
-ailsa_multiple_insert_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
+ailsa_multiple_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
 
 #endif
 
@@ -816,7 +816,7 @@ int
 ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
 
 int
-ailsa_multiple_insert_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
+ailsa_multiple_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert);
 
 static void
 ailsa_store_basic_sqlite(sqlite3_stmt *state, AILLIST *results);
@@ -956,13 +956,13 @@ ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
 }
 
 int
-ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
+ailsa_multiple_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert)
 {
 	int retval;
 	ailsa_sql_multi_s *sql = ailsa_calloc(sizeof(ailsa_sql_multi_s), "sql in ailsa_multiple_insert_query");
 
-	if ((retval = cmdb_create_multi_insert(sql, query_no, insert->total)) != 0) {
-		ailsa_syslog(LOG_ERR, "Unable to create multiple insert struct");
+	if ((retval = cmdb_create_multi(sql, query, insert->total)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to create multiple struct");
 		goto cleanup;
 	}
 	retval = DB_TYPE_INVALID;
@@ -970,11 +970,11 @@ ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
 	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
-		retval = ailsa_multiple_insert_query_mysql(cmdb, sql, insert);
+		retval = ailsa_multiple_query_mysql(cmdb, sql, insert);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
 	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
-		retval = ailsa_multiple_insert_query_sqlite(cmdb, sql, insert);
+		retval = ailsa_multiple_query_sqlite(cmdb, sql, insert);
 #endif
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
@@ -985,25 +985,25 @@ ailsa_multiple_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *
 }
 
 static int
-cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t total)
+cmdb_create_multi(ailsa_sql_multi_s *sql, const struct ailsa_sql_query_s query, size_t total)
 {
-	if (!(sql) || (query == 0) || (total == 0))
+	if (!(sql) || (total == 0))
 		return AILSA_NO_DATA;
 	int retval = 0;
 	unsigned int *u = NULL;
-	unsigned int n = insert_queries[query].number;
-	const unsigned int *f = insert_queries[query].fields;
+	unsigned int n = query.number;
+	const unsigned int *f = query.fields;
 	size_t i, len_s, len_q, len_t, tot;
 	char *values = NULL, *q = NULL;
 
-	len_q = strlen(insert_queries[query].query);
+	len_q = strlen(query.query);
 	values = cmdb_create_value_string(query);
 	len_s = strlen(values);
 	len_t = total / (size_t)n;
 	tot = (len_s * len_t) + len_q;
 	u = cmdb_insert_fields_array(n, total, f);
 	q = ailsa_calloc(tot, "q in cmdb_create_multi_insert");
-	sprintf(q, "%s", insert_queries[query].query);
+	sprintf(q, "%s", query.query);
 	for (i = 1; i < len_t; i++) {
 		sprintf(q + len_q, "%s", values);
 		len_q += len_s;
@@ -1017,10 +1017,10 @@ cmdb_create_multi_insert(ailsa_sql_multi_s *sql, unsigned int query, size_t tota
 }
 
 static char *
-cmdb_create_value_string(unsigned int query)
+cmdb_create_value_string(const struct ailsa_sql_query_s query)
 {
 	char *value = NULL;
-	unsigned int count = insert_queries[query].number;
+	unsigned int count = query.number;
 	unsigned int i;
 	size_t len = (size_t)count * 3;
 	len += 4;
@@ -1200,7 +1200,7 @@ ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s inse
 }
 
 int
-ailsa_multiple_insert_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *insert, AILLIST *list)
+ailsa_multiple_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *insert, AILLIST *list)
 {
 	if (!(cmdb) || !(insert) || !(list))
 		return AILSA_NO_DATA;
@@ -1560,7 +1560,7 @@ ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 }
 
 int
-ailsa_multiple_insert_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert)
+ailsa_multiple_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST *insert)
 {
 	if (!(cmdb) || !(sql) || !(insert))
 		return AILSA_NO_DATA;

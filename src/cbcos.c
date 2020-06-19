@@ -692,7 +692,7 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 		ailsa_syslog(LOG_ERR, "Inserting new os_id into list failed");
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_insert_query(cmc, INSERT_BUILD_PACKAGE, pack)) != 0) {
+	if ((retval = ailsa_multiple_query(cmc, insert_queries[INSERT_BUILD_PACKAGE], pack)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert build packages into database: %d", retval);
 		goto cleanup;
 	}
