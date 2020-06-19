@@ -484,6 +484,26 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // PREFER_A_INFO_ON_RANGE
+"SELECT ip, fqdn, record_id FROM preferred_a WHERE ip LIKE ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // RECORDS_ON_NET_RANGE
+"SELECT destination, r.id, host, name FROM records r LEFT JOIN zones z ON z.id = r.zone WHERE destination LIKE ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // REV_RECORD_ID_ON_ZONE_HOST
+"SELECT rev_record_id FROM rev_records WHERE rev_zone = ? AND host = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // DESTINATION_ON_RECORD_ID
+"SELECT destination, host, name FROM records r LEFT JOIN zones z ON r.zone = z.id WHERE r.id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
