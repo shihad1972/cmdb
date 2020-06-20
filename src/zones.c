@@ -140,8 +140,6 @@ list_zones(ailsa_cmdb_s *dc)
 		type = ((ailsa_data_s *)e->next->next->next->data)->data->text;
 		master = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
 		len = strlen(zone);
-/*		if ((strncmp(zone->master, "(null)", COMM_S)) == 0)
-			snprintf(zone->master, RANGE_S, "N/A"); */
 		if (len < 8)
 			printf("%s\t\t\t\t", zone);
 		else if (len < 16)
@@ -1799,135 +1797,6 @@ cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
 		return retval;
 }
 
-int
-get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
-{
-	zone_info_s *fwd, *list, *next;
-	fwd = dnsa->zones;
-	list = NULL;
-	if (fwd->next)
-		next = fwd->next;
-	else
-		next = NULL;
-	while (fwd) {
-		if (strncmp(fwd->name, cm->domain, RBUFF_S) == 0) {
-			list = fwd;
-			fwd = next;
-		} else {
-			free (fwd);
-			fwd = next;
-		}
-		if (next)
-			next = fwd->next;
-	}
-	dnsa->zones = list;
-	if (list) {
-		list->next = NULL;
-		return NONE;
-	}
-	fprintf(stderr, "Forward domain %s not found\n", cm->domain);
-	return NO_DOMAIN;
-}
-
-int
-get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm)
-{
-	rev_zone_info_s *rev, *list, *next;
-	rev = dnsa->rev_zones;
-	list = NULL;
-	if (rev->next)
-		next = rev->next;
-	else
-		next = NULL;
-	while (rev) {
-		if (strncmp(rev->net_range, cm->domain, RANGE_S) == 0) {
-			list = rev;
-			rev = next;
-		} else {
-			free(rev);
-			rev = next;
-		}
-		if (next)
-			next = rev->next;
-	}
-	dnsa->rev_zones = list;
-	if (list) {
-		list->next = NULL;
-		return NONE;
-	}
-	fprintf(stderr, "Reverse domain %s not found\n", cm->domain);
-	return NO_DOMAIN;
-}
-
-int
-get_rev_host(unsigned long int prefix, char *rev_host, char *host)
-{
-	char *tmp;
-	int i;
-	size_t len;
-
-	*rev_host = '\0';
-	if (prefix == 8) {
-		for (i = 0; i < 3; i++) {
-			tmp = strrchr(host, '.');
-			tmp++;
-			rev_host = strncat(rev_host, tmp, 4);
-			rev_host = strncat(rev_host, ".", CH_S);
-			tmp--;
-			*tmp = '\0';
-		}
-		len = strlen(rev_host);
-		rev_host[len - 1] = '\0';
-	} else if (prefix == 16) {
-		for (i = 0; i < 2; i++) {
-			tmp = strrchr(host, '.');
-			tmp++;
-			rev_host = strncat(rev_host, tmp, 4);
-			rev_host = strncat(rev_host, ".", CH_S);
-			tmp--;
-			*tmp = '\0';
-		}
-		len = strlen(rev_host);
-		rev_host[len - 1] = '\0';
-	} else if (prefix >= 24) {
-		tmp = strrchr(host, '.');
-		tmp++;
-		strncpy(rev_host, tmp, 4);
-	} else {
-		printf("Prefix %lu invalid\n", prefix);
-			return 1;
-	}
-	return 0;
-}
-
-unsigned long int
-get_zone_serial(void)
-{
-	time_t now;
-	struct tm *lctime;
-	char sday[COMM_S], smonth[COMM_S], syear[COMM_S], sserial[RANGE_S];
-	unsigned long int serial;
-
-	now = time(0);
-	if (!(lctime = localtime(&now)))
-		report_error(GET_TIME_FAILED, strerror(errno));
-	snprintf(syear, COMM_S, "%d", lctime->tm_year + 1900);
-	if (lctime->tm_mon < 9)
-		snprintf(smonth, COMM_S, "0%d", lctime->tm_mon + 1);
-	else
-		snprintf(smonth, COMM_S, "%d", lctime->tm_mon + 1);
-	if (lctime->tm_mday < 10)
-		snprintf(sday, COMM_S, "0%d", lctime->tm_mday);
-	else
-		snprintf(sday, COMM_S, "%d", lctime->tm_mday);
-	snprintf(sserial, RANGE_S, "%s%s%s01",
-		 syear,
-		 smonth,
-		 sday);
-	serial = strtoul(sserial, NULL, 10);
-	return serial;
-}
-
 static int
 dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
 {
@@ -2310,37 +2179,6 @@ list_glue_zones(ailsa_cmdb_s *dc)
 	}
 	cleanup:
 		ailsa_list_full_clean(g);
-}
-char *
-get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
-{
-	char *fqdn;
-	size_t len;
-	
-	if (!(fqdn = calloc(URL_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "fqdn in get_zone_fqdn_name");
-	if (ns == 0) {
-		len = strlen(glue->pri_ns) - 1;
-		if (*(glue->pri_ns + len) == '.') {
-			*(glue->pri_ns + len) = '\0';
-			snprintf(fqdn, URL_S, "%s", glue->pri_ns);
-		} else {
-			snprintf(fqdn, URL_S, "%s.%s", glue->pri_ns, zone->name);
-		}
-	} else if (ns == 1) {
-		len = strlen(glue->sec_ns) - 1;
-		if (*(glue->sec_ns + len) == '.') {
-			*(glue->sec_ns + len) = '\0';
-			snprintf(fqdn, URL_S, "%s", glue->sec_ns);
-		} else if (strncmp(glue->sec_ns, "none", COMM_S) == 0) {
-			snprintf(fqdn, URL_S, "%s", glue->sec_ns);
-		} else {
-			snprintf(fqdn, URL_S, "%s.%s", glue->sec_ns, zone->name);
-		}
-	} else {
-		report_error(NOT_PRI_OR_SEC_NS, "get_zone_fqdn_name");
-	}
-	return fqdn;
 }
 
 void

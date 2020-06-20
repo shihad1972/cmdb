@@ -65,8 +65,6 @@ int
 build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* Added 06/03/2013 */
 int
-get_fwd_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
-int
 delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 delete_glue_zone (ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
@@ -75,8 +73,6 @@ delete_glue_zone (ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End addition 07/03/2013 */
-int
-get_rev_zone(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 void
 get_duplicate_a_records(dnsa_comm_line_s *cm, dnsa_s *dnsa);
 /* Zone display functions */
@@ -93,8 +89,6 @@ get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
 list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
-unsigned long int
-get_zone_serial(void);
 void
 select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
 void
@@ -111,10 +105,5 @@ check_zone(char *domain, ailsa_cmdb_s *dc);
 /* 04/03/2013 functions add */
 int
 add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
-int
-get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
-/* Glue zone functins */
-char *
-get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);
 
 #endif /* __CMDB_DNSA_H__ */

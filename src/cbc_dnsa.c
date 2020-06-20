@@ -39,6 +39,7 @@
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "base_sql.h"
 #include "cbc_data.h"
 #include "cmdb.h"
@@ -60,7 +61,7 @@ fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc)
 	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
 	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
 	snprintf(zone->type, COMM_S, "master");
-	zone->serial = get_zone_serial();
+	zone->serial = generate_zone_serial();
 	zone->refresh = dc->refresh;
 	zone->retry = dc->retry;
 	zone->expire = dc->expire;
