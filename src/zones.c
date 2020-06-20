@@ -663,8 +663,8 @@ multi_a_range(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 			ailsa_syslog(LOG_ERR, "Cannot add IP to list");
 			goto cleanup;
 		}
-		if ((retval = ailsa_argument_query(dc, A_RECORDS_WITH_IP, pre, mod)) != 0) {
-			ailsa_syslog(LOG_ERR, "A_RECORDS_WITH_IP query failed");
+		if ((retval = ailsa_argument_query(dc, FQDN_PREF_A_ON_IP, pre, mod)) != 0) {
+			ailsa_syslog(LOG_ERR, "FQDN_PREF_A_ON_IP query failed");
 			goto cleanup;
 		}
 		if (strlen(d->data->text) < 8)
@@ -674,8 +674,6 @@ multi_a_range(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 		d = e->next->data;
 		printf("%lu\t", d->data->number);
 		d = mod->head->data;
-		printf("%s.", d->data->text);
-		d = mod->head->next->data;
 		printf("%s\n", d->data->text);
 		e = ailsa_move_down_list(e, total);
 		ailsa_list_clean(mod);
@@ -810,116 +808,85 @@ multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 int
 mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = 0;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	char *fqdn = ailsa_calloc(DOMAIN_LEN, "fqdn in mark_preferred_a_record");
+	int retval;
 	uint32_t ip_addr;
 	unsigned long int ip;
-	dnsa_s *dnsa;
-	zone_info_s *zone;
-	preferred_a_s *prefer;
+	size_t total;
+	AILLIST *i = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in mark_preferred_a_record");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in mark_preferred_a_record");
-	init_zone_struct(zone);
-	dnsa->zones = zone;
-	if ((retval = dnsa_run_multiple_query(dc, dnsa,
-		 DUPLICATE_A_RECORD | PREFERRED_A)) != 0) {
-		dnsa_clean_list(dnsa);
-		return retval;
+	if ((retval = cmdb_add_string_to_list(cm->dest, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add ip address to list");
+		goto cleanup;
 	}
-	select_specific_ip(dnsa, cm);
-	prefer = dnsa->prefer;
+	if ((retval = ailsa_argument_query(dc, DUP_IP_A_RECORD, i, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "DUP_IP_A_RECORD query failed");
+		goto cleanup;
+	}
+	if (r->total == 0) {
+		ailsa_syslog(LOG_INFO, "IP address %s has no duplicate entries", cm->dest);
+		goto cleanup;
+	}
+	ailsa_list_clean(r);
+	if ((retval = ailsa_argument_query(dc, FQDN_PREF_A_ON_IP, i, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "FQDN_PREF_A_ON_IP query failed");
+		goto cleanup;
+	}
+	if (r->total > 0) {
+		ailsa_syslog(LOG_INFO, "IP address %s already has a preferred A record", cm->dest);
+		goto cleanup;
+	}
+	ailsa_list_clean(r);
 	if (inet_pton(AF_INET, cm->dest, &ip_addr))
 		ip = (unsigned long int)htonl(ip_addr);
 	else
 		return USER_INPUT_INVALID;
-	while (prefer) {
-		if (prefer->ip_addr == ip) {
-			printf("IP %s already has preferred A record %s\n",
-			       cm->dest, prefer->fqdn);
-			dnsa_clean_list(dnsa);
-			return NONE;
-		} else {
-			prefer = prefer->next;
-		}
+	if ((retval = cmdb_add_number_to_list(ip, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add network IP address to list");
+		goto cleanup;
 	}
-	if (!(dnsa->records)) {
-		fprintf(stderr, "No multiple A records for IP %s\n",
-			cm->dest);
-		return CANNOT_ADD_A_RECORD;
-	} else {
-		retval = get_preferred_a_record(dc, cm, dnsa);
+	if ((retval = cmdb_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get zone id for domain %s", cm->domain);
+		goto cleanup;
 	}
-	if (retval != 0)
+	if (r->total == 0) {
+		ailsa_syslog(LOG_ERR, "Domain %s does not exist", cm->domain);
+		goto cleanup;
+	}
+	if ((retval = dnsa_populate_record(dc, cm, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate record info");
+		goto cleanup;
+	}
+	total = i->total;
+	snprintf(fqdn, DOMAIN_LEN, "%s.%s", cm->host, cm->domain);
+	if ((retval = ailsa_argument_query(dc, RECORD_ID_BASE, r, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "RECORD_ID_BASE query failed");
+		goto cleanup;
+	}
+	if (total == i->total) {
+		ailsa_syslog(LOG_ERR, "A record %s for %s does not exist", fqdn, cm->dest);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(fqdn, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add fqdn to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(i)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(dc, INSERT_PREF_A, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_PREF_A query failed");
+		goto cleanup;
+	}
+	cleanup:
+		my_free(fqdn);
+		ailsa_list_full_clean(i);
+		ailsa_list_full_clean(r);
 		return retval;
-	printf("IP: %s\tIP Addr: %lu\tRecord ID: %lu\n",
-	       dnsa->prefer->ip, dnsa->prefer->ip_addr, dnsa->prefer->record_id);
-	dnsa->prefer->cuser = dnsa->prefer->muser = (unsigned long int)getuid();
-	if ((retval = dnsa_run_insert(dc, dnsa, PREFERRED_AS)) != 0)
-		fprintf(stderr, "Cannot insert preferred A record\n");
-	else
-		printf("Database updated with preferred A record\n");
-	dnsa_clean_list(dnsa);
-	return retval;
-}
-
-int
-get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa)
-{
-	char *name = cm->dest;
-	char fqdn[RBUFF_S], cl_fqdn[RBUFF_S], *cl_name;
-	int i = 0, type = RECORDS_ON_DEST_AND_ID;
-	uint32_t ip_addr;
-	unsigned int f = dnsa_extended_search_fields[type];
-	unsigned int a = dnsa_extended_search_args[type];
-	unsigned int max = cmdb_get_max(a, f);
-	dbdata_s *start, *list;
-	preferred_a_s *prefer;
-	record_row_s *rec = dnsa->records;
-
-	if (!(prefer = malloc(sizeof(preferred_a_s))))
-		report_error(MALLOC_FAIL, "prefer in get_preferred_a_record");
-	init_preferred_a_struct(prefer);
-	dnsa->prefer = prefer;
-	init_multi_dbdata_struct(&start, max);
-	while (rec) {
-		if (strncmp(name, rec->dest, RBUFF_S) == 0) {
-			snprintf(prefer->ip, RANGE_S, "%s", cm->dest);
-			inet_pton(AF_INET, rec->dest, &ip_addr);
-			prefer->ip_addr = (unsigned long int) htonl(ip_addr);
-			i++;
-		}
-		if (rec->next)
-			rec = rec->next;
-		else
-			rec = NULL;
-	}
-	snprintf(start->args.text, RANGE_S, "%s", name);
-	i = dnsa_run_extended_search(dc, start, RECORDS_ON_DEST_AND_ID);
-	list = start;
-	name = fqdn;
-	cl_name = cl_fqdn;
-	i = 0;
-	while (list) {
-		snprintf(name, RBUFF_S, "%s.%s",
-list->fields.text, list->next->fields.text);
-		snprintf(cl_name, RBUFF_S, "%s.%s",
-cm->host, cm->domain);
-		if (strncmp(name, cl_name, RBUFF_S) == 0) {
-			i++;
-			prefer->record_id = list->next->next->fields.number;
-			snprintf(prefer->fqdn, RBUFF_S, "%s", name);
-		}
-		list = list->next->next->next;
-	}
-	if (i == 0) {
-		fprintf(stderr,
-"Your FQDN is not associated with this IP address\n\
-If you want it associated with this IP address, please add it as an A record\n\
-Curently you cannot add FQDN's not authoritative on this DNS server\n");
-		return CANNOT_ADD_A_RECORD;
-	}
-	clean_dbdata_struct(start);
-	return NONE;
 }
 
 int
@@ -1494,13 +1461,17 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot create list of records to add");
 		goto cleanup;
 	}
-	if ((retval = cmdb_remove_reverse_records(dc, cm->domain, rem)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
-		goto cleanup;
+	if (rem->total > 0) {
+		if ((retval = cmdb_remove_reverse_records(dc, cm->domain, rem)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
+			goto cleanup;
+		}
 	}
-	if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
-		goto cleanup;
+	if (add->total > 0) {
+		if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
+			goto cleanup;
+		}
 	}
 	if (rem->total > 0 || add->total > 0) {
 		ailsa_list_clean(net);
@@ -1591,18 +1562,19 @@ cmdb_records_to_remove(char *range, AILLIST *rec, AILLIST *rev, AILLIST *remove)
 {
 	if (!(range) || !(rec) || !(rev) || !(remove))
 		return AILSA_NO_DATA;
-	int retval = 0;
+	if ((rec->total == 0) || (rev->total == 0))
+		return AILSA_NO_DATA;
 	size_t rec_tot = 4;
 	size_t rev_tot = 2;
+	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
+		return WRONG_LENGTH_LIST;
+	char *fqdn = ailsa_calloc(DOMAIN_LEN, "fqdn in cmdb_records_to_remove");
+	int retval = 0;
 	size_t len = strlen(range);
 	size_t gap = MAC_LEN - len;
 	char *tmp = range + len;
 	AILELEM *ce, *ve;
-	ailsa_data_s *c, *v;
-	if ((rec->total == 0) || (rev->total == 0))
-		return AILSA_NO_DATA;
-	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
-		return WRONG_LENGTH_LIST;
+	ailsa_data_s *c, *v, *d;
 	ve = rev->head;
 	while (ve) {
 		ce = rec->head;
@@ -1612,19 +1584,31 @@ cmdb_records_to_remove(char *range, AILLIST *rec, AILLIST *rev, AILLIST *remove)
 			c = ce->data;
 			v = ve->data;
 			snprintf(tmp, gap, "%s", v->data->text);
-			if (strncmp(range, c->data->text, MAC_LEN) == 0)
-				break;
+			if (strncmp(range, c->data->text, MAC_LEN) == 0) {
+				c = ce->next->next->data;
+				d = ce->next->next->next->data;
+				if (strncmp("@", c->data->text, BYTE_LEN) == 0)
+					snprintf(fqdn, DOMAIN_LEN, "%s.", d->data->text);
+				else
+					snprintf(fqdn, DOMAIN_LEN, "%s.%s.", c->data->text, d->data->text);
+				v = ve->next->data;
+				if (strncmp(v->data->text, fqdn, DOMAIN_LEN) == 0)
+					break;
+			}
 			ce = ailsa_move_down_list(ce, rec_tot);
 		}
 		if (!(ce)) {
+			v = ve->data;
 			if ((retval = cmdb_add_string_to_list(v->data->text, remove)) != 0) {
 				ailsa_syslog(LOG_ERR, "Cannot add record to delete list");
-				return retval;
+				goto cleanup;
 			}
 		}
 		ve = ailsa_move_down_list(ve, rev_tot);
 	}
-	return retval;
+	cleanup:
+		my_free(fqdn);
+		return retval;
 }
 
 static int
@@ -1669,7 +1653,7 @@ cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *rem)
 			goto cleanup;
 		e = ailsa_move_down_list(e, total);
 	}
-	if ((retval = ailsa_multiple_query(dc, delete_queries[DELETE_REVERSE_RECORD], r)) != 0) {
+	if ((retval = ailsa_multiple_delete(dc, delete_queries[DELETE_REVERSE_RECORD], r)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
 		goto cleanup;
 	}

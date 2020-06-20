@@ -84,8 +84,6 @@ void
 display_zone(char *domain, ailsa_cmdb_s *dc);
 void
 display_rev_zone(char *domain, ailsa_cmdb_s *dc);
-int
-get_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm, dnsa_s *dnsa);
 void
 list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */

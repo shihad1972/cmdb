@@ -106,6 +106,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'e') {
 			comp->action = ADD_PREFER_A;
 			comp->type = REVERSE_ZONE;
+			comp->rtype = strndup("A", MAC_LEN);
 		} else if (opt == 'g') {
 			comp->action = DELETE_PREFERRED;
 			comp->type = REVERSE_ZONE;

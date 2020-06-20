@@ -210,7 +210,8 @@ enum {			// SQL INSERT QUERIES
 	INSERT_RECORD_MX,
 	INSERT_RECORD_SRV,
 	INSERT_REVERSE_RECORD,
-	INSERT_GLUE_ZONE
+	INSERT_GLUE_ZONE,
+	INSERT_PREF_A
 };
 
 enum {			// SQL DELETE QUERIES
@@ -259,6 +260,12 @@ typedef struct ailsa_sql_query_s {
 	unsigned int fields[20];
 } ailsa_sql_query_s;
 
+typedef struct ailsa_sql_delete_s {
+	char *query;
+	unsigned int number;
+	unsigned int fields[20];
+} ailsa_sql_delete_s;
+
 typedef struct ailsa_sql_multi_s {
 	char *query;
 	unsigned int number;
@@ -292,6 +299,9 @@ ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert);
 
 int
 ailsa_multiple_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *insert);
+
+int
+ailsa_multiple_delete(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *del);
 
 // Some helper functions
 

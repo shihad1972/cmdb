@@ -1,3 +1,8 @@
+20/06/2020
+ Strange bug when building reverse zones with newly set preferred A record.
+It does not add the record in on the first time the zone is built, only on
+the 2nd time it is built.
+
 06/06/2020
 Should probably move all actions to the CMDB_ definitions. These are in
 ailsacmdb.h and will remove another dependency on cmdb.h
