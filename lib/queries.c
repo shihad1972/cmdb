@@ -750,6 +750,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // DELETE_PREF_A
+"DELETE FROM preferred_a WHERE ip = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

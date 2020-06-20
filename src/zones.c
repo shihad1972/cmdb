@@ -673,8 +673,12 @@ multi_a_range(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 			printf("%s\t", d->data->text);
 		d = e->next->data;
 		printf("%lu\t", d->data->number);
-		d = mod->head->data;
-		printf("%s\n", d->data->text);
+		if (mod->total > 0) {
+			d = mod->head->data;
+			printf("%s\n", d->data->text);
+		} else {
+			printf("No preferred A record set\n");
+		}
 		e = ailsa_move_down_list(e, total);
 		ailsa_list_clean(mod);
 	}
@@ -791,10 +795,14 @@ multi_a_ip_address(ailsa_cmdb_s *dc, dnsa_comm_line_s *dcl)
 		h = e->data;
 		d = e->next->data;
 		snprintf(hostname, DOMAIN_LEN, "%s.%s", h->data->text, d->data->text);
-		if (strncmp(hostname, ((ailsa_data_s *)fqdn->head->data)->data->text, DOMAIN_LEN) == 0)
-			printf("   *\t%s\n", hostname);
-		else
+		if (fqdn->total > 0) {
+			if (strncmp(hostname, ((ailsa_data_s *)fqdn->head->data)->data->text, DOMAIN_LEN) == 0)
+				printf("   *\t%s\n", hostname);
+			else
+				printf("\t%s\n", hostname);
+		} else {
 			printf("\t%s\n", hostname);
+		}
 		e = ailsa_move_down_list(e, total);
 	}
 	cleanup:
@@ -892,42 +900,21 @@ mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 int
 delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	char *ip_addr = cm->dest;
-	int retval = 0;
-	int i = 0;
-	dnsa_s *dnsa;
-	dbdata_s data;
-	preferred_a_s *prefer;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in delete_preferred_a");
-	init_dbdata_struct(&data);
-	if ((retval = dnsa_run_query(dc, dnsa, PREFERRED_A)) != 0) {
-		dnsa_clean_list(dnsa);
+	if ((retval = cmdb_add_string_to_list(cm->dest, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_PREF_A], l)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_PREF_A query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
 		return retval;
-	}
-	prefer = dnsa->prefer;
-	while (prefer) {
-		if (strncmp(ip_addr, prefer->ip, RANGE_S) == 0) {
-			printf("Found IP address %s in preferred list\n",
-			       ip_addr);
-			i++;
-			break;
-		}
-		prefer = prefer->next;
-	}
-	if (i == 0) {
-		fprintf(stderr, "IP %s does not have a preferred A record\n",
-			ip_addr);
-		dnsa_clean_list(dnsa);
-		return USER_INPUT_INVALID;
-	}
-	data.args.number = prefer->prefa_id;
-	if ((retval = dnsa_run_delete(dc, &data, PREFERRED_AS)) != 1)
-		printf("Unable to delete IP %s from preferred list\n", ip_addr);
-	else
-		printf("Deleted IP %s from preferred list\n", ip_addr);
-	dnsa_clean_list(dnsa);
-	return retval;
 }
 
 int
