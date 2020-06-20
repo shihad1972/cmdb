@@ -641,7 +641,12 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?)",
 	5,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
-	}
+	},
+	{ // INSERT_GLUE_ZONE
+"INSERT INTO glue_zones (zone_id, name, pri_ns, sec_ns, pri_dns, sec_dns, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	8,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {

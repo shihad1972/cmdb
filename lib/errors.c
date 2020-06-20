@@ -602,7 +602,7 @@ display_dnsa_usage(void)
 	printf("-u: display IP's with multiple A records\n\t( -n domain | -i ip-address )\n");
 	printf("-w: commit valid zones on nameserver\n\t( -F | -R )\n");
 	printf("-x: remove zone\n\t( -F |-R ) -n\n");
-	printf("-z: add zone\n\t( -F | -R [-p] | -G [ -N -I ] ) [ -S -M ] -n\n\n");
+	printf("-z: add zone\n\t( -F | -R [-p] | -G -N [ -I ] ) [ -S -M ] -n\n\n");
 	printf("Zone details:\n");
 	printf("-M: master IP address\n-N: name server(s) (comma separated)\n");
 	printf("-I: IP('s) (comma separated)\n\n");

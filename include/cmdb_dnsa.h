@@ -108,30 +108,13 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* Forward zone functions */
 int
 check_zone(char *domain, ailsa_cmdb_s *dc);
-/* Reverse zone functions */
-void
-fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc);
 /* 04/03/2013 functions add */
 int
 add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 get_rev_host(unsigned long int prefix, char *rev_dest, char *dest);
 /* Glue zone functins */
-void
-split_glue_ns(char *pri_ns, glue_zone_info_s *glue);
-void
-split_glue_ip(char *pri_ip, glue_zone_info_s *glue);
-void
-setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue);
-int
-get_glue_zone_parent(ailsa_cmdb_s *dc, dnsa_s *dnsa);
-void
-check_glue_zone_input(glue_zone_info_s *glue);
-void
-print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone);
 char *
 get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns);
-void
-glue_sort_fqdn(glue_zone_info_s *glue);
 
 #endif /* __CMDB_DNSA_H__ */

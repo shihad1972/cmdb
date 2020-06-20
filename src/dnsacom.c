@@ -139,7 +139,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 'I') {
 			comp->glue_ip = strndup(optarg, MAC_LEN);
 		} else if (opt == 'N') {
-			comp->glue_ns = strndup(optarg, BUFFER_LEN);
+			comp->glue_ns = strndup(optarg, FILE_LEN);
 		} else if (opt == 'h') {
 			comp->host = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'i') {
@@ -210,8 +210,6 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = NO_RECORD_TYPE;
 	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
 		retval = NO_PREFIX;
-	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ip)) && (comp->action == ADD_ZONE))
-		retval = NO_GLUE_IP;
 	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ns)) && (comp->action == ADD_ZONE))
 		retval = NO_GLUE_NS;
 	if (retval == NO_GLUE_NS) {

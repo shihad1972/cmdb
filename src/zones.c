@@ -98,6 +98,15 @@ dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 static int
 check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *domain, char *top, char *host);
 
+static int
+dnsa_split_glue_ns(char *ns, AILLIST *list);
+
+static int
+dnsa_get_ip_for_glue_ns(char *ip, AILLIST *list);
+
+static int
+dnsa_split_glue_ip(char *ip, AILLIST *list);
+
 void
 list_zones(ailsa_cmdb_s *dc)
 {
@@ -2026,41 +2035,6 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
 }
 
 void
-fill_rev_zone_info(rev_zone_info_s *zone, dnsa_comm_line_s *cm, ailsa_cmdb_s *dc)
-{
-	char address[RANGE_S], *addr;
-	uint32_t ip_addr;
-	unsigned long int range;
-
-	addr = &(address[0]);
-	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
-	snprintf(zone->net_range, RANGE_S, "%s", cm->domain);
-	snprintf(zone->net_start, RANGE_S, "%s", cm->domain);
-	zone->prefix = cm->prefix;
-	zone->serial = get_zone_serial();
-	zone->refresh = dc->refresh;
-	zone->retry = dc->retry;
-	zone->expire = dc->expire;
-	zone->ttl = dc->ttl;
-	inet_pton(AF_INET, zone->net_range, &ip_addr);
-	ip_addr = htonl(ip_addr);
-	zone->start_ip = ip_addr;
-	range = get_net_range(cm->prefix);
-	zone->end_ip = ip_addr + range - 1;
-	ip_addr = htonl((uint32_t)zone->end_ip);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	snprintf(zone->net_finish, RANGE_S, "%s", addr);
-	snprintf(zone->hostmaster, RBUFF_S, "%s", dc->hostmaster);
-	snprintf(zone->master, RBUFF_S, "%s", cm->master);
-	zone->cuser = zone->muser = (unsigned long int)getuid();
-	if (cm->ztype)
-		snprintf(zone->type, RANGE_S, "%s", cm->ztype);
-	else
-		snprintf(zone->type, COMM_S, "master");
-}
-
-void
 select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 {
 	record_row_s *records, *next, *ip;
@@ -2089,58 +2063,197 @@ select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
 int
 add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = NONE;
-	dbdata_s data, user;
-	dnsa_s *dnsa;
-	glue_zone_info_s *glue;
-	zone_info_s *zone;
+	if (!(dc) || !(cm))
+		goto cleanup;
+	char *parent;
+	int retval;
+	AILLIST *p = ailsa_db_data_list_init();
+	AILLIST *u = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
 
-	if (!(glue = malloc(sizeof(glue_zone_info_s))))
-		report_error(MALLOC_FAIL, "glue in add_glue_zone");
-	zone = ailsa_calloc(sizeof(zone_info_s), "zone in add_glue_zones");
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in add_glue_zone");
-	init_dbdata_struct(&data);
-	init_dbdata_struct(&user);
-	setup_glue_struct(dnsa, zone, glue);
-	if (strchr(cm->glue_ns, ','))
-		split_glue_ns(cm->glue_ns, glue);
-	else
-		snprintf(glue->pri_ns, RBUFF_S, "%s", cm->glue_ns);
-	if (strchr(cm->glue_ip, ',')) {
-		split_glue_ip(cm->glue_ip, glue);
-		if (strncmp(glue->sec_ns, "none", COMM_S) == 0) {
-			printf("Removing 2nd IP as no 2nd name provided.\n");
-			snprintf(glue->sec_dns, COMM_S, "none");
+	parent = strchr(cm->domain, '.');
+	if (parent) {
+		parent++;
+	} else {
+		retval = AILSA_CANNOT_GET_PARENT;
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(parent, p)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add parent domain to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_zone_id_to_list(parent, FORWARD_ZONE, dc, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add parent zone id to list");
+		goto cleanup;
+	}
+	if (z->total == 0) {
+		ailsa_syslog(LOG_INFO, "Parent zones %s does not exist", parent);
+		retval = AILSA_NO_PARENT;
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cm->domain, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if ((retval = dnsa_split_glue_ns(cm->glue_ns, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot split nameservers");
+		goto cleanup;
+	}
+	if ((retval = dnsa_get_ip_for_glue_ns(cm->glue_ip, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get IP addresses for name servers");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(dc, INSERT_GLUE_ZONE, z)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_GLUE_ZONE query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), u)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert muser into update list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_zone_id_to_list(parent, FORWARD_ZONE, dc, u)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to update list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], u)) != 0) {
+		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(p);
+		ailsa_list_full_clean(u);
+		ailsa_list_full_clean(z);
+		return retval;
+}
+
+static int
+dnsa_split_glue_ns(char *ns, AILLIST *l)
+{
+	if (!(ns) || !(l))
+		return AILSA_NO_DATA;
+	int retval;
+	char *server, *tmp, *ptr;
+
+	server = tmp = strndup(ns, FILE_LEN);
+	ptr = strchr(tmp, ',');
+	if (ptr) {
+		*ptr = '\0';
+		ptr++;
+	}
+	if ((retval = cmdb_add_string_to_list(tmp, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add name server to list");
+		return retval;
+	}
+	tmp = ptr;
+	if (tmp) {
+		ptr = strchr(tmp, ',');
+		if (ptr) {
+			*ptr = '\0';
+			ailsa_syslog(LOG_INFO, "Too many parent name servers. Only using 2");
+		}
+		if ((retval = cmdb_add_string_to_list(tmp, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add name server to list");
+			goto cleanup;
 		}
 	} else {
-		snprintf(glue->pri_dns, RANGE_S, "%s", cm->glue_ip);
-		if (strncmp(glue->sec_ns, "none", COMM_S) != 0) {
-			printf("Removing 2nd name as no 2nd IP provided.\n");
-			snprintf(glue->sec_ns, RANGE_S, "none");
+		if ((retval = cmdb_add_string_to_list("none", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add name server to list");
+			goto cleanup;
 		}
 	}
-	snprintf(glue->name, RBUFF_S, "%s", cm->domain);
-	if ((retval = get_glue_zone_parent(dc, dnsa)) != 0) {
-		dnsa_clean_list(dnsa);
-		printf("Zone %s has no parent!\n", cm->domain);
+	cleanup:
+		my_free(server);
 		return retval;
+}
+
+static int
+dnsa_get_ip_for_glue_ns(char *ip, AILLIST *list)
+{
+	if (!(list))
+		return AILSA_NO_DATA;
+	char *ip_addr = ailsa_calloc(INET6_ADDRSTRLEN, "ip in cmdb_write_fwd_zone_config");
+	int retval, type;
+	AILELEM *e;
+	ailsa_data_s *d;
+	if (ip) {
+		retval = dnsa_split_glue_ip(ip, list);
+		goto cleanup;
 	}
-	glue->cuser = glue->muser = (unsigned long int)getuid();
-	check_glue_zone_input(glue);
-	if ((retval = dnsa_run_insert(dc, dnsa, GLUES)) != 0) {
-		dnsa_clean_list(dnsa);
-		fprintf(stderr, "Cannot insert glue zone %s into database\n",
-			cm->domain);
+	e = list->head->next->next;
+	d = e->data;
+	if ((retval = cmdb_getaddrinfo(d->data->text, ip_addr, &type)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot resolve name %s", d->data->text);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(ip_addr, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add first IP to list");
+		goto cleanup;
+	}
+	e = e->next;
+	d = e->data;
+	memset(ip_addr, 0, INET6_ADDRSTRLEN);
+	if (strncmp(d->data->text, "none", BYTE_LEN) != 0) {
+		if ((retval = cmdb_getaddrinfo(d->data->text, ip_addr, &type)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot resolve name %s", d->data->text);
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(ip_addr, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add 2nd IP to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("none", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add 2nd IP to list");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		my_free(ip_addr);
 		return retval;
+}
+
+static int
+dnsa_split_glue_ip(char *ip, AILLIST *list)
+{
+	if (!(ip) || !(list))
+		return AILSA_NO_DATA;
+	char *ip_addr, *tmp, *ptr;
+	int retval;
+
+	ip_addr = tmp = strndup(ip, DOMAIN_LEN);
+	ptr = strchr(tmp, ',');
+	if (ptr) {
+		*ptr = '\0';
+		ptr++;
 	}
-	data.args.number = glue->zone_id;
-	user.args.number = (unsigned long int)getuid();
-	user.next = &data;
-	if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
-		fprintf(stderr, "Cannot set zone as update\n");
-	printf("Glue records for zone %s added\n", cm->domain);
-	dnsa_clean_list(dnsa);
-	return retval;
+	if ((retval = cmdb_add_string_to_list(tmp, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add first NS IP to list");
+		goto cleanup;
+	}
+	tmp = ptr;
+	if (tmp) {
+		ptr = strchr(tmp, ',');
+		if (ptr) {
+			ptr = '\0';
+			ailsa_syslog(LOG_INFO, "Too many parent NS IP addresses. Only using 2");
+		}
+		if ((retval = cmdb_add_string_to_list(tmp, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add 2nd NS IP to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("none", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add 2nd IP to list");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		my_free(ip_addr);
+		return retval;
 }
 
 int
@@ -2230,111 +2343,6 @@ list_glue_zones(ailsa_cmdb_s *dc)
 	cleanup:
 		ailsa_list_full_clean(g);
 }
-
-void
-split_glue_ns(char *ns, glue_zone_info_s *glue)
-{
-	char *pnt;
-	if (!(pnt = strchr(ns, ',')))
-		return;
-	*pnt = '\0';
-	pnt++;
-	snprintf(glue->pri_ns, RBUFF_S, "%s", ns);
-	snprintf(glue->sec_ns, RBUFF_S, "%s", pnt);
-}
-
-void
-split_glue_ip(char *ip, glue_zone_info_s *glue)
-{
-	char *pnt;
-	if (!(pnt = strchr(ip, ',')))
-		return;
-	*pnt = '\0';
-	pnt++;
-	snprintf(glue->pri_dns, RANGE_S, "%s", ip);
-	snprintf(glue->sec_dns, RANGE_S, "%s", pnt);
-}
-
-void
-setup_glue_struct(dnsa_s *dnsa, zone_info_s *zone, glue_zone_info_s *glue)
-{
-	if (glue)
-		init_glue_zone_struct(glue);
-	else
-		report_error(NO_GLUE_ZONE, "setup_glue_struct");
-	if (zone)
-		init_zone_struct(zone);
-	if (dnsa) {
-		dnsa->glue = glue;
-		dnsa->zones = zone;
-	}
-}
-
-int
-get_glue_zone_parent(ailsa_cmdb_s *dc, dnsa_s *dnsa)
-{
-	char *parent;
-	int retval = NONE;
-	zone_info_s *zone = dnsa->zones;
-
-	if ((retval = dnsa_run_query(dc, dnsa, ZONE)) != 0) {
-		fprintf(stderr, "Unable to get zones from database\n");
-		return retval;
-	}
-	parent = strchr(dnsa->glue->name, '.');
-	parent++;
-	while (zone) {
-		if ((strncmp(zone->name, parent, RBUFF_S) == 0) &&
-		    (strncmp(zone->type, "master", COMM_S) == 0)) {
-			dnsa->glue->zone_id = zone->id;
-			break;
-		}
-		zone = zone->next;
-	}
-	if (!(zone))
-		retval = NO_PARENT_ZONE;
-	return retval;
-}
-
-void
-check_glue_zone_input(glue_zone_info_s *glue)
-{
-	if (!(glue))
-		return;
-	char *gzone = glue->name;
-	const char *pri = glue->pri_ns;
-	const char *sec = glue->sec_ns;
-	if (strstr(pri, gzone))
-		ailsa_add_trailing_dot(glue->pri_ns);
-	if (strstr(sec, gzone))
-		ailsa_add_trailing_dot(glue->sec_ns);
-}
-
-void
-print_glue_zone(glue_zone_info_s *glue, zone_info_s *zone)
-{
-	char *pri, *sec;
-	zone_info_s *list = NULL;
-	if (zone)
-		list = zone;
-	else {
-		fprintf(stderr, "No zone info passed to print_glue_zone??\n");
-		exit(NO_ZONE_LIST);
-	}
-	while (list) {
-		if (list->id == glue->zone_id) {
-			pri = get_zone_fqdn_name(list, glue, 0);
-			sec = get_zone_fqdn_name(list, glue, 1);
-			printf("%s\t%s\t%s,%s\t%s,%s\n",
-list->name, glue->name, glue->pri_dns, glue->sec_dns, pri, sec);
-
-			free(sec);
-			free(pri);
-		}
-		list = list->next;
-	}
-}
-
 char *
 get_zone_fqdn_name(zone_info_s *zone, glue_zone_info_s *glue, int ns)
 {
