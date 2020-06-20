@@ -740,6 +740,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_GLUE_ZONE
+"DELETE FROM glue_zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

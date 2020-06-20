@@ -2259,52 +2259,20 @@ dnsa_split_glue_ip(char *ip, AILLIST *list)
 int
 delete_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
-	int retval = NONE, c = NONE;
-	unsigned long int glue_id = 0;
-	dnsa_s *dnsa;
-	dbdata_s data, user;
-	glue_zone_info_s *glue;
+	if (!(dc) || !(cm))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *g = ailsa_db_data_list_init();
 
-	dnsa = ailsa_calloc(sizeof(dnsa_s), "dnsa in delete_glue_sone");
-	init_dbdata_struct(&data);
-	if ((retval = dnsa_run_query(dc, dnsa, GLUE)) != 0) {
-		dnsa_clean_list(dnsa);
-		fprintf(stderr, "Cannot get list of glue zones\n");
-		return NO_GLUE_ZONE;
+	if ((retval = cmdb_add_string_to_list(cm->domain, g)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add glue domain name to list");
+		goto cleanup;
 	}
-	glue = dnsa->glue;
-	while (glue) {
-		if (strncmp(cm->domain, glue->name, CONF_S) != 0) {
-			glue = glue->next;
-		} else {
-			c++;
-			snprintf(data.args.text, CONF_S, "%s", glue->name);
-			glue_id = glue->id;
-			glue = glue->next;
-		}
-	}
-	if (c == 0) {
-		fprintf(stderr, "No glue zone %s found\n", cm->domain);
-		return NO_GLUE_ZONE;
-	} else if (c > 1) {
-		fprintf(stderr, "Multiple glue zones for %s found\n", cm->domain);
-	}
-	if ((retval = dnsa_run_delete(dc, &data, GLUES)) == 0) {
-		fprintf(stderr, "Unable to delete glue zone %s\n", cm->domain);
-	} else {
-		if (retval == 1)
-			printf("Glue zone %s deleted\n", cm->domain);
-		else if (retval > 1)
-			fprintf(stderr, "Multiple glue zones deleted for %s\n", cm->domain);
-		data.args.number = glue_id;
-		user.args.number = (unsigned long int)getuid();
-		user.next = &data;
-		if ((retval = dnsa_run_update(dc, &user, ZONE_UPDATED_YES)) != 0)
-			fprintf(stderr, "Cannot set zone as update\n");
-	}
-	retval = 0;
-	dnsa_clean_list(dnsa);
-	return retval;
+	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_GLUE_ZONE], g)) != 0)
+		ailsa_syslog(LOG_ERR, "DELETE_GLUE_ZONE query failed");
+	cleanup:
+		ailsa_list_full_clean(g);
+		return retval;
 }
 
 void
