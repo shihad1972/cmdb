@@ -339,7 +339,7 @@ int
 cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_add_os_id_to_list(char **os, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list);

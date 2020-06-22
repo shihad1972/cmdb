@@ -340,39 +340,32 @@ cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
-cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 {
- /* This function should be widened to allow for less inputs, i.e. we should
-  * be able to search on just an os name and arch, or os name and version. We
-  * should probably be able to get the alias of the name and use that in the
-  * search too. */
-	if (!(os) || !(arch) || !(version) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
+	char *os = args[0];
+	char *arch = args[1];
+	char *version = args[2];
 	int retval = 0;
-	AILLIST *args = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILLIST *a = ailsa_db_data_list_init();
 
-	data->data->text = strndup(os, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
+	if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(arch, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS architechture into list");
+	if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
 		goto cleanup;
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(version, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
+	if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add version to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, args, list)) != 0)
+	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, a, list)) != 0)
 		ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	cleanup:
-		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(a);
 		return retval;
 }
 
@@ -505,7 +498,7 @@ cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cc, BUILD_ID_ON_SERVER_NAME, l, list)) != 0)
-		ailsa_syslog(LOG_ERR, "BUILD_ID_ON_SERVER_NAME query failed")
+		ailsa_syslog(LOG_ERR, "BUILD_ID_ON_SERVER_NAME query failed");
 
 	cleanup:
 		ailsa_list_full_clean(l);
@@ -585,14 +578,19 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 	if (!(cc) || !(os) || !(arch) || !(version ))
 		return retval;
 	AILLIST *list = ailsa_db_data_list_init();
+	char **args = ailsa_calloc((sizeof(char *) * 3), "args in cmdb_check_for_os");
 
-	if ((retval = cmdb_add_os_id_to_list(os, arch, version, cc, list)) != 0) {
+	args[0] = os;
+	args[1] = arch;
+	args[2] = version;
+	if ((retval = cmdb_add_os_id_to_list(args, cc, list)) != 0) {
 		retval = -1;
 		goto cleanup;
 	}
 	retval = (int)list->total;
 
 	cleanup:
+		my_free(args);
 		ailsa_list_full_clean(list);
 		return retval;
 }

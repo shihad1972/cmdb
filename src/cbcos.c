@@ -387,6 +387,7 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
 		return AILSA_NO_DATA;
+	char **args = ailsa_calloc((sizeof(char *) * 3), "args in remove_cbc_build_os");
 	char *os = col->os, *version = col->version, *arch = col->arch;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILLIST *build = ailsa_db_data_list_init();
@@ -395,7 +396,10 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	AILELEM *element;
 	ailsa_data_s *data;
 
-	if ((retval = cmdb_add_os_id_to_list(os, arch, version, cmc, list)) != 0) {
+	args[0] = os;
+	args[1] = arch;
+	args[2] = version;
+	if ((retval = cmdb_add_os_id_to_list(args, cmc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get OS id");
 		retval = OS_NOT_FOUND;
 		goto cleanup;
@@ -426,6 +430,7 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	cleanup:
 		ailsa_list_destroy(list);
 		ailsa_list_destroy(build);
+		my_free(args);
 		my_free(list);
 		my_free(build);
 		return retval;
