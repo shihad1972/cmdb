@@ -37,11 +37,6 @@
 #  include "cbc_data.h"
 #  include "build.h"
 
-void
-fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc);
-
-void
-copy_cbc_into_dnsa(ailsa_cmdb_s *dc, ailsa_cmdb_s *cbc);
 
 int
 get_dns_ip_list(ailsa_cmdb_s *cbt, uli_t *ip, dbdata_s *data);

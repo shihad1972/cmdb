@@ -44,9 +44,6 @@ cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 // New functions for new create_build_config
 
 int
-check_for_existing_build(ailsa_cmdb_s *cbc, cbc_build_s *build);
-
-int
 cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
 
 int

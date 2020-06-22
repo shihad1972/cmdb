@@ -180,6 +180,11 @@ enum {			// SQL ARGUMENT QUERIES
 	RECORDS_ON_NET_RANGE,
 	REV_RECORD_ID_ON_ZONE_HOST,
 	DESTINATION_ON_RECORD_ID,
+	BUILD_IP_ON_SERVER_ID,
+	BUILD_DOMAIN_NET_INFO,
+	BUILD_IP_ON_BUILD_DOMAIN_ID,
+	BUILD_ID_ON_SERVER_NAME,
+	MAC_ADDRESS_FOR_BUILD,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -350,6 +355,9 @@ cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);

@@ -504,6 +504,29 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // BUILD_IP_ON_SERVER_ID
+"SELECT ip_id FROM build_ip WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_DOMAIN_NET_INFO
+"SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_IP_ON_BUILD_DOMAIN_ID
+"SELECT ip FROM build_ip WHERE bd_id = ? ORDER BY ip",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_ID_ON_SERVER_NAME
+"SELECT build_id FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)"
+	},
+	{ // MAC_ADDRESS_FOR_BUILD
+"SELECT detail FROM hardware WHERE server_id = ? AND device = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

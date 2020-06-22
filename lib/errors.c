@@ -512,7 +512,7 @@ display_cbcdomain_usage(void)
 	printf("cbcdomain: Program to manipulate build domains\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add build domain\n");
+	printf("-a: add build domain\n-d: display build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");

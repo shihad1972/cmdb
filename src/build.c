@@ -484,7 +484,7 @@ int
 write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE, type = BUILD_IP_ON_SERVER_ID;
+	int retval = NONE, type = BUILD_IP_FOR_SERVER_ID;
 	dbdata_s *data;
 
 	cmdb_prep_db_query(&data, cbc_search, type);

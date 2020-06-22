@@ -493,6 +493,25 @@ cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(server, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, BUILD_ID_ON_SERVER_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "BUILD_ID_ON_SERVER_NAME query failed")
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 {
 	if (!(cc) || !(zone))
