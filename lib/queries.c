@@ -73,6 +73,7 @@ const char *basic_queries[] = {
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
 "SELECT net_range FROM rev_zones WHERE type = 'master'", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
+"SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {

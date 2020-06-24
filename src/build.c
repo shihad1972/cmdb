@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -39,6 +40,7 @@
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
@@ -320,22 +322,25 @@ print_build_config(cbc_s *details)
 void
 list_build_servers(ailsa_cmdb_s *cmc)
 {
-	int retval = NONE, type = SERVERS_WITH_BUILD;
-	unsigned int max;
-	dbdata_s *data, *list;
+	if (!(cmc))
+		return;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
-		printf("No servers have build configurations\n");
-	} else {
-		list = data;
-		while (list) {
-			printf("%s\n", list->fields.text);
-			list = list->next;
-		}
+	if ((retval = ailsa_basic_query(cmc, ALL_SERVERS_WITH_BUILD, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "ALL_SERVERS_WITH_BUILD query failed");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
+	e = list->head;
+	while (e) {
+		d = e->data;
+		printf("%s\n", d->data->text);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(list);
 }
 
 int
