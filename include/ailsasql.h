@@ -185,6 +185,10 @@ enum {			// SQL ARGUMENT QUERIES
 	BUILD_IP_ON_BUILD_DOMAIN_ID,
 	BUILD_ID_ON_SERVER_NAME,
 	MAC_ADDRESS_FOR_BUILD,
+	LOCALE_ID_FROM_NAME,
+	DISK_ID_ON_SERVER_NAME,
+	SEED_SCHEME_LVM_ON_ID,
+	IP_ID_ON_SERVER_NAME,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -216,7 +220,10 @@ enum {			// SQL INSERT QUERIES
 	INSERT_RECORD_SRV,
 	INSERT_REVERSE_RECORD,
 	INSERT_GLUE_ZONE,
-	INSERT_PREF_A
+	INSERT_PREF_A,
+	INSERT_DISK_DEV,
+	INSERT_BUILD_IP,
+	INSERT_BUILD,
 };
 
 enum {			// SQL DELETE QUERIES
@@ -339,6 +346,9 @@ int
 cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_disk_dev_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_add_os_id_to_list(char **os, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
@@ -358,6 +368,12 @@ cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_locale_id_to_list(char *locale, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_ip_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);

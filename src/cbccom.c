@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
 #endif // HAVE_WORDEXP_H
@@ -118,12 +119,12 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'b') {
 			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
 		} else if (opt == 'e') {
-			snprintf(cb->locale, NAME_S, "%s", optarg);
+			cb->locale = strndup(optarg, NAME_S);
 		} else if (opt == 'k') {
-			snprintf(cb->netcard, HOST_S, "%s", optarg);
+			cb->netcard = strndup(optarg, HOST_S);
 		} else if (opt == 'j') {
 // We do not check for a starting /dev here.
-			snprintf(cb->harddisk, HOST_S, "%s", optarg);
+			cb->harddisk = strndup(optarg, HOST_S);
 		} else if (opt == 'o') {
 			snprintf(cb->os, MAC_S, "%s", optarg);
 		} else if (opt == 'p') {
@@ -169,6 +170,15 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			retval = NO_BUILD_VARIENT;
 		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
 			retval = NO_BUILD_PARTITION;
+		if (!(cb->harddisk)) {
+			ailsa_syslog(LOG_INFO, "No disk provided. Setting to vda");
+			cb->harddisk = strdup("vda");
+		}
+		if (!(cb->netcard)) {
+			ailsa_syslog(LOG_INFO, "No network card provided. Setting to eth0");
+			cb->netcard = strdup("eth0");
+		}
+			
 	}
 	validate_cbc_comm_line(cb);
 	return retval;
@@ -196,7 +206,8 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "OS: %s\n", cml->os);
 	fprintf(stderr, "OS Version: %s\n", cml->os_version);
 	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale: %s\n", cml->locale);
+	if (cml->locale)
+		fprintf(stderr, "Locale: %s\n", cml->locale);
 	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
 	fprintf(stderr, "Action Type: %s\n", cml->action_type);
 	fprintf(stderr, "Partition: %s\n", cml->partition);
@@ -233,12 +244,18 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 	if (strncmp(cml->arch, "NULL", COMM_S) != 0)
 		if (ailsa_validate_input(cml->arch, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "architecture");
-	if (strncmp(cml->netcard, "NULL", COMM_S) != 0)
+	if (cml->netcard)
 		if (ailsa_validate_input(cml->netcard, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network device");
+	if (cml->harddisk)
+		if (ailsa_validate_input(cml->harddisk, DEV_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "disk drive device");
 	if (strncmp(cml->config, "NULL", COMM_S) != 0)
 		if (ailsa_validate_input(cml->config, PATH_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "config file path");
+	if (cml->locale)
+		if (ailsa_validate_input(cml->locale, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "locale");
 }
 
 void
@@ -254,8 +271,17 @@ init_cbc_comm_values(cbc_comm_line_s *cbt)
 	snprintf(cbt->varient, CONF_S, "NULL");
 	snprintf(cbt->build_domain, RBUFF_S, "NULL");
 	snprintf(cbt->arch, MAC_S, "NULL");
-	snprintf(cbt->netcard, COMM_S, "NULL");
 	snprintf(cbt->config, COMM_S, "NULL");
-	snprintf(cbt->locale, COMM_S, "NULL");
 }
 
+void
+clean_cbc_comm_line(cbc_comm_line_s *cml)
+{
+	if (cml->locale)
+		my_free(cml->locale);
+	if (cml->harddisk)
+		my_free(cml->harddisk);
+	if (cml->netcard)
+		my_free(cml->netcard);
+	my_free(cml);
+}

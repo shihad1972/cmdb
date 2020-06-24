@@ -520,12 +520,34 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // BUILD_ID_ON_SERVER_NAME
-"SELECT build_id FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)"
+"SELECT build_id FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
 	},
 	{ // MAC_ADDRESS_FOR_BUILD
 "SELECT detail FROM hardware WHERE server_id = ? AND device = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // LOCALE_ID_FROM_NAME
+"SELECT locale_id FROM locale WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // DISK_ID_ON_SERVER_NAME
+"SELECT disk_id FROM disk_dev d LEFT JOIN server s ON s.server_id = d.server_id WHERE s.name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SEED_SCHEME_LVM_ON_ID
+"SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // IP_ID_ON_SERVER_NAME
+"SELECT ip_id FROM build_ip WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
 	},
 };
 
@@ -674,6 +696,21 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO preferred_a (ip, ip_addr, record_id, fqdn, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
 	6,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DISK_DEV
+"INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT }
+	},
+	{ // INSERT_BUILD_IP
+"INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	7,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD
+"INSERT INTO build (server_id, net_inst_int, mac_addr, varient_id, os_id, locale_id, def_scheme_id, ip_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	10,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 

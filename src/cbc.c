@@ -44,7 +44,7 @@ main(int argc, char *argv[])
 	init_cbc_comm_values(cml);
 	if ((retval = parse_cbc_command_line(argc, argv, cml)) != 0) {
 		ailsa_clean_cmdb(cmc);
-		free(cml);
+		clean_cbc_comm_line(cml);
 		display_command_line_error(retval, argv[0]);
 	}
 	if (cml->action == QUERY_CONFIG)
@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 	ailsa_clean_cmdb(cmc);
-	free(cml);
+	clean_cbc_comm_line(cml);
 	if (retval == DISPLAY_USAGE)
 		retval = NONE;
 	if (retval != NONE) {

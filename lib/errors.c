@@ -361,6 +361,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+	else if (retval == AILSA_NO_DISK_DEV)
+		ailsa_syslog(LOG_ERR, "No disk device was provided");
 	else if (retval == AILSA_INVALID_DBTYPE)
 		ailsa_syslog(LOG_ERR, "DB type was invalid in the query");
 	else if (retval == AILSA_NO_PRIORITY)

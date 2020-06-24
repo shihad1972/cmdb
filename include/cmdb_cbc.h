@@ -40,9 +40,9 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char build_domain[RBUFF_S];
 	char action_type[MAC_S];
 	char arch[MAC_S];
-	char netcard[HOST_S];
-	char harddisk[HOST_S];
-	char locale[NAME_S];
+	char *netcard;
+	char *harddisk;
+	char *locale;
 	short int action;
 	short int server;
 	short int removeip;
@@ -63,6 +63,9 @@ typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
 
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt);
+
+void
+clean_cbc_comm_line(cbc_comm_line_s *cbt);
 
 void
 print_cbc_command_line_values(cbc_comm_line_s *command_line);

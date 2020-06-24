@@ -41,46 +41,6 @@ create_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 int
 cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 
-// New functions for new create_build_config
-
-int
-cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_get_varient(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_get_os(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_get_locale(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_get_partition_scheme(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_search_for_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_check_in_use_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *ip);
-
-int
-cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data);
-
-int
-cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *bd);
-
-int
-cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-int
-cbc_search_for_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build);
-
-// End of new functions
-
 void
 list_build_servers(ailsa_cmdb_s *cbt);
 

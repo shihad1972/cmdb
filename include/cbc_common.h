@@ -35,9 +35,6 @@ void
 cbc_set_varient_updated(ailsa_cmdb_s *cbc, unsigned long int vid);
 
 void
-check_ip_in_dns(unsigned long int *ip_addr, char *name, char *domain);
-
-void
 set_build_domain_updated(ailsa_cmdb_s *cbt, char *domain);
 
 int
