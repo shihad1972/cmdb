@@ -1,5 +1,12 @@
+24/06/2020
+Consolidate the cmdb_add_*_id_to_list into 2 functions:
+	1 for char *
+	1 for char **
+Have to be careful of the char ** one; Need to tell length of list. Maybe end
+with NULL pointer at the end of list?
+
 20/06/2020
- Strange bug when building reverse zones with newly set preferred A record.
+Strange bug when building reverse zones with newly set preferred A record.
 It does not add the record in on the first time the zone is built, only on
 the 2nd time it is built.
 

@@ -247,7 +247,10 @@ enum {			// SQL DELETE QUERIES
 	DELETE_REC_PROTO,
 	DELETE_REVERSE_RECORD,
 	DELETE_GLUE_ZONE,
-	DELETE_PREF_A
+	DELETE_PREF_A,
+	DELETE_BUILD_IP,
+	DELETE_DISK_DEV,
+	DELETE_BUILD_ON_SERVER_ID
 };
 
 enum {			// SQL UPDATE QUERIES
@@ -375,6 +378,9 @@ cmdb_add_locale_id_to_list(char *locale, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_ip_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_disk_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);

@@ -536,7 +536,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // DISK_ID_ON_SERVER_NAME
-"SELECT disk_id FROM disk_dev d LEFT JOIN server s ON s.server_id = d.server_id WHERE s.name = ?",
+"SELECT disk_id FROM disk_dev WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
 	1,
 	{ AILSA_DB_TEXT }
 	},
@@ -815,6 +815,21 @@ const struct ailsa_sql_query_s delete_queries[] = {
 "DELETE FROM preferred_a WHERE ip = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // DELETE_BUILD_IP
+"DELETE FROM build_id WHERE ip_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_DISK_DEV
+"DELETE FROM disk_dev WHERE disk_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_BUILD_ON_SERVER_ID
+"DELETE FROM build WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
 	},
 };
 

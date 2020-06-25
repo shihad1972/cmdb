@@ -502,59 +502,42 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 int
 remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-#ifndef CLEAN_REMOVE_BUILD_CONFIG
-# define CLEAN_REMOVE_BUILD_CONFIG(retval) { \
-		free(data);                  \
-		free(cbc);                   \
-		free(scratch);               \
-		return retval;               \
-}
-#endif
-	int retval = NONE;
-	dbdata_s *data;
-	cbc_s *cbc, *scratch;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in remove_build_config");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in remove_build_config");
-	if (!(scratch = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in remove_build_config");
-	init_dbdata_struct(data);
-	init_cbc_struct(cbc);
-	init_cbc_struct(scratch);
-	if ((retval = cbc_run_query(cbt, cbc, CSERVER)) != 0)
-		CLEAN_REMOVE_BUILD_CONFIG(retval);
-	if ((retval = cbc_get_server(cml, cbc, scratch)) != 0)
-		CLEAN_REMOVE_BUILD_CONFIG(retval);
-	data->args.number = scratch->server->server_id;
-	if ((retval = cbc_run_delete(cbt, data, BUILD_ON_SERVER_ID)) == 1)
-		printf("Build for server %s deleted\n", cml->name);
-	else if (retval == 0)
-		printf("Seems like there was no build for %s\n", cml->name);
-	else
-		printf("WOW! We have delete multiple builds for %s\n",
-		       cml->name);
-	if (cml->removeip == TRUE) {
-		printf("You have asked to delete the build IP for %s\n", 
-		       cml->name);
-		printf("If this server is still online, this IP will be reused\n");
-		printf("Duplicate IP addresses are a bad thing!\n");
-		printf("Remember to delete from DNS too.\n");
-#ifdef HAVE_DNSA
-//		remove_ip_from_dns(cbt, cml, data);
-#endif // HAVE_DNSA
-		if ((retval = cbc_run_delete(cbt, data, BUILD_IP_ON_SER_ID)) == 1)
-			printf("Delete 1 IP as requested\n");
-		else if (retval == 0)
-			printf("Don't worry, no build IP's deleted\n");
-		else
-			printf("Wow! Multiple build IP's deleted\n");
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
 	}
-	if ((retval = cbc_run_delete(cbt, data, DISK_DEV_ON_SERVER_ID)) == 0)
-		printf("No disk dev to delete??\n");
-	retval = NONE;
-	CLEAN_REMOVE_BUILD_CONFIG(retval);
-#undef CLEAN_REMOVE_BUILD_CONFIG
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_disk_id_to_list(cml->name, cbt, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add disk id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_ON_SERVER_ID], args)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_BUILD_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
+		goto cleanup;
+	}
+	if (cml->removeip) {
+		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_IP], ip)) != 0) {
+			ailsa_syslog(LOG_ERR, "DELETE_BUILD_IP query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(ip);
+		return retval;
 }
-
