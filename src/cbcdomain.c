@@ -53,7 +53,6 @@
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 # include "dnsa_base_sql.h"
-# include "cbc_dnsa.h"
 #endif // HAVE_DNSA 
 
 static int

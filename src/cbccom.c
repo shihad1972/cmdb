@@ -178,7 +178,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			ailsa_syslog(LOG_INFO, "No network card provided. Setting to eth0");
 			cb->netcard = strdup("eth0");
 		}
-			
 	}
 	validate_cbc_comm_line(cb);
 	return retval;
