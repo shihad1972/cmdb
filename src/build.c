@@ -159,7 +159,7 @@ int
 cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
 {
 	cbc_server_s *server = cbc->server;
-	if (strncmp(cml->name, "NULL", COMM_S) != 0) {
+	if (cml->name) {
 		while (server) {
 			if (strncmp(server->name, cml->name, HOST_S) == 0) {
 				details->server = server;

@@ -30,16 +30,16 @@
 # include "cbc_data.h"
 
 typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
-	char config[CONF_S];
-	char name[CONF_S];
-	char uuid[CONF_S];
-	char partition[RBUFF_S];
-	char varient[CONF_S];
-	char os[CONF_S];
-	char os_version[MAC_S];
-	char build_domain[RBUFF_S];
-	char action_type[MAC_S];
-	char arch[MAC_S];
+	char *config;
+	char *name;
+	char *uuid;
+	char *partition;
+	char *varient;
+	char *os;
+	char *os_version;
+	char *build_domain;
+	char *action_type;
+	char *arch;
 	char *netcard;
 	char *harddisk;
 	char *locale;

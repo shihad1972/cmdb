@@ -456,10 +456,10 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 	}
 	if ((retval = get_build_id(cbt, cml->server_id, cml->name, &bid)) != 0)
 		return retval;
-	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
+	if (cml->varient)
 		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)
 			return retval;
-	if (strncmp(cml->os, "NULL", COMM_S) != 0) {
+	if (cml->os) {
 		os[0] = strndup(cml->arch, MAC_S);
 		os[1] = strndup(cml->os_version, MAC_S);
 		os[2] = strndup(cml->os, CONF_S);
@@ -469,13 +469,13 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 			return retval;
 		}
 	}
-	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
+	if (cml->partition)
 		if ((retval = get_scheme_id(cbt, cml->partition, &dsid)) != 0)
 			return retval;
 	unsigned long int ids[4] = { vid, osid, dsid, sid };
-	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
+	if (cml->build_domain)
 		return CANNOT_MODIFY_BUILD_DOMAIN;
-	if (strncmp(cml->locale, "NULL", COMM_S) != 0)
+	if (cml->locale)
 		return LOCALE_NOT_IMPLEMENTED;
 	if ((type = get_modify_query(ids)) == 0) {
 		printf("No modifiers?\n");
