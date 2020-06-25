@@ -49,17 +49,10 @@ ailsa_list_init(AILLIST *list, void (*destroy)(void *data))
 void
 ailsa_list_destroy(AILLIST *list)
 {
-	void *data;
-	int retval = 0;
 
 	if (!(list))
 		return;
-	while (list->total > 0) {
-		retval = ailsa_list_remove(list, list->tail, (void **)&data);
-		if (retval == 0 && list->destroy != NULL) {
-			list->destroy(data);
-		}
-	}
+	ailsa_list_clean(list);
 	memset(list, 0, sizeof(AILLIST));
 	return;
 }
