@@ -52,7 +52,7 @@ int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
 	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:y";
-	int retval, opt, trim;
+	int retval, opt;
 	retval = NONE;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -91,7 +91,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'n') {
-			cb->name = strndup(optarg, NAME_S)
+			cb->name = strndup(optarg, NAME_S);
 			cb->server = NAME;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
@@ -125,7 +125,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 // We do not check for a starting /dev here.
 			cb->harddisk = strndup(optarg, HOST_S);
 		} else if (opt == 'o') {
-			cb->osu = strndup(optarg, MAC_S);
+			cb->os = strndup(optarg, MAC_S);
 		} else if (opt == 'p') {
 			cb->partition = strndup(optarg, CONF_S);
 		} else if (opt == 't') {
@@ -246,10 +246,10 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 	if (cml->varient)
 		if (ailsa_validate_input(cml->varient, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "varient");
-	if ((cml->build_domain))
+	if (cml->build_domain)
 		if (ailsa_validate_input(cml->build_domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "build domain");
-	if ((cml->arch))
+	if (cml->arch)
 		if (ailsa_validate_input(cml->arch, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "architecture");
 	if (cml->netcard)
