@@ -82,6 +82,91 @@ cbc_add_ip_to_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int i
 static int
 cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
+static int
+ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
+
+static int
+ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build);
+
+static int
+ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST *build);
+
+static int
+ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build);
+
+static int
+ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build);
+
+int
+modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(cml->name, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, BUILD_DETAILS_ON_SERVER_NAME, args, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS_ON_SERVER_NAME query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_get_modified_build(cbt, cml, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot modify build for %s", cml->name);
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(build);
+		return retval;
+}
+
+int
+remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_disk_id_to_list(cml->name, cbt, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add disk id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_ON_SERVER_ID], args)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_BUILD_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
+		goto cleanup;
+	}
+	if (cml->removeip) {
+		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_IP], ip)) != 0) {
+			ailsa_syslog(LOG_ERR, "DELETE_BUILD_IP query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(ip);
+		return retval;
+}
+
 int
 create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
@@ -439,104 +524,133 @@ cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
 		return retval;
 }
 
-int
-modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+static int
+ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
 {
-	char *os[3];
-	int retval = NONE, type = NONE;
-	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0, bid = 0;
-	dbdata_s *data;
+	if (!(cbt) || !(cml) || !(build))
+		return AILSA_NO_DATA;
+	int retval = 0;
 
-	if (cml->server_id == 0) {
-		if ((retval = get_server_id(cbt, cml->name, &sid)) != 0)
-			return retval;
-		cml->server_id = sid;
-	} else {
-		sid = cml->server_id;
-	}
-	if ((retval = get_build_id(cbt, cml->server_id, cml->name, &bid)) != 0)
-		return retval;
 	if (cml->varient)
-		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)
-			return retval;
-	if (cml->os) {
-		os[0] = strndup(cml->arch, MAC_S);
-		os[1] = strndup(cml->os_version, MAC_S);
-		os[2] = strndup(cml->os, CONF_S);
-		if ((retval = get_os_id(cbt, os, &osid)) != 0) {
-			if (retval == OS_NOT_FOUND)
-				fprintf(stderr, "Build os not found\n");
-			return retval;
-		}
-	}
+		if ((retval = ailsa_modify_build_varient(cml->varient, cbt, build)) != 0)
+			goto cleanup;
 	if (cml->partition)
-		if ((retval = get_scheme_id(cbt, cml->partition, &dsid)) != 0)
-			return retval;
-	unsigned long int ids[4] = { vid, osid, dsid, sid };
-	if (cml->build_domain)
-		return CANNOT_MODIFY_BUILD_DOMAIN;
+		if ((retval = ailsa_modify_build_partition_scheme(cml->partition, cbt, build)) != 0)
+			goto cleanup;
 	if (cml->locale)
-		return LOCALE_NOT_IMPLEMENTED;
-	if ((type = get_modify_query(ids)) == 0) {
-		printf("No modifiers?\n");
-		return NO_MODIFIERS;
-	}
-	init_multi_dbdata_struct(&data, cbc_update_args[type]);
-	cbc_prep_update_dbdata(data, type, ids);
-	if ((retval = cbc_run_update(cbt, data, type)) == 1) {
-		printf("Build updated\n");
-		retval = NONE;
-	} else if (retval == 0) {
-		printf("No build updated. Does server %s have a build?\n",
-		       cml->name);
-		retval = SERVER_BUILD_NOT_FOUND;
-	} else {
-		printf("Multiple builds??\n");
-		retval = MULTIPLE_SERVER_BUILDS;
-	}
-	clean_dbdata_struct(data);
-	return retval;
+		if ((retval = ailsa_modify_build_locale(cml->locale, cbt, build)) != 0)
+			goto cleanup;
+	if (cml->netcard)
+		if ((retval = ailsa_modify_build_netcard(cml->netcard, cbt, build)) != 0)
+			goto cleanup;
+	cleanup:
+		return retval;
 }
 
-int
-remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+static int
+ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
 {
-	if (!(cbt) || !(cml))
+	if (!(varient) || !(cbt) || !(build))
 		return AILSA_NO_DATA;
 	int retval;
-	AILLIST *args = ailsa_db_data_list_init();
-	AILLIST *disk = ailsa_db_data_list_init();
-	AILLIST *ip = ailsa_db_data_list_init();
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e, *r;
 
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
+	if ((retval = cmdb_add_varient_id_to_list(varient, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		if (!(r = ailsa_replace_element(build, e, 0))) {
+			retval = AILSA_VARIENT_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_list_pop_element(l, e)) != 0)
+			goto cleanup;
+		ailsa_clean_element(l, r);
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(partition) || !(cbt) || !(build))
+		goto cleanup;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e, *p;
+
+	if ((retval = cmdb_add_scheme_id_to_list(partition, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition scheme id to list");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		if (!(p = ailsa_replace_element(build, e, 4))) {
+			retval = AILSA_PARTITION_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace partition scheme id in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_list_pop_element(l, e)) != 0)
+			goto cleanup;
+		ailsa_clean_element(l, p);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(locale) || !(cbt) || !(build))
+		goto cleanup;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e, *c;
+
+	if ((retval = cmdb_add_locale_id_to_list(locale, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale id to list");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		if (!(c = ailsa_replace_element(build, e, 3))) {
+			retval = AILSA_LOCALE_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace locale id in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_list_pop_element(l, e)) != 0)
+			goto cleanup;
+		ailsa_clean_element(l, c);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(netdev) || !(cbt) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *m = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)build->head->data)->data->number, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, ip)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_disk_id_to_list(cml->name, cbt, disk)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add disk id to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_ON_SERVER_ID], args)) != 0) {
-		ailsa_syslog(LOG_ERR, "DELETE_BUILD_ON_SERVER_ID query failed");
-		goto cleanup;
-	}
-	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
-		ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
-		goto cleanup;
-	}
-	if (cml->removeip) {
-		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_IP], ip)) != 0) {
-			ailsa_syslog(LOG_ERR, "DELETE_BUILD_IP query failed");
-			goto cleanup;
-		}
-	}
 	cleanup:
-		ailsa_list_full_clean(args);
-		ailsa_list_full_clean(disk);
-		ailsa_list_full_clean(ip);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(m);
 		return retval;
 }

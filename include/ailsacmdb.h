@@ -150,6 +150,9 @@ enum {                  // Error codes
 	AILSA_NO_MAC_ADDR = 214,
 	AILSA_NO_DISK_DEV = 215,
 	AILSA_IP_CONVERT_FAILED = 216,
+	AILSA_VARIENT_REPLACE_FAIL = 220,
+	AILSA_PARTITION_REPLACE_FAIL = 221,
+	AILSA_LOCALE_REPLACE_FAIL = 222,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -471,10 +474,16 @@ int
 ailsa_list_insert(AILLIST *list, void *data);
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
+int
+ailsa_list_pop_element(AILLIST *list, AILELEM *element);
+void
+ailsa_clean_element(AILLIST *list, AILELEM *e);
 void
 ailsa_list_full_clean(AILLIST *l);
 AILELEM *
 ailsa_move_down_list(AILELEM *element, size_t number);
+AILELEM *
+ailsa_replace_element(AILLIST *list, AILELEM *element, size_t number);
 // Hash Table
 
 unsigned int

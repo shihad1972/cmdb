@@ -41,7 +41,6 @@ main(int argc, char *argv[])
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbc_comm_line_s *cml = ailsa_calloc(sizeof(cbc_comm_line_s), "cml in main");
 
-	init_cbc_comm_values(cml);
 	if ((retval = parse_cbc_command_line(argc, argv, cml)) != 0) {
 		ailsa_clean_cmdb(cmc);
 		clean_cbc_comm_line(cml);

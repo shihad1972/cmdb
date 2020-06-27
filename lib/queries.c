@@ -550,6 +550,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // BUILD_DETAILS_ON_SERVER_NAME
+"SELECT varient_id, os_id, ip_id, locale_id, def_scheme_id, mac_addr, net_inst_int FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
