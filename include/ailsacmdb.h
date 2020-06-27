@@ -482,8 +482,6 @@ void
 ailsa_list_full_clean(AILLIST *l);
 AILELEM *
 ailsa_move_down_list(AILELEM *element, size_t number);
-AILELEM *
-ailsa_replace_element(AILLIST *list, AILELEM *element, size_t number);
 // Hash Table
 
 unsigned int

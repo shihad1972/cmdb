@@ -407,6 +407,9 @@ void
 cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data);
 
 int
+cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number);
+
+int
 ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
 
 int

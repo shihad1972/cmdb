@@ -554,7 +554,7 @@ ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *l = ailsa_db_data_list_init();
-	AILELEM *e, *r;
+	AILELEM *e;
 
 	if ((retval = cmdb_add_varient_id_to_list(varient, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
@@ -562,14 +562,11 @@ ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
 	}
 	if (l->total > 0) {
 		e = l->head;
-		if (!(r = ailsa_replace_element(build, e, 0))) {
+		if ((retval = cmdb_replace_data_element(build, e, 0)) != 0) {
 			retval = AILSA_VARIENT_REPLACE_FAIL;
 			ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
 			goto cleanup;
 		}
-		if ((retval = ailsa_list_pop_element(l, e)) != 0)
-			goto cleanup;
-		ailsa_clean_element(l, r);
 	}
 	cleanup:
 		ailsa_list_full_clean(l);
@@ -583,7 +580,7 @@ ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST 
 		goto cleanup;
 	int retval;
 	AILLIST *l = ailsa_db_data_list_init();
-	AILELEM *e, *p;
+	AILELEM *e;
 
 	if ((retval = cmdb_add_scheme_id_to_list(partition, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition scheme id to list");
@@ -591,14 +588,11 @@ ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST 
 	}
 	if (l->total > 0) {
 		e = l->head;
-		if (!(p = ailsa_replace_element(build, e, 4))) {
+		if ((retval = cmdb_replace_data_element(build, e, 4)) != 0) {
 			retval = AILSA_PARTITION_REPLACE_FAIL;
 			ailsa_syslog(LOG_ERR, "Cannot replace partition scheme id in list");
 			goto cleanup;
 		}
-		if ((retval = ailsa_list_pop_element(l, e)) != 0)
-			goto cleanup;
-		ailsa_clean_element(l, p);
 	}
 
 	cleanup:
@@ -613,7 +607,7 @@ ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
 		goto cleanup;
 	int retval;
 	AILLIST *l = ailsa_db_data_list_init();
-	AILELEM *e, *c;
+	AILELEM *e;
 
 	if ((retval = cmdb_add_locale_id_to_list(locale, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add locale id to list");
@@ -621,14 +615,11 @@ ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
 	}
 	if (l->total > 0) {
 		e = l->head;
-		if (!(c = ailsa_replace_element(build, e, 3))) {
+		if ((retval =  cmdb_replace_data_element(build, e, 3)) != 0) {
 			retval = AILSA_LOCALE_REPLACE_FAIL;
 			ailsa_syslog(LOG_ERR, "Cannot replace locale id in list");
 			goto cleanup;
 		}
-		if ((retval = ailsa_list_pop_element(l, e)) != 0)
-			goto cleanup;
-		ailsa_clean_element(l, c);
 	}
 
 	cleanup:

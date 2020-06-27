@@ -725,3 +725,53 @@ set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned lo
 		ailsa_list_full_clean(a);
 		return retval;
 }
+
+int
+cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number)
+{
+	if (!(list) || !(element))
+		return AILSA_NO_DATA;
+	size_t i;
+	size_t esize = sizeof(AILELEM);
+	size_t dsize = sizeof(ailsa_data_s);
+	size_t usize = sizeof(ailsa_data_u);
+	AILELEM *e = list->head;
+	AILELEM *next, *prev;
+	AILELEM *r = ailsa_calloc(esize, "r in cmdb_replace_data_element");
+	ailsa_data_s *d = ailsa_calloc(dsize, "d in cmdb_replace_data_element");
+	ailsa_data_u *u = ailsa_calloc(usize, "u in cmdb_replace_data_element");
+	ailsa_data_s *s = element->data;
+
+	memcpy(r, element, esize);
+	memcpy(d, s, dsize);
+	memcpy(u, s->data, usize);
+	r->data = d;
+	d->data = u;
+	if (d->type == AILSA_DB_TEXT)
+		u->text = strndup(((ailsa_data_s *)element->data)->data->text, DOMAIN_LEN);
+	if (number == 0) {
+		list->head = r;
+		r->next = e->next;
+		r->next->prev = r;
+	} else if (number == list->total) {
+		e = list->tail;
+		list->tail = r;
+		r->prev = e->prev;
+		r->prev->next = r;
+	} else {
+		for (i = 0; i < number; i++) {
+			if (e)
+				e = e->next;
+		}
+		next = e->next;
+		prev = e->prev;
+		next->prev = r;
+		prev->next = r;
+		r->next = next;
+		r->prev = prev;
+	}
+	if (list->destroy)
+		list->destroy(e->data);
+	my_free(e);
+	return 0;
+}

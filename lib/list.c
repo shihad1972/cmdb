@@ -250,32 +250,3 @@ ailsa_move_down_list(AILELEM *element, size_t number)
 	}
 	return e;
 }
-
-AILELEM *
-ailsa_replace_element(AILLIST *list, AILELEM *element, size_t number)
-{
-	if (!(list) || !(element))
-		return NULL;
-	size_t i;
-	AILELEM *e = list->head;
-	if (number == 0) {
-		list->head = element;
-		element->next = e->next;
-		e->next->prev = element;
-	} else if (number == list->total) {
-		e = list->tail;
-		list->tail = element;
-		element->prev = e;
-		e->prev->next = element;
-	} else {
-		for (i = 0; i < number; i++) {
-			if (e)
-				e = e->next;
-		}
-		e->next->prev = element;
-		element->next = e->next;
-		e->prev->next = element;
-		element->prev = e->prev;
-	}
-	return e;
-}
