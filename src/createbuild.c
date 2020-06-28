@@ -567,6 +567,8 @@ ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
 			ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
 			goto cleanup;
 		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Varient %s not found in database", varient);
 	}
 	cleanup:
 		ailsa_list_full_clean(l);
@@ -593,6 +595,8 @@ ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST 
 			ailsa_syslog(LOG_ERR, "Cannot replace partition scheme id in list");
 			goto cleanup;
 		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Partition scheme %s not found in database", partition);
 	}
 
 	cleanup:
@@ -620,6 +624,8 @@ ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
 			ailsa_syslog(LOG_ERR, "Cannot replace locale id in list");
 			goto cleanup;
 		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Locale %s not found in database", locale);
 	}
 
 	cleanup:
@@ -635,11 +641,36 @@ ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build)
 	int retval;
 	AILLIST *l = ailsa_db_data_list_init();
 	AILLIST *m = ailsa_db_data_list_init();
+	AILELEM *e = build->head;
+	ailsa_data_s *d = e->data;
 
-	if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)build->head->data)->data->number, l)) != 0) {
+	if ((retval = cmdb_add_number_to_list(d->data->number, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
+	if ((retval = cmdb_add_string_to_list(netdev, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add network device to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, MAC_ADDRESS_FOR_BUILD, l, m)) != 0) {
+		ailsa_syslog(LOG_ERR, "MAC_ADDRESS_FOR_BUILD query failed");
+		goto cleanup;
+	}
+	e = l->tail;
+	if (m->total > 0) {
+		if ((retval = cmdb_replace_data_element(build, e, 6)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot replace netdev in list");
+			goto cleanup;
+		}
+		e = m->head;
+		if ((retval = cmdb_replace_data_element(build, e, 5)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot replace mac address in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Network device %s not found in database");
+	}
+
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(m);

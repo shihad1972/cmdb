@@ -555,6 +555,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // BUILD_OS_DETAILS_ON_OS_ID
+"SELECT os, os_version, arch FROM build_os WHERE os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
