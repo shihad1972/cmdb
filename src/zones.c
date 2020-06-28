@@ -1904,7 +1904,7 @@ int
 add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
-		goto cleanup;
+		return AILSA_NO_DATA;
 	char *parent;
 	int retval;
 	AILLIST *p = ailsa_db_data_list_init();
