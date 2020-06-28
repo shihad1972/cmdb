@@ -713,8 +713,6 @@ write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
 char *
-get_uname(unsigned long int uid);
-char *
 cmdb_get_uname(unsigned long int uid);
 const char *
 sqlite3_errstr(int error);

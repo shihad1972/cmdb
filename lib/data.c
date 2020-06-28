@@ -444,17 +444,6 @@ convert_time(char *timestamp, unsigned long int *store)
 }
 
 char *
-get_uname(unsigned long int uid)
-{
-	struct passwd *user;
-
-	if ((user = getpwuid((uid_t)uid)))
-		return user->pw_name;
-	else
-		return NULL;
-}
-
-char *
 cmdb_get_uname(unsigned long int uid)
 {
 	struct passwd pwd;

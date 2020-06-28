@@ -194,6 +194,7 @@ cmdb_display_customer_details(AILLIST *list)
 {
 	if (!(list))
 		return;
+	char *uname = NULL, *mname = NULL;
 	AILELEM *first, *second;
 	ailsa_data_s *one, *two;
 
@@ -218,22 +219,28 @@ cmdb_display_customer_details(AILLIST *list)
 	one = first->data;
 	second = first->next;
 	two = second->data;
+	uname = cmdb_get_uname(one->data->number);
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
+		printf("  Created by %s @ %s\n", uname, ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
-		printf("  Created by %s @ %s\n", get_uname(one->data->number), two->data->text);
+		printf("  Created by %s @ %s\n", uname, two->data->text);
 	first = second->next;
 	one = first->data;
 	second = first->next;
 	two = second->data;
+	mname = cmdb_get_uname(one->data->number);
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Modified by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
+		printf("  Modified by %s @ %s\n", mname, ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
-		printf("  Modified by %s @ %s\n", get_uname(one->data->number), two->data->text);
+		printf("  Modified by %s @ %s\n", mname, two->data->text);
+	if (uname)
+		my_free(uname);
+	if (mname)
+		my_free(mname);
 }
 
 void

@@ -210,7 +210,7 @@ main(int argc, char *argv[])
 	cvcl = ailsa_calloc(sizeof(cbcvari_comm_line_s), "cvcl in cbcvarient main");
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
-		free(cvcl);
+		clean_cbcvarient_comm_line(cvcl);
 		display_command_line_error(retval, argv[0]);
 	}
 	if (!(cvcl->varient))
@@ -382,8 +382,7 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 	if (!(cmc))
 		return AILSA_NO_DATA;
 	int retval;
-	char *text;
-	unsigned long int id;
+	char *text = NULL, *uname = NULL;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *element;
 	ailsa_data_s *data;
@@ -430,13 +429,13 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 		else
 			break;
 		data = element->data;
-		id = data->data->number;
-		if (strlen(get_uname(id)) < 8)
-			printf("%s\t\t", get_uname(id));
-		else if (strlen(get_uname(id)) < 16)
-			printf("%s\t", get_uname(id));
+		uname = cmdb_get_uname(data->data->number);
+		if (strlen(uname) < 8)
+			printf("%s\t\t", uname);
+		else if (strlen(uname) < 16)
+			printf("%s\t", uname);
 		else
-			printf("%s\n\t\t\t\t\t\t", get_uname(id));
+			printf("%s\n\t\t\t\t\t\t", uname);
 		if (element->next)
 			element = element->next;
 		else
@@ -457,10 +456,11 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 #endif
 			printf("%s\n", data->data->text);
 		element = element->next;
+		if (uname)
+			my_free(uname);
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 

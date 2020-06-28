@@ -378,6 +378,7 @@ cmdb_display_server_details(AILLIST *server)
 {
 	if (!(server))
 		return;
+	char *uname, *mname;
 	AILELEM *elem, *time;
 	ailsa_data_s *data, *user;
 
@@ -400,22 +401,28 @@ cmdb_display_server_details(AILLIST *server)
 	data = elem->data;
 	time = elem->next;
 	user = time->data;
+	uname = cmdb_get_uname(data->data->number);
 #ifdef HAVE_MYSQL
 	if (user->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %s\n", get_uname(data->data->number), ailsa_convert_mysql_time(user->data->time));
+		printf("  Created by %s @ %s\n", uname, ailsa_convert_mysql_time(user->data->time));
 	} else
 #endif
-		printf("  Created by %s @ %s\n", get_uname(data->data->number), user->data->text);
+		printf("  Created by %s @ %s\n", uname, user->data->text);
 	elem = time->next;
 	data = elem->data;
 	time = elem->next;
 	user = time->data;
+	mname = cmdb_get_uname(data->data->number);
 #ifdef HAVE_MYSQL
 	if (user->type == AILSA_DB_TIME) {
-		printf("  Modified by %s @ %s\n", get_uname(data->data->number), ailsa_convert_mysql_time(user->data->time));
+		printf("  Modified by %s @ %s\n", mname, ailsa_convert_mysql_time(user->data->time));
 	} else
 #endif
-		printf("  Modified by %s @ %s\n", get_uname(data->data->number), user->data->text);
+		printf("  Modified by %s @ %s\n", mname, user->data->text);
+	if (uname)
+		my_free(uname);
+	if (mname)
+		my_free(mname);
 }
 
 void
