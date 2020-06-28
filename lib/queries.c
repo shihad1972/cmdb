@@ -889,6 +889,13 @@ const struct ailsa_sql_query_s update_queries[] = {
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	},
+	{ // UPDATE_BUILD
+"UPDATE build SET varient_id = ?, os_id = ?, ip_id = ?, locale_id = ?, \
+ def_scheme_id = ?, mac_addr = ?, net_inst_int = ?, muser = ? \
+ WHERE server_id = ?",
+	9,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 static int

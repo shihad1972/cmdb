@@ -95,7 +95,13 @@ static int
 ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build);
 
 static int
-ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build);
+ailsa_modify_build_netcard(char *netdev, char *server, ailsa_cmdb_s *cbt, AILLIST *build);
+
+static int
+ailsa_modify_build_os(char **os, ailsa_cmdb_s *cbt, AILLIST *build);
+
+static int
+cmdb_get_full_os(char **os, ailsa_cmdb_s *cbt, unsigned long int os_id);
 
 int
 modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -114,10 +120,25 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_DETAILS_ON_SERVER_NAME query failed");
 		goto cleanup;
 	}
-	if ((retval = ailsa_get_modified_build(cbt, cml, build)) != 0) {
+	if ((retval = ailsa_get_modified_build(cbt, cml, build)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot modify build for %s", cml->name);
 		goto cleanup;
+	} else if (retval < 0) {
+		ailsa_syslog(LOG_INFO, "Nothing to modify in build");
+		retval = 0;
+		goto cleanup;
 	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to build list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_BUILD], build)) != 0)
+		ailsa_syslog(LOG_ERR, "UPDATE_BUILD query failed");
+
 	cleanup:
 		ailsa_list_full_clean(args);
 		ailsa_list_full_clean(build);
@@ -529,7 +550,8 @@ ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build
 {
 	if (!(cbt) || !(cml) || !(build))
 		return AILSA_NO_DATA;
-	int retval = 0;
+	int retval = -1;
+	char **os = ailsa_calloc((sizeof(char *) * 3), "os in ailsa_get_modified_build");
 
 	if (cml->varient)
 		if ((retval = ailsa_modify_build_varient(cml->varient, cbt, build)) != 0)
@@ -541,9 +563,26 @@ ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build
 		if ((retval = ailsa_modify_build_locale(cml->locale, cbt, build)) != 0)
 			goto cleanup;
 	if (cml->netcard)
-		if ((retval = ailsa_modify_build_netcard(cml->netcard, cbt, build)) != 0)
+		if ((retval = ailsa_modify_build_netcard(cml->netcard, cml->name, cbt, build)) != 0)
 			goto cleanup;
+	if ((cml->os) || (cml->os_version) || (cml->arch)) {
+		if (cml->os)
+			os[0] = strndup(cml->os, MAC_LEN);
+		if (cml->os_version)
+			os[1] = strndup(cml->os_version, SERVICE_LEN);
+		if (cml->arch)
+			os[2] = strndup(cml->arch, SERVICE_LEN);
+		if ((retval = ailsa_modify_build_os(os, cbt, build)) != 0)
+			goto cleanup;
+	}
 	cleanup:
+		if (os[2])
+			my_free(os[2]);
+		if (os[1])
+			my_free(os[1]);
+		if (os[0])
+			my_free(os[0]);
+		my_free(os);
 		return retval;
 }
 
@@ -634,7 +673,7 @@ ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
 }
 
 static int
-ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build)
+ailsa_modify_build_netcard(char *netdev, char *server, ailsa_cmdb_s *cbt, AILLIST *build)
 {
 	if (!(netdev) || !(cbt) || !(build))
 		return AILSA_NO_DATA;
@@ -642,9 +681,8 @@ ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build)
 	AILLIST *l = ailsa_db_data_list_init();
 	AILLIST *m = ailsa_db_data_list_init();
 	AILELEM *e = build->head;
-	ailsa_data_s *d = e->data;
 
-	if ((retval = cmdb_add_number_to_list(d->data->number, l)) != 0) {
+	if ((retval = cmdb_add_server_id_to_list(server, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
@@ -668,11 +706,85 @@ ailsa_modify_build_netcard(char *netdev, ailsa_cmdb_s *cbt, AILLIST *build)
 			goto cleanup;
 		}
 	} else {
-		ailsa_syslog(LOG_INFO, "Network device %s not found in database");
+		ailsa_syslog(LOG_INFO, "Network device %s not found in database", netdev);
 	}
 
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(m);
+		return retval;
+}
+
+static int
+ailsa_modify_build_os(char **os, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(os) || !(cbt) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *bos = ailsa_db_data_list_init();
+	AILELEM *e = build->head->next;
+	ailsa_data_s *d = e->data;
+	if (!(os[0]) || !(os[1]) || !(os[2])) {
+		if ((retval = cmdb_get_full_os(os, cbt, d->data->number)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot get OS details");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_os_id_to_list(os, cbt, bos)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add os id to list");
+		goto cleanup;
+	}
+	if (bos->total > 0) {
+		e = bos->head;
+		if ((retval = cmdb_replace_data_element(build, e, 1)) != 0) {
+			retval = AILSA_OS_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace os_id in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "OS %s, version %s, arch %s does not exist", os[0], os[1], os[2]);
+	}
+	cleanup:
+		ailsa_list_full_clean(bos);
+		return retval;
+}
+
+static int
+cmdb_get_full_os(char **os, ailsa_cmdb_s *cbt, unsigned long int os_id)
+{
+	if (!(os) || !(cbt) || (os_id == 0))
+		return AILSA_NO_DATA;
+	int retval, i;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *build_os = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_number_to_list(os_id, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add os_id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, BUILD_OS_DETAILS_ON_OS_ID, args, build_os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_OS_ID query failed");
+		goto cleanup;
+	}
+	if (build_os->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find os with id %lu", os_id);
+		retval = AILSA_NO_OS;
+		goto cleanup;
+	}
+	e = build_os->head;
+	for (i = 0; i < 3; i++) {
+		if (!(e))
+			break;
+		d = e->data;
+		if (!(os[i])) {
+			os[i] = strndup(d->data->text, MAC_LEN);
+		}
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(build_os);
 		return retval;
 }
