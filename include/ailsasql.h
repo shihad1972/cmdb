@@ -265,6 +265,7 @@ enum {			// SQL UPDATE QUERIES
 	REV_ZONE_SERIAL_UPDATE,
 	SET_FWD_ZONE_UPDATED,
 	SET_REV_ZONE_UPDATED,
+	UPDATE_BUILD,
 };
 
 typedef struct ailsa_sql_single_s {

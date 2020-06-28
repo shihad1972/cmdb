@@ -752,7 +752,7 @@ cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number)
 		list->head = r;
 		r->next = e->next;
 		r->next->prev = r;
-	} else if (number == list->total) {
+	} else if (number == (list->total - 1)) {
 		e = list->tail;
 		list->tail = r;
 		r->prev = e->prev;
