@@ -1,6 +1,11 @@
+28/06/2020
+The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do
+not find what they are searching for. Should maybe have a wrapper function
+for them if we want to be _sure_ there the server is added. Could probably
+do this when consolidating these functions doing note 24/06/2020.
+
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)
-
 
 24/06/2020
 Consolidate the cmdb_add_*_id_to_list into 2 functions:
@@ -41,10 +46,10 @@ obviously fail for packaes that are part of a base install, and so those
 packages should be added to the base varient.
 
 20/04/2020
- When adding a locale, need to check if that locale already exists
+When adding a locale, need to check if that locale already exists
 
 19/04/2020
- When adding packages, I need to check if the package already exists for
+When adding packages, I need to check if the package already exists for
 that particular varient and OS combination.
 
 10/04/2020
@@ -55,7 +60,7 @@ should be printed.
 04/04/2020
 Programs moved to new AILLIST database model:
 	cmdb		**Done**
-	dnsa
+	dnsa		**Done**
 	cbc
 	cbcvarient	**Done**
 	cbcdomain	**Done**
@@ -77,10 +82,12 @@ Reworking the SQL code:
 07/02/2020
 Start to use the errors.c in lib/ directory. cmdb-0.3 branch has put the
 base_sql.h header file into include/
+	DONE Commit id a3d4ed5d
 
 27/02/2019
 Need to add a generic logging function, that can handle both console
 output and also logging to syslog.
+	DONE Commit id d4c83120, function ailsa_syslog
 
 09/11/2018
 Deleting SRV records is tricky; it seems to delete all SRV records
@@ -118,6 +125,7 @@ os_id.
 
 18/02/2015
 Need to get rid of the search / extended search in dnsa and cmdb
+	DONE: Commit id 53b2efb. Moved to AILLIST database access
 
 31/01/2015
 Need to check all programs are checking for ~/.dnsa.conf and also add
