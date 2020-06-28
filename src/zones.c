@@ -610,7 +610,7 @@ display_multi_a_records(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-	int retval;
+	int retval = 0;
 
 	if (cm->domain)
 		retval = multi_a_range(dc, cm);
@@ -1398,7 +1398,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		return AILSA_NO_DATA;
 	char *range = ailsa_calloc(MAC_LEN, "range in build_reverse_zone");
 	char *tmp;
-	int retval;
+	int retval = 0;
 	size_t len;
 	AILLIST *add = ailsa_db_data_list_init();
 	AILLIST *net = ailsa_db_data_list_init();
