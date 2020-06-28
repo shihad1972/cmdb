@@ -119,208 +119,26 @@ fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *buil
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-	int retval, query;
-	cbc_s *cbc, *details;
-	
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in display_build_config");
-	if (!(details = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "details in display_build_config");
-	init_cbc_struct(cbc);
-	init_cbc_struct(details);
-	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME; // | PARTOPT;
-/*
- * Removed PARTOPT from the query - if there are no partition options, then
- * this all fails :( The display function is not using it anyway.
- */
-	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return MY_QUERY_FAIL;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
 	}
-	if ((retval = cbc_get_server(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return SERVER_NOT_FOUND;
+	if (server->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find server %s", cml->name);
+		goto cleanup;
 	}
-	if ((retval = cbc_get_build_details(cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
+	printf("Build details for server %s\n", cml->name);
+
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(build);
 		return retval;
-	}
-	print_build_config(details);
-	clean_cbc_struct(cbc);
-	free(details);
-	return NONE;
-}
-
-int
-cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
-{
-	cbc_server_s *server = cbc->server;
-	if (cml->name) {
-		while (server) {
-			if (strncmp(server->name, cml->name, HOST_S) == 0) {
-				details->server = server;
-				break;
-			} else {
-				server = server->next;
-			}
-		}
-	} else if (cml->server_id != 0) {
-		while (server) {
-			if (server->server_id == cml->server_id) {
-				details->server = server;
-				break;
-			} else {
-				server = server->next;
-			}
-		}
-	} else {
-		printf("No server specifier?? (UUID no longer valid!)\n");
-		return NO_SERVERS;
-	}
-	if (!details->server)
-		return SERVER_NOT_FOUND;
-	return NONE;
-}
-
-/* Bloody horrible function. What is calling this?
-   Ahh - display_build_config */
-int
-cbc_get_build_details(cbc_s *cbc, cbc_s *details)
-{
-	unsigned long int sid = details->server->server_id;
-	unsigned long int osid, bid, ipid, lid, vid, bdid, btid, ssid;
-	cbc_build_s *build = cbc->build;
-	cbc_build_domain_s *dom = cbc->bdom;
-	cbc_build_ip_s *bip = cbc->bip;
-	cbc_build_os_s *bos = cbc->bos;
-	cbc_build_type_s *type = cbc->btype;
-	details->dpart = cbc->dpart;
-	cbc_locale_s *loc = cbc->locale;
-	cbc_varient_s *vari = cbc->varient;
-	cbc_seed_scheme_s *sch = cbc->sscheme;
-	osid = bid = ipid = lid = vid = bdid = btid = ssid = 0;
-
-	while (build) {
-		if (build->server_id == sid) {
-			bid = build->build_id;
-			osid = build->os_id;
-			ipid = build->ip_id;
-			lid = build->locale_id;
-			vid = build->varient_id;
-			ssid = build->def_scheme_id;
-			details->build = build;
-		}
-		build = build->next;
-	}
-	if (!details->build)
-		return SERVER_BUILD_NOT_FOUND;
-	while (bos) {
-		if (bos->os_id == osid) {
-			btid = bos->bt_id;
-			details->bos = bos;
-		}
-		bos = bos->next;
-	}
-	while (bip) {
-		if (bip->ip_id == ipid) {
-			bdid = bip->bd_id;
-			details->bip = bip;
-		}
-		bip = bip->next;
-	}
-	while (dom) {
-		if (dom->bd_id == bdid)
-			details->bdom = dom;
-		dom = dom->next;
-	}
-	while (type) {
-		if (type->bt_id == btid)
-			details->btype = type;
-		type = type->next;
-	}
-	while (loc) {
-		if (loc->locale_id == lid)
-			details->locale = loc;
-		loc = loc->next;
-	}
-	while (vari) {
-		if (vari->varient_id == vid)
-			details->varient = vari;
-		vari = vari->next;
-	}
-	while (sch) {
-		if (sch->def_scheme_id == ssid)
-			details->sscheme = sch;
-		sch = sch->next;
-	}
-	return NONE;
-}
-
-void
-print_build_config(cbc_s *details)
-{
-	if (!(details))
-		report_error(CBC_NO_DATA, "details in print_build_config");
-	char *name = details->server->name, ip[RANGE_S], *addr;
-	char *cuser = cmdb_get_uname(details->build->cuser);
-	char *muser = cmdb_get_uname(details->build->muser);
-	char *locale = details->locale->locale;
-	char *lang = details->locale->language;
-	char *tz = details->locale->timezone;
-	time_t crtime = (time_t)details->build->ctime;
-	time_t motime = (time_t)details->build->mtime;
-	unsigned long int sid = details->build->def_scheme_id;
-	uint32_t ip_addr;
-	cbc_pre_part_s *part = details->dpart;
-
-	addr = ip;
-	if (details->bip) {
-		ip_addr = htonl((uint32_t)details->bip->ip);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	}
-	printf("Build details for server %s\n\n", details->server->name);
-	if (details->bdom)
-		printf("Build domain:\t%s\n", details->bdom->domain);
-	if (details->btype)
-		printf("Build type:\t%s\n", details->btype->build_type);
-	else
-		printf("No build type associated with %s\n", name);
-	if (details->bos)
-		printf("OS:\t\t%s, version %s, arch %s\n", details->bos->os,
-		 details->bos->version, details->bos->arch);
-	else
-		printf("No build os associated with server %s\n", name);
-	if (details->varient) 
-		printf("Build varient:\t%s\n", details->varient->varient);
-	else
-		printf("No build varient associated with %s\n", name);
-	if (details->bip)
-		printf("IP address:\t%s\n", addr);
-	else
-		printf("No build IP associated with server %s\n", name);
-	if (details->locale)
-		printf("Locale:\t\t%s\nLanguage:\t%s\nTimezone:\t%s\n", locale, lang, tz);
-	printf("Build created by %s at %s", cuser, ctime(&crtime));
-	printf("Build updated by %s at %s", muser, ctime(&motime));
-	if (part) {
-		printf("Partition information:\n");
-		if (details->sscheme)
-			printf("Name:\t%s\n", details->sscheme->name);
-		while (part) {
-			if (part->link_id.def_scheme_id == sid)
-				printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,
-				 part->mount);
-			part = part->next;
-		}
-	}
-	if (cuser)
-		my_free(cuser);
-	if (muser)
-		my_free(muser);
 }
 
 void

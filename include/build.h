@@ -33,13 +33,7 @@ int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
 int
-cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details);
-
-int
 create_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
-cbc_get_build_details(cbc_s *cbc, cbc_s *details);
 
 void
 list_build_servers(ailsa_cmdb_s *cbt);
@@ -70,9 +64,6 @@ get_modify_query(unsigned long int ids[]);
 
 void
 cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[]);
-
-void
-print_build_config(cbc_s *details);
 
 char *
 get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt);
