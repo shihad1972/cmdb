@@ -736,7 +736,6 @@ cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number)
 	size_t dsize = sizeof(ailsa_data_s);
 	size_t usize = sizeof(ailsa_data_u);
 	AILELEM *e = list->head;
-	AILELEM *next, *prev;
 	AILELEM *r = ailsa_calloc(esize, "r in cmdb_replace_data_element");
 	ailsa_data_s *d = ailsa_calloc(dsize, "d in cmdb_replace_data_element");
 	ailsa_data_u *u = ailsa_calloc(usize, "u in cmdb_replace_data_element");
@@ -763,12 +762,10 @@ cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number)
 			if (e)
 				e = e->next;
 		}
-		next = e->next;
-		prev = e->prev;
-		next->prev = r;
-		prev->next = r;
-		r->next = next;
-		r->prev = prev;
+		e->next->prev = r;
+		e->prev->next = r;
+		r->next = e->next;
+		r->prev = e->prev;
 	}
 	if (list->destroy)
 		list->destroy(e->data);
