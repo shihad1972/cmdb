@@ -178,8 +178,8 @@ create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 	AILLIST *l = ailsa_db_data_list_init();
 
 	os[0] = cml->os;
-	os[1] = cml->arch;
-	os[2] = cml->os_version;
+	os[1] = cml->os_version;
+	os[2] = cml->arch;
 	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, l)) != 0)
 			goto cleanup;
 	if (l->total > 0) {

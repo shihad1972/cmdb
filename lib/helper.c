@@ -343,8 +343,8 @@ cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 	if (!(args[0]) || !(args[1]) || !(args[2]))
 		return AILSA_NO_DATA;
 	char *os = args[0];
-	char *arch = args[1];
-	char *version = args[2];
+	char *version = args[1];
+	char *arch = args[2];
 	int retval = 0;
 	AILLIST *a = ailsa_db_data_list_init();
 
@@ -657,8 +657,8 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 	char **args = ailsa_calloc((sizeof(char *) * 3), "args in cmdb_check_for_os");
 
 	args[0] = os;
-	args[1] = arch;
-	args[2] = version;
+	args[1] = version;
+	args[2] = arch;
 	if ((retval = cmdb_add_os_id_to_list(args, cc, list)) != 0) {
 		retval = -1;
 		goto cleanup;

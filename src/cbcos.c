@@ -399,8 +399,8 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	ailsa_data_s *data;
 
 	args[0] = col->os;
-	args[1] = col->arch;
-	args[2] = col->version;
+	args[1] = col->version;
+	args[2] = col->arch;
 	if ((retval = cmdb_add_os_id_to_list(args, cmc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get OS id");
 		retval = OS_NOT_FOUND;
