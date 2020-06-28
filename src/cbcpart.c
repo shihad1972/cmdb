@@ -385,7 +385,7 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	size_t parts, i, len;
 	int retval;
 	short int lvm;
-	char *str;
+	char *str = NULL, *uname = NULL;
 	void *data;
 	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
@@ -410,14 +410,13 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		printf("with LVM,");
 	else
 		printf("no LVM,");
+	uname = cmdb_get_uname(((ailsa_data_s *)s->head->next->next->data)->data->number);
 #ifdef HAVE_MYSQL
 	if (((ailsa_data_s *)s->head->next->next->next->data)->type == AILSA_DB_TIME)
-		printf("  Created by: %s @ %s\n\n", get_uname(((ailsa_data_s *)s->head->next->next->data)->data->number),
-		  ailsa_convert_mysql_time(((ailsa_data_s *)s->head->next->next->next->data)->data->time));
+		printf("  Created by: %s @ %s\n\n", uname, ailsa_convert_mysql_time(((ailsa_data_s *)s->head->next->next->next->data)->data->time));
 	else
 #endif
-		printf("  Created by: %s @ %s\n\n", get_uname(((ailsa_data_s *)s->head->next->next->data)->data->number),
-		  ((ailsa_data_s *)s->head->next->next->next->data)->data->text);
+		printf("  Created by: %s @ %s\n\n", uname, ((ailsa_data_s *)s->head->next->next->next->data)->data->text);
 	printf("Mount\t\tFS\tMin\tMax\tOptions\t\t");
 	if (lvm > 0)
 		printf("\tVolume\n");
@@ -485,6 +484,8 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		my_free(s);
 		my_free(a);
 		my_free(o);
+		if (uname)
+			my_free(uname);
 		return retval;
 }
 

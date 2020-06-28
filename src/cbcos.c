@@ -278,6 +278,7 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	if (!(cmc) || !(col))
 		goto cleanup;
 	char *name = col->os;
+	char *uname;
 
 	int i = 0;
 
@@ -325,10 +326,12 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 					printf("%s\t%s\t%s\t\t",
 					     two->data->text, three->data->text, four->data->text);
 			}
-			if (strlen(get_uname(five->data->number)) < 8)
-				printf("%s\t\t%s\n", get_uname(five->data->number), six->data->text);
+			uname = cmdb_get_uname(five->data->number);
+			if (strlen(uname) < 8)
+				printf("%s\t\t%s\n", uname, six->data->text);
 			else
-				printf("%s\t%s\n", get_uname(five->data->number), six->data->text);
+				printf("%s\t%s\n", uname, six->data->text);
+			my_free(uname);
 		}
 	}
 	if (i == 0)

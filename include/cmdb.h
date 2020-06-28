@@ -512,8 +512,6 @@ int
 write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
-char *
-get_uname(unsigned long int uid);
 int
 get_ip_from_hostname(dbdata_s *data);
 

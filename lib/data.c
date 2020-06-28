@@ -454,6 +454,34 @@ get_uname(unsigned long int uid)
 		return NULL;
 }
 
+char *
+cmdb_get_uname(unsigned long int uid)
+{
+	struct passwd pwd;
+	struct passwd *result;
+	char *buf, *user;
+	size_t bsize, usize;
+	long sconf;
+
+	if ((sconf = sysconf(_SC_GETPW_R_SIZE_MAX)) < 0)
+		bsize = 16384;
+	else
+		bsize = (size_t)sconf;
+	if ((sconf = sysconf(_SC_LOGIN_NAME_MAX)) < 0)
+		usize = 256;
+	else
+		usize = (size_t)sconf;
+	buf = ailsa_calloc(bsize, "buf in cmdb_get_uname");
+	user = ailsa_calloc(usize, "user in cmdb_get_uname");
+	getpwuid_r((uid_t)uid, &pwd, buf, bsize, &result);
+	if (!(result)) {
+		snprintf(user, usize, "NULL");
+	} else {
+		snprintf(user, usize, "%s",  pwd.pw_name);
+	}
+	free(buf);
+	return user;
+}
 
 int
 get_ip_from_hostname(dbdata_s *data)

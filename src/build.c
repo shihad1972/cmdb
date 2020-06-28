@@ -266,8 +266,8 @@ print_build_config(cbc_s *details)
 	if (!(details))
 		report_error(CBC_NO_DATA, "details in print_build_config");
 	char *name = details->server->name, ip[RANGE_S], *addr;
-	char *cuser = get_uname(details->build->cuser);
-	char *muser = get_uname(details->build->muser);
+	char *cuser = cmdb_get_uname(details->build->cuser);
+	char *muser = cmdb_get_uname(details->build->muser);
 	char *locale = details->locale->locale;
 	char *lang = details->locale->language;
 	char *tz = details->locale->timezone;
@@ -317,6 +317,10 @@ print_build_config(cbc_s *details)
 			part = part->next;
 		}
 	}
+	if (cuser)
+		my_free(cuser);
+	if (muser)
+		my_free(muser);
 }
 
 void

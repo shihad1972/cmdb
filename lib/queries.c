@@ -1464,6 +1464,10 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 			tmp->data->number = strtoul(row[i - 1], NULL, 10);
 			tmp->type = AILSA_DB_LINT;
 			break;
+		case MYSQL_TYPE_SHORT:
+			tmp->data->small = (short int)strtoul(row[i - 1], NULL, 10);
+			tmp->type = AILSA_DB_SINT;
+			break;
 		case MYSQL_TYPE_TIMESTAMP:
 			tmp->data->text = strndup(row[i - 1], SQL_TEXT_MAX);
 			tmp->type = AILSA_DB_TEXT;

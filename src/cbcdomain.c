@@ -359,6 +359,7 @@ display_build_domain_details(AILLIST *d)
 	if (d->total != 11)
 		return;
 	char ip[SERVICE_LEN];
+	char *uname, *cname;
 	uint32_t ip_addr;
 	AILELEM *e = d->head;
 
@@ -396,7 +397,8 @@ display_build_domain_details(AILLIST *d)
 		printf("No NTP configuration\n");
 	}
 	e = e->next;
-	printf("Created by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	uname = cmdb_get_uname(((ailsa_data_s *)e->data)->data->number);
+	printf("Created by:\t%s", uname);
 	e = e->next;
 #ifdef HAVE_MYSQL
 	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
@@ -405,7 +407,8 @@ display_build_domain_details(AILLIST *d)
 #endif
 		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
 	e = e->next;
-	printf("Modified by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	cname = cmdb_get_uname(((ailsa_data_s *)e->data)->data->number);
+	printf("Modified by:\t%s", cname);
 	e = e->next;
 #ifdef HAVE_MYSQL
 	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
@@ -413,6 +416,10 @@ display_build_domain_details(AILLIST *d)
 	else
 #endif
 		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
+	if (uname)
+		my_free(uname);
+	if (cname)
+		my_free(cname);
 }
 
 static void
