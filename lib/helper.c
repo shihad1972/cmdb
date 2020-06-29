@@ -376,6 +376,30 @@ cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_os_alias_to_list(char *os, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(os) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(os, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, OS_ALIAS_ON_OS_NAME, l, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "OS_ALIAS_ON_OS_NAME query failed");
+		goto cleanup;
+	}
+	if (list->total == total)
+		retval = AILSA_NO_OS;
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+int
 cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(zone) || !(cc) || !(list))

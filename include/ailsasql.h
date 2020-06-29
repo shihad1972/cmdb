@@ -199,6 +199,7 @@ enum {			// SQL ARGUMENT QUERIES
 	BUILD_TIMES_AND_USERS,
 	PART_SCHEME_NAME_ON_SERVER_ID,
 	PARTITIOINS_ON_SERVER_ID,
+	OS_ALIAS_ON_OS_NAME,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -364,6 +365,9 @@ cmdb_add_disk_dev_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_os_id_to_list(char **os, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_os_alias_to_list(char *os, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list);

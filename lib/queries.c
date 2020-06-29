@@ -596,7 +596,12 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT mount_point, filesystem, logical_volume FROM default_part dp LEFT JOIN build b ON dp.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
-	}
+	},
+	{ // OS_ALIAS_ON_OS_NAME
+"SELECT DISTINCT alias FROM build_os WHERE os = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

@@ -274,7 +274,7 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *elem;
-	ailsa_data_s *one, *two, *three, *four, *five, *six;
+	ailsa_data_s *one, *two, *four, *five, *six, *valias;
 	if (!(cmc) || !(col))
 		goto cleanup;
 	char *name = col->os;
@@ -294,12 +294,12 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		two = (ailsa_data_s *)elem->data;
 		if (elem->next)
 			elem = elem->next;
-		three = (ailsa_data_s *)elem->data;
 		if (elem->next)
 			elem = elem->next;
 		four = (ailsa_data_s *)elem->data;
 		if (elem->next)
 			elem = elem->next;
+		valias = (ailsa_data_s *)elem->data;
 		if (elem->next)
 			elem = elem->next;
 		five = (ailsa_data_s *)elem->data;
@@ -315,16 +315,16 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
 			}
 			i++;
-			if (strncasecmp(three->data->text, "none", COMM_S) == 0) {
+			if (strncasecmp(valias->data->text, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
 				     two->data->text, four->data->text);
 			} else {
-				if (strlen(two->data->text) < 8)
+				if (strlen(valias->data->text) < 8)
 					printf("%s\t%s\t\t%s\t\t",
-					     two->data->text, three->data->text, four->data->text);
+					     two->data->text, valias->data->text, four->data->text);
 				else
 					printf("%s\t%s\t%s\t\t",
-					     two->data->text, three->data->text, four->data->text);
+					     two->data->text, valias->data->text, four->data->text);
 			}
 			uname = cmdb_get_uname(five->data->number);
 			if (strlen(uname) < 8)
@@ -350,12 +350,6 @@ add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 
 	if (!(col->ver_alias))
 		col->ver_alias = strdup("none");
-	if (!(col->alias)) {
-		col->alias = ailsa_calloc(SERVICE_LEN, "col->alias in add_cbc_build_os");
-		if ((retval = get_os_alias(cmc, col->os, col->alias)) != 0) {
-			goto cleanup;
-		}
-	}
 	if ((retval = cmdb_check_for_os(cmc, col->os, col->arch, col->version)) > 0) {
 		retval = 0;
 		ailsa_syslog(LOG_ERR, "Build OS already in database");
@@ -629,9 +623,16 @@ cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
 		return retval;
 	}
-	if ((retval = cmdb_add_string_to_list(col->alias, os)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS alias into list");
-		return retval;
+	if (col->alias) {
+		if ((retval = cmdb_add_string_to_list(col->alias, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert OS alias into list");
+			return retval;
+		}
+	} else {
+		if ((retval = cmdb_add_os_alias_to_list(col->os, cmc, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add os alias to list");
+			return retval;
+		}
 	}
 	if ((retval = cmdb_add_string_to_list(col->ver_alias, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert OS version alias into list");

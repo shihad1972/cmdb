@@ -387,7 +387,7 @@ get_scheme_name(ailsa_cmdb_s *cbc, uli_t server_id, char *name)
 		clean_dbdata_struct(data);
 		return SCHEME_NOT_FOUND;
 	} else if (retval > 1) {
-		fprintf(stderr, "FOund multiple schemes for server_id %lu\n", server_id);
+		fprintf(stderr, "Found multiple schemes for server_id %lu\n", server_id);
 	}
 	snprintf(name, RBUFF_S, "%s", data->fields.text);
 	clean_dbdata_struct(data);
