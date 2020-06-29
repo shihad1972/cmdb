@@ -68,6 +68,39 @@ const int spvar_no = 5;
 
 const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
 
+static int
+cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
+
+void
+display_cbc_ip_net_info(AILLIST *ip);
+
+static int
+cbc_print_os_build_type(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_os_info(AILLIST *os);
+
+static int
+cbc_print_build_varient(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static int
+cbc_print_build_locale(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_locale(AILLIST *list);
+
+static int
+cbc_print_build_scheme(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_scheme(AILLIST *list);
+
+static int
+cbc_print_build_times_and_users(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_times_and_users(AILLIST *bt);
+
 static void
 check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
 
@@ -116,6 +149,9 @@ fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 static int
 fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
+static void
+print_string_8_16(char *string, size_t len);
+
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
@@ -133,14 +169,320 @@ display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_INFO, "Cannot find server %s", cml->name);
 		goto cleanup;
 	}
-	printf("Build details for server %s\n", cml->name);
-
+	printf("Build details for server %s\n\n", cml->name);
+	if ((retval = cbc_print_ip_net_info(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print IP network information");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_os_build_type(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print os and build type");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_varient(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build varient");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_locale(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build locale");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_scheme(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build parition info");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_times_and_users(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build times and users");
+		goto cleanup;
+	}
 	cleanup:
 		ailsa_list_full_clean(server);
 		ailsa_list_full_clean(build);
 		return retval;
 }
 
+static int
+cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *ip = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, IP_NET_ON_SERVER_ID, list, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get network info");
+		goto cleanup;
+	}
+	if (ip->total == 0) {
+		ailsa_syslog(LOG_INFO, "No IP information found");
+		goto cleanup;
+	}
+	display_cbc_ip_net_info(ip);
+
+	cleanup:
+		ailsa_list_full_clean(ip);
+		return retval;
+}
+
+void
+display_cbc_ip_net_info(AILLIST *ip)
+{
+	if (!(ip))
+		return	;
+	char ip_text[SERVICE_LEN];
+	AILELEM *e = ip->head;
+	ailsa_data_s *d = e->data;
+	uint32_t ip_addr;
+
+	printf("Domain name:\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	ip_addr = htonl((uint32_t)d->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip_text, SERVICE_LEN);
+	printf("IP Address:\t%s\n", ip_text);
+}
+
+static int
+cbc_print_os_build_type(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *os = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_OS_AND_TYPE, list, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_AND_TYPE query failed");
+		goto cleanup;
+	}
+	if (os->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build OS found");
+		goto cleanup;
+	}
+	display_build_os_info(os);
+
+	cleanup:
+		ailsa_list_full_clean(os);
+		return retval;
+}
+
+static void
+display_build_os_info(AILLIST *os)
+{
+	if (!(os))
+		return;
+	AILELEM *e = os->head;
+	ailsa_data_s *d = e->data;
+
+	printf("Build OS:\t%s, ", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Version %s, ", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Architecture %s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Build Type:\t%s\n", d->data->text);
+}
+
+static int
+cbc_print_build_varient(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *v = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_VARIENT_ON_SERVER_ID, list, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_VARIENT_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (v->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build varient");
+		goto cleanup;
+	}
+	d = v->head->data;
+	printf("Build Varient\t%s\n", d->data->text);
+
+	cleanup:
+		ailsa_list_full_clean(v);
+		return retval;
+}
+
+static int
+cbc_print_build_locale(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, LOCALE_DETAILS_ON_SERVER_ID, list, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build locale");
+		goto cleanup;
+	}
+	display_build_locale(l);
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static void
+display_build_locale(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *e = list->head;
+	ailsa_data_s *d = e->data;
+
+	printf("Locale:\t\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Language:\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Timezone:\t%s\n", d->data->text);
+}
+
+static int
+cbc_print_build_times_and_users(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *bt = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_TIMES_AND_USERS, list, bt)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_TIMES_AND_USERS query failed");
+		goto cleanup;
+	}
+	if (bt->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot get build times and users");
+		goto cleanup;
+	}
+	display_build_times_and_users(bt);
+
+	cleanup:
+		ailsa_list_full_clean(bt);
+		return retval;
+}
+
+static void
+display_build_times_and_users(AILLIST *bt)
+{
+	if (!(bt))
+		return;
+	char *uname = NULL, *cname = NULL;
+	AILELEM *e = bt->head;
+	ailsa_data_s *d = e->data;
+
+	uname = cmdb_get_uname(d->data->number);
+	printf("Build created by %s on ", uname);
+	e = e->next;
+	d = e->data;
+#ifdef HAVE_MYSQL
+	if (d->type == AILSA_DB_TIME)
+		printf("%s\n", ailsa_convert_mysql_time(d->data->time));
+	else
+#endif // HAVE_MYSQL
+		printf("%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	cname = cmdb_get_uname(d->data->number);
+	printf("Build modified by %s on ", cname);
+	e = e->next;
+	d = e->data;
+#ifdef HAVE_MYSQL
+	if (d->type == AILSA_DB_TIME)
+		printf("%s\n", ailsa_convert_mysql_time(d->data->time));
+	else
+#endif // HAVE_MYSQL
+		printf("%s\n", d->data->text);
+	my_free(uname);
+	my_free(cname);
+	
+}
+
+static int
+cbc_print_build_scheme(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *ps = ailsa_db_data_list_init();
+	AILLIST *scheme = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_argument_query(cbc, PART_SCHEME_NAME_ON_SERVER_ID, list, scheme)) != 0) {
+		ailsa_syslog(LOG_ERR, "PART_SCHEME_NAME_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (scheme->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find partition scheme");
+		goto cleanup;
+	}
+	d = scheme->head->data;
+	printf("\nPart scheme\t%s\n", d->data->text);
+	if ((retval = ailsa_argument_query(cbc, PARTITIOINS_ON_SERVER_ID, list, ps)) != 0) {
+		ailsa_syslog(LOG_ERR, "PARTITIOINS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (ps->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find the partitions for the scheme");
+		goto cleanup;
+	}
+	printf("Mount Point\tFilesystem\tLogical Volume\n");
+	display_build_scheme(ps);
+
+	cleanup:
+		ailsa_list_full_clean(ps);
+		ailsa_list_full_clean(scheme);
+		return retval;
+}
+
+static void
+display_build_scheme(AILLIST *list)
+{
+	if (!(list))
+		return;
+	size_t len = 3;
+	size_t slen;
+	AILELEM *e = list->head;
+	ailsa_data_s *d = e->data;
+
+	if ((list->total % len) != 0)
+		return;
+	while (e) {
+		d = e->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		d = e->next->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		d = e->next->next->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		printf("\n");
+		e = ailsa_move_down_list(e, len);
+	}
+	printf("\n");
+}
+
+static void
+print_string_8_16(char *string, size_t len)
+{
+	if (!(string))
+		return;
+	if (len < 8)
+		printf("%s\t\t", string);
+	else
+		printf("%s\t", string);
+}
 void
 list_build_servers(ailsa_cmdb_s *cmc)
 {

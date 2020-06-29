@@ -641,7 +641,7 @@ ailsa_db_data_list_init(void)
 AILLIST *
 ailsa_dhcp_list_init(void)
 {
-	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_dhcp_list_init");
 	ailsa_list_init(list, ailsa_clean_dhcp);
 	return list;
 }
@@ -649,7 +649,7 @@ ailsa_dhcp_list_init(void)
 AILLIST *
 ailsa_iface_list_init(void)
 {
-	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_iface_list_init");
 	ailsa_list_init(list, ailsa_clean_iface);
 	return list;
 }
@@ -657,7 +657,7 @@ ailsa_iface_list_init(void)
 ailsa_data_s *
 ailsa_db_text_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_text_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_TEXT;
 	return data;
@@ -666,7 +666,7 @@ ailsa_db_text_data_init(void)
 ailsa_data_s *
 ailsa_db_lint_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_lint_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_LINT;
 	return data;
@@ -675,7 +675,7 @@ ailsa_db_lint_data_init(void)
 ailsa_data_s *
 ailsa_db_sint_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_sint_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_SINT;
 	return data;

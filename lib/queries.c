@@ -560,6 +560,43 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // IP_NET_ON_SERVER_ID
+"SELECT domainname, ip FROM build_ip WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_OS_AND_TYPE
+"SELECT os, os_version, arch, build_type FROM build_os bo \
+ LEFT JOIN build_type bt ON bt.bt_id = bo.bt_id \
+ LEFT JOIN build b ON b.os_id = bo.os_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_VARIENT_ON_SERVER_ID
+"SELECT varient FROM varient v LEFT JOIN build b ON v.varient_id = b.varient_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // LOCALE_DETAILS_ON_SERVER_ID
+"SELECT locale, language, timezone FROM locale l LEFT JOIN build b ON l.locale_id = b.locale_id where server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_TIMES_AND_USERS
+"SELECT cuser, ctime, muser, mtime FROM build WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // PART_SCHEME_NAME_ON_SERVER_ID
+"SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON b.def_scheme_id = ss.def_scheme_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // PARTITIOINS_ON_SERVER_ID
+"SELECT mount_point, filesystem, logical_volume FROM default_part dp LEFT JOIN build b ON dp.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	}
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
