@@ -512,6 +512,8 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
+	if (!(cml->partition))
+		cml->partition = ailsa_calloc(RBUFF_S, "cml->partition in write_build_config");
 	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
 		return retval;
 	if ((retval = get_scheme_name(cmc, cml->server_id, cml->partition)) != 0)
@@ -988,10 +990,16 @@ fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
 	char *bline = list->fields.text;
 	CHECK_DATA_LIST()
 	char *alias = list->fields.text;
-	snprintf(cml->os, CONF_S, "%s", alias);
+	if (!(cml->os))
+		cml->os = strndup(alias, CONF_S);
+	else
+		snprintf(cml->os, CONF_S, "%s", alias);
 	CHECK_DATA_LIST()
 	char *osver = list->fields.text;
-	snprintf(cml->os_version, MAC_S, "%s", osver);
+	if (!(cml->os_version))
+		cml->os_version = strndup(osver, MAC_S);
+	else
+		snprintf(cml->os_version, MAC_S, "%s", osver);
 	CHECK_DATA_LIST()
 	char *country = list->fields.text;
 	CHECK_DATA_LIST()
@@ -1057,7 +1065,10 @@ cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg,
 url, cml->name);
 	}
 	/* Store url for use in fill_packages */
-	snprintf(cml->config, CONF_S, "%s", url);
+	if (!(cml->config))
+		cml->config = strndup(url, CONF_S);
+	else
+		snprintf(cml->config, CONF_S, "%s", url);
 }
 
 static void
@@ -1235,7 +1246,10 @@ d-i clock-setup/ntp-server string %s\n\
 	snprintf(build->string + build->size, len + 1, "%s", output);
 	build->size += len;
 	/* Store the arch for use in fill_kernel */
-	snprintf(cml->arch, MAC_S, "%s", arch);
+	if (!(cml->arch))
+		cml->arch = strndup(arch, MAC_S);
+	else
+		snprintf(cml->arch, MAC_S, "%s", arch);
 }
 
 static int
@@ -1380,7 +1394,10 @@ add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
 	short int lvm = data->next->fields.small;
 	size_t plen;
 
-	snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
+	if (!(cml->harddisk))
+		cml->harddisk = strndup(data->fields.text, CONF_S);
+	else
+		snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
 	if (lvm == 0)
 		snprintf(disk, FILE_S, "\
 d-i partman-auto/disk string %s\n\
