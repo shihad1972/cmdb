@@ -32,8 +32,10 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 /* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -105,12 +107,6 @@ static void
 check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
 
 static void
-fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf);
-
-static void
-fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf);
-
-static void
 fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
 
 static void
@@ -151,6 +147,18 @@ fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *buil
 
 static void
 print_string_8_16(char *string, size_t len);
+
+static int
+cbc_get_dhcp_info(ailsa_cmdb_s *cbc, AILLIST *dhcp);
+
+static int
+cbc_fill_dhcp_conf(AILLIST *db, AILLIST *dhcp);
+
+static int
+cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp);
+
+static ailsa_tftp_s *
+cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -512,27 +520,19 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
-	if (!(cml->partition))
-		cml->partition = ailsa_calloc(RBUFF_S, "cml->partition in write_build_config");
-	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-		return retval;
-	if ((retval = get_scheme_name(cmc, cml->server_id, cml->partition)) != 0)
-		return retval;
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
 		printf("Failed to write dhcpd.hosts file\n");
 		return retval;
 	} else {
 		printf("dhcpd.hosts file written\n");
 	}
-/* This will add the OS alias to cml. This will be useful in writing the
-    host script */
 	if ((retval = write_tftp_config(cmc, cml)) != 0) {
 		printf("Failed to write tftp configuration\n");
 		return retval;
 	} else {
 		printf("tftp configuration file written\n");
 	}
-	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
+/*	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
 	    (strncmp(cml->os, "ubuntu", COMM_S) == 0)) {
 		if ((retval = write_preseed_build_file(cmc, cml)) != 0) {
 			printf("Failed to write build file\n");
@@ -557,133 +557,225 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	} else {
 		printf("OS %s does not exist\n", cml->os);
 		return OS_NOT_FOUND;
-	}
+	} */
 	return retval;
 }
 
 int
 write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char *ip, line[RBUFF_S];
-	int retval = NONE, type = DHCP_DETAILS;
-	unsigned int max;
-	uint32_t ip_addr;
-	dbdata_s *data;
-	cbc_dhcp_config_s *dhconf;
-	string_len_s *dhcp;
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	char file[DOMAIN_LEN];
+	int retval;
+	AILLIST *dhcp = ailsa_dhcp_config_list_init();
 
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in write_dhcp_config");
-	if (!(dhcp = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "dhcp in write_dhcp_config");
-	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
-		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
-	init_string_len(dhcp);
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_DHCP_B_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_DHCP_B_ERR;
-	} else {
-		ip_addr = htonl((uint32_t)data->next->fields.number);
-		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-		fill_dhconf(cml->name, data, ip, dhconf);
-		snprintf(line, RBUFF_S, "host %s { hardware ethernet %s; fixed-address %s; \
-option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
-data->next->next->fields.text);
-		retval = 0;
+	if ((retval = cbc_get_dhcp_info(cmc, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get dhcp info");
+		goto cleanup;
 	}
-	snprintf(dhconf->file, CONF_S, "%s/dhcpd.hosts", cmc->dhcpconf);
-	fill_dhcp_hosts(line, dhcp, dhconf);
-	retval = write_file(dhconf->file, dhcp->string);
-	/* Could use a free_strings macro here - check out 21st century C */
-	free(ip);
-	free(dhcp->string);
-	free(dhcp);
-	free(dhconf);
-	clean_dbdata_struct(data);
-	return retval;
+	snprintf(file, DOMAIN_LEN, "%sdhcpd.hosts", cmc->dhcpconf);
+	if ((retval = cbc_write_dhcp_config_file(file, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write dhcp config file");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(dhcp);
+		return retval;
 }
 
-static void
-fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf)
+static int
+cbc_get_dhcp_info(ailsa_cmdb_s *cbc, AILLIST *dhcp)
 {
-	strncpy(dhconf->name, name, CONF_S);
-	strncpy(dhconf->eth, data->fields.text, MAC_S);
-	strncpy(dhconf->ip, ip, RANGE_S);
-	strncpy(dhconf->domain, data->next->next->fields.text, RBUFF_S);
+	if (!(cbc || !(dhcp)))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *db = ailsa_db_data_list_init();
+	if ((retval = ailsa_basic_query(cbc, DHCP_INFORMATION, db)) != 0) {
+		ailsa_syslog(LOG_ERR, "DHCP_INFORMATION query failed in cbc_get_dhcp_info");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_dhcp_conf(db, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill dhcp list");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(db);
+		return retval;
 }
 
-static void
-fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
+static int
+cbc_fill_dhcp_conf(AILLIST *db, AILLIST *dhcp)
 {
-	char *buff, *cont;
-	FILE *dhcp_hosts;
-	size_t len = 0, blen;
+	if (!(db) || !(dhcp))
+		return AILSA_NO_DATA;
+	int retval;
+	char ip_addr[HOST_LEN];
+	size_t total = 4;
+	uint32_t ip;
+	AILELEM *e = db->head;
+	ailsa_data_s *d = e->data;
+	ailsa_dhcp_conf_s *p;
 
-	if (!(buff = calloc(RBUFF_S,  sizeof(char))))
-		report_error(MALLOC_FAIL, "buff in fill_dhcp_hosts");
-	if (!(dhcp_hosts = fopen(dhconf->file, "r")))
-		report_error(FILE_O_FAIL, dhconf->file);
-	while (fgets(buff, RBUFF_S, dhcp_hosts)) {
-		blen = strlen(buff);
-		if (dhcp->len < (blen + len))
-			resize_string_buff(dhcp);
-		cont = dhcp->string;
-		if (!(strstr(buff, dhconf->name))) {
-			if (!(strstr(buff, dhconf->eth))) {
-				if (!(strstr(buff, dhconf->ip))) {
-					strncpy(cont + len, buff, blen + 1);
-					len += blen;
-				}
-			}
+	if ((db->total % total) != 0)
+		return -1;
+	while (e) {
+		memset(ip_addr, 0, HOST_LEN);
+		d = e->data;
+		p = ailsa_calloc(sizeof(ailsa_dhcp_conf_s), "p in cbc_fill_dhcp_conf");
+		p->name = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->data;
+		p->mac = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->data;
+		ip = htonl((uint32_t)d->data->number);
+		if (!(inet_ntop(AF_INET, &ip, ip_addr, HOST_LEN)) != 0) {
+			retval = AILSA_IP_CONVERT_FAILED;
+			goto cleanup;
 		}
+		p->ip = strndup(ip_addr, HOST_LEN);
+		d = e->next->next->next->data;
+		p->domain = strndup(d->data->text, DOMAIN_LEN);
+		if ((retval = ailsa_list_insert(dhcp, p)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert data into list in cbc_fill_dhcp_conf");
+			goto cleanup;
+		}
+		e = ailsa_move_down_list(e, total);
 	}
-	fclose(dhcp_hosts);
-	if (dhcp->len < (len + RBUFF_S))
-		resize_string_buff(dhcp);
-	cont = dhcp->string;
-	strncpy(cont + len, line, RBUFF_S);
-	free(buff);
+	cleanup:
+		return retval;
+}
+
+static int
+cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp)
+{
+	if (!(dhcp))
+		return AILSA_NO_DATA;
+	int retval, fd, flags;
+	mode_t um, mask;
+	AILELEM *e = dhcp->head;
+	ailsa_dhcp_conf_s *d;
+
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(filename, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open dhcp config file %s: %s", filename, strerror(errno));
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	while (e) {
+		d = e->data;
+		dprintf(fd, "host %s { hardware ethernet %s; fixed-address %s; option domain-name \"%s\"; }\n",
+		  d->name, d->mac, d->ip, d->domain);
+		e = e->next;
+	}
+	close(fd);
+	mask = umask(um);
+	return retval;
 }
 
 int
 write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE, type = BUILD_IP_FOR_SERVER_ID;
-	dbdata_s *data;
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	char filename[DOMAIN_LEN];
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *locale = ailsa_db_data_list_init();
+	AILLIST *tftp = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+	ailsa_tftp_s *l;
 
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return CANNOT_FIND_BUILD_IP;
-	} else if (retval > 1) 
-		fprintf(stderr, "Multiple build IP's! Using the first one!\n");
-	snprintf(pxe, RBUFF_S, "%s%s%lX", cmc->tftpdir, cmc->pxe,
-		 data->fields.number);
-	clean_dbdata_struct(data);
-
-	type = TFTP_DETAILS;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_TFTP_B_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_TFTP_B_ERR;
-	} else {
-		fill_tftp_output(cml, data, out);
-		retval = write_file(pxe, out);
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
-	return retval;
+	if ((retval = ailsa_argument_query(cmc, IP_NET_ON_SERVER_ID, server, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "IP_NET_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (ip->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot get build IP information");
+		goto cleanup;
+	}
+	if (ip->head->next)
+		d = ip->head->next->data;
+	else
+		goto cleanup;
+	snprintf(filename, DOMAIN_LEN, "%s%s%lX", cmc->tftpdir, cmc->pxe, d->data->number);
+	if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_SERVER_ID, server, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	d = os->head->data;
+	cml->os = strndup(d->data->text, MAC_LEN);
+	if ((retval = ailsa_argument_query(cmc, FULL_LOCALE_DETAILS_ON_SERVER_ID, server, locale)) != 0) {
+		ailsa_syslog(LOG_ERR, "FULL_LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, TFTP_DETAILS_ON_SERVER_ID, server, tftp)) != 0) {
+		ailsa_syslog(LOG_ERR, "TFTP_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (!(l = cbc_fill_tftp_values(os, locale, tftp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill ailsa_tftp_s struct with tftp values");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(ip);
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(locale);
+		ailsa_list_full_clean(tftp);
+		return retval;
+}
+
+static ailsa_tftp_s *
+cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp)
+{
+	if (!(os) || !(loc) || !(tftp))
+		return NULL;
+	ailsa_tftp_s *ret = ailsa_calloc(sizeof(ailsa_tftp_s), "ret in cbc_fill_tftp_values");
+	ailsa_data_s *d = os->head->data;
+
+	if ((os->total == 0) || (loc->total == 0) || (tftp->total == 0)) {
+		ailsa_syslog(LOG_ERR, "Empty list passed into cbc_fill_tftp_values");
+		goto cleanup;
+	}
+	if (((os->total % 3) != 0) || ((loc->total % 3) != 0) || ((tftp->total %4) != 0)) {
+		ailsa_syslog(LOG_ERR, "Wrong length for lists in cbc_fill_tftp_values");
+		goto cleanup;
+	}
+	ret->alias = strndup(d->data->text, MAC_LEN);
+	d = os->head->next->data;
+	ret->version = strndup(d->data->text, MAC_LEN);
+	d = os->head->next->next->data;
+	ret->arch = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->data;
+	ret->country = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->next->data;
+	ret->arch = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->next->next->data;
+	ret->keymap = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->data;
+	ret->boot_line = strndup(d->data->text, CONFIG_LEN);
+	d = tftp->head->next->data;
+	ret->arg = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->next->next->data;
+	ret->url = strndup(d->data->text, CONFIG_LEN);
+	d = tftp->head->next->next->next->data;
+	ret->net_int = strndup(d->data->text, SERVICE_LEN);
+	return ret;
+
+	cleanup:
+		ailsa_clean_tftp(ret);
+		return NULL;
 }
 
 int
@@ -1346,6 +1438,8 @@ fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i)
 	len = strlen(pack); /* should always be 26 */
 	next = pack + len;
 	for (j = 0; j < k; j++) {
+		if (!(list))
+			break;
 		snprintf(next, HOST_S, " %s", list->fields.text);
 		len = strlen(list->fields.text);
 		next = next + len + 1;

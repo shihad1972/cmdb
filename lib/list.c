@@ -65,7 +65,6 @@ ailsa_list_clean(AILLIST *list)
 void
 ailsa_list_destroy(AILLIST *list)
 {
-
 	if (!(list))
 		return;
 	ailsa_list_clean(list);

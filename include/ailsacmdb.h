@@ -438,11 +438,31 @@ typedef struct ailsa_dhcp_s {
 	unsigned long int gw, nw, nm, ns, ip;
 } ailsa_dhcp_s;
 
+typedef struct ailsa_dhcp_conf_s {
+	char *name;
+	char *mac;
+	char *ip;
+	char *domain;
+} ailsa_dhcp_conf_s;
+
 typedef struct ailsa_iface_s {
 	char *name;
 	int flag;
 	uint32_t ip, sip, fip, nm, bc, nw;
 } ailsa_iface_s;
+
+typedef struct ailsa_tftp_s {
+	char *alias;
+	char *version;
+	char *arch;
+	char *country;
+	char *locale;
+	char *keymap;
+	char *boot_line;
+	char *arg;
+	char *url;
+	char *net_int;
+} ailsa_tftp_s;
 
 // library version info
 
@@ -514,6 +534,10 @@ void
 ailsa_clean_data(void *data);
 void
 ailsa_clean_dhcp(void *data);
+void
+ailsa_clean_dhcp_config(void *dhcp);
+void
+ailsa_clean_tftp(void *tftp);
 void
 ailsa_clean_iface(void *data);
 void *
@@ -643,6 +667,9 @@ ailsa_iface_list_init(void);
 
 AILLIST *
 ailsa_dhcp_list_init(void);
+
+AILLIST *
+ailsa_dhcp_config_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

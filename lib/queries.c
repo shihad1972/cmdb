@@ -74,6 +74,10 @@ const char *basic_queries[] = {
 "SELECT net_range FROM rev_zones WHERE type = 'master'", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
 "SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
+"SELECT s.name, b.mac_addr, ip.ip, db.domain FROM build b \
+ LEFT JOIN server s ON s.server_id = b.server_id \
+ LEFT JOIN build_ip ip ON ip.ip_id = b.ip_id \
+ LEFT JOIN build_domain db ON db.bd_id = ip.bd_id", // DHCP_INFORMATION
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -601,6 +605,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT DISTINCT alias FROM build_os WHERE os = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_DETAILS_ON_SERVER_ID
+"SELECT alias, os_version, arch FROM build_os WHERE os_id = (SELECT os_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // FULL_LOCALE_DETAILS_ON_SERVER_ID
+"SELECT country, locale, keymap FROM locale WHERE locale_id = (SELECT locale_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // TFTP_DETAILS_ON_SERVER_ID
+"SELECT boot_line, net_inst_int, arg, url FROM build b LEFT JOIN build_os bo on b.os_id = bo.os_id LEFT JOIN build_type bt on bt.bt_id = bo.bt_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
 	},
 };
 

@@ -442,6 +442,8 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 		ailsa_syslog(LOG_ERR, "Cannot add . to end of hostmaster");
 	if (ailsa_add_trailing_slash(cmdb->dir) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot add / to the end of DIR");
+	if (ailsa_add_trailing_slash(cmdb->pxe) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of PXE");
 	if (ailsa_add_trailing_slash(cmdb->bind) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot add / to the end of BIND");
 	if (ailsa_add_trailing_slash(cmdb->tmpdir) != 0)
