@@ -617,7 +617,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // TFTP_DETAILS_ON_SERVER_ID
-"SELECT boot_line, net_inst_int, arg, url FROM build b LEFT JOIN build_os bo on b.os_id = bo.os_id LEFT JOIN build_type bt on bt.bt_id = bo.bt_id WHERE server_id = ?",
+"SELECT boot_line, net_inst_int, arg, url, build_type FROM build b LEFT JOIN build_os bo on b.os_id = bo.os_id LEFT JOIN build_type bt on bt.bt_id = bo.bt_id WHERE server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},

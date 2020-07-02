@@ -455,6 +455,7 @@ typedef struct ailsa_tftp_s {
 	char *alias;
 	char *version;
 	char *arch;
+	char *build_type;
 	char *country;
 	char *locale;
 	char *keymap;

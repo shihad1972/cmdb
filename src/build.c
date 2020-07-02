@@ -107,9 +107,6 @@ static void
 check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
 
 static void
-fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
-
-static void
 fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 static void
@@ -159,6 +156,9 @@ cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp);
 
 static ailsa_tftp_s *
 cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp);
+
+static int
+cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *tftp);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -690,7 +690,7 @@ write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	AILLIST *locale = ailsa_db_data_list_init();
 	AILLIST *tftp = ailsa_db_data_list_init();
 	ailsa_data_s *d;
-	ailsa_tftp_s *l;
+	ailsa_tftp_s *l = NULL;
 
 	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
@@ -727,7 +727,13 @@ write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot fill ailsa_tftp_s struct with tftp values");
 		goto cleanup;
 	}
+	if ((retval = cbc_write_tftp_config_file(cml, filename, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write tftp boot config file");
+		goto cleanup;
+	}
 	cleanup:
+		if (l)
+			ailsa_clean_tftp(l);
 		ailsa_list_full_clean(server);
 		ailsa_list_full_clean(ip);
 		ailsa_list_full_clean(os);
@@ -748,7 +754,7 @@ cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp)
 		ailsa_syslog(LOG_ERR, "Empty list passed into cbc_fill_tftp_values");
 		goto cleanup;
 	}
-	if (((os->total % 3) != 0) || ((loc->total % 3) != 0) || ((tftp->total %4) != 0)) {
+	if (((os->total % 3) != 0) || ((loc->total % 3) != 0) || ((tftp->total % 5) != 0)) {
 		ailsa_syslog(LOG_ERR, "Wrong length for lists in cbc_fill_tftp_values");
 		goto cleanup;
 	}
@@ -760,22 +766,75 @@ cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp)
 	d = loc->head->data;
 	ret->country = strndup(d->data->text, SERVICE_LEN);
 	d = loc->head->next->data;
-	ret->arch = strndup(d->data->text, SERVICE_LEN);
+	ret->locale = strndup(d->data->text, SERVICE_LEN);
 	d = loc->head->next->next->data;
 	ret->keymap = strndup(d->data->text, SERVICE_LEN);
 	d = tftp->head->data;
 	ret->boot_line = strndup(d->data->text, CONFIG_LEN);
 	d = tftp->head->next->data;
-	ret->arg = strndup(d->data->text, SERVICE_LEN);
-	d = tftp->head->next->next->data;
-	ret->url = strndup(d->data->text, CONFIG_LEN);
-	d = tftp->head->next->next->next->data;
 	ret->net_int = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->next->next->data;
+	ret->arg = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->next->next->next->data;
+	ret->url = strndup(d->data->text, CONFIG_LEN);
+	d = tftp->head->next->next->next->next->data;
+	ret->build_type = strndup(d->data->text, MAC_LEN);
 	return ret;
 
 	cleanup:
 		ailsa_clean_tftp(ret);
 		return NULL;
+}
+
+static int
+cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *tftp)
+{
+	if (!(filename) || !(tftp))
+		return AILSA_NO_DATA;
+	char *host = cml->name;
+	int retval, fd, flags;
+	mode_t um, mask;
+
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(filename, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open tftp config file %s: %s", filename, strerror(errno));
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	dprintf(fd, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img ", host, host, tftp->alias, tftp->version, tftp->arch, tftp->alias, tftp->version, tftp->arch);
+	if (strncmp(tftp->build_type, "preseed", SERVICE_LEN) == 0) {
+		dprintf(fd, "\
+county=%s console-setup/layoutcode=%s %s %s=%s%s.cfg ", tftp->country, tftp->country, tftp->boot_line, tftp->arg, tftp->url, host);
+		if (cml->gui > 0) {
+			dprintf(fd, "\
+vga=788\n\n");
+		} else {
+			dprintf(fd, "\
+vga=off console=ttyS0,115200n8\n\n");
+		}
+	}
+	if (strncmp(tftp->build_type, "kickstart", SERVICE_LEN) == 0) {
+		dprintf(fd, "\
+ksdevice=%s ramdisk_size=8192 %s=%s%s.cfg ", tftp->net_int, tftp->arg, tftp->url, host);
+		if (cml->gui > 0) {
+			dprintf(fd, "\
+console=tty0\n\n");
+		} else {
+			dprintf(fd, "\
+console=ttyS0,115200n8\n\n");
+		}
+	}
+	close(fd);
+	mask = umask(um);
+	return retval;
 }
 
 int
@@ -1073,94 +1132,6 @@ chmod 755 %s\n\
 		free(newarg);
 		newarg = 0;
 	}
-}
-
-static void
-fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
-{
-	dbdata_s *list = data;
-	char *bline = list->fields.text;
-	CHECK_DATA_LIST()
-	char *alias = list->fields.text;
-	if (!(cml->os))
-		cml->os = strndup(alias, CONF_S);
-	else
-		snprintf(cml->os, CONF_S, "%s", alias);
-	CHECK_DATA_LIST()
-	char *osver = list->fields.text;
-	if (!(cml->os_version))
-		cml->os_version = strndup(osver, MAC_S);
-	else
-		snprintf(cml->os_version, MAC_S, "%s", osver);
-	CHECK_DATA_LIST()
-	char *country = list->fields.text;
-	CHECK_DATA_LIST()
-	CHECK_DATA_LIST()
-	CHECK_DATA_LIST()
-	char *arg = list->fields.text;
-	CHECK_DATA_LIST()
-	char *url = list->fields.text;
-	CHECK_DATA_LIST()
-	char *arch = list->fields.text;
-	CHECK_DATA_LIST()
-	char *net_inst = list->fields.text;
-	if (strncmp(alias, "debian", COMM_S) == 0) {
-		if (cml->gui > 0)
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
-url, cml->name);
-		else
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg vga=off console=ttyS0,115200n8\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
-url, cml->name);
-	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
-		if (cml->gui > 0)
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img country=%s \
-console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
-bline, arg, url, cml->name);
-		else
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img country=%s \
-console-setup/layoutcode=%s %s %s=%s%s.cfg console=ttyS0,115200n8\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
-bline, arg, url, cml->name);
-	} else if ((strncmp(alias, "centos", COMM_S) == 0) ||
-		   (strncmp(alias, "fedora", COMM_S) == 0)) {
-		snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img ksdevice=%s vga=off console=ttyS0,115200n8 ramdisk_size=8192\
- %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
-url, cml->name);
-	}
-	/* Store url for use in fill_packages */
-	if (!(cml->config))
-		cml->config = strndup(url, CONF_S);
-	else
-		snprintf(cml->config, CONF_S, "%s", url);
 }
 
 static void

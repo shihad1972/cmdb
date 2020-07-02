@@ -338,6 +338,8 @@ ailsa_clean_tftp(void *tftp)
 		my_free(data->url);
 	if (data->net_int)
 		my_free(data->net_int);
+	if (data->build_type)
+		my_free(data->build_type);
 	my_free(data);
 }
 
