@@ -465,6 +465,34 @@ typedef struct ailsa_tftp_s {
 	char *net_int;
 } ailsa_tftp_s;
 
+typedef struct ailsa_build_s {
+	char *locale;
+	char *language;
+	char *keymap;
+	char *net_int;
+	char *ip;
+	char *ns;
+	char *nm;
+	char *gw;
+	char *ntp;
+	char *host;
+	char *domain;
+	char *mirror;
+	char *os;
+	char *version;
+	char *arch;
+	short int do_ntp;
+} ailsa_build_s;
+
+typedef struct ailsa_partition_s {
+	unsigned long int min;
+	unsigned long int max;
+	unsigned long int pri;
+	char *mount;
+	char *fs;
+	char *logvol;
+} ailsa_partition_s;
+
 // library version info
 
 void
@@ -539,6 +567,10 @@ void
 ailsa_clean_dhcp_config(void *dhcp);
 void
 ailsa_clean_tftp(void *tftp);
+void
+ailsa_clean_build(void *build);
+void
+ailsa_clean_partition(void *partition);
 void
 ailsa_clean_iface(void *data);
 void *
@@ -671,6 +703,9 @@ ailsa_dhcp_list_init(void);
 
 AILLIST *
 ailsa_dhcp_config_list_init(void);
+
+AILLIST *
+ailsa_partition_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

@@ -621,6 +621,32 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // PRESEED_BUILD_DETAILS
+"SELECT locale, language, keymap, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, arch \
+ FROM build b LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
+ LEFT JOIN build_os bo ON b.os_id = bo.os_id \
+ LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
+ LEFT JOIN locale l ON b.locale_id = l.locale_id \
+ LEFT JOIN build_type bt ON bt.bt_id = bo.bt_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_TYPE_ON_SERVER_ID
+"SELECT build_type FROM build_type WHERE bt_id = (SELECT bt_id FROM build_os WHERE os_id = (SELECT os_id FROM build WHERE server_id = ?))",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_PARTITIONS_ON_SERVER_ID
+"SELECT minimum, maximum, priority, mount_point, filesystem, logical_volume FROM default_part\
+ WHERE def_scheme_id = (SELECT def_scheme_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_PACKAGES_ON_SERVER_ID
+"SELECT package FROM packages p LEFT JOIN build b ON p.varient_id = b.varient_id AND p.os_id = b.os_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

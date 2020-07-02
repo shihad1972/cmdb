@@ -344,6 +344,59 @@ ailsa_clean_tftp(void *tftp)
 }
 
 void
+ailsa_clean_build(void *build)
+{
+	if (!(build))
+		return;
+	ailsa_build_s *data = build;
+	if (data->locale)
+		my_free(data->locale);
+	if (data->language)
+		my_free(data->language);
+	if (data->keymap)
+		my_free(data->keymap);
+	if (data->net_int)
+		my_free(data->net_int);
+	if (data->ip)
+		my_free(data->ip);
+	if (data->ns)
+		my_free(data->ns);
+	if (data->nm)
+		my_free(data->nm);
+	if (data->gw)
+		my_free(data->gw);
+	if (data->ntp)
+		my_free(data->ntp);
+	if (data->host)
+		my_free(data->host);
+	if (data->domain)
+		my_free(data->domain);
+	if (data->mirror)
+		my_free(data->mirror);
+	if (data->os)
+		my_free(data->os);
+	if (data->version)
+		my_free(data->version);
+	if (data->arch)
+		my_free(data->arch);
+	my_free(data);
+}
+
+void
+ailsa_clean_partition(void *partition)
+{
+	if (!(partition))
+		return;
+	ailsa_partition_s *data = partition;
+	if (data->mount)
+		my_free(data->mount);
+	if (data->fs)
+		my_free(data->fs);
+	if (data->logvol)
+		my_free(data->logvol);
+	my_free(data);
+}
+void
 ailsa_clean_dhcp_config(void *dhcp)
 {
 	if (!(dhcp))
@@ -706,6 +759,14 @@ ailsa_dhcp_config_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_dhcp_config_list_init");
 	ailsa_list_init(list, ailsa_clean_dhcp_config);
+	return list;
+}
+
+AILLIST *
+ailsa_partition_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_partition_list_init");
+	ailsa_list_init(list, ailsa_clean_partition);
 	return list;
 }
 
