@@ -42,18 +42,6 @@ int
 write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
-write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
-write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
-write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
 write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int

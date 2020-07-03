@@ -469,6 +469,7 @@ typedef struct ailsa_build_s {
 	char *locale;
 	char *language;
 	char *keymap;
+	char *country;
 	char *net_int;
 	char *ip;
 	char *ns;

@@ -71,6 +71,24 @@ const int spvar_no = 5;
 const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
 
 static int
+write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
+
+static int
+write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_preseed_net_mirror(int fd, ailsa_build_s *bld);
+
+static int
 cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
 
 void
@@ -105,12 +123,6 @@ display_build_times_and_users(AILLIST *bt);
 
 static void
 check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
-
-static void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
-
-static void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 static int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
@@ -159,6 +171,9 @@ cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp);
 
 static int
 cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *tftp);
+
+static ailsa_build_s *
+cbc_fill_build_details(AILLIST *build);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -521,47 +536,25 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	int retval = NONE;
 
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
-		printf("Failed to write dhcpd.hosts file\n");
+		ailsa_syslog(LOG_ERR, "Failed to write dhcpd.hosts file");
 		return retval;
 	} else {
 		printf("dhcpd.hosts file written\n");
 	}
 	if ((retval = write_tftp_config(cmc, cml)) != 0) {
-		printf("Failed to write tftp configuration\n");
+		ailsa_syslog(LOG_ERR, "Failed to write tftp configuration");
 		return retval;
 	} else {
 		printf("tftp configuration file written\n");
 	}
-/*	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
-	    (strncmp(cml->os, "ubuntu", COMM_S) == 0)) {
-		if ((retval = write_preseed_build_file(cmc, cml)) != 0) {
-			printf("Failed to write build file\n");
-			return retval;
-		} else {
-			printf("build file written\n");
-		}
-		if ((retval = write_pre_host_script(cmc, cml)) != 0) {
-			fprintf(stderr, "Failed to write host script\n");
-			return retval;
-		} else {
-			printf("host script written\n");
-		}
-	} else if ((strncmp(cml->os, "centos", COMM_S) == 0) ||
-	           (strncmp(cml->os, "fedora", COMM_S) == 0)) {
-		if ((retval = write_kickstart_build_file(cmc, cml)) != 0) {
-			printf("Failed to write build file\n");
-			return retval;
-		} else {
-			printf("build file written\n");
-		}
-	} else {
-		printf("OS %s does not exist\n", cml->os);
-		return OS_NOT_FOUND;
-	} */
+	if ((retval = write_build_config_file(cmc, cml)) != 0) {
+		ailsa_syslog(LOG_ERR, "Failed to write build file");
+		return retval;
+	}
 	return retval;
 }
 
-int
+static int
 write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	if (!(cmc) || !(cml))
@@ -677,7 +670,7 @@ cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp)
 	return retval;
 }
 
-int
+static int
 write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	if (!(cmc) || !(cml))
@@ -837,47 +830,89 @@ console=ttyS0,115200n8\n\n");
 	return retval;
 }
 
-int
+static int
+write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
+{
+	if (!(cbc) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list in write_build_config_file");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, BUILD_TYPE_ON_SERVER_ID, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_TYPE_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build type for server %s", cml->name);
+		goto cleanup;
+	}
+	d = build->head->data;
+	if (strcmp(d->data->text, "preseed") == 0) {
+		if ((retval = write_preseed_build_file(cbc, cml)) != 0)
+			goto cleanup;
+	} else if (strcmp(d->data->text, "kickstart") == 0) {
+		if ((retval = write_kickstart_build_file(cbc, cml)) != 0)
+			goto cleanup;
+	} else {
+		ailsa_syslog(LOG_INFO, "Build type %s not supported", d->data->text);
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(build);
+		return retval;
+}
+static int
 write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char file[NAME_S];
-	int retval = NONE, type = NET_BUILD_DETAILS;
-	dbdata_s *data;
-	string_len_s *build;
+	char file[DOMAIN_LEN];
+	int retval, fd, flags;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *partitions = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_partition_list_init();
+	AILLIST *packages = ailsa_db_data_list_init();
+	ailsa_build_s *bld = NULL;
+	mode_t um, mask;
 
-	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
-	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
-	init_string_len(build);
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_NET_BUILD_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_NET_BUILD_ERR;
-	} else {
-		fill_net_output(cml, data, build);
-		retval = 0;
+	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server ID to list in write_preseed_build_file");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
-
-	type = BUILD_MIRROR;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BUILD_MIRR_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BUILD_MIRR_ERR;
-	} else {
-		fill_mirror_output(cml, data, build);
-		retval = 0;
+	if ((retval = ailsa_argument_query(cmc, PRESEED_BUILD_DETAILS, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "PRESEED_BUILD_DETAILS query failed");
+		goto cleanup;
 	}
-
-	if ((retval = fill_partition(cmc, cml, build)) != 0)
+	if (!(bld = cbc_fill_build_details(build))) {
+		ailsa_syslog(LOG_ERR, "Cannot fill build details");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DISK_DEV_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PARTITIONS_ON_SERVER_ID, server, partitions)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
+		retval = FILE_O_FAIL;
+		goto cleanup;
+	}
+	if ((retval = write_preseed_net_mirror(fd, bld)) != 0)
+		goto cleanup;
+/*	if ((retval = fill_partition(cmc, cml, build)) != 0)
 		return retval;
 	if ((retval = fill_kernel(cml, build)) != 0)
 		return retval;
@@ -898,11 +933,171 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	if ((retval = fill_system_packages(cmc, cml, build)) != 0)
 		return retval;
 	retval = write_file(file, build->string);
-	clean_string_len(build);
+	clean_string_len(build); */
+	cleanup:
+		if (fd > 0)
+			close(fd);
+		mask = umask(um);
+		if (bld)
+			ailsa_clean_build(bld);
+		ailsa_list_full_clean(build);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(packages);
+		ailsa_list_full_clean(partitions);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(server);
+		return retval;
+}
+
+static int
+write_preseed_net_mirror(int fd, ailsa_build_s *bld)
+{
+	if (!(bld))
+		return AILSA_NO_DATA;
+	int retval = 0;
+
+	dprintf(fd, "\
+d-i console-setup/ask_detect boolean false\n\
+d-i debian-installer/locale string %s\n\
+d-i debian-installer/language string %s\n\
+d-i console-keymaps-at/keymap select %s\n\
+d-i keyboard-configuration/xkb-keymap select %s\n\
+d-i keymap select %s\n\
+\n", bld->locale, bld->language, bld->keymap, bld->keymap, bld->keymap);
+	if (strncmp(bld->os, "debian", SERVICE_LEN) == 0)
+		dprintf(fd, "\
+d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n");
+	dprintf(fd, "\
+d-i netcfg/enable boolean true\n\
+d-i netcfg/confirm_static boolean true\n\
+d-i netcfg/disable_dhcp boolean true\n\
+d-i netcfg/choose_interface select %s\n\
+d-i netcfg/get_nameservers string %s\n\
+d-i netcfg/get_ipaddress string %s\n\
+d-i netcfg/get_netmask string %s\n\
+d-i netcfg/get_gateway string %s\n\
+d-i netcfg/get_hostname string %s\n\
+d-i netcfg/get_domain string %s\n\
+\n", bld->net_int, bld->ns, bld->ip, bld->nm, bld->gw, bld->host, bld->domain);
+	if (strncmp(bld->os, "debian", SERVICE_LEN) == 0)
+		dprintf(fd, "\
+d-i netcfg/wireless_wep string\n\
+d-i hw-detect/load_firmware boolean true\n");
+	dprintf(fd, "\
+\n\
+d-i mirror/country string manual\n\
+d-i mirror/http/hostname string %s\n\
+d-i mirror/http/directory string /%s\n\
+d-i mirror/suite string %s\n\
+\n\
+### Account setup\n\
+d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
+d-i passwd/user-fullname string Admin User\n\
+d-i passwd/username string sysadmin\n\
+d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
+d-i clock-setup/utc boolean true\n\
+\n\
+d-i time/zone string %s\n\
+", bld->mirror, bld->os, bld->version, bld->country);
+	if (bld->do_ntp > 0)
+		dprintf(fd, "\
+d-i clock-setup/ntp boolean true\n\
+d-i clock-setup/ntp-server string %s\n", bld->ntp);
+	else
+		dprintf(fd, "\
+d-i clock-setup/ntp boolean false\n");
 	return retval;
 }
 
-int
+static ailsa_build_s *
+cbc_fill_build_details(AILLIST *build)
+{
+	if (!(build))
+		return NULL;
+	char addr[SERVICE_LEN];
+	uint32_t ip;
+	size_t len = 16;
+	ailsa_build_s *b = ailsa_calloc(sizeof(ailsa_build_s), "b in cbc_fill_build_details");
+	AILELEM *e = build->head;
+	ailsa_data_s *d = e->data;
+
+	memset(addr, 0, SERVICE_LEN);
+	if (build->total < len) {
+		ailsa_syslog(LOG_ERR, "cbc_fill_build_details list only has %zu elements", build->total);
+		goto cleanup;
+	}
+	b->locale = strndup(d->data->text, MAC_LEN);
+	e = e->next;
+	d = e->data;
+	b->language = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->keymap = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->country = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->net_int = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->ip = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->ns = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->nm = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->gw = strndup(addr, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->do_ntp = d->data->small;
+	e = e->next;
+	d = e->data;
+	b->ntp = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->host = strndup(d->data->text, HOST_LEN);
+	e = e->next;
+	d = e->data;
+	b->domain = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->mirror = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->os = strndup(d->data->text, MAC_LEN);
+	e = e->next;
+	d = e->data;
+	b->version = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->arch = strndup(d->data->text, SERVICE_LEN);
+	return b;
+
+	cleanup:
+		ailsa_clean_build(b);
+		return NULL;
+}
+
+static int
 write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[NAME_S], url[CONF_S], *server = cml->name;
@@ -1132,187 +1327,6 @@ chmod 755 %s\n\
 		free(newarg);
 		newarg = 0;
 	}
-}
-
-static void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	char output[BUFF_S];
-	char *ip, *ns, *nm, *gw, *tmp;
-	dbdata_s *list = data;
-	size_t len;
-
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_output");
-	if (!(ns = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ns in fill_net_output");
-	if (!(nm = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "nm in fill_net_output");
-	if (!(gw = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "gw in fill_net_output");
-	char *locale = list->fields.text;
-	CHECK_DATA_LIST()
-	char *keymap = list->fields.text;
-	CHECK_DATA_LIST()
-	char *net_dev = list->fields.text;
-	CHECK_DATA_LIST()
-	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
-	CHECK_DATA_LIST()
-	char *host = list->fields.text;
-	CHECK_DATA_LIST()
-	char *domain = list->fields.text;
-	CHECK_DATA_LIST()
-	char *lang = list->fields.text;
-
-	if (strncmp(cml->os, "debian", COMM_S) == 0)
-		snprintf(output, BUFF_S, "\
-d-i console-setup/ask_detect boolean false\n\
-d-i debian-installer/locale string %s\n\
-d-i console-keymaps-at/keymap select %s\n\
-d-i keyboard-configuration/xkb-keymap select %s\n\
-d-i keymap select %s\n\
-\n\
-d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
-d-i netcfg/enable boolean true\n\
-d-i netcfg/confirm_static boolean true\n\
-d-i netcfg/disable_dhcp boolean true\n\
-d-i netcfg/choose_interface select %s\n\
-d-i netcfg/get_nameservers string %s\n\
-d-i netcfg/get_ipaddress string %s\n\
-d-i netcfg/get_netmask string %s\n\
-d-i netcfg/get_gateway string %s\n\
-\n\
-d-i netcfg/get_hostname string %s\n\
-d-i netcfg/get_domain string %s\n",
-locale, keymap, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
-	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
-/* Need to add the values into this!! */
-		snprintf(output, BUFF_S, "\
-d-i console-setup/ask_detect boolean false\n\
-d-i debian-installer/locale string %s\n\
-d-i debian-installer/language string %s\n\
-d-i console-keymaps-at/keymap select %s\n\
-d-i keymap select %s\n\
-\n\
-d-i netcfg/enable boolean true\n\
-d-i netcfg/confirm_static boolean true\n\
-d-i netcfg/disable_dhcp boolean true\n\
-d-i netcfg/choose_interface select %s\n\
-d-i netcfg/get_nameservers string %s\n\
-d-i netcfg/get_ipaddress string %s\n\
-d-i netcfg/get_netmask string %s\n\
-d-i netcfg/get_gateway string %s\n\
-\n\
-d-i netcfg/get_hostname string %s\n\
-d-i netcfg/get_domain string %s\n",
-locale, lang, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
-	if ((len = strlen(output)) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "string in fill_net_output");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string, len + 1, "%s", output);
-	build->size += len;
-	free(ip);
-	free(gw);
-	free(ns);
-	free(nm);
-}
-
-static void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	char *mirror = data->fields.text;
-	char *ver_alias = data->next->fields.text;
-	char *alias = data->next->next->fields.text;
-	char *country = data->next->next->next->fields.text;
-	char *ntpserv = data->next->next->next->next->next->fields.text;
-	char *arch = data->next->next->next->next->next->next->fields.text;
-	char ntp[NAME_S], output[BUFF_S], *tmp;
-	size_t len;
-
-	if (strncmp(cml->os, "debian", COMM_S) == 0)
-// Would be nice to be able to add a password for the user and root here.
-		snprintf(output, BUFF_S, "\
-d-i netcfg/wireless_wep string\n\
-d-i hw-detect/load_firmware boolean true\n\
-\n\
-d-i mirror/country string manual\n\
-d-i mirror/http/hostname string %s\n\
-d-i mirror/http/directory string /%s\n\
-\n\
-d-i mirror/suite string %s\n\
-\n\
-### Account setup\n\
-d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
-d-i passwd/root-login boolean false\n\
-d-i passwd/user-fullname string Admin User\n\
-d-i passwd/username string sysadmin\n\
-d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
-d-i clock-setup/utc boolean true\n\
-\n\
-d-i time/zone string %s\n\
-", mirror, alias, ver_alias, country);
-	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
-		snprintf(output, BUFF_S, "\
-d-i mirror/country string manual\n\
-d-i mirror/http/hostname string %s\n\
-d-i mirror/http/directory string /%s\n\
-\n\
-d-i mirror/suite string %s\n\
-\n\
-### Account setup\n\
-d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
-d-i passwd/user-fullname string Admin User\n\
-d-i passwd/username string sysadmin\n\
-d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
-d-i clock-setup/utc boolean true\n\
-\n\
-d-i time/zone string %s\n\
-", mirror, alias, ver_alias, country);
-	if (data->next->next->next->next->fields.small == 0)
-			snprintf(ntp, NAME_S, "\
-d-i clock-setup/ntp boolean false\n\
-\n\
-");
-	else
-			snprintf(ntp, NAME_S, "\
-d-i clock-setup/ntp boolean true\n\
-d-i clock-setup/ntp-server string %s\n\
-\n\
-", ntpserv);
-	strncat(output, ntp, NAME_S);
-	len = strlen(output);
-	if ((build->size + len) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_mirror_output");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string + build->size, len + 1, "%s", output);
-	build->size += len;
-	/* Store the arch for use in fill_kernel */
-	if (!(cml->arch))
-		cml->arch = strndup(arch, MAC_S);
-	else
-		snprintf(cml->arch, MAC_S, "%s", arch);
 }
 
 static int

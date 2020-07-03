@@ -355,6 +355,8 @@ ailsa_clean_build(void *build)
 		my_free(data->language);
 	if (data->keymap)
 		my_free(data->keymap);
+	if (data->country)
+		my_free(data->country);
 	if (data->net_int)
 		my_free(data->net_int);
 	if (data->ip)

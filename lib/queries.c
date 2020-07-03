@@ -622,7 +622,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // PRESEED_BUILD_DETAILS
-"SELECT locale, language, keymap, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, arch \
+"SELECT locale, language, keymap, country, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, arch \
  FROM build b LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
  LEFT JOIN build_os bo ON b.os_id = bo.os_id \
  LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
@@ -644,6 +644,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	},
 	{ // BUILD_PACKAGES_ON_SERVER_ID
 "SELECT package FROM packages p LEFT JOIN build b ON p.varient_id = b.varient_id AND p.os_id = b.os_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DISK_DEV_DETAILS_ON_SERVER_ID
+"SELECT device, lvm FROM disk_dev WHERE server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},
