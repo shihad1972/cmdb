@@ -89,6 +89,9 @@ static int
 write_preseed_net_mirror(int fd, ailsa_build_s *bld);
 
 static int
+write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build);
+
+static int
 cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
 
 void
@@ -174,6 +177,9 @@ cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *t
 
 static ailsa_build_s *
 cbc_fill_build_details(AILLIST *build);
+
+static int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -902,6 +908,10 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
 		goto cleanup;
 	}
+	if ((retval = cbc_fill_partition_details(partitions, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill partition details");
+		goto cleanup;
+	}
 	um = umask(0);
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
@@ -911,6 +921,8 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		goto cleanup;
 	}
 	if ((retval = write_preseed_net_mirror(fd, bld)) != 0)
+		goto cleanup;
+	if ((retval = write_partition_head(fd, disk, bld)) != 0)
 		goto cleanup;
 /*	if ((retval = fill_partition(cmc, cml, build)) != 0)
 		return retval;
@@ -1009,6 +1021,33 @@ d-i clock-setup/ntp boolean false\n");
 	return retval;
 }
 
+static int
+write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build)
+{
+	if ((fd == 0) || !(disk) || !(build))
+		return AILSA_NO_DATA;
+	ailsa_data_s *d = disk->head->data;
+	dprintf(fd, "\
+d-i partman-auto/disk string %s\n\
+d-i partman-auto/choose_recipe select monkey\n\
+d-i partman-auto/method string lvm\n\
+d-i partman-auto/purge_lvm_from_device boolean true\n\
+d-i partman-auto-lvm/guided_size string 100%%\n\
+d-i partman-auto-lvm/no_boot boolean true\n\
+d-i partman/choose_partition select finish\n\
+d-i partman/confirm_nooverwrite boolean true\n\
+d-i partman/confirm boolean true\n\
+d-i partman-lvm/confirm boolean true\n\
+d-i partman-lvm/confirm_nooverwrite boolean true\n\
+d-i partman-lvm/device_remove_lvm boolean true\n\
+d-i partman-lvm/device_remove_lvm_span boolean true\n\
+d-i partman-md/device_remove_md boolean true\n\
+d-i partman-md/confirm boolean true\n\
+d-i partman-partitioning/confirm_write_new_label boolean true\n\
+d-i partman/mount_style select uuid\n", d->data->text);
+	return 0;
+}
+
 static ailsa_build_s *
 cbc_fill_build_details(AILLIST *build)
 {
@@ -1097,6 +1136,40 @@ cbc_fill_build_details(AILLIST *build)
 		return NULL;
 }
 
+static int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest)
+{
+	if (!(list) || !(dest))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e = list->head;
+	ailsa_data_s *d;
+	ailsa_partition_s *p;
+	size_t total = 6;
+	if ((list->total == 0) || ((list->total % total) != 0)) {
+		ailsa_syslog(LOG_ERR, "list in cbc_fill_partition_details has wrong length %zu", list->total);
+		return WRONG_LENGTH_LIST;
+	}
+	while (e) {
+		p = ailsa_calloc(sizeof(ailsa_partition_s), "p in cbc_fill_partition_details");
+		d = e->data;
+		p->min = d->data->number;
+		d = e->next->data;
+		p->max = d->data->number;
+		d = e->next->next->data;
+		p->pri = d->data->number;
+		d = e->next->next->next->data;
+		p->mount = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->next->next->data;
+		p->fs = strndup(d->data->text, SERVICE_LEN);
+		d = e->next->next->next->next->next->data;
+		p->logvol = strndup(d->data->text, MAC_LEN);
+		e = ailsa_move_down_list(e, total);
+		if ((retval = ailsa_list_insert(dest, p)) != 0)
+			return retval;
+	}
+	return 0;
+}
 static int
 write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
