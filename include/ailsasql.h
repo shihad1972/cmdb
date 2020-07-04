@@ -367,7 +367,7 @@ int
 cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_add_default_part_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_disk_dev_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);

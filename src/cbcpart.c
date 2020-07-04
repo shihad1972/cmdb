@@ -665,8 +665,12 @@ add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(cbc) || !(cpl))
 		return AILSA_NO_DATA;
 	int retval;
+	char **args = ailsa_calloc((sizeof(char *) * 2), "args in add_new_partition_option");
 	AILLIST *list = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
+
+	args[0] = cpl->scheme;
+	args[1] = cpl->partition;
 	if ((retval = cmdb_add_scheme_id_to_list(cpl->scheme, cbc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
 		goto cleanup;
@@ -675,7 +679,7 @@ add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		ailsa_syslog(LOG_ERR, "Scheme list total is not 1?");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+	if ((retval = cmdb_add_default_part_id_to_list(args, cbc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition id to list");
 		goto cleanup;
 	}
@@ -707,6 +711,7 @@ add_new_partition_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if ((retval = set_db_row_updated(cbc, SET_PART_SCHEME_UPDATED, cpl->scheme, 0)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot update the partition scheme in the database");
 	cleanup:
+		my_free(args);
 		ailsa_list_destroy(list);
 		ailsa_list_destroy(results);
 		my_free(list);
@@ -720,15 +725,19 @@ remove_partition_from_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(cbc) || !(cpl))
 		return AILSA_NO_DATA;
 	int retval;
+	char **args = ailsa_calloc((sizeof(char *) * 2), "args in remove_partition_from_scheme");
 	AILLIST *list = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+	args[0] = cpl->scheme;
+	args[1] = cpl->partition;
+	if ((retval = cmdb_add_default_part_id_to_list(args, cbc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get def_part_id for partition");
 		goto cleanup;
 	}
 	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_PARTITION], list)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot delete partition %s in scheme %s", cpl->partition, cpl->scheme);
 	cleanup:
+		my_free(args);
 		ailsa_list_destroy(list);
 		my_free(list);
 		return retval;
@@ -758,7 +767,11 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if (!(cbc) || !(cpl))
 		return AILSA_NO_DATA;
 	int retval;
+	char **args = ailsa_calloc((sizeof(char *) * 2), "args in remove_part_option");
 	AILLIST *list = ailsa_db_data_list_init();
+
+	args[0] = cpl->scheme;
+	args[1] = cpl->partition;
 	if ((retval = cmdb_add_scheme_id_to_list(cpl->scheme, cbc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
 		goto cleanup;
@@ -767,7 +780,7 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		ailsa_syslog(LOG_ERR, "Scheme list total is not 1?");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_default_part_id_to_list(cpl->scheme, cpl->partition, cbc, list)) != 0) {
+	if ((retval = cmdb_add_default_part_id_to_list(args, cbc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition id to list");
 		goto cleanup;
 	}
@@ -782,6 +795,7 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if ((retval = ailsa_delete_query(cbc, delete_queries[DELETE_PART_OPTION], list)) != 0)
 		ailsa_syslog(LOG_ERR, "DELETE_PART_OPTION query failed");
 	cleanup:
+		my_free(args);
 		ailsa_list_destroy(list);
 		my_free(list);
 		return retval;
