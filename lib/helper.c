@@ -271,18 +271,18 @@ cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
-cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_add_default_part_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(scheme) || !(partition) || !(cc) || !(list))
+	if (!(args) || !(cc) || !(list))
 		return AILSA_NO_DATA;
 	AILLIST *part = ailsa_db_data_list_init();
 	int retval;
 
-	if ((retval = cmdb_add_string_to_list(scheme, part)) != 0) {
+	if ((retval = cmdb_add_string_to_list(args[0], part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(partition, part)) != 0) {
+	if ((retval = cmdb_add_string_to_list(args[1], part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition name to list");
 		goto cleanup;
 	}
