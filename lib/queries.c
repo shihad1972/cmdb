@@ -652,6 +652,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // PART_OPTIONS_ON_SCHEME_NAME_MOUNT
+"SELECT poption FROM part_options WHERE def_part_id = (SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id WHERE scheme_name = ? AND mount_point = ?)",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {

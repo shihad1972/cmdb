@@ -92,6 +92,12 @@ static int
 write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build);
 
 static int
+write_preseed_partitions(int fd, AILLIST *disk, AILLIST *part);
+
+static void
+write_preseed_lvm_group(int fd, char *dev);
+
+static int
 cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
 
 void
@@ -150,9 +156,6 @@ fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
 
 static void
 fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
-
-static int
-fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
 
 static int
 fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
@@ -924,9 +927,9 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		goto cleanup;
 	if ((retval = write_partition_head(fd, disk, bld)) != 0)
 		goto cleanup;
-/*	if ((retval = fill_partition(cmc, cml, build)) != 0)
-		return retval;
-	if ((retval = fill_kernel(cml, build)) != 0)
+	if ((retval = write_preseed_partitions(fd, disk, part)) != 0)
+		goto cleanup;
+/*	if ((retval = fill_kernel(cml, build)) != 0)
 		return retval;
 	clean_dbdata_struct(data);
 
@@ -1046,6 +1049,67 @@ d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
 d-i partman/mount_style select uuid\n", d->data->text);
 	return 0;
+}
+
+static int
+write_preseed_partitions(int fd, AILLIST *disk, AILLIST *part)
+{
+	if ((fd == 0) || !(part))
+		return AILSA_NO_DATA;
+	short int lvm = ((ailsa_data_s *)disk->head->next->data)->data->small;
+	char *diskdev = ((ailsa_data_s *)disk->head->data)->data->text;
+	AILELEM *e = part->head;
+	ailsa_partition_s *p;
+	dprintf(fd, "\
+\n\
+d-i partman-auto/expert_recipe string \\\n\
+      monkey :: \\\n");
+	if (lvm > 0)
+		write_preseed_lvm_group(fd, diskdev);
+	while (e) {
+		p = e->data;
+		dprintf(fd, "\
+              %lu %lu %lu %s  \\\n", p->pri, p->min, p->max, p->fs);
+		if (lvm > 0)
+			dprintf(fd, "\
+                       $lvmok \\\n\
+                       in_vg{ systemvg } \\\n\
+                       lv_name{ %s }\\\n", p->logvol);
+		if ((strncmp(p->fs, "swap", BYTE_LEN)) != 0) {
+			dprintf(fd, "\
+                       method{ format } format{ } \\\n\
+                       use_filesystem{ } filesystem{ %s } \\\n\
+                       mountpoint { %s } \\\n", p->fs, p->mount);
+		} else {
+			dprintf(fd, "\
+                       method{ swap } format{ } \\\n");
+		}
+// This would be the place to add the partition options
+		e = e->next;
+		if (e)
+			dprintf(fd, "\
+              . \\\n\n");
+		else
+			dprintf(fd, "\
+              .\n\n");
+	}
+	dprintf(fd, "\
+d-i grub-installer/only_debian boolean true\n\
+d-i grub-installer/bootdev string %s\n", diskdev);
+	return 0;
+}
+
+static void
+write_preseed_lvm_group(int fd, char *dev)
+{
+	dprintf(fd, "\
+              100 1000 1000000000 ext3 \\\n\
+                       $defaultignore{} \\\n\
+                       $primary{} \\\n\
+                       method{ lvm } \\\n\
+                       device{ %s } \\\n\
+                       vg_name{ systemvg }\\\n\
+              . \\\n", dev);
 }
 
 static ailsa_build_s *
@@ -1403,48 +1467,6 @@ chmod 755 %s\n\
 }
 
 static int
-fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
-{
-	char *pos, line[FILE_S];
-	int retval = NONE, type = BASIC_PART;
-	short int lvm;
-	size_t len;
-	dbdata_s *data;
-
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BASIC_DISK;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BASIC_DISK;
-	} else {
-		add_pre_start_part(cml, data, line);
-	}
-
-	lvm = data->next->fields.small;
-	len = strlen(line);
-	pos = (line + len);
-	snprintf(pos, URL_S, "\
-d-i partman-auto/expert_recipe string \\\n\
-      monkey :: \\\n");
-	PRINT_STRING_WITH_LENGTH_CHECK
-
-	if (lvm > 0)
-		add_pre_volume_group(cml, build);
-	retval = add_pre_parts(cmc, cml, build, lvm);
-	memset(line, 0, FILE_S);
-	snprintf(line, FILE_S, "\
-\n\n\
-d-i grub-installer/only_debian boolean true\n\
-d-i grub-installer/bootdev  string %s\n", data->fields.text);
-	PRINT_STRING_WITH_LENGTH_CHECK
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-static int
 fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
 {
 //	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
@@ -1538,56 +1560,6 @@ d-i preseed/late_command string cd /target/root; wget %shosts/%s.sh \
 	snprintf(build->string + build->size, len + 1, "%s", pack);
 	build->size += len;
 	free(pack);
-}
-
-char *
-add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
-{
-	short int lvm = data->next->fields.small;
-	size_t plen;
-
-	if (!(cml->harddisk))
-		cml->harddisk = strndup(data->fields.text, CONF_S);
-	else
-		snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
-	if (lvm == 0)
-		snprintf(disk, FILE_S, "\
-d-i partman-auto/disk string %s\n\
-d-i partman-auto/choose_recipe select monkey\n\
-d-i partman-auto/method string regular\n\
-d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman/choose_partition select finish\n\
-d-i partman/confirm_nooverwrite boolean true\n\
-d-i partman/confirm boolean true\n\
-d-i partman-md/device_remove_md boolean true\n\
-#d-i partman-md/confirm boolean true\n\
-d-i partman-partitioning/confirm_write_new_label boolean true\n\
-#d-i partman/mount_style select uuid\n\
-\n\
-", cml->harddisk);
-	else
-		snprintf(disk, FILE_S, "\
-d-i partman-auto/disk string %s\n\
-d-i partman-auto/choose_recipe select monkey\n\
-d-i partman-auto/method string lvm\n\
-d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman-auto-lvm/guided_size string 100%%\n\
-d-i partman-auto-lvm/no_boot boolean true\n\
-d-i partman/choose_partition select finish\n\
-d-i partman/confirm_nooverwrite boolean true\n\
-d-i partman/confirm boolean true\n\
-d-i partman-lvm/confirm boolean true\n\
-d-i partman-lvm/confirm_nooverwrite boolean true\n\
-d-i partman-lvm/device_remove_lvm boolean true\n\
-d-i partman-lvm/device_remove_lvm_span boolean true\n\
-d-i partman-md/device_remove_md boolean true\n\
-d-i partman-md/confirm boolean true\n\
-d-i partman-partitioning/confirm_write_new_label boolean true\n\
-d-i partman/mount_style select uuid\n\
-\n\
-", cml->harddisk);
-	plen = strlen(disk);
-	return (disk + plen);
 }
 
 int
