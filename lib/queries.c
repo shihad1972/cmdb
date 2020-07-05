@@ -622,7 +622,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // PRESEED_BUILD_DETAILS
-"SELECT locale, language, keymap, country, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, arch \
+"SELECT locale, language, keymap, country, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, arch, url \
  FROM build b LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
  LEFT JOIN build_os bo ON b.os_id = bo.os_id \
  LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
@@ -656,6 +656,15 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT poption FROM part_options WHERE def_part_id = (SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id WHERE scheme_name = ? AND mount_point = ?)",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_PACKAGES_ON_SERVER_ID
+"SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
+  LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  LEFT JOIN build_ip bd ON spc.bd_id = bd.bd_id \
+  WHERE bd.server_id = ? ORDER BY sp.name, spa.field",
+	1,
+	{ AILSA_DB_LINT }
 	},
 };
 

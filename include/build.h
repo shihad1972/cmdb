@@ -63,16 +63,7 @@ void
 add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url);
 
 int
-add_pre_parts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm);
-
-int
 get_pre_part_options(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts);
-
-void
-add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *disk);
-
-void
-add_system_package_line(ailsa_cmdb_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data);
 
 char *
 cbc_complete_arg(ailsa_cmdb_s *cbc, uli_t server_id, char *arg);

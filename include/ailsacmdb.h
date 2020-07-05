@@ -1,6 +1,6 @@
 /*
  *  ailsacmdb: Ailsatech Configuration Management Database library
- *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -482,6 +482,8 @@ typedef struct ailsa_build_s {
 	char *os;
 	char *version;
 	char *arch;
+	char *url;
+	char *fqdn;
 	short int do_ntp;
 } ailsa_build_s;
 
@@ -493,6 +495,14 @@ typedef struct ailsa_partition_s {
 	char *fs;
 	char *logvol;
 } ailsa_partition_s;
+
+typedef struct ailsa_syspack_s {
+	char *name;
+	char *field;
+	char *type;
+	char *arg;
+	char *newarg;
+} ailsa_syspack_s;
 
 // library version info
 
@@ -572,6 +582,8 @@ void
 ailsa_clean_build(void *build);
 void
 ailsa_clean_partition(void *partition);
+void
+ailsa_clean_syspack(void *sysp);
 void
 ailsa_clean_iface(void *data);
 void *
@@ -707,6 +719,9 @@ ailsa_dhcp_config_list_init(void);
 
 AILLIST *
 ailsa_partition_list_init(void);
+
+AILLIST *
+ailsa_syspack_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

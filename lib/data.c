@@ -1,7 +1,7 @@
 /*
  *
  *  alisacmdb: Alisatech Configuration Management Database library
- *  Copyright (C) 2015 Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2015 - 2020 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -381,6 +381,10 @@ ailsa_clean_build(void *build)
 		my_free(data->version);
 	if (data->arch)
 		my_free(data->arch);
+	if (data->url)
+		my_free(data->url);
+	if (data->fqdn)
+		my_free(data->fqdn);
 	my_free(data);
 }
 
@@ -398,6 +402,27 @@ ailsa_clean_partition(void *partition)
 		my_free(data->logvol);
 	my_free(data);
 }
+
+void
+ailsa_clean_syspack(void *sysp)
+{
+	if (!(sysp))
+		return;
+	ailsa_syspack_s *data = sysp;
+
+	if (data->name)
+		my_free(data->name);
+	if (data->field)
+		my_free(data->field);
+	if (data->type)
+		my_free(data->type);
+	if (data->arg)
+		my_free(data->arg);
+	if (data->newarg)
+		my_free(data->newarg);
+	my_free(data);
+}
+
 void
 ailsa_clean_dhcp_config(void *dhcp)
 {
@@ -769,6 +794,14 @@ ailsa_partition_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_partition_list_init");
 	ailsa_list_init(list, ailsa_clean_partition);
+	return list;
+}
+
+AILLIST *
+ailsa_syspack_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_partition_list_init");
+	ailsa_list_init(list, ailsa_clean_syspack);
 	return list;
 }
 
