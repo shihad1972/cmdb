@@ -106,6 +106,15 @@ static int
 write_preseed_packages(int fd, ailsa_build_s *build, AILLIST *pack);
 
 static int
+write_build_host_script(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
+
+static int
+cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys);
+
+static void
+cbc_write_system_scripts(char *host, char *url, int fd, AILLIST *sys);
+
+static int
 cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
 
 void
@@ -188,6 +197,9 @@ cbc_fill_sys_pack_details(AILLIST *sys, AILLIST *pack, ailsa_build_s *bld);
 
 static void
 cbc_get_sys_newarg(ailsa_syspack_s *sys, ailsa_build_s *bld);
+
+static int
+cbc_fill_system_scripts(AILLIST *list, AILLIST *dest);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
@@ -566,6 +578,12 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		return retval;
 	} else {
 		printf("build configuration file written\n");
+	}
+	if ((retval = write_build_host_script(cmc, cml)) != 0) {
+		ailsa_syslog(LOG_ERR, "Failed to write host script");
+		return retval;
+	} else {
+		printf("host script file written\n");
 	}
 	return retval;
 }
@@ -1172,6 +1190,127 @@ write_preseed_system_packages(int fd, AILLIST *sys)
 	return 0;
 }
 
+static int
+write_build_host_script(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
+{
+	if (!(cbc) || !(cml))
+		return AILSA_NO_DATA;
+	char file[DOMAIN_LEN];
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *domain = ailsa_db_data_list_init();
+	AILLIST *script = ailsa_db_data_list_init();
+	AILLIST *sys = ailsa_sysscript_list_init();
+
+	memset(file, 0, DOMAIN_LEN);
+	snprintf(file, DOMAIN_LEN, "%shosts/%s.sh", cbc->toplevelos, cml->name);
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, DOMAIN_BUILD_ALIAS_ON_SERVER_ID, server, domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "DOMAIN_BUILD_ALIAS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE, domain, script)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE query failed");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_system_scripts(script, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate system script list");
+		goto cleanup;
+	}
+	if ((retval = cbc_write_script_file(file, cml->name, domain, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write script file for %s", cml->name);
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(domain);
+		ailsa_list_full_clean(script);
+		ailsa_list_full_clean(sys);
+		return retval;
+}
+
+
+static int
+cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys)
+{
+	if (!(file) || !(sys) || !(domain))
+		return AILSA_NO_DATA;
+	char *url;
+	int retval, fd, flags;
+	mode_t um, mask;
+	ailsa_data_s *d;
+
+	if ((domain->total == 0) || ((domain->total % 3) != 0)) {
+		ailsa_syslog(LOG_ERR, "domain list empty in cbc_write_script_file");
+		return AILSA_NO_DATA;
+	}
+	d = domain->head->next->next->data;
+	url = d->data->text;
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open file %s for writing", file);
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	dprintf(fd, "\
+#!/bin/sh\n\
+#\n\
+#\n\
+# Auto Generated install script for %s\n\
+#\n\
+#\n\
+#\n\
+###################\n\
+\n\
+\n\
+WGET=/usr/bin/wget\n\
+\n\
+$WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
+\n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh >> scripts.log 2>&1\n\
+\n\
+$WGET %sscripts/motd.sh\n\
+chmod 755 motd.sh\n\
+./motd.sh >> scritps.log 2>&1\
+\n", host, url, url, url);
+	cbc_write_system_scripts(host, url, fd, sys);
+	close(fd);
+	mask = umask(um);
+	return retval;
+}
+
+static void
+cbc_write_system_scripts(char *host, char *url, int fd, AILLIST *sys)
+{
+	if (!(host) || !(url) || (fd == 0) || !(sys))
+		return;
+	if (sys->total == 0)
+		return;
+	AILELEM *e = sys->head;
+	ailsa_sysscript_s *ss;
+
+	while (e) {
+		ss = e->data;
+		if (ss->no == 1)
+			dprintf(fd, "\n\n\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s", url, ss->name, ss->name, ss->name, ss->arg);
+		else
+			dprintf(fd, " %s", ss->arg);
+		e = e->next;
+	}
+	dprintf(fd, "\n");
+}
+
 static ailsa_build_s *
 cbc_fill_build_details(AILLIST *build)
 {
@@ -1358,6 +1497,33 @@ cbc_get_sys_newarg(ailsa_syspack_s *sys, ailsa_build_s *bld)
 			}
 		}
 	}
+}
+
+static int
+cbc_fill_system_scripts(AILLIST *list, AILLIST *dest)
+{
+	if (!(list) || !(dest))
+		return AILSA_NO_DATA;
+	size_t total = 3;
+	if ((list->total % total) != 0)
+		return WRONG_LENGTH_LIST;
+	int retval = 0;
+	AILELEM *e = list->head;
+	ailsa_sysscript_s *sys;
+	ailsa_data_s *d;
+	while (e) {
+		sys = ailsa_calloc(sizeof(ailsa_sysscript_s), "sys in cbc_fill_system_scripts");
+		d = e->data;
+		sys->name = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->data;
+		sys->arg = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->data;
+		sys->no = d->data->number;
+		if ((retval = ailsa_list_insert(dest, sys)) != 0)
+			return retval;
+		e = ailsa_move_down_list(e, total);
+	}
+	return retval;
 }
 
 static int

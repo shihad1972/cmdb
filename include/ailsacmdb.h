@@ -504,6 +504,12 @@ typedef struct ailsa_syspack_s {
 	char *newarg;
 } ailsa_syspack_s;
 
+typedef struct ailsa_sysscript_s {
+	char *name;
+	char *arg;
+	unsigned long int no;
+} ailsa_sysscript_s;
+
 // library version info
 
 void
@@ -584,6 +590,8 @@ void
 ailsa_clean_partition(void *partition);
 void
 ailsa_clean_syspack(void *sysp);
+void
+ailsa_clean_sysscript(void *script);
 void
 ailsa_clean_iface(void *data);
 void *
@@ -722,6 +730,9 @@ ailsa_partition_list_init(void);
 
 AILLIST *
 ailsa_syspack_list_init(void);
+
+AILLIST *
+ailsa_sysscript_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

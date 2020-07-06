@@ -424,6 +424,20 @@ ailsa_clean_syspack(void *sysp)
 }
 
 void
+ailsa_clean_sysscript(void *script)
+{
+	if (!(script))
+		return;
+	ailsa_sysscript_s *data = script;
+
+	if (data->name)
+		my_free(data->name);
+	if (data->arg)
+		my_free(data->arg);
+	my_free(data);
+}
+
+void
 ailsa_clean_dhcp_config(void *dhcp)
 {
 	if (!(dhcp))
@@ -800,8 +814,16 @@ ailsa_partition_list_init(void)
 AILLIST *
 ailsa_syspack_list_init(void)
 {
-	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_partition_list_init");
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_syspack_list_init");
 	ailsa_list_init(list, ailsa_clean_syspack);
+	return list;
+}
+
+AILLIST *
+ailsa_sysscript_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_sysscript_list_init");
+	ailsa_list_init(list, ailsa_clean_sysscript);
 	return list;
 }
 

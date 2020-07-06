@@ -666,6 +666,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE
+"SELECT ss.name, sa.arg, sa.no FROM system_scripts ss JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id JOIN build_type bt ON sa.bt_id = bt.bt_id JOIN build_domain bd ON sa.bd_id = bd.bd_id WHERE bd.domain = ? AND bt.alias = ? ORDER BY ss.name, sa.no",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // DOMAIN_BUILD_ALIAS_ON_SERVER_ID
+"SELECT domain, bt.alias, bt.url FROM build_domain bd JOIN build_ip bi ON bd.bd_id = bi.bd_id JOIN build b ON b.ip_id = bi.ip_id JOIN build_os bo ON bo.os_id = b.os_id JOIN build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
