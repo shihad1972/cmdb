@@ -1012,6 +1012,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 	9,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // UPDATE_DISK_DEV_LVM
+"UPDATE disk_dev SET lvm = ? WHERE server_id = ?",
+	2,
+	{ AILSA_DB_SINT, AILSA_DB_LINT }
+	},
 };
 
 static int

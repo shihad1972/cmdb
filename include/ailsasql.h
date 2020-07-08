@@ -287,6 +287,7 @@ enum {			// SQL UPDATE QUERIES
 	SET_FWD_ZONE_UPDATED,
 	SET_REV_ZONE_UPDATED,
 	UPDATE_BUILD,
+	UPDATE_DISK_DEV_LVM,
 };
 
 typedef struct ailsa_sql_single_s {
