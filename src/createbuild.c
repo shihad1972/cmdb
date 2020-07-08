@@ -86,6 +86,9 @@ static int
 ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
 static int
+cbc_update_disk_lvm(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
+
+static int
 ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build);
 
 static int
@@ -136,8 +139,16 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_BUILD], build)) != 0)
+	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_BUILD], build)) != 0) {
 		ailsa_syslog(LOG_ERR, "UPDATE_BUILD query failed");
+		goto cleanup;
+	}
+	if (cml->partition) {
+		if ((retval = cbc_update_disk_lvm(cbt, cml)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot update disk dev lvm info");
+			goto cleanup;
+		}
+	}
 
 	cleanup:
 		ailsa_list_full_clean(args);
@@ -583,6 +594,36 @@ ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build
 		if (os[0])
 			my_free(os[0]);
 		my_free(os);
+		return retval;
+}
+
+static int
+cbc_update_disk_lvm(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *part = ailsa_db_data_list_init();
+	AILLIST *lvm = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(cml->partition, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, SCHEME_LVM_INFO, part, lvm)) != 0) {
+		ailsa_syslog(LOG_ERR, "SCHEME_LVM_INFO query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, lvm)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_DISK_DEV_LVM], lvm)) != 0)
+		goto cleanup;
+
+	cleanup:
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(lvm);
 		return retval;
 }
 
