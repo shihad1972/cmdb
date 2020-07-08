@@ -612,7 +612,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // FULL_LOCALE_DETAILS_ON_SERVER_ID
-"SELECT country, locale, keymap FROM locale WHERE locale_id = (SELECT locale_id FROM build WHERE server_id = ?)",
+"SELECT country, locale, keymap, timezone FROM locale WHERE locale_id = (SELECT locale_id FROM build WHERE server_id = ?)",
 	1,
 	{ AILSA_DB_LINT }
 	},

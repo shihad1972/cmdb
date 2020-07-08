@@ -79,6 +79,15 @@ static int
 write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 static int
+cbc_write_kickstart_base(ailsa_cmdb_s *cmc, char *name, int fd, AILLIST *list);
+
+static int
+cbc_write_kickstart_partitions(int fd, AILLIST *disk, AILLIST *part);
+
+static int
+cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list);
+
+static int
 write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
 
 static int
@@ -146,12 +155,6 @@ cbc_print_build_times_and_users(ailsa_cmdb_s *cbc, AILLIST *list);
 
 static void
 display_build_times_and_users(AILLIST *bt);
-
-static void
-check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
-
-static int
-fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
 
 static int
 fill_kick_partitions(ailsa_cmdb_s *cbc, cbc_comm_line_s *cmc, string_len_s *build);
@@ -781,7 +784,7 @@ cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp)
 		ailsa_syslog(LOG_ERR, "Empty list passed into cbc_fill_tftp_values");
 		goto cleanup;
 	}
-	if (((os->total % 3) != 0) || ((loc->total % 3) != 0) || ((tftp->total % 5) != 0)) {
+	if (((os->total % 3) != 0) || ((loc->total % 4) != 0) || ((tftp->total % 5) != 0)) {
 		ailsa_syslog(LOG_ERR, "Wrong length for lists in cbc_fill_tftp_values");
 		goto cleanup;
 	}
@@ -905,7 +908,8 @@ static int
 write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	char file[DOMAIN_LEN];
-	int retval, fd, flags;
+	int retval, flags;
+	int fd = 0;
 	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *build = ailsa_db_data_list_init();
 	AILLIST *disk = ailsa_db_data_list_init();
@@ -1529,6 +1533,57 @@ cbc_fill_system_scripts(AILLIST *list, AILLIST *dest)
 static int
 write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *locale = ailsa_db_data_list_init();
+	AILLIST *partitions = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_partition_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	char file[DOMAIN_LEN];
+	int retval, flags;
+	int fd = 0;
+	mode_t um = 0;
+	mode_t mask;
+
+	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if (server->total == 0) {
+		ailsa_syslog(LOG_ERR, "Server %s not found", cml->name);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, FULL_LOCALE_DETAILS_ON_SERVER_ID, server, locale)) != 0) {
+		ailsa_syslog(LOG_ERR, "FULL_LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DISK_DEV_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PARTITIONS_ON_SERVER_ID, server, partitions)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_partition_details(partitions, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill in partitin details");
+		goto cleanup;
+	}
+	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
+		retval = FILE_O_FAIL;
+		goto cleanup;
+	}
+	if ((retval = cbc_write_kickstart_base(cmc, cml->name, fd, locale)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_partitions(fd, disk, part)) != 0)
+		goto cleanup;
+/*
 	char file[NAME_S], url[CONF_S], *server = cml->name;
 	int retval = NONE, type = KICK_BASE;
 	unsigned long int bd_id;
@@ -1612,8 +1667,116 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	retval = write_file(file, build.string);
 	free(build.string);
 	return retval;
+*/
+	cleanup:
+		if (fd > 0)
+			close(fd);
+		if (um > 0)
+			mask = umask(um);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(locale);
+		ailsa_list_full_clean(partitions);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(server);
+		return retval;
 }
 
+static int
+cbc_write_kickstart_base(ailsa_cmdb_s *cmc, char *name, int fd, AILLIST *list)
+{
+	if (!(cmc) || !(name) || !(list) || (fd == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	char *key, *lang, *time;
+	ailsa_data_s *d;
+	size_t total = 4;
+
+	if ((list->total == 0) || ((list->total % total) != 0))
+		return WRONG_LENGTH_LIST;
+	d = list->head->next->data;
+	lang = d->data->text;
+	d = list->head->next->next->data;
+	key = d->data->text;
+	d = list->tail->data;
+	time = d->data->text;
+	if ((retval = cbc_check_gb_keyboard(cmc, name, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check for GB keyboard");
+		return retval;
+	}
+	/* root password is k1Ckstart */
+	dprintf(fd, "\
+auth --useshadow --enablemd5\n\
+bootloader --location=mbr\n\
+text\n\
+firewall --disabled\n\
+firstboot --disable\n\
+keyboard %s\n\
+lang %s\n\
+logging --level=info\n\
+reboot\n\
+rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
+selinux --disabled\n\
+skipx\n\
+timezone  %s\n\
+install\n", key, lang, time);
+	return retval;
+}
+
+static int
+cbc_write_kickstart_partitions(int fd, AILLIST *disk, AILLIST *part)
+{
+	if (!(disk) || !(part) || (fd == 0))
+		return AILSA_NO_DATA;
+	AILELEM *e;
+	ailsa_data_s *d;
+	ailsa_partition_s *p;
+	if ((disk->total == 0) || (part->total == 0))
+		return AILSA_NO_DATA;
+	d = disk->head->data;
+	dprintf(fd, "\
+\n\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n", d->data->text);
+	d = disk->head->next->data;
+	return 0;
+}
+
+static int
+cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list)
+{
+	if (!(cmc) || !(host) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+
+	if ((retval = cmdb_add_server_id_to_list(host, cmc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_SERVER_ID, server, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((os->total == 0) || (os->total < 2)) {
+		ailsa_syslog(LOG_ERR, "OS list wrong length in cbc_check_gb_keyboard");
+		goto cleanup;
+	}
+	d = os->head->next->data;
+	if (strncmp(d->data->text, "6", BYTE_LEN) == 0) {
+		d = list->head->next->next->data;
+		if (strncmp(d->data->text, "gb", BYTE_LEN) == 0) {
+			snprintf(d->data->text, BYTE_LEN, "uk");
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(os);
+		return retval;
+}
 #ifndef CHECK_DATA_LIST
 # define CHECK_DATA_LIST(retval) {        \
 	if (list->next)             \
@@ -1634,75 +1797,6 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	memset(line, 0, len);                        \
 }
 #endif /* PRINT_STRING_WITH_LENGTH_CHECK */
-int
-write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
-{
-	char *server, line[TBUFF_S], *pos;
-	int retval = NONE, type, query = SCRIPT_CONFIG;
-	size_t len = NONE;
-	unsigned long int bd_id;
-	dbdata_s *list = 0, *data = 0;
-	string_len_s *build;
-
-	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_pre_host_script");
-	init_string_len(build);
-	server = cml->name;
-	type = BD_ID_ON_SERVER_ID;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(list);
-		return NO_BD_CONFIG;
-	} else if (retval > 1) {
-		fprintf(stderr, "Associated with multiple build domains?\n");
-		fprintf(stderr, "Using 1st one!!!\n");
-	}
-	retval = 0;
-	bd_id = data->fields.number;
-	clean_dbdata_struct(data);
-
-	snprintf(build->string, RBUFF_S, "\
-#!/bin/sh\n\
-#\n\
-#\n\
-# Auto Generated install script for %s\n\
-#\n", server);
-	len = strlen(build->string);
-	build->size = len;
-	snprintf(line, TBUFF_S, "\
-#\n\
-#\n\
-######################\n\
-\n\
-\n\
-WGET=/usr/bin/wget\n\
-\n\
-$WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
-\n\
-$WGET %sscripts/firstboot.sh\n\
-chmod 755 firstboot.sh\n\
-./firstboot.sh >> scripts.log 2>&1\n\
-\n\
-$WGET %sscripts/motd.sh\n\
-chmod 755 motd.sh\n\
-./motd.sh >> scripts.log 2>&1\n\
-\n", cml->config, cml->config, cml->config);
-	PRINT_STRING_WITH_LENGTH_CHECK
-
-	cmdb_prep_db_query(&data, cbc_search, query);
-	data->args.number = bd_id;
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
-	if ((retval = cbc_run_search(cmc, data, query)) > 0)
-		fill_build_scripts(cmc, data, retval, build, cml);
-	server = cml->name;
-	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
-	retval = write_file(line, build->string);
-	clean_dbdata_struct(data);
-	free(build->string);
-	free(build);
-	return retval;
-}
 
 static void
 fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
@@ -1857,60 +1951,6 @@ get_replaced_syspack_arg(dbdata_s *data, int loop)
 			break;
 	}
 	return str;
-}
-
-static int
-fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
-{
-	char buff[FILE_S], *key, *loc, *tim;
-	int retval, type = KICK_BASE;
-	size_t len;
-	dbdata_s *data;
-
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_KICKSTART_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_KICKSTART_ERR;
-	} else {
-		retval = NONE;
-	}
-
-	key = data->fields.text;
-	loc = data->next->fields.text;
-	tim = data->next->next->fields.text;
-/*
- * Redhat 6 kickstart crashes if you supply gb as keyboard type.
- * Need to check this and updated to uk if found. All other OS
- * seem to be unaffected.
- */
-	check_for_gb_keyboard(cbc, cml->server_id, key);
-	/* root password is k1Ckstart */
-	snprintf(buff, FILE_S, "\
-auth --useshadow --enablemd5\n\
-bootloader --location=mbr\n\
-text\n\
-firewall --disabled\n\
-firstboot --disable\n\
-keyboard %s\n\
-lang %s\n\
-logging --level=info\n\
-reboot\n\
-rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQE49xFclS07BgBHoGaDK4lcJEZIMs8ilgqV84.\n\
-selinux --disabled\n\
-skipx\n\
-timezone  %s\n\
-install\n\
-\n", key, loc, tim);
-	if ((len = strlen(buff)) > build->len)
-		resize_string_buff(build);
-	snprintf(build->string, len + 1, "%s", buff);
-	build->size += len;
-	clean_dbdata_struct(data);
-	return retval;
 }
 
 static int
@@ -2244,96 +2284,6 @@ get_build_id(ailsa_cmdb_s *cmc, uli_t id, char *name, uli_t *build_id)
 	}
 	clean_dbdata_struct(data);
 	return retval;
-}
-
-int
-get_modify_query(unsigned long int ids[])
-{
-	int retval = NONE;
-	unsigned long int vid = ids[0], osid = ids[1], dsid = ids[2];
-
-	if (vid > 0) {
-		if (osid > 0) {
-			if (dsid > 0) {
-				retval = UP_BUILD_VAR_OS_PART;
-			} else {
-				retval = UP_BUILD_VAR_OS;
-			}
-		} else {
-			if (dsid > 0) {
-				retval = UP_BUILD_VAR_PART;
-			} else {
-				retval = UP_BUILD_VARIENT;
-			}
-		}
-	} else {
-		if (osid > 0) {
-			if (dsid > 0) {
-				retval = UP_BUILD_OS_PART;
-			} else {
-				retval = UP_BUILD_OS;
-			}
-		} else {
-			if (dsid > 0) {
-				retval = UP_BUILD_PART;
-			}
-		}
-	}
-	return retval;
-}
-
-void
-cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
-{
-	if (type == UP_BUILD_VAR_OS_PART) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[1];
-		data->next->next->args.number = ids[2];
-		data->next->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VAR_OS) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[1];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VAR_PART) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[2];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_OS_PART) {
-		data->args.number = ids[1];
-		data->next->args.number = ids[2];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VARIENT) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[3];
-	} else if (type == UP_BUILD_OS) {
-		data->args.number = ids[1];
-		data->next->args.number = ids[3];
-	} else if (type == UP_BUILD_PART) {
-		data->args.number = ids[2];
-		data->next->args.number = ids[3];
-	}
-}
-
-// Static functions
-void
-check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key)
-{
-	if (!(cbc) || !(key) || !(server_id))
-		return;
-	int retval = 0, type = GET_BUILD_OS_FROM_SERVER_ID;
-	unsigned int max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	dbdata_s *data;
-
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = server_id;
-	if ((retval = cbc_run_search(cbc, data, type)) == 1) {
-		if ((strncmp(data->fields.text, "Centos", RBUFF_S) == 0) ||
-		 (strncmp(data->fields.text, "Redhat", RBUFF_S) == 0)) {
-			if (strncmp(data->next->fields.text, "6", RBUFF_S) == 0)
-				if (strncmp(key, "gb", RBUFF_S) == 0)
-					snprintf(key, COMM_S, "uk");
-		}
-	}
 }
 
 #undef PRINT_STRING_WITH_LENGTH_CHECK

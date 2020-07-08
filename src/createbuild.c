@@ -120,6 +120,10 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_DETAILS_ON_SERVER_NAME query failed");
 		goto cleanup;
 	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "Server %s does not have a build configuration", cml->name);
+		goto cleanup;
+	}
 	if ((retval = ailsa_get_modified_build(cbt, cml, build)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot modify build for %s", cml->name);
 		goto cleanup;

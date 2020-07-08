@@ -42,16 +42,7 @@ int
 write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
 get_build_id(ailsa_cmdb_s *cbc, uli_t id, char *name, uli_t *build_id);
-
-int
-get_modify_query(unsigned long int ids[]);
-
-void
-cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[]);
 
 char *
 get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt);
