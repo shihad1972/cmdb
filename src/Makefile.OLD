@@ -12,23 +12,22 @@ LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid
 bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cpc cbcsysp cbcscript ckc cbclocale cmdb hellolv mkvm mksp
 
-COMOBJECTS = cbc_common.o
 DNSCOMOBJ = zones.o dnsacom.o
 COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
 VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)
 DOBJECTS = dnsa.o $(DNSCOMOBJ)
-BOBJECTS = cbc.o $(COMOBJECTS) $(DNSCOMOBJ) build.o createbuild.o cbccom.o
-CDOBJECTS = cbcdomain.o $(COMOBJECTS) $(DNSCOMOBJ)
-COOBJECTS = cbcos.o $(COMOBJECTS)
-CVOBJECTS = cbcvarient.o $(COMOBJECTS)
-CKOBJECTS = cbcpart.o $(COMOBJECTS)
-CLOBJECTS = cbclocale.o $(COMOBJECTS)
+BOBJECTS = cbc.o $(DNSCOMOBJ) build.o createbuild.o cbccom.o
+CDOBJECTS = cbcdomain.o $(DNSCOMOBJ)
+COOBJECTS = cbcos.o
+CVOBJECTS = cbcvarient.o
+CKOBJECTS = cbcpart.o
+CLOBJECTS = cbclocale.o
 POBJECTS = cpc.c
 KOBJECTS = ckc.c
-SPOBJECTS = cbcsysp.o $(COMOBJECTS)
-SSOBJECTS = cbcscript.o $(COMOBJECTS)
+SPOBJECTS = cbcsysp.o
+SSOBJECTS = cbcscript.o
 TOBJECTS = sql_test.o
 
 all:	$(bin_programs)

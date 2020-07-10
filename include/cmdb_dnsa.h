@@ -22,7 +22,6 @@
 
 #ifndef __CMDB_DNSA_H__
 # define __CMDB_DNSA_H__
-# include "base_sql.h"
 # include "cmdb.h"
 # include "dnsa_data.h"
 

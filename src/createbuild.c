@@ -46,16 +46,12 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_common.h"
 #include "cbc_data.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 #include "build.h"
 
 #ifdef HAVE_DNSA
 
 # include "cmdb_dnsa.h"
-# include "dnsa_base_sql.h"
 
 #endif /* HAVE_DNSA */
 

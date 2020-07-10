@@ -23,7 +23,6 @@
 #ifndef __DNSA_DATA_H__
 # define __DNSA_DATA_H__
 # include <ailsacmdb.h>
-# include "base_sql.h"
 # include "cmdb.h"
 
 typedef struct dnsa_comm_line_s { /* Hold parsed command line args */

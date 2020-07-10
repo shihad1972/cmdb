@@ -44,7 +44,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include <cmdb.h>
-#include <base_sql.h>
 
 const char *basic_queries[] = {
 "SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
@@ -675,6 +674,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT domain, bt.alias, bt.url FROM build_domain bd JOIN build_ip bi ON bd.bd_id = bi.bd_id JOIN build b ON b.ip_id = bi.ip_id JOIN build_os bo ON bo.os_id = b.os_id JOIN build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
+	},
+	{ // MIRROR_ON_BUILD_ALIAS
+"SELECT mirror from build_type where alias = ?",
+	1,
+	{ AILSA_DB_TEXT }
 	},
 };
 

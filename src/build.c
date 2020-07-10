@@ -46,9 +46,6 @@
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbc_data.h"
-#include "cbc_common.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 #include "build.h"
 
 /* Hopefully this will be the file to need these variables
@@ -69,8 +66,6 @@ const int sp_position[] = { 5, 11, 17, 10, 5 };
 const int sp_query[] = { 33, 63, 64, 20, 33 };
 
 const int spvar_no = 5;
-
-const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
 
 static int
 write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);

@@ -29,9 +29,9 @@
 #include <libgen.h>
 #include <syslog.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include <cmdb.h>
 #include <cmdb_cmdb.h>
-#include <cmdb_sql.h>
 
 static int
 cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);

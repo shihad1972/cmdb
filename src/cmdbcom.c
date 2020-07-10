@@ -41,9 +41,9 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include <cmdb.h>
 #include <cmdb_data.h>
-#include <cmdb_sql.h>
 
 static int
 check_cmdb_comm_options(cmdb_comm_line_s *comp);

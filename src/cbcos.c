@@ -42,7 +42,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cbc_common.h"
 #include "cbcnet.h"
 
 typedef struct cbcos_comm_line_s {

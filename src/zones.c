@@ -44,8 +44,6 @@
 #include "cmdb.h"
 #include "dnsa_data.h"
 #include "cmdb_dnsa.h"
-#include "base_sql.h"
-#include "dnsa_base_sql.h"
 
 static void
 print_fwd_zone_records(AILLIST *r);

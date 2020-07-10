@@ -28,16 +28,4 @@
 # include <config.h>
 # include "cbc_data.h"
 
-int
-get_server_id(ailsa_cmdb_s *cbc, char *server, unsigned long int *id);
-
-int
-get_partition_id(ailsa_cmdb_s *cbc, char *name, char *mount, uli_t *id);
-
-int
-get_scheme_id_from_build(ailsa_cmdb_s *cbc, uli_t server_id, uli_t *id);
-
-int
-get_scheme_name(ailsa_cmdb_s *cbc, uli_t server_id, char *name);
-
 #endif /* CBC_COMMON_H */

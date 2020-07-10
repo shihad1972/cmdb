@@ -10,8 +10,7 @@ libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
 		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o) \
 		libailsacmdb.a(cbcnet.o)
 
-libailsasql.a:	libailsasql.a(queries.o) libailsasql.a(base_sql.o) \
-		libailsasql.a(cbc_base_sql.o) libailsasql.a(sql.o) libailsasql.a(helper.o) \
+libailsasql.a:	libailsasql.a(queries.o) libailsasql.a(sql.o) libailsasql.a(helper.o) \
 		libailsasql.a(sql_data.o) libailsasql.a(dnsa_net.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
@@ -75,12 +74,6 @@ libailsasql.a(queries.o):	queries.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(helper.o):	helper.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(base_sql.o):	base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(cbc_base_sql.o):	cbc_base_sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

@@ -45,7 +45,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_sql.h"
 
 void
 report_error(int error, const char *errstr)

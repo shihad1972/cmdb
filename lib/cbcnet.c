@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 #include <time.h>
 /* For freeBSD ?? */
@@ -37,11 +38,11 @@
 #include <ifaddrs.h>
 #include <errno.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "cbcnet.h"
 #include "cbc_data.h"
-#include "cbc_base_sql.h"
 
 static int
 compare_iface_bdom(cbc_build_domain_s *bdl, cbc_iface_s *i);
@@ -345,36 +346,37 @@ int
 cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail)
 {
 	int retval = 0;
-	int type = BOOT_FILES_MIRROR_DETAILS;
 	int s;
-	unsigned int max;
 	unsigned long int size;
 	size_t len;
 	FILE *tx = NULL, *rx = NULL, *krn = NULL, *intrd = NULL;
 	char kfile[BUFF_S], infile[BUFF_S];
 	char *buff = NULL, *kernel = NULL, *initrd = NULL;
 	char *host;
-	dbdata_s *data = NULL;
 	struct addrinfo h, *r, *p;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *mirror = ailsa_db_data_list_init();
 
 	r = NULL;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
 	if (!(kernel = calloc(RBUFF_S, 1)))
 		goto cleanup;
 	if (!(initrd = calloc(RBUFF_S, 1)))
 		goto cleanup;
-	snprintf(data->args.text, RBUFF_S, "%s", os);
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		fprintf(stderr, "No build type for os %s\n", os);
-		retval = 1;
-		goto cleanup;
-	} else if (retval > 1) {
-		fprintf(stderr, "More than 1 build type for os %s?\n", os);
-		retval = 2;
+	if ((retval = cmdb_add_string_to_list(os, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add os alias to list");
 		goto cleanup;
 	}
-	host = data->fields.text;
+	if ((retval = ailsa_argument_query(cmc, MIRROR_ON_BUILD_ALIAS, list, mirror)) != 0) {
+		ailsa_syslog(LOG_ERR, "MIRROR_ON_BUILD_ALIAS query failed");
+		goto cleanup;
+	}
+	if (mirror->total > 0) {
+		host = ((ailsa_data_s *)mirror->head->data)->data->text;
+	} else {
+		ailsa_syslog(LOG_ERR, "Nothing back from query MIRROR_ON_BUILD_ALIAS");
+		retval = AILSA_NO_MIRROR;
+		goto cleanup;
+	}
 	if (strncmp(os, "debian", COMM_S) == 0) {
 		if (strncmp(arch, "i386", COMM_S) == 0) {
 			snprintf(kernel, BUFF_S, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
@@ -423,7 +425,7 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 		break;
 	}
 	if (!(p)) {
-		fprintf(stderr, "Cannot connect to host %s\n", data->fields.text);
+		fprintf(stderr, "Cannot connect to host %s\n", host);
 		retval = 1;
 		goto cleanup;
 	}
@@ -502,7 +504,8 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 			free(initrd);
 		if (r)
 			freeaddrinfo(r);
-		clean_dbdata_struct(data);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(mirror);
 		return retval;
 }
 
