@@ -42,27 +42,6 @@ int
 write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 int
-get_build_id(ailsa_cmdb_s *cbc, uli_t id, char *name, uli_t *build_id);
-
-char *
-get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt);
-
-void
-add_kick_base_script(dbdata_s *data, string_len_s *build);
-
-void
-add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url);
-
-int
-get_pre_part_options(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts);
-
-char *
-cbc_complete_arg(ailsa_cmdb_s *cbc, uli_t server_id, char *arg);
-
-char *
-get_replaced_syspack_arg(dbdata_s *data, int loop);
-
-int
 modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
 int
