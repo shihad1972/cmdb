@@ -379,6 +379,8 @@ ailsa_clean_build(void *build)
 		my_free(data->os);
 	if (data->version)
 		my_free(data->version);
+	if (data->os_ver)
+		my_free(data->os_ver);
 	if (data->arch)
 		my_free(data->arch);
 	if (data->url)

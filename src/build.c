@@ -85,6 +85,15 @@ static int
 cbc_write_kickstart_partitions(int fd, AILLIST *disk, AILLIST *part);
 
 static int
+cbc_write_kickstart_net(int fd, ailsa_build_s *bld);
+
+static int
+cbc_write_kickstart_packages(int fd, AILLIST *pack);
+
+static int
+cbc_write_kickstart_scripts(int fd, char *url, AILLIST *sys);
+
+static int
 cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list);
 
 static int
@@ -121,7 +130,7 @@ static int
 cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys);
 
 static void
-cbc_write_system_scripts(char *host, char *url, int fd, AILLIST *sys);
+cbc_write_system_scripts(char *url, int fd, AILLIST *sys);
 
 static int
 cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
@@ -926,8 +935,8 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot add server ID to list in write_preseed_build_file");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cmc, PRESEED_BUILD_DETAILS, server, build)) != 0) {
-		ailsa_syslog(LOG_ERR, "PRESEED_BUILD_DETAILS query failed");
+	if ((retval = ailsa_argument_query(cmc, BUILD_DETAILS, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
@@ -1274,6 +1283,7 @@ cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys)
 \n\
 \n\
 WGET=/usr/bin/wget\n\
+cd /root\n\
 \n\
 $WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
 \n\
@@ -1285,34 +1295,39 @@ $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
 ./motd.sh >> scritps.log 2>&1\
 \n", host, url, url, url);
-	cbc_write_system_scripts(host, url, fd, sys);
+	cbc_write_system_scripts(url, fd, sys);
 	close(fd);
 	mask = umask(um);
 	return retval;
 }
 
 static void
-cbc_write_system_scripts(char *host, char *url, int fd, AILLIST *sys)
+cbc_write_system_scripts(char *url, int fd, AILLIST *sys)
 {
-	if (!(host) || !(url) || (fd == 0) || !(sys))
+	if (!(url) || (fd == 0) || !(sys))
 		return;
 	if (sys->total == 0)
 		return;
 	AILELEM *e = sys->head;
-	ailsa_sysscript_s *ss;
+	ailsa_sysscript_s *ss = e->data;
+	char *name = ss->name;
 
 	while (e) {
 		ss = e->data;
-		if (ss->no == 1)
-			dprintf(fd, "\n\n\
+		if (ss->no == 1) {
+			if (strncmp(name, ss->name, DOMAIN_LEN) != 0)
+				dprintf(fd, " > %s.log 2>&1\n", name);
+			name = ss->name;
+			dprintf(fd, "\n\
 $WGET %sscripts/%s\n\
 chmod 755 %s\n\
 ./%s %s", url, ss->name, ss->name, ss->name, ss->arg);
-		else
+		} else {
 			dprintf(fd, " %s", ss->arg);
+		}
 		e = e->next;
 	}
-	dprintf(fd, "\n");
+	dprintf(fd, " > %s.log 2>&1\n", name);
 }
 
 static ailsa_build_s *
@@ -1322,7 +1337,7 @@ cbc_fill_build_details(AILLIST *build)
 		return NULL;
 	char addr[SERVICE_LEN];
 	uint32_t ip;
-	size_t len = 17;
+	size_t len = 18;
 	ailsa_build_s *b = ailsa_calloc(sizeof(ailsa_build_s), "b in cbc_fill_build_details");
 	AILELEM *e = build->head;
 	ailsa_data_s *d = e->data;
@@ -1393,6 +1408,9 @@ cbc_fill_build_details(AILLIST *build)
 	e = e->next;
 	d = e->data;
 	b->version = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->os_ver = strndup(d->data->text, SERVICE_LEN);
 	e = e->next;
 	d = e->data;
 	b->arch = strndup(d->data->text, SERVICE_LEN);
@@ -1535,16 +1553,22 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	if (!(cmc) || !(cml))
 		return AILSA_NO_DATA;
+	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *domain = ailsa_db_data_list_init();
 	AILLIST *disk = ailsa_db_data_list_init();
 	AILLIST *locale = ailsa_db_data_list_init();
 	AILLIST *partitions = ailsa_db_data_list_init();
 	AILLIST *part = ailsa_partition_list_init();
+	AILLIST *pack = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *scripts = ailsa_db_data_list_init();
+	AILLIST *sys = ailsa_sysscript_list_init();
 	char file[DOMAIN_LEN];
 	int retval, flags;
 	int fd = 0;
 	mode_t um = 0;
 	mode_t mask;
+	ailsa_build_s *bld = NULL;
 
 	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
@@ -1566,8 +1590,32 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
 		goto cleanup;
 	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PACKAGES_ON_SERVER_ID, server, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PACKAGES_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, DOMAIN_BUILD_ALIAS_ON_SERVER_ID, server, domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "DOMAIN_BUILD_ALIAS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE, domain, scripts)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_DETAILS, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
+		goto cleanup;
+	}
 	if ((retval = cbc_fill_partition_details(partitions, part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot fill in partitin details");
+		goto cleanup;
+	}
+	if (!(bld = cbc_fill_build_details(build))) {
+		ailsa_syslog(LOG_ERR, "Cannot fill build details");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_system_scripts(scripts, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill system scripts list");
 		goto cleanup;
 	}
 	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
@@ -1575,7 +1623,7 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	if ((fd = open(file, flags, mask)) == -1) {
-		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
+		ailsa_syslog(LOG_ERR, "Cannot open kickstart build file %s for writing: %s", file, strerror(errno));
 		retval = FILE_O_FAIL;
 		goto cleanup;
 	}
@@ -1583,101 +1631,30 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		goto cleanup;
 	if ((retval = cbc_write_kickstart_partitions(fd, disk, part)) != 0)
 		goto cleanup;
-/*
-	char file[NAME_S], url[CONF_S], *server = cml->name;
-	int retval = NONE, type = KICK_BASE;
-	unsigned long int bd_id;
-	dbdata_s *data;
-	string_len_s build = { .len = FILE_S, .size = NONE };
+	if ((retval = cbc_write_kickstart_net(fd, bld)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_packages(fd, pack)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_scripts(fd, bld->url, sys)) != 0)
+		goto cleanup;
 
-	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
-	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
-	if ((retval = fill_kick_base(cmc, cml, &build)) != 0)
-		return retval;
-	if ((retval = fill_kick_partitions(cmc, cml, &build)) != 0)
-		return retval;
-
-	type = KICK_NET_DETAILS;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build for %s has no network information.\n",
-		 server);
-		return NO_NET_BUILD_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build for %s has multiple network configs.\n",
-		 server);
-		return MULTI_NET_BUILD_ERR;
-	} else {
-		fill_kick_network_info(data, &build);
-	}
-	clean_dbdata_struct(data);
-
-	type = BUILD_PACKAGES;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		data = NULL;
-		fprintf(stderr, "Build for %s has no packages associated.\n",
-		 server);
-	}
-	fill_kick_packages(cml, data, &build);
-	clean_dbdata_struct(data);
-
-	type = BUILD_TYPE_URL;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build type for %s has no url??\n", server);
-		return NO_BUILD_URL;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple url's?? Perhaps multiple build domains\n");
-	}
-	add_kick_base_script(data, &build);
-	snprintf(url, CONF_S, "%s", data->fields.text);
-	clean_dbdata_struct(data);
-
-	type = BD_ID_ON_SERVER_ID;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build domain for server %s not found\n", server);
-		return BUILD_DOMAIN_NOT_FOUND;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple build domains found for server %s\n", server);
-	bd_id = data->fields.number;
-	clean_dbdata_struct(data);
-
-	type = SCRIPT_CONFIG;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = bd_id;
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
-	if ((retval = cbc_run_search(cmc, data, type)) == 0)
-		fprintf(stderr, "No scripts configured for this build\n");
-	else
-		fill_build_scripts(cmc, data, retval, &build, cml);
-	add_kick_final_config(cml, &build, url);
-	clean_dbdata_struct(data);
-	retval = write_file(file, build.string);
-	free(build.string);
-	return retval;
-*/
 	cleanup:
 		if (fd > 0)
 			close(fd);
 		if (um > 0)
 			mask = umask(um);
+		if (bld)
+			ailsa_clean_build(bld);
+		ailsa_list_full_clean(build);
+		ailsa_list_full_clean(domain);
 		ailsa_list_full_clean(disk);
 		ailsa_list_full_clean(locale);
 		ailsa_list_full_clean(partitions);
+		ailsa_list_full_clean(pack);
 		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(scripts);
 		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(sys);
 		return retval;
 }
 
@@ -1739,6 +1716,90 @@ zerombr\n\
 bootloader --location=mbr --driveorder=%s\n\
 clearpart --all --initlabel\n", d->data->text);
 	d = disk->head->next->data;
+	e = part->head;
+	if (d->data->small > 0) {
+		dprintf(fd, "\
+part /boot --asprimary --fstype=\"ext3\" --size=512\n\
+part pv.1 --asprimary --size=1 --grow\n\
+volgroup system_vg --pesize=32768 pv.1\n");
+		while (e) {
+			p = e->data;
+			dprintf(fd, "\
+logvol %s --fstype=\"%s\" --name=%s --vgname=system_vg --size=%lu\n\
+", p->mount, p->fs, p->logvol, p->min);
+			e = e->next;
+		}
+	} else {
+		while (e) {
+			p = e->data;
+			dprintf(fd, "\
+part %s --fstype=\"%s\" --size=%lu\n\
+", p->mount, p->fs, p->min);
+			e = e->next;
+		}
+	}
+	dprintf(fd, "\n");
+	return 0;
+}
+
+static int
+cbc_write_kickstart_net(int fd, ailsa_build_s *bld)
+{
+	if (!(bld) || (fd == 0))
+		return AILSA_NO_DATA;
+	dprintf(fd, "\
+\n\
+url --url=http://%s/%s/%s/os/%s\n\
+network --bootproto=static --device=%s --ip=%s --netmask=%s --gateway=%s --nameserver=%s --hostname=%s.%s --onboot=on\n\
+", bld->mirror, bld->os, bld->os_ver, bld->arch, bld->net_int, bld->ip, bld->nm, bld->gw, bld->ns, bld->host, bld->domain);
+	return 0;
+}
+
+static int
+cbc_write_kickstart_packages(int fd, AILLIST *pack)
+{
+	if (!(pack) || (fd == 0))
+		return AILSA_NO_DATA;
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	dprintf(fd, "\
+\n\
+%%packages\n\
+\n\
+@Base\n\
+");
+	e = pack->head;
+	while (e) {
+		d = e->data;
+		dprintf(fd, "%s\n", d->data->text);
+		e = e->next;
+	}
+	dprintf(fd, "\n%%end\n\n");
+	return 0;
+}
+
+static int
+cbc_write_kickstart_scripts(int fd, char *url, AILLIST *sys)
+{
+	if (!(url) || !(sys) || (fd == 0))
+		return AILSA_NO_DATA;
+
+	dprintf(fd, "\
+%%post\n\
+\n\
+WGET=/usr/bin/wget\n\
+cd /root\n\
+$WGET %sscripts/disable_install.php > disable.log 2>&1\n\
+\n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh > firstboot.log 2>&1\n\
+\n\
+wget %sscripts/motd.sh\n\
+chmod 755 motd.sh\n\
+./motd.sh > motd.log 2>&1\n", url, url, url);
+	cbc_write_system_scripts(url, fd, sys);
 	return 0;
 }
 

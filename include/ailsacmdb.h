@@ -481,6 +481,7 @@ typedef struct ailsa_build_s {
 	char *mirror;
 	char *os;
 	char *version;
+	char *os_ver;
 	char *arch;
 	char *url;
 	char *fqdn;
