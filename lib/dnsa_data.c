@@ -299,4 +299,3 @@ dnsa_clean_glue(glue_zone_info_s *list)
 			next = NULL;
 	}
 }
-

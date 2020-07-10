@@ -40,8 +40,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
-#include "cbc_data.h"
 
 static int
 cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);

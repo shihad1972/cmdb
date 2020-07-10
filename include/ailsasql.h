@@ -21,6 +21,7 @@
 
 #ifndef __AILSASQL_H__
 # define __AILSASQL_H__
+# define MAXDATASIZE     1048576    // Maximum buffer length
 enum {			/* Select statements */
 	SERVER = 1,
 	SERVER_TYPE,
@@ -499,6 +500,9 @@ get_net_range(unsigned long int prefix);
 
 int
 do_rev_lookup(char *ip, char *host, size_t len);
+
+int
+cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 // Some zone functions
 

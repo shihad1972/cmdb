@@ -512,6 +512,64 @@ typedef struct ailsa_sysscript_s {
 	unsigned long int no;
 } ailsa_sysscript_s;
 
+enum {
+	CBCSCRIPT = 1,
+	CBCSCRARG = 2
+};
+
+enum {
+	SPACKAGE = 1,
+	SPACKARG = 2,
+	SPACKCNF = 3
+};
+
+typedef struct cbc_syss_s {
+	char *name;
+	char *arg;
+	char *domain;
+	char *type;
+	short int action;
+	short int what;
+	unsigned long int no;
+} cbc_syss_s;
+
+typedef struct cbc_sysp_s {
+	char *arg;
+	char *domain;
+	char *field;
+	char *name;
+	char *type;
+	short int action;
+	short int what;
+} cbc_sysp_s;
+
+typedef struct cbcdomain_comm_line_s {
+	char *domain;
+	char *ntpserver;
+	char *config;
+	short int action;
+	short int confntp;
+	unsigned long int start_ip;
+	unsigned long int end_ip;
+	unsigned long int netmask;
+	unsigned long int gateway;
+	unsigned long int ns;
+} cbcdomain_comm_line_s;
+
+typedef struct cbc_dhcp_s { // Info for a dhcp network
+        char *iname;    // Interface Name
+        char *dname;    // Domain Name
+        unsigned long int gw, nw, nm, ns, ip; // 
+        struct string_l *dom_search;
+        struct cbc_dhcp_s *next;
+} cbc_dhcp_s;
+
+typedef struct cbc_iface_s { // Info about interface
+        char *name;
+        uint32_t ip, sip, fip, nm, bc, nw;
+        struct cbc_iface_s *next;
+} cbc_iface_s;
+
 // library version info
 
 void
@@ -596,6 +654,8 @@ void
 ailsa_clean_sysscript(void *script);
 void
 ailsa_clean_iface(void *data);
+void
+clean_cbc_syss_s(cbc_syss_s *scr);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *

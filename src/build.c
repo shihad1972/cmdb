@@ -45,7 +45,6 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
 #include "build.h"
 
 /* Hopefully this will be the file to need these variables

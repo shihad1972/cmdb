@@ -46,7 +46,6 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
 #include "build.h"
 
 #ifdef HAVE_DNSA

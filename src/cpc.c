@@ -42,7 +42,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include "cmdb.h"
-#include "cbc_data.h"
 
 typedef struct cpc_config_s {
 	char *disk;

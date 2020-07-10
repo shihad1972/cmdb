@@ -27,7 +27,6 @@
 
 #ifndef __CBC_BUILD_H__
 # define __CBC_BUILD_H__
-# include "cmdb_cbc.h"
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);

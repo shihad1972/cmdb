@@ -40,9 +40,7 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
 #include "cbcnet.h"
-#include "cbc_data.h"
 
 static int
 compare_iface_bdom(cbc_build_domain_s *bdl, cbc_iface_s *i);

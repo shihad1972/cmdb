@@ -27,7 +27,6 @@
 # define __CMDB_CBC_H__
 # include <config.h>
 # include <ailsacmdb.h>
-# include "cbc_data.h"
 
 typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 	char *config;

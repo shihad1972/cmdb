@@ -467,6 +467,22 @@ ailsa_clean_iface(void *iface)
 }
 
 void
+clean_cbc_syss_s(cbc_syss_s *scr)
+{
+	if (!(scr))
+		return;
+	if (scr->name)
+		free(scr->name);
+	if (scr->arg)
+		free(scr->arg);
+	if (scr->domain)
+		free(scr->domain);
+	if (scr->type)
+		free(scr->type);
+	free(scr);
+}
+
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
