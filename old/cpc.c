@@ -117,9 +117,6 @@ add_clock_and_ntp(string_len_s *pre, cpc_config_s *cpc);
 
 static void
 add_partitions(string_len_s *pre, cpc_config_s *cpc);
-/*
-static void
-add_no_recommends(string_len_s *pre, cpc_config_s *cpc); */
 
 static void
 add_apt(string_len_s *pre, cpc_config_s *cpc);
@@ -666,25 +663,6 @@ d-i grub-installer/only_debian boolean true\n\
 	pre->size += psize;
 	free(part);
 }
-/*
-static void
-add_no_recommends(string_len_s *pre, cpc_config_s *cpc)
-{
-	char *rec;
-	size_t rsize;
-	if (cpc->recommends == 0)
-		return;
-	if ((asprintf(&rec, "\
-d-i base-installer/install-recommends boolean false\n\
-\n")) == -1)
-		report_error(MALLOC_FAIL, "rec in add_no_recommends");
-	rsize = strlen(rec);
-	if ((pre->size + rsize) >= pre->len)
-		resize_string_buff(pre);
-	snprintf(pre->string + pre->size, rsize + 1, "%s", rec);
-	pre->size += rsize;
-	free(rec);
-} */
 
 static void
 add_apt(string_len_s *pre, cpc_config_s *cpc)

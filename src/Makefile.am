@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb cpc ckc mkvm mksp
+bin_PROGRAMS = cmdb mkvm mksp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h

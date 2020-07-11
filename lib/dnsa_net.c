@@ -42,7 +42,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 
 

@@ -42,7 +42,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 
 static void
@@ -1872,32 +1871,6 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
 		return retval;
 }
 
-void
-select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm)
-{
-	record_row_s *records, *next, *ip;
-
-	ip = NULL;
-	records = dnsa->records;
-	next = records->next;
-	while (records) {
-		if (strncmp(records->dest, cm->dest, RANGE_S) == 0) {
-			ip = records;
-			records = records->next;
-			if (records)
-				next = records->next;
-		} else {
-			free(records);
-			records = next;
-			if (records)
-				next = records->next;
-		}
-	}
-	dnsa->records = ip;
-	if (ip)
-		ip->next = NULL;
-}
-
 int
 add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
@@ -2148,17 +2121,4 @@ list_glue_zones(ailsa_cmdb_s *dc)
 	}
 	cleanup:
 		ailsa_list_full_clean(g);
-}
-
-void
-add_int_ip_to_fwd_records(record_row_s *records)
-{
-	uint32_t ip;
-	while (records) {
-		if (inet_pton(AF_INET, records->dest, &ip))
-			records->ip_addr = (unsigned long int) htonl(ip);
-		else
-			records->ip_addr = 0;
-		records = records->next;
-	}
 }

@@ -41,7 +41,6 @@
 #endif // H)AVE_GETOPT_H
 #include "cmdb.h"
 #include <ailsacmdb.h>
-#include "dnsa_data.h"
 #include "cmdb_dnsa.h"
 
 
@@ -543,7 +542,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 		}
 	}
 	cleanup:
-		cmdb_free(regex, RBUFF_S);
+		my_free(regex);
 		return retval;
 }
 

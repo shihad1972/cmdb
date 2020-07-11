@@ -849,15 +849,7 @@ display_version(char *prog);
 void
 get_error_string(int error, char *errstr);
 void
-cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
 chomp(char *input);
-void
-display_action_error(short int action);
 void 
 display_type_error(short int type);
 void
