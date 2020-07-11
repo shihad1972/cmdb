@@ -1,3 +1,7 @@
+11/07/2020
+Should be able to read config values from environment variables. Also
+have defaults either in config file, environment or database
+
 02/07/2020
 Fix cbcvarient where displaying varient that does not exist blows up.
 
@@ -64,7 +68,7 @@ should be printed.
 Programs moved to new AILLIST database model:
 	cmdb		**Done**
 	dnsa		**Done**
-	cbc
+	cbc		**Done**
 	cbcvarient	**Done**
 	cbcdomain	**Done**
 	cbcos		**Done**
@@ -79,8 +83,8 @@ line options. Once this is up and working, this can be the default data
 definition language for the daemon too.
 
 Reworking the SQL code:
-  - allow inserts of multiple entries
-  - condense cmdb dnsa and cbc sql into 1 set of functions
+  - allow inserts of multiple entries				**DONE**
+  - condense cmdb dnsa and cbc sql into 1 set of functions	**DONE**
 
 07/02/2020
 Start to use the errors.c in lib/ directory. cmdb-0.3 branch has put the
@@ -141,6 +145,8 @@ we need to page the terminal and also rerun the query on the database using
 the LIMIT clause in the SQL statement. This can be used in the prepared
 statements but probably not the base queries, so I will have to fix the whole
 DB access :(
+	**Update** This is more a display problem. Now using AILLIST to
+	access database should make this easier
 
 21/11/2014
 Check the auditd source code for a cool way to read a config file.
@@ -259,6 +265,7 @@ Fixed
 
 26/08/2013
 Add checks against all strtoul from DB as if given NULL it will segfault.
+	**DONE** New DB access
 
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
@@ -273,6 +280,7 @@ search so that it will do a, e.g. cbc_search and get the correct values
 for number and type of args and fields. Also this will need to be the
 correct search itself. Could this config contain this information?
 	** Started. ailsa_cmdb_s **
+	** Done: Various commits. All progrmas use aisla_cmdb_s
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
@@ -301,6 +309,9 @@ Also need to add an email alias for root in smtp configuration
 Database access is pretty poor. Multiple inserts need multiple statements
 and the memory allocation for a large result set is bad too (each result
 has an individual malloc.)
+	11/07/2020 **Update**
+	New AILLIST database access allows multiple inserts in 1 query.
+	Cannot page result set yet. This is more an issue with display
 
 28/04/2013
 The varients perhaps should be able to be added together, so for example you
