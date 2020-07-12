@@ -1102,8 +1102,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		--tmp;
 		*tmp = '\0';
 		snprintf(classless, CONF_S, "/%lu.", prefix);
-		len = strlen(classless);
-		strncat(in_addr, classless, len);
+		strncat(in_addr, classless, SERVICE_LEN);
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
 			strncat(in_addr, tmp, SERVICE_LEN);
