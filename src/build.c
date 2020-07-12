@@ -58,7 +58,7 @@ const char *spvars[] = {
 	"%ip"
 };
 
-const int sp_position[] = { 5, 11, 17, 10, 5 };
+const int sp_position[] = { 5, 11, 18, 10, 5 };
 
 //const unsigned int spvar_len[] = { 7, 7, 5, 9, 3 };
 
@@ -926,6 +926,10 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
 		goto cleanup;
 	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PACKAGES_ON_SERVER_ID, server, packages)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PACKAGES_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
 	if ((retval = ailsa_argument_query(cmc, SYSTEM_PACKAGES_ON_SERVER_ID, server, sys)) != 0) {
 		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGES_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -988,10 +992,11 @@ write_preseed_net_mirror(int fd, ailsa_build_s *bld)
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string %s\n\
 d-i debian-installer/language string %s\n\
+d-i debian-installer/country string %s\n\
 d-i console-keymaps-at/keymap select %s\n\
 d-i keyboard-configuration/xkb-keymap select %s\n\
 d-i keymap select %s\n\
-\n", bld->locale, bld->language, bld->keymap, bld->keymap, bld->keymap);
+\n", bld->locale, bld->language, bld->country, bld->keymap, bld->keymap, bld->keymap);
 	if (strncmp(bld->os, "debian", SERVICE_LEN) == 0)
 		dprintf(fd, "\
 d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n");
@@ -1043,10 +1048,17 @@ write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build)
 	if ((fd == 0) || !(disk) || !(build))
 		return AILSA_NO_DATA;
 	ailsa_data_s *d = disk->head->data;
+	ailsa_data_s *l = disk->head->next->data;
 	dprintf(fd, "\
 d-i partman-auto/disk string %s\n\
-d-i partman-auto/choose_recipe select monkey\n\
-d-i partman-auto/method string lvm\n\
+d-i partman-auto/choose_recipe select monkey\n", d->data->text);
+	if (l->data->number > 0)
+		dprintf(fd, "\
+d-i partman-auto/method string lvm\n");
+	else
+		dprintf(fd, "\
+d-i partman-auto/method string regular\n");
+	dprintf(fd, "\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
 d-i partman-auto-lvm/guided_size string 100%%\n\
 d-i partman-auto-lvm/no_boot boolean true\n\
@@ -1060,7 +1072,7 @@ d-i partman-lvm/device_remove_lvm_span boolean true\n\
 d-i partman-md/device_remove_md boolean true\n\
 d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
-d-i partman/mount_style select uuid\n", d->data->text);
+d-i partman/mount_style select uuid\n");
 	return 0;
 }
 
@@ -1092,7 +1104,7 @@ d-i partman-auto/expert_recipe string \\\n\
 			dprintf(fd, "\
                        method{ format } format{ } \\\n\
                        use_filesystem{ } filesystem{ %s } \\\n\
-                       mountpoint { %s } \\\n", p->fs, p->mount);
+                       mountpoint{ %s } \\\n", p->fs, p->mount);
 		} else {
 			dprintf(fd, "\
                        method{ swap } format{ } \\\n");
@@ -1101,7 +1113,7 @@ d-i partman-auto/expert_recipe string \\\n\
 		e = e->next;
 		if (e)
 			dprintf(fd, "\
-              . \\\n\n");
+              . \\\n");
 		else
 			dprintf(fd, "\
               .\n\n");
