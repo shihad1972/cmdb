@@ -909,6 +909,9 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	ailsa_build_s *bld = NULL;
 	mode_t um, mask;
 
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
 	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server ID to list in write_preseed_build_file");
@@ -946,9 +949,6 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot fill system package details");
 		goto cleanup;
 	}
-	um = umask(0);
-	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
-	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	if ((fd = open(file, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
 		retval = FILE_O_FAIL;

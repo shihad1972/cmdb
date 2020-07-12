@@ -1058,8 +1058,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -1072,8 +1071,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -1088,8 +1086,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -1100,8 +1097,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		prefix == 31 || prefix == 32) {
 		tmp = strrchr(line, c);
 		++tmp;
-		len = strlen(tmp);
-		strncat(in_addr, tmp, len);
+		strncat(in_addr, tmp, SERVICE_LEN);
 		strcat(in_addr, ".");
 		--tmp;
 		*tmp = '\0';
@@ -1110,18 +1106,15 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		strncat(in_addr, classless, len);
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
 		}
 	}
-	len = strlen(line);
-	strncat(in_addr, line, len);
-	len = strlen(louisa);
-	strncat(in_addr, louisa, len);
+	strncat(in_addr, line, SERVICE_LEN);
+	strncat(in_addr, louisa, SERVICE_LEN);
 	free(line);
 	free(classless);
 }
