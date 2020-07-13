@@ -516,12 +516,13 @@ display_cbcdomain_usage(void)
 	printf("-a: add build domain\n-d: display build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
+	printf("-z: set default build domain\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("NTP server configuration:\n");
 	printf("-t ntp_server\n\n");
-	printf("cbcdomain ( action ) [ -b build-domain ] ( app options )\n\n");
+	printf("cbcdomain ( action ) [ -n build-domain ] ( app options )\n\n");
 }
 
 void
