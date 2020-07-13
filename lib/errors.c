@@ -531,12 +531,12 @@ display_cbcos_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add OS\n-d: display OS\n-g: grab boot files\n-l: list OS\n");
-	printf("-r: remove OS\n-x: set default OS\n");
+	printf("-r: remove OS\n-z: set default OS\n");
 	printf("All actions apart from -l and -g need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <alias>\n-t: <os architecture\n\n");
-	printf("cbcos [ -a | -d | -l | -r ] -n [ detail options ]\n\n");
+	printf("cbcos [ -a | -d | -l | -r | -z ] -n [ detail options ]\n\n");
 }
 
 void
