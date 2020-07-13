@@ -158,7 +158,7 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
-	const char *optstr = "ade:fghln:o:rs:t:vx";
+	const char *optstr = "ade:fghln:o:rs:t:vz";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -180,7 +180,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		{"architecture",	required_argument,	NULL,	't'},
 		{"os-arch",		required_argument,	NULL,	't'},
 		{"version",		no_argument,		NULL,	'v'},
-		{"set-default",		no_argument,		NULL,	'x'},
+		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
 	};
 
@@ -201,7 +201,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = CVERSION;
 		else if (opt == 'g')
 			col->action = DOWNLOAD;
-		else if (opt == 'x')
+		else if (opt == 'z')
 			col->action = SET_DEFAULT;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
@@ -795,6 +795,10 @@ cbcos_set_default_os(ailsa_cmdb_s *cc, cbcos_comm_line_s *ccl)
 	args[2] = ccl->arch;
 	if ((retval = cmdb_add_os_id_to_list(args, cc, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get OS id");
+		goto cleanup;
+	}
+	if (os->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find OS %s; version %s; architecture %s", args[0], args[1], args[2]);
 		goto cleanup;
 	}
 	if ((retval = ailsa_basic_query(cc, DEFAULT_OS, def)) != 0) {
