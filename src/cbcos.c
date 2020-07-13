@@ -98,6 +98,9 @@ ailsa_insert_cuser_muser(AILLIST *list, AILELEM *elem);
 static void
 display_server_name_for_build_os_id(AILLIST *list);
 
+static int
+cbcos_set_default_os(ailsa_cmdb_s *cc, cbcos_comm_line_s *ccl);
+
 int
 main (int argc, char *argv[])
 {
@@ -123,6 +126,8 @@ main (int argc, char *argv[])
 		retval = remove_cbc_build_os(cmc, cocl);
 	else if (cocl->action == DOWNLOAD)
 		retval = cbcos_grab_boot_files(cmc, cocl);
+	else if (cocl->action == SET_DEFAULT)
+		retval = cbcos_set_default_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
 	if (retval != 0) {
@@ -153,7 +158,7 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
-	const char *optstr = "ade:fghln:o:rs:t:v";
+	const char *optstr = "ade:fghln:o:rs:t:vx";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -175,6 +180,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		{"architecture",	required_argument,	NULL,	't'},
 		{"os-arch",		required_argument,	NULL,	't'},
 		{"version",		no_argument,		NULL,	'v'},
+		{"set-default",		no_argument,		NULL,	'x'},
 		{NULL,			0,			NULL,	0}
 	};
 
@@ -195,6 +201,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = CVERSION;
 		else if (opt == 'g')
 			col->action = DOWNLOAD;
+		else if (opt == 'x')
+			col->action = SET_DEFAULT;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'e')
@@ -222,7 +230,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		printf("No action provided\n");
 		return NO_ACTION;
 	}
-	if (col->action == ADD_CONFIG && (
+	if (((col->action == ADD_CONFIG) || (col->action == SET_DEFAULT)) && (
 		(!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
@@ -764,3 +772,57 @@ ailsa_insert_cuser_muser(AILLIST *list, AILELEM *elem)
 	return retval;
 }
 
+static int
+cbcos_set_default_os(ailsa_cmdb_s *cc, cbcos_comm_line_s *ccl)
+{
+	if (!(cc) || !(ccl))
+		return AILSA_NO_DATA;
+	if ((!(ccl->os) && !(ccl->alias)) || (!(ccl->version) && !(ccl->ver_alias)) || !(ccl->arch))
+		return AILSA_NO_DATA;
+	char **args = ailsa_calloc((sizeof(char *) * 3), "args in cbcos_set_default_os");
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+
+	int retval;
+	if (ccl->os)
+		args[0] = ccl->os;
+	else
+		args[0] = ccl->alias;
+	if (ccl->version)
+		args[1] = ccl->version;
+	else
+		args[1] = ccl->ver_alias;
+	args[2] = ccl->arch;
+	if ((retval = cmdb_add_os_id_to_list(args, cc, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get OS id");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cc, DEFAULT_OS, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_OS query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cc, INSERT_DEFAULT_OS, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_OS query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to list in cbcos_set_default_os");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cc, update_queries[UPDATE_DEFAULT_OS], os)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_OS query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(def);
+		my_free(args);
+		return retval;
+}

@@ -77,6 +77,7 @@ const char *basic_queries[] = {
  LEFT JOIN server s ON s.server_id = b.server_id \
  LEFT JOIN build_ip ip ON ip.ip_id = b.ip_id \
  LEFT JOIN build_domain db ON db.bd_id = ip.bd_id", // DHCP_INFORMATION
+"SELECT os_id FROM default_os", // DEFAULT_OS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -843,6 +844,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	10,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_DEFAULT_OS
+"INSERT INTO default_os (os_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -1020,6 +1026,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE disk_dev SET lvm = ? WHERE server_id = ?",
 	2,
 	{ AILSA_DB_SINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_OS
+"UPDATE default_os SET os_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 
