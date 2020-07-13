@@ -1,4 +1,4 @@
-.TH cbcpart 8 "Version 0.2: 05 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcpart 8 "Version 0.3: 13 July 2020" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcpart \- Create Build Config Partitions
 .SH SYNOPSIS
@@ -15,7 +15,7 @@ cbcpart \- Create Build Config Partitions
 
 .B cbcpart
 [
-.B -adlmrv
+.B -adlmrvz
 ] [
 .B -p | -s | -o
 ] [
@@ -45,6 +45,8 @@ list all partition schemes.
 modify a scheme / partition.
 .IP "-r,  --remove, --delete"
 remove a partition from a scheme or an entire partition scheme.
+.IP "-z   --set-default"
+set a partition scheme to be default
 .IP "-v,  --version"
 version (no other argument needed)
 .IP "-h,  --help"

@@ -79,6 +79,7 @@ const char *basic_queries[] = {
  LEFT JOIN build_domain db ON db.bd_id = ip.bd_id", // DHCP_INFORMATION
 "SELECT os_id FROM default_os", // DEFAULT_OS
 "SELECT def_scheme_id FROM default_scheme", // DEFAULT_SCHEME
+"SELECT varient_id FROM default_varient", // DEFAULT_VARIENT
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -855,6 +856,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	3,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_DEFAULT_VARIENT
+"INSERT INTO default_varient (varient_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -1040,6 +1046,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 	},
 	{ // UPDATE_DEFAULT_SCHEME
 "UPDATE default_scheme SET def_scheme_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_VARIENT
+"UPDATE default_varient SET varient_id = ?, muser = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
 	},

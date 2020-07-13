@@ -196,6 +196,9 @@ print_varient_details(AILLIST *list);
 static int
 compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char *sarch);
 
+static int
+set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
+
 int
 main(int argc, char *argv[])
 {
@@ -230,6 +233,8 @@ main(int argc, char *argv[])
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
 		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
+	else if (cvcl->action == SET_DEFAULT)
+		retval = set_default_cbc_varient(cmc, cvcl);
 	else
 		printf("Unknown action type\n");
 	if (retval == OS_NOT_FOUND) {
@@ -275,7 +280,7 @@ clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl)
 static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
-	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:";
+	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:z";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -299,6 +304,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		{"os-arch",		required_argument,	NULL,	't'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"varient-name",	required_argument,	NULL,	'x'},
+		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
 	};
 
@@ -318,6 +324,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->action = RM_CONFIG;
 		else if (opt == 'm')
 			cvl->action = MOD_CONFIG;
+		else if (opt == 'z')
+			cvl->action = SET_DEFAULT;
 		else if (opt == 'v')
 			cvl->action = CVERSION;
 		else if (opt == 'h')
@@ -353,6 +361,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return CVERSION;
 	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
+	if (cvl->action == SET_DEFAULT)
+		cvl->type = CVARIENT;
 	if (cvl->type == 0 && cvl->action != LIST_CONFIG)
 		return NO_TYPE;
 	if (cvl->action != LIST_CONFIG && !(cvl->varient) && !(cvl->valias))
@@ -922,3 +932,55 @@ compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char 
 	return retval;
 }
 
+static int
+set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	if (!(cmc) || !(cvl))
+		return AILSA_NO_DATA;
+	if (!(cvl->varient) && !(cvl->valias))
+		return AILSA_NO_DATA;
+	AILLIST *varient = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+	char *v;
+	int retval;
+
+	if (cvl->varient)
+		v = cvl->varient;
+	else
+		v = cvl->valias;
+	if ((retval = cmdb_add_varient_id_to_list(v, cmc, varient)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient ID to list");
+		goto cleanup;
+	}
+	if (varient->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find varient %s", v);
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cmc, DEFAULT_VARIENT, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cmc, INSERT_DEFAULT_VARIENT, varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to varient list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cmc, update_queries[UPDATE_DEFAULT_VARIENT], varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(varient);
+		ailsa_list_full_clean(def);
+		return retval;
+}
