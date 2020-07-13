@@ -51,7 +51,7 @@ validate_cbc_comm_line(cbc_comm_line_s *cml);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:y";
+	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:uvwx:y";
 	int retval, opt;
 	retval = NONE;
 #ifdef HAVE_GETOPT_H
@@ -77,7 +77,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		{"query",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
-		{"uuid",		required_argument,	NULL,	'u'},
+		{"view-default",	no_argument,		NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"write",		no_argument,		NULL,	'w'},
 		{"commit",		no_argument,		NULL,	'w'},
@@ -97,8 +97,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->server_id = strtoul(optarg, NULL, 10);
 			cb->server = ID;
 		} else if (opt == 'u') {
-			cb->uuid = strndup(optarg, CONF_S);
-			cb->server = UUID;
+			cb->action = VIEW_DEFAULT;
 		} else if (opt == 'a') {
 			cb->action = ADD_CONFIG;
 		} else if (opt == 'd') {
@@ -155,7 +154,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		return NONE;
 	else if (cb->action == NONE)
 		return NO_ACTION;
-	else if ((cb->action != LIST_CONFIG) &&
+	else if ((cb->action != LIST_CONFIG) && (cb->action != VIEW_DEFAULT) &&
 		 (cb->server == 0))
 		return NO_NAME_OR_ID;
 	if (cb->action == ADD_CONFIG) {

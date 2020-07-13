@@ -46,4 +46,7 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 int
 remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
+int
+view_defaults_for_cbc(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
+
 #endif /* __CBC_BUILD_H__ */

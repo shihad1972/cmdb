@@ -5,7 +5,7 @@ cbc \- Create Build Config
 .B cbc
 [
 .B action
-] ( -n | -i | -u )
+] ( -n | -i )
 .B <server specifier>
 [
 .B build options
@@ -42,6 +42,8 @@ modify
 remove
 .IP "-w,  --write, --commit"
 write
+.IP "-u   --view-default"
+view defaults
 .IP "-v,  --version"
 version (no other argsument needed)
 .PP
@@ -50,8 +52,6 @@ version (no other argsument needed)
 This is the name of the server.
 .IP "-i,  --id \fBserver_id\fP"
 This is the server_id from the database.
-.IP "-u,  --uuid \fBUUID\fp"
-This is the Universal Unique Identifier of the server .
 .PP
 .B Build Options
 .IP "-o,  --operating-system \fBOperating System\fP"

@@ -490,16 +490,17 @@ display_cbc_usage(void)
 	printf("Action options:\n");
 	printf("-a: add build for server\n-d: display build details\n");
 	printf("-l: list servers with a build\n-m: modify build options\n");
-	printf("-r: remove build for server\n-w: write build files\n\n");
+	printf("-r: remove build for server\n-u: show defaults\n");
+	printf("-w: write build files\n\n");
 	printf("Display and write options:\n");
-	printf("cbc ( -d | -w ) ( -n | -i | -u ) <server specifier>\n\n");
+	printf("cbc ( -d | -w ) ( -n | -i ) <server specifier>\n\n");
 	printf("Remove options:\n");
 	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
 	printf("cbc ( -a | -m ) -o<OS> -s<version> -t<arch> -b<domain> -x");
 	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> -j<hardisk device> ");
-	printf("(-n | -i | -u ) ");
+	printf("(-n | -i ) ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("for these options.\n\n");
@@ -573,7 +574,7 @@ display_cbcpart_usage(void)
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n-o: option\n\n");
 	printf("Detail Options\n");
-	printf("-u: Use lvm (when adding a scheme)\n");
+	printf("-j: Use lvm (when adding a scheme)\n");
 	printf("-g: <logical-volume> (if using lvm)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
@@ -583,7 +584,7 @@ display_cbcpart_usage(void)
 	printf("-b: <mount-option>\n");
 	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
-	printf("cbcpart: ( -a | -d | -l | -m | -r | -z ) ( -p | -s | -o ) [ ( -u -g \
+	printf("cbcpart: ( -a | -d | -l | -m | -r | -z ) ( -p | -s | -o ) [ ( -j -g \
 log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -b ] )\n");
 }
 
