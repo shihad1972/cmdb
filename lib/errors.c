@@ -556,8 +556,8 @@ display_cbcvarient_usage(void)
 	printf("Detail Options:\n");
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("cbcvarient [ -a | -d | -l | -r ] \
-[ -g | -j ] [ -x | -k ] [ detail options ]\n\n");
+	printf("cbcvarient ( -a | -d | -l | -r ) \
+( -g | -j ) ( -x | -k ) [ detail options ]\n\n");
 }
 
 void
@@ -568,7 +568,7 @@ display_cbcpart_usage(void)
 	printf("Action Options:\n");
 	printf("-a: add scheme / partition\n-d: display scheme\n");
 	printf("-l: list schemes\n-r: remove scheme / partition\n");
-	printf("-m: modify\n\n");
+	printf("-m: modify\n-z: set-default\n\n");
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n-o: option\n\n");
 	printf("Detail Options\n");
@@ -582,7 +582,7 @@ display_cbcpart_usage(void)
 	printf("-b: <mount-option>\n");
 	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
-	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s | -o ) [ ( -u -g \
+	printf("cbcpart: ( -a | -d | -l | -m | -r | -z ) ( -p | -s | -o ) [ ( -u -g \
 log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -b ] )\n");
 }
 

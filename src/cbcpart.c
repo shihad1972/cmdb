@@ -103,6 +103,9 @@ remove_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 static int
 remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
+static int
+set_default_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
+
 int
 main (int argc, char *argv[])
 {
@@ -126,6 +129,8 @@ main (int argc, char *argv[])
 		retval = list_seed_schemes(cmc);
 	else if (cpl->action == RM_CONFIG)
 		retval = remove_scheme_part(cmc, cpl);
+	else if (cpl->action == SET_DEFAULT)
+		retval = set_default_scheme(cmc, cpl);
 	if (retval == WRONG_TYPE)
 		ailsa_syslog(LOG_ERR, "Wrong type specified. Neither partition or scheme?\n");
 	ailsa_clean_cmdb(cmc);
@@ -153,7 +158,7 @@ static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	const char *errmsg = "parse_cbcpart_comm_line";
-	const char *optstr = "ab:df:g:hi:lmn:oprst:uvx:y:";
+	const char *optstr = "ab:df:g:hi:lmn:oprst:uvx:y:z";
 	int opt, retval;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -180,6 +185,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		{"version",		no_argument,		NULL,	'v'},
 		{"max-size",		required_argument,	NULL,	'x'},
 		{"priority",		required_argument,	NULL,	'y'},
+		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
 	};
 
@@ -198,6 +204,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = MOD_CONFIG;
 		} else if (opt == 'r') {
 			cpl->action = RM_CONFIG;
+		} else if (opt == 'z') {
+			cpl->action = SET_DEFAULT;
 		} else if (opt == 'u') {
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
@@ -795,5 +803,54 @@ remove_part_option(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		my_free(args);
 		ailsa_list_destroy(list);
 		my_free(list);
+		return retval;
+}
+
+static int
+set_default_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	if (!(cpl->scheme))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *part = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_scheme_id_to_list(cpl->scheme, cbc, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
+		goto cleanup;
+	}
+	if (part->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find partition scheme %s", cpl->scheme);
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbc, DEFAULT_SCHEME, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_SCHEME query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(part)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser, muser to default scheme list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cbc, INSERT_DEFAULT_SCHEME, part)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_SCHEME query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), part)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to default scheme list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cbc, update_queries[UPDATE_DEFAULT_SCHEME], part)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_SCHEME query failed");
+			goto cleanup;
+		}
+	}
+
+	cleanup:
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(def);
 		return retval;
 }

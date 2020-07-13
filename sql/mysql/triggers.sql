@@ -16,6 +16,8 @@ CREATE TRIGGER default_os_insert BEFORE INSERT ON default_os FOR EACH ROW set NE
 CREATE TRIGGER default_os_update BEFORE UPDATE ON default_os FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER default_part_insert BEFORE INSERT ON default_part FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER default_part_update BEFORE UPDATE ON default_part FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER default_scheme_insert BEFORE INSERT ON default_scheme FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER default_scheme_update BEFORE UPDATE ON default_scheme FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER glue_zones_insert BEFORE INSERT ON glue_zones FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER glue_zones_update BEFORE UPDATE ON glue_zones FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER hardware_insert BEFORE INSERT ON hardware FOR EACH ROW set NEW.mtime = NOW();
