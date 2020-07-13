@@ -114,6 +114,8 @@ as the daemon can have a config file passed to it on startup.
 
 24/02/2016
 Add default for build_os, partition and varient
+	** DONE ** 13/07/2020 Commit ID 1e072d5
+	Added a default build domain also
 
 03/03/2015
 I want to get rid of the need to have a server already in the database before
