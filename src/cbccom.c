@@ -158,16 +158,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		 (cb->server == 0))
 		return NO_NAME_OR_ID;
 	if (cb->action == ADD_CONFIG) {
-		if (!(cb->os) ||
-		    (!(cb->arch)) ||
-		    (!(cb->os_version)))
-			retval = NO_OS_SPECIFIED;
-		else if (!(cb->build_domain))
-			retval = NO_BUILD_DOMAIN;
-		else if (!(cb->varient))
-			retval = NO_BUILD_VARIENT;
-		else if (!(cb->partition))
-			retval = NO_BUILD_PARTITION;
 		if (!(cb->harddisk)) {
 			ailsa_syslog(LOG_INFO, "No disk provided. Setting to vda");
 			cb->harddisk = strdup("vda");

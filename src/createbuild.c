@@ -335,9 +335,11 @@ cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
 		goto cleanup;
 	}
 	if ((retval = cbc_get_build_dom_info(cbt, cml, bdom)) != 0)
-		return retval;
+		goto cleanup;
 	if ((retval = cbc_calculate_build_ip(cbt, cml, bdom)) != 0)
-		return retval;
+		goto cleanup;
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, build)) != 0)
+		goto cleanup;
 
 	cleanup:
 		ailsa_list_full_clean(l);
@@ -353,9 +355,16 @@ cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(cml->build_domain, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add build domain to list");
-		goto cleanup;
+	if (cml->build_domain) {
+		if ((retval = cmdb_add_string_to_list(cml->build_domain, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add build domain to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
 	}
 	if ((retval = ailsa_argument_query(cbt, BUILD_DOMAIN_NET_INFO, list, bdom)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NET_INFO query failed");
@@ -487,9 +496,16 @@ cbc_add_ip_to_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int i
 		ailsa_syslog(LOG_ERR, "Cannot add hostname to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cml->build_domain, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
-		goto cleanup;
+	if (cml->build_domain) {
+		if ((retval = cmdb_add_string_to_list(cml->build_domain, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
 	}
 	if ((retval = cmdb_add_build_domain_id_to_list(cml->build_domain, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");

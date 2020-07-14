@@ -169,17 +169,24 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(domain) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *dom = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(domain, dom)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
-		goto cleanup;
+	if (!(domain)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_DOMAIN, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(domain, dom)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, BUILD_DOMAIN_ID_ON_DOMAIN, dom, list)) != 0)
+			ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
 	}
-	if ((retval = ailsa_argument_query(cc, BUILD_DOMAIN_ID_ON_DOMAIN, dom, list)) != 0)
-		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
 
 	cleanup:
 		ailsa_list_full_clean(dom);
@@ -229,21 +236,28 @@ cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(varient) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
-		goto cleanup;
+	if (!(varient)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_VARIENT, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
+			ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
 	}
-	if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
-		ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
 
 	cleanup:
 		ailsa_list_full_clean(args);
@@ -253,17 +267,23 @@ cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(scheme) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	AILLIST *s = ailsa_db_data_list_init();
 	int retval;
 
-	if ((retval = cmdb_add_string_to_list(scheme, s)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
-		goto cleanup;
+	if (!(scheme)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_SCHEME, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_SCHEME query failed");
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(scheme, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
+			ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
 	}
-	if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
-		ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
 	cleanup:
 		ailsa_list_full_clean(s);
 		return retval;
@@ -339,36 +359,44 @@ cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
-	if (!(args[0]) || !(args[1]) || !(args[2]))
-		return AILSA_NO_DATA;
-	char *os = args[0];
-	char *version = args[1];
-	char *arch = args[2];
+	char *os = NULL;
+	char *version = NULL;
+	char *arch = NULL;
 	int retval = 0;
 	AILLIST *a = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
-		goto cleanup;
+	if (!(args[0]) && !(args[1]) && !(args[2])) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_OS, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_OS query failed");
+			goto cleanup;
+		}
+	} else {
+		os = args[0];
+		version = args[1];
+		arch = args[2];
+		if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS alias to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add version to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add version alias to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, BUILD_OS_ON_ALL, a, list)) != 0)
+			ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	}
-	if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add OS alias to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add version to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add version alias to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, BUILD_OS_ON_ALL, a, list)) != 0)
-		ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	cleanup:
 		ailsa_list_full_clean(a);
 		return retval;
