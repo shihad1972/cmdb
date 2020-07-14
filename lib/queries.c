@@ -975,7 +975,7 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // DELETE_BUILD_IP
-"DELETE FROM build_id WHERE ip_id = ?",
+"DELETE FROM build_ip WHERE ip_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},

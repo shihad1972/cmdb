@@ -209,6 +209,14 @@ display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_INFO, "Cannot find server %s", cml->name);
 		goto cleanup;
 	}
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
+		goto cleanup;
+	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build for server %s", cml->name);
+		goto cleanup;
+	}
 	printf("Build details for server %s\n\n", cml->name);
 	if ((retval = cbc_print_ip_net_info(cbt, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot print IP network information");

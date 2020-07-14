@@ -68,7 +68,7 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom);
 
 #ifdef HAVE_DNSA
 static int
-cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int ip);
+cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip);
 #endif // HAVE_DNSA
 
 static int
@@ -162,9 +162,18 @@ remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *bld = ailsa_db_data_list_init();
 	AILLIST *disk = ailsa_db_data_list_init();
 	AILLIST *ip = ailsa_db_data_list_init();
 
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, bld)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
+		goto cleanup;
+	}
+	if (bld->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build for server %s found", cml->name);
+		goto cleanup;
+	}
 	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
@@ -181,9 +190,11 @@ remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "DELETE_BUILD_ON_SERVER_ID query failed");
 		goto cleanup;
 	}
-	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
-		ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
-		goto cleanup;
+	if (disk->total > 0) {
+		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
+			ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
+			goto cleanup;
+		}
 	}
 	if (cml->removeip) {
 		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_IP], ip)) != 0) {
@@ -193,6 +204,7 @@ remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 	}
 	cleanup:
 		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(bld);
 		ailsa_list_full_clean(disk);
 		ailsa_list_full_clean(ip);
 		return retval;
@@ -384,9 +396,11 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 	if (!(cbt) || !(cml) || !(bdom))
 		return AILSA_NO_DATA;
 	int retval;
+	char *domain;
 	unsigned long int ip, bip, lip;
 	AILLIST *l = ailsa_db_data_list_init();
 	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *m = ailsa_db_data_list_init();
 	AILELEM *e;
 	ailsa_data_s *d = bdom->head->next->data;
 	ailsa_data_s *f = bdom->head->next->next->data;
@@ -398,6 +412,15 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 	if ((retval = ailsa_argument_query(cbt, BUILD_IP_ON_BUILD_DOMAIN_ID, l, r)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_IP_ON_BUILD_DOMAIN_ID query failed");
 		goto cleanup;
+	}
+	if (!(cml->build_domain)) {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, m)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
+		domain = ((ailsa_data_s *)m->head->data)->data->text;
+	} else {
+		domain = cml->build_domain;
 	}
 	ip = d->data->number;
 	lip = f->data->number;
@@ -417,7 +440,7 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 			}
 #ifdef HAVE_DNSA
 			if (e == r->tail) {
-				if ((retval = cbc_check_ip_in_dns(cbt, cml, ip)) > 0) {
+				if ((retval = cbc_check_ip_in_dns(cbt, domain, cml->name, ip)) > 0) {
 					ip++;
 					e = r->head;
 					continue;
@@ -442,18 +465,20 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(m);
 		return retval;
 }
 
 #ifdef HAVE_DNSA
 static int
-cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int ip)
+cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip)
 {
-	if (!(cbt) || !(cml) || (ip == 0))
+	if (!(cbt) || !(domain) || (ip == 0))
 		return AILSA_NO_DATA;
 	char ip_addr[INET6_ADDRSTRLEN];
 	int retval;
 	uint32_t addr = htonl((uint32_t)ip);
+	ailsa_data_s *d, *e;
 	AILLIST *l = ailsa_db_data_list_init();
 	AILLIST *r = ailsa_db_data_list_init();
 
@@ -471,6 +496,12 @@ cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int i
 		retval = -1;
 		ailsa_syslog(LOG_ERR, "A_RECORDS_WITH_IP query failed");
 		goto cleanup;
+	}
+	if (r->total == 2) {
+		d = r->head->data;
+		e = r->tail->data;
+		if ((strncmp(host, d->data->text, HOST_LEN) == 0) && (strncmp(domain, e->data->text, DOMAIN_LEN) == 0))
+			goto cleanup;
 	}
 	retval = (int)r->total;
 	cleanup:
