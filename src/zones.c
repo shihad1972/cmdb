@@ -1498,7 +1498,7 @@ cmdb_trim_record_list(AILLIST *r, AILLIST *p)
 	AILELEM *rec, *pref, *tmp;
 	ailsa_data_s *pd, *rev;
 	if ((r->total == 0) || (p->total == 0))
-		return AILSA_NO_DATA;
+		return retval;
 	if (((r->total % rec_tot) != 0) || ((p->total % pref_tot) != 0))
 		return WRONG_LENGTH_LIST;
 	if (!(r->destroy))
@@ -1546,14 +1546,14 @@ cmdb_records_to_remove(char *range, AILLIST *rec, AILLIST *rev, AILLIST *remove)
 {
 	if (!(range) || !(rec) || !(rev) || !(remove))
 		return AILSA_NO_DATA;
+	int retval = 0;
 	if ((rec->total == 0) || (rev->total == 0))
-		return AILSA_NO_DATA;
+		return retval;
 	size_t rec_tot = 4;
 	size_t rev_tot = 2;
 	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
 		return WRONG_LENGTH_LIST;
 	char *fqdn = ailsa_calloc(DOMAIN_LEN, "fqdn in cmdb_records_to_remove");
-	int retval = 0;
 	size_t len = strlen(range);
 	size_t gap = MAC_LEN - len;
 	char *tmp = range + len;
@@ -1661,7 +1661,7 @@ cmdb_records_to_add(char *range, AILLIST *rec, AILLIST *rev, AILLIST *add)
 	AILELEM *ce, *ve;
 	ailsa_data_s *c, *v, *reg;
 	if ((rev->total == 0) || (rev->total == 0))
-		return AILSA_NO_DATA;
+		return retval;
 	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
 		return WRONG_LENGTH_LIST;
 	ce = rec->head;
