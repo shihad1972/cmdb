@@ -483,6 +483,9 @@ int
 check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list);
 
 int
+cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
 int

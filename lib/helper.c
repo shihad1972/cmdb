@@ -746,6 +746,24 @@ check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list)
 }
 
 int
+cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_server_id_to_list(server, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list for %s", server);
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find server %s", server);
+		retval = 1;
+	}
+	return retval;
+}
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {
 	if (!(cc) || (query == 0) || (!(name) && number == 0))
