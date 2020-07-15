@@ -69,6 +69,9 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom);
 #ifdef HAVE_DNSA
 static int
 cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip);
+
+static int
+cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip);
 #endif // HAVE_DNSA
 
 static int
@@ -461,7 +464,12 @@ cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 		ailsa_syslog(LOG_ERR, "Cannot add IP id to bdom list");
 		goto cleanup;
 	}
-
+#ifdef HAVE_DNSA
+	if ((retval = cbc_add_host_to_dns(cbt, domain, cml->name, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build hostname into DNS");
+		goto cleanup;
+	}
+#endif // HAVE_DNSA
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(r);
@@ -507,6 +515,83 @@ cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long i
 	cleanup:
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(r);
+		return retval;
+}
+
+static int
+cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip)
+{
+	if (!(cbt) || !(domain) || !(host) || (ip == 0))
+		return AILSA_NO_DATA;
+	char ip_addr[INET6_ADDRSTRLEN];
+	int retval;
+	uint32_t ip_net = ntohl((uint32_t)ip);
+	AILLIST *rec = ailsa_db_data_list_init();
+	AILLIST *zone = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain %s id to list", domain);
+		goto cleanup;
+	}
+	if (rec->total == 0) {
+		ailsa_syslog(LOG_INFO, "Domain %s does not exist in DNS", domain);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list("A", rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add type string to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(host, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host to list");
+		goto cleanup;
+	}
+	memset(ip_addr, 0, INET6_ADDRSTRLEN);
+	if (!(inet_ntop(AF_INET, &ip_net, ip_addr, INET6_ADDRSTRLEN))) {
+		ailsa_syslog(LOG_ERR, "Unable to convert IP address");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(ip_addr, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if (rec->total == 4) {
+		if ((retval = cmdb_check_for_fwd_record(cbt, rec)) < 0) {
+			ailsa_syslog(LOG_ERR, "Cannot check for forward records");
+			goto cleanup;
+		} else if (retval > 0) {
+			ailsa_syslog(LOG_INFO, "Record already exists in database");
+			retval = 0;
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. Wanted 4; got %zu", rec->total);
+		retval = WRONG_LENGTH_LIST;
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in record list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbt, INSERT_RECORD_BASE, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_RECORD_BASE query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to zone update list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to update list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbt, update_queries[SET_FWD_ZONE_UPDATED], zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+		goto cleanup;
+	}
+// When we move zones.c into library, we can call commit_fwd_zone here.
+	cleanup:
+		ailsa_list_full_clean(rec);
+		ailsa_list_full_clean(zone);
 		return retval;
 }
 #endif // HAVE_DNSA
