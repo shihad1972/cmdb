@@ -395,3 +395,51 @@ cmdb_populate_customer_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *
 	retval = cmdb_populate_cuser_muser(customer);
 	return retval;
 }
+
+int
+cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	if (!(cm->coid))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *cust = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_cust_id_to_list(cm->coid, cc, cust)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cust id to list");
+		goto cleanup;
+	}
+	if (cust->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find customer with COID %s", cm->coid);
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cc, INSERT_DEFAULT_CUSTOMER, cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cc, update_queries[UPDATE_DEFAULT_CUSTOMER], cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(cust);
+		ailsa_list_full_clean(def);
+		return retval;
+}

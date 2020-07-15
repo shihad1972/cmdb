@@ -81,10 +81,12 @@ const char *basic_queries[] = {
 "SELECT def_scheme_id FROM default_scheme", // DEFAULT_SCHEME
 "SELECT varient_id FROM default_varient", // DEFAULT_VARIENT
 "SELECT bd_id FROM default_domain", // DEFAULT_DOMAIN
+"SELECT cust_id FROM default_customer", // DEFAULT_CUSTOMER
 "SELECT os, os_version, arch FROM build_os WHERE os_id = (SELECT os_id FROM default_os)", // DEFAULT_OS_DETAILS
 "SELECT scheme_name FROM seed_schemes WHERE def_scheme_id = (SELECT def_scheme_id FROM default_scheme)", // DEFAULT_SCHEME_DETAILS
 "SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
 "SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
+"SELECT coid FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -871,6 +873,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	3,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_DEFAULT_CUSTOMER
+"INSERT INTO default_customer(cust_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -1066,6 +1073,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 	},
 	{ // UPDATE_DEFAULT_DOMAIN
 "UPDATE default_domain SET bd_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_CUSTOMER
+"UPDATE default_customer SET cust_id = ?, muser = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
 	},

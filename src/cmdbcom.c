@@ -54,7 +54,7 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefhjlorstuvwz";
+	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlorstuvwz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -64,6 +64,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"display",		no_argument, 		NULL,	'd'},
 		{"service",		no_argument,		NULL,	'e'},
 		{"force",		no_argument,		NULL,	'f'},
+		{"hardtype",		no_argument,		NULL,	'g'},
+		{"hard-type",		no_argument,		NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"identity",		required_argument,	NULL,	'i'},
 		{"service-type",	no_argument,		NULL,	'j'},
@@ -81,9 +83,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"version",		no_argument,		NULL,	'v'},
 		{"hardware",		no_argument,		NULL,	'w'},
 		{"virtmachine",		required_argument,	NULL,	'x'},
+		{"set-default",		no_argument,		NULL,	'Z'},
 		{"type",		required_argument,	NULL,	'y'},
-		{"hardtype",		no_argument,		NULL,	'z'},
-		{"hard-type",		no_argument,		NULL,	'z'},
 		{"hardwaretype",	no_argument,		NULL,	'z'},
 		{"address",		required_argument,	NULL,	'A'},
 		{"device",		required_argument,	NULL,	'B'},
@@ -130,7 +131,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			comp->type = SERVICE_TYPE;
 		else if (opt == 'w')
 			comp->type = HARDWARE;
-		else if (opt == 'z')
+		else if (opt == 'g')
 			comp->type = HARDWARE_TYPE;
 		else if (opt == 'o')
 			comp->type = VM_HOST;
@@ -144,6 +145,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			comp->action = ADD_TO_DB;
 		else if (opt == 'r')
 			comp->action = RM_FROM_DB;
+		else if (opt == 'z')
+			comp->action = SET_DEFAULT;
 		else if (opt == 'm')
 			comp->action = MODIFY;
 		else if (opt == 'h')
@@ -315,6 +318,11 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (!comp->name) {
 			retval = NO_NAME;
 		}
+	} else if (comp->action == SET_DEFAULT) {
+		if (!(comp->coid))
+			retval = NO_COID;
+		else if (comp->type != CUSTOMER)
+			retval = WRONG_TYPE;
 	} else if ((!(comp->name)) && (!(comp->id)) && 
 		(comp->type != NONE || comp->action != NONE) &&
 		(comp->type != CONTACT)) {
