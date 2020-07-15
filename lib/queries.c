@@ -81,6 +81,10 @@ const char *basic_queries[] = {
 "SELECT def_scheme_id FROM default_scheme", // DEFAULT_SCHEME
 "SELECT varient_id FROM default_varient", // DEFAULT_VARIENT
 "SELECT bd_id FROM default_domain", // DEFAULT_DOMAIN
+"SELECT os, os_version, arch FROM build_os WHERE os_id = (SELECT os_id FROM default_os)", // DEFAULT_OS_DETAILS
+"SELECT scheme_name FROM seed_schemes WHERE def_scheme_id = (SELECT def_scheme_id FROM default_scheme)", // DEFAULT_SCHEME_DETAILS
+"SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
+"SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -971,7 +975,7 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // DELETE_BUILD_IP
-"DELETE FROM build_id WHERE ip_id = ?",
+"DELETE FROM build_ip WHERE ip_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},

@@ -209,6 +209,14 @@ display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_INFO, "Cannot find server %s", cml->name);
 		goto cleanup;
 	}
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
+		goto cleanup;
+	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build for server %s", cml->name);
+		goto cleanup;
+	}
 	printf("Build details for server %s\n\n", cml->name);
 	if ((retval = cbc_print_ip_net_info(cbt, server)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot print IP network information");
@@ -1828,4 +1836,59 @@ cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list)
 		ailsa_list_full_clean(server);
 		ailsa_list_full_clean(os);
 		return retval;
+}
+
+int
+view_defaults_for_cbc(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_db_data_list_init();
+	AILLIST *var = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_OS_DETAILS, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_OS_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_SCHEME_DETAILS, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_SCHEME_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_VARIENT_DETAILS, var)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT_DETAILS query failed");
+		goto cleanup;
+	}
+	if (dom->total == 0)
+		printf("No default build domain\n");
+	else
+		printf("Default build domain: %s\n", ((ailsa_data_s *)dom->head->data)->data->text);
+	if (part->total == 0)
+		printf("No default partition scheme\n");
+	else
+		printf("Default partition scheme: %s\n", ((ailsa_data_s *)part->head->data)->data->text);
+	if (var->total == 0)
+		printf("No default varient\n");
+	else
+		printf("Default build varient: %s\n", ((ailsa_data_s *)var->head->data)->data->text);
+	if (os->total == 0) {
+		printf("No default build OS\n");
+	} else {
+		printf("Default build os: %s; ", ((ailsa_data_s *)os->head->data)->data->text);
+		printf("Version: %s; ", ((ailsa_data_s *)os->head->next->data)->data->text);
+		printf("Arch: %s\n", ((ailsa_data_s *)os->head->next->next->data)->data->text);
+	}
+	cleanup:
+		ailsa_list_full_clean(dom);
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(var);
+		return retval;
+
 }

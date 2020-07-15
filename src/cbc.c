@@ -61,6 +61,8 @@ main(int argc, char *argv[])
 		retval = modify_build_config(cmc, cml);
 	else if (cml->action == RM_CONFIG)
 		retval = remove_build_config(cmc, cml);
+	else if (cml->action == VIEW_DEFAULT)
+		retval = view_defaults_for_cbc(cmc, cml);
 	else if (cml->action == QUERY_CONFIG)
 		;
 	else

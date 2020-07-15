@@ -158,7 +158,7 @@ static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	const char *errmsg = "parse_cbcpart_comm_line";
-	const char *optstr = "ab:df:g:hi:lmn:oprst:uvx:y:z";
+	const char *optstr = "ab:df:g:hi:jlmn:oprst:vx:y:z";
 	int opt, retval;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -172,6 +172,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		{"logvol",		required_argument,	NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"min-size",		required_argument,	NULL,	'i'},
+		{"lvm",			no_argument,		NULL,	'j'},
 		{"list",		no_argument,		NULL,	'l'},
 		{"modify",		no_argument,		NULL,	'm'},
 		{"scheme-name",		required_argument,	NULL,	'n'},
@@ -181,7 +182,6 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		{"delete",		no_argument,		NULL,	'r'},
 		{"scheme",		no_argument,		NULL,	's'},
 		{"mount-point",		required_argument,	NULL,	't'},
-		{"lvm",			no_argument,		NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"max-size",		required_argument,	NULL,	'x'},
 		{"priority",		required_argument,	NULL,	'y'},
@@ -206,7 +206,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = RM_CONFIG;
 		} else if (opt == 'z') {
 			cpl->action = SET_DEFAULT;
-		} else if (opt == 'u') {
+		} else if (opt == 'j') {
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
 			cpl->action = CVERSION;
