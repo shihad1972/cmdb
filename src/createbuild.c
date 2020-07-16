@@ -181,10 +181,8 @@ remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, ip)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
+	if ((retval = cmdb_check_add_ip_id_to_list(cml->name, cbt, ip)) != 0)
 		goto cleanup;
-	}
 	if ((retval = cmdb_add_disk_id_to_list(cml->name, cbt, disk)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add disk id to list");
 		goto cleanup;

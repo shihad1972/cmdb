@@ -747,6 +747,25 @@ cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list
 }
 
 int
+cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(host) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_ip_id_to_list(host, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find IP for server %s", host);
+		retval = 1;
+	}
+	return retval;
+}
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {
 	if (!(cc) || (query == 0) || (!(name) && number == 0))
