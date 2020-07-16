@@ -728,6 +728,25 @@ cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *
 }
 
 int
+cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_varient_id_to_list(varient, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find varient %s", varient);
+		retval = 1;
+	}
+	return retval;
+}
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {
 	if (!(cc) || (query == 0) || (!(name) && number == 0))

@@ -240,12 +240,8 @@ create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot get network info");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_varient_id_to_list(cml->varient, cbt, b)) != 0)
+	if ((retval = cmdb_check_add_varient_id_to_list(cml->varient, cbt, b)) != 0)
 		goto cleanup;
-	if (b->total != 4) {
-		ailsa_syslog(LOG_ERR, "Cannot get varient");
-		goto cleanup;
-	}
 	if ((retval = cmdb_add_os_id_to_list(os, cbt, b)) != 0)
 		goto cleanup;
 	if (b->total != 5) {
@@ -751,19 +747,13 @@ ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
 	AILLIST *l = ailsa_db_data_list_init();
 	AILELEM *e;
 
-	if ((retval = cmdb_add_varient_id_to_list(varient, cbt, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+	if ((retval = cmdb_check_add_varient_id_to_list(varient, cbt, l)) != 0)
 		goto cleanup;
-	}
-	if (l->total > 0) {
-		e = l->head;
-		if ((retval = cmdb_replace_data_element(build, e, 0)) != 0) {
-			retval = AILSA_VARIENT_REPLACE_FAIL;
-			ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
-			goto cleanup;
-		}
-	} else {
-		ailsa_syslog(LOG_INFO, "Varient %s not found in database", varient);
+	e = l->head;
+	if ((retval = cmdb_replace_data_element(build, e, 0)) != 0) {
+		retval = AILSA_VARIENT_REPLACE_FAIL;
+		ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
+		goto cleanup;
 	}
 	cleanup:
 		ailsa_list_full_clean(l);

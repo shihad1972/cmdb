@@ -493,13 +493,8 @@ display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 		varient = cvl->valias;
 	else
 		goto cleanup;
-	if ((retval = cmdb_add_varient_id_to_list(varient, cmc, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+	if ((retval = cmdb_check_add_varient_id_to_list(varient, cmc, list)) != 0)
 		goto cleanup;
-	} else if (list->total > 1) {	// FIXME
-		ailsa_syslog(LOG_ERR, "Multiple varients returned");
-		goto cleanup;
-	}
 	varient_get_display_query(cvl, list, query);
 	if ((retval = ailsa_individual_query(cmc, query, list, v)) != 0) {
 		ailsa_syslog(LOG_ERR, "PACKAGE_DETAILS_FOR_VARIENT query failed");
@@ -748,16 +743,8 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 	size_t i;
 	int retval = 0;
 
-	if ((retval = cmdb_add_varient_id_to_list(vari, cbc, scratch)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot get varient id");
+	if ((retval = cmdb_check_add_varient_id_to_list(vari, cbc, scratch)) != 0)
 		goto cleanup;
-	}
-	if (scratch->total > 1) {
-		ailsa_syslog(LOG_INFO, "Multiple varients returned. Using first one returned");
-	} else if (scratch->total == 0) {
-		ailsa_syslog(LOG_INFO, "Cannot find varient %s", vari);
-		goto cleanup;
-	}
 	vid = ((ailsa_data_s *)scratch->head->data)->data->number;
 	ailsa_list_destroy(scratch);
 	ailsa_list_init(scratch, ailsa_clean_data);
@@ -948,14 +935,8 @@ set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 		v = cvl->varient;
 	else
 		v = cvl->valias;
-	if ((retval = cmdb_add_varient_id_to_list(v, cmc, varient)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient ID to list");
+	if ((retval = cmdb_check_add_varient_id_to_list(v, cmc, varient)) != 0)
 		goto cleanup;
-	}
-	if (varient->total == 0) {
-		ailsa_syslog(LOG_ERR, "Cannot find varient %s", v);
-		goto cleanup;
-	}
 	if ((retval = ailsa_basic_query(cmc, DEFAULT_VARIENT, def)) != 0) {
 		ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT query failed");
 		goto cleanup;
