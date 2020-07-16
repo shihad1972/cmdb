@@ -47,41 +47,18 @@ cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(hclass) || !(cc) || !(list))
 		return AILSA_NO_DATA;
-	AILLIST *hard, *results;
-	AILELEM *res;
-	ailsa_data_s *data = NULL, *tmp;
-	int retval = 0;
+	int retval;
+	AILLIST *hard = ailsa_db_data_list_init();
 
-	hard = ailsa_db_data_list_init();
-	results = ailsa_db_data_list_init();
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(hclass, MAC_LEN);
-	if ((retval = ailsa_list_insert(hard, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert class name into list");
+	if ((retval = cmdb_add_string_to_list(hclass, hard)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add hardware class to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_CLASS, hard, results)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot run SQL query: %d", retval);
-		goto cleanup;
-	}
-	if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than 1 hard type id returned. Using first one");
-	} else if (results->total < 1) {
-		ailsa_syslog(LOG_INFO, "No hard type's returned.");
-		retval = NO_HARDWARE_TYPES;
-		goto cleanup;
-	}
-	res = results->head;
-	tmp = res->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert hard type id into list");
-		goto cleanup;
-	}
+	if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_CLASS, hard, list)) != 0)
+		ailsa_syslog(LOG_ERR, "HARDWARE_TYPE_ID_ON_CLASS query failed");
+
 	cleanup:
 		ailsa_list_full_clean(hard);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -92,37 +69,16 @@ cmdb_add_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *server = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(name, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert name into server list");
+	if ((retval = cmdb_add_string_to_list(name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, results)) != 0) {
+	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SERVER_ID_ON_NAME query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_INFO, "No server %s found in database", name);
-		retval = SERVER_NOT_FOUND;
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than 1 server found searching on %s: using first one", name);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert server id into list");
 
 	cleanup:
 		ailsa_list_full_clean(server);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -133,36 +89,16 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *st = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(type, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(st, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert service type name into list");
+	if ((retval = cmdb_add_string_to_list(type, st)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add service type to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_SERVICE, st, results)) != 0) {
+	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_SERVICE, st, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SERVICE_TYPE_ID_ON_SERVICE query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_INFO, "No service with type %s was found in the database", type);
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "Multiple services types found for %s. Using first one", type);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert service type id into list");
 
 	cleanup:
 		ailsa_list_full_clean(st);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -196,40 +132,29 @@ cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(coid) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *customer = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(coid, MAC_LEN);
-	if ((retval = ailsa_list_insert(customer, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert customer name into list");
-		goto cleanup;
+	if (!(coid)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(coid, customer)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add COID to customer list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, customer, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "CUST_ID_ON_COID query failed");
+			goto cleanup;
+		}
 	}
-	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, customer, results)) != 0) {
-		ailsa_syslog(LOG_ERR, "CUST_ID_ON_COID query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than one customer with coid %s. Using first one", coid);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert cust id into list");
 
 	cleanup:
 		ailsa_list_full_clean(customer);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 

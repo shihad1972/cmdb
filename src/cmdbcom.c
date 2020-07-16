@@ -243,13 +243,9 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_EMAIL;
 			else if (!(comp->phone))
 				retval = NO_PHONE;
-			else if (!(comp->coid))
-				retval = NO_COID;
 		} else if (comp->type == SERVER) {
 			if (!(comp->name))
 				retval = NO_NAME;
-			else if (!(comp->coid))
-				retval = NO_COID;
 			if (!(comp->make))
 				comp->make = strdup("none");
 			if (!(comp->model))
@@ -287,8 +283,6 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (comp->type == SERVICE) {
 			if (!(comp->name))
 				retval = NO_NAME;
-			else if (!(comp->coid))
-				retval = NO_COID;
 			else if (!(comp->detail))
 				retval = NO_DETAIL;
 			else if (!(comp->url))

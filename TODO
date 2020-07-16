@@ -1,3 +1,6 @@
+16/07/2020
+Need to add the VIEW_DEFAULT action to cmdb for customer.
+
 11/07/2020
 Should be able to read config values from environment variables. Also
 have defaults either in config file, environment or database
