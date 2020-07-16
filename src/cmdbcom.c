@@ -54,7 +54,7 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlorstuvwz";
+	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlorqstuvwz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -75,6 +75,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		{"modify",		no_argument,		NULL,	'm'},
 		{"name",		required_argument,	NULL,	'n'},
 		{"vm",			no_argument,		NULL,	'o'},
+		{"view-default",	no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"server",		no_argument,		NULL,	's'},
@@ -147,6 +148,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			comp->action = RM_FROM_DB;
 		else if (opt == 'z')
 			comp->action = SET_DEFAULT;
+		else if (opt == 'q')
+			comp->action = VIEW_DEFAULT;
 		else if (opt == 'm')
 			comp->action = MODIFY;
 		else if (opt == 'h')
@@ -312,6 +315,9 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (!comp->name) {
 			retval = NO_NAME;
 		}
+	} else if (comp->action  == VIEW_DEFAULT) {
+		if (comp->type != CUSTOMER)
+			retval = WRONG_TYPE;
 	} else if (comp->action == SET_DEFAULT) {
 		if (!(comp->coid))
 			retval = NO_COID;

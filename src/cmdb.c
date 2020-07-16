@@ -150,6 +150,9 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case SET_DEFAULT:
 		retval = cmdb_set_default_customer(cm, cc);
 		break;
+	case VIEW_DEFAULT:
+		cmdb_display_default_customer(cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;

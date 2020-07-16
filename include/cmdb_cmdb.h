@@ -68,6 +68,9 @@ int
 cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void
+cmdb_display_default_customer(ailsa_cmdb_s *cc);
+
+void
 cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void

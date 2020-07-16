@@ -439,3 +439,34 @@ cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_list_full_clean(def);
 		return retval;
 }
+
+void
+cmdb_display_default_customer(ailsa_cmdb_s *cc)
+{
+	if (!(cc))
+		return;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER_DETAILS, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER_DETAILS query failed");
+		goto cleanup;
+	}
+	if (list->total == 0) {
+		ailsa_syslog(LOG_ERR, "No default customer is set");
+		goto cleanup;
+	}
+	d = list->head->data;
+	printf("COID\t\tCustomer\n");
+	if (strlen(d->data->text) < 8)
+		printf("%s\t\t", d->data->text);
+	else
+		printf("%s\t", d->data->text);
+	d = list->head->next->data;
+	printf("%s\n", d->data->text);
+
+	cleanup:
+		ailsa_list_full_clean(list);
+		return;
+}

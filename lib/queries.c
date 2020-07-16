@@ -86,7 +86,7 @@ const char *basic_queries[] = {
 "SELECT scheme_name FROM seed_schemes WHERE def_scheme_id = (SELECT def_scheme_id FROM default_scheme)", // DEFAULT_SCHEME_DETAILS
 "SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
 "SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
-"SELECT coid FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
+"SELECT coid, name FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
