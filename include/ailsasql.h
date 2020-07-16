@@ -490,6 +490,9 @@ int
 cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
 int

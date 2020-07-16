@@ -137,7 +137,7 @@ modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "Cannot add muser to build list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, build)) != 0) {
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
 		goto cleanup;
 	}
@@ -177,7 +177,7 @@ remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_INFO, "No build for server %s found", cml->name);
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
@@ -232,12 +232,8 @@ create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_INFO, "Build already exists");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, b)) != 0)
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, b)) != 0)
 		goto cleanup;
-	if (b->total != 1) {
-		ailsa_syslog(LOG_ERR, "Cannot get server id");
-		goto cleanup;
-	}
 	if ((retval = cbc_get_network_info(cbt, cml, b)) != 0)
 		goto cleanup;
 	if (b->total != 3) {
@@ -627,7 +623,7 @@ cbc_add_ip_to_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int i
 		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, l)) != 0) {
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
@@ -658,10 +654,8 @@ cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
 	}
 	if (list->total > 0)
 		goto cleanup;
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, args)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, args)) != 0)
 		goto cleanup;
-	}
 	snprintf(disk, HOST_LEN, "/dev/%s", cml->harddisk);
 	if ((retval = cmdb_add_string_to_list(disk, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add disk device to list");
@@ -745,10 +739,8 @@ cbc_update_disk_lvm(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "SCHEME_LVM_INFO query failed");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, lvm)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, lvm)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_DISK_DEV_LVM], lvm)) != 0)
 		goto cleanup;
 
@@ -854,10 +846,8 @@ ailsa_modify_build_netcard(char *netdev, char *server, ailsa_cmdb_s *cbt, AILLIS
 	AILLIST *m = ailsa_db_data_list_init();
 	AILELEM *e = build->head;
 
-	if ((retval = cmdb_add_server_id_to_list(server, cbt, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(server, cbt, l)) != 0) 
 		goto cleanup;
-	}
 	if ((retval = cmdb_add_string_to_list(netdev, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add network device to list");
 		goto cleanup;

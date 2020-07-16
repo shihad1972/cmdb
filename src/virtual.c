@@ -574,7 +574,7 @@ mkvm_fill_server_list(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm, AILLIST *server)
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(vm->uuid, server)) != 0)
 		goto cleanup;
-	if ((retval = cmdb_add_cust_id_to_list(vm->coid, cmdb, server)) != 0) 
+	if ((retval = cmdb_check_add_cust_id_to_list(vm->coid, cmdb, server)) != 0) 
 		goto cleanup;
 	if (server->total != 6) {
 		ailsa_syslog(LOG_ERR, "Cannot get customer ID from coid %s", vm->coid);
@@ -614,12 +614,8 @@ cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 	unsigned long int server_id;
 	AILLIST *l = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_server_id_to_list(vm->name, cmdb, l)) != 0)
+	if ((retval = cmdb_check_add_server_id_to_list(vm->name, cmdb, l)) != 0)
 		goto cleanup;
-	if (l->total != 1) {
-		ailsa_syslog(LOG_ERR, "Cannot find server %s", vm->name);
-		goto cleanup;
-	}
 	server_id = ((ailsa_data_s *)l->head->data)->data->number;
 	sprintf(buff, "Network Card");
 	if ((retval = cmdb_add_hard_type_id_to_list(buff, cmdb, l)) != 0)

@@ -688,6 +688,25 @@ cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	return retval;
 }
+
+int
+cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_cust_id_to_list(coid, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add customer id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
+		retval = 1;
+	}
+	return retval;
+}
 int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {

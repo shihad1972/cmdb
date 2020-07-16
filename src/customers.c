@@ -407,12 +407,8 @@ cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *cust = ailsa_db_data_list_init();
 	AILLIST *def = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_cust_id_to_list(cm->coid, cc, cust)) != 0) {
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, cust)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add cust id to list");
-		goto cleanup;
-	}
-	if (cust->total == 0) {
-		ailsa_syslog(LOG_ERR, "Cannot find customer with COID %s", cm->coid);
 		goto cleanup;
 	}
 	if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER, def)) != 0) {

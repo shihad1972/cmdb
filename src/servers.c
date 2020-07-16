@@ -213,12 +213,8 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *hardware = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_server_id_to_list(cm->name, cc, hardware)) != 0) {
-		ailsa_syslog(LOG_ERR, "SQL argument returned %d", retval);
-		goto cleanup;
-	}
-	if (hardware->total == 0) {
-		ailsa_syslog(LOG_INFO, "Server %s not found", cm->name);
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, hardware)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
 	if (cm->sid) {
@@ -256,9 +252,9 @@ cmdb_add_services_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *service = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_server_id_to_list(cm->name, cc, service)) != 0)
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, service)) != 0)
 		goto cleanup;
-	if ((retval = cmdb_add_cust_id_to_list(cm->coid, cc, service)) != 0)
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, service)) != 0)
 		goto cleanup;
 	if ((retval = cmdb_add_service_type_id_to_list(cm->service, cc, service)) != 0)
 		goto cleanup;
@@ -707,12 +703,8 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cm->coid, args)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert coid into server list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot run query for cust_id");
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert cust_id into server list");
 		goto cleanup;
 	}
 	if (server->total == 5) {

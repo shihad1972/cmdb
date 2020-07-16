@@ -201,14 +201,8 @@ display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *build = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbt, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, server)) != 0)
 		goto cleanup;
-	}
-	if (server->total == 0) {
-		ailsa_syslog(LOG_INFO, "Cannot find server %s", cml->name);
-		goto cleanup;
-	}
 	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
 		goto cleanup;
@@ -718,10 +712,8 @@ write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	ailsa_data_s *d;
 	ailsa_tftp_s *l = NULL;
 
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cmc, IP_NET_ON_SERVER_ID, server, ip)) != 0) {
 		ailsa_syslog(LOG_ERR, "IP_NET_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -873,10 +865,8 @@ write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
 	AILLIST *build = ailsa_db_data_list_init();
 	ailsa_data_s *d;
 
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list in write_build_config_file");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbc, server)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cbc, BUILD_TYPE_ON_SERVER_ID, server, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_TYPE_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -921,10 +911,8 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server ID to list in write_preseed_build_file");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cmc, BUILD_DETAILS, server, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
 		goto cleanup;
@@ -1216,10 +1204,8 @@ write_build_host_script(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
 
 	memset(file, 0, DOMAIN_LEN);
 	snprintf(file, DOMAIN_LEN, "%shosts/%s.sh", cbc->toplevelos, cml->name);
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cbc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbc, server)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cbc, DOMAIN_BUILD_ALIAS_ON_SERVER_ID, server, domain)) != 0) {
 		ailsa_syslog(LOG_ERR, "DOMAIN_BUILD_ALIAS_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -1569,14 +1555,8 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	mode_t mask;
 	ailsa_build_s *bld = NULL;
 
-	if ((retval = cmdb_add_server_id_to_list(cml->name, cmc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
 		goto cleanup;
-	}
-	if (server->total == 0) {
-		ailsa_syslog(LOG_ERR, "Server %s not found", cml->name);
-		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cmc, FULL_LOCALE_DETAILS_ON_SERVER_ID, server, locale)) != 0) {
 		ailsa_syslog(LOG_ERR, "FULL_LOCALE_DETAILS_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -1813,10 +1793,8 @@ cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list)
 	ailsa_data_s *d;
 
 
-	if ((retval = cmdb_add_server_id_to_list(host, cmc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+	if ((retval = cmdb_check_add_server_id_to_list(host, cmc, server)) != 0)
 		goto cleanup;
-	}
 	if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_SERVER_ID, server, os)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_SERVER_ID query failed");
 		goto cleanup;
