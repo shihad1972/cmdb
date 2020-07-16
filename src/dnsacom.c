@@ -469,8 +469,9 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 			return HOST_INPUT_INVALID;
-		if (!(comm->rtype))
-			return NO_RTYPE;
+		if (comm->toplevel)
+			if (ailsa_validate_input(comm->toplevel, DOMAIN_REGEX) < 0)
+				return DOMAIN_INPUT_INVALID;
 	} else {
 		if ((comm->rtype) && (comm->host)) {
 			if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
