@@ -54,7 +54,7 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp);
 int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:m:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlorqstuvwz";
+	const char *optstr = "c:i:k:n:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlmorqstuvwz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;

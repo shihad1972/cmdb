@@ -996,6 +996,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_SERVER_ON_ID
+"DELETE FROM server WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

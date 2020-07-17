@@ -277,6 +277,26 @@ cmdb_add_services_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return retval;
 }
 
+int
+cmdb_remove_server_from_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_delete_query(cc, delete_queries[DELETE_SERVER_ON_ID], server)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_SERVER_ON_ID query failed");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(server);
+		return retval;
+}
+
 void
 cmdb_list_servers(ailsa_cmdb_s *cc)
 {

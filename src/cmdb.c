@@ -123,6 +123,9 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case DISPLAY:
 		cmdb_display_server(cm, cc);
 		break;
+	case RM_FROM_DB:
+		retval = cmdb_remove_server_from_database(cm, cc);
+		break;
 	default:
 		display_type_error(cm->type);
 		retval = WRONG_TYPE;

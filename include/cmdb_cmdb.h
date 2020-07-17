@@ -56,6 +56,9 @@ void
 cmdb_display_server_details(AILLIST *server);
 
 int
+cmdb_remove_server_from_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
+int
 cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 
 void
