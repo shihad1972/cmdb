@@ -51,7 +51,7 @@ validate_cbc_comm_line(cbc_comm_line_s *cml);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:uvwx:y";
+	const char *optstr = "ab:de:ghi:j:k:lmn:o:p:qrs:t:uvwx:y";
 	int retval, opt;
 	retval = NONE;
 #ifdef HAVE_GETOPT_H

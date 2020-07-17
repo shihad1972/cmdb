@@ -831,6 +831,8 @@ append initrd=initrd-%s-%s-%s.img ", host, host, tftp->alias, tftp->version, tft
 	if (strncmp(tftp->build_type, "preseed", SERVICE_LEN) == 0) {
 		dprintf(fd, "\
 county=%s console-setup/layoutcode=%s %s %s=%s%s.cfg ", tftp->country, tftp->country, tftp->boot_line, tftp->arg, tftp->url, host);
+		if ((strcmp(tftp->alias, "debian") == 0) && (strcmp(tftp->version, "10") == 0))
+			dprintf(fd, "lowmem/low=true ");
 		if (cml->gui > 0) {
 			dprintf(fd, "\
 vga=788\n\n");
@@ -1173,7 +1175,7 @@ write_preseed_system_packages(int fd, AILLIST *sys)
 	if (!(sys) || (fd == 0))
 		return AILSA_NO_DATA;
 	if (sys->total == 0)
-		return AILSA_NO_DATA;
+		return 0;
 	AILELEM *e = sys->head;
 	ailsa_syspack_s *pack;
 
@@ -1457,8 +1459,10 @@ cbc_fill_sys_pack_details(AILLIST *sys, AILLIST *pack, ailsa_build_s *bld)
 	AILELEM *e;
 	ailsa_data_s *d;
 
-	if ((sys->total == 0) || ((sys->total % total) != 0))
+	if ((sys->total % total) != 0)
 		return WRONG_LENGTH_LIST;
+	if (sys->total == 0)
+		return 0;
 	e = sys->head;
 	while (e) {
 		config = ailsa_calloc(sizeof(ailsa_syspack_s), "config in cbc_fill_sys_pack_details");
