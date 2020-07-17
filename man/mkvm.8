@@ -5,37 +5,43 @@ mkvm \- Make Virtual Machine
 .B mkvm
 [
 .B action
-] -c <cpus> -g <storage-volume-size> [ -k <virt-network> | -b <bridge-device> ] -n <name> -p <storage-pool> -r <ram> -u <connection-uri>
+] -c <cpus> -g <storage-volume-size> ( -k <virt-network> | -b <bridge-device> ) -n <name> -p <storage-pool> -r <ram> -u <connection-uri> [ -C COID ]
 .PP
 .SH DESCRIPTION
 \fBmkvm\fP will make a virtual machine in a libvirt environment. It will do this with a root disk of \fIstorage-volume-size\fP, created in \fIstorage-pool\fP, place it on network \fIvirt-network\fP. It will add \fIcpus\fP no. of cpus, and \fIram\fP MB of RAM. You can specify the \fIconnection-uri\fP for the libvirt connection.
+
+You can also add the virtual machine into CMDB, this will add the base VM and also the disk and network card.
 .SH OPTIONS
 .B Actions (these do not take arguments, only one can be used)
 .IP "-a,  --add"
 .IP "-h,  --help"
 .IP "-v,  --version"
-.IP "-C,  --cmdb"
-Add a defined VM to the CMDB database.
+.PP
+.B Optional
+.IP "-d,  --cmdb"
+Add a defined VM to the CMDB database
 .PP
 .B VM Options
 .IP "-g,  --size \fBsize\fP"
-This is the size of the disk for the virtual machine.
+This is the size of the disk for the virtual machine
 .PP
-.B The next 2 options are mutually exclusive.
+.B The next 2 options are mutually exclusive
 .IP "-k,  --network \fBname\fP"
-This is the name of the virtual network to attach the VM to.
+This is the name of the virtual network to attach the VM to
 .IP "-b,  --bridge \fBnetwork bridge device\fP"
-The name of the network bridge device to attach the VM to.
+The name of the network bridge device to attach the VM to
 .IP "-n,  --name \fBname\fP"
-A name for your virtual machine.
+A name for your virtual machine
 .IP "-p,  --pool \fBpool\fP"
-The storage pool that contains the disk.
+The storage pool that contains the disk
 .IP "-c,  --cpus \fBcpus\fP"
-Number of CPU's for the VM.
+Number of CPU's for the VM
 .IP "-r,  --ram \fBram\fP"
-Amount of RAM for the VM in MB.
+Amount of RAM for the VM in MB
 .IP "-u,  --uri \fBURI\fP"
 Specify the libvirt connection URI
+.IP "-C,  --coid \fBCOID\fP"
+Specify the COID of the customer to assign the VM to
 .SH FILES
 .I /etc/cmdb/mkvm.conf
 .RS
