@@ -830,7 +830,7 @@ kernel vmlinuz-%s-%s-%s\n\
 append initrd=initrd-%s-%s-%s.img ", host, host, tftp->alias, tftp->version, tftp->arch, tftp->alias, tftp->version, tftp->arch);
 	if (strncmp(tftp->build_type, "preseed", SERVICE_LEN) == 0) {
 		dprintf(fd, "\
-county=%s console-setup/layoutcode=%s %s %s=%s%s.cfg ", tftp->country, tftp->country, tftp->boot_line, tftp->arg, tftp->url, host);
+county=%s console-setup/layoutcode=%s %s %s=%s%s.cfg interface=%s ", tftp->country, tftp->country, tftp->boot_line, tftp->arg, tftp->url, host, tftp->net_int);
 		if ((strcmp(tftp->alias, "debian") == 0) && (strcmp(tftp->version, "10") == 0))
 			dprintf(fd, "lowmem/low=true ");
 		if (cml->gui > 0) {
