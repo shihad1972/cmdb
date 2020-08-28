@@ -54,10 +54,10 @@ static void
 print_glue_records(char *zone, AILLIST *g);
 
 static void
-print_rev_zone_info(char *domain, AILLIST *z);
+print_rev_zone_info(char *in_addr, AILLIST *z);
 
 static void
-print_rev_zone_records(char *domain, AILLIST *r);
+print_rev_zone_records(AILLIST *r);
 
 static int
 multi_a_range(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl);
@@ -424,8 +424,8 @@ display_rev_zone(char *domain, ailsa_cmdb_s *dc)
 		goto cleanup;
 	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_ZONE_ID, i, r)) != 0)
 		goto cleanup;
-	print_rev_zone_info(domain, z);
-	print_rev_zone_records(in_addr, r);
+	print_rev_zone_info(in_addr, z);
+	print_rev_zone_records(r);
 	cleanup:
 		ailsa_list_full_clean(i);
 		ailsa_list_full_clean(l);
@@ -434,27 +434,27 @@ display_rev_zone(char *domain, ailsa_cmdb_s *dc)
 }
 
 void
-print_rev_zone_info(char *domain, AILLIST *z)
+print_rev_zone_info(char *in_addr, AILLIST *z)
 {
-	if (!(domain) || !(z))
+	if (!(in_addr) || !(z))
 		return;
 	AILELEM *e = z->head;
 
-	printf("%s\t", domain);
-	printf("%s\t%lu\n", ((ailsa_data_s *)e->next->data)->data->text, ((ailsa_data_s *)e->data)->data->number);
+	printf("domain: %s\n", in_addr);
+	printf("name server: %s\nserial #: %lu\n\n", ((ailsa_data_s *)e->next->data)->data->text, ((ailsa_data_s *)e->data)->data->number);
 }
 
 static void
-print_rev_zone_records(char *domain, AILLIST *r)
+print_rev_zone_records(AILLIST *r)
 {
-	if (!(domain) || !(r))
+	if (!(r))
 		return;
 	AILELEM *e = r->head;
 	ailsa_data_s *d;
 
 	while (e) {
 		d = e->data;
-		printf("%s.%s\t", d->data->text, domain);
+		printf("%s\t", d->data->text);
 		e = e->next;
 		d = e->data;
 		printf("%s\n", d->data->text);
