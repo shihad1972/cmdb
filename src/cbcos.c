@@ -63,6 +63,9 @@ static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
+cbc_fill_os_details(char *name, AILLIST *list, AILLIST *dest);
+
+static int
 add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
@@ -277,75 +280,100 @@ list_cbc_build_os(ailsa_cmdb_s *cmc)
 static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
+	if (!(cmc) || !(col))
+		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
-	AILELEM *elem;
-	ailsa_data_s *one, *two, *four, *five, *six, *valias;
-	if (!(cmc) || !(col))
-		goto cleanup;
+	AILLIST *os = ailsa_cbcos_list_init();
+	AILELEM *e;
+	ailsa_cbcos_s *cos;
 	char *name = col->os;
 	char *uname;
-
-	int i = 0;
 
 	if ((retval = ailsa_basic_query(cmc, BUILD_OSES, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL query returned %d", retval );
 		goto cleanup;
 	}
-	elem = list->head;
-	while (elem) {
-		one = (ailsa_data_s *)elem->data;
-		if (elem->next)
-			elem = elem->next;
-		two = (ailsa_data_s *)elem->data;
-		if (elem->next)
-			elem = elem->next;
-		if (elem->next)
-			elem = elem->next;
-		four = (ailsa_data_s *)elem->data;
-		if (elem->next)
-			elem = elem->next;
-		valias = (ailsa_data_s *)elem->data;
-		if (elem->next)
-			elem = elem->next;
-		five = (ailsa_data_s *)elem->data;
-		if (elem->next)
-			elem = elem->next;
-		six = (ailsa_data_s *)elem->data;
-		elem = elem->next;
-		if (five == six)
-			break;
-		if (strncasecmp(one->data->text, name, MAC_S) == 0) {
-			if (i == 0) {
-				printf("Operating System %s\n", name);
-				printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
-			}
-			i++;
-			if (strncasecmp(valias->data->text, "none", COMM_S) == 0) {
+	if ((retval = cbc_fill_os_details(name, list, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill cbcos struct");
+		goto cleanup;
+	}
+	if (os->total > 0) {
+		printf("Operating System %s\n", name);
+		printf("Version\tVersion alias\tArchitecture\tCreated by\tCreation time\n");
+		e = os->head;
+		while (e) {
+			cos = e->data;
+			if (strncasecmp(cos->ver_alias, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
-				     two->data->text, four->data->text);
+				     cos->os_version, cos->arch);
 			} else {
-				if (strlen(valias->data->text) < 8)
+				if (strlen(cos->ver_alias) < 8)
 					printf("%s\t%s\t\t%s\t\t",
-					     two->data->text, valias->data->text, four->data->text);
+					     cos->os_version, cos->ver_alias, cos->arch);
 				else
 					printf("%s\t%s\t%s\t\t",
-					     two->data->text, valias->data->text, four->data->text);
+					cos->os_version, cos->ver_alias, cos->arch);
 			}
-			uname = cmdb_get_uname(five->data->number);
+			uname = cmdb_get_uname(cos->cuser);
 			if (strlen(uname) < 8)
-				printf("%s\t\t%s\n", uname, six->data->text);
+				printf("%s\t\t%s\n", uname, cos->ctime);
 			else
-				printf("%s\t%s\n", uname, six->data->text);
+				printf("%s\t%s\n", uname, cos->ctime);
 			my_free(uname);
+			e = e->next;
 		}
+	} else {
+		printf("OS %s not found\n", name);
 	}
-	if (i == 0)
-		retval =  OS_NOT_FOUND;
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(os);
 		return retval;
+}
+static int
+cbc_fill_os_details(char *name, AILLIST *list, AILLIST *dest)
+{
+	if (!(name) || !(list) || !(dest))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = 7;
+	AILELEM *elem;
+	ailsa_data_s *data;
+	ailsa_cbcos_s *cos;
+
+	if (list->total == 0)
+		return AILSA_NO_DATA;
+	if ((list->total % total) != 0)
+		return AILSA_NO_DATA;
+	elem = list->head;
+	while (elem) {
+		data = elem->data;
+		if (name) {
+			if (strncasecmp(data->data->text, name, MAC_LEN) != 0) {
+				elem = ailsa_move_down_list(elem, total);
+				continue;
+			}
+		}
+		cos = ailsa_calloc(sizeof(ailsa_cbcos_s), "cos in cbc_fill_os_details");
+		cos->os = strndup(((ailsa_data_s *)elem->data)->data->text, MAC_LEN);
+		elem = elem->next;
+		cos->os_version = strndup(((ailsa_data_s *)elem->data)->data->text, SERVICE_LEN);
+		elem = elem->next;
+		cos->alias = strndup(((ailsa_data_s *)elem->data)->data->text, SERVICE_LEN);
+		elem = elem->next;
+		cos->arch = strndup(((ailsa_data_s *)elem->data)->data->text, SERVICE_LEN);
+		elem = elem->next;
+		cos->ver_alias = strndup(((ailsa_data_s *)elem->data)->data->text, SERVICE_LEN);
+		elem = elem->next;
+		cos->cuser = ((ailsa_data_s *)elem->data)->data->number;
+		elem = elem->next;
+		cos->ctime = strndup(((ailsa_data_s *)elem->data)->data->text, HOST_LEN);
+		elem = elem->next;
+		if ((retval = ailsa_list_insert(dest, cos)) != 0)
+			return retval;
+	}
+	return 0;
 }
 
 static int

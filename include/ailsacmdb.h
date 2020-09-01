@@ -466,6 +466,18 @@ typedef struct ailsa_tftp_s {
 	char *net_int;
 } ailsa_tftp_s;
 
+typedef struct ailsa_cbcos_s {	// should probably look at ctime here
+	char *os;
+	char *os_version;
+	char *alias;
+	char *arch;
+	char *ver_alias;
+	char *ctime;
+	char *mtime;
+	unsigned long int cuser;
+	unsigned long int muser;
+} ailsa_cbcos_s;
+
 typedef struct ailsa_build_s {
 	char *locale;
 	char *language;
@@ -641,6 +653,8 @@ ailsa_clean_data(void *data);
 void
 ailsa_clean_dhcp(void *data);
 void
+ailsa_clean_cbcos(void *cbcos);
+void
 ailsa_clean_dhcp_config(void *dhcp);
 void
 ailsa_clean_tftp(void *tftp);
@@ -783,6 +797,9 @@ ailsa_iface_list_init(void);
 
 AILLIST *
 ailsa_dhcp_list_init(void);
+
+AILLIST *
+ailsa_cbcos_list_init(void);
 
 AILLIST *
 ailsa_dhcp_config_list_init(void);

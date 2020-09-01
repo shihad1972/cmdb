@@ -455,6 +455,30 @@ ailsa_clean_dhcp_config(void *dhcp)
 		my_free(data->domain);
 	my_free(data);
 }
+
+void
+ailsa_clean_cbcos(void *cbcos)
+{
+	if (!(cbcos))
+		return;
+	ailsa_cbcos_s *data = cbcos;
+	if (data->os)
+		my_free(data->os);
+	if (data->os_version)
+		my_free(data->os_version);
+	if (data->alias)
+		my_free(data->alias);
+	if (data->ver_alias)
+		my_free(data->ver_alias);
+	if (data->arch)
+		my_free(data->arch);
+	if (data->ctime)
+		my_free(data->ctime);
+	if (data->mtime)
+		my_free(data->mtime);
+	my_free(data);
+}
+
 void
 ailsa_clean_iface(void *iface)
 {
@@ -818,6 +842,14 @@ ailsa_dhcp_config_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_dhcp_config_list_init");
 	ailsa_list_init(list, ailsa_clean_dhcp_config);
+	return list;
+}
+
+AILLIST *
+ailsa_cbcos_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_cbcos_list_init");
+	ailsa_list_init(list, ailsa_clean_cbcos);
 	return list;
 }
 
