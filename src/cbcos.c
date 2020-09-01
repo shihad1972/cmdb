@@ -494,68 +494,59 @@ cbcos_grab_boot_files(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	int retval = 0;
 	int test = 0;
 	int count = 0;
-	char *os, *alias, *version, *arch, *ver_alias;
 	AILLIST *list = ailsa_db_data_list_init();
-	AILELEM *elem = NULL, *head;
-	ailsa_data_s *data;
+	AILLIST *os = ailsa_cbcos_list_init();
+	AILELEM *elem = NULL;
+	ailsa_cbcos_s *cos;
 
 	cbcos_check_for_null_in_comm_line(col, &test);
 	if ((retval = ailsa_basic_query(cmc, BUILD_OSES, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "SQL basic query returned %d", retval);
 		goto cleanup;
 	}
-	elem = list->head;
-	if (list->total < 1)
+	if (col->os) {
+		if ((retval = cbc_fill_os_details(col->os, list, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot fill cbcos details");
+			goto cleanup;
+		}
+	} else if(col->alias) {
+		if ((retval = cbc_fill_os_details(col->alias, list, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot fill cbcos details");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cbc_fill_os_details(NULL, list, os)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot fill cbcos details");
+			goto cleanup;
+		}
+	}
+	elem = os->head;
+	if (os->total < 1)
 		goto cleanup;
 	while (elem) {
-		head = elem;
-		data = elem->data;
-		os = data->data->text;
-		if (elem->next)
-			elem = elem->next;
-		data = elem->data;
-		version = data->data->text;
-		if (elem->next)
-			elem = elem->next;
-		data = elem->data;
-		alias = data->data->text;
-		if (elem->next)
-			elem = elem->next;
-		data = elem->data;
-		arch = data->data->text;
-		if (elem->next)
-			elem = elem->next;
-		data = elem->data;
-		ver_alias = data->data->text;
-		if (ver_alias == arch)
-			break;
+		cos = elem->data;
 		if ((test & 7) == 7) {
-			printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
+			printf("Will download OS %s, version %s, arch %s\n", cos->os, cos->os_version, cos->arch);
 			count++;
-			if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
+			if ((retval = cbc_get_boot_files(cmc, cos->alias, cos->os_version, cos->arch, cos->ver_alias)) != 0)
 				ailsa_syslog(LOG_ERR, "Error downloading OS\n");
 		} else {
-			cbcos_check_for_os(col, head, &test);
+			cbcos_check_for_os(col, elem, &test);
 			if ((test & 56) == 56) {
-				printf("Will download OS %s, version %s, arch %s\n", os, version, arch);
+				printf("Will download OS %s, version %s, arch %s\n", cos->os, cos->os_version, cos->arch);
 				count ++;
-				if ((retval = cbc_get_boot_files(cmc, alias, version, arch, ver_alias)) != 0)
+				if ((retval = cbc_get_boot_files(cmc, cos->alias, cos->os_version, cos->arch, cos->ver_alias)) != 0)
 					ailsa_syslog(LOG_ERR, "Error downloading OS\n");
 			}
 		}
-		if (elem->next)
-			elem = elem->next;
-		if (elem->next)
-			elem = elem->next;
-		if (elem->next)
-			elem = elem->next;
+		elem = elem->next;
 		test = test & 7;
 	}
 	if (count == 0)
 		ailsa_syslog(LOG_ERR, "No OS found to download\n");
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(os);
 		return retval;
 }
 
@@ -577,49 +568,28 @@ cbcos_check_for_os(cbcos_comm_line_s *col, AILELEM *head, int *test)
 {
 	if (!(col) || !(head) || !(test))
 		return;
-	AILELEM *elem = head;
-	ailsa_data_s *data = elem->data;
-	char *os, *alias, *arch, *version, *ver_alias;
+	ailsa_cbcos_s *os = head->data;
 
-	os = data->data->text;
-	if (elem->next)
-		elem = elem->next;
-	data = elem->data;
-	version = data->data->text;
-	if (elem->next)
-		elem = elem->next;
-	data = elem->data;
-	alias = data->data->text;
-	if (elem->next)
-		elem = elem->next;
-	data = elem->data;
-	arch = data->data->text;
-	if (elem->next)
-		elem = elem->next;
-	data = elem->data;
-	ver_alias = data->data->text;
-	if (ver_alias == arch)
-		return;
-	if ((*test & 4) == 4) {
+	if ((*test & 4) == 4) {		// check if os name / alias set on command line
 		*test = *test | 32;
 	} else if (col->os) {
-		if (strncasecmp(col->os, os, MAC_S) == 0)
+		if (strncasecmp(col->os, os->os, MAC_S) == 0)
 			*test = *test | 32;
 	} else if (col->alias) {
-		if (strncasecmp(col->alias, alias, MAC_S) == 0)
+		if (strncasecmp(col->alias, os->alias, MAC_S) == 0)
 			*test = *test | 32;
 	}
-	if ((*test & 1) == 1)
+	if ((*test & 1) == 1)		// check if os arch set on command line
 		*test = *test | 8;
-	else if (strncasecmp(col->arch, arch, RANGE_S) == 0)
+	else if (strncasecmp(col->arch, os->arch, RANGE_S) == 0)
 		*test = *test | 8;
-	if ((*test & 2) == 2) {
+	if ((*test & 2) == 2) {		// check if os version set on command line
 		*test = *test | 16;
 	} else if (col->version) {
-		if (strncasecmp(col->version, version, MAC_S) == 0)
+		if (strncasecmp(col->version, os->os_version, MAC_S) == 0)
 			*test = *test | 16;
 	} else if (col->ver_alias) {
-		if (strncasecmp(col->ver_alias, ver_alias, MAC_S) == 0)
+		if (strncasecmp(col->ver_alias, os->ver_alias, MAC_S) == 0)
 			*test = *test | 16;
 	}
 }
