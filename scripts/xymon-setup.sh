@@ -47,7 +47,7 @@ if [ $DIR != $TGT ]; then
   cd $TGT
 fi
 
-for i in hobbit-patch.sh deploy-patch.sh; do
+for i in hobbit-patch.sh deploy-patch.sh lspci.sh deploy-lspci.sh; do
   $WGET ${url}${i}
   chmod 755 $i
 done
@@ -61,6 +61,7 @@ if [ -f hobbit-patch.sh ] && [ -f deploy-patch.sh ]; then
 
 cd /root
 ./deploy-patch.sh > hobbit-patch.log 2>&1
+./deploy-lspci.sh > lspci.log 2>&1
 if [ -f /etc/init.d/hobbit-client ]; then
   CLIENT=hobbit-client
 elif [ -f /etc/init.d/xymon-client ]; then
