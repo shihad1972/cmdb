@@ -119,7 +119,7 @@ elif [ -f /etc/lsb-release ] || [ -f /etc/debian_version ]; then
 " >>${ETCDIR}/clientlaunch.d/lspci.cfg
         elif [ -d /etc/xymon ]; then
             echo "
-[patches]
+[lspci]
 	ENVFILE \$XYMONCLIENTHOME/etc/xymonclient.cfg
 	CMD \$XYMONCLIENTHOME/ext/lspci.sh
 	LOGFILE \$XYMONCLIENTHOME/logs/lspci.sh
