@@ -19,6 +19,12 @@
 #  Create the required configuration on a debian host for the elasticsearch
 #  repository
 
+# *** 
+#     We cannot currently use this script within the cbc software, unless we
+#     have a domain set aside specifically for the server and the clients are
+#     in a separate domain.
+# ***
+
 if [ -z "$1" ]; then
   echo "No URL passed as argument"
   exit 1;
