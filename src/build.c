@@ -1165,7 +1165,7 @@ d-i finish-install/keep-consoles boolean true\n\
 d-i finish-install/reboot_in_progress note\n\
 d-i cdrom-detect/eject boolean false\n\
 d-i preseed/late_command string cd /target/root; \
-wget %shosts/%s.sh && sh /target/root/%s.sh\n\n", bld->url, bld->host, bld->host);
+wget %shosts/%s.sh && sh /target/root/%s.sh >> /target/root/%s.log 2>&1\n\n", bld->url, bld->host, bld->host, bld->host);
 	return 0;
 }
 
@@ -1270,7 +1270,11 @@ cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys)
 \n\
 \n\
 WGET=/usr/bin/wget\n\
-cd /root\n\
+if [ -d /target ]; then\n\
+  cd /target/root\n\
+else\n\
+  cd /root\n\
+fi\n\
 \n\
 $WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
 \n\
@@ -1280,7 +1284,7 @@ chmod 755 firstboot.sh\n\
 \n\
 $WGET %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh >> scritps.log 2>&1\
+./motd.sh >> scripts.log 2>&1\
 \n", host, url, url, url);
 	cbc_write_system_scripts(url, fd, sys);
 	close(fd);
