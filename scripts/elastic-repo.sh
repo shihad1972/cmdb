@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #  Copyright (C) 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -53,14 +53,18 @@ fi
 cat > $SCRIPT << EOF
 #!/bin/sh
 STATUS=$STATUS
+apt-get update && apt-get install gnupg -y
 $WGET -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
 echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list
 apt-get update
 if [ "\$STATUS" = "server" ]; then
   apt-get install elasticsearch kibana
-else if [ "\$STATUS" = "client" ]; then
-  apt-get install filebeat
+  systemctl enable elasticsearch
+  systemctl enable kibana
+  systemctl start elasticsearch
+  systemctl start kibana
 fi
+apt-get install filebeat
 EOF
 chmod 755 $SCRIPT
 
