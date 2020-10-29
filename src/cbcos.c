@@ -233,8 +233,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		printf("No action provided\n");
 		return NO_ACTION;
 	}
-	if (((col->action == ADD_CONFIG) || (col->action == SET_DEFAULT)) && (
-		(!(col->version)) || (!(col->os)) || (!(col->arch)))) {
+	if (((col->action == ADD_CONFIG) || (col->action == SET_DEFAULT) ||
+	      (col->action == RM_CONFIG)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}
