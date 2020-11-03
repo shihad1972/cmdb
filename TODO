@@ -1,10 +1,10 @@
+03/11/2020
+When adding package to varient, we need to check if the package already
+exists in that varient and not add it again. IDEMPOTENT
+
 17/07/2020
 When displaying build OS, it would be useful to know what servers are
 built with that OS.
-
-16/07/2020
-Need to add the VIEW_DEFAULT action to cmdb for customer.
-	** DONE commit 4b64960 **
 
 11/07/2020
 Should be able to read config values from environment variables. Also
