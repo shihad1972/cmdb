@@ -1026,6 +1026,7 @@ d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVm
 d-i passwd/user-fullname string Admin User\n\
 d-i passwd/username string sysadmin\n\
 d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
+d-i passwd/user-default-groups string audio cdrom video dip floppy plugdev netdev sudo\n\
 d-i clock-setup/utc boolean true\n\
 \n\
 d-i time/zone string %s\n\
