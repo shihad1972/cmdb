@@ -1,6 +1,7 @@
 03/11/2020
 When adding package to varient, we need to check if the package already
 exists in that varient and not add it again. IDEMPOTENT
+	** Done. Commit ID: 51dcd4e **
 
 17/07/2020
 When displaying build OS, it would be useful to know what servers are
