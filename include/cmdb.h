@@ -78,7 +78,7 @@ enum {			/* dnsa error codes */
 	MY_STATEMENT_FAIL = 15,
 	NO_QUERY = 16,
 	MY_BIND_FAIL = 17,
-	UNKNOWN_QUERY = 18,
+	NO_ZONE_FOUND = 18,
 	INSERT_NOT_CONFIGURED = 19,
 	FILE_O_FAIL = 20,
 	DIR_C_FAIL = 21,

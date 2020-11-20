@@ -96,8 +96,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
 	} else if (error == DB_WRONG_TYPE) {
 		fprintf(stderr, "Wrong DB type in query %s\n", errstr);
-	} else if (error == UNKNOWN_QUERY) {
-		fprintf(stderr, "Unknown query for type %s\n", errstr);
+	} else if (error == NO_ZONE_FOUND) {
+		fprintf(stderr, "Zone %s not found\n", errstr);
 	} else if (error == NO_DB_TYPE) {
 		fprintf(stderr, "No DB type configured\n");
 	} else if (error == DB_TYPE_INVALID) {

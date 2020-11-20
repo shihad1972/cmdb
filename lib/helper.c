@@ -684,7 +684,7 @@ cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find server %s", server);
-		retval = 1;
+		retval = SERVER_NOT_FOUND;
 	}
 	return retval;
 }
@@ -703,7 +703,7 @@ cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
-		retval = 1;
+		retval = CUSTOMER_NOT_FOUND;
 	}
 	return retval;
 }
@@ -722,7 +722,7 @@ cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find zone %s", zone);
-		retval = 1;
+		retval = NO_ZONE_FOUND;
 	}
 	return retval;
 }
@@ -740,8 +740,8 @@ cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list
 		return retval;
 	}
 	if (list->total != (total + 1)) {
-		ailsa_syslog(LOG_ERR, "Cannot find varient %s", varient);
-		retval = 1;
+		ailsa_syslog(LOG_INFO, "Cannot find varient %s", varient);
+		retval = VARIENT_NOT_FOUND;
 	}
 	return retval;
 }
@@ -760,7 +760,7 @@ cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find IP for server %s", host);
-		retval = 1;
+		retval = CANNOT_FIND_BUILD_IP;
 	}
 	return retval;
 }
