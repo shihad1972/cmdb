@@ -60,6 +60,9 @@ static void
 list_cbc_build_os(ailsa_cmdb_s *cmc);
 
 static int
+check_for_build_os(ailsa_cbcos_s *cos, char *version, char *valias, char *arch);
+
+static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
@@ -278,6 +281,52 @@ list_cbc_build_os(ailsa_cmdb_s *cmc)
 }
 
 static int
+check_for_build_os(ailsa_cbcos_s *cos, char *version, char *valias, char *arch)
+{
+	int retval = 0;
+	if (!(version) && !(valias) && !(arch))
+		return 1;
+	if (arch) {
+		if (version || valias) {
+			if (version) {
+				if (strncmp(cos->os_version, version, MAC_S) == 0)
+					retval = 1;
+				else
+					retval = 0;
+			} else if (valias) {
+				if (strncmp(cos->ver_alias, valias, MAC_S) == 0)
+					retval = 1;
+				else
+					retval = 0;
+			}
+			if (retval == 1) {
+				if (strncmp(cos->arch, arch, RANGE_S) == 0)
+					retval = 1;
+				else
+					retval = 0;
+			}
+		} else if (strncmp(cos->arch, arch, RANGE_S) == 0) {
+			retval = 1;
+		}
+		return retval;
+	} else {
+		if (version) {
+			if (strncmp(cos->os_version, version, MAC_S) == 0)
+				retval = 1;
+			else
+				retval = 0;
+		} else if (valias) {
+			if (strncmp(cos->ver_alias, valias, MAC_S) == 0)
+				retval = 1;
+			else
+				retval = 0;
+		}
+		return retval;
+	}
+	return retval;
+}
+
+static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
@@ -288,6 +337,9 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	AILELEM *e;
 	ailsa_cbcos_s *cos;
 	char *name = col->os;
+	char *version = col->version;
+	char *valias = col->ver_alias;
+	char *arch = col->arch;
 	char *uname;
 
 	if ((retval = ailsa_basic_query(cmc, BUILD_OSES, list)) != 0) {
@@ -304,6 +356,10 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		e = os->head;
 		while (e) {
 			cos = e->data;
+			if (check_for_build_os(cos, version, valias, arch) == 0) {
+				e = e->next;
+				continue;
+			}
 			if (strncasecmp(cos->ver_alias, "none", COMM_S) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
 				     cos->os_version, cos->arch);
