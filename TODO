@@ -5,6 +5,7 @@ exists in that varient and not add it again. IDEMPOTENT
 17/07/2020
 When displaying build OS, it would be useful to know what servers are
 built with that OS.
+Also display does not honour -o <os_version> nor -t <architecture>
 
 11/07/2020
 Should be able to read config values from environment variables. Also
@@ -94,16 +95,6 @@ Reworking the SQL code:
   - allow inserts of multiple entries				**DONE**
   - condense cmdb dnsa and cbc sql into 1 set of functions	**DONE**
 
-07/02/2020
-Start to use the errors.c in lib/ directory. cmdb-0.3 branch has put the
-base_sql.h header file into include/
-	DONE Commit id a3d4ed5d
-
-27/02/2019
-Need to add a generic logging function, that can handle both console
-output and also logging to syslog.
-	DONE Commit id d4c83120, function ailsa_syslog
-
 09/11/2018
 Deleting SRV records is tricky; it seems to delete all SRV records
 for a given service (e.g. ldap) and we cannot specify which one
@@ -120,11 +111,6 @@ as the daemon can have a config file passed to it on startup.
 	Install script cmdb.sh now takes into account the values in
 	configmake.h
 
-24/02/2016
-Add default for build_os, partition and varient
-	** DONE ** 13/07/2020 Commit ID 1e072d5
-	Added a default build domain also
-
 03/03/2015
 I want to get rid of the need to have a server already in the database before
 adding a build. This would mean extending the ethernet and hard-disk options
@@ -139,10 +125,6 @@ os_id.
 	*** Add: Can even just have versions in build_os; no need to have
 	name and alias; Have those in build_type and then refernce from
 	build_os
-
-18/02/2015
-Need to get rid of the search / extended search in dnsa and cmdb
-	DONE: Commit id 53b2efb. Moved to AILLIST database access
 
 31/01/2015
 Need to check all programs are checking for ~/.dnsa.conf and also add
