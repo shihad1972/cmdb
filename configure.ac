@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([cmdb], [0.3.4], [iain@thargoid.co.uk])
-AC_CONFIG_SRCDIR([src/cpc.c])
+AC_INIT([cmdb], [0.3.6], [iain@thargoid.co.uk])
+AC_CONFIG_SRCDIR([src/cbc.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([include/config.h])
 AM_INIT_AUTOMAKE

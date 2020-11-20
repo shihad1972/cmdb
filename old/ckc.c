@@ -202,7 +202,7 @@ ckc_build_package_list(ckc_package_s **list, ckc_config_s *ckc)
 			pack = pack->next;
 		pack->next = new;
 	}
-	cmdb_free(package, len);
+	my_free(package);
 }
 
 static void
@@ -211,26 +211,26 @@ clean_ckc_config(ckc_config_s *ckc)
 	if (!(ckc))
 		return;
 	if (ckc->country)
-		cmdb_free(ckc->country, strlen(ckc->country));
+		my_free(ckc->country);
 	if (ckc->domain)
-		cmdb_free(ckc->domain, strlen(ckc->domain));
+		my_free(ckc->domain);
 	if (ckc->file)
-		cmdb_free(ckc->file, strlen(ckc->file));
+		my_free(ckc->file);
 	if (ckc->ip)
-		cmdb_free(ckc->ip, strlen(ckc->ip));
+		my_free(ckc->ip);
 	if (ckc->host)
-		cmdb_free(ckc->host, strlen(ckc->host));
+		my_free(ckc->host);
 	if (ckc->disk)
-		cmdb_free(ckc->disk, strlen(ckc->disk));
+		my_free(ckc->disk);
 	if (ckc->language)
-		cmdb_free(ckc->language, strlen(ckc->language));
+		my_free(ckc->language);
 	if (ckc->packages)
-		cmdb_free(ckc->packages, strlen(ckc->packages));
+		my_free(ckc->packages);
 	if (ckc->timezone)
-		cmdb_free(ckc->timezone, strlen(ckc->timezone));
+		my_free(ckc->timezone);
 	if (ckc->url)
-		cmdb_free(ckc->url, strlen(ckc->url));
-	cmdb_free(ckc, sizeof(ckc_config_s));
+		my_free(ckc->url);
+	my_free(ckc);
 }
 
 static void
@@ -245,8 +245,8 @@ clean_ckc_package(ckc_package_s *pack)
 	while (list) {
 		next = list->next;
 		if (list->package)
-			cmdb_free(list->package, strlen(list->package));
-		cmdb_free(list, sizeof(ckc_package_s));
+			my_free(list->package);
+		my_free(list);
 		list = next;
 	}
 }
@@ -313,7 +313,7 @@ ckc_split_ip(char *net[], char *ip)
 		i++;
 		member = tmp;
 	}
-	cmdb_free(info, strlen(info));
+	my_free(info);
 }
 
 static void
@@ -436,7 +436,7 @@ postfix\n");
 Error in closing %s: %s\n", ckc->file, strerror(errno));
 	for (i = 0; i < 4; i++) {
 		if (netinfo[i])
-			cmdb_free(netinfo[i], strlen(netinfo[i]));
+			my_free(netinfo[i]);
 	}
 	clean_ckc_package(pack);
 }

@@ -47,24 +47,6 @@ ailsa_list_init(AILLIST *list, void (*destroy)(void *data))
 }
 
 void
-ailsa_list_destroy(AILLIST *list)
-{
-	void *data;
-	int retval = 0;
-
-	if (!(list))
-		return;
-	while (list->total > 0) {
-		retval = ailsa_list_remove(list, list->tail, (void **)&data);
-		if (retval == 0 && list->destroy != NULL) {
-			list->destroy(data);
-		}
-	}
-	memset(list, 0, sizeof(AILLIST));
-	return;
-}
-
-void
 ailsa_list_clean(AILLIST *list)
 {
 	void *data;
@@ -78,6 +60,23 @@ ailsa_list_clean(AILLIST *list)
 			list->destroy(data);
 		}
 	}
+}
+
+void
+ailsa_list_destroy(AILLIST *list)
+{
+	if (!(list))
+		return;
+	ailsa_list_clean(list);
+	memset(list, 0, sizeof(AILLIST));
+	return;
+}
+
+void
+ailsa_list_full_clean(AILLIST *l)
+{
+	ailsa_list_destroy(l);
+	my_free(l);
 }
 
 int
@@ -163,6 +162,8 @@ ailsa_list_remove(AILLIST *list, AILELEM *element, void **data)
 {
 	if (!(element) || list->total == 0)
 		return -1;
+	int retval = 0;
+
 	*data = element->data;
 	if (element == list->head) {
 		list->head = element->next;
@@ -177,9 +178,72 @@ ailsa_list_remove(AILLIST *list, AILELEM *element, void **data)
 		else
 			element->next->prev = element->prev;
 	}
+	list->total--;
 	my_free(element);
+	return retval;
+}
+
+int
+ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len)
+{
+	if (!(l) || !(e))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t count;
+	size_t no = 0;
+	void *d = NULL;
+	AILELEM *p = e;
+	AILELEM *n;
+	for (count = 0; count < len; count++) {
+		n = p->next;
+		retval = ailsa_list_remove(l, p, &d);
+		if (retval == 0 && l->destroy != NULL) {
+			l->destroy(d);
+			no++;
+		}
+		p = n;
+	}
+	if (no != len) {
+		ailsa_syslog(LOG_ERR, "Only %zu of %zu elements removed from list", no, len);
+		return 1;
+	}
+	return 0;
+}
+int
+ailsa_list_pop_element(AILLIST *list, AILELEM *element)
+{
+	AILELEM *e, *f;
+	if (!(element) || list->total == 0)
+		return -1;
+	if (element == list->head) {
+		list->head = NULL;
+	} else if (element == list->tail) {
+		list->tail = list->tail->prev;
+		list->tail->next = NULL;
+
+	} else {
+		e = list->head;
+		while (e)
+			if (e->next == element)
+				break;
+		f = list->tail;
+		while (f)
+			if (f->prev == element)
+				break;
+		f->prev = e;
+		e->next = f;
+	}
 	list->total--;
 	return 0;
+}
+
+void
+ailsa_clean_element(AILLIST *list, AILELEM *e)
+{
+	if (!(list) || !(e))
+		return;
+	list->destroy(e->data);
+	my_free(e);
 }
 
 AILELEM *
@@ -196,13 +260,6 @@ ailsa_list_get_element(AILLIST *list, size_t number)
 		element = element->next;
 	}
 	return element;
-}
-
-void
-ailsa_list_full_clean(AILLIST *l)
-{
-	ailsa_list_destroy(l);
-	my_free(l);
 }
 
 AILELEM *

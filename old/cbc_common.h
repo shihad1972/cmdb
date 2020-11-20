@@ -1,7 +1,7 @@
-/* 
+/*
  *
- *  cbc: Create Build Configuration
- *  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  cbc: Create build config
+ *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,36 +17,15 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  build.h
- * 
- *  Header file for the build.c file.
- * 
- *  (C) Iain M. Conochie 2012 - 2013
- * 
+ *  cbc_common.h
+ *
+ *  Common header file for the cbc program suite
+ *
  */
 
-#ifndef __CBC_BUILD_H__
-# define __CBC_BUILD_H__
+#ifndef __CBC_COMMON_H__
+# define __CBC_COMMON_H__
+# include <config.h>
+# include "cbc_data.h"
 
-int
-display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
-
-int
-create_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-void
-list_build_servers(ailsa_cmdb_s *cbt);
-
-int
-write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
-
-int
-modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
-
-int
-remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
-
-int
-view_defaults_for_cbc(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
-
-#endif /* __CBC_BUILD_H__ */
+#endif /* CBC_COMMON_H */

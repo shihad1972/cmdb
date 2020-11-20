@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #ifdef HAVE_WORDEXP_H
 # include <wordexp.h>
 #endif // HAVE_WORDEXP_H
@@ -50,8 +51,8 @@ validate_cbc_comm_line(cbc_comm_line_s *cml);
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	const char *optstr = "ab:de:ghi:k:j:lmn:o:p:qrs:t:u:vwx:y";
-	int retval, opt, trim;
+	const char *optstr = "ab:de:ghi:j:k:lmn:o:p:qrs:t:uvwx:y";
+	int retval, opt;
 	retval = NONE;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -76,7 +77,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		{"query",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
-		{"uuid",		required_argument,	NULL,	'u'},
+		{"view-default",	no_argument,		NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"write",		no_argument,		NULL,	'w'},
 		{"commit",		no_argument,		NULL,	'w'},
@@ -90,15 +91,13 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'n') {
-			if ((trim = snprintf(cb->name, NAME_S, "%s", optarg)) >= NAME_S)
-				fprintf(stderr, "Hostname %s trimmed. 63 chars max!\n", optarg);
+			cb->name = strndup(optarg, NAME_S);
 			cb->server = NAME;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
 			cb->server = ID;
 		} else if (opt == 'u') {
-			snprintf(cb->uuid, CONF_S, "%s", optarg);
-			cb->server = UUID;
+			cb->action = VIEW_DEFAULT;
 		} else if (opt == 'a') {
 			cb->action = ADD_CONFIG;
 		} else if (opt == 'd') {
@@ -116,24 +115,24 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'w') {
 			cb->action = WRITE_CONFIG;
 		} else if (opt == 'b') {
-			snprintf(cb->build_domain, RBUFF_S, "%s", optarg);
+			cb->build_domain = strndup(optarg, RBUFF_S);
 		} else if (opt == 'e') {
-			snprintf(cb->locale, NAME_S, "%s", optarg);
+			cb->locale = strndup(optarg, NAME_S);
 		} else if (opt == 'k') {
-			snprintf(cb->netcard, HOST_S, "%s", optarg);
+			cb->netcard = strndup(optarg, HOST_S);
 		} else if (opt == 'j') {
 // We do not check for a starting /dev here.
-			snprintf(cb->harddisk, HOST_S, "%s", optarg);
+			cb->harddisk = strndup(optarg, HOST_S);
 		} else if (opt == 'o') {
-			snprintf(cb->os, MAC_S, "%s", optarg);
+			cb->os = strndup(optarg, MAC_S);
 		} else if (opt == 'p') {
-			snprintf(cb->partition, CONF_S, "%s", optarg);
+			cb->partition = strndup(optarg, CONF_S);
 		} else if (opt == 't') {
-			snprintf(cb->arch, RANGE_S, "%s", optarg);
+			cb->arch = strndup(optarg, RANGE_S);
 		} else if (opt == 's') {
-			snprintf(cb->os_version, MAC_S, "%s", optarg);
+			cb->os_version = strndup(optarg, MAC_S);
 		} else if (opt == 'x') {
-			snprintf(cb->varient, CONF_S, "%s", optarg);
+			cb->varient = strndup(optarg, CONF_S);
 		} else if (opt == 'y') {
 			cb->gui = 1;
 		} else if (opt == 'v') {
@@ -147,7 +146,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	}
 	if ((cb->action == NONE) && 
 	 (cb->server == NONE) &&
-	 (strncmp(cb->action_type, "NULL", MAC_S) == 0))
+	 (!(cb->action_type)))
 		return DISPLAY_USAGE;
 	else if (cb->action == CVERSION)
 		return CVERSION;
@@ -155,20 +154,18 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		return NONE;
 	else if (cb->action == NONE)
 		return NO_ACTION;
-	else if ((cb->action != LIST_CONFIG) &&
+	else if ((cb->action != LIST_CONFIG) && (cb->action != VIEW_DEFAULT) &&
 		 (cb->server == 0))
 		return NO_NAME_OR_ID;
 	if (cb->action == ADD_CONFIG) {
-		if ((strncmp(cb->os, "NULL", COMM_S) == 0) &&
-		    (strncmp(cb->arch, "NULL", COMM_S) == 0) &&
-		    (strncmp(cb->os_version, "NULL", COMM_S) == 0))
-			retval = NO_OS_SPECIFIED;
-		else if (strncmp(cb->build_domain, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_DOMAIN;
-		else if (strncmp(cb->varient, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_VARIENT;
-		else if (strncmp(cb->partition, "NULL", COMM_S) == 0)
-			retval = NO_BUILD_PARTITION;
+		if (!(cb->harddisk)) {
+			ailsa_syslog(LOG_INFO, "No disk provided. Setting to vda");
+			cb->harddisk = strdup("vda");
+		}
+		if (!(cb->netcard)) {
+			ailsa_syslog(LOG_INFO, "No network card provided. Setting to eth0");
+			cb->netcard = strdup("eth0");
+		}
 	}
 	validate_cbc_comm_line(cb);
 	return retval;
@@ -188,19 +185,30 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 		fprintf(stderr, "Action: Create build configuration\n");
 	else
 		fprintf(stderr, "Action: Unknown!!\n");
-	fprintf(stderr, "Config: %s\n", cml->config);
-	fprintf(stderr, "Name: %s\n", cml->name);
-	fprintf(stderr, "UUID: %s\n", cml->uuid);
+	if (cml->config)
+		fprintf(stderr, "Config: %s\n", cml->config);
+	if (cml->name)
+		fprintf(stderr, "Name: %s\n", cml->name);
+	if (cml->uuid)
+		fprintf(stderr, "UUID: %s\n", cml->uuid);
 	fprintf(stderr, "Server ID: %ld\n", cml->server_id);
 	fprintf(stderr, "OS ID: %lu\n", cml->os_id);
-	fprintf(stderr, "OS: %s\n", cml->os);
-	fprintf(stderr, "OS Version: %s\n", cml->os_version);
-	fprintf(stderr, "Architecture: %s\n", cml->arch);
-	fprintf(stderr, "Locale: %s\n", cml->locale);
-	fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
-	fprintf(stderr, "Action Type: %s\n", cml->action_type);
-	fprintf(stderr, "Partition: %s\n", cml->partition);
-	fprintf(stderr, "Varient: %s\n", cml->varient);
+	if (cml->os)
+		fprintf(stderr, "OS: %s\n", cml->os);
+	if (cml->os_version)
+		fprintf(stderr, "OS Version: %s\n", cml->os_version);
+	if (cml->arch)
+		fprintf(stderr, "Architecture: %s\n", cml->arch);
+	if (cml->locale)
+		fprintf(stderr, "Locale: %s\n", cml->locale);
+	if (cml->build_domain)
+		fprintf(stderr, "Build Domain: %s\n", cml->build_domain);
+	if (cml->action_type)
+		fprintf(stderr, "Action Type: %s\n", cml->action_type);
+	if (cml->partition)
+		fprintf(stderr, "Partition: %s\n", cml->partition);
+	if (cml->varient)
+		fprintf(stderr, "Varient: %s\n", cml->varient);
 	
 	fprintf(stderr, "\n");
 }
@@ -208,54 +216,79 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 static void
 validate_cbc_comm_line(cbc_comm_line_s *cml)
 {
-	if (strncmp(cml->uuid, "NULL", COMM_S) != 0)
+	if (cml->uuid)
 		if (ailsa_validate_input(cml->uuid, UUID_REGEX) < 0)
 			if (ailsa_validate_input(cml->uuid, FS_REGEX) < 0)
 				report_error(USER_INPUT_INVALID, "uuid");
-	if (strncmp(cml->name, "NULL", COMM_S) != 0)
+	if (cml->name)
 		if (ailsa_validate_input(cml->name, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "name");
-	if (strncmp(cml->os, "NULL", COMM_S) != 0)
+	if (cml->os)
 		if (ailsa_validate_input(cml->os, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "os");
-	if (strncmp(cml->os_version, "NULL", COMM_S) != 0)
+	if (cml->os_version)
 		if (ailsa_validate_input(cml->os_version, OS_VER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "os version");
-	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
+	if (cml->partition)
 		if (ailsa_validate_input(cml->partition, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "partition scheme");
-	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
+	if (cml->varient)
 		if (ailsa_validate_input(cml->varient, NAME_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "varient");
-	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
+	if (cml->build_domain)
 		if (ailsa_validate_input(cml->build_domain, DOMAIN_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "build domain");
-	if (strncmp(cml->arch, "NULL", COMM_S) != 0)
+	if (cml->arch)
 		if (ailsa_validate_input(cml->arch, CUSTOMER_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "architecture");
-	if (strncmp(cml->netcard, "NULL", COMM_S) != 0)
+	if (cml->netcard)
 		if (ailsa_validate_input(cml->netcard, DEV_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "network device");
-	if (strncmp(cml->config, "NULL", COMM_S) != 0)
+	if (cml->harddisk)
+		if (ailsa_validate_input(cml->harddisk, DEV_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "disk drive device");
+	if (cml->config)
 		if (ailsa_validate_input(cml->config, PATH_REGEX) < 0)
 			report_error(USER_INPUT_INVALID, "config file path");
+	if (cml->locale)
+		if (ailsa_validate_input(cml->locale, NAME_REGEX) < 0)
+			report_error(USER_INPUT_INVALID, "locale");
 }
 
 void
 init_cbc_comm_values(cbc_comm_line_s *cbt)
 {
 	memset(cbt, 0, sizeof(cbc_comm_line_s));
-	snprintf(cbt->name, CONF_S, "NULL");
-	snprintf(cbt->uuid, CONF_S, "NULL");
-	snprintf(cbt->action_type, MAC_S, "NULL");
-	snprintf(cbt->os, CONF_S, "NULL");
-	snprintf(cbt->os_version, MAC_S, "NULL");
-	snprintf(cbt->partition, CONF_S, "NULL");
-	snprintf(cbt->varient, CONF_S, "NULL");
-	snprintf(cbt->build_domain, RBUFF_S, "NULL");
-	snprintf(cbt->arch, MAC_S, "NULL");
-	snprintf(cbt->netcard, COMM_S, "NULL");
-	snprintf(cbt->config, COMM_S, "NULL");
-	snprintf(cbt->locale, COMM_S, "NULL");
 }
 
+void
+clean_cbc_comm_line(cbc_comm_line_s *cml)
+{
+	if (cml->build_domain)
+		my_free(cml->build_domain);
+	if (cml->locale)
+		my_free(cml->locale);
+	if (cml->harddisk)
+		my_free(cml->harddisk);
+	if (cml->netcard)
+		my_free(cml->netcard);
+	if (cml->varient)
+		my_free(cml->varient);
+	if (cml->arch)
+		my_free(cml->arch);
+	if (cml->os_version)
+		my_free(cml->os_version);
+	if (cml->os)
+		my_free(cml->os);
+	if (cml->action_type)
+		my_free(cml->action_type);
+	if (cml->uuid)
+		my_free(cml->uuid);
+	if (cml->config)
+		my_free(cml->config);
+	if (cml->partition)
+		my_free(cml->partition);
+	if (cml->name)
+		my_free(cml->name);
+	my_free(cml);
+}

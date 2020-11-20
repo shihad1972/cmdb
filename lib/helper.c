@@ -41,48 +41,24 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "base_sql.h"
 
 int
 cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(hclass) || !(cc) || !(list))
 		return AILSA_NO_DATA;
-	AILLIST *hard, *results;
-	AILELEM *res;
-	ailsa_data_s *data = NULL, *tmp;
-	int retval = 0;
+	int retval;
+	AILLIST *hard = ailsa_db_data_list_init();
 
-	hard = ailsa_db_data_list_init();
-	results = ailsa_db_data_list_init();
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(hclass, MAC_LEN);
-	if ((retval = ailsa_list_insert(hard, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert class name into list");
+	if ((retval = cmdb_add_string_to_list(hclass, hard)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add hardware class to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_CLASS, hard, results)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot run SQL query: %d", retval);
-		goto cleanup;
-	}
-	if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than 1 hard type id returned. Using first one");
-	} else if (results->total < 1) {
-		ailsa_syslog(LOG_INFO, "No hard type's returned.");
-		retval = NO_HARDWARE_TYPES;
-		goto cleanup;
-	}
-	res = results->head;
-	tmp = res->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert hard type id into list");
-		goto cleanup;
-	}
+	if ((retval = ailsa_argument_query(cc, HARDWARE_TYPE_ID_ON_CLASS, hard, list)) != 0)
+		ailsa_syslog(LOG_ERR, "HARDWARE_TYPE_ID_ON_CLASS query failed");
+
 	cleanup:
 		ailsa_list_full_clean(hard);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -93,37 +69,16 @@ cmdb_add_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *server = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(name, HOST_LEN);
-	if ((retval = ailsa_list_insert(server, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert name into server list");
+	if ((retval = cmdb_add_string_to_list(name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, results)) != 0) {
+	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SERVER_ID_ON_NAME query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_INFO, "No server %s found in database", name);
-		retval = SERVER_NOT_FOUND;
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than 1 server found searching on %s: using first one", name);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert server id into list");
 
 	cleanup:
 		ailsa_list_full_clean(server);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -134,53 +89,40 @@ cmdb_add_service_type_id_to_list(char *type, ailsa_cmdb_s *cc, AILLIST *list)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *st = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(type, SERVICE_LEN);
-	if ((retval = ailsa_list_insert(st, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert service type name into list");
+	if ((retval = cmdb_add_string_to_list(type, st)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add service type to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_SERVICE, st, results)) != 0) {
+	if ((retval = ailsa_argument_query(cc, SERVICE_TYPE_ID_ON_SERVICE, st, list)) != 0)
 		ailsa_syslog(LOG_ERR, "SERVICE_TYPE_ID_ON_SERVICE query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_INFO, "No service with type %s was found in the database", type);
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "Multiple services types found for %s. Using first one", type);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert service type id into list");
 
 	cleanup:
 		ailsa_list_full_clean(st);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
 int
 cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(domain) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *dom = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(domain, dom)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
-		goto cleanup;
+	if (!(domain)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_DOMAIN, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(domain, dom)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, BUILD_DOMAIN_ID_ON_DOMAIN, dom, list)) != 0)
+			ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
 	}
-	if ((retval = ailsa_argument_query(cc, BUILD_DOMAIN_ID_ON_DOMAIN, dom, list)) != 0)
-		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_ID_ON_DOMAIN query failed");
 
 	cleanup:
 		ailsa_list_full_clean(dom);
@@ -190,68 +132,58 @@ cmdb_add_build_domain_id_to_list(char *domain, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(coid) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *customer = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *element;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(coid, MAC_LEN);
-	if ((retval = ailsa_list_insert(customer, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert customer name into list");
-		goto cleanup;
+	if (!(coid)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(coid, customer)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add COID to customer list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, customer, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "CUST_ID_ON_COID query failed");
+			goto cleanup;
+		}
 	}
-	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, customer, results)) != 0) {
-		ailsa_syslog(LOG_ERR, "CUST_ID_ON_COID query failed");
-		goto cleanup;
-	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than one customer with coid %s. Using first one", coid);
-	}
-	element = results->head;
-	tmp = element->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert cust id into list");
 
 	cleanup:
 		ailsa_list_full_clean(customer);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
 int
 cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 {
- /* Doing it like this (directly adding into the list) does not protect
-  * against coronavirus^W multiple insertions into the list. Calling
-  * function will have to check */
-	if (!(varient) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *args = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
 
-	data->data->text = strndup(varient, HOST_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
-		goto cleanup;
+	if (!(varient)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_VARIENT, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(varient, args)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
+			ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(varient, HOST_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, VARIENT_ID_ON_VARIANT_OR_VALIAS, args, list)) != 0)
-		ailsa_syslog(LOG_ERR, "VARIENT_ID_ON_VARIANT_OR_VALIAS, query failed");
+
 	cleanup:
 		ailsa_list_full_clean(args);
 		return retval;
@@ -260,35 +192,41 @@ cmdb_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
 int
 cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(scheme) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
 	AILLIST *s = ailsa_db_data_list_init();
 	int retval;
 
-	if ((retval = cmdb_add_string_to_list(scheme, s)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
-		goto cleanup;
+	if (!(scheme)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_SCHEME, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_SCHEME query failed");
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(scheme, s)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
+			ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
 	}
-	if ((retval = ailsa_argument_query(cc, SCHEME_ID_ON_NAME, s, list)) != 0)
-		ailsa_syslog(LOG_ERR, "SCHEME_ID_ON_NAME query failed");
 	cleanup:
 		ailsa_list_full_clean(s);
 		return retval;
 }
 
 int
-cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_add_default_part_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 {
-	if (!(scheme) || !(partition) || !(cc) || !(list))
+	if (!(args) || !(cc) || !(list))
 		return AILSA_NO_DATA;
 	AILLIST *part = ailsa_db_data_list_init();
 	int retval;
 
-	if ((retval = cmdb_add_string_to_list(scheme, part)) != 0) {
+	if ((retval = cmdb_add_string_to_list(args[0], part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(partition, part)) != 0) {
+	if ((retval = cmdb_add_string_to_list(args[1], part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition name to list");
 		goto cleanup;
 	}
@@ -300,82 +238,119 @@ cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc
 }
 
 int
+cmdb_add_disk_dev_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(server, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, DISK_ID_ON_SERVER_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "DISK_ID_ON_SERVER_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
 cmdb_add_build_type_id_to_list(char *alias, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(alias) || !(cc) || !(list))
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *build = ailsa_db_data_list_init();
-	AILLIST *results = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
-	AILELEM *elem;
-	ailsa_data_s *tmp;
 
-	data->data->text = strndup(alias, MAC_LEN);
-	if ((retval = ailsa_list_insert(build, data)) != 0) {
+	if ((retval = cmdb_add_string_to_list(alias, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot insert build alias into list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_argument_query(cc, BT_ID_ON_ALIAS, build, results)) != 0) {
+	if ((retval = ailsa_argument_query(cc, BT_ID_ON_ALIAS, build, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "BUILD_TYPE_ID_ON_ALIAS query failed");
 		goto cleanup;
 	}
-	if (results->total == 0) {
-		ailsa_syslog(LOG_ERR, "Cannot find build type with alias %s", alias);
-		goto cleanup;
-	} else if (results->total > 1) {
-		ailsa_syslog(LOG_INFO, "More than one build type with alias %s. Using first one", alias);
-	}
-	elem = results->head;
-	tmp = elem->data;
-	data = ailsa_db_lint_data_init();
-	data->data->number = tmp->data->number;
-	if ((retval = ailsa_list_insert(list, data)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert build_type_id into list");
 
 	cleanup:
 		ailsa_list_full_clean(build);
-		ailsa_list_full_clean(results);
 		return retval;
 }
 
 int
-cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 {
- /* This function should be widened to allow for less inputs, i.e. we should
-  * be able to search on just an os name and arch, or os name and version. We
-  * should probably be able to get the alias of the name and use that in the
-  * search too. */
-	if (!(os) || !(arch) || !(version) || !(cc) || !(list))
+	if (!(cc) || !(list))
 		return AILSA_NO_DATA;
+	char *os = NULL;
+	char *version = NULL;
+	char *arch = NULL;
 	int retval = 0;
-	AILLIST *args = ailsa_db_data_list_init();
-	ailsa_data_s *data = ailsa_db_text_data_init();
+	AILLIST *a = ailsa_db_data_list_init();
 
-	data->data->text = strndup(os, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS name into list");
-		goto cleanup;
+	if (!(args[0]) && !(args[1]) && !(args[2])) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_OS, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_OS query failed");
+			goto cleanup;
+		}
+	} else {
+		os = args[0];
+		version = args[1];
+		arch = args[2];
+		if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(os, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS alias to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add version to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(version, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add version alias to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, BUILD_OS_ON_ALL, a, list)) != 0)
+			ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(arch, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS architechture into list");
-		goto cleanup;
-	}
-	data = ailsa_db_text_data_init();
-	data->data->text = strndup(version, MAC_LEN);
-	if ((retval = ailsa_list_insert(args, data)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert OS version into list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, CHECK_BUILD_OS, args, list)) != 0)
-		ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	cleanup:
-		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(a);
 		return retval;
 }
 
+int
+cmdb_add_os_alias_to_list(char *os, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(os) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(os, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add OS name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, OS_ALIAS_ON_OS_NAME, l, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "OS_ALIAS_ON_OS_NAME query failed");
+		goto cleanup;
+	}
+	if (list->total == total)
+		retval = AILSA_NO_OS;
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
 int
 cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
 {
@@ -493,6 +468,95 @@ cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if ((retval = cmdb_add_string_to_list(server, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, BUILD_ID_ON_SERVER_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "BUILD_ID_ON_SERVER_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_locale_id_to_list(char *locale, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if (!(locale)) {
+		if ((retval = ailsa_basic_query(cc, DEFAULT_LOCALE, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_LOCALE query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list(locale, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add locale name to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_argument_query(cc, LOCALE_ID_FROM_NAME, l, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "LOCALE_ID_ON_NAME query failed");
+			goto cleanup;
+		}
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_ip_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(server, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, IP_ID_ON_SERVER_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "IP_ID_ON_SERVER_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cmdb_add_disk_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(server, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, DISK_ID_ON_SERVER_NAME, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "DISK_ID_ON_SERVER_NAME query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 {
 	if (!(cc) || !(zone))
@@ -566,14 +630,19 @@ cmdb_check_for_os(ailsa_cmdb_s *cc, char *os, char *arch, char *version)
 	if (!(cc) || !(os) || !(arch) || !(version ))
 		return retval;
 	AILLIST *list = ailsa_db_data_list_init();
+	char **args = ailsa_calloc((sizeof(char *) * 3), "args in cmdb_check_for_os");
 
-	if ((retval = cmdb_add_os_id_to_list(os, arch, version, cc, list)) != 0) {
+	args[0] = os;
+	args[1] = version;
+	args[2] = arch;
+	if ((retval = cmdb_add_os_id_to_list(args, cc, list)) != 0) {
 		retval = -1;
 		goto cleanup;
 	}
 	retval = (int)list->total;
 
 	cleanup:
+		my_free(args);
 		ailsa_list_full_clean(list);
 		return retval;
 }
@@ -599,6 +668,101 @@ check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list)
 	cleanup:
 		ailsa_list_full_clean(args);
 		return retval;
+}
+
+int
+cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(server) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_server_id_to_list(server, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list for %s", server);
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find server %s", server);
+		retval = SERVER_NOT_FOUND;
+	}
+	return retval;
+}
+
+int
+cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_cust_id_to_list(coid, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add customer id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
+		retval = CUSTOMER_NOT_FOUND;
+	}
+	return retval;
+}
+
+int
+cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(zone) || !(cc) || !(list) || (type == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_zone_id_to_list(zone, type, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find zone %s", zone);
+		retval = NO_ZONE_FOUND;
+	}
+	return retval;
+}
+
+int
+cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_varient_id_to_list(varient, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_INFO, "Cannot find varient %s", varient);
+		retval = VARIENT_NOT_FOUND;
+	}
+	return retval;
+}
+
+int
+cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(host) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_ip_id_to_list(host, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find IP for server %s", host);
+		retval = CANNOT_FIND_BUILD_IP;
+	}
+	return retval;
 }
 
 int
@@ -631,4 +795,51 @@ set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned lo
 	cleanup:
 		ailsa_list_full_clean(a);
 		return retval;
+}
+
+int
+cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number)
+{
+	if (!(list) || !(element))
+		return AILSA_NO_DATA;
+	size_t i;
+	size_t esize = sizeof(AILELEM);
+	size_t dsize = sizeof(ailsa_data_s);
+	size_t usize = sizeof(ailsa_data_u);
+	AILELEM *e = list->head;
+	AILELEM *r = ailsa_calloc(esize, "r in cmdb_replace_data_element");
+	ailsa_data_s *d = ailsa_calloc(dsize, "d in cmdb_replace_data_element");
+	ailsa_data_u *u = ailsa_calloc(usize, "u in cmdb_replace_data_element");
+	ailsa_data_s *s = element->data;
+
+	memcpy(r, element, esize);
+	memcpy(d, s, dsize);
+	memcpy(u, s->data, usize);
+	r->data = d;
+	d->data = u;
+	if (d->type == AILSA_DB_TEXT)
+		u->text = strndup(((ailsa_data_s *)element->data)->data->text, DOMAIN_LEN);
+	if (number == 0) {
+		list->head = r;
+		r->next = e->next;
+		r->next->prev = r;
+	} else if (number == (list->total - 1)) {
+		e = list->tail;
+		list->tail = r;
+		r->prev = e->prev;
+		r->prev->next = r;
+	} else {
+		for (i = 0; i < number; i++) {
+			if (e)
+				e = e->next;
+		}
+		e->next->prev = r;
+		e->prev->next = r;
+		r->next = e->next;
+		r->prev = e->prev;
+	}
+	if (list->destroy)
+		list->destroy(e->data);
+	my_free(e);
+	return 0;
 }

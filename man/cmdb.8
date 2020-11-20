@@ -1,4 +1,4 @@
-.TH CMDB 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH CMDB 8 "Version 0.3: 03 May 2020" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cmdb \- Configuration Management Database
 .SH SYNOPSIS
@@ -15,9 +15,9 @@ cmdb \- Configuration Management Database
 
 .B cmdb
 [
-.B -adhlmrv
+.B -adhlmrvz
 ] [
-.B -ejotsuwz
+.B -egjotsuw
 ] [
 .B -ABCDEILMPSTVY
 ]
@@ -49,6 +49,8 @@ list
 modify
 .IP "-r,  --remove, --delete"
 remove
+.IP "-z,  --set-default"
+set default (for customer)
 .IP "-v,  --version"
 version (no other argument needed)
 .PP
@@ -67,7 +69,7 @@ customer
 virtual machine host
 .IP "-j,  --servicetype"
 service type
-.IP "-z,  --hardtype"
+.IP "-g,  --hardtype"
 hardware type
 .PP
 .B Naming

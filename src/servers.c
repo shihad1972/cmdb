@@ -78,12 +78,12 @@ cmdb_add_server_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Only %zu members in insert list", server->total);
 		goto cleanup;
 	}
-	retval = ailsa_insert_query(cc, INSERT_SERVER, server);
+	if ((retval = ailsa_insert_query(cc, INSERT_SERVER, server)) != 0)
+			ailsa_syslog(LOG_ERR, "INSERT_SERVER query failed");
+
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(server);
-		my_free(args);
-		my_free(server);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(server);
 		return retval;
 }
 
@@ -112,12 +112,12 @@ cmdb_add_service_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_INFO, "Service type is already in database");
 		goto cleanup;
 	}
-	retval = ailsa_insert_query(cc, INSERT_SERVICE_TYPE, args);
+	if ((retval = ailsa_insert_query(cc, INSERT_SERVICE_TYPE, args)) != 0)
+			ailsa_syslog(LOG_ERR, "INSERT_SERVICE_TYPE query failed");
+
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -146,12 +146,12 @@ cmdb_add_hardware_type_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_INFO, "Hardware type is already in the database");
 		goto cleanup;
 	}
-	retval = ailsa_insert_query(cc, INSERT_HARDWARE_TYPE, args);
+	if ((retval = ailsa_insert_query(cc, INSERT_HARDWARE_TYPE, args)) != 0)
+			ailsa_syslog(LOG_ERR, "INSERT_HARDWARE_TYPE query failed");
+
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -198,12 +198,9 @@ cmdb_add_vm_host_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	retval = ailsa_insert_query(cc, INSERT_VM_HOST, vm);
 
 	cleanup:
-		ailsa_list_destroy(vm);
-		ailsa_list_destroy(results);
-		ailsa_list_destroy(server);
-		my_free(vm);
-		my_free(results);
-		my_free(server);
+		ailsa_list_full_clean(vm);
+		ailsa_list_full_clean(results);
+		ailsa_list_full_clean(server);
 		return retval;
 }
 
@@ -214,15 +211,10 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	AILLIST *hardware = ailsa_db_data_list_init();
-	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_string_to_list(cm->name, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert server name into list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, SERVER_ID_ON_NAME, server, hardware)) != 0) {
-		ailsa_syslog(LOG_ERR, "SQL argument returned %d", retval);
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, hardware)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
 		goto cleanup;
 	}
 	if (cm->sid) {
@@ -243,14 +235,11 @@ cmdb_add_hardware_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (results->total > 0)
 		ailsa_syslog(LOG_INFO, "Hardware already exists in database");
 	else
-		retval = ailsa_insert_query(cc, INSERT_HARDWARE, hardware);
+		if ((retval = ailsa_insert_query(cc, INSERT_HARDWARE, hardware)) != 0)
+			ailsa_syslog(LOG_ERR, "INSERT_HARDWARE query failed");
 	cleanup:
-		ailsa_list_destroy(hardware);
-		ailsa_list_destroy(server);
-		ailsa_list_destroy(results);
-		my_free(hardware);
-		my_free(server);
-		my_free(results);
+		ailsa_list_full_clean(hardware);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
@@ -263,9 +252,9 @@ cmdb_add_services_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	AILLIST *service = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_add_server_id_to_list(cm->name, cc, service)) != 0)
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, service)) != 0)
 		goto cleanup;
-	if ((retval = cmdb_add_cust_id_to_list(cm->coid, cc, service)) != 0)
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, service)) != 0)
 		goto cleanup;
 	if ((retval = cmdb_add_service_type_id_to_list(cm->service, cc, service)) != 0)
 		goto cleanup;
@@ -279,13 +268,32 @@ cmdb_add_services_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "Service %s already exists for %s", cm->service, cm->name);
 		goto cleanup;
 	}
-	retval = ailsa_insert_query(cc, INSERT_SERVICE, service);
+	if ((retval = ailsa_insert_query(cc, INSERT_SERVICE, service)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_SERVICE query failed");
 
 	cleanup:
-		ailsa_list_destroy(service);
-		ailsa_list_destroy(results);
-		my_free(service);
-		my_free(results);
+		ailsa_list_full_clean(service);
+		ailsa_list_full_clean(results);
+		return retval;
+}
+
+int
+cmdb_remove_server_from_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_server_id_to_list(cm->name, cc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_delete_query(cc, delete_queries[DELETE_SERVER_ON_ID], server)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_SERVER_ON_ID query failed");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(server);
 		return retval;
 }
 
@@ -323,9 +331,9 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 	} else {
 		ailsa_syslog(LOG_INFO, "No servers found in the database\n");
 	}
+
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 }
 
 void
@@ -375,14 +383,10 @@ cmdb_display_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	}
 
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(server);
-		ailsa_list_destroy(services);
-		ailsa_list_destroy(hardware);
-		my_free(args);
-		my_free(server);
-		my_free(services);
-		my_free(hardware);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(services);
+		ailsa_list_full_clean(hardware);
 }
 
 void
@@ -390,6 +394,7 @@ cmdb_display_server_details(AILLIST *server)
 {
 	if (!(server))
 		return;
+	char *uname, *mname;
 	AILELEM *elem, *time;
 	ailsa_data_s *data, *user;
 
@@ -412,22 +417,28 @@ cmdb_display_server_details(AILLIST *server)
 	data = elem->data;
 	time = elem->next;
 	user = time->data;
+	uname = cmdb_get_uname(data->data->number);
 #ifdef HAVE_MYSQL
 	if (user->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %s\n", get_uname(data->data->number), ailsa_convert_mysql_time(user->data->time));
+		printf("  Created by %s @ %s\n", uname, ailsa_convert_mysql_time(user->data->time));
 	} else
 #endif
-		printf("  Created by %s @ %s\n", get_uname(data->data->number), user->data->text);
+		printf("  Created by %s @ %s\n", uname, user->data->text);
 	elem = time->next;
 	data = elem->data;
 	time = elem->next;
 	user = time->data;
+	mname = cmdb_get_uname(data->data->number);
 #ifdef HAVE_MYSQL
 	if (user->type == AILSA_DB_TIME) {
-		printf("  Modified by %s @ %s\n", get_uname(data->data->number), ailsa_convert_mysql_time(user->data->time));
+		printf("  Modified by %s @ %s\n", mname, ailsa_convert_mysql_time(user->data->time));
 	} else
 #endif
-		printf("  Modified by %s @ %s\n", get_uname(data->data->number), user->data->text);
+		printf("  Modified by %s @ %s\n", mname, user->data->text);
+	if (uname)
+		my_free(uname);
+	if (mname)
+		my_free(mname);
 }
 
 void
@@ -454,10 +465,8 @@ cmdb_list_services_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "No Services for server %s\n", cm->name);
 	}
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(results);
 }
 
 void
@@ -514,8 +523,7 @@ cmdb_list_service_types(ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "No service types found in database\n");
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 }
 
 void
@@ -542,10 +550,8 @@ cmdb_list_hardware_for_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "No hardware for server %s\n", cm->name);
 	}
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(results);
 }
 
 void
@@ -605,8 +611,7 @@ cmdb_list_hardware_types(ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "No hardware types found in the database\n");
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 }
 
 void
@@ -668,10 +673,8 @@ cmdb_display_vm_server(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_ERR, "VM Host has no built virtual machines\n");
 	}
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(results);
-		my_free(args);
-		my_free(results);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(results);
 }
 
 void
@@ -720,12 +723,8 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cm->coid, args)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert coid into server list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cc, CUST_ID_ON_COID, args, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot run query for cust_id");
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot insert cust_id into server list");
 		goto cleanup;
 	}
 	if (server->total == 5) {
@@ -751,8 +750,7 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 	}
 	retval = cmdb_populate_cuser_muser(server);
 	cleanup:
-		ailsa_list_destroy(args);
-		my_free(args);
+		ailsa_list_full_clean(args);
 		return retval;
 }
 

@@ -40,11 +40,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_cbc.h"
-#include "cbc_data.h"
-#include "cbc_common.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 
 static int
 validate_cbcsysp_comm_line(cbc_sysp_s *cbs);

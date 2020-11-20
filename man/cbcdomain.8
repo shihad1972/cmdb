@@ -1,11 +1,11 @@
-.TH cbcdomain 8 "Version 0.2: 03 January 2016" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.TH cbcdomain 8 "Version 0.3: 13 July 2020" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
 .SH NAME
 cbcdomain \- Create Build Config Domain
 .SH SYNOPSIS
 
 .B cbcdomain
 [
-.B -almrvw
+.B -almrvwz
 ] [
 .B -n build-domain
 ] [
@@ -47,6 +47,8 @@ Use this to modify a build domain, using -n to specify
 Use this to remove a build domain, using -n to specify
 .IP "-w,  --write, --commit"
 Use this to write out the dhcpd.networks configuration file
+.IP "-z,  --set-default"
+Use this to set the default build domain to use in cbc
 .IP "-v,  --version"
 Display version information
 .IP "-h,  --help"

@@ -194,6 +194,7 @@ cmdb_display_customer_details(AILLIST *list)
 {
 	if (!(list))
 		return;
+	char *uname = NULL, *mname = NULL;
 	AILELEM *first, *second;
 	ailsa_data_s *one, *two;
 
@@ -218,22 +219,28 @@ cmdb_display_customer_details(AILLIST *list)
 	one = first->data;
 	second = first->next;
 	two = second->data;
+	uname = cmdb_get_uname(one->data->number);
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Created by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
+		printf("  Created by %s @ %s\n", uname, ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
-		printf("  Created by %s @ %s\n", get_uname(one->data->number), two->data->text);
+		printf("  Created by %s @ %s\n", uname, two->data->text);
 	first = second->next;
 	one = first->data;
 	second = first->next;
 	two = second->data;
+	mname = cmdb_get_uname(one->data->number);
 #ifdef HAVE_MYSQL
 	if (two->type == AILSA_DB_TIME) {
-		printf("  Modified by %s @ %s\n", get_uname(one->data->number), ailsa_convert_mysql_time(two->data->time));
+		printf("  Modified by %s @ %s\n", mname, ailsa_convert_mysql_time(two->data->time));
 	} else
 #endif
-		printf("  Modified by %s @ %s\n", get_uname(one->data->number), two->data->text);
+		printf("  Modified by %s @ %s\n", mname, two->data->text);
+	if (uname)
+		my_free(uname);
+	if (mname)
+		my_free(mname);
 }
 
 void
@@ -387,4 +394,79 @@ cmdb_populate_customer_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *
 	}
 	retval = cmdb_populate_cuser_muser(customer);
 	return retval;
+}
+
+int
+cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	if (!(cm->coid))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *cust = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, cust)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add cust id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cc, INSERT_DEFAULT_CUSTOMER, cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cc, update_queries[UPDATE_DEFAULT_CUSTOMER], cust)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_CUSTOMER query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(cust);
+		ailsa_list_full_clean(def);
+		return retval;
+}
+
+void
+cmdb_display_default_customer(ailsa_cmdb_s *cc)
+{
+	if (!(cc))
+		return;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_basic_query(cc, DEFAULT_CUSTOMER_DETAILS, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_CUSTOMER_DETAILS query failed");
+		goto cleanup;
+	}
+	if (list->total == 0) {
+		ailsa_syslog(LOG_ERR, "No default customer is set");
+		goto cleanup;
+	}
+	d = list->head->data;
+	printf("COID\t\tCustomer\n");
+	if (strlen(d->data->text) < 8)
+		printf("%s\t\t", d->data->text);
+	else
+		printf("%s\t", d->data->text);
+	d = list->head->next->data;
+	printf("%s\n", d->data->text);
+
+	cleanup:
+		ailsa_list_full_clean(list);
+		return;
 }

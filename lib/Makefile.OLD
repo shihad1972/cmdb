@@ -3,15 +3,11 @@ override CPPFLAGS := -I../src/ -I../include/ -I/usr/include/uuid/ -I/usr/include
 ARFLAGS = rvU
 lib_LIBRARIES = libailsacmdb.a libailsasql.a
 
-libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(parse_config.o) \
-		libailsacmdb.a(logging.o) libailsacmdb.a(errors.o)\
-		libailsacmdb.a(regexp.o) libailsacmdb.a(fileio.o) libailsacmdb.a(data.o) \
-		libailsacmdb.a(list.o) libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o) \
-		libailsacmdb.a(cmdb_data.o) libailsacmdb.a(cbc_data.o) libailsacmdb.a(dnsa_data.o) \
-		libailsacmdb.a(cbcnet.o)
+libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(logging.o) libailsacmdb.a(errors.o) \
+		libailsacmdb.a(regexp.o) libailsacmdb.a(data.o) libailsacmdb.a(list.o) \
+		libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o)
 
-libailsasql.a:	libailsasql.a(queries.o) libailsasql.a(base_sql.o) libailsasql.a(dnsa_base_sql.o) \
-		libailsasql.a(cbc_base_sql.o) libailsasql.a(sql.o) libailsasql.a(helper.o) \
+libailsasql.a:	libailsasql.a(queries.o) libailsasql.a(sql.o) libailsasql.a(helper.o) \
 		libailsasql.a(sql_data.o) libailsasql.a(dnsa_net.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
@@ -35,31 +31,13 @@ libailsacmdb.a(uuid.o):	uuid.o
 libailsacmdb.a(config.o): config.o
 	$(AR) $(ARFLAGS) $@ $<
 
-libailsacmdb.a(parse_config.o):	parse_config.o
-	$(AR) $(ARFLAGS) $@ $<
-
 libailsacmdb.a(networking.o):	networking.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsacmdb.a(regexp.o):	regexp.o
 	$(AR) $(ARFLAGS) $@ $<
 
-libailsacmdb.a(fileio.o):	fileio.o
-	$(AR) $(ARFLAGS) $@ $<
-
 libailsacmdb.a(errors.o):	errors.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(cmdb_data.o): cmdb_data.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(dnsa_data.o): dnsa_data.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(cbc_data.o): cbc_data.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsacmdb.a(cbcnet.o): cbcnet.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(dnsa_net.o): dnsa_net.o
@@ -75,15 +53,6 @@ libailsasql.a(queries.o):	queries.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(helper.o):	helper.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(base_sql.o):	base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(dnsa_base_sql.o):	dnsa_base_sql.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(cbc_base_sql.o):	cbc_base_sql.o
 	$(AR) $(ARFLAGS) $@ $<
 
 .PHONY:	clean

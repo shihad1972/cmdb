@@ -53,36 +53,7 @@
 # include "cbc_dnsa.h"
 # include "dnsa_base_sql.h"
 
-
-void
-fill_cbc_fwd_zone(zone_info_s *zone, char *domain, ailsa_cmdb_s *dc)
-{
-	snprintf(zone->name, RBUFF_S, "%s", domain);
-	snprintf(zone->pri_dns, RBUFF_S, "%s", dc->prins);
-	snprintf(zone->sec_dns, RBUFF_S, "%s", dc->secns);
-	snprintf(zone->type, COMM_S, "master");
-	zone->serial = generate_zone_serial();
-	zone->refresh = dc->refresh;
-	zone->retry = dc->retry;
-	zone->expire = dc->expire;
-	zone->ttl = dc->ttl;
-	zone->cuser = zone->muser = (unsigned long int)getuid();
-}
-
-void
-copy_cbc_into_dnsa(ailsa_cmdb_s *dc, ailsa_cmdb_s *cbc)
-{
-	snprintf(dc->dbtype, RANGE_S, "%s", cbc->dbtype);
-	snprintf(dc->file, CONF_S, "%s", cbc->file);
-	snprintf(dc->db, CONF_S, "%s", cbc->db);
-	snprintf(dc->user, CONF_S, "%s", cbc->user);
-	snprintf(dc->host, CONF_S, "%s", cbc->host);
-	snprintf(dc->pass, CONF_S, "%s", cbc->pass);
-	snprintf(dc->socket, CONF_S, "%s", cbc->socket);
-	dc->port = cbc->port;
-	dc->cliflag = cbc->cliflag;
-}
-
+/*
 int
 get_dns_ip_list(ailsa_cmdb_s *cbt, uli_t *ip, dbdata_s *data)
 {
@@ -159,7 +130,7 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 	data->args.number = zone->id;
 	fill_rec_with_build_info(rec, zone, cml, cbc);
 	retval = dnsa_run_extended_search(cbt, data, RECORDS_ON_ZONE);
-	if (retval == 0) /* No hosts in zone so just add */ {
+	if (retval == 0)  { // No hosts in zone so just add
 		retval = add_build_host_to_dns(cbt, dnsa);
 	} else {
 		retval = do_build_ip_dns_check(cbc->bip, data);
@@ -170,7 +141,7 @@ check_for_build_ip_in_dns(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_s *cbc)
 		clean_dbdata_struct(data);
 		dnsa_clean_list(dnsa);
 		return retval;
-}
+} */
 
 void
 setup_dnsa_build_ip_structs(zone_info_s *zone, dnsa_s *dnsa, ailsa_cmdb_s *cbt, record_row_s *rec)
@@ -225,7 +196,7 @@ fill_rec_with_build_info(record_row_s *rec, zone_info_s *zone, cbc_comm_line_s *
 	inet_ntop(AF_INET, &ip_addr, dest, RANGE_S);
 	rec->cuser = rec->muser = (unsigned long int)getuid();
 }
-
+/*
 int
 add_build_host_to_dns(ailsa_cmdb_s *dc, dnsa_s *dnsa)
 {
@@ -265,7 +236,7 @@ remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 	type = RECORD_ID_ON_IP_DEST_DOM;
 	max = cmdb_get_max(dnsa_extended_search_fields[type], dnsa_extended_search_args[type]);
 	init_multi_dbdata_struct(&dns, max);
-	if ((retval = cbc_run_search(cbc, data, BUILD_IP_ON_SERVER_ID)) <= 0) {
+	if ((retval = cbc_run_search(cbc, data, IP_ID_ON_SERVER_ID)) <= 0) {
 		fprintf(stderr, "Cannot find build ip for server %s\n", cml->name);
 	} else {
 		if (retval > 1)
@@ -306,6 +277,6 @@ remove_ip_from_dns(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, dbdata_s *data)
 	cleanup:
 		clean_dbdata_struct(dns);
 		data->args.number = server_id;
-}
+} */
 #endif /* HAVE_DNSA */
 

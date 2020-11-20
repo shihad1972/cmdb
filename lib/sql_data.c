@@ -46,7 +46,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "base_sql.h"
 
 void
 cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data)

@@ -1,6 +1,6 @@
 /*
  *  ailsacmdb: Ailsatech Configuration Management Database library
- *  Copyright (C) 2012 - 2015  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -147,6 +147,15 @@ enum {                  // Error codes
 	AILSA_NO_PARENT = 211,
 	AILSA_CANNOT_GET_PARENT = 212,
 	AILSA_TOO_MANY_PARENTS = 213,
+	AILSA_NO_MAC_ADDR = 214,
+	AILSA_NO_DISK_DEV = 215,
+	AILSA_IP_CONVERT_FAILED = 216,
+	AILSA_NO_OS = 217,
+	AILSA_VARIENT_REPLACE_FAIL = 220,
+	AILSA_PARTITION_REPLACE_FAIL = 221,
+	AILSA_LOCALE_REPLACE_FAIL = 222,
+	AILSA_OS_REPLACE_FAIL = 223,
+	AILSA_NO_MIRROR = 224,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -430,11 +439,148 @@ typedef struct ailsa_dhcp_s {
 	unsigned long int gw, nw, nm, ns, ip;
 } ailsa_dhcp_s;
 
+typedef struct ailsa_dhcp_conf_s {
+	char *name;
+	char *mac;
+	char *ip;
+	char *domain;
+} ailsa_dhcp_conf_s;
+
 typedef struct ailsa_iface_s {
 	char *name;
 	int flag;
 	uint32_t ip, sip, fip, nm, bc, nw;
 } ailsa_iface_s;
+
+typedef struct ailsa_tftp_s {
+	char *alias;
+	char *version;
+	char *arch;
+	char *build_type;
+	char *country;
+	char *locale;
+	char *keymap;
+	char *boot_line;
+	char *arg;
+	char *url;
+	char *net_int;
+} ailsa_tftp_s;
+
+typedef struct ailsa_cbcos_s {	// should probably look at ctime here
+	char *os;
+	char *os_version;
+	char *alias;
+	char *arch;
+	char *ver_alias;
+	char *ctime;
+	char *mtime;
+	unsigned long int cuser;
+	unsigned long int muser;
+} ailsa_cbcos_s;
+
+typedef struct ailsa_build_s {
+	char *locale;
+	char *language;
+	char *keymap;
+	char *country;
+	char *net_int;
+	char *ip;
+	char *ns;
+	char *nm;
+	char *gw;
+	char *ntp;
+	char *host;
+	char *domain;
+	char *mirror;
+	char *os;
+	char *version;
+	char *os_ver;
+	char *arch;
+	char *url;
+	char *fqdn;
+	short int do_ntp;
+} ailsa_build_s;
+
+typedef struct ailsa_partition_s {
+	unsigned long int min;
+	unsigned long int max;
+	unsigned long int pri;
+	char *mount;
+	char *fs;
+	char *logvol;
+} ailsa_partition_s;
+
+typedef struct ailsa_syspack_s {
+	char *name;
+	char *field;
+	char *type;
+	char *arg;
+	char *newarg;
+} ailsa_syspack_s;
+
+typedef struct ailsa_sysscript_s {
+	char *name;
+	char *arg;
+	unsigned long int no;
+} ailsa_sysscript_s;
+
+enum {
+	CBCSCRIPT = 1,
+	CBCSCRARG = 2
+};
+
+enum {
+	SPACKAGE = 1,
+	SPACKARG = 2,
+	SPACKCNF = 3
+};
+
+typedef struct cbc_syss_s {
+	char *name;
+	char *arg;
+	char *domain;
+	char *type;
+	short int action;
+	short int what;
+	unsigned long int no;
+} cbc_syss_s;
+
+typedef struct cbc_sysp_s {
+	char *arg;
+	char *domain;
+	char *field;
+	char *name;
+	char *type;
+	short int action;
+	short int what;
+} cbc_sysp_s;
+
+typedef struct cbcdomain_comm_line_s {
+	char *domain;
+	char *ntpserver;
+	char *config;
+	short int action;
+	short int confntp;
+	unsigned long int start_ip;
+	unsigned long int end_ip;
+	unsigned long int netmask;
+	unsigned long int gateway;
+	unsigned long int ns;
+} cbcdomain_comm_line_s;
+
+typedef struct cbc_dhcp_s { // Info for a dhcp network
+        char *iname;    // Interface Name
+        char *dname;    // Domain Name
+        unsigned long int gw, nw, nm, ns, ip; // 
+        struct string_l *dom_search;
+        struct cbc_dhcp_s *next;
+} cbc_dhcp_s;
+
+typedef struct cbc_iface_s { // Info about interface
+        char *name;
+        uint32_t ip, sip, fip, nm, bc, nw;
+        struct cbc_iface_s *next;
+} cbc_iface_s;
 
 // library version info
 
@@ -468,6 +614,12 @@ int
 ailsa_list_insert(AILLIST *list, void *data);
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
+int
+ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len);
+int
+ailsa_list_pop_element(AILLIST *list, AILELEM *element);
+void
+ailsa_clean_element(AILLIST *list, AILELEM *e);
 void
 ailsa_list_full_clean(AILLIST *l);
 AILELEM *
@@ -503,7 +655,23 @@ ailsa_clean_data(void *data);
 void
 ailsa_clean_dhcp(void *data);
 void
+ailsa_clean_cbcos(void *cbcos);
+void
+ailsa_clean_dhcp_config(void *dhcp);
+void
+ailsa_clean_tftp(void *tftp);
+void
+ailsa_clean_build(void *build);
+void
+ailsa_clean_partition(void *partition);
+void
+ailsa_clean_syspack(void *sysp);
+void
+ailsa_clean_sysscript(void *script);
+void
 ailsa_clean_iface(void *data);
+void
+clean_cbc_syss_s(cbc_syss_s *scr);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -632,6 +800,21 @@ ailsa_iface_list_init(void);
 AILLIST *
 ailsa_dhcp_list_init(void);
 
+AILLIST *
+ailsa_cbcos_list_init(void);
+
+AILLIST *
+ailsa_dhcp_config_list_init(void);
+
+AILLIST *
+ailsa_partition_list_init(void);
+
+AILLIST *
+ailsa_syspack_list_init(void);
+
+AILLIST *
+ailsa_sysscript_list_init(void);
+
 ailsa_data_s *
 ailsa_db_text_data_init(void);
 
@@ -685,15 +868,7 @@ display_version(char *prog);
 void
 get_error_string(int error, char *errstr);
 void
-cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
 chomp(char *input);
-void
-display_action_error(short int action);
 void 
 display_type_error(short int type);
 void
@@ -703,7 +878,7 @@ write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
 char *
-get_uname(unsigned long int uid);
+cmdb_get_uname(unsigned long int uid);
 const char *
 sqlite3_errstr(int error);
 

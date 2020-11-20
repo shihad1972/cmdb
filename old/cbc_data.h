@@ -586,9 +586,6 @@ void
 display_build_struct(cbc_s *base);
 
 void
-display_build_domain(cbc_build_domain_s *dom);
-
-void
 display_build_ip(cbc_s *base);
 
 void

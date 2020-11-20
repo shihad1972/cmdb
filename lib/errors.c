@@ -45,7 +45,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "cmdb_sql.h"
 
 void
 report_error(int error, const char *errstr)
@@ -97,8 +96,8 @@ report_error(int error, const char *errstr)
 		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
 	} else if (error == DB_WRONG_TYPE) {
 		fprintf(stderr, "Wrong DB type in query %s\n", errstr);
-	} else if (error == UNKNOWN_QUERY) {
-		fprintf(stderr, "Unknown query for type %s\n", errstr);
+	} else if (error == NO_ZONE_FOUND) {
+		fprintf(stderr, "Zone %s not found\n", errstr);
 	} else if (error == NO_DB_TYPE) {
 		fprintf(stderr, "No DB type configured\n");
 	} else if (error == DB_TYPE_INVALID) {
@@ -361,6 +360,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No ntp server was supplied\n");
 	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", RANGE_S)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+	else if (retval == AILSA_NO_DISK_DEV)
+		ailsa_syslog(LOG_ERR, "No disk device was provided");
 	else if (retval == AILSA_INVALID_DBTYPE)
 		ailsa_syslog(LOG_ERR, "DB type was invalid in the query");
 	else if (retval == AILSA_NO_PRIORITY)
@@ -455,10 +456,11 @@ display_cmdb_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action options:\n");
 	printf("-a: add\n-d: display\n-l: list\n-m: modify\n-r: remove\n-f: force\n");
+	printf("-z: set-default (for customer)\n");
 	printf("Type options:\n");
 	printf("-s: server\n-u: customer\n-t: contact\n");
 	printf("-e: services\n-w: hardware\n-o: virtual machine hosts\n");
-	printf("-j: service types\n-z: hardware types\n");
+	printf("-j: service types\n-g: hardware types\n");
 	printf("Name options:\n");
 	printf("-n: name\n-i: uuid for server or coid for customer\n");
 	printf("-x: vmhost server name for adding a vm server\n");
@@ -489,16 +491,17 @@ display_cbc_usage(void)
 	printf("Action options:\n");
 	printf("-a: add build for server\n-d: display build details\n");
 	printf("-l: list servers with a build\n-m: modify build options\n");
-	printf("-r: remove build for server\n-w: write build files\n\n");
+	printf("-r: remove build for server\n-u: show defaults\n");
+	printf("-w: write build files\n\n");
 	printf("Display and write options:\n");
-	printf("cbc ( -d | -w ) ( -n | -i | -u ) <server specifier>\n\n");
+	printf("cbc ( -d | -w ) ( -n | -i ) <server specifier>\n\n");
 	printf("Remove options:\n");
 	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
 	printf("cbc ( -a | -m ) -o<OS> -s<version> -t<arch> -b<domain> -x");
 	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> -j<hardisk device> ");
-	printf("(-n | -i | -u ) ");
+	printf("(-n | -i ) ");
 	printf("<server_specifier>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("for these options.\n\n");
@@ -512,15 +515,16 @@ display_cbcdomain_usage(void)
 	printf("cbcdomain: Program to manipulate build domains\n\n");
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
-	printf("-a: add build domain\n");
+	printf("-a: add build domain\n-d: display build domain\n");
 	printf("-l: list build domain names\n-m: modify build domain\n");
 	printf("-r: remove build domain\n-w: write dhcp network config\n");
+	printf("-z: set default build domain\n");
 	printf("All actions apart from -l and -w need -n <domain name>\n\n");
 	printf("Network Details:\n");
 	printf("-k: start_ip,end_ip,gateway,netmask,nameserver\n\n");
 	printf("NTP server configuration:\n");
 	printf("-t ntp_server\n\n");
-	printf("cbcdomain ( action ) [ -b build-domain ] ( app options )\n\n");
+	printf("cbcdomain ( action ) [ -n build-domain ] ( app options )\n\n");
 }
 
 void
@@ -530,12 +534,12 @@ display_cbcos_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add OS\n-d: display OS\n-g: grab boot files\n-l: list OS\n");
-	printf("-r: remove OS\n");
+	printf("-r: remove OS\n-z: set default OS\n");
 	printf("All actions apart from -l and -g need -n <OS name>\n\n");
 	printf("Detail Options:\n");
 	printf("-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <alias>\n-t: <os architecture\n\n");
-	printf("cbcos [ -a | -d | -l | -r ] -n [ detail options ]\n\n");
+	printf("cbcos [ -a | -d | -l | -r | -z ] -n [ detail options ]\n\n");
 }
 
 void
@@ -545,8 +549,8 @@ display_cbcvarient_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add varient\n-d: display varient\n-l: list varients\n");
-	printf("-r: remove varient\n\n");
-	printf("-d and -r actions need -x <varient name> or -k <valias>\n");
+	printf("-r: remove varient\n-z: set-default\n\n");
+	printf("-d, -r and -z actions need -x <varient name> or -k <valias>\n");
 	printf("-a will need both -x <varient name> and -k <valias>\n\n");
 	printf("Definition Options:\n");
 	printf("-g: package\n-j: varient\n\n");
@@ -555,8 +559,8 @@ display_cbcvarient_usage(void)
 	printf("Detail Options:\n");
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("cbcvarient [ -a | -d | -l | -r ] \
-[ -g | -j ] [ -x | -k ] [ detail options ]\n\n");
+	printf("cbcvarient ( -a | -d | -l | -r | -z ) \
+( -g | -j ) ( -x | -k ) [ detail options ]\n\n");
 }
 
 void
@@ -567,11 +571,11 @@ display_cbcpart_usage(void)
 	printf("Action Options:\n");
 	printf("-a: add scheme / partition\n-d: display scheme\n");
 	printf("-l: list schemes\n-r: remove scheme / partition\n");
-	printf("-m: modify\n\n");
+	printf("-m: modify\n-z: set-default\n\n");
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n-o: option\n\n");
 	printf("Detail Options\n");
-	printf("-u: Use lvm (when adding a scheme)\n");
+	printf("-j: Use lvm (when adding a scheme)\n");
 	printf("-g: <logical-volume> (if using lvm)\n");
 	printf("-n: <scheme name>\n\n");
 	printf("Partition Details:\n");
@@ -581,7 +585,7 @@ display_cbcpart_usage(void)
 	printf("-b: <mount-option>\n");
 	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
-	printf("cbcpart: ( -a | -d | -l | -m | -r ) ( -p | -s | -o ) [ ( -u -g \
+	printf("cbcpart: ( -a | -d | -l | -m | -r | -z ) ( -p | -s | -o ) [ ( -j -g \
 log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -b ] )\n");
 }
 
@@ -779,146 +783,6 @@ get_error_string(int error, char *errstr)
 		snprintf(errstr, CONF_S, "No build packages in database");
 	else
 		snprintf(errstr, CONF_S, "Unknown error %d", error);
-}
-
-void
-cbc_query_mismatch(unsigned int fields, unsigned int required, int query)
-{
-	char errstr[HOST_S];
-	char *err = errstr;
-	if (query == BOOT_LINE)
-		snprintf(err, HOST_S, "boot_line query: required %d, got %d\n",
-			required, fields);
-	else if (query == BUILD)
-		snprintf(err, HOST_S, "build query: required %d, got %d\n",
-			required, fields);
-	else if (query == BUILD_DOMAIN)
-		snprintf(err, HOST_S, "build domain query: required %d; got %d\n",
-			 required, fields);
-	else if (query == BUILD_IP)
-		snprintf(err, HOST_S, "build ip query: required %d; got %d\n",
-			 required, fields);
-	else if (query == BUILD_OS)
-		snprintf(err, HOST_S, "build os query: required %d, got %d\n",
-			 required, fields);
-	else if (query == BUILD_TYPE)
-		snprintf(err, HOST_S, "build type query: required %d, got %d\n",
-			 required, fields);
-	else if (query == DISK_DEV)
-		snprintf(err, HOST_S, "disk dev query: required %d, got %d\n",
-			 required, fields);
-	else if (query == LOCALE)
-		snprintf(err, HOST_S, "locale query: required %d, got %d\n",
-			 required, fields);
-	else if (query == BPACKAGE)
-		snprintf(err, HOST_S, "package query: required %d, got %d\n",
-			 required, fields);
-	else if (query == DPART)
-		snprintf(err, HOST_S, "\
-default partition query: required %d, got %d\n", required, fields);
-	else if (query == SSCHEME)
-		snprintf(err, HOST_S, "\
-preseed scheme partition query: required %d, got %d\n", required, fields);
-	else if (query == CSERVER)
-		snprintf(err, HOST_S, "server query: required %d, got %d\n",
-			 required, fields);
-	else if (query == VARIENT)
-		snprintf(err, HOST_S, "varient query: required %d, got %d\n",
-			 required, fields);
-	else if (query == VMHOST)
-		snprintf(err, HOST_S, "\
-virtual machine host query: required %d, got %d\n", required, fields);
-	else
-		snprintf(err, HOST_S, "\
-unknown query type %d: required %d, got %d\n", query, required, fields);
-	report_error(FIELDS_MISMATCH, errstr);
-}
-
-void
-cmdb_query_mismatch(unsigned int fields, unsigned int required, int query)
-{
-	char errstr[HOST_S];
-	char *err = errstr;
-	if (query == SERVER)
-		snprintf(err, HOST_S, "server query: required %d, got %d\n",
-			 required, fields);
-	else if (query == CUSTOMER)
-		snprintf(err, HOST_S, "customer query: required %d, got %d\n",
-			 required, fields);
-	else if (query == CONTACT)
-		snprintf(err, HOST_S, "contact query: required %d, got %d\n",
-			 required, fields);
-	else if (query == SERVICE)
-		snprintf(err, HOST_S, "service query: required %d, got %d\n",
-			 required, fields);
-	else if (query == SERVICE_TYPE)
-		snprintf(err, HOST_S, "\
-service type query: required %d, got %d\n", required, fields);
-	else if (query == HARDWARE)
-		snprintf(err, HOST_S, "hardware query: required %d, got %d\n",
-			 required, fields);
-	else if (query == HARDWARE_TYPE)
-		snprintf(err, HOST_S, "\
-hardware type query: required %d, got %d\n", required, fields);
-	else if (query == VM_HOST)
-		snprintf(err, HOST_S, "\
-virtual machine host query: required %d, got %d\n", required, fields);
-	else
-		snprintf(err, HOST_S, "\
-unknown query type %d: required %d, got %d\n", query, required, fields);
-	report_error(FIELDS_MISMATCH, errstr);
-}
-
-void
-dnsa_query_mismatch(unsigned int fields, unsigned int required, int query)
-{
-	char errstr[HOST_S];
-	char *err = errstr;
-	if (query == ZONE)
-		snprintf(err, HOST_S, "zone query: required %d, got %d\n",
-			 required, fields);
-	else if (query == REV_ZONE)
-		snprintf(err, HOST_S, "\
-reverse zone query: required %d, got %d\n", required, fields);
-	else if (query == RECORD)
-		snprintf(err, HOST_S, "record query: required %d, got %d\n",
-			 required, fields);
-	else if (query == REV_RECORD)
-		snprintf(err, HOST_S, "\
-reverse record query: required %d, got %d\n", required, fields);
-	else if (query == ALL_A_RECORD)
-		snprintf(err, HOST_S, "\
-all A records query: required %d, got %d\n", required, fields);
-	else if (query == DUPLICATE_A_RECORD)
-		snprintf(err, HOST_S, "\
-duplicate A records query: required %d, got %d\n", required, fields);
-	else if (query == PREFERRED_A)
-		snprintf(err, HOST_S, "\
-preferred A records query: required %d, got %d\n", required, fields);
-	else if (query == RECORDS_ON_CNAME_TYPE)
-		snprintf(err, HOST_S, "\
-CNAME records query: required %d, got %d\n", required, fields);
-	else
-		snprintf(err, HOST_S, "\
-unknown query type %d: required %d, got %d\n", query, required, fields);
-	report_error(FIELDS_MISMATCH, errstr);
-}
-
-void
-display_action_error(short int action)
-{
-	if (action == NONE)
-		fprintf(stderr, "No action specified\n");
-	else if (action == DISPLAY)
-		fprintf(stderr, "Display failed\n");
-	else if (action == LIST_OBJ)
-		fprintf(stderr, "Listing failed\n");
-	else if (action == ADD_TO_DB)
-		fprintf(stderr, "Adding to DB failed\n");
-	else if (action == RM_FROM_DB)
-		fprintf(stderr, "Removing from DB failed\n");
-	else
-		fprintf(stderr, "Unknown error code %d failed\n", action);
 }
 
 void 

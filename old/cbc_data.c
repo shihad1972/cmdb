@@ -396,42 +396,6 @@ clean_build_domain(cbc_build_domain_s *dom)
 }
 
 void
-display_build_domain(cbc_build_domain_s *bdom)
-{
-	char *ip;
-	time_t create;
-	uint32_t ip_addr;
-
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in display_build_domain");
-	printf("Details for build domain %s\n", bdom->domain);
-	ip_addr = htonl((uint32_t)bdom->start_ip);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	printf("Network configuration\n\tStart IP: %s\n", ip);
-	ip_addr = htonl((uint32_t)bdom->end_ip);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	printf("\tEnd IP: %s\n", ip);
-	ip_addr = htonl((uint32_t)bdom->netmask);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	printf("\tNetmask: %s\n", ip);
-	ip_addr = htonl((uint32_t)bdom->gateway);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	printf("\tGateway: %s\n", ip);
-	ip_addr = htonl((uint32_t)bdom->ns);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	printf("\tName server: %s\n", ip);
-	if (bdom->config_ntp > 0)
-		printf("NTP server: %s\n", bdom->ntp_server);
-	else
-		printf("No NTP configuration\n");
-	create = (time_t)bdom->ctime;
-	printf("Build domain created by %s on %s", get_uname(bdom->cuser), ctime(&create));
-	create = (time_t)bdom->mtime;
-	printf("Build domain updated by %s at %s", get_uname(bdom->muser), ctime(&create));
-	free(ip);
-}
-
-void
 clean_build_ip(cbc_build_ip_s *ip)
 {
 	cbc_build_ip_s *list, *next;

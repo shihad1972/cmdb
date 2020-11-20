@@ -30,7 +30,6 @@
 #include <ailsacmdb.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
 #include "build.h"
 
 int
@@ -41,10 +40,9 @@ main(int argc, char *argv[])
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbc_comm_line_s *cml = ailsa_calloc(sizeof(cbc_comm_line_s), "cml in main");
 
-	init_cbc_comm_values(cml);
 	if ((retval = parse_cbc_command_line(argc, argv, cml)) != 0) {
 		ailsa_clean_cmdb(cmc);
-		free(cml);
+		clean_cbc_comm_line(cml);
 		display_command_line_error(retval, argv[0]);
 	}
 	if (cml->action == QUERY_CONFIG)
@@ -63,12 +61,14 @@ main(int argc, char *argv[])
 		retval = modify_build_config(cmc, cml);
 	else if (cml->action == RM_CONFIG)
 		retval = remove_build_config(cmc, cml);
+	else if (cml->action == VIEW_DEFAULT)
+		retval = view_defaults_for_cbc(cmc, cml);
 	else if (cml->action == QUERY_CONFIG)
 		;
 	else
 		printf("Case %d not implemented yet\n", cml->action);
 	ailsa_clean_cmdb(cmc);
-	free(cml);
+	clean_cbc_comm_line(cml);
 	if (retval == DISPLAY_USAGE)
 		retval = NONE;
 	if (retval != NONE) {

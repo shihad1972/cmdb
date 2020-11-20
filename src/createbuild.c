@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <syslog.h>
 #include <time.h>
 #include <sys/stat.h>
@@ -45,602 +46,887 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_common.h"
-#include "cbc_data.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 #include "build.h"
 
 #ifdef HAVE_DNSA
 
 # include "cmdb_dnsa.h"
-# include "dnsa_base_sql.h"
-# include "cbc_dnsa.h"
 
 #endif /* HAVE_DNSA */
 
-int
-create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
-{
-	int retval = 0;
-	cbc_s *cbc;
-	cbc_build_s *build;
+static int
+cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
-	if (!(build = malloc(sizeof(cbc_build_s))))
-		report_error(MALLOC_FAIL, "build in create_build_config");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in create_build_config");
-	init_cbc_struct(cbc);
-	init_build_struct(build);
-	if ((retval = get_server_id(cbt, cml->name, &(build->server_id))) != 0)
-		goto cleanup;
-	if ((retval = check_for_existing_build(cbt, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_network_info(cbt, cml, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_varient(cbt, cml, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_os(cbt, cml, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_locale(cbt, cml, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_partition_scheme(cbt, cml, build)) != 0)
-		goto cleanup;
-// Now the searches will add stuff to the DB. We need to make sure we search first!
-	if ((retval = cbc_add_disk(cbt, cml, build)) != 0)
-		goto cleanup;
-	if ((retval = cbc_get_ip_info(cbt, cml, build)) != 0)
-		goto cleanup;
-	build->cuser = build->muser = (unsigned long int)getuid();
-	cbc->build = build;
-	if ((retval = cbc_run_insert(cbt, cbc, BUILDS)) != 0) {
-		fprintf(stderr, "Cannot insert build into db\n");
-	} else {
-		printf("Build inserted into db\n");
-		set_build_domain_updated(cbt, cml->build_domain);
-	}
-	goto cleanup;
+static int
+cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
-	cleanup:
-		cbc->build = NULL;
-		clean_cbc_struct(cbc);
-		free(build);
-		return retval;
-}
+static int
+cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bd);
 
-int
-check_for_existing_build(ailsa_cmdb_s *cbc, cbc_build_s *build)
-{
-	int retval = 0, query = BUILD_ID_ON_SERVER_ID;
-	unsigned int max;
-	dbdata_s *data;
+static int
+cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom);
 
-	if (!(build) || !(cbc))
-		return CBC_NO_DATA;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = build->server_id;
-	retval = cbc_run_search(cbc, data, query);
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = MAC_ON_SERVER_ID_DEV;
-	unsigned int max;
-	dbdata_s *data;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = build->server_id;
-	if (strncmp(cml->netcard, "NULL", COMM_S) == 0) {
-		fprintf(stderr, "No network card given. Using eth0\n");
-		snprintf(cml->netcard, HOST_S, "eth0");
-	}
-	snprintf(data->next->args.text, COMM_S, "%s", cml->netcard);
-	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
-		retval = NO_NETWORK_HARDWARE;
-		goto cleanup;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple instances of %s?? Using first\n",
-		 data->next->args.text);
-		retval = 0;
-	} else
-		retval = 0;
-	snprintf(build->mac_addr, MAC_S, "%s", data->fields.text);
-	snprintf(build->net_int, RANGE_S, "%s", cml->netcard);
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-int
-cbc_get_varient(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = VARIENT_ID_ON_VARIENT;
-	dbdata_s *data;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, 1);
-	snprintf(data->args.text, HOST_S, "%s", cml->varient);
-	retval = cbc_run_search(cbt, data, query);
-	if (retval == 0) {
-		query = VARIENT_ID_ON_VALIAS;
-		retval = cbc_run_search(cbt, data, query);
-	}
-	if (retval == 0) {
-		retval = VARIENT_NOT_FOUND;
-		goto cleanup;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple varients found for %s. Using 1st one\n",
-		 cml->varient);
-	}
-	build->varient_id = data->fields.number;
-	retval = 0;
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-int
-cbc_get_os(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = OS_ID_ON_NAME;
-	unsigned int max;
-	dbdata_s *data;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, MAC_S, "%s", cml->os);
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os_version);
-	snprintf(data->next->next->args.text, MAC_S, "%s", cml->arch);
-	retval = cbc_run_search(cbt, data, query);
-	if (retval == 0) {
-		query = OS_ID_ON_ALIAS;
-		retval = cbc_run_search(cbt, data, query);
-	}
-	if (retval == 0) {
-		query = OS_ID_ON_NAME_VER_ALIAS;
-		retval = cbc_run_search(cbt, data, query);
-	}
-	if (retval == 0) {
-		query = OS_ID_ON_ALIAS_VER_ALIAS;
-		retval = cbc_run_search(cbt, data, query);
-	}
-	if (retval > 1) {
-		retval = 0;
-		fprintf(stderr, "Multiple OS's found. Using first one\n");
-	} else if (retval == 0) {
-		retval = OS_NOT_FOUND;
-		goto cleanup;
-	} else {
-		retval = 0;
-	}
-	build->os_id = data->fields.number;
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-int
-cbc_get_locale(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0;
-	int query = GET_DEFAULT_LOCALE;
-	unsigned long int isdefault;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	if (strncmp(cml->locale, "NULL", COMM_S) != 0) {
-		retval = get_locale_id(cbt, cml->locale, &(build->locale_id));
-		return retval;
-	}
-	if ((retval = get_default_id(cbt, query, NULL, &isdefault)) != 0) {
-		fprintf(stderr, "Cannot find default locale\n");
-		return retval;
-	}
-	build->locale_id = isdefault;
-	return retval;
-}
-
-int
-cbc_get_partition_scheme(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = DEF_SCHEME_ID_ON_SCH_NAME;
-	dbdata_s *data;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, 1);
-	snprintf(data->args.text, CONF_S, "%s", cml->partition);
-	retval = cbc_run_search(cbt, data, query);
-	if (retval == 0) {
-		retval = SCHEME_NOT_FOUND;
-		goto cleanup;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple schemes found for %s. Using 1st one\n",
-		 cml->partition);
-	retval = 0;
-	build->def_scheme_id = data->fields.number;
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-int
-cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0;
-	cbc_s *cbc;
-	cbc_build_ip_s *bip;
-	unsigned long int ip[4]; // ip[0] = id, [1] = start, [2] = end, [3] = ip
-	unsigned long int dnsip;
-
-	memset(&ip, 0, sizeof(ip));
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	if ((retval = cbc_search_for_ip(cbt, cml, build)) > 0)
-		return 0;
-	if ((retval = cbc_get_build_dom_info(cbt, cml, ip)) != 0)
-		return retval;
-	check_ip_in_dns(&(ip[3]), cml->name, cml->build_domain);
-	dnsip = ip[3];
-	if ((retval = cbc_check_in_use_ip(cbt, cml, ip)) != 0)
-		return retval;
-	if ((dnsip != 0) && (dnsip != ip[3]))
-		fprintf(stderr, "We could not use the DNS ip address for this host\n");
-	if (!(bip = malloc(sizeof(cbc_build_ip_s))))
-		report_error(MALLOC_FAIL, "bip in cbc_get_ip_info");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in cbc_get_ip_info");
-	init_cbc_struct(cbc);
-	init_build_ip(bip);
-	cbc->bip = bip;
-	snprintf(bip->host, HOST_S, "%s", cml->name);
-	snprintf(bip->domain, RBUFF_S, "%s", cml->build_domain);
-	bip->ip = ip[3];
-	bip->bd_id = ip[0];
-	bip->server_id = build->server_id;
-	bip->cuser = bip->muser = (unsigned long int)getuid();
-	if ((retval = cbc_run_insert(cbt, cbc, BUILD_IPS)) != 0)
-		goto cleanup;
 #ifdef HAVE_DNSA
-	int dret = 0;
-	if ((dret = check_for_build_ip_in_dns(cbt, cml, cbc)) == 0) {
-		printf("Hostname added into dns\n");
-		if ((dret = cmdb_validate_zone(cbt, FORWARD_ZONE, cml->build_domain)) != 0)
-			ailsa_syslog(LOG_INFO, "Cannot reload name server");
-	} else if (dret == 1)
-		printf("Unable to add IP to DNS\n");
-	else if (dret == 2)
-		printf("Hostname already in domain\n");
-	else if (dret == 3)
-		printf("Hostname modified in DNS\n");
-	else if (dret == 4)
-		printf("Domain not in database??\n");
-	else
-		goto cleanup;
+static int
+cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip);
+
+static int
+cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip);
 #endif // HAVE_DNSA
-	cbc_search_for_ip(cbt, cml, build);
-	goto cleanup;
 
-	cleanup:
-		clean_cbc_struct(cbc);
-		return retval;
-}
+static int
+cbc_add_ip_to_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int ip);
 
-int
-cbc_search_for_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = IP_ID_ON_SERVER_ID;
-	dbdata_s *data;
+static int
+cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	init_multi_dbdata_struct(&data, 1);
-	data->args.number = build->server_id;
-	retval = cbc_run_search(cbt, data, query);
-	if (retval > 1)
-		fprintf(stderr, "Multiple build IP's found for server %s. Using 1st one\n",
-		 cml->name);
-	build->ip_id = data->fields.number;
-	clean_dbdata_struct(data);
-	return retval;
-}
+static int
+ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build);
 
-int
-cbc_check_in_use_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *ip)
-{
-	int retval = 0, query = IP_ON_BD_ID;
-	unsigned long int dnsip;
-	dbdata_s *data;
+static int
+cbc_update_disk_lvm(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml);
 
-	if (!(cbt) || !(cml) || !(ip))
-		return CBC_NO_DATA;
-	dnsip = *(ip + 3);
-	if (*(ip + 3) == 0) // dns query did not find an IP so start at start
-		*(ip + 3) = *(ip + 1);
-	init_multi_dbdata_struct(&data, 1);
-	data->args.number = *ip;
-	if ((retval = cbc_run_search(cbt, data, query)) == 0)
-// nothing built in this domain so we can use IP we have
-		goto cleanup;
-#ifdef HAVE_DNSA
-	if (dnsip == 0)
-		get_dns_ip_list(cbt, ip, data);
-#endif // HAVE_DNSA
-	retval = cbc_find_build_ip(ip, data);
-	goto cleanup;
+static int
+ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build);
 
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
+static int
+ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST *build);
 
-int
-cbc_find_build_ip(unsigned long int *ipinfo, dbdata_s *data)
-{
-	int retval = 0, i;
-	dbdata_s *list;
+static int
+ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build);
 
-	if (!(ipinfo) || !(data))
-		return CBC_NO_DATA;
-	if (*(ipinfo + 3) > *(ipinfo + 2))
-		return BUILD_IP_OUT_OF_RANGE;
-	while (*(ipinfo + 3) <= *(ipinfo + 2)) {
-		i = FALSE;
-		list = data;
-		while (list) {
-			if (list->fields.number == *(ipinfo + 3))
-				i = TRUE;
-			list = list->next;
-		}
-		if (i == FALSE)
-			break;
-		++*(ipinfo + 3);
-	}
-	if (*(ipinfo + 3) > *(ipinfo + 2))
-		retval = NO_BUILD_IP;
-	else
-		retval = 0;
-	return retval;
-}
+static int
+ailsa_modify_build_netcard(char *netdev, char *server, ailsa_cmdb_s *cbt, AILLIST *build);
 
-int
-cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, uli_t *bd)
-{
-	int retval = 0, query = BUILD_DOM_IP_RANGE;
-	unsigned int max;
-	unsigned long int *bdom;
-	dbdata_s *data;
+static int
+ailsa_modify_build_os(char **os, ailsa_cmdb_s *cbt, AILLIST *build);
 
-	if (!(cbt) || !(cml) || !(bd))
-		return CBC_NO_DATA;
-	bdom = bd;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	snprintf(data->args.text, RBUFF_S, "%s", cml->build_domain);
-	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
-		retval = BUILD_DOMAIN_NOT_FOUND;
-		goto cleanup;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple build domains found for %s. Using 1st one\n",
-		 cml->build_domain);
-	*bdom = data->fields.number;
-	bdom++;
-	*bdom = data->next->fields.number;
-	bdom++;
-	*bdom = data->next->next->fields.number;
-	retval = 0;
-	goto cleanup;
-
-	cleanup:
-		clean_dbdata_struct(data);
-		return retval;
-}
-
-int
-cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = DISK_DEV_ON_SERVER_ID_DEV;
-	unsigned int max;
-	dbdata_s *data = NULL, *lvm = 0;
-	cbc_s *cbc = NULL;
-	cbc_disk_dev_s *disk = NULL;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	if ((retval = cbc_search_for_disk(cbt, cml, build)) == 0)
-		return retval;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = build->server_id;
-	snprintf(data->next->args.text, HOST_S, "%s", cml->harddisk);
-	if ((retval = cbc_run_search(cbt, data, query)) == 0) {
-		retval = NO_HARD_DISK_DEV;
-		goto cleanup;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple disks %s for server\n", cml->harddisk);
-	init_multi_dbdata_struct(&lvm, 1);
-	lvm->args.number = build->def_scheme_id;
-	query = LVM_ON_DEF_SCHEME_ID;
-	if ((retval = cbc_run_search(cbt, lvm, query)) == 0) {
-		retval = PARTITIONS_NOT_FOUND;
-		goto cleanup;
-	}
-	if (!(disk = malloc(sizeof(cbc_disk_dev_s))))
-		report_error(MALLOC_FAIL, "disk in cbc_add_disk");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in cbc_add_disk");
-	init_cbc_struct(cbc);
-	init_disk_dev(disk);
-	cbc->diskd = disk;
-	snprintf(disk->device, HOST_S, "/dev/%s", cml->harddisk);
-	disk->lvm = lvm->fields.small;
-	disk->server_id = build->server_id;
-	if ((retval = cbc_run_insert(cbt, cbc, DISK_DEVS)) != 0)
-		fprintf(stderr, "Cannot insert disk device %s\n", cml->harddisk);
-	else
-		printf("Inserted disk device into db\n");
-	goto cleanup;
-
-	cleanup:
-		clean_cbc_struct(cbc);
-		clean_dbdata_struct(data);
-		clean_dbdata_struct(lvm);
-		return retval;
-}
-
-int
-cbc_search_for_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, cbc_build_s *build)
-{
-	int retval = 0, query = BASIC_PART;
-	unsigned int max;
-	dbdata_s *data;
-
-	if (!(cbt) || !(cml) || !(build))
-		return CBC_NO_DATA;
-	max = cmdb_get_max(cbc_search_args[query], cbc_search_fields[query]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = build->server_id;
-	if ((retval = cbc_run_search(cbt, data, query)) == 0)
-		retval = 1;
-	else
-		retval = 0;
-	clean_dbdata_struct(data);
-	return retval;
-}
+static int
+cmdb_get_full_os(char **os, ailsa_cmdb_s *cbt, unsigned long int os_id);
 
 int
 modify_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-	char *os[3];
-	int retval = NONE, type = NONE;
-	unsigned long int sid = 0, vid = 0, osid = 0, dsid = 0, bid = 0;
-	dbdata_s *data;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
 
-	if (cml->server_id == 0) {
-		if ((retval = get_server_id(cbt, cml->name, &sid)) != 0)
-			return retval;
-		cml->server_id = sid;
-	} else {
-		sid = cml->server_id;
+	if ((retval = cmdb_add_string_to_list(cml->name, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
 	}
-	if ((retval = get_build_id(cbt, cml->server_id, cml->name, &bid)) != 0)
-		return retval;
-	if (strncmp(cml->varient, "NULL", COMM_S) != 0)
-		if ((retval = get_varient_id(cbt, cml->varient, &vid)) != 0)
-			return retval;
-	if (strncmp(cml->os, "NULL", COMM_S) != 0) {
-		os[0] = strndup(cml->arch, MAC_S);
-		os[1] = strndup(cml->os_version, MAC_S);
-		os[2] = strndup(cml->os, CONF_S);
-		if ((retval = get_os_id(cbt, os, &osid)) != 0) {
-			if (retval == OS_NOT_FOUND)
-				fprintf(stderr, "Build os not found\n");
-			return retval;
+	if ((retval = ailsa_argument_query(cbt, BUILD_DETAILS_ON_SERVER_NAME, args, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS_ON_SERVER_NAME query failed");
+		goto cleanup;
+	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "Server %s does not have a build configuration", cml->name);
+		goto cleanup;
+	}
+	if ((retval = ailsa_get_modified_build(cbt, cml, build)) > 0) {
+		ailsa_syslog(LOG_ERR, "Cannot modify build for %s", cml->name);
+		goto cleanup;
+	} else if (retval < 0) {
+		ailsa_syslog(LOG_INFO, "Nothing to modify in build");
+		retval = 0;
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to build list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_BUILD], build)) != 0) {
+		ailsa_syslog(LOG_ERR, "UPDATE_BUILD query failed");
+		goto cleanup;
+	}
+	if (cml->partition) {
+		if ((retval = cbc_update_disk_lvm(cbt, cml)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot update disk dev lvm info");
+			goto cleanup;
 		}
 	}
-	if (strncmp(cml->partition, "NULL", COMM_S) != 0)
-		if ((retval = get_scheme_id(cbt, cml->partition, &dsid)) != 0)
-			return retval;
-	unsigned long int ids[4] = { vid, osid, dsid, sid };
-	if (strncmp(cml->build_domain, "NULL", COMM_S) != 0)
-		return CANNOT_MODIFY_BUILD_DOMAIN;
-	if (strncmp(cml->locale, "NULL", COMM_S) != 0)
-		return LOCALE_NOT_IMPLEMENTED;
-	if ((type = get_modify_query(ids)) == 0) {
-		printf("No modifiers?\n");
-		return NO_MODIFIERS;
-	}
-	init_multi_dbdata_struct(&data, cbc_update_args[type]);
-	cbc_prep_update_dbdata(data, type, ids);
-	if ((retval = cbc_run_update(cbt, data, type)) == 1) {
-		printf("Build updated\n");
-		retval = NONE;
-	} else if (retval == 0) {
-		printf("No build updated. Does server %s have a build?\n",
-		       cml->name);
-		retval = SERVER_BUILD_NOT_FOUND;
-	} else {
-		printf("Multiple builds??\n");
-		retval = MULTIPLE_SERVER_BUILDS;
-	}
-	clean_dbdata_struct(data);
-	return retval;
+
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(build);
+		return retval;
 }
 
 int
 remove_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-#ifndef CLEAN_REMOVE_BUILD_CONFIG
-# define CLEAN_REMOVE_BUILD_CONFIG(retval) { \
-		free(data);                  \
-		free(cbc);                   \
-		free(scratch);               \
-		return retval;               \
-}
-#endif
-	int retval = NONE;
-	dbdata_s *data;
-	cbc_s *cbc, *scratch;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *bld = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
 
-	if (!(data = malloc(sizeof(dbdata_s))))
-		report_error(MALLOC_FAIL, "data in remove_build_config");
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in remove_build_config");
-	if (!(scratch = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in remove_build_config");
-	init_dbdata_struct(data);
-	init_cbc_struct(cbc);
-	init_cbc_struct(scratch);
-	if ((retval = cbc_run_query(cbt, cbc, CSERVER)) != 0)
-		CLEAN_REMOVE_BUILD_CONFIG(retval);
-	if ((retval = cbc_get_server(cml, cbc, scratch)) != 0)
-		CLEAN_REMOVE_BUILD_CONFIG(retval);
-	data->args.number = scratch->server->server_id;
-	if ((retval = cbc_run_delete(cbt, data, BUILD_ON_SERVER_ID)) == 1)
-		printf("Build for server %s deleted\n", cml->name);
-	else if (retval == 0)
-		printf("Seems like there was no build for %s\n", cml->name);
-	else
-		printf("WOW! We have delete multiple builds for %s\n",
-		       cml->name);
-	if (cml->removeip == TRUE) {
-		printf("You have asked to delete the build IP for %s\n", 
-		       cml->name);
-		printf("If this server is still online, this IP will be reused\n");
-		printf("Duplicate IP addresses are a bad thing!\n");
-		printf("Remember to delete from DNS too.\n");
-#ifdef HAVE_DNSA
-		remove_ip_from_dns(cbt, cml, data);
-#endif // HAVE_DNSA
-		if ((retval = cbc_run_delete(cbt, data, BUILD_IP_ON_SER_ID)) == 1)
-			printf("Delete 1 IP as requested\n");
-		else if (retval == 0)
-			printf("Don't worry, no build IP's deleted\n");
-		else
-			printf("Wow! Multiple build IP's deleted\n");
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, bld)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
+		goto cleanup;
 	}
-	if ((retval = cbc_run_delete(cbt, data, DISK_DEV_ON_SERVER_ID)) == 0)
-		printf("No disk dev to delete??\n");
-	retval = NONE;
-	CLEAN_REMOVE_BUILD_CONFIG(retval);
-#undef CLEAN_REMOVE_BUILD_CONFIG
+	if (bld->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build for server %s found", cml->name);
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_ip_id_to_list(cml->name, cbt, ip)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_disk_id_to_list(cml->name, cbt, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add disk id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_ON_SERVER_ID], args)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_BUILD_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (disk->total > 0) {
+		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_DISK_DEV], disk)) != 0) {
+			ailsa_syslog(LOG_ERR, "DELETE_DISK_DEV query failed");
+			goto cleanup;
+		}
+	}
+	if (cml->removeip) {
+		if ((retval = ailsa_delete_query(cbt, delete_queries[DELETE_BUILD_IP], ip)) != 0) {
+			ailsa_syslog(LOG_ERR, "DELETE_BUILD_IP query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(bld);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(ip);
+		return retval;
 }
 
+int
+create_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	char **os = ailsa_calloc((sizeof(char *) * 3), "os in create_build_config");
+	AILLIST *b = ailsa_db_data_list_init();
+	AILLIST *l = ailsa_db_data_list_init();
+
+	os[0] = cml->os;
+	os[1] = cml->os_version;
+	os[2] = cml->arch;
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, l)) != 0)
+			goto cleanup;
+	if (l->total > 0) {
+		ailsa_syslog(LOG_INFO, "Build already exists");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, b)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_network_info(cbt, cml, b)) != 0)
+		goto cleanup;
+	if (b->total != 3) {
+		ailsa_syslog(LOG_ERR, "Cannot get network info");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_varient_id_to_list(cml->varient, cbt, b)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_os_id_to_list(os, cbt, b)) != 0)
+		goto cleanup;
+	if (b->total != 5) {
+		ailsa_syslog(LOG_ERR, "Cannot get OS");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_locale_id_to_list(cml->locale, cbt, b)) != 0)
+		goto cleanup;
+	if (b->total != 6) {
+		ailsa_syslog(LOG_ERR, "Cannot get locale ID");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_scheme_id_to_list(cml->partition, cbt, b)) != 0)
+		goto cleanup;
+	if (b->total != 7) {
+		ailsa_syslog(LOG_ERR, "Cannot get partition ID");
+		goto cleanup;
+	}
+// Now the searches will add stuff to the DB. We need to make sure we search first!
+	if ((retval = cbc_add_disk(cbt, cml, b)) != 0)
+		goto cleanup;
+	if ((retval = cbc_get_ip_info(cbt, cml, b)) != 0)
+		goto cleanup;
+	if (b->total != 8) {
+		ailsa_syslog(LOG_ERR, "Cannot get IP ID");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(b)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_insert_query(cbt, INSERT_BUILD, b)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_BUILD query failed");
+
+	cleanup:
+		my_free(os);
+		ailsa_list_full_clean(b);
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+cbc_get_network_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
+{
+	if (!(cbt) || !(cml) || !(build))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_string_to_list(cml->netcard, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add network card to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, MAC_ADDRESS_FOR_BUILD, build, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "MAC_ADDRESS_FOR_BUILD query failed");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		d = e->data;
+		if ((retval = cmdb_add_string_to_list(d->data->text, build)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add mac address to list");
+			goto cleanup;
+		}
+	} else {
+		retval = AILSA_NO_MAC_ADDR;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
+cbc_get_ip_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
+{
+	if (!(cbt) || !(cml) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = build->total;
+	unsigned long int ip[4]; // ip[0] = id, [1] = start, [2] = end, [3] = ip
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *bdom = ailsa_db_data_list_init();
+	void *data;
+
+	memset(&ip, 0, sizeof(ip));
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, build)) != 0)
+		goto cleanup;
+	if (build->total == (total + 1))
+		goto cleanup;
+	else if (build->total > (total + 1)) {
+		while (build->total != (total + 1)) {
+			if (!(build->destroy))
+				goto cleanup;
+			if ((retval = ailsa_list_remove(build, build->tail, &data)) == 0)
+				build->destroy(data);
+		}
+		goto cleanup;
+	}
+	if ((retval = cbc_get_build_dom_info(cbt, cml, bdom)) != 0)
+		goto cleanup;
+	if ((retval = cbc_calculate_build_ip(cbt, cml, bdom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, build)) != 0)
+		goto cleanup;
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(bdom);
+		return retval;
+}
+
+int
+cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
+{
+	if (!(cbt) || !(cml) || !(bdom))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+
+	if (cml->build_domain) {
+		if ((retval = cmdb_add_string_to_list(cml->build_domain, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add build domain to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
+	}
+	if ((retval = ailsa_argument_query(cbt, BUILD_DOMAIN_NET_INFO, list, bdom)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NET_INFO query failed");
+		goto cleanup;
+	}
+	if (bdom->total == 0)
+		retval = BUILD_DOMAIN_NOT_FOUND;
+
+	cleanup:
+		ailsa_list_full_clean(list);
+		return retval;
+}
+
+static int
+cbc_calculate_build_ip(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
+{
+	if (!(cbt) || !(cml) || !(bdom))
+		return AILSA_NO_DATA;
+	int retval;
+	char *domain;
+	unsigned long int ip, bip, lip;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *m = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d = bdom->head->next->data;
+	ailsa_data_s *f = bdom->head->next->next->data;
+
+	if ((retval = cmdb_add_build_domain_id_to_list(cml->build_domain, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, BUILD_IP_ON_BUILD_DOMAIN_ID, l, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_IP_ON_BUILD_DOMAIN_ID query failed");
+		goto cleanup;
+	}
+	if (!(cml->build_domain)) {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, m)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
+		domain = ((ailsa_data_s *)m->head->data)->data->text;
+	} else {
+		domain = cml->build_domain;
+	}
+	ip = d->data->number;
+	lip = f->data->number;
+	if (r->total > 0) {
+		e = r->head;
+		while (e) {
+			if (ip > lip) {
+				ailsa_syslog(LOG_ERR, "No more build IP's in domain %s", cml->build_domain);
+				goto cleanup;
+			}
+			d = e->data;
+			bip = d->data->number;
+			if (bip == ip) {
+				ip++;
+				e = r->head;
+				continue;
+			}
+#ifdef HAVE_DNSA
+			if (e == r->tail) {
+				if ((retval = cbc_check_ip_in_dns(cbt, domain, cml->name, ip)) > 0) {
+					ip++;
+					e = r->head;
+					continue;
+				} else if (retval < 0) {
+					ailsa_syslog(LOG_ERR, "Cannot check for ip in dns");
+					goto cleanup;
+				}
+			}
+#endif // HAVE_DNSA
+			e = e->next;
+		}
+	}
+	if ((retval = cbc_add_ip_to_build(cbt, cml, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP address to build");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_ip_id_to_list(cml->name, cbt, bdom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP id to bdom list");
+		goto cleanup;
+	}
+#ifdef HAVE_DNSA
+	if ((retval = cbc_add_host_to_dns(cbt, domain, cml->name, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build hostname into DNS");
+		goto cleanup;
+	}
+#endif // HAVE_DNSA
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(m);
+		return retval;
+}
+
+#ifdef HAVE_DNSA
+static int
+cbc_check_ip_in_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip)
+{
+	if (!(cbt) || !(domain) || (ip == 0))
+		return AILSA_NO_DATA;
+	char ip_addr[INET6_ADDRSTRLEN];
+	int retval;
+	uint32_t addr = htonl((uint32_t)ip);
+	ailsa_data_s *d, *e;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+
+	if (!(inet_ntop(AF_INET, &addr, ip_addr, INET6_ADDRSTRLEN))) {
+		retval = -1;
+		ailsa_syslog(LOG_ERR, "Cannot convert IP %u", addr);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(ip_addr, l)) != 0) {
+		retval = -1;
+		ailsa_syslog(LOG_ERR, "Cannot add ip_addr to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, A_RECORDS_WITH_IP, l, r)) != 0) {
+		retval = -1;
+		ailsa_syslog(LOG_ERR, "A_RECORDS_WITH_IP query failed");
+		goto cleanup;
+	}
+	if (r->total == 2) {
+		d = r->head->data;
+		e = r->tail->data;
+		if ((strncmp(host, d->data->text, HOST_LEN) == 0) && (strncmp(domain, e->data->text, DOMAIN_LEN) == 0))
+			goto cleanup;
+	}
+	retval = (int)r->total;
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		return retval;
+}
+
+static int
+cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long int ip)
+{
+	if (!(cbt) || !(domain) || !(host) || (ip == 0))
+		return AILSA_NO_DATA;
+	char ip_addr[INET6_ADDRSTRLEN];
+	int retval;
+	uint32_t ip_net = ntohl((uint32_t)ip);
+	AILLIST *rec = ailsa_db_data_list_init();
+	AILLIST *zone = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, rec)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list("A", rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add type string to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(host, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add host to list");
+		goto cleanup;
+	}
+	memset(ip_addr, 0, INET6_ADDRSTRLEN);
+	if (!(inet_ntop(AF_INET, &ip_net, ip_addr, INET6_ADDRSTRLEN))) {
+		ailsa_syslog(LOG_ERR, "Unable to convert IP address");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(ip_addr, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
+		goto cleanup;
+	}
+	if (rec->total == 4) {
+		if ((retval = cmdb_check_for_fwd_record(cbt, rec)) < 0) {
+			ailsa_syslog(LOG_ERR, "Cannot check for forward records");
+			goto cleanup;
+		} else if (retval > 0) {
+			ailsa_syslog(LOG_INFO, "Record already exists in database");
+			retval = 0;
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_ERR, "Wrong number in list. Wanted 4; got %zu", rec->total);
+		retval = WRONG_LENGTH_LIST;
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in record list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbt, INSERT_RECORD_BASE, rec)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_RECORD_BASE query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to zone update list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, zone)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_update_query(cbt, update_queries[SET_FWD_ZONE_UPDATED], zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+		goto cleanup;
+	}
+// When we move zones.c into library, we can call commit_fwd_zone here.
+	cleanup:
+		ailsa_list_full_clean(rec);
+		ailsa_list_full_clean(zone);
+		return retval;
+}
+#endif // HAVE_DNSA
+
+static int
+cbc_add_ip_to_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, unsigned long int ip)
+{
+	if (!(cbt) || !(cml) || (ip == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_number_to_list(ip, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add IP address to addition list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cml->name, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add hostname to list");
+		goto cleanup;
+	}
+	if (cml->build_domain) {
+		if ((retval = cmdb_add_string_to_list(cml->build_domain, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_build_domain_id_to_list(cml->build_domain, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server id to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_populate_cuser_muser(l)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_insert_query(cbt, INSERT_BUILD_IP, l)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_BUILD_IP query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+cbc_add_disk(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
+{
+	if (!(cbt) || !(cml) || !(build))
+		return AILSA_NO_DATA;
+	char disk[HOST_LEN];
+	int retval;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *list = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_disk_dev_id_to_list(cml->name, cbt, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add disk dev id to list");
+		goto cleanup;
+	}
+	if (list->total > 0)
+		goto cleanup;
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, args)) != 0)
+		goto cleanup;
+	snprintf(disk, HOST_LEN, "/dev/%s", cml->harddisk);
+	if ((retval = cmdb_add_string_to_list(disk, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add disk device to list");
+		goto cleanup;
+	}
+	d = build->tail->data;
+	if ((retval = cmdb_add_number_to_list(d->data->number, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add def_scheme_id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, SEED_SCHEME_LVM_ON_ID, list, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "SEED_SCHEME_LVM_ON_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_insert_query(cbt, INSERT_DISK_DEV, args)) != 0)
+		ailsa_syslog(LOG_ERR, "INSERT_DISK_DEV query failed");
+	else
+		ailsa_syslog(LOG_INFO, "Disk %s inserted into database", cml->harddisk);
+
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(list);
+		return retval;
+}
+
+static int
+ailsa_get_modified_build(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *build)
+{
+	if (!(cbt) || !(cml) || !(build))
+		return AILSA_NO_DATA;
+	int retval = -1;
+	char **os = ailsa_calloc((sizeof(char *) * 3), "os in ailsa_get_modified_build");
+
+	if (cml->varient)
+		if ((retval = ailsa_modify_build_varient(cml->varient, cbt, build)) != 0)
+			goto cleanup;
+	if (cml->partition)
+		if ((retval = ailsa_modify_build_partition_scheme(cml->partition, cbt, build)) != 0)
+			goto cleanup;
+	if (cml->locale)
+		if ((retval = ailsa_modify_build_locale(cml->locale, cbt, build)) != 0)
+			goto cleanup;
+	if (cml->netcard)
+		if ((retval = ailsa_modify_build_netcard(cml->netcard, cml->name, cbt, build)) != 0)
+			goto cleanup;
+	if ((cml->os) || (cml->os_version) || (cml->arch)) {
+		if (cml->os)
+			os[0] = strndup(cml->os, MAC_LEN);
+		if (cml->os_version)
+			os[1] = strndup(cml->os_version, SERVICE_LEN);
+		if (cml->arch)
+			os[2] = strndup(cml->arch, SERVICE_LEN);
+		if ((retval = ailsa_modify_build_os(os, cbt, build)) != 0)
+			goto cleanup;
+	}
+	cleanup:
+		if (os[2])
+			my_free(os[2]);
+		if (os[1])
+			my_free(os[1]);
+		if (os[0])
+			my_free(os[0]);
+		my_free(os);
+		return retval;
+}
+
+static int
+cbc_update_disk_lvm(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
+{
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *part = ailsa_db_data_list_init();
+	AILLIST *lvm = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_string_to_list(cml->partition, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition name to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, SCHEME_LVM_INFO, part, lvm)) != 0) {
+		ailsa_syslog(LOG_ERR, "SCHEME_LVM_INFO query failed");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, lvm)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_update_query(cbt, update_queries[UPDATE_DISK_DEV_LVM], lvm)) != 0)
+		goto cleanup;
+
+	cleanup:
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(lvm);
+		return retval;
+}
+
+static int
+ailsa_modify_build_varient(char *varient, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(varient) || !(cbt) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = cmdb_check_add_varient_id_to_list(varient, cbt, l)) != 0)
+		goto cleanup;
+	e = l->head;
+	if ((retval = cmdb_replace_data_element(build, e, 0)) != 0) {
+		retval = AILSA_VARIENT_REPLACE_FAIL;
+		ailsa_syslog(LOG_ERR, "Cannot replace varient id in list");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_partition_scheme(char *partition, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(partition) || !(cbt) || !(build))
+		goto cleanup;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = cmdb_add_scheme_id_to_list(partition, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add partition scheme id to list");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		if ((retval = cmdb_replace_data_element(build, e, 4)) != 0) {
+			retval = AILSA_PARTITION_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace partition scheme id in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Partition scheme %s not found in database", partition);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_locale(char *locale, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(locale) || !(cbt) || !(build))
+		goto cleanup;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = cmdb_add_locale_id_to_list(locale, cbt, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add locale id to list");
+		goto cleanup;
+	}
+	if (l->total > 0) {
+		e = l->head;
+		if ((retval =  cmdb_replace_data_element(build, e, 3)) != 0) {
+			retval = AILSA_LOCALE_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace locale id in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Locale %s not found in database", locale);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static int
+ailsa_modify_build_netcard(char *netdev, char *server, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(netdev) || !(cbt) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *m = ailsa_db_data_list_init();
+	AILELEM *e = build->head;
+
+	if ((retval = cmdb_check_add_server_id_to_list(server, cbt, l)) != 0) 
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list(netdev, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add network device to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, MAC_ADDRESS_FOR_BUILD, l, m)) != 0) {
+		ailsa_syslog(LOG_ERR, "MAC_ADDRESS_FOR_BUILD query failed");
+		goto cleanup;
+	}
+	e = l->tail;
+	if (m->total > 0) {
+		if ((retval = cmdb_replace_data_element(build, e, 6)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot replace netdev in list");
+			goto cleanup;
+		}
+		e = m->head;
+		if ((retval = cmdb_replace_data_element(build, e, 5)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot replace mac address in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "Network device %s not found in database", netdev);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(m);
+		return retval;
+}
+
+static int
+ailsa_modify_build_os(char **os, ailsa_cmdb_s *cbt, AILLIST *build)
+{
+	if (!(os) || !(cbt) || !(build))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *bos = ailsa_db_data_list_init();
+	AILELEM *e = build->head->next;
+	ailsa_data_s *d = e->data;
+	if (!(os[0]) || !(os[1]) || !(os[2])) {
+		if ((retval = cmdb_get_full_os(os, cbt, d->data->number)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot get OS details");
+			goto cleanup;
+		}
+	}
+	if ((retval = cmdb_add_os_id_to_list(os, cbt, bos)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add os id to list");
+		goto cleanup;
+	}
+	if (bos->total > 0) {
+		e = bos->head;
+		if ((retval = cmdb_replace_data_element(build, e, 1)) != 0) {
+			retval = AILSA_OS_REPLACE_FAIL;
+			ailsa_syslog(LOG_ERR, "Cannot replace os_id in list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_INFO, "OS %s, version %s, arch %s does not exist", os[0], os[1], os[2]);
+	}
+	cleanup:
+		ailsa_list_full_clean(bos);
+		return retval;
+}
+
+static int
+cmdb_get_full_os(char **os, ailsa_cmdb_s *cbt, unsigned long int os_id)
+{
+	if (!(os) || !(cbt) || (os_id == 0))
+		return AILSA_NO_DATA;
+	int retval, i;
+	AILLIST *args = ailsa_db_data_list_init();
+	AILLIST *build_os = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_number_to_list(os_id, args)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add os_id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbt, BUILD_OS_DETAILS_ON_OS_ID, args, build_os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_OS_ID query failed");
+		goto cleanup;
+	}
+	if (build_os->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find os with id %lu", os_id);
+		retval = AILSA_NO_OS;
+		goto cleanup;
+	}
+	e = build_os->head;
+	for (i = 0; i < 3; i++) {
+		if (!(e))
+			break;
+		d = e->data;
+		if (!(os[i])) {
+			os[i] = strndup(d->data->text, MAC_LEN);
+		}
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(build_os);
+		return retval;
+}

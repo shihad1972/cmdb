@@ -44,7 +44,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include <cmdb.h>
-#include <base_sql.h>
 
 const char *basic_queries[] = {
 "SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
@@ -73,6 +72,21 @@ const char *basic_queries[] = {
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
 "SELECT net_range FROM rev_zones WHERE type = 'master'", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
+"SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
+"SELECT s.name, b.mac_addr, ip.ip, db.domain FROM build b \
+ LEFT JOIN server s ON s.server_id = b.server_id \
+ LEFT JOIN build_ip ip ON ip.ip_id = b.ip_id \
+ LEFT JOIN build_domain db ON db.bd_id = ip.bd_id", // DHCP_INFORMATION
+"SELECT os_id FROM default_os", // DEFAULT_OS
+"SELECT def_scheme_id FROM default_scheme", // DEFAULT_SCHEME
+"SELECT varient_id FROM default_varient", // DEFAULT_VARIENT
+"SELECT bd_id FROM default_domain", // DEFAULT_DOMAIN
+"SELECT cust_id FROM default_customer", // DEFAULT_CUSTOMER
+"SELECT os, os_version, arch FROM build_os WHERE os_id = (SELECT os_id FROM default_os)", // DEFAULT_OS_DETAILS
+"SELECT scheme_name FROM seed_schemes WHERE def_scheme_id = (SELECT def_scheme_id FROM default_scheme)", // DEFAULT_SCHEME_DETAILS
+"SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
+"SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
+"SELECT coid, name FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -504,6 +518,183 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // BUILD_IP_ON_SERVER_ID
+"SELECT ip_id FROM build_ip WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_DOMAIN_NET_INFO
+"SELECT bd_id, start_ip, end_ip FROM build_domain WHERE domain = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_IP_ON_BUILD_DOMAIN_ID
+"SELECT ip FROM build_ip WHERE bd_id = ? ORDER BY ip",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_ID_ON_SERVER_NAME
+"SELECT build_id FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // MAC_ADDRESS_FOR_BUILD
+"SELECT detail FROM hardware WHERE server_id = ? AND device = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // LOCALE_ID_FROM_NAME
+"SELECT locale_id FROM locale WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // DISK_ID_ON_SERVER_NAME
+"SELECT disk_id FROM disk_dev WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // SEED_SCHEME_LVM_ON_ID
+"SELECT lvm FROM seed_schemes WHERE def_scheme_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // IP_ID_ON_SERVER_NAME
+"SELECT ip_id FROM build_ip WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_DETAILS_ON_SERVER_NAME
+"SELECT varient_id, os_id, ip_id, locale_id, def_scheme_id, mac_addr, net_inst_int FROM build WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_DETAILS_ON_OS_ID
+"SELECT os, os_version, arch FROM build_os WHERE os_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // IP_NET_ON_SERVER_ID
+"SELECT domainname, ip FROM build_ip WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_OS_AND_TYPE
+"SELECT os, os_version, arch, build_type FROM build_os bo \
+ LEFT JOIN build_type bt ON bt.bt_id = bo.bt_id \
+ LEFT JOIN build b ON b.os_id = bo.os_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_VARIENT_ON_SERVER_ID
+"SELECT varient FROM varient v LEFT JOIN build b ON v.varient_id = b.varient_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // LOCALE_DETAILS_ON_SERVER_ID
+"SELECT locale, language, timezone FROM locale l LEFT JOIN build b ON l.locale_id = b.locale_id where server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_TIMES_AND_USERS
+"SELECT cuser, ctime, muser, mtime FROM build WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // PART_SCHEME_NAME_ON_SERVER_ID
+"SELECT scheme_name FROM seed_schemes ss LEFT JOIN build b ON b.def_scheme_id = ss.def_scheme_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // PARTITIOINS_ON_SERVER_ID
+"SELECT mount_point, filesystem, logical_volume FROM default_part dp LEFT JOIN build b ON dp.def_scheme_id = b.def_scheme_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // OS_ALIAS_ON_OS_NAME
+"SELECT DISTINCT alias FROM build_os WHERE os = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // BUILD_OS_DETAILS_ON_SERVER_ID
+"SELECT alias, os_version, arch FROM build_os WHERE os_id = (SELECT os_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // FULL_LOCALE_DETAILS_ON_SERVER_ID
+"SELECT country, locale, keymap, timezone FROM locale WHERE locale_id = (SELECT locale_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // TFTP_DETAILS_ON_SERVER_ID
+"SELECT boot_line, net_inst_int, arg, url, build_type FROM build b LEFT JOIN build_os bo on b.os_id = bo.os_id LEFT JOIN build_type bt on bt.bt_id = bo.bt_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_DETAILS
+"SELECT locale, language, keymap, country, net_inst_int, ip, ns, netmask, gateway, config_ntp, ntp_server, hostname, domain, mirror, bt.alias, ver_alias, os_version, arch, url \
+ FROM build b LEFT JOIN build_ip bi ON b.ip_id = bi.ip_id \
+ LEFT JOIN build_os bo ON b.os_id = bo.os_id \
+ LEFT JOIN build_domain bd ON bd.bd_id = bi.bd_id \
+ LEFT JOIN locale l ON b.locale_id = l.locale_id \
+ LEFT JOIN build_type bt ON bt.bt_id = bo.bt_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_TYPE_ON_SERVER_ID
+"SELECT build_type FROM build_type WHERE bt_id = (SELECT bt_id FROM build_os WHERE os_id = (SELECT os_id FROM build WHERE server_id = ?))",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_PARTITIONS_ON_SERVER_ID
+"SELECT minimum, maximum, priority, mount_point, filesystem, logical_volume FROM default_part\
+ WHERE def_scheme_id = (SELECT def_scheme_id FROM build WHERE server_id = ?)",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // BUILD_PACKAGES_ON_SERVER_ID
+"SELECT package FROM packages p LEFT JOIN build b ON p.varient_id = b.varient_id AND p.os_id = b.os_id WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DISK_DEV_DETAILS_ON_SERVER_ID
+"SELECT device, lvm FROM disk_dev WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // PART_OPTIONS_ON_SCHEME_NAME_MOUNT
+"SELECT poption FROM part_options WHERE def_part_id = (SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id WHERE scheme_name = ? AND mount_point = ?)",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // SYSTEM_PACKAGES_ON_SERVER_ID
+"SELECT sp.name, spa.field, spa.type, spc.arg FROM system_package_args spa \
+  LEFT JOIN system_package_conf spc ON spa.syspack_arg_id = spc.syspack_arg_id \
+  LEFT JOIN system_packages sp ON sp.syspack_id = spc.syspack_id \
+  LEFT JOIN build_ip bd ON spc.bd_id = bd.bd_id \
+  WHERE bd.server_id = ? ORDER BY sp.name, spa.field",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE
+"SELECT ss.name, sa.arg, sa.no FROM system_scripts ss JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id JOIN build_type bt ON sa.bt_id = bt.bt_id JOIN build_domain bd ON sa.bd_id = bd.bd_id WHERE bd.domain = ? AND bt.alias = ? ORDER BY ss.name, sa.no",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
+	},
+	{ // DOMAIN_BUILD_ALIAS_ON_SERVER_ID
+"SELECT domain, bt.alias, bt.url FROM build_domain bd JOIN build_ip bi ON bd.bd_id = bi.bd_id JOIN build b ON b.ip_id = bi.ip_id JOIN build_os bo ON bo.os_id = b.os_id JOIN build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // MIRROR_ON_BUILD_ALIAS
+"SELECT mirror from build_type where alias = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
+	{ // PACKAGE_FULL
+"SELECT pack_id FROM packages WHERE package = ? AND varient_id = ? and os_id = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
@@ -652,6 +843,46 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	6,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_DISK_DEV
+"INSERT INTO disk_dev (server_id, device, lvm) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT }
+	},
+	{ // INSERT_BUILD_IP
+"INSERT INTO build_ip (ip, hostname, domainname, bd_id, server_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	7,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_BUILD
+"INSERT INTO build (server_id, net_inst_int, mac_addr, varient_id, os_id, locale_id, def_scheme_id, ip_id, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	10,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DEFAULT_OS
+"INSERT INTO default_os (os_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DEFAULT_SCHEME
+"INSERT INTO default_scheme (def_scheme_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DEFAULT_VARIENT
+"INSERT INTO default_varient (varient_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DEFAULT_DOMAIN
+"INSERT INTO default_domain (bd_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_DEFAULT_CUSTOMER
+"INSERT INTO default_customer(cust_id, cuser, muser) VALUES (?, ?, ?)",
+	3,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -755,6 +986,26 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // DELETE_BUILD_IP
+"DELETE FROM build_ip WHERE ip_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_DISK_DEV
+"DELETE FROM disk_dev WHERE disk_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_BUILD_ON_SERVER_ID
+"DELETE FROM build WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
+	{ // DELETE_SERVER_ON_ID
+"DELETE FROM server WHERE server_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {
@@ -802,6 +1053,43 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE rev_zones SET muser = ?, updated = 'yes' WHERE net_range = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
+	{ // UPDATE_BUILD
+"UPDATE build SET varient_id = ?, os_id = ?, ip_id = ?, locale_id = ?, \
+ def_scheme_id = ?, mac_addr = ?, net_inst_int = ?, muser = ? \
+ WHERE server_id = ?",
+	9,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DISK_DEV_LVM
+"UPDATE disk_dev SET lvm = ? WHERE server_id = ?",
+	2,
+	{ AILSA_DB_SINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_OS
+"UPDATE default_os SET os_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_SCHEME
+"UPDATE default_scheme SET def_scheme_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_VARIENT
+"UPDATE default_varient SET varient_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_DOMAIN
+"UPDATE default_domain SET bd_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_DEFAULT_CUSTOMER
+"UPDATE default_customer SET cust_id = ?, muser = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 
@@ -1382,6 +1670,10 @@ ailsa_store_mysql_row(MYSQL_ROW row, AILLIST *results, unsigned int *fields)
 		case MYSQL_TYPE_LONGLONG:
 			tmp->data->number = strtoul(row[i - 1], NULL, 10);
 			tmp->type = AILSA_DB_LINT;
+			break;
+		case MYSQL_TYPE_SHORT:
+			tmp->data->small = (short int)strtoul(row[i - 1], NULL, 10);
+			tmp->type = AILSA_DB_SINT;
 			break;
 		case MYSQL_TYPE_TIMESTAMP:
 			tmp->data->text = strndup(row[i - 1], SQL_TEXT_MAX);

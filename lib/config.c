@@ -272,12 +272,10 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 		vm->cpus = 1;
 	if (vm->ram == 0)
 		vm->ram = 256;
-	if ((vm->action == AILSA_CMDB_ADD) && !(vm->name))
-		retval = AILSA_NO_DATA;
+	if ((vm->action == AILSA_ADD) && !(vm->name))
+		retval = AILSA_NO_NAME;
 	if (!(vm->network ) && !(vm->netdev))
 		retval = AILSA_NO_NETWORK;
-	if ((vm->cmdb > 0) && !(vm->coid))
-		retval = AILSA_NO_COID;
 	return retval;
 }
 
@@ -442,6 +440,8 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 		ailsa_syslog(LOG_ERR, "Cannot add . to end of hostmaster");
 	if (ailsa_add_trailing_slash(cmdb->dir) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot add / to the end of DIR");
+	if (ailsa_add_trailing_slash(cmdb->pxe) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot add / to the end of PXE");
 	if (ailsa_add_trailing_slash(cmdb->bind) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot add / to the end of BIND");
 	if (ailsa_add_trailing_slash(cmdb->tmpdir) != 0)
@@ -469,7 +469,7 @@ display_mkvm_usage(void)
 	printf("Actions\n");
 	printf("\t-a: add\n");
 	printf("\t-h: help\t-v: version\n");
-	printf("\t-C: add to cmdb\n");
+	printf("\t-d: add to cmdb\n");
 	printf("Options\n");
 	printf("\t-u <uri>: Connection URI for libvirtd\n");
 	printf("\t-n <name>: Supply VM name\n");
@@ -477,6 +477,7 @@ display_mkvm_usage(void)
 	printf("\t-g <size>: Size (in GB) of disk (default's to 10GB)\n");
 	printf("\t-c <cpus>: No of CPU's the vm should have (default's to 1)\n");
 	printf("\t-r <ram>: Amount of RAM (in MB) the vm should have (default's to 256MB)\n");
+	printf("\t-C <coid>: COID of customer in CMDB\n");
 	printf("Mutually exclusive Options\n");
 	printf("\t[ -k <network>: Name of the network | -b <bridge-device>: Name of the bridge ]\n");
 }

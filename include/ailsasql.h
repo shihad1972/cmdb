@@ -21,6 +21,49 @@
 
 #ifndef __AILSASQL_H__
 # define __AILSASQL_H__
+# define MAXDATASIZE     1048576    // Maximum buffer length
+enum {			/* Select statements */
+	SERVER = 1,
+	SERVER_TYPE,
+	CUSTOMER,
+	CONTACT,
+	SERVICE,
+	SERVICE_TYPE,
+	HARDWARE,
+	HARDWARE_TYPE,
+	VM_HOST,
+
+	ZONE,
+	REV_ZONE,
+	RECORD,
+	REV_RECORD,
+	ALL_A_RECORD,
+	DUPLICATE_A_RECORD,
+	PREFERRED_A,
+	RECORDS_ON_CNAME_TYPE,
+	GLUE,
+
+	BOOT_LINE,
+	BUILD,
+	BUILD_DOMAIN,
+	BUILD_IP,
+	BUILD_OS,
+	BUILD_TYPE,
+	DISK_DEV,
+	LOCALE,
+	BPACKAGE,
+	DPART,
+	SSCHEME,
+	CSERVER,
+	VARIENT,
+	VMHOST,
+	SYSPACK,
+	SYSARG,
+	SYSCONF,
+	SCRIPT,
+	SCRIPTA,
+	PARTOPT
+};
 
 enum {			// SQL Data types
 	AILSA_DB_NULL = 0,
@@ -66,7 +109,7 @@ enum {			// SQL Tables
 	USERS_TABLES,
 	VARIENT_TABLE,
 	VM_SERVER_HOSTS_TABLE,
-	ZONES_TABLE
+	ZONES_TABLE,
 };
 
 enum {			// SQL BASIC QUERIES
@@ -93,7 +136,19 @@ enum {			// SQL BASIC QUERIES
 	REV_ZONE_INFORMATION,
 	GLUE_ZONE_INFORMATION,
 	REV_ZONES_NET_RANGE,
-	REV_ZONE_CONFIG
+	REV_ZONE_CONFIG,
+	ALL_SERVERS_WITH_BUILD,
+	DHCP_INFORMATION,
+	DEFAULT_OS,
+	DEFAULT_SCHEME,
+	DEFAULT_VARIENT,
+	DEFAULT_DOMAIN,
+	DEFAULT_CUSTOMER,
+	DEFAULT_OS_DETAILS,
+	DEFAULT_SCHEME_DETAILS,
+	DEFAULT_VARIENT_DETAILS,
+	DEFAULT_DOMAIN_DETAILS,
+	DEFAULT_CUSTOMER_DETAILS,
 };
 
 enum {			// SQL ARGUMENT QUERIES
@@ -180,6 +235,39 @@ enum {			// SQL ARGUMENT QUERIES
 	RECORDS_ON_NET_RANGE,
 	REV_RECORD_ID_ON_ZONE_HOST,
 	DESTINATION_ON_RECORD_ID,
+	BUILD_IP_ON_SERVER_ID,
+	BUILD_DOMAIN_NET_INFO,
+	BUILD_IP_ON_BUILD_DOMAIN_ID,
+	BUILD_ID_ON_SERVER_NAME,
+	MAC_ADDRESS_FOR_BUILD,
+	LOCALE_ID_FROM_NAME,
+	DISK_ID_ON_SERVER_NAME,
+	SEED_SCHEME_LVM_ON_ID,
+	IP_ID_ON_SERVER_NAME,
+	BUILD_DETAILS_ON_SERVER_NAME,
+	BUILD_OS_DETAILS_ON_OS_ID,
+	IP_NET_ON_SERVER_ID,
+	BUILD_OS_AND_TYPE,
+	BUILD_VARIENT_ON_SERVER_ID,
+	LOCALE_DETAILS_ON_SERVER_ID,
+	BUILD_TIMES_AND_USERS,
+	PART_SCHEME_NAME_ON_SERVER_ID,
+	PARTITIOINS_ON_SERVER_ID,
+	OS_ALIAS_ON_OS_NAME,
+	BUILD_OS_DETAILS_ON_SERVER_ID,
+	FULL_LOCALE_DETAILS_ON_SERVER_ID,
+	TFTP_DETAILS_ON_SERVER_ID,
+	BUILD_DETAILS,
+	BUILD_TYPE_ON_SERVER_ID,
+	BUILD_PARTITIONS_ON_SERVER_ID,
+	BUILD_PACKAGES_ON_SERVER_ID,
+	DISK_DEV_DETAILS_ON_SERVER_ID,
+	PART_OPTIONS_ON_SCHEME_NAME_MOUNT,
+	SYSTEM_PACKAGES_ON_SERVER_ID,
+	SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE,
+	DOMAIN_BUILD_ALIAS_ON_SERVER_ID,
+	MIRROR_ON_BUILD_ALIAS,
+	PACKAGE_FULL,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -211,7 +299,15 @@ enum {			// SQL INSERT QUERIES
 	INSERT_RECORD_SRV,
 	INSERT_REVERSE_RECORD,
 	INSERT_GLUE_ZONE,
-	INSERT_PREF_A
+	INSERT_PREF_A,
+	INSERT_DISK_DEV,
+	INSERT_BUILD_IP,
+	INSERT_BUILD,
+	INSERT_DEFAULT_OS,
+	INSERT_DEFAULT_SCHEME,
+	INSERT_DEFAULT_VARIENT,
+	INSERT_DEFAULT_DOMAIN,
+	INSERT_DEFAULT_CUSTOMER,
 };
 
 enum {			// SQL DELETE QUERIES
@@ -234,7 +330,11 @@ enum {			// SQL DELETE QUERIES
 	DELETE_REC_PROTO,
 	DELETE_REVERSE_RECORD,
 	DELETE_GLUE_ZONE,
-	DELETE_PREF_A
+	DELETE_PREF_A,
+	DELETE_BUILD_IP,
+	DELETE_DISK_DEV,
+	DELETE_BUILD_ON_SERVER_ID,
+	DELETE_SERVER_ON_ID,
 };
 
 enum {			// SQL UPDATE QUERIES
@@ -247,6 +347,13 @@ enum {			// SQL UPDATE QUERIES
 	REV_ZONE_SERIAL_UPDATE,
 	SET_FWD_ZONE_UPDATED,
 	SET_REV_ZONE_UPDATED,
+	UPDATE_BUILD,
+	UPDATE_DISK_DEV_LVM,
+	UPDATE_DEFAULT_OS,
+	UPDATE_DEFAULT_SCHEME,
+	UPDATE_DEFAULT_VARIENT,
+	UPDATE_DEFAULT_DOMAIN,
+	UPDATE_DEFAULT_CUSTOMER,
 };
 
 typedef struct ailsa_sql_single_s {
@@ -331,10 +438,16 @@ int
 cmdb_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_add_default_part_id_to_list(char *scheme, char *partition, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_add_default_part_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_add_os_id_to_list(char *os, char *arch, char *version, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_add_disk_dev_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_os_id_to_list(char **os, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_os_alias_to_list(char *os, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_sys_pack_id_to_list(char *pack, ailsa_cmdb_s *cc, AILLIST *list);
@@ -352,6 +465,18 @@ int
 cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_build_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_locale_id_to_list(char *locale, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_ip_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_add_disk_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);
 
 int
@@ -364,6 +489,21 @@ int
 check_builds_for_os_id(ailsa_cmdb_s *cc, unsigned long int id, AILLIST *list);
 
 int
+cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
 int
@@ -373,6 +513,9 @@ dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone);
 
 void
 cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data);
+
+int
+cmdb_replace_data_element(AILLIST *list, AILELEM *element, size_t number);
 
 int
 ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
@@ -394,6 +537,9 @@ get_net_range(unsigned long int prefix);
 
 int
 do_rev_lookup(char *ip, char *host, size_t len);
+
+int
+cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 // Some zone functions
 

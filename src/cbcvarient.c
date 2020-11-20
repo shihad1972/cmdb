@@ -41,8 +41,6 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
-#include "cbc_common.h"
 
 
 enum {
@@ -187,6 +185,9 @@ static int
 build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch);
 
 static int
+check_package_list(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static int
 get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch);
 
 static int
@@ -197,6 +198,9 @@ print_varient_details(AILLIST *list);
 
 static int
 compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char *sarch);
+
+static int
+set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 int
 main(int argc, char *argv[])
@@ -210,7 +214,7 @@ main(int argc, char *argv[])
 	cvcl = ailsa_calloc(sizeof(cbcvari_comm_line_s), "cvcl in cbcvarient main");
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
-		free(cvcl);
+		clean_cbcvarient_comm_line(cvcl);
 		display_command_line_error(retval, argv[0]);
 	}
 	if (!(cvcl->varient))
@@ -232,6 +236,8 @@ main(int argc, char *argv[])
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
 		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
+	else if (cvcl->action == SET_DEFAULT)
+		retval = set_default_cbc_varient(cmc, cvcl);
 	else
 		printf("Unknown action type\n");
 	if (retval == OS_NOT_FOUND) {
@@ -277,7 +283,7 @@ clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl)
 static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
-	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:";
+	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:z";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -301,6 +307,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		{"os-arch",		required_argument,	NULL,	't'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"varient-name",	required_argument,	NULL,	'x'},
+		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
 	};
 
@@ -320,6 +327,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->action = RM_CONFIG;
 		else if (opt == 'm')
 			cvl->action = MOD_CONFIG;
+		else if (opt == 'z')
+			cvl->action = SET_DEFAULT;
 		else if (opt == 'v')
 			cvl->action = CVERSION;
 		else if (opt == 'h')
@@ -355,6 +364,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return CVERSION;
 	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
+	if (cvl->action == SET_DEFAULT)
+		cvl->type = CVARIENT;
 	if (cvl->type == 0 && cvl->action != LIST_CONFIG)
 		return NO_TYPE;
 	if (cvl->action != LIST_CONFIG && !(cvl->varient) && !(cvl->valias))
@@ -382,8 +393,7 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 	if (!(cmc))
 		return AILSA_NO_DATA;
 	int retval;
-	char *text;
-	unsigned long int id;
+	char *text = NULL, *uname = NULL;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *element;
 	ailsa_data_s *data;
@@ -430,13 +440,13 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 		else
 			break;
 		data = element->data;
-		id = data->data->number;
-		if (strlen(get_uname(id)) < 8)
-			printf("%s\t\t", get_uname(id));
-		else if (strlen(get_uname(id)) < 16)
-			printf("%s\t", get_uname(id));
+		uname = cmdb_get_uname(data->data->number);
+		if (strlen(uname) < 8)
+			printf("%s\t\t", uname);
+		else if (strlen(uname) < 16)
+			printf("%s\t", uname);
 		else
-			printf("%s\n\t\t\t\t\t\t", get_uname(id));
+			printf("%s\n\t\t\t\t\t\t", uname);
 		if (element->next)
 			element = element->next;
 		else
@@ -457,10 +467,11 @@ list_cbc_build_varient(ailsa_cmdb_s *cmc)
 #endif
 			printf("%s\n", data->data->text);
 		element = element->next;
+		if (uname)
+			my_free(uname);
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 
@@ -485,13 +496,8 @@ display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 		varient = cvl->valias;
 	else
 		goto cleanup;
-	if ((retval = cmdb_add_varient_id_to_list(varient, cmc, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
+	if ((retval = cmdb_check_add_varient_id_to_list(varient, cmc, list)) != 0)
 		goto cleanup;
-	} else if (list->total > 1) {	// FIXME
-		ailsa_syslog(LOG_ERR, "Multiple varients returned");
-		goto cleanup;
-	}
 	varient_get_display_query(cvl, list, query);
 	if ((retval = ailsa_individual_query(cmc, query, list, v)) != 0) {
 		ailsa_syslog(LOG_ERR, "PACKAGE_DETAILS_FOR_VARIENT query failed");
@@ -684,8 +690,14 @@ add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 		ailsa_syslog(LOG_ERR, "Cannot build package list to insert");
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_query(cbc, insert_queries[INSERT_BUILD_PACKAGE], list)) != 0 )
-		ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
+	if ((retval = check_package_list(cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check package list");
+		goto cleanup;
+	}
+	if (list->total > 0) {
+		if ((retval = ailsa_multiple_query(cbc, insert_queries[INSERT_BUILD_PACKAGE], list)) != 0 )
+			ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
+	}
 	cleanup:
 		ailsa_list_destroy(list);
 		my_free(list);
@@ -740,16 +752,8 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 	size_t i;
 	int retval = 0;
 
-	if ((retval = cmdb_add_varient_id_to_list(vari, cbc, scratch)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot get varient id");
+	if ((retval = cmdb_check_add_varient_id_to_list(vari, cbc, scratch)) != 0)
 		goto cleanup;
-	}
-	if (scratch->total > 1) {
-		ailsa_syslog(LOG_INFO, "Multiple varients returned. Using first one returned");
-	} else if (scratch->total == 0) {
-		ailsa_syslog(LOG_INFO, "Cannot find varient %s", vari);
-		goto cleanup;
-	}
 	vid = ((ailsa_data_s *)scratch->head->data)->data->number;
 	ailsa_list_destroy(scratch);
 	ailsa_list_init(scratch, ailsa_clean_data);
@@ -789,6 +793,56 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 		return retval;
 }
 
+static int
+check_package_list(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *results = ailsa_db_data_list_init();
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILELEM *elem = list->head;
+	AILELEM *head = NULL;
+	ailsa_data_s *data = NULL;
+	size_t len = 5;
+	while (elem) {
+		head = elem;
+		data = elem->data;
+		if ((retval = cmdb_add_string_to_list(data->data->text, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add package name to package list");
+			goto cleanup;
+		}
+		elem = elem->next;
+		data = elem->data;
+		if ((retval = cmdb_add_number_to_list(data->data->number, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add varient_id to package list");
+			goto cleanup;
+		}
+		elem = elem->next;
+		data = elem->data;
+		if ((retval = cmdb_add_number_to_list(data->data->number, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add os_id to package list");
+			goto cleanup;
+		}
+		elem = elem->next->next->next;
+		if ((retval = ailsa_argument_query(cbc, PACKAGE_FULL, pack, results)) != 0) {
+			ailsa_syslog(LOG_ERR, "PACKAGE_FULL query failed");
+			goto cleanup;
+		}
+		if (results->total > 0) {
+			if ((retval = ailsa_list_remove_elements(list, head, len)) != 0)
+				goto cleanup;
+		}
+		ailsa_list_destroy(pack);
+		ailsa_list_destroy(results);
+		ailsa_list_init(pack, ailsa_clean_data);
+		ailsa_list_init(results, ailsa_clean_data);
+	}
+	cleanup:
+		ailsa_list_full_clean(results);
+		ailsa_list_full_clean(pack);
+		return retval;
+}
 static int
 get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch)
 {
@@ -924,3 +978,49 @@ compare_os_details(char *os, char *ver, char *arch, char *sos, char *sver, char 
 	return retval;
 }
 
+static int
+set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	if (!(cmc) || !(cvl))
+		return AILSA_NO_DATA;
+	if (!(cvl->varient) && !(cvl->valias))
+		return AILSA_NO_DATA;
+	AILLIST *varient = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+	char *v;
+	int retval;
+
+	if (cvl->varient)
+		v = cvl->varient;
+	else
+		v = cvl->valias;
+	if ((retval = cmdb_check_add_varient_id_to_list(v, cmc, varient)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_basic_query(cmc, DEFAULT_VARIENT, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot populate cuser and muser in list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cmc, INSERT_DEFAULT_VARIENT, varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to varient list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cmc, update_queries[UPDATE_DEFAULT_VARIENT], varient)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_VARIENT query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(varient);
+		ailsa_list_full_clean(def);
+		return retval;
+}

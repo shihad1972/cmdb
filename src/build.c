@@ -29,22 +29,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 /* For freeBSD ?? */
 #include <sys/socket.h>
 #include <netinet/in.h>
 /* End freeBSD */
 #include <arpa/inet.h>
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
-#include "cbc_common.h"
-#include "base_sql.h"
-#include "cbc_base_sql.h"
 #include "build.h"
 
 /* Hopefully this will be the file to need these variables
@@ -58,284 +58,495 @@ const char *spvars[] = {
 	"%ip"
 };
 
+const int sp_position[] = { 5, 11, 18, 10, 5 };
+
 //const unsigned int spvar_len[] = { 7, 7, 5, 9, 3 };
 
 const int sp_query[] = { 33, 63, 64, 20, 33 };
 
 const int spvar_no = 5;
 
-const unsigned int *cbc_search[] = { cbc_search_args, cbc_search_fields };
-
-static void
-check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key);
-
-static void
-fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf);
-
-static void
-fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf);
-
-static void
-fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output);
-
-static void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
-
-static void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
+static int
+write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 static int
-fill_kernel(cbc_comm_line_s *cml, string_len_s *build);
+write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+cbc_write_kickstart_base(ailsa_cmdb_s *cmc, char *name, int fd, AILLIST *list);
+
+static int
+cbc_write_kickstart_partitions(int fd, AILLIST *disk, AILLIST *part);
+
+static int
+cbc_write_kickstart_net(int fd, ailsa_build_s *bld);
+
+static int
+cbc_write_kickstart_packages(int fd, AILLIST *pack);
+
+static int
+cbc_write_kickstart_scripts(int fd, char *url, AILLIST *sys);
+
+static int
+cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list);
+
+static int
+write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
+
+static int
+write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
+
+static int
+write_preseed_net_mirror(int fd, ailsa_build_s *bld);
+
+static int
+write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build);
+
+static int
+write_preseed_partitions(int fd, AILLIST *disk, AILLIST *part);
+
+static int
+write_preseed_system_packages(int fd, AILLIST *sys);
 
 static void
-fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i);
+write_preseed_lvm_group(int fd, char *dev);
 
 static int
-fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
+write_preseed_packages(int fd, ailsa_build_s *build, AILLIST *pack);
 
 static int
-fill_kick_partitions(ailsa_cmdb_s *cbc, cbc_comm_line_s *cmc, string_len_s *build);
+write_build_host_script(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
 
 static int
-fill_kick_part_header(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build);
+cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys);
 
 static void
-fill_kick_network_info(dbdata_s *data, string_len_s *build);
-
-static void
-fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build);
-
-static void
-fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *data, int no, string_len_s *build, cbc_comm_line_s *cml);
+cbc_write_system_scripts(char *url, int fd, AILLIST *sys);
 
 static int
-fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list);
+
+void
+display_cbc_ip_net_info(AILLIST *ip);
 
 static int
-fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build);
+cbc_print_os_build_type(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_os_info(AILLIST *os);
+
+static int
+cbc_print_build_varient(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static int
+cbc_print_build_locale(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_locale(AILLIST *list);
+
+static int
+cbc_print_build_scheme(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_scheme(AILLIST *list);
+
+static int
+cbc_print_build_times_and_users(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static void
+display_build_times_and_users(AILLIST *bt);
+
+static void
+print_string_8_16(char *string, size_t len);
+
+static int
+cbc_get_dhcp_info(ailsa_cmdb_s *cbc, AILLIST *dhcp);
+
+static int
+cbc_fill_dhcp_conf(AILLIST *db, AILLIST *dhcp);
+
+static int
+cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp);
+
+static ailsa_tftp_s *
+cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp);
+
+static int
+cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *tftp);
+
+static ailsa_build_s *
+cbc_fill_build_details(AILLIST *build);
+
+static int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest);
+
+static int
+cbc_fill_sys_pack_details(AILLIST *sys, AILLIST *pack, ailsa_build_s *bld);
+
+static void
+cbc_get_sys_newarg(ailsa_syspack_s *sys, ailsa_build_s *bld);
+
+static int
+cbc_fill_system_scripts(AILLIST *list, AILLIST *dest);
 
 int
 display_build_config(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-	int retval, query;
-	cbc_s *cbc, *details;
-	
-	if (!(cbc = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "cbc in display_build_config");
-	if (!(details = malloc(sizeof(cbc_s))))
-		report_error(MALLOC_FAIL, "details in display_build_config");
-	init_cbc_struct(cbc);
-	init_cbc_struct(details);
-	query = BUILD | BUILD_DOMAIN | BUILD_IP | BUILD_TYPE | BUILD_OS | 
-	  CSERVER | LOCALE | DPART | VARIENT | SSCHEME; // | PARTOPT;
-/*
- * Removed PARTOPT from the query - if there are no partition options, then
- * this all fails :( The display function is not using it anyway.
- */
-	if ((retval = cbc_run_multiple_query(cbt, cbc, query)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return MY_QUERY_FAIL;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbt, server)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_build_id_to_list(cml->name, cbt, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build id to list");
+		goto cleanup;
 	}
-	if ((retval = cbc_get_server(cml, cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
-		return SERVER_NOT_FOUND;
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build for server %s", cml->name);
+		goto cleanup;
 	}
-	if ((retval = cbc_get_build_details(cbc, details)) != 0) {
-		clean_cbc_struct(cbc);
-		free(details);
+	printf("Build details for server %s\n\n", cml->name);
+	if ((retval = cbc_print_ip_net_info(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print IP network information");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_os_build_type(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print os and build type");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_varient(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build varient");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_locale(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build locale");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_scheme(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build parition info");
+		goto cleanup;
+	}
+	if ((retval = cbc_print_build_times_and_users(cbt, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot print build times and users");
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(build);
 		return retval;
-	}
-	print_build_config(details);
-	clean_cbc_struct(cbc);
-	free(details);
-	return NONE;
 }
 
-int
-cbc_get_server(cbc_comm_line_s *cml, cbc_s *cbc, cbc_s *details)
+static int
+cbc_print_ip_net_info(ailsa_cmdb_s *cbc, AILLIST *list)
 {
-	cbc_server_s *server = cbc->server;
-	if (strncmp(cml->name, "NULL", COMM_S) != 0) {
-		while (server) {
-			if (strncmp(server->name, cml->name, HOST_S) == 0) {
-				details->server = server;
-				break;
-			} else {
-				server = server->next;
-			}
-		}
-	} else if (cml->server_id != 0) {
-		while (server) {
-			if (server->server_id == cml->server_id) {
-				details->server = server;
-				break;
-			} else {
-				server = server->next;
-			}
-		}
-	} else {
-		printf("No server specifier?? (UUID no longer valid!)\n");
-		return NO_SERVERS;
-	}
-	if (!details->server)
-		return SERVER_NOT_FOUND;
-	return NONE;
-}
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *ip = ailsa_db_data_list_init();
 
-/* Bloody horrible function. What is calling this?
-   Ahh - display_build_config */
-int
-cbc_get_build_details(cbc_s *cbc, cbc_s *details)
-{
-	unsigned long int sid = details->server->server_id;
-	unsigned long int osid, bid, ipid, lid, vid, bdid, btid, ssid;
-	cbc_build_s *build = cbc->build;
-	cbc_build_domain_s *dom = cbc->bdom;
-	cbc_build_ip_s *bip = cbc->bip;
-	cbc_build_os_s *bos = cbc->bos;
-	cbc_build_type_s *type = cbc->btype;
-	details->dpart = cbc->dpart;
-	cbc_locale_s *loc = cbc->locale;
-	cbc_varient_s *vari = cbc->varient;
-	cbc_seed_scheme_s *sch = cbc->sscheme;
-	osid = bid = ipid = lid = vid = bdid = btid = ssid = 0;
+	if ((retval = ailsa_argument_query(cbc, IP_NET_ON_SERVER_ID, list, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get network info");
+		goto cleanup;
+	}
+	if (ip->total == 0) {
+		ailsa_syslog(LOG_INFO, "No IP information found");
+		goto cleanup;
+	}
+	display_cbc_ip_net_info(ip);
 
-	while (build) {
-		if (build->server_id == sid) {
-			bid = build->build_id;
-			osid = build->os_id;
-			ipid = build->ip_id;
-			lid = build->locale_id;
-			vid = build->varient_id;
-			ssid = build->def_scheme_id;
-			details->build = build;
-		}
-		build = build->next;
-	}
-	if (!details->build)
-		return SERVER_BUILD_NOT_FOUND;
-	while (bos) {
-		if (bos->os_id == osid) {
-			btid = bos->bt_id;
-			details->bos = bos;
-		}
-		bos = bos->next;
-	}
-	while (bip) {
-		if (bip->ip_id == ipid) {
-			bdid = bip->bd_id;
-			details->bip = bip;
-		}
-		bip = bip->next;
-	}
-	while (dom) {
-		if (dom->bd_id == bdid)
-			details->bdom = dom;
-		dom = dom->next;
-	}
-	while (type) {
-		if (type->bt_id == btid)
-			details->btype = type;
-		type = type->next;
-	}
-	while (loc) {
-		if (loc->locale_id == lid)
-			details->locale = loc;
-		loc = loc->next;
-	}
-	while (vari) {
-		if (vari->varient_id == vid)
-			details->varient = vari;
-		vari = vari->next;
-	}
-	while (sch) {
-		if (sch->def_scheme_id == ssid)
-			details->sscheme = sch;
-		sch = sch->next;
-	}
-	return NONE;
+	cleanup:
+		ailsa_list_full_clean(ip);
+		return retval;
 }
 
 void
-print_build_config(cbc_s *details)
+display_cbc_ip_net_info(AILLIST *ip)
 {
-	if (!(details))
-		report_error(CBC_NO_DATA, "details in print_build_config");
-	char *name = details->server->name, ip[RANGE_S], *addr;
-	char *cuser = get_uname(details->build->cuser);
-	char *muser = get_uname(details->build->muser);
-	char *locale = details->locale->locale;
-	char *lang = details->locale->language;
-	char *tz = details->locale->timezone;
-	time_t crtime = (time_t)details->build->ctime;
-	time_t motime = (time_t)details->build->mtime;
-	unsigned long int sid = details->build->def_scheme_id;
+	if (!(ip))
+		return	;
+	char ip_text[SERVICE_LEN];
+	AILELEM *e = ip->head;
+	ailsa_data_s *d = e->data;
 	uint32_t ip_addr;
-	cbc_pre_part_s *part = details->dpart;
 
-	addr = ip;
-	if (details->bip) {
-		ip_addr = htonl((uint32_t)details->bip->ip);
-		inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	}
-	printf("Build details for server %s\n\n", details->server->name);
-	if (details->bdom)
-		printf("Build domain:\t%s\n", details->bdom->domain);
-	if (details->btype)
-		printf("Build type:\t%s\n", details->btype->build_type);
-	else
-		printf("No build type associated with %s\n", name);
-	if (details->bos)
-		printf("OS:\t\t%s, version %s, arch %s\n", details->bos->os,
-		 details->bos->version, details->bos->arch);
-	else
-		printf("No build os associated with server %s\n", name);
-	if (details->varient) 
-		printf("Build varient:\t%s\n", details->varient->varient);
-	else
-		printf("No build varient associated with %s\n", name);
-	if (details->bip)
-		printf("IP address:\t%s\n", addr);
-	else
-		printf("No build IP associated with server %s\n", name);
-	if (details->locale)
-		printf("Locale:\t\t%s\nLanguage:\t%s\nTimezone:\t%s\n", locale, lang, tz);
-	printf("Build created by %s at %s", cuser, ctime(&crtime));
-	printf("Build updated by %s at %s", muser, ctime(&motime));
-	if (part) {
-		printf("Partition information:\n");
-		if (details->sscheme)
-			printf("Name:\t%s\n", details->sscheme->name);
-		while (part) {
-			if (part->link_id.def_scheme_id == sid)
-				printf("\t%s\t%s\t%s\n", part->fs, part->log_vol,
-				 part->mount);
-			part = part->next;
-		}
-	}
+	printf("Domain name:\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	ip_addr = htonl((uint32_t)d->data->number);
+	inet_ntop(AF_INET, &ip_addr, ip_text, SERVICE_LEN);
+	printf("IP Address:\t%s\n", ip_text);
 }
 
+static int
+cbc_print_os_build_type(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *os = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_OS_AND_TYPE, list, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_AND_TYPE query failed");
+		goto cleanup;
+	}
+	if (os->total == 0) {
+		ailsa_syslog(LOG_INFO, "No build OS found");
+		goto cleanup;
+	}
+	display_build_os_info(os);
+
+	cleanup:
+		ailsa_list_full_clean(os);
+		return retval;
+}
+
+static void
+display_build_os_info(AILLIST *os)
+{
+	if (!(os))
+		return;
+	AILELEM *e = os->head;
+	ailsa_data_s *d = e->data;
+
+	printf("Build OS:\t%s, ", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Version %s, ", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Architecture %s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Build Type:\t%s\n", d->data->text);
+}
+
+static int
+cbc_print_build_varient(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *v = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_VARIENT_ON_SERVER_ID, list, v)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_VARIENT_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (v->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build varient");
+		goto cleanup;
+	}
+	d = v->head->data;
+	printf("Build Varient\t%s\n", d->data->text);
+
+	cleanup:
+		ailsa_list_full_clean(v);
+		return retval;
+}
+
+static int
+cbc_print_build_locale(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, LOCALE_DETAILS_ON_SERVER_ID, list, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (l->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build locale");
+		goto cleanup;
+	}
+	display_build_locale(l);
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+static void
+display_build_locale(AILLIST *list)
+{
+	if (!(list))
+		return;
+	AILELEM *e = list->head;
+	ailsa_data_s *d = e->data;
+
+	printf("Locale:\t\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Language:\t%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	printf("Timezone:\t%s\n", d->data->text);
+}
+
+static int
+cbc_print_build_times_and_users(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *bt = ailsa_db_data_list_init();
+
+	if ((retval = ailsa_argument_query(cbc, BUILD_TIMES_AND_USERS, list, bt)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_TIMES_AND_USERS query failed");
+		goto cleanup;
+	}
+	if (bt->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot get build times and users");
+		goto cleanup;
+	}
+	display_build_times_and_users(bt);
+
+	cleanup:
+		ailsa_list_full_clean(bt);
+		return retval;
+}
+
+static void
+display_build_times_and_users(AILLIST *bt)
+{
+	if (!(bt))
+		return;
+	char *uname = NULL, *cname = NULL;
+	AILELEM *e = bt->head;
+	ailsa_data_s *d = e->data;
+
+	uname = cmdb_get_uname(d->data->number);
+	printf("Build created by %s on ", uname);
+	e = e->next;
+	d = e->data;
+#ifdef HAVE_MYSQL
+	if (d->type == AILSA_DB_TIME)
+		printf("%s\n", ailsa_convert_mysql_time(d->data->time));
+	else
+#endif // HAVE_MYSQL
+		printf("%s\n", d->data->text);
+	e = e->next;
+	d = e->data;
+	cname = cmdb_get_uname(d->data->number);
+	printf("Build modified by %s on ", cname);
+	e = e->next;
+	d = e->data;
+#ifdef HAVE_MYSQL
+	if (d->type == AILSA_DB_TIME)
+		printf("%s\n", ailsa_convert_mysql_time(d->data->time));
+	else
+#endif // HAVE_MYSQL
+		printf("%s\n", d->data->text);
+	my_free(uname);
+	my_free(cname);
+	
+}
+
+static int
+cbc_print_build_scheme(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *ps = ailsa_db_data_list_init();
+	AILLIST *scheme = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = ailsa_argument_query(cbc, PART_SCHEME_NAME_ON_SERVER_ID, list, scheme)) != 0) {
+		ailsa_syslog(LOG_ERR, "PART_SCHEME_NAME_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (scheme->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find partition scheme");
+		goto cleanup;
+	}
+	d = scheme->head->data;
+	printf("\nPart scheme\t%s\n", d->data->text);
+	if ((retval = ailsa_argument_query(cbc, PARTITIOINS_ON_SERVER_ID, list, ps)) != 0) {
+		ailsa_syslog(LOG_ERR, "PARTITIOINS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (ps->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find the partitions for the scheme");
+		goto cleanup;
+	}
+	printf("Mount Point\tFilesystem\tLogical Volume\n");
+	display_build_scheme(ps);
+
+	cleanup:
+		ailsa_list_full_clean(ps);
+		ailsa_list_full_clean(scheme);
+		return retval;
+}
+
+static void
+display_build_scheme(AILLIST *list)
+{
+	if (!(list))
+		return;
+	size_t len = 3;
+	size_t slen;
+	AILELEM *e = list->head;
+	ailsa_data_s *d = e->data;
+
+	if ((list->total % len) != 0)
+		return;
+	while (e) {
+		d = e->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		d = e->next->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		d = e->next->next->data;
+		slen = strlen(d->data->text);
+		print_string_8_16(d->data->text, slen);
+		printf("\n");
+		e = ailsa_move_down_list(e, len);
+	}
+	printf("\n");
+}
+
+static void
+print_string_8_16(char *string, size_t len)
+{
+	if (!(string))
+		return;
+	if (len < 8)
+		printf("%s\t\t", string);
+	else
+		printf("%s\t", string);
+}
 void
 list_build_servers(ailsa_cmdb_s *cmc)
 {
-	int retval = NONE, type = SERVERS_WITH_BUILD;
-	unsigned int max;
-	dbdata_s *data, *list;
+	if (!(cmc))
+		return;
+	int retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	AILELEM *e;
+	ailsa_data_s *d;
 
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	if ((retval = cbc_run_search(cmc, data, SERVERS_WITH_BUILD)) == 0) {
-		printf("No servers have build configurations\n");
-	} else {
-		list = data;
-		while (list) {
-			printf("%s\n", list->fields.text);
-			list = list->next;
-		}
+	if ((retval = ailsa_basic_query(cmc, ALL_SERVERS_WITH_BUILD, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "ALL_SERVERS_WITH_BUILD query failed");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
+	e = list->head;
+	while (e) {
+		d = e->data;
+		printf("%s\n", d->data->text);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(list);
 }
 
 int
@@ -343,624 +554,451 @@ write_build_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
 	int retval = NONE;
 
-	if ((retval = get_server_id(cmc, cml->name, &cml->server_id)) != 0)
-		return retval;
-	if ((retval = get_scheme_name(cmc, cml->server_id, cml->partition)) != 0)
-		return retval;
 	if ((retval = write_dhcp_config(cmc, cml)) != 0) {
-		printf("Failed to write dhcpd.hosts file\n");
+		ailsa_syslog(LOG_ERR, "Failed to write dhcpd.hosts file");
 		return retval;
 	} else {
 		printf("dhcpd.hosts file written\n");
 	}
-/* This will add the OS alias to cml. This will be useful in writing the
-    host script */
 	if ((retval = write_tftp_config(cmc, cml)) != 0) {
-		printf("Failed to write tftp configuration\n");
+		ailsa_syslog(LOG_ERR, "Failed to write tftp configuration");
 		return retval;
 	} else {
 		printf("tftp configuration file written\n");
 	}
-	if ((strncmp(cml->os, "debian", COMM_S) == 0) ||
-	    (strncmp(cml->os, "ubuntu", COMM_S) == 0)) {
-		if ((retval = write_preseed_build_file(cmc, cml)) != 0) {
-			printf("Failed to write build file\n");
-			return retval;
-		} else {
-			printf("build file written\n");
-		}
-		if ((retval = write_pre_host_script(cmc, cml)) != 0) {
-			fprintf(stderr, "Failed to write host script\n");
-			return retval;
-		} else {
-			printf("host script written\n");
-		}
-	} else if ((strncmp(cml->os, "centos", COMM_S) == 0) ||
-	           (strncmp(cml->os, "fedora", COMM_S) == 0)) {
-		if ((retval = write_kickstart_build_file(cmc, cml)) != 0) {
-			printf("Failed to write build file\n");
-			return retval;
-		} else {
-			printf("build file written\n");
-		}
+	if ((retval = write_build_config_file(cmc, cml)) != 0) {
+		ailsa_syslog(LOG_ERR, "Failed to write build file");
+		return retval;
 	} else {
-		printf("OS %s does not exist\n", cml->os);
-		return OS_NOT_FOUND;
+		printf("build configuration file written\n");
+	}
+	if ((retval = write_build_host_script(cmc, cml)) != 0) {
+		ailsa_syslog(LOG_ERR, "Failed to write host script");
+		return retval;
+	} else {
+		printf("host script file written\n");
 	}
 	return retval;
 }
 
-int
+static int
 write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char *ip, line[RBUFF_S];
-	int retval = NONE, type = DHCP_DETAILS;
-	unsigned int max;
-	uint32_t ip_addr;
-	dbdata_s *data;
-	cbc_dhcp_config_s *dhconf;
-	string_len_s *dhcp;
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	char file[DOMAIN_LEN];
+	int retval;
+	AILLIST *dhcp = ailsa_dhcp_config_list_init();
 
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in write_dhcp_config");
-	if (!(dhcp = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "dhcp in write_dhcp_config");
-	if (!(dhconf = malloc(sizeof(cbc_dhcp_config_s))))
-		report_error(MALLOC_FAIL, "dhconf in write_dhcp_config");
-	init_string_len(dhcp);
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, DHCP_DETAILS)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_DHCP_B_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_DHCP_B_ERR;
-	} else {
-		ip_addr = htonl((uint32_t)data->next->fields.number);
-		inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-		fill_dhconf(cml->name, data, ip, dhconf);
-		snprintf(line, RBUFF_S, "host %s { hardware ethernet %s; fixed-address %s; \
-option domain-name \"%s\"; }\n", cml->name, data->fields.text, ip,
-data->next->next->fields.text);
-		retval = 0;
+	if ((retval = cbc_get_dhcp_info(cmc, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get dhcp info");
+		goto cleanup;
 	}
-	snprintf(dhconf->file, CONF_S, "%s/dhcpd.hosts", cmc->dhcpconf);
-	fill_dhcp_hosts(line, dhcp, dhconf);
-	retval = write_file(dhconf->file, dhcp->string);
-	/* Could use a free_strings macro here - check out 21st century C */
-	free(ip);
-	free(dhcp->string);
-	free(dhcp);
-	free(dhconf);
-	clean_dbdata_struct(data);
+	snprintf(file, DOMAIN_LEN, "%sdhcpd.hosts", cmc->dhcpconf);
+	if ((retval = cbc_write_dhcp_config_file(file, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write dhcp config file");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(dhcp);
+		return retval;
+}
+
+static int
+cbc_get_dhcp_info(ailsa_cmdb_s *cbc, AILLIST *dhcp)
+{
+	if (!(cbc || !(dhcp)))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *db = ailsa_db_data_list_init();
+	if ((retval = ailsa_basic_query(cbc, DHCP_INFORMATION, db)) != 0) {
+		ailsa_syslog(LOG_ERR, "DHCP_INFORMATION query failed in cbc_get_dhcp_info");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_dhcp_conf(db, dhcp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill dhcp list");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(db);
+		return retval;
+}
+
+static int
+cbc_fill_dhcp_conf(AILLIST *db, AILLIST *dhcp)
+{
+	if (!(db) || !(dhcp))
+		return AILSA_NO_DATA;
+	int retval;
+	char ip_addr[HOST_LEN];
+	size_t total = 4;
+	uint32_t ip;
+	AILELEM *e = db->head;
+	ailsa_data_s *d = e->data;
+	ailsa_dhcp_conf_s *p;
+
+	if ((db->total % total) != 0)
+		return -1;
+	while (e) {
+		memset(ip_addr, 0, HOST_LEN);
+		d = e->data;
+		p = ailsa_calloc(sizeof(ailsa_dhcp_conf_s), "p in cbc_fill_dhcp_conf");
+		p->name = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->data;
+		p->mac = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->data;
+		ip = htonl((uint32_t)d->data->number);
+		if (!(inet_ntop(AF_INET, &ip, ip_addr, HOST_LEN)) != 0) {
+			retval = AILSA_IP_CONVERT_FAILED;
+			goto cleanup;
+		}
+		p->ip = strndup(ip_addr, HOST_LEN);
+		d = e->next->next->next->data;
+		p->domain = strndup(d->data->text, DOMAIN_LEN);
+		if ((retval = ailsa_list_insert(dhcp, p)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert data into list in cbc_fill_dhcp_conf");
+			goto cleanup;
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+	cleanup:
+		return retval;
+}
+
+static int
+cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp)
+{
+	if (!(dhcp))
+		return AILSA_NO_DATA;
+	int retval, fd, flags;
+	mode_t um, mask;
+	AILELEM *e = dhcp->head;
+	ailsa_dhcp_conf_s *d;
+
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(filename, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open dhcp config file %s: %s", filename, strerror(errno));
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	while (e) {
+		d = e->data;
+		dprintf(fd, "host %s { hardware ethernet %s; fixed-address %s; option domain-name \"%s\"; }\n",
+		  d->name, d->mac, d->ip, d->domain);
+		e = e->next;
+	}
+	close(fd);
+	mask = umask(um);
 	return retval;
 }
 
-static void
-fill_dhconf(char *name, dbdata_s *data, char *ip, cbc_dhcp_config_s *dhconf)
-{
-	strncpy(dhconf->name, name, CONF_S);
-	strncpy(dhconf->eth, data->fields.text, MAC_S);
-	strncpy(dhconf->ip, ip, RANGE_S);
-	strncpy(dhconf->domain, data->next->next->fields.text, RBUFF_S);
-}
-
-static void
-fill_dhcp_hosts(char *line, string_len_s *dhcp, cbc_dhcp_config_s *dhconf)
-{
-	char *buff, *cont;
-	FILE *dhcp_hosts;
-	size_t len = 0, blen;
-
-	if (!(buff = calloc(RBUFF_S,  sizeof(char))))
-		report_error(MALLOC_FAIL, "buff in fill_dhcp_hosts");
-	if (!(dhcp_hosts = fopen(dhconf->file, "r")))
-		report_error(FILE_O_FAIL, dhconf->file);
-	while (fgets(buff, RBUFF_S, dhcp_hosts)) {
-		blen = strlen(buff);
-		if (dhcp->len < (blen + len))
-			resize_string_buff(dhcp);
-		cont = dhcp->string;
-		if (!(strstr(buff, dhconf->name))) {
-			if (!(strstr(buff, dhconf->eth))) {
-				if (!(strstr(buff, dhconf->ip))) {
-					strncpy(cont + len, buff, blen + 1);
-					len += blen;
-				}
-			}
-		}
-	}
-	fclose(dhcp_hosts);
-	if (dhcp->len < (len + RBUFF_S))
-		resize_string_buff(dhcp);
-	cont = dhcp->string;
-	strncpy(cont + len, line, RBUFF_S);
-	free(buff);
-}
-
-int
+static int
 write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char out[BUFF_S], pxe[RBUFF_S];
-	int retval = NONE, type = BUILD_IP_ON_SERVER_ID;
-	dbdata_s *data;
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	char filename[DOMAIN_LEN];
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *ip = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *locale = ailsa_db_data_list_init();
+	AILLIST *tftp = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+	ailsa_tftp_s *l = NULL;
 
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return CANNOT_FIND_BUILD_IP;
-	} else if (retval > 1) 
-		fprintf(stderr, "Multiple build IP's! Using the first one!\n");
-	snprintf(pxe, RBUFF_S, "%s%s%lX", cmc->tftpdir, cmc->pxe,
-		 data->fields.number);
-	clean_dbdata_struct(data);
-
-	type = TFTP_DETAILS;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_TFTP_B_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_TFTP_B_ERR;
-	} else {
-		fill_tftp_output(cml, data, out);
-		retval = write_file(pxe, out);
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cmc, IP_NET_ON_SERVER_ID, server, ip)) != 0) {
+		ailsa_syslog(LOG_ERR, "IP_NET_ON_SERVER_ID query failed");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
+	if (ip->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot get build IP information");
+		goto cleanup;
+	}
+	if (ip->head->next)
+		d = ip->head->next->data;
+	else
+		goto cleanup;
+	snprintf(filename, DOMAIN_LEN, "%s%s%lX", cmc->tftpdir, cmc->pxe, d->data->number);
+	if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_SERVER_ID, server, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	d = os->head->data;
+	cml->os = strndup(d->data->text, MAC_LEN);
+	if ((retval = ailsa_argument_query(cmc, FULL_LOCALE_DETAILS_ON_SERVER_ID, server, locale)) != 0) {
+		ailsa_syslog(LOG_ERR, "FULL_LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, TFTP_DETAILS_ON_SERVER_ID, server, tftp)) != 0) {
+		ailsa_syslog(LOG_ERR, "TFTP_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (!(l = cbc_fill_tftp_values(os, locale, tftp)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill ailsa_tftp_s struct with tftp values");
+		goto cleanup;
+	}
+	if ((retval = cbc_write_tftp_config_file(cml, filename, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write tftp boot config file");
+		goto cleanup;
+	}
+	cleanup:
+		if (l)
+			ailsa_clean_tftp(l);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(ip);
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(locale);
+		ailsa_list_full_clean(tftp);
+		return retval;
+}
+
+static ailsa_tftp_s *
+cbc_fill_tftp_values(AILLIST *os, AILLIST *loc, AILLIST *tftp)
+{
+	if (!(os) || !(loc) || !(tftp))
+		return NULL;
+	ailsa_tftp_s *ret = ailsa_calloc(sizeof(ailsa_tftp_s), "ret in cbc_fill_tftp_values");
+	ailsa_data_s *d = os->head->data;
+
+	if ((os->total == 0) || (loc->total == 0) || (tftp->total == 0)) {
+		ailsa_syslog(LOG_ERR, "Empty list passed into cbc_fill_tftp_values");
+		goto cleanup;
+	}
+	if (((os->total % 3) != 0) || ((loc->total % 4) != 0) || ((tftp->total % 5) != 0)) {
+		ailsa_syslog(LOG_ERR, "Wrong length for lists in cbc_fill_tftp_values");
+		goto cleanup;
+	}
+	ret->alias = strndup(d->data->text, MAC_LEN);
+	d = os->head->next->data;
+	ret->version = strndup(d->data->text, MAC_LEN);
+	d = os->head->next->next->data;
+	ret->arch = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->data;
+	ret->country = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->next->data;
+	ret->locale = strndup(d->data->text, SERVICE_LEN);
+	d = loc->head->next->next->data;
+	ret->keymap = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->data;
+	ret->boot_line = strndup(d->data->text, CONFIG_LEN);
+	d = tftp->head->next->data;
+	ret->net_int = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->next->next->data;
+	ret->arg = strndup(d->data->text, SERVICE_LEN);
+	d = tftp->head->next->next->next->data;
+	ret->url = strndup(d->data->text, CONFIG_LEN);
+	d = tftp->head->next->next->next->next->data;
+	ret->build_type = strndup(d->data->text, MAC_LEN);
+	return ret;
+
+	cleanup:
+		ailsa_clean_tftp(ret);
+		return NULL;
+}
+
+static int
+cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *tftp)
+{
+	if (!(filename) || !(tftp))
+		return AILSA_NO_DATA;
+	char *host = cml->name;
+	int retval, fd, flags;
+	mode_t um, mask;
+
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(filename, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open tftp config file %s: %s", filename, strerror(errno));
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	dprintf(fd, "\
+default %s\n\
+\n\
+label %s\n\
+kernel vmlinuz-%s-%s-%s\n\
+append initrd=initrd-%s-%s-%s.img ", host, host, tftp->alias, tftp->version, tftp->arch, tftp->alias, tftp->version, tftp->arch);
+	if (strncmp(tftp->build_type, "preseed", SERVICE_LEN) == 0) {
+		dprintf(fd, "\
+county=%s console-setup/layoutcode=%s %s %s=%s%s.cfg interface=%s ", tftp->country, tftp->country, tftp->boot_line, tftp->arg, tftp->url, host, tftp->net_int);
+		if ((strcmp(tftp->alias, "debian") == 0) && (strcmp(tftp->version, "10") == 0))
+			dprintf(fd, "lowmem/low=true ");
+		if (cml->gui > 0) {
+			dprintf(fd, "\
+vga=788\n\n");
+		} else {
+			dprintf(fd, "\
+vga=off console=ttyS0,115200n8\n\n");
+		}
+	}
+	if (strncmp(tftp->build_type, "kickstart", SERVICE_LEN) == 0) {
+		dprintf(fd, "\
+ksdevice=%s ramdisk_size=8192 %s=%s%s.cfg ", tftp->net_int, tftp->arg, tftp->url, host);
+		if (cml->gui > 0) {
+			dprintf(fd, "\
+console=tty0\n\n");
+		} else {
+			dprintf(fd, "\
+console=ttyS0,115200n8\n\n");
+		}
+	}
+	close(fd);
+	mask = umask(um);
 	return retval;
 }
 
-int
+static int
+write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
+{
+	if (!(cbc) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cbc, BUILD_TYPE_ON_SERVER_ID, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_TYPE_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (build->total == 0) {
+		ailsa_syslog(LOG_INFO, "Cannot find build type for server %s", cml->name);
+		goto cleanup;
+	}
+	d = build->head->data;
+	if (strcmp(d->data->text, "preseed") == 0) {
+		if ((retval = write_preseed_build_file(cbc, cml)) != 0)
+			goto cleanup;
+	} else if (strcmp(d->data->text, "kickstart") == 0) {
+		if ((retval = write_kickstart_build_file(cbc, cml)) != 0)
+			goto cleanup;
+	} else {
+		ailsa_syslog(LOG_INFO, "Build type %s not supported", d->data->text);
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(build);
+		return retval;
+}
+static int
 write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 {
-	char file[NAME_S];
-	int retval = NONE, type = NET_BUILD_DETAILS;
-	dbdata_s *data;
-	string_len_s *build;
+	char file[DOMAIN_LEN];
+	int retval, flags;
+	int fd = 0;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *partitions = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_partition_list_init();
+	AILLIST *packages = ailsa_db_data_list_init();
+	AILLIST *sys = ailsa_db_data_list_init();
+	AILLIST *syspack = ailsa_syspack_list_init();
+	ailsa_build_s *bld = NULL;
+	mode_t um, mask;
 
-	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
-	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_preseed_build_file");
-	init_string_len(build);
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_NET_BUILD_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_NET_BUILD_ERR;
-	} else {
-		fill_net_output(cml, data, build);
-		retval = 0;
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cmc, BUILD_DETAILS, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
+		goto cleanup;
 	}
-	clean_dbdata_struct(data);
-
-	type = BUILD_MIRROR;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BUILD_MIRR_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BUILD_MIRR_ERR;
-	} else {
-		fill_mirror_output(cml, data, build);
-		retval = 0;
+	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DISK_DEV_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
 	}
-
-	if ((retval = fill_partition(cmc, cml, build)) != 0)
+	if ((retval = ailsa_argument_query(cmc, BUILD_PARTITIONS_ON_SERVER_ID, server, partitions)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PACKAGES_ON_SERVER_ID, server, packages)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PACKAGES_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, SYSTEM_PACKAGES_ON_SERVER_ID, server, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_PACKAGES_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if (!(bld = cbc_fill_build_details(build))) {
+		ailsa_syslog(LOG_ERR, "Cannot fill build details");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_partition_details(partitions, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill partition details");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_sys_pack_details(sys, syspack, bld)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill system package details");
+		goto cleanup;
+	}
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
+		retval = FILE_O_FAIL;
+		goto cleanup;
+	}
+	if ((retval = write_preseed_net_mirror(fd, bld)) != 0)
+		goto cleanup;
+	if ((retval = write_partition_head(fd, disk, bld)) != 0)
+		goto cleanup;
+	if ((retval = write_preseed_partitions(fd, disk, part)) != 0)
+		goto cleanup;
+	if ((retval = write_preseed_packages(fd, bld, packages)) != 0)
+		goto cleanup;
+	if ((retval = write_preseed_system_packages(fd, syspack)) != 0)
+		goto cleanup;
+	cleanup:
+		if (fd > 0)
+			close(fd);
+		mask = umask(um);
+		if (bld)
+			ailsa_clean_build(bld);
+		ailsa_list_full_clean(build);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(packages);
+		ailsa_list_full_clean(partitions);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(sys);
+		ailsa_list_full_clean(syspack);
 		return retval;
-	if ((retval = fill_kernel(cml, build)) != 0)
-		return retval;
-	clean_dbdata_struct(data);
-
-	type = BUILD_PACKAGES;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BUILD_PACKAGES;
-	} else {
-		fill_packages(cml, data, build, retval);
-		retval = 0;
-	}
-	clean_dbdata_struct(data);
-
-	if ((retval = fill_system_packages(cmc, cml, build)) != 0)
-		return retval;
-	retval = write_file(file, build->string);
-	clean_string_len(build);
-	return retval;
 }
 
-int
-write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
+static int
+write_preseed_net_mirror(int fd, ailsa_build_s *bld)
 {
-	char file[NAME_S], url[CONF_S], *server = cml->name;
-	int retval = NONE, type = KICK_BASE;
-	unsigned long int bd_id;
-	dbdata_s *data;
-	string_len_s build = { .len = FILE_S, .size = NONE };
+	if (!(bld))
+		return AILSA_NO_DATA;
+	int retval = 0;
 
-	snprintf(file, NAME_S, "%sweb/%s.cfg", cmc->toplevelos, server);
-	if (!(build.string = calloc(build.len, sizeof(char))))
-		report_error(MALLOC_FAIL, "build.string in write_kickstart_build_file");
-	if ((retval = fill_kick_base(cmc, cml, &build)) != 0)
-		return retval;
-	if ((retval = fill_kick_partitions(cmc, cml, &build)) != 0)
-		return retval;
-
-	type = KICK_NET_DETAILS;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build for %s has no network information.\n",
-		 server);
-		return NO_NET_BUILD_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build for %s has multiple network configs.\n",
-		 server);
-		return MULTI_NET_BUILD_ERR;
-	} else {
-		fill_kick_network_info(data, &build);
-	}
-	clean_dbdata_struct(data);
-
-	type = BUILD_PACKAGES;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		data = NULL;
-		fprintf(stderr, "Build for %s has no packages associated.\n",
-		 server);
-	}
-	fill_kick_packages(cml, data, &build);
-	clean_dbdata_struct(data);
-
-	type = BUILD_TYPE_URL;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build type for %s has no url??\n", server);
-		return NO_BUILD_URL;
-	} else if (retval > 1) {
-		fprintf(stderr, "Multiple url's?? Perhaps multiple build domains\n");
-	}
-	add_kick_base_script(data, &build);
-	snprintf(url, CONF_S, "%s", data->fields.text);
-	clean_dbdata_struct(data);
-
-	type = BD_ID_ON_SERVER_ID;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		fprintf(stderr, "Build domain for server %s not found\n", server);
-		return BUILD_DOMAIN_NOT_FOUND;
-	} else if (retval > 1)
-		fprintf(stderr, "Multiple build domains found for server %s\n", server);
-	bd_id = data->fields.number;
-	clean_dbdata_struct(data);
-
-	type = SCRIPT_CONFIG;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = bd_id;
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
-	if ((retval = cbc_run_search(cmc, data, type)) == 0)
-		fprintf(stderr, "No scripts configured for this build\n");
-	else
-		fill_build_scripts(cmc, data, retval, &build, cml);
-	add_kick_final_config(cml, &build, url);
-	clean_dbdata_struct(data);
-	retval = write_file(file, build.string);
-	free(build.string);
-	return retval;
-}
-
-#ifndef CHECK_DATA_LIST
-# define CHECK_DATA_LIST(retval) {        \
-	if (list->next)             \
-		list = list->next;  \
-	else                        \
-		return retval;             \
-}
-#endif /* CHECK_DATA_LIST */
-
-#ifndef PRINT_STRING_WITH_LENGTH_CHECK
-# define PRINT_STRING_WITH_LENGTH_CHECK {            \
-	len = strlen(line);                          \
-	if ((build->size + len) >= build->len)        \
-		resize_string_buff(build);           \
-	pos = build->string + build->size;           \
-	snprintf(pos, len + 1, "%s", line);          \
-	build->size += len;                          \
-	memset(line, 0, len);                        \
-}
-#endif /* PRINT_STRING_WITH_LENGTH_CHECK */
-int
-write_pre_host_script(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
-{
-	char *server, line[TBUFF_S], *pos;
-	int retval = NONE, type, query = SCRIPT_CONFIG;
-	size_t len = NONE;
-	unsigned long int bd_id;
-	dbdata_s *list = 0, *data = 0;
-	string_len_s *build;
-
-	if (!(build = malloc(sizeof(string_len_s))))
-		report_error(MALLOC_FAIL, "build in write_pre_host_script");
-	init_string_len(build);
-	server = cml->name;
-	type = BD_ID_ON_SERVER_ID;
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(list);
-		return NO_BD_CONFIG;
-	} else if (retval > 1) {
-		fprintf(stderr, "Associated with multiple build domains?\n");
-		fprintf(stderr, "Using 1st one!!!\n");
-	}
-	retval = 0;
-	bd_id = data->fields.number;
-	clean_dbdata_struct(data);
-
-	snprintf(build->string, RBUFF_S, "\
-#!/bin/sh\n\
-#\n\
-#\n\
-# Auto Generated install script for %s\n\
-#\n", server);
-	len = strlen(build->string);
-	build->size = len;
-	snprintf(line, TBUFF_S, "\
-#\n\
-#\n\
-######################\n\
-\n\
-\n\
-WGET=/usr/bin/wget\n\
-\n\
-$WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
-\n\
-$WGET %sscripts/firstboot.sh\n\
-chmod 755 firstboot.sh\n\
-./firstboot.sh >> scripts.log 2>&1\n\
-\n\
-$WGET %sscripts/motd.sh\n\
-chmod 755 motd.sh\n\
-./motd.sh >> scripts.log 2>&1\n\
-\n", cml->config, cml->config, cml->config);
-	PRINT_STRING_WITH_LENGTH_CHECK
-
-	cmdb_prep_db_query(&data, cbc_search, query);
-	data->args.number = bd_id;
-	snprintf(data->next->args.text, MAC_S, "%s", cml->os);
-	if ((retval = cbc_run_search(cmc, data, query)) > 0)
-		fill_build_scripts(cmc, data, retval, build, cml);
-	server = cml->name;
-	snprintf(line, CONF_S, "%shosts/%s.sh", cmc->toplevelos, server);
-	retval = write_file(line, build->string);
-	clean_dbdata_struct(data);
-	free(build->string);
-	free(build);
-	return retval;
-}
-
-static void
-fill_build_scripts(ailsa_cmdb_s *cbc, dbdata_s *list, int retval, string_len_s *build, cbc_comm_line_s *cml)
-{
-	if (!(list))
-		return;
-	char *pos, *script = list->fields.text;
-	char *arg = 0, *newarg;
-	char line[TBUFF_S];
-	int scrno = 0;
-	size_t len;
-	unsigned long int argno = 0;
-	dbdata_s *data = list;
-	while (scrno <= retval) {
-		if (data) {
-			argno = data->next->next->fields.number;
-			arg = data->next->fields.text;
-		}
-		if (!(newarg = cbc_complete_arg(cbc, cml->server_id, arg)))
-			return;
-		if (scrno == 0) {
-			snprintf(line, TBUFF_S, "\
-$WGET %sscripts/%s\n\
-chmod 755 %s\n\
-./%s %s ", cml->config, script, script, script, newarg);
-		} else {
-			if ((argno > 1) && (data)) {
-				len = strlen(line);
-				pos = line + len;
-				snprintf(pos, TBUFF_S - len, "\
-%s ", newarg);
-			} else {
-				len = strlen(line);
-				pos = line + len;
-				snprintf(pos, TBUFF_S - len, "\
->> %s.log 2>&1\n\n", script);
-				PRINT_STRING_WITH_LENGTH_CHECK
-				memset(line, 0, TBUFF_S);
-				if (data) {
-					script = data->fields.text;
-					snprintf(line, TBUFF_S, "\
-$WGET %sscripts/%s\n\
-chmod 755 %s\n\
-./%s %s ", cml->config, script, script, script, newarg);
-				}
-			}
-		}
-		scrno++;
-		if (data)
-			data = data->next->next->next;
-		free(newarg);
-		newarg = 0;
-	}
-}
-
-static void
-fill_tftp_output(cbc_comm_line_s *cml, dbdata_s *data, char *output)
-{
-	dbdata_s *list = data;
-	char *bline = list->fields.text;
-	CHECK_DATA_LIST()
-	char *alias = list->fields.text;
-	snprintf(cml->os, CONF_S, "%s", alias);
-	CHECK_DATA_LIST()
-	char *osver = list->fields.text;
-	snprintf(cml->os_version, MAC_S, "%s", osver);
-	CHECK_DATA_LIST()
-	char *country = list->fields.text;
-	CHECK_DATA_LIST()
-	CHECK_DATA_LIST()
-	CHECK_DATA_LIST()
-	char *arg = list->fields.text;
-	CHECK_DATA_LIST()
-	char *url = list->fields.text;
-	CHECK_DATA_LIST()
-	char *arch = list->fields.text;
-	CHECK_DATA_LIST()
-	char *net_inst = list->fields.text;
-	if (strncmp(alias, "debian", COMM_S) == 0) {
-		if (cml->gui > 0)
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
-url, cml->name);
-		else
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img %s %s=%s%s.cfg vga=off console=ttyS0,115200n8\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, bline, arg,
-url, cml->name);
-	} else if (strncmp(alias, "ubuntu", COMM_S) == 0) {
-		if (cml->gui > 0)
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img country=%s \
-console-setup/layoutcode=%s %s %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
-bline, arg, url, cml->name);
-		else
-			snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img country=%s \
-console-setup/layoutcode=%s %s %s=%s%s.cfg console=ttyS0,115200n8\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, country, country,
-bline, arg, url, cml->name);
-	} else if ((strncmp(alias, "centos", COMM_S) == 0) ||
-		   (strncmp(alias, "fedora", COMM_S) == 0)) {
-		snprintf(output, BUFF_S, "\
-default %s\n\
-\n\
-label %s\n\
-kernel vmlinuz-%s-%s-%s\n\
-append initrd=initrd-%s-%s-%s.img ksdevice=%s vga=off console=ttyS0,115200n8 ramdisk_size=8192\
- %s=%s%s.cfg\n\n",
-cml->name, cml->name, alias, osver, arch, alias, osver, arch, net_inst, arg, 
-url, cml->name);
-	}
-	/* Store url for use in fill_packages */
-	snprintf(cml->config, CONF_S, "%s", url);
-}
-
-static void
-fill_net_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	char output[BUFF_S];
-	char *ip, *ns, *nm, *gw, *tmp;
-	dbdata_s *list = data;
-	size_t len;
-
-	if (!(ip = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ip in fill_net_output");
-	if (!(ns = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "ns in fill_net_output");
-	if (!(nm = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "nm in fill_net_output");
-	if (!(gw = calloc(RANGE_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "gw in fill_net_output");
-	char *locale = list->fields.text;
-	CHECK_DATA_LIST()
-	char *keymap = list->fields.text;
-	CHECK_DATA_LIST()
-	char *net_dev = list->fields.text;
-	CHECK_DATA_LIST()
-	uint32_t ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, ns, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, nm, RANGE_S);
-	CHECK_DATA_LIST()
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, gw, RANGE_S);
-	CHECK_DATA_LIST()
-	char *host = list->fields.text;
-	CHECK_DATA_LIST()
-	char *domain = list->fields.text;
-	CHECK_DATA_LIST()
-	char *lang = list->fields.text;
-
-	if (strncmp(cml->os, "debian", COMM_S) == 0)
-		snprintf(output, BUFF_S, "\
-d-i console-setup/ask_detect boolean false\n\
-d-i debian-installer/locale string %s\n\
-d-i console-keymaps-at/keymap select %s\n\
-d-i keyboard-configuration/xkb-keymap select %s\n\
-d-i keymap select %s\n\
-\n\
-d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n\
-d-i netcfg/enable boolean true\n\
-d-i netcfg/confirm_static boolean true\n\
-d-i netcfg/disable_dhcp boolean true\n\
-d-i netcfg/choose_interface select %s\n\
-d-i netcfg/get_nameservers string %s\n\
-d-i netcfg/get_ipaddress string %s\n\
-d-i netcfg/get_netmask string %s\n\
-d-i netcfg/get_gateway string %s\n\
-\n\
-d-i netcfg/get_hostname string %s\n\
-d-i netcfg/get_domain string %s\n",
-locale, keymap, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
-	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
-/* Need to add the values into this!! */
-		snprintf(output, BUFF_S, "\
+	dprintf(fd, "\
 d-i console-setup/ask_detect boolean false\n\
 d-i debian-installer/locale string %s\n\
 d-i debian-installer/language string %s\n\
+d-i debian-installer/country string %s\n\
 d-i console-keymaps-at/keymap select %s\n\
+d-i keyboard-configuration/xkb-keymap select %s\n\
 d-i keymap select %s\n\
-\n\
+\n", bld->locale, bld->language, bld->country, bld->keymap, bld->keymap, bld->keymap);
+	if (strncmp(bld->os, "debian", SERVICE_LEN) == 0)
+		dprintf(fd, "\
+d-i preseed/early_command string /bin/killall.sh; /bin/netcfg\n");
+	dprintf(fd, "\
 d-i netcfg/enable boolean true\n\
 d-i netcfg/confirm_static boolean true\n\
 d-i netcfg/disable_dhcp boolean true\n\
@@ -969,67 +1007,18 @@ d-i netcfg/get_nameservers string %s\n\
 d-i netcfg/get_ipaddress string %s\n\
 d-i netcfg/get_netmask string %s\n\
 d-i netcfg/get_gateway string %s\n\
-\n\
 d-i netcfg/get_hostname string %s\n\
-d-i netcfg/get_domain string %s\n",
-locale, lang, keymap, keymap, net_dev, ns, ip, nm, gw, host, domain);
-	if ((len = strlen(output)) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "string in fill_net_output");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string, len + 1, "%s", output);
-	build->size += len;
-	free(ip);
-	free(gw);
-	free(ns);
-	free(nm);
-}
-
-static void
-fill_mirror_output(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	char *mirror = data->fields.text;
-	char *ver_alias = data->next->fields.text;
-	char *alias = data->next->next->fields.text;
-	char *country = data->next->next->next->fields.text;
-	char *ntpserv = data->next->next->next->next->next->fields.text;
-	char *arch = data->next->next->next->next->next->next->fields.text;
-	char ntp[NAME_S], output[BUFF_S], *tmp;
-	size_t len;
-
-	if (strncmp(cml->os, "debian", COMM_S) == 0)
-// Would be nice to be able to add a password for the user and root here.
-		snprintf(output, BUFF_S, "\
+d-i netcfg/get_domain string %s\n\
+\n", bld->net_int, bld->ns, bld->ip, bld->nm, bld->gw, bld->host, bld->domain);
+	if (strncmp(bld->os, "debian", SERVICE_LEN) == 0)
+		dprintf(fd, "\
 d-i netcfg/wireless_wep string\n\
-d-i hw-detect/load_firmware boolean true\n\
+d-i hw-detect/load_firmware boolean true\n");
+	dprintf(fd, "\
 \n\
 d-i mirror/country string manual\n\
 d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string /%s\n\
-\n\
-d-i mirror/suite string %s\n\
-\n\
-### Account setup\n\
-d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
-d-i passwd/root-login boolean false\n\
-d-i passwd/user-fullname string Admin User\n\
-d-i passwd/username string sysadmin\n\
-d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
-d-i clock-setup/utc boolean true\n\
-\n\
-d-i time/zone string %s\n\
-", mirror, alias, ver_alias, country);
-	else if (strncmp(cml->os, "ubuntu", COMM_S) == 0)
-		snprintf(output, BUFF_S, "\
-d-i mirror/country string manual\n\
-d-i mirror/http/hostname string %s\n\
-d-i mirror/http/directory string /%s\n\
-\n\
 d-i mirror/suite string %s\n\
 \n\
 ### Account setup\n\
@@ -1037,201 +1026,38 @@ d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVm
 d-i passwd/user-fullname string Admin User\n\
 d-i passwd/username string sysadmin\n\
 d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
+d-i passwd/user-default-groups string audio cdrom video dip floppy plugdev netdev sudo\n\
 d-i clock-setup/utc boolean true\n\
 \n\
 d-i time/zone string %s\n\
-", mirror, alias, ver_alias, country);
-	if (data->next->next->next->next->fields.small == 0)
-			snprintf(ntp, NAME_S, "\
-d-i clock-setup/ntp boolean false\n\
-\n\
-");
-	else
-			snprintf(ntp, NAME_S, "\
+", bld->mirror, bld->os, bld->version, bld->country);
+	if (bld->do_ntp > 0)
+		dprintf(fd, "\
 d-i clock-setup/ntp boolean true\n\
-d-i clock-setup/ntp-server string %s\n\
-\n\
-", ntpserv);
-	strncat(output, ntp, NAME_S);
-	len = strlen(output);
-	if ((build->size + len) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "tmp in fill_mirror_output");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string + build->size, len + 1, "%s", output);
-	build->size += len;
-	/* Store the arch for use in fill_kernel */
-	snprintf(cml->arch, MAC_S, "%s", arch);
-}
-
-static int
-fill_partition(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
-{
-	char *pos, line[FILE_S];
-	int retval = NONE, type = BASIC_PART;
-	short int lvm;
-	size_t len;
-	dbdata_s *data;
-
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BASIC_DISK;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BASIC_DISK;
-	} else {
-		add_pre_start_part(cml, data, line);
-	}
-
-	lvm = data->next->fields.small;
-	len = strlen(line);
-	pos = (line + len);
-	snprintf(pos, URL_S, "\
-d-i partman-auto/expert_recipe string \\\n\
-      monkey :: \\\n");
-	PRINT_STRING_WITH_LENGTH_CHECK
-
-	if (lvm > 0)
-		add_pre_volume_group(cml, build);
-	retval = add_pre_parts(cmc, cml, build, lvm);
-	memset(line, 0, FILE_S);
-	snprintf(line, FILE_S, "\
-\n\n\
-d-i grub-installer/only_debian boolean true\n\
-d-i grub-installer/bootdev  string %s\n", data->fields.text);
-	PRINT_STRING_WITH_LENGTH_CHECK
-	clean_dbdata_struct(data);
+d-i clock-setup/ntp-server string %s\n", bld->ntp);
+	else
+		dprintf(fd, "\
+d-i clock-setup/ntp boolean false\n");
 	return retval;
 }
 
 static int
-fill_kernel(cbc_comm_line_s *cml, string_len_s *build)
+write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build)
 {
-//	char *arch = cml->arch, *tmp, output[BUFF_S], *os = cml->os;
-	char *tmp, output[BUFF_S], *os = cml->os;
-	size_t len;
-	if (strncmp(os + 1, "ebian", COMM_S) == 0) {
-		snprintf(output, BUFF_S, "\
-\n\n\
-d-i apt-setup/non-free boolean true\n\
-d-i apt-setup/contrib boolean true\n\
-d-i apt-setup/services-select multiselect security\n\
-d-i apt-setup/security_host string security.%s.org\n\
-\n\n\
-tasksel tasksel/first multiselect standard\n", os);
-	} else {
-		snprintf(output, BUFF_S, "\
-\n\
-d-i apt-setup/non-free boolean true\n\
-d-i apt-setup/contrib boolean true\n\
-\n\
-tasksel tasksel/first multiselect standard\n");
-	}
-	len = strlen(output);
-	if ((build->size + len) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_kernel");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string + build->size, len + 1, "%s", output);
-	build->size += len;
-	return NONE;
-}
-
-static void
-fill_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build, int i)
-{
-	char *next, *tmp, *pack;
-	int j, k = i;
-	size_t len;
-	dbdata_s *list = data;
-
-	if (!(pack = malloc(BUFF_S * sizeof(char))))
-		report_error(MALLOC_FAIL, "pack in fill_packages");
-	snprintf(pack, MAC_S, "\nd-i pkgsel/include string");
-	len = strlen(pack); /* should always be 26 */
-	next = pack + len;
-	for (j = 0; j < k; j++) {
-		snprintf(next, HOST_S, " %s", list->fields.text);
-		len = strlen(list->fields.text);
-		next = next + len + 1;
-		list = list->next;
-	}
-	len = strlen(pack) + 331 + strlen(cml->config);
-	if (len > BUFF_S) {
-		tmp = realloc(pack, BUFF_S * 2 * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "realloc in fill_packages");
-		else
-			pack = tmp;
-	}
-	snprintf(next, TBUFF_S, "\n\
-d-i pkgsel/upgrade select none\n\
-\n\
-popularity-contest popularity-contest/participate boolean false\n\
-\n\
-d-i finish-install/keep-consoles boolean true\n\
-\n\
-d-i finish-install/reboot_in_progress note\n\
-\n\
-d-i cdrom-detect/eject boolean false\n\
-\n\
-d-i preseed/late_command string cd /target/root; wget %shosts/%s.sh \
-&& sh /target/root/%s.sh\n",
-		cml->config, cml->name, cml->name);
-	len = strlen(pack);
-	if ((len + build->size) > build->len) {
-		while ((build->size + len) > build->len)
-			build->len *=2;
-		tmp = realloc(build->string, build->len * sizeof(char));
-		if (!tmp)
-			report_error(MALLOC_FAIL, "next in fill_packages");
-		else
-			build->string = tmp;
-	}
-	snprintf(build->string + build->size, len + 1, "%s", pack);
-	build->size += len;
-	free(pack);
-}
-
-char *
-add_pre_start_part(cbc_comm_line_s *cml, dbdata_s *data, char *disk)
-{
-	short int lvm = data->next->fields.small;
-	size_t plen;
-
-	snprintf(cml->harddisk, CONF_S, "%s", data->fields.text);
-	if (lvm == 0)
-		snprintf(disk, FILE_S, "\
+	if ((fd == 0) || !(disk) || !(build))
+		return AILSA_NO_DATA;
+	ailsa_data_s *d = disk->head->data;
+	ailsa_data_s *l = disk->head->next->data;
+	dprintf(fd, "\
 d-i partman-auto/disk string %s\n\
-d-i partman-auto/choose_recipe select monkey\n\
-d-i partman-auto/method string regular\n\
-d-i partman-auto/purge_lvm_from_device boolean true\n\
-d-i partman/choose_partition select finish\n\
-d-i partman/confirm_nooverwrite boolean true\n\
-d-i partman/confirm boolean true\n\
-d-i partman-md/device_remove_md boolean true\n\
-#d-i partman-md/confirm boolean true\n\
-d-i partman-partitioning/confirm_write_new_label boolean true\n\
-#d-i partman/mount_style select uuid\n\
-\n\
-", cml->harddisk);
+d-i partman-auto/choose_recipe select monkey\n", d->data->text);
+	if (l->data->number > 0)
+		dprintf(fd, "\
+d-i partman-auto/method string lvm\n");
 	else
-		snprintf(disk, FILE_S, "\
-d-i partman-auto/disk string %s\n\
-d-i partman-auto/choose_recipe select monkey\n\
-d-i partman-auto/method string lvm\n\
+		dprintf(fd, "\
+d-i partman-auto/method string regular\n");
+	dprintf(fd, "\
 d-i partman-auto/purge_lvm_from_device boolean true\n\
 d-i partman-auto-lvm/guided_size string 100%%\n\
 d-i partman-auto-lvm/no_boot boolean true\n\
@@ -1245,309 +1071,605 @@ d-i partman-lvm/device_remove_lvm_span boolean true\n\
 d-i partman-md/device_remove_md boolean true\n\
 d-i partman-md/confirm boolean true\n\
 d-i partman-partitioning/confirm_write_new_label boolean true\n\
-d-i partman/mount_style select uuid\n\
-\n\
-", cml->harddisk);
-	plen = strlen(disk);
-	return (disk + plen);
-}
-
-int
-add_pre_parts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build, short int lvm)
-{
-	char *pos, line[BUFF_S], *fs, *mnt, *lv, *opt;
-	int retval = 0, query = FULL_PART, optno, i;
-	unsigned int dlen;
-	unsigned long int pri, min, max;
-	size_t len;
-	dbdata_s *data, *opts, *list, *lopt;
-
-	cmdb_prep_db_query(&data, cbc_search, query);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cbc, data, query)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_FULL_DISK;
-	}
-	dlen = cbc_search_fields[query];
-	list = data;
-	while (list) {
-		if ((retval = check_data_length(list, dlen)) != 0) {
-			clean_dbdata_struct(data);
-			return CBC_DATA_WRONG_COUNT;
-		}
-		pri = list->fields.number;
-		min = list->next->fields.number;
-		max = list->next->next->fields.number;
-		fs = list->next->next->next->fields.text;
-		lv = list->next->next->next->next->fields.text;
-		mnt = list->next->next->next->next->next->fields.text;
-		optno = get_pre_part_options(cbc, cml, mnt, &opts);
-		snprintf(line, RBUFF_S, "\
-              %lu %lu %lu %s  \\\n", pri, min, max, fs);
-		PRINT_STRING_WITH_LENGTH_CHECK
-		if (lvm > 0) {
-			snprintf(line, TBUFF_S, "\
-                       $lvmok \\\n\
-                       in_vg{ systemvg } \\\n\
-                       lv_name{ %s } \\\n", lv);
-			PRINT_STRING_WITH_LENGTH_CHECK
-		}
-		if ((strncmp(fs, "swap", COMM_S) != 0) &&
-		    (strncmp(fs, "linux-swap", RANGE_S) != 0))
-			snprintf(line, TBUFF_S, "\
-                       method{ format } format{ } \\\n\
-                       use_filesystem{ } filesystem{ %s } \\\n\
-                       mountpoint{ %s } \\\n", fs, mnt);
-		else
-			snprintf(line, TBUFF_S, "\
-                       method{ swap } format{ } \\\n");
-		PRINT_STRING_WITH_LENGTH_CHECK
-		list = move_down_list_data(list, dlen);
-		if (optno > 0) {
-			lopt = opts;
-			i = optno;
-			while (i > 0) {
-				opt = lopt->fields.text;
-				snprintf(line, RBUFF_S, "\
-                       options/%s{ %s } \\\n", opt, opt);
-				PRINT_STRING_WITH_LENGTH_CHECK
-				lopt = lopt->next;
-				i--;
-			}
-		}
-		snprintf(line, MAC_S, "\
-               . \\\n");
-		PRINT_STRING_WITH_LENGTH_CHECK
-		clean_dbdata_struct(opts);
-	}
-	build->size -= 2;
-	clean_dbdata_struct(data);
-	return retval;
-}
-
-int
-get_pre_part_options(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt, dbdata_s **opts)
-{
-	int retval, query = PART_OPT_ON_SCHEME_ID;
-
-	cmdb_prep_db_query(opts, cbc_search, query);
-	if ((retval = get_partition_id(cbc, cml->partition, mnt, &(*opts)->args.number)) != 0)
-		return 0;
-	if ((retval = get_scheme_id_from_build(cbc, cml->server_id, &(*opts)->next->args.number)) != 0)
-		return 0;
-	retval = cbc_run_search(cbc, *opts, query);
-	return retval;
-}
-
-void
-add_pre_volume_group(cbc_comm_line_s *cml, string_len_s *build)
-{
-	char line[RBUFF_S], *pos;
-	size_t len;
-
-	snprintf(line, RBUFF_S, "\
-              100 1000 1000000000 ext3 \\\n\
-                       $defaultignore{ } \\\n\
-                       $primary{ } \\\n\
-                       method{ lvm } \\\n");
-	PRINT_STRING_WITH_LENGTH_CHECK
-	memset(&line, 0, RBUFF_S);
-	snprintf(line, RBUFF_S, "\
-                       device{ %s } \\\n\
-                       vg_name{ systemvg } \\\n\
-              . \\\n", cml->harddisk);
-	PRINT_STRING_WITH_LENGTH_CHECK
+d-i partman/mount_style select uuid\n");
+	return 0;
 }
 
 static int
-fill_system_packages(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml, string_len_s *build)
+write_preseed_partitions(int fd, AILLIST *disk, AILLIST *part)
 {
-	int retval, type = SYSP_INFO_ON_BD_ID;
-	char *package = NULL;
-	unsigned int max;
-	unsigned long int bd_id;
-	dbdata_s *data, *list;
-
-	init_multi_dbdata_struct(&data, 1);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cmc, data, BD_ID_ON_SERVER_ID)) == 0) {
-		fprintf(stderr, "No build domain in fill_system_packages\n");
-		return NO_RECORDS;
-	}
-	bd_id = data->fields.number;
-	clean_dbdata_struct(data);
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = bd_id;
-	if ((retval = cbc_run_search(cmc, data, type)) == 0) {
-		printf("No system packages configured for domain\n");
-		clean_dbdata_struct(data);
-		return retval;
-	} else {
-		retval = 0;
-	}
-	list = data;
-	while (list) {
-		if (!(package) || (strncmp(package, list->fields.text, URL_S) != 0)) {
-			if (build->size + 1 >= build->len)
-				resize_string_buff(build);
-			snprintf(build->string + build->size, 2, "\n");
-			build->size++;
-			package = list->fields.text;
+	if ((fd == 0) || !(part))
+		return AILSA_NO_DATA;
+	short int lvm = ((ailsa_data_s *)disk->head->next->data)->data->small;
+	char *diskdev = ((ailsa_data_s *)disk->head->data)->data->text;
+	AILELEM *e = part->head;
+	ailsa_partition_s *p;
+	dprintf(fd, "\
+\n\
+d-i partman-auto/expert_recipe string \\\n\
+      monkey :: \\\n");
+	if (lvm > 0)
+		write_preseed_lvm_group(fd, diskdev);
+	while (e) {
+		p = e->data;
+		dprintf(fd, "\
+              %lu %lu %lu %s  \\\n", p->pri, p->min, p->max, p->fs);
+		if (lvm > 0)
+			dprintf(fd, "\
+                       $lvmok \\\n\
+                       in_vg{ systemvg } \\\n\
+                       lv_name{ %s }\\\n", p->logvol);
+		if ((strncmp(p->fs, "swap", BYTE_LEN)) != 0) {
+			dprintf(fd, "\
+                       method{ format } format{ } \\\n\
+                       use_filesystem{ } filesystem{ %s } \\\n\
+                       mountpoint{ %s } \\\n", p->fs, p->mount);
+		} else {
+			dprintf(fd, "\
+                       method{ swap } format{ } \\\n");
 		}
-		add_system_package_line(cmc, cml->server_id, build, list);
-		list = list->next->next->next->next;
+// This would be the place to add the partition options
+		e = e->next;
+		if (e)
+			dprintf(fd, "\
+              . \\\n");
+		else
+			dprintf(fd, "\
+              .\n\n");
 	}
-	clean_dbdata_struct(data);
+	dprintf(fd, "\
+d-i grub-installer/only_debian boolean true\n\
+d-i grub-installer/bootdev string %s\n", diskdev);
+	return 0;
+}
+
+static void
+write_preseed_lvm_group(int fd, char *dev)
+{
+	dprintf(fd, "\
+              100 1000 1000000000 ext3 \\\n\
+                       $defaultignore{} \\\n\
+                       $primary{} \\\n\
+                       method{ lvm } \\\n\
+                       device{ %s } \\\n\
+                       vg_name{ systemvg }\\\n\
+              . \\\n", dev);
+}
+
+static int
+write_preseed_packages(int fd, ailsa_build_s *bld, AILLIST *pack)
+{
+	if (!(bld) || !(pack) || (fd == 0))
+		return AILSA_NO_DATA;
+	AILELEM *e = pack->head;
+	ailsa_data_s *d;
+
+	dprintf(fd, "\
+d-i apt-setup/non-free boolean true\n\
+d-i apt-setup/contrib boolean true\n");
+	if (strncmp(bld->os, "debian", BYTE_LEN) == 0)
+		dprintf(fd, "\
+d-i apt-setup/services-select multiselect security\n\
+d-i apt-setup/security_host string security.%s.org\n", bld->os);
+	dprintf(fd, "\
+tasksel tasksel/first multiselect standard\n\n\
+d-i pkgsel/upgrade select none\n\
+d-i pkgsel/include string");
+	while (e) {
+		d = e->data;
+		dprintf(fd, " %s", d->data->text);
+		e = e->next;
+	}
+	dprintf(fd, "\n\
+popularity-contest popularity-contest/participate boolean false\n\
+d-i finish-install/keep-consoles boolean true\n\
+d-i finish-install/reboot_in_progress note\n\
+d-i cdrom-detect/eject boolean false\n\
+d-i preseed/late_command string cd /target/root; \
+wget %shosts/%s.sh && sh /target/root/%s.sh >> /target/root/%s.log 2>&1\n\n", bld->url, bld->host, bld->host, bld->host);
+	return 0;
+}
+
+static int
+write_preseed_system_packages(int fd, AILLIST *sys)
+{
+	if (!(sys) || (fd == 0))
+		return AILSA_NO_DATA;
+	if (sys->total == 0)
+		return 0;
+	AILELEM *e = sys->head;
+	ailsa_syspack_s *pack;
+
+	while (e) {
+		pack = e->data;
+		dprintf(fd, "\
+%s\t%s\t%s\t", pack->name, pack->field, pack->type);
+		if (pack->newarg)
+			dprintf(fd, "%s\n", pack->newarg);
+		else
+			dprintf(fd, "%s\n", pack->arg);
+		e = e->next;
+	}
+	return 0;
+}
+
+static int
+write_build_host_script(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml)
+{
+	if (!(cbc) || !(cml))
+		return AILSA_NO_DATA;
+	char file[DOMAIN_LEN];
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *domain = ailsa_db_data_list_init();
+	AILLIST *script = ailsa_db_data_list_init();
+	AILLIST *sys = ailsa_sysscript_list_init();
+
+	memset(file, 0, DOMAIN_LEN);
+	snprintf(file, DOMAIN_LEN, "%shosts/%s.sh", cbc->toplevelos, cml->name);
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cbc, DOMAIN_BUILD_ALIAS_ON_SERVER_ID, server, domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "DOMAIN_BUILD_ALIAS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE, domain, script)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE query failed");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_system_scripts(script, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot populate system script list");
+		goto cleanup;
+	}
+	if ((retval = cbc_write_script_file(file, cml->name, domain, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot write script file for %s", cml->name);
+		goto cleanup;
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(domain);
+		ailsa_list_full_clean(script);
+		ailsa_list_full_clean(sys);
+		return retval;
+}
+
+
+static int
+cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys)
+{
+	if (!(file) || !(sys) || !(domain))
+		return AILSA_NO_DATA;
+	char *url;
+	int retval, fd, flags;
+	mode_t um, mask;
+	ailsa_data_s *d;
+
+	if ((domain->total == 0) || ((domain->total % 3) != 0)) {
+		ailsa_syslog(LOG_ERR, "domain list empty in cbc_write_script_file");
+		return AILSA_NO_DATA;
+	}
+	d = domain->head->next->next->data;
+	url = d->data->text;
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	retval = 0;
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open file %s for writing", file);
+		retval = FILE_O_FAIL;
+		return retval;
+	}
+	dprintf(fd, "\
+#!/bin/sh\n\
+#\n\
+#\n\
+# Auto Generated install script for %s\n\
+#\n\
+#\n\
+#\n\
+###################\n\
+\n\
+\n\
+WGET=/usr/bin/wget\n\
+if [ -d /target ]; then\n\
+  cd /target/root\n\
+else\n\
+  cd /root\n\
+fi\n\
+\n\
+$WGET %sscripts/disable_install.php > scripts.log 2>&1\n\
+\n\
+$WGET %sscripts/firstboot.sh\n\
+chmod 755 firstboot.sh\n\
+./firstboot.sh >> scripts.log 2>&1\n\
+\n\
+$WGET %sscripts/motd.sh\n\
+chmod 755 motd.sh\n\
+./motd.sh >> scripts.log 2>&1\
+\n", host, url, url, url);
+	cbc_write_system_scripts(url, fd, sys);
+	close(fd);
+	mask = umask(um);
 	return retval;
 }
 
-void
-add_system_package_line(ailsa_cmdb_s *cbc, uli_t server_id, string_len_s *build, dbdata_s *data)
+static void
+cbc_write_system_scripts(char *url, int fd, AILLIST *sys)
 {
-	char *buff, *arg, *tmp;
-	size_t blen, slen;
-
-	if (!(buff = calloc(BUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "buff in add_system_package_line");
-	if ((snprintf(buff, BUFF_S, "%s\t%s\t%s\t", data->fields.text,
-	      data->next->fields.text, data->next->next->fields.text)) >= BUFF_S)
-		fprintf(stderr, "System package line truncated in preseed file!\n");
-	blen = strlen(buff);
-	tmp = data->next->next->next->fields.text;
-	if (!(arg = cbc_complete_arg(cbc, server_id, tmp))) {
-		fprintf(stderr, "Could not cbc_complete_arg for %s\n",
-		 data->next->fields.text);
-		free(buff);
+	if (!(url) || (fd == 0) || !(sys))
 		return;
+	if (sys->total == 0)
+		return;
+	AILELEM *e = sys->head;
+	ailsa_sysscript_s *ss = e->data;
+	char *name = ss->name;
+
+	while (e) {
+		ss = e->data;
+		if (ss->no == 1) {
+			if (strncmp(name, ss->name, DOMAIN_LEN) != 0)
+				dprintf(fd, " > %s.log 2>&1\n", name);
+			name = ss->name;
+			dprintf(fd, "\n\
+$WGET %sscripts/%s\n\
+chmod 755 %s\n\
+./%s %s", url, ss->name, ss->name, ss->name, ss->arg);
+		} else {
+			dprintf(fd, " %s", ss->arg);
+		}
+		e = e->next;
 	}
-	slen = strlen(arg);
-	if ((blen + slen + build->size) >= build->len)
-		resize_string_buff(build);
-	snprintf(build->string + build->size, blen + slen + 2, "%s%s\n", buff, arg);
-	build->size += blen + slen + 1;
-	free(arg);
-	free(buff);
+	dprintf(fd, " > %s.log 2>&1\n", name);
 }
 
-char *
-cbc_complete_arg(ailsa_cmdb_s *cbc, uli_t server_id, char *arg)
+static ailsa_build_s *
+cbc_fill_build_details(AILLIST *build)
 {
-	char *tmp, *new = 0, *pre, *post;
-	int i, retval;
-	size_t len;
-	dbdata_s *data;
+	if (!(build))
+		return NULL;
+	char addr[SERVICE_LEN];
+	uint32_t ip;
+	size_t len = 18;
+	ailsa_build_s *b = ailsa_calloc(sizeof(ailsa_build_s), "b in cbc_fill_build_details");
+	AILELEM *e = build->head;
+	ailsa_data_s *d = e->data;
 
-	if (!(arg))
-		return new;
-	if (!(new = calloc(TBUFF_S, sizeof(char))))
-		report_error(MALLOC_FAIL, "new in cbc_complete_arg");
-	snprintf(new, TBUFF_S, "%s", arg);
-	for ( i = 0; i < spvar_no; i++ ) {
-		if ((pre = strstr(new, spvars[i]))) {
-// Check we are not the start of the new buffer
-			if ((pre - new) > 0)
-				*pre = '\0';
-// Move forward to part we want to save
-			tmp = pre + strlen(spvars[i]);
-// and save it
-			post = strndup(tmp, TBUFF_S);
-			init_multi_dbdata_struct(&data, cbc_search_fields[sp_query[i]]);
-			data->args.number = server_id;
-			if ((retval = cbc_run_search(cbc, data, sp_query[i])) == 0) {
-				fprintf(stderr,
-"Query returned 0 entries in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
-				goto cleanup;
-			}
-			if (!(tmp = get_replaced_syspack_arg(data, i))) {
-				fprintf(stderr,
-"Cannot get new string in cbc_complete_arg for id %lu turn %d, no #%d\n", server_id, i, sp_query[i]);
-				goto cleanup;
-			}
-			len = strlen(tmp) + strlen(post);
-			if ((len + strlen(new)) < TBUFF_S)
-				snprintf(pre, len + 1, "%s%s", tmp, post);
-			clean_dbdata_struct(data);
-			free(tmp);
-			free(post);
-		}
+	memset(addr, 0, SERVICE_LEN);
+	if (build->total < len) {
+		ailsa_syslog(LOG_ERR, "cbc_fill_build_details list only has %zu elements", build->total);
+		goto cleanup;
 	}
-	return new;
+	b->locale = strndup(d->data->text, MAC_LEN);
+	e = e->next;
+	d = e->data;
+	b->language = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->keymap = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->country = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->net_int = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->ip = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->ns = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->nm = strndup(addr, SERVICE_LEN);
+	memset(addr, 0, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	ip = htonl((uint32_t)d->data->number);
+	if (!(inet_ntop(AF_INET, &ip, addr, SERVICE_LEN)))
+		goto cleanup;
+	b->gw = strndup(addr, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->do_ntp = d->data->small;
+	e = e->next;
+	d = e->data;
+	b->ntp = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->host = strndup(d->data->text, HOST_LEN);
+	e = e->next;
+	d = e->data;
+	b->domain = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->mirror = strndup(d->data->text, DOMAIN_LEN);
+	e = e->next;
+	d = e->data;
+	b->os = strndup(d->data->text, MAC_LEN);
+	e = e->next;
+	d = e->data;
+	b->version = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->os_ver = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->arch = strndup(d->data->text, SERVICE_LEN);
+	e = e->next;
+	d = e->data;
+	b->url = strndup(d->data->text, DOMAIN_LEN);
+	b->fqdn = ailsa_calloc(DOMAIN_LEN, "b->fqdn in cbc_fill_build_details");
+	snprintf(b->fqdn, DOMAIN_LEN, "%s.%s", b->host, b->domain);
+	return b;
 
 	cleanup:
-		free(new);
-		clean_dbdata_struct(data);
+		ailsa_clean_build(b);
 		return NULL;
 }
 
-char *
-get_replaced_syspack_arg(dbdata_s *data, int loop)
+static int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest)
 {
-// This function NEEDS validated inputs
-	char *str = NULL, *tmp, addr[RANGE_S], *ip;
-	uint32_t ip_addr;
-
-	switch(loop) {
-		case 0:
-			str = strndup(data->fields.text, RANGE_S - 1);
-			tmp = strrchr(str, '.');
-			tmp++;
-			*tmp = '0';
-			*(tmp + 1) = '\0';
-			break;
-		case 1:
-			str = strndup(data->fields.text, RBUFF_S - 1);
-			break;
-		case 2:
-			if (!(str = calloc(RBUFF_S, sizeof(char))))
-				report_error(MALLOC_FAIL, "str in get_replaced_syspack_arg");
-			snprintf(str, RBUFF_S, "%s.%s", data->fields.text, data->next->fields.text);
-			break;
-		case 3:
-			str = strndup(data->fields.text, HOST_S - 1);
-			break;
-		case 4:
-// This is broken. The IP address is a number and will need to be converted to a string
-			ip_addr = htonl((uint32_t)data->fields.number);
-			ip = addr;
-			inet_ntop(AF_INET, &ip_addr, ip, RANGE_S);
-			str = strndup(ip, RANGE_S - 1);
-			break;
+	if (!(list) || !(dest))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e = list->head;
+	ailsa_data_s *d;
+	ailsa_partition_s *p;
+	size_t total = 6;
+	if ((list->total == 0) || ((list->total % total) != 0)) {
+		ailsa_syslog(LOG_ERR, "list in cbc_fill_partition_details has wrong length %zu", list->total);
+		return WRONG_LENGTH_LIST;
 	}
-	return str;
+	while (e) {
+		p = ailsa_calloc(sizeof(ailsa_partition_s), "p in cbc_fill_partition_details");
+		d = e->data;
+		p->min = d->data->number;
+		d = e->next->data;
+		p->max = d->data->number;
+		d = e->next->next->data;
+		p->pri = d->data->number;
+		d = e->next->next->next->data;
+		p->mount = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->next->next->data;
+		p->fs = strndup(d->data->text, SERVICE_LEN);
+		d = e->next->next->next->next->next->data;
+		p->logvol = strndup(d->data->text, MAC_LEN);
+		e = ailsa_move_down_list(e, total);
+		if ((retval = ailsa_list_insert(dest, p)) != 0)
+			return retval;
+	}
+	return 0;
 }
 
 static int
-fill_kick_base(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+cbc_fill_sys_pack_details(AILLIST *sys, AILLIST *pack, ailsa_build_s *bld)
 {
-	char buff[FILE_S], *key, *loc, *tim;
-	int retval, type = KICK_BASE;
-	size_t len;
-	dbdata_s *data;
+	if (!(sys) || !(pack) || !(bld))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = 4;
+	ailsa_syspack_s *config;
+	AILELEM *e;
+	ailsa_data_s *d;
 
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_KICKSTART_ERR;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_KICKSTART_ERR;
-	} else {
-		retval = NONE;
+	if ((sys->total % total) != 0)
+		return WRONG_LENGTH_LIST;
+	if (sys->total == 0)
+		return 0;
+	e = sys->head;
+	while (e) {
+		config = ailsa_calloc(sizeof(ailsa_syspack_s), "config in cbc_fill_sys_pack_details");
+		d = e->data;
+		config->name = strndup(d->data->text, CONFIG_LEN);
+		d = e->next->data;
+		config->field = strndup(d->data->text, CONFIG_LEN);
+		d = e->next->next->data;
+		config->type = strndup(d->data->text, MAC_LEN);
+		d = e->next->next->next->data;
+		config->arg = strndup(d->data->text, CONFIG_LEN);
+		e = ailsa_move_down_list(e, total);
+		cbc_get_sys_newarg(config, bld);
+		if ((retval = ailsa_list_insert(pack, config)) != 0)
+			return retval;
 	}
+	return 0;
+}
 
-	key = data->fields.text;
-	loc = data->next->fields.text;
-	tim = data->next->next->fields.text;
-/*
- * Redhat 6 kickstart crashes if you supply gb as keyboard type.
- * Need to check this and updated to uk if found. All other OS
- * seem to be unaffected.
- */
-	check_for_gb_keyboard(cbc, cml->server_id, key);
+static void
+cbc_get_sys_newarg(ailsa_syspack_s *sys, ailsa_build_s *bld)
+{
+	if (!(sys) || !(bld))
+		return;
+	char *ptr, *new, *arg, *tmp;
+	char **a;
+	int i, pos;
+	size_t len, lena;
+	arg = sys->arg;
+	for (i = 0; i < spvar_no; i++) {
+		if ((tmp = strstr(arg, spvars[i]))) {
+			len = strlen(spvars[i]);
+			lena = strlen(arg);
+			pos = sp_position[i];
+			a = (char **)bld;
+			new = a[pos];
+			sys->newarg = ailsa_calloc(DOMAIN_LEN, "sys->newarg in cbc_get_sys_newarg");
+			if (len == lena) {
+				snprintf(sys->newarg, DOMAIN_LEN, "%s", new);
+			} else if (tmp == arg) {
+				ptr = arg + len;
+				snprintf(sys->newarg, DOMAIN_LEN, "%s%s", new, ptr);
+			}
+		}
+	}
+}
+
+static int
+cbc_fill_system_scripts(AILLIST *list, AILLIST *dest)
+{
+	if (!(list) || !(dest))
+		return AILSA_NO_DATA;
+	size_t total = 3;
+	if ((list->total % total) != 0)
+		return WRONG_LENGTH_LIST;
+	int retval = 0;
+	AILELEM *e = list->head;
+	ailsa_sysscript_s *sys;
+	ailsa_data_s *d;
+	while (e) {
+		sys = ailsa_calloc(sizeof(ailsa_sysscript_s), "sys in cbc_fill_system_scripts");
+		d = e->data;
+		sys->name = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->data;
+		sys->arg = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->data;
+		sys->no = d->data->number;
+		if ((retval = ailsa_list_insert(dest, sys)) != 0)
+			return retval;
+		e = ailsa_move_down_list(e, total);
+	}
+	return retval;
+}
+
+static int
+write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
+{
+	if (!(cmc) || !(cml))
+		return AILSA_NO_DATA;
+	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *domain = ailsa_db_data_list_init();
+	AILLIST *disk = ailsa_db_data_list_init();
+	AILLIST *locale = ailsa_db_data_list_init();
+	AILLIST *partitions = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_partition_list_init();
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *scripts = ailsa_db_data_list_init();
+	AILLIST *sys = ailsa_sysscript_list_init();
+	char file[DOMAIN_LEN];
+	int retval, flags;
+	int fd = 0;
+	mode_t um = 0;
+	mode_t mask;
+	ailsa_build_s *bld = NULL;
+
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cmc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cmc, FULL_LOCALE_DETAILS_ON_SERVER_ID, server, locale)) != 0) {
+		ailsa_syslog(LOG_ERR, "FULL_LOCALE_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
+		ailsa_syslog(LOG_ERR, "DISK_DEV_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PARTITIONS_ON_SERVER_ID, server, partitions)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PARTITIONS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_PACKAGES_ON_SERVER_ID, server, pack)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_PACKAGES_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, DOMAIN_BUILD_ALIAS_ON_SERVER_ID, server, domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "DOMAIN_BUILD_ALIAS_ON_SERVER_ID query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE, domain, scripts)) != 0) {
+		ailsa_syslog(LOG_ERR, "SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, BUILD_DETAILS, server, build)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_partition_details(partitions, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill in partitin details");
+		goto cleanup;
+	}
+	if (!(bld = cbc_fill_build_details(build))) {
+		ailsa_syslog(LOG_ERR, "Cannot fill build details");
+		goto cleanup;
+	}
+	if ((retval = cbc_fill_system_scripts(scripts, sys)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot fill system scripts list");
+		goto cleanup;
+	}
+	snprintf(file, DOMAIN_LEN, "%sweb/%s.cfg", cmc->toplevelos,  cml->name);
+	um = umask(0);
+	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	flags = O_CREAT | O_WRONLY | O_TRUNC;
+	if ((fd = open(file, flags, mask)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot open kickstart build file %s for writing: %s", file, strerror(errno));
+		retval = FILE_O_FAIL;
+		goto cleanup;
+	}
+	if ((retval = cbc_write_kickstart_base(cmc, cml->name, fd, locale)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_partitions(fd, disk, part)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_net(fd, bld)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_packages(fd, pack)) != 0)
+		goto cleanup;
+	if ((retval = cbc_write_kickstart_scripts(fd, bld->url, sys)) != 0)
+		goto cleanup;
+
+	cleanup:
+		if (fd > 0)
+			close(fd);
+		if (um > 0)
+			mask = umask(um);
+		if (bld)
+			ailsa_clean_build(bld);
+		ailsa_list_full_clean(build);
+		ailsa_list_full_clean(domain);
+		ailsa_list_full_clean(disk);
+		ailsa_list_full_clean(locale);
+		ailsa_list_full_clean(partitions);
+		ailsa_list_full_clean(pack);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(scripts);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(sys);
+		return retval;
+}
+
+static int
+cbc_write_kickstart_base(ailsa_cmdb_s *cmc, char *name, int fd, AILLIST *list)
+{
+	if (!(cmc) || !(name) || !(list) || (fd == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	char *key, *lang, *time;
+	ailsa_data_s *d;
+	size_t total = 4;
+
+	if ((list->total == 0) || ((list->total % total) != 0))
+		return WRONG_LENGTH_LIST;
+	d = list->head->next->data;
+	lang = d->data->text;
+	d = list->head->next->next->data;
+	key = d->data->text;
+	d = list->tail->data;
+	time = d->data->text;
+	if ((retval = cbc_check_gb_keyboard(cmc, name, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check for GB keyboard");
+		return retval;
+	}
 	/* root password is k1Ckstart */
-	snprintf(buff, FILE_S, "\
+	dprintf(fd, "\
 auth --useshadow --enablemd5\n\
 bootloader --location=mbr\n\
 text\n\
@@ -1561,438 +1683,199 @@ rootpw --iscrypted $6$YuyiUAiz$8w/kg1ZGEnp0YqHTPuz2WpveT0OaYG6Vw89P.CYRAox7CaiaQ
 selinux --disabled\n\
 skipx\n\
 timezone  %s\n\
-install\n\
-\n", key, loc, tim);
-	if ((len = strlen(buff)) > build->len)
-		resize_string_buff(build);
-	snprintf(build->string, len + 1, "%s", buff);
-	build->size += len;
-	clean_dbdata_struct(data);
+install\n", key, lang, time);
 	return retval;
 }
 
 static int
-fill_kick_partitions(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+cbc_write_kickstart_partitions(int fd, AILLIST *disk, AILLIST *part)
 {
-	char line[TBUFF_S], *fs, *lv, *mount, *opts, *pos;
-	int retval, query = FULL_PART;
-	size_t len;
-	short int lvm;
-	unsigned int dlen;
-	unsigned long int psize;
-	dbdata_s *part, *list;
-
-	if ((retval = fill_kick_part_header(cbc, cml, build)) != 0)
-		return retval;
-	lvm = cml->lvm;
-	cmdb_prep_db_query(&part, cbc_search, query);
-	part->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cbc, part, query)) == 0) {
-		clean_dbdata_struct(part);
-		return NO_FULL_DISK;
-	}
-
-	dlen = cbc_search_fields[query];
-	list = part;
-	while (list) {
-		if ((retval = check_data_length(list, dlen)) != 0) {
-			clean_dbdata_struct(part);
-			return CBC_DATA_WRONG_COUNT;
+	if (!(disk) || !(part) || (fd == 0))
+		return AILSA_NO_DATA;
+	AILELEM *e;
+	ailsa_data_s *d;
+	ailsa_partition_s *p;
+	if ((disk->total == 0) || (part->total == 0))
+		return AILSA_NO_DATA;
+	d = disk->head->data;
+	dprintf(fd, "\
+\n\
+zerombr\n\
+bootloader --location=mbr --driveorder=%s\n\
+clearpart --all --initlabel\n", d->data->text);
+	d = disk->head->next->data;
+	e = part->head;
+	if (d->data->small > 0) {
+		dprintf(fd, "\
+part /boot --asprimary --fstype=\"ext3\" --size=512\n\
+part pv.1 --asprimary --size=1 --grow\n\
+volgroup system_vg --pesize=32768 pv.1\n");
+		while (e) {
+			p = e->data;
+			dprintf(fd, "\
+logvol %s --fstype=\"%s\" --name=%s --vgname=system_vg --size=%lu\n\
+", p->mount, p->fs, p->logvol, p->min);
+			e = e->next;
 		}
-		psize = list->next->fields.number;
-		fs = list->next->next->next->fields.text;
-		lv = list->next->next->next->next->fields.text;
-		mount = list->next->next->next->next->next->fields.text;
-		opts = get_kick_part_opts(cbc, cml, mount);
-		if ((lvm > 0) && (strncmp(mount, "/boot", COMM_S) != 0))
-			snprintf(line, BUFF_S, "\
-logvol %s --fstype \"%s\" --name=%s --vgname=%s --size=%lu\
-", mount, fs, lv, cml->name, psize);
-		else if (strncmp(mount, "/boot", COMM_S) != 0)
-			snprintf(line, BUFF_S, "\
-part %s --fstype=\"%s\" --size=%lu\
-", mount, fs, psize);
-		else
-			fprintf(stderr, "\
-Sorry, we have already added a boot partition\n");
-		len = strlen(line);
-		pos = line + len;
-		if (opts)
-			snprintf(pos, HOST_S, "\
- --fsoptions=\"%s\"", opts);
-		len = strlen(line);	
-		pos = line + len;
-		snprintf(pos, COMM_S, "\n");
-		PRINT_STRING_WITH_LENGTH_CHECK
-		list = move_down_list_data(list, dlen);
-		free(opts);
+	} else {
+		while (e) {
+			p = e->data;
+			dprintf(fd, "\
+part %s --fstype=\"%s\" --size=%lu\n\
+", p->mount, p->fs, p->min);
+			e = e->next;
+		}
 	}
-
-	clean_dbdata_struct(part);
+	dprintf(fd, "\n");
 	return 0;
-}
-
-char *
-get_kick_part_opts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, char *mnt)
-{	
-	int retval;
-	char *opts = 0, *pos;
-	size_t len;
-	dbdata_s *data = 0, *list;
-
-	if ((retval = get_pre_part_options(cbc, cml, mnt, &data)) == 0) {
-		clean_dbdata_struct(data);
-		return opts;
-	}
-	opts = ailsa_calloc(HOST_S, "opts in get_kick_part_opts");
-	snprintf(opts, HOST_S, "%s", data->fields.text);
-	list = data->next;
-	retval--;
-	while (retval > 0) {
-		len = strlen(opts);
-		pos = opts + len;
-		snprintf(pos, HOST_S - len, ",%s", list->fields.text);
-		list = list->next;
-		retval--;
-	}
-	clean_dbdata_struct(data);
-	return opts;
 }
 
 static int
-fill_kick_part_header(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, string_len_s *build)
+cbc_write_kickstart_net(int fd, ailsa_build_s *bld)
 {
-	char *device, *pos, line[FILE_S];
-	int retval, type = BASIC_PART;
-	size_t len;
-	short int lvm;
-	dbdata_s *data;
-
-	cmdb_prep_db_query(&data, cbc_search, type);
-	data->args.number = cml->server_id;
-	if ((retval = cbc_run_search(cbc, data, type)) == 0) {
-		clean_dbdata_struct(data);
-		return NO_BASIC_DISK;
-	} else if (retval > 1) {
-		clean_dbdata_struct(data);
-		return MULTI_BASIC_DISK;
-	}
-	device = data->fields.text;
-	cml->lvm = lvm = data->next->fields.small;
-	if (lvm > 0)
-		snprintf(line, FILE_S, "\
-zerombr\n\
-bootloader --location=mbr --driveorder=%s\n\
-clearpart --all --initlabel\n\
-part /boot --asprimary --fstype \"ext3\" --size=512\n\
-part pv.1 --asprimary --size=1 --grow\n\
-volgroup %s --pesize=32768 pv.1\n\
-",  device, cml->name);
-	else
-		snprintf(line, FILE_S, "\
-zerombr\n\
-bootloader --location=mbr --driveorder=%s\n\
-clearpart --all --initlabel\n\
-", device);
-	PRINT_STRING_WITH_LENGTH_CHECK
-	clean_dbdata_struct(data);
+	if (!(bld) || (fd == 0))
+		return AILSA_NO_DATA;
+	dprintf(fd, "\
+\n\
+url --url=http://%s/%s/%s/os/%s\n\
+network --bootproto=static --device=%s --ip=%s --netmask=%s --gateway=%s --nameserver=%s --hostname=%s.%s --onboot=on\n\
+", bld->mirror, bld->os, bld->os_ver, bld->arch, bld->net_int, bld->ip, bld->nm, bld->gw, bld->ns, bld->host, bld->domain);
 	return 0;
 }
 
-static void
-fill_kick_network_info(dbdata_s *data, string_len_s *build)
+static int
+cbc_write_kickstart_packages(int fd, AILLIST *pack)
 {
-	char buff[FILE_S], ip[RANGE_S], nm[RANGE_S], gw[RANGE_S], ns[RANGE_S];
-	char *tmp, *addr, *mirror, *alias, *arch, *ver, *dev, *host, *domain;
-	size_t len = NONE;
-	uint32_t ip_addr;
-	dbdata_s *list = data;
-	mirror = list->fields.text;
-	CHECK_DATA_LIST()
-	alias = list->fields.text;
-	CHECK_DATA_LIST()
-	arch = list->fields.text;
-	CHECK_DATA_LIST()
-	ver = list->fields.text;
-	CHECK_DATA_LIST()
-	dev = list->fields.text;
-	CHECK_DATA_LIST()
-	addr = ip;
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST()
-	addr = nm;
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST()
-	addr = gw;
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST()
-	addr = ns;
-	ip_addr = htonl((uint32_t)list->fields.number);
-	inet_ntop(AF_INET, &ip_addr, addr, RANGE_S);
-	CHECK_DATA_LIST()
-	host = list->fields.text;
-	CHECK_DATA_LIST()
-	domain = list->fields.text;
-	if (strncmp(alias, "centos", COMM_S) == 0)
-		snprintf(buff, FILE_S, "\
-url --url=http://%s/%s/%s/os/%s\n\
-network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
---hostname %s.%s --onboot=on\n\n", mirror, alias, ver, arch, dev, ip, nm, gw, ns, host, domain);
-	else if (strncmp(alias, "fedora", COMM_S) == 0)
-		snprintf(buff, FILE_S, "\
-url --url=http://%s/releases/%s/Fedora/%s/os/\n\
-network --bootproto=static --device=%s --ip %s --netmask %s --gateway %s --nameserver %s \
---hostname %s.%s --onboot=on\n\n", mirror, ver, arch, dev, ip, nm, gw, ns, host, domain);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size +=len;
-}
+	if (!(pack) || (fd == 0))
+		return AILSA_NO_DATA;
+	AILELEM *e;
+	ailsa_data_s *d;
 
-static void
-fill_kick_packages(cbc_comm_line_s *cml, dbdata_s *data, string_len_s *build)
-{
-	char buff[BUFF_S], *tmp;
-	size_t len = NONE;
-	dbdata_s *list = data;
-
-	snprintf(buff, MAC_S, "\
+	dprintf(fd, "\
+\n\
 %%packages\n\
 \n\
 @Base\n\
 ");
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-	while (list) {
-		len = strlen(list->fields.text);
-		len++;
-		if ((build->size + len) >= build->len)
-			resize_string_buff(build);
-		tmp = build->string + build->size;
-		snprintf(tmp, len + 1, "%s\n", list->fields.text);
-		build->size += len;
-		list = list->next;
+	e = pack->head;
+	while (e) {
+		d = e->data;
+		dprintf(fd, "%s\n", d->data->text);
+		e = e->next;
 	}
-	tmp = build->string + build->size;
-	snprintf(tmp, CH_S, "\n");
-	build->size++;
-	tmp++;
-	if ((build->size + 6) >= build->len)
-		resize_string_buff(build);
-// This breaks a Centos 5 build
-	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
-		snprintf(tmp, COMM_S, "%%end\n\n");
-		build->size += 6;
-	}
+	dprintf(fd, "\n%%end\n\n");
+	return 0;
 }
 
-void
-add_kick_base_script(dbdata_s *data, string_len_s *build)
+static int
+cbc_write_kickstart_scripts(int fd, char *url, AILLIST *sys)
 {
-	char buff[BUFF_S], *tmp;
-	size_t len = NONE;
-	if (!(data))
-		return;
-	char *script = data->fields.text;
+	if (!(url) || !(sys) || (fd == 0))
+		return AILSA_NO_DATA;
 
-	snprintf(buff, BUFF_S, "\
-\n\
+	dprintf(fd, "\
 %%post\n\
+\n\
 WGET=/usr/bin/wget\n\
 cd /root\n\
-wget %sscripts/disable_install.php > /root/disable.log 2>&1\n\
+$WGET %sscripts/disable_install.php > disable.log 2>&1\n\
 \n\
 $WGET %sscripts/firstboot.sh\n\
 chmod 755 firstboot.sh\n\
-./firstboot.sh >> scripts.log 2>&1\n\
+./firstboot.sh > firstboot.log 2>&1\n\
 \n\
 wget %sscripts/motd.sh\n\
 chmod 755 motd.sh\n\
-./motd.sh > motd.log\n\n", script, script, script);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
+./motd.sh > motd.log 2>&1\n", url, url, url);
+	cbc_write_system_scripts(url, fd, sys);
+	return 0;
 }
 
-#ifndef CHECK_KICK_CONFIG
-# define CHECK_KICK_CONFIG(conf) {                \
-	if (data->next) {                         \
-		server = data->next->fields.text; \
-	} else {                                  \
-		fprintf(stderr,                   \
-		 "Only one data struct in linked list in conf config\n"); \
-		return;                           \
-	}                                         \
-	if (strncmp(url, "NULL", COMM_S) == 0) {  \
-		fprintf(stderr, "url set to NULL in conf config\n");      \
-		return;                           \
-	}                                         \
-	if (!(server)) {                          \
-		fprintf(stderr, "Nothing in DB for conf server\n");       \
-		return;                           \
-	}                                         \
-	if (strncmp(server, "NULL", COMM_S) == 0) {                      \
-		fprintf(stderr, "conf server set to NULL\n");             \
-		return;                           \
-	}                                         \
-}
-#endif /* CHECK_KICK_CONFIG */
-
-void
-add_kick_final_config(cbc_comm_line_s *cml, string_len_s *build, char *url)
+static int
+cbc_check_gb_keyboard(ailsa_cmdb_s *cmc, char *host, AILLIST *list)
 {
-	char buff[BUFF_S], *tmp;
-	size_t len = NONE;
+	if (!(cmc) || !(host) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	ailsa_data_s *d;
 
-	snprintf(buff, BUFF_S, "\
-wget %sscripts/kick-final.sh\n\
-chmod 755 kick-final.sh\n\
-./kick-final.sh > final.log 2>&1\n\
-\n", url);
-	len = strlen(buff);
-	if ((build->size + len) >= build->len)
-		resize_string_buff(build);
-	tmp = build->string + build->size;
-	snprintf(tmp, len + 1, "%s", buff);
-	build->size += len;
-	tmp += len;
-	if ((build->size + 6) >= build->len)
-		resize_string_buff(build);
-// This breaks a Centos 5 build
-	if (strncmp(cml->os_version, "5", COMM_S) != 0) {
-		snprintf(tmp, COMM_S, "%%end\n\n");
-		build->size += 6;
+
+	if ((retval = cmdb_check_add_server_id_to_list(host, cmc, server)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_SERVER_ID, server, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_OS_DETAILS_ON_SERVER_ID query failed");
+		goto cleanup;
 	}
+	if ((os->total == 0) || (os->total < 2)) {
+		ailsa_syslog(LOG_ERR, "OS list wrong length in cbc_check_gb_keyboard");
+		goto cleanup;
+	}
+	d = os->head->next->data;
+	if (strncmp(d->data->text, "6", BYTE_LEN) == 0) {
+		d = list->head->next->next->data;
+		if (strncmp(d->data->text, "gb", BYTE_LEN) == 0) {
+			snprintf(d->data->text, BYTE_LEN, "uk");
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(os);
+		return retval;
 }
 
 int
-get_build_id(ailsa_cmdb_s *cmc, uli_t id, char *name, uli_t *build_id)
+view_defaults_for_cbc(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml)
 {
-	int retval = NONE, type;
-	unsigned int max;
-	dbdata_s *data;
+	if (!(cbt) || !(cml))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_db_data_list_init();
+	AILLIST *var = ailsa_db_data_list_init();
 
-	type = BUILD_ID_ON_SERVER_ID;
-	max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = id;
-	if ((retval = cbc_run_search(cmc, data, BUILD_ID_ON_SERVER_ID)) == 1) {
-		*build_id = data->fields.number;
-		retval = NONE;
-	} else if (retval > 1) {
-		fprintf(stderr,
-			"Multiple builds found for server %s\n", name);
-		retval = MULTIPLE_SERVER_BUILDS;
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_DOMAIN_DETAILS, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_OS_DETAILS, os)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_OS_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_SCHEME_DETAILS, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_SCHEME_DETAILS query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbt, DEFAULT_VARIENT_DETAILS, var)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_VARIENT_DETAILS query failed");
+		goto cleanup;
+	}
+	if (dom->total == 0)
+		printf("No default build domain\n");
+	else
+		printf("Default build domain: %s\n", ((ailsa_data_s *)dom->head->data)->data->text);
+	if (part->total == 0)
+		printf("No default partition scheme\n");
+	else
+		printf("Default partition scheme: %s\n", ((ailsa_data_s *)part->head->data)->data->text);
+	if (var->total == 0)
+		printf("No default varient\n");
+	else
+		printf("Default build varient: %s\n", ((ailsa_data_s *)var->head->data)->data->text);
+	if (os->total == 0) {
+		printf("No default build OS\n");
 	} else {
-		fprintf(stderr,
-			"No build found for server %s\n", name);
-		retval = SERVER_BUILD_NOT_FOUND;
+		printf("Default build os: %s; ", ((ailsa_data_s *)os->head->data)->data->text);
+		printf("Version: %s; ", ((ailsa_data_s *)os->head->next->data)->data->text);
+		printf("Arch: %s\n", ((ailsa_data_s *)os->head->next->next->data)->data->text);
 	}
-	clean_dbdata_struct(data);
-	return retval;
+	cleanup:
+		ailsa_list_full_clean(dom);
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(part);
+		ailsa_list_full_clean(var);
+		return retval;
+
 }
-
-int
-get_modify_query(unsigned long int ids[])
-{
-	int retval = NONE;
-	unsigned long int vid = ids[0], osid = ids[1], dsid = ids[2];
-
-	if (vid > 0) {
-		if (osid > 0) {
-			if (dsid > 0) {
-				retval = UP_BUILD_VAR_OS_PART;
-			} else {
-				retval = UP_BUILD_VAR_OS;
-			}
-		} else {
-			if (dsid > 0) {
-				retval = UP_BUILD_VAR_PART;
-			} else {
-				retval = UP_BUILD_VARIENT;
-			}
-		}
-	} else {
-		if (osid > 0) {
-			if (dsid > 0) {
-				retval = UP_BUILD_OS_PART;
-			} else {
-				retval = UP_BUILD_OS;
-			}
-		} else {
-			if (dsid > 0) {
-				retval = UP_BUILD_PART;
-			}
-		}
-	}
-	return retval;
-}
-
-void
-cbc_prep_update_dbdata(dbdata_s *data, int type, unsigned long int ids[])
-{
-	if (type == UP_BUILD_VAR_OS_PART) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[1];
-		data->next->next->args.number = ids[2];
-		data->next->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VAR_OS) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[1];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VAR_PART) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[2];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_OS_PART) {
-		data->args.number = ids[1];
-		data->next->args.number = ids[2];
-		data->next->next->args.number = ids[3];
-	} else if (type == UP_BUILD_VARIENT) {
-		data->args.number = ids[0];
-		data->next->args.number = ids[3];
-	} else if (type == UP_BUILD_OS) {
-		data->args.number = ids[1];
-		data->next->args.number = ids[3];
-	} else if (type == UP_BUILD_PART) {
-		data->args.number = ids[2];
-		data->next->args.number = ids[3];
-	}
-}
-
-// Static functions
-void
-check_for_gb_keyboard(ailsa_cmdb_s *cbc, unsigned long int server_id, char *key)
-{
-	if (!(cbc) || !(key) || !(server_id))
-		return;
-	int retval = 0, type = GET_BUILD_OS_FROM_SERVER_ID;
-	unsigned int max = cmdb_get_max(cbc_search_args[type], cbc_search_fields[type]);
-	dbdata_s *data;
-
-	init_multi_dbdata_struct(&data, max);
-	data->args.number = server_id;
-	if ((retval = cbc_run_search(cbc, data, type)) == 1) {
-		if ((strncmp(data->fields.text, "Centos", RBUFF_S) == 0) ||
-		 (strncmp(data->fields.text, "Redhat", RBUFF_S) == 0)) {
-			if (strncmp(data->next->fields.text, "6", RBUFF_S) == 0)
-				if (strncmp(key, "gb", RBUFF_S) == 0)
-					snprintf(key, COMM_S, "uk");
-		}
-	}
-}
-
-#undef PRINT_STRING_WITH_LENGTH_CHECK
-

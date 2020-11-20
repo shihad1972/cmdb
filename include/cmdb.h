@@ -1,7 +1,7 @@
 /* 
  *
  *  cmdb: Configuration Management Database
- *  Copyright (C) 2012 - 2014  Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2012 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ enum {			/* dnsa error codes */
 	MY_STATEMENT_FAIL = 15,
 	NO_QUERY = 16,
 	MY_BIND_FAIL = 17,
-	UNKNOWN_QUERY = 18,
+	NO_ZONE_FOUND = 18,
 	INSERT_NOT_CONFIGURED = 19,
 	FILE_O_FAIL = 20,
 	DIR_C_FAIL = 21,
@@ -369,7 +369,8 @@ enum {			/* cbc action codes */
 	RM_CONFIG = 16,
 	LIST_CONFIG = 17,
 	QUERY_CONFIG = 18,
-	LIST_SERVERS = 19
+	LIST_SERVERS = 19,
+	VIEW_DEFAULT = 20,
 };
 
 enum {			/* dnsa action codes */
@@ -449,8 +450,6 @@ extern int optind, opterr, optopt;
 void 
 report_error(int error, const char *errstr);
 void
-display_action_error(short int action);
-void
 display_type_error(short int type);
 void
 get_error_string(int error, char *errstr);
@@ -489,12 +488,6 @@ display_version(char *prog);
 */
 // Database fields query mismatch error functions
 
-void
-cbc_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-cmdb_query_mismatch(unsigned int fields, unsigned int required, int query);
-void
-dnsa_query_mismatch(unsigned int fields, unsigned int required, int query);
 
 // Miscellaneous
 
@@ -512,8 +505,6 @@ int
 write_file(char *filename, char *output);
 void
 convert_time(char *timestamp, unsigned long int *store);
-char *
-get_uname(unsigned long int uid);
 int
 get_ip_from_hostname(dbdata_s *data);
 

@@ -1,20 +1,19 @@
-bin_PROGRAMS = cmdb cpc ckc mkvm mksp
+bin_PROGRAMS = cmdb mkvm mksp
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
 mksp_SOURCES = mksp.c virtual.c virtual.h
 cmdb_SOURCES = cmdb.c cmdbcom.c servers.c customers.c
 dnsa_SOURCES = dnsa.c zones.c dnsacom.c
-CBC_COMBO = cbc_common.c
-CBC_DNSA = cbc_dnsa.c dnsacom.c zones.c
-cbc_SOURCES = cbc.c $(CBC_COMBO) build.c createbuild.c cbccom.c
-cbcdomain_SOURCES = cbcdomain.c $(CBC_COMBO)
-cbcos_SOURCES = cbcos.c $(CBC_COMBO)
-cbcpart_SOURCES = cbcpart.c $(CBC_COMBO)
-cbclocale_SOURCES = cbclocale.c $(CBC_COMBO)
-cbcvarient_SOURCES = cbcvarient.c $(CBC_COMBO)
-cbcsysp_SOURCES = cbcsysp.c $(CBC_COMBO)
-cbcscript_SOURCES = cbcscript.c $(CBC_COMBO)
+CBC_DNSA = dnsacom.c zones.c
+cbc_SOURCES = cbc.c build.c createbuild.c cbccom.c
+cbcdomain_SOURCES = cbcdomain.c
+cbcos_SOURCES = cbcos.c
+cbcpart_SOURCES = cbcpart.c
+cbclocale_SOURCES = cbclocale.c
+cbcvarient_SOURCES = cbcvarient.c
+cbcsysp_SOURCES = cbcsysp.c
+cbcscript_SOURCES = cbcscript.c
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript

@@ -46,14 +46,8 @@
 #include <ailsasql.h>
 #include "cmdb.h"
 #include "cmdb_cbc.h"
-#include "cbc_data.h"
-#include "cbc_common.h"
-#include "cbcnet.h"
-#include "cbc_base_sql.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
-# include "dnsa_base_sql.h"
-# include "cbc_dnsa.h"
 #endif // HAVE_DNSA 
 
 static int
@@ -104,6 +98,9 @@ write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom);
 static int
 cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *dom);
 
+static int
+set_default_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
+
 int
 main(int argc, char *argv[])
 {
@@ -131,6 +128,8 @@ main(int argc, char *argv[])
 		retval = modify_cbc_build_domain(cmc, cdcl);
 	else if (cdcl->action == WRITE_CONFIG)
 		retval = write_dhcp_net_config(cmc);
+	else if (cdcl->action == SET_DEFAULT)
+		retval = set_default_cbc_build_domain(cmc, cdcl);
 	else
 		printf("Unknown Action type\n");
 
@@ -170,7 +169,7 @@ validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 static int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 {
-	const char *optstr = "abdk:lmn:rt:vw";
+	const char *optstr = "abdk:lmn:rt:vwz";
 	int opt, retval;
 
 	retval = NONE;
@@ -192,6 +191,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		{"version",		no_argument,		NULL,	'v'},
 		{"write",		no_argument,		NULL,	'w'},
 		{"commit",		no_argument,		NULL,	'w'},
+		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
 	};
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
@@ -211,6 +211,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->action = RM_CONFIG;
 		} else if (opt == 'w') {
 			cdl->action = WRITE_CONFIG;
+		} else if (opt == 'z') {
+			cdl->action = SET_DEFAULT;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
 		} else if (opt == 'n') {
@@ -360,6 +362,7 @@ display_build_domain_details(AILLIST *d)
 	if (d->total != 11)
 		return;
 	char ip[SERVICE_LEN];
+	char *uname, *cname;
 	uint32_t ip_addr;
 	AILELEM *e = d->head;
 
@@ -397,7 +400,8 @@ display_build_domain_details(AILLIST *d)
 		printf("No NTP configuration\n");
 	}
 	e = e->next;
-	printf("Created by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	uname = cmdb_get_uname(((ailsa_data_s *)e->data)->data->number);
+	printf("Created by:\t%s", uname);
 	e = e->next;
 #ifdef HAVE_MYSQL
 	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
@@ -406,7 +410,8 @@ display_build_domain_details(AILLIST *d)
 #endif
 		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
 	e = e->next;
-	printf("Modified by:\t%s", get_uname(((ailsa_data_s *)e->data)->data->number));
+	cname = cmdb_get_uname(((ailsa_data_s *)e->data)->data->number);
+	printf("Modified by:\t%s", cname);
 	e = e->next;
 #ifdef HAVE_MYSQL
 	if (((ailsa_data_s *)e->data)->type == AILSA_DB_TIME)
@@ -414,6 +419,10 @@ display_build_domain_details(AILLIST *d)
 	else
 #endif
 		printf(" @ %s\n", ((ailsa_data_s *)e->data)->data->text);
+	if (uname)
+		my_free(uname);
+	if (cname)
+		my_free(cname);
 }
 
 static void
@@ -718,4 +727,52 @@ cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *dom)
 		return retval;
 	}
 	return retval;
+}
+
+static int
+set_default_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
+{
+	if (!(cbs) || !(cdl))
+		return AILSA_NO_DATA;
+	if (!(cdl->domain))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *domain = ailsa_db_data_list_init();
+	AILLIST *def = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_build_domain_id_to_list(cdl->domain, cbs, domain)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add build domain ID to list");
+		goto cleanup;
+	}
+	if (domain->total == 0) {
+		ailsa_syslog(LOG_ERR, "Build domain %s does not exist");
+		goto cleanup;
+	}
+	if ((retval = ailsa_basic_query(cbs, DEFAULT_DOMAIN, def)) != 0) {
+		ailsa_syslog(LOG_ERR, "DEFAULT_DOMAIN query failed");
+		goto cleanup;
+	}
+	if (def->total == 0) {
+		if ((retval = cmdb_populate_cuser_muser(domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to domain list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_insert_query(cbs, INSERT_DEFAULT_DOMAIN, domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "INSERT_DEFAULT_DOMAIN query failed");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add muser to domain list");
+			goto cleanup;
+		}
+		if ((retval = ailsa_update_query(cbs, update_queries[UPDATE_DEFAULT_DOMAIN], domain)) != 0) {
+			ailsa_syslog(LOG_ERR, "UPDATE_DEFAULT_DOMAIN query failed");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(domain);
+		ailsa_list_full_clean(def);
+		return retval;
 }

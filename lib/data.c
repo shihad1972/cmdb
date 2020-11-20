@@ -1,7 +1,7 @@
 /*
  *
  *  alisacmdb: Alisatech Configuration Management Database library
- *  Copyright (C) 2015 Iain M Conochie <iain-AT-thargoid.co.uk>
+ *  Copyright (C) 2015 - 2020 Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -313,6 +313,173 @@ ailsa_clean_dhcp(void *dhcp)
 }
 
 void
+ailsa_clean_tftp(void *tftp)
+{
+	if (!(tftp))
+		return;
+	ailsa_tftp_s *data = tftp;
+	if (data->alias)
+		my_free(data->alias);
+	if (data->version)
+		my_free(data->version);
+	if (data->arch)
+		my_free(data->arch);
+	if (data->country)
+		my_free(data->country);
+	if (data->locale)
+		my_free(data->locale);
+	if (data->keymap)
+		my_free(data->keymap);
+	if (data->boot_line)
+		my_free(data->boot_line);
+	if (data->arg)
+		my_free(data->arg);
+	if (data->url)
+		my_free(data->url);
+	if (data->net_int)
+		my_free(data->net_int);
+	if (data->build_type)
+		my_free(data->build_type);
+	my_free(data);
+}
+
+void
+ailsa_clean_build(void *build)
+{
+	if (!(build))
+		return;
+	ailsa_build_s *data = build;
+	if (data->locale)
+		my_free(data->locale);
+	if (data->language)
+		my_free(data->language);
+	if (data->keymap)
+		my_free(data->keymap);
+	if (data->country)
+		my_free(data->country);
+	if (data->net_int)
+		my_free(data->net_int);
+	if (data->ip)
+		my_free(data->ip);
+	if (data->ns)
+		my_free(data->ns);
+	if (data->nm)
+		my_free(data->nm);
+	if (data->gw)
+		my_free(data->gw);
+	if (data->ntp)
+		my_free(data->ntp);
+	if (data->host)
+		my_free(data->host);
+	if (data->domain)
+		my_free(data->domain);
+	if (data->mirror)
+		my_free(data->mirror);
+	if (data->os)
+		my_free(data->os);
+	if (data->version)
+		my_free(data->version);
+	if (data->os_ver)
+		my_free(data->os_ver);
+	if (data->arch)
+		my_free(data->arch);
+	if (data->url)
+		my_free(data->url);
+	if (data->fqdn)
+		my_free(data->fqdn);
+	my_free(data);
+}
+
+void
+ailsa_clean_partition(void *partition)
+{
+	if (!(partition))
+		return;
+	ailsa_partition_s *data = partition;
+	if (data->mount)
+		my_free(data->mount);
+	if (data->fs)
+		my_free(data->fs);
+	if (data->logvol)
+		my_free(data->logvol);
+	my_free(data);
+}
+
+void
+ailsa_clean_syspack(void *sysp)
+{
+	if (!(sysp))
+		return;
+	ailsa_syspack_s *data = sysp;
+
+	if (data->name)
+		my_free(data->name);
+	if (data->field)
+		my_free(data->field);
+	if (data->type)
+		my_free(data->type);
+	if (data->arg)
+		my_free(data->arg);
+	if (data->newarg)
+		my_free(data->newarg);
+	my_free(data);
+}
+
+void
+ailsa_clean_sysscript(void *script)
+{
+	if (!(script))
+		return;
+	ailsa_sysscript_s *data = script;
+
+	if (data->name)
+		my_free(data->name);
+	if (data->arg)
+		my_free(data->arg);
+	my_free(data);
+}
+
+void
+ailsa_clean_dhcp_config(void *dhcp)
+{
+	if (!(dhcp))
+		return;
+	ailsa_dhcp_conf_s *data = dhcp;
+	if (data->name)
+		my_free(data->name);
+	if (data->mac)
+		my_free(data->mac);
+	if (data->ip)
+		my_free(data->ip);
+	if (data->domain)
+		my_free(data->domain);
+	my_free(data);
+}
+
+void
+ailsa_clean_cbcos(void *cbcos)
+{
+	if (!(cbcos))
+		return;
+	ailsa_cbcos_s *data = cbcos;
+	if (data->os)
+		my_free(data->os);
+	if (data->os_version)
+		my_free(data->os_version);
+	if (data->alias)
+		my_free(data->alias);
+	if (data->ver_alias)
+		my_free(data->ver_alias);
+	if (data->arch)
+		my_free(data->arch);
+	if (data->ctime)
+		my_free(data->ctime);
+	if (data->mtime)
+		my_free(data->mtime);
+	my_free(data);
+}
+
+void
 ailsa_clean_iface(void *iface)
 {
 	if (!(iface))
@@ -321,6 +488,22 @@ ailsa_clean_iface(void *iface)
 	if (data->name)
 		my_free(data->name);
 	my_free(data);
+}
+
+void
+clean_cbc_syss_s(cbc_syss_s *scr)
+{
+	if (!(scr))
+		return;
+	if (scr->name)
+		free(scr->name);
+	if (scr->arg)
+		free(scr->arg);
+	if (scr->domain)
+		free(scr->domain);
+	if (scr->type)
+		free(scr->type);
+	free(scr);
 }
 
 void
@@ -444,16 +627,33 @@ convert_time(char *timestamp, unsigned long int *store)
 }
 
 char *
-get_uname(unsigned long int uid)
+cmdb_get_uname(unsigned long int uid)
 {
-	struct passwd *user;
+	struct passwd pwd;
+	struct passwd *result;
+	char *buf, *user;
+	size_t bsize, usize;
+	long sconf;
 
-	if ((user = getpwuid((uid_t)uid)))
-		return user->pw_name;
+	if ((sconf = sysconf(_SC_GETPW_R_SIZE_MAX)) < 0)
+		bsize = 16384;
 	else
-		return NULL;
+		bsize = (size_t)sconf;
+	if ((sconf = sysconf(_SC_LOGIN_NAME_MAX)) < 0)
+		usize = 256;
+	else
+		usize = (size_t)sconf;
+	buf = ailsa_calloc(bsize, "buf in cmdb_get_uname");
+	user = ailsa_calloc(usize, "user in cmdb_get_uname");
+	getpwuid_r((uid_t)uid, &pwd, buf, bsize, &result);
+	if (!(result)) {
+		snprintf(user, usize, "NULL");
+	} else {
+		snprintf(user, usize, "%s",  pwd.pw_name);
+	}
+	free(buf);
+	return user;
 }
-
 
 int
 get_ip_from_hostname(dbdata_s *data)
@@ -624,7 +824,7 @@ ailsa_db_data_list_init(void)
 AILLIST *
 ailsa_dhcp_list_init(void)
 {
-	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_dhcp_list_init");
 	ailsa_list_init(list, ailsa_clean_dhcp);
 	return list;
 }
@@ -632,15 +832,55 @@ ailsa_dhcp_list_init(void)
 AILLIST *
 ailsa_iface_list_init(void)
 {
-	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_iface_list_init");
 	ailsa_list_init(list, ailsa_clean_iface);
+	return list;
+}
+
+AILLIST *
+ailsa_dhcp_config_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_dhcp_config_list_init");
+	ailsa_list_init(list, ailsa_clean_dhcp_config);
+	return list;
+}
+
+AILLIST *
+ailsa_cbcos_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_cbcos_list_init");
+	ailsa_list_init(list, ailsa_clean_cbcos);
+	return list;
+}
+
+AILLIST *
+ailsa_partition_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_partition_list_init");
+	ailsa_list_init(list, ailsa_clean_partition);
+	return list;
+}
+
+AILLIST *
+ailsa_syspack_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_syspack_list_init");
+	ailsa_list_init(list, ailsa_clean_syspack);
+	return list;
+}
+
+AILLIST *
+ailsa_sysscript_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_sysscript_list_init");
+	ailsa_list_init(list, ailsa_clean_sysscript);
 	return list;
 }
 
 ailsa_data_s *
 ailsa_db_text_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_text_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_TEXT;
 	return data;
@@ -649,7 +889,7 @@ ailsa_db_text_data_init(void)
 ailsa_data_s *
 ailsa_db_lint_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_lint_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_LINT;
 	return data;
@@ -658,7 +898,7 @@ ailsa_db_lint_data_init(void)
 ailsa_data_s *
 ailsa_db_sint_data_init(void)
 {
-	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in cmdb_list_contacts_for_customers");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_db_sint_data_init");
 	ailsa_init_data(data);
 	data->type = AILSA_DB_SINT;
 	return data;
@@ -850,8 +1090,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -864,8 +1103,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -880,8 +1118,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
@@ -892,28 +1129,23 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		prefix == 31 || prefix == 32) {
 		tmp = strrchr(line, c);
 		++tmp;
-		len = strlen(tmp);
-		strncat(in_addr, tmp, len);
+		strncat(in_addr, tmp, SERVICE_LEN);
 		strcat(in_addr, ".");
 		--tmp;
 		*tmp = '\0';
 		snprintf(classless, CONF_S, "/%lu.", prefix);
-		len = strlen(classless);
-		strncat(in_addr, classless, len);
+		strncat(in_addr, classless, SERVICE_LEN);
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
-			len = strlen(tmp);
-			strncat(in_addr, tmp, len);
+			strncat(in_addr, tmp, SERVICE_LEN);
 			strcat(in_addr, ".");
 			--tmp;
 			*tmp = '\0';
 			i++;
 		}
 	}
-	len = strlen(line);
-	strncat(in_addr, line, len);
-	len = strlen(louisa);
-	strncat(in_addr, louisa, len);
+	strncat(in_addr, line, SERVICE_LEN);
+	strncat(in_addr, louisa, SERVICE_LEN);
 	free(line);
 	free(classless);
 }

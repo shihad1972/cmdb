@@ -22,9 +22,25 @@
 
 #ifndef __CMDB_DNSA_H__
 # define __CMDB_DNSA_H__
-# include "base_sql.h"
 # include "cmdb.h"
-# include "dnsa_data.h"
+
+typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
+	short int action;
+	short int type;
+	unsigned long int prefix;
+	char *rtype;
+	char *ztype;
+	char *service;
+	char *protocol;
+	char *domain;
+	char *toplevel;
+	char *config;
+	char *host;
+	char *dest;
+	char *master;
+	char *glue_ip;
+	char *glue_ns;
+} dnsa_comm_line_s;
 
 // Get command line args and pass them. Put actions into the struct
 int
@@ -73,8 +89,6 @@ delete_glue_zone (ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 int
 delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
 /* End addition 07/03/2013 */
-void
-get_duplicate_a_records(dnsa_comm_line_s *cm, dnsa_s *dnsa);
 /* Zone display functions */
 void
 list_zones(ailsa_cmdb_s *dc);
@@ -87,10 +101,6 @@ display_rev_zone(char *domain, ailsa_cmdb_s *dc);
 void
 list_glue_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
-void
-select_specific_ip(dnsa_s *dnsa, dnsa_comm_line_s *cm);
-void
-add_int_ip_to_fwd_records(record_row_s *records);
 /* Added 05/03/2013 */
 int
 delete_preferred_a(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);

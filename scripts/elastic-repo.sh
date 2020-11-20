@@ -1,12 +1,5 @@
 #!/bin/sh
-#
-#  Build script to configure rsyslog to log remotely to a logging 
-#  server
-#
-#  Takes the name or IP of the logging server as argument
-#
-#
-#  Copyright (C) 2012 - 2013  Iain M Conochie <iain-AT-thargoid.co.uk>
+#  Copyright (C) 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,12 +14,22 @@
 #  You should have received a copy of the GNU General Public License along
 #  with this program; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#  elastic-repo.sh
+#  Create the required configuration on a debian host for the elasticsearch
+#  repository
+
+# *** 
+#     We cannot currently use this script within the cbc software, unless we
+#     have a domain set aside specifically for the server and the clients are
+#     in a separate domain.
+# ***
 
 if [ -z "$1" ]; then
   echo "No URL passed as argument"
   exit 1;
 else
-  url=$1;
+  STATUS=$1;
 fi
 
 if [ -d /target ]; then
@@ -36,8 +39,8 @@ else
 fi
 
 DIR=`pwd`
+SCRIPT="${TGT}/../usr/share/firstboot/004-elastic-search.sh"
 WGET=/usr/bin/wget
-SCRIPT="${TGT}/../usr/share/firstboot/003-hobbit-setup.sh"
 if [ -z "$WGET" ]; then
   echo "Cannot find wget"
   exit 1
@@ -47,30 +50,21 @@ if [ $DIR != $TGT ]; then
   cd $TGT
 fi
 
-for i in hobbit-patch.sh deploy-patch.sh lspci.sh deploy-lspci.sh; do
-  $WGET ${url}${i}
-  chmod 755 $i
-done
-
-if [ -f hobbit-patch.sh ] && [ -f deploy-patch.sh ]; then
-  cat > $SCRIPT <<EOF
+cat > $SCRIPT << EOF
 #!/bin/sh
-#
-# Setup hobbit-patch script
-#
-
-cd /root
-./deploy-patch.sh > hobbit-patch.log 2>&1
-./deploy-lspci.sh > lspci.log 2>&1
-if [ -f /etc/init.d/hobbit-client ]; then
-  CLIENT=hobbit-client
-elif [ -f /etc/init.d/xymon-client ]; then
-  CLIENT=xymon-client
+STATUS=$STATUS
+apt-get update && apt-get install gnupg -y
+$WGET -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list
+apt-get update
+if [ "\$STATUS" = "server" ]; then
+  apt-get install elasticsearch kibana
+  systemctl enable elasticsearch
+  systemctl enable kibana
+  systemctl start elasticsearch
+  systemctl start kibana
 fi
-service \$CLIENT restart
+apt-get install filebeat
 EOF
-  chmod 755 $SCRIPT
-else
-  echo "Unable to find files"
-fi
+chmod 755 $SCRIPT
 

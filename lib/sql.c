@@ -41,7 +41,6 @@
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include "cmdb.h"
-#include "base_sql.h"
 
 #ifdef HAVE_MYSQL
 
