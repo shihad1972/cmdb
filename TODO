@@ -1,3 +1,36 @@
+03/11/2020
+When adding package to varient, we need to check if the package already
+exists in that varient and not add it again. IDEMPOTENT
+	** Done. Commit ID: 51dcd4e **
+
+17/07/2020
+When displaying build OS, it would be useful to know what servers are
+built with that OS.
+Also display does not honour -o <os_version> nor -t <architecture>
+
+11/07/2020
+Should be able to read config values from environment variables. Also
+have defaults either in config file, environment or database
+
+02/07/2020
+Fix cbcvarient where displaying varient that does not exist blows up.
+
+28/06/2020
+The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do
+not find what they are searching for. Should maybe have a wrapper function
+for them if we want to be _sure_ there the server is added. Could probably
+do this when consolidating these functions doing note 24/06/2020.
+
+27/06/2020
+It would be useful to have extra functions for the list(clone being an example)
+
+24/06/2020
+Consolidate the cmdb_add_*_id_to_list into 2 functions:
+	1 for char *
+	1 for char **
+Have to be careful of the char ** one; Need to tell length of list. Maybe end
+with NULL pointer at the end of list?
+
 20/06/2020
  Strange bug when building reverse zones with newly set preferred A record.
 It does not add the record in on the first time the zone is built, only on
