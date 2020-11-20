@@ -184,6 +184,32 @@ ailsa_list_remove(AILLIST *list, AILELEM *element, void **data)
 }
 
 int
+ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len)
+{
+	if (!(l) || !(e))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t count;
+	size_t no = 0;
+	void *d = NULL;
+	AILELEM *p = e;
+	AILELEM *n;
+	for (count = 0; count < len; count++) {
+		n = p->next;
+		retval = ailsa_list_remove(l, p, &d);
+		if (retval == 0 && l->destroy != NULL) {
+			l->destroy(d);
+			no++;
+		}
+		p = n;
+	}
+	if (no != len) {
+		ailsa_syslog(LOG_ERR, "Only %zu of %zu elements removed from list", no, len);
+		return 1;
+	}
+	return 0;
+}
+int
 ailsa_list_pop_element(AILLIST *list, AILELEM *element)
 {
 	AILELEM *e, *f;

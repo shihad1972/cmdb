@@ -185,6 +185,9 @@ static int
 build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch);
 
 static int
+check_package_list(ailsa_cmdb_s *cbc, AILLIST *list);
+
+static int
 get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch);
 
 static int
@@ -687,8 +690,14 @@ add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 		ailsa_syslog(LOG_ERR, "Cannot build package list to insert");
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_query(cbc, insert_queries[INSERT_BUILD_PACKAGE], list)) != 0 )
-		ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
+	if ((retval = check_package_list(cbc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot check package list");
+		goto cleanup;
+	}
+	if (list->total > 0) {
+		if ((retval = ailsa_multiple_query(cbc, insert_queries[INSERT_BUILD_PACKAGE], list)) != 0 )
+			ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
+	}
 	cleanup:
 		ailsa_list_destroy(list);
 		my_free(list);
@@ -784,6 +793,56 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 		return retval;
 }
 
+static int
+check_package_list(ailsa_cmdb_s *cbc, AILLIST *list)
+{
+	if (!(cbc) || !(list))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *results = ailsa_db_data_list_init();
+	AILLIST *pack = ailsa_db_data_list_init();
+	AILELEM *elem = list->head;
+	AILELEM *head = NULL;
+	ailsa_data_s *data = NULL;
+	size_t len = 5;
+	while (elem) {
+		head = elem;
+		data = elem->data;
+		if ((retval = cmdb_add_string_to_list(data->data->text, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add package name to package list");
+			goto cleanup;
+		}
+		elem = elem->next;
+		data = elem->data;
+		if ((retval = cmdb_add_number_to_list(data->data->number, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add varient_id to package list");
+			goto cleanup;
+		}
+		elem = elem->next;
+		data = elem->data;
+		if ((retval = cmdb_add_number_to_list(data->data->number, pack)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add os_id to package list");
+			goto cleanup;
+		}
+		elem = elem->next->next->next;
+		if ((retval = ailsa_argument_query(cbc, PACKAGE_FULL, pack, results)) != 0) {
+			ailsa_syslog(LOG_ERR, "PACKAGE_FULL query failed");
+			goto cleanup;
+		}
+		if (results->total > 0) {
+			if ((retval = ailsa_list_remove_elements(list, head, len)) != 0)
+				goto cleanup;
+		}
+		ailsa_list_destroy(pack);
+		ailsa_list_destroy(results);
+		ailsa_list_init(pack, ailsa_clean_data);
+		ailsa_list_init(results, ailsa_clean_data);
+	}
+	cleanup:
+		ailsa_list_full_clean(results);
+		ailsa_list_full_clean(pack);
+		return retval;
+}
 static int
 get_build_os_query(AILLIST *list, unsigned int *query, char *os, char *vers, char *arch)
 {

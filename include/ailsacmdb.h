@@ -615,6 +615,8 @@ ailsa_list_insert(AILLIST *list, void *data);
 int
 ailsa_list_remove(AILLIST *list, AILELEM *element, void **data);
 int
+ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len);
+int
 ailsa_list_pop_element(AILLIST *list, AILELEM *element);
 void
 ailsa_clean_element(AILLIST *list, AILELEM *e);
