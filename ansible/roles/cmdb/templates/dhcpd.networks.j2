@@ -1,0 +1,12 @@
+{% for item in interfaces %}
+  shared-network {{ item.domain }} {
+        option domain-name-servers {{ item.address }};
+        option domain-search "{{ item.domain }}";
+        option routers {{ item.address }};
+        subnet {{ item.network }} netmask {{ item.netmask_full }} {
+                authoratative;
+                next-server {{ item.address }};
+                filename "pxelinux.0";
+        }
+}
+{% endfor %}

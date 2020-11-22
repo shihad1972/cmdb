@@ -1,0 +1,38 @@
+---
+
+- name: Create cmdb group
+  become: true
+  group:
+    name: "{{ cmdb_uname }}"
+    gid: "{{ cmdb_uid }}"
+  when: do_cmdb_user|bool
+
+- name: Create cmdb user
+  become: true
+  user:
+    name: "{{ cmdb_uname }}"
+    comment: "CMDB system user"
+    group: "{{ cmdb_uname }}"
+    home: "{{ cmdb_dir }}"
+    shell: /bin/bash
+    uid: "{{ cmdb_uid }}"
+  when: do_cmdb_user|bool
+
+- name: Create cmdb top level directory
+  become: true
+  file:
+    group: "{{ cmdb_uname }}"
+    owner: "{{ cmdb_uname }}"
+    mode: 0775
+    path: "{{ cmdb_dir }}"
+    state: directory
+
+- name: Create cmdb directory structure
+  become: true
+  file:
+    group: "{{ cmdb_uname }}"
+    owner: "{{ cmdb_uname }}"
+    mode: 0775
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ cmdb_dirs }}"

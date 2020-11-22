@@ -1,0 +1,28 @@
+---
+
+- name: Ensure directory can be written to by cmdb group
+  become: true
+  file:
+    path: "{{ tftp_dir }}"
+    group: "{{ cmdb_uname }}"
+    mode: 02775
+    state: directory
+
+- name: Create pxelinux.cfg directory
+  become: true
+  file:
+    path: "{{ tftp_dir }}/pxelinux.cfg"
+    owner: "{{ cmdb_uname }}"
+    group: "{{ cmdb_uname }}"
+    mode: 02775
+    state: directory
+
+- name: Copy pxelinux.0 into TFTP directory
+  become: true
+  copy:
+    remote_src: yes
+    src: "{{ pxelinux }}"
+    dest: "{{ tftp_dir }}/pxelinux.0"
+    owner: root
+    group: root
+    mode: 0644

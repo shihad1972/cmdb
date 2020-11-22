@@ -1,0 +1,41 @@
+---
+
+- name: Create basic DHCPD configuration file
+  become: true
+  copy:
+    src: dhcpd.conf
+    dest: "{{ dhcp_conf_dir }}/dhcpd.conf"
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart dhcpd
+
+- name: Create DHCP hosts file
+  become: true
+  copy:
+    content: "# DHCPD Hosts file for CMDB\n"
+    dest: "{{ dhcp_conf_dir }}/dhcpd.hosts"
+    mode: 0664
+    owner: root
+    group: "{{ cmdb_group }}"
+  notify: restart dhcpd
+
+- name: Create initial DHCP networks file
+  become: true
+  template:
+    src: dhcpd.networks.j2
+    dest: "{{ dhcp_conf_dir }}/dhcpd.networks"
+    mode: 0664
+    owner: root
+    group: "{{ cmdb_group }}"
+  notify: restart dhcpd
+
+- name: Create defaults file
+  become: true
+  template:
+    src: isc-dhcp-server.j2
+    dest: /etc/default/isc-dhcp-server
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart dhcpd

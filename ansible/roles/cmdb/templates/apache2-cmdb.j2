@@ -1,0 +1,27 @@
+#
+# This is the connfiguration file for the cmdb web portal used
+# by the cmdb build system, Muppett
+Alias /cmdb/scripts/ "{{ cmdb_dir }}/scripts/"
+<Directory "{{ cmdb_dir }}/scripts/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Require all granted
+</Directory>
+
+Alias /cmdb/hosts/ "{{ cmdb_dir }}/hosts/"
+<Directory "{{ cmdb_dir }}/hosts/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Require all granted
+</Directory>
+
+Alias /cmdb/ "{{ cmdb_dir }}/web/"
+<Directory "{{ cmdb_dir }}/web/">
+    Options Indexes FollowSymLinks Includes MultiViews
+    Require all granted
+</Directory>
+
+ScriptAlias /cmdb-bin/ "{{ cmdb_dir }}/cgi-bin/"
+<Directory "{{ cmdb_dir }}/cgi-bin/">
+    AllowOverride None
+    Options ExecCGI Includes
+    Require all granted
+</Directory>

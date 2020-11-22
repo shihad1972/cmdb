@@ -1,0 +1,56 @@
+---
+
+- name: Grab distro specific mysql vars
+  include_vars: debian-mysql.yml
+  when: ansible_distribution == 'Debian'
+
+- name: Install the mysql package
+  become: true
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ mysql_packages }}"
+
+- name: Ensure database is started
+  become: true
+  service:
+    name: "{{ mysql_service }}"
+    state: started
+    enabled: yes
+
+- name: Set database root password
+  become: true
+  shell: "mysql -e \"ALTER USER \'root\'@\'localhost\' IDENTIFIED BY \'{{ mysql_password }}\';\" && touch /root/.mysql_ansible"
+  args:
+    creates: /root/.mysql_ansible
+    
+- name: Create initial my.cnf file
+  become: true
+  copy:
+    content: "[client]\nuser=root\npassword={{ mysql_password }}\n"
+    dest: "/root/.my.cnf"
+    mode: 0600
+    owner: root
+    group: root
+
+- name: Create initial database container
+  become: true
+  mysql_db:
+    login_user: root
+    name: "{{ mysql_db_name }}"
+
+- name: Copy sql dump file to remote host
+  become: true
+  copy:
+    src: dump.sql
+    dest: "{{ mysql_dump_file }}"
+    mode: 0640
+    owner: root
+    group: root
+
+- name: Import schema into database
+  become: true
+  mysql_db:
+    state: import
+    name: "{{ mysql_db_name }}"
+    target: "{{ mysql_dump_file }}"

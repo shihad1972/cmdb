@@ -1,0 +1,16 @@
+---
+# vars file for cmdb
+
+debian_apache_conf_d: /etc/apache2/conf-available
+debian_apache_conf_enable: /etc/apache2/conf-enabled/
+cmdb_dir: /var/lib/cmdb
+cmdb_dirs:
+  - "{{ cmdb_dir }}"
+  - "{{ cmdb_dir }}/cmdb"
+  - "{{ cmdb_dir }}/data"
+  - "{{ cmdb_dir }}/hosts"
+  - "{{ cmdb_dir }}/scripts"
+  - "{{ cmdb_dir }}/sql"
+  - "{{ cmdb_dir }}/web"
+tftp_dir: /srv/tftp
+pxelinux: /usr/lib/PXELINUX/pxelinux.0

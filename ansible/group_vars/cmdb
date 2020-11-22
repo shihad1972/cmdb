@@ -1,6 +1,6 @@
 ---
 
 domain: ailsatech.co.uk
-ip_address: "{{ ansible_default_ipv4.ip_address }}"
+interface: ens9
 fqdn: "{{ ansible_fqdn }}"
 do_cmdb_user: false

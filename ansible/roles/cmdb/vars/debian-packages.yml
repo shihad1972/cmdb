@@ -1,0 +1,22 @@
+---
+
+packages:
+  - apache2
+  - apache2-bin
+  - libapache2-mod-php
+  - tftpd-hpa
+  - isc-dhcp-server
+  - bind9
+  - bind9-host
+  - sqlite3
+  - default-mysql-client
+  - pxelinux
+  - syslinux
+
+libraries:
+  - libgcrypt20-dev
+  - uuid-dev
+  - libyaml-dev
+  - libvirt-dev
+  - libsqlite3-dev
+  - default-libmysqlclient-dev

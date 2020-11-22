@@ -1,0 +1,12 @@
+---
+# tasks file for cmdb
+
+- import_tasks: prerequisites.yml
+- import_tasks: network.yml
+- import_tasks: packages.yml
+- import_tasks: debian-web-server.yml
+  when: ansible_distribution == 'Debian'
+- import_tasks: tftp.yml
+- import_tasks: dhcp.yml
+- import_tasks: mysql.yml
+  when: do_mysql|bool

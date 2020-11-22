@@ -1,0 +1,22 @@
+---
+
+- name: Add apache configuration
+  become: true
+  template:
+    src: apache2-cmdb.j2
+    dest: "{{ debian_apache_conf_d }}/cmdb.conf"
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart apache2
+
+- name: Symlink the configuration into enabled
+  become: true
+  file:
+    path: "{{ debian_apache_conf_enable }}/cmdb.conf"
+    src: "{{ debian_apache_conf_d }}/cmdb.conf"
+    state: link
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart apache2

@@ -1,0 +1,21 @@
+---
+# defaults file for cmdb
+
+domain: example.net
+cmdb_uname: cmdb
+cmdb_group: "{{ cmdb_uname }}"
+cmdb_uid: 145
+do_cmdb_user: false
+interface: eth0
+interfaces:
+  - address: 172.26.80.9
+    interface: "{{ interface }}"
+    network: 172.26.80.0
+    netmask_full: 255.255.255.0
+    start: 172.26.80.11
+    end: 172.26.80.224
+    type: static
+    domain: "{{ domain }}"
+dhcp_conf_dir: /etc/dhcp
+do_mysql: true
+mysql_password: CwIn.tqjE2S_gqb4-xAet5D

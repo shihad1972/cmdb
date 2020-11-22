@@ -1,0 +1,26 @@
+---
+# handlers file for cmdb
+
+- name: restart tftpd
+  become: true
+  service:
+    name: tftpd-hpa
+    state: restarted
+
+- name: restart dhcpd
+  become: true
+  service:
+    name: isc-dhcp-server
+    state: restarted
+
+- name: restart bind
+  become: true
+  service:
+    name: bind9
+    state: restarted
+
+- name: restart apache2
+  become: true
+  service:
+    name: apache2
+    state: restarted

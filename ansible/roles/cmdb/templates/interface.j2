@@ -1,0 +1,15 @@
+allow-hotplug {{ item.interface }}
+iface {{ item.interface }} inet {{ item.type }}
+{% if item.type == "static" %}
+        address {{ item.address }}
+  {% if item.gateway is defined %}
+        gateway {{ item.gateway }}
+  {% endif %}
+  {% if item.dns_server is defined %}
+        # dns-* options are implemented by the resolvconf package, if installed
+        dns-nameservers {{ item.dns_server }}
+  {% endif %}
+  {% if item.dns_search is defined %}
+        dns-search {{ item.dns_search }}
+  {% endif %}
+{% endif %}
