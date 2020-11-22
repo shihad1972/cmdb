@@ -1,0 +1,6 @@
+---
+
+- src: https://github.com/shihad1972/ansible-cmdb.git
+  scm: git
+  version: master
+  name: cmdb

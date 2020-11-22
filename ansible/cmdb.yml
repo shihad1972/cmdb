@@ -1,0 +1,6 @@
+---
+
+- name: Configure CMDB host
+  hosts: cmdb
+  roles:
+    - { role: cmdb }

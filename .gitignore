@@ -34,3 +34,4 @@ src/mkvm
 src/mksp
 src/dnsa
 .vscode/*
+ansible/roles/
