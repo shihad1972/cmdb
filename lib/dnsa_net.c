@@ -377,10 +377,12 @@ write_zone_file_header(int fd, AILLIST *n, AILLIST *s, char *master)
 		dprintf(fd, "\tIN\tNS\t%s.\n", pri);
 	else
 		dprintf(fd, "\tIN\tNS\t%s\n", pri);
-	if (sec[slen - 1] != '.')
-		dprintf(fd, "\tIN\tNS\t%s.\n", sec);
-	else
-		dprintf(fd, "\tIN\tNS\t%s\n", sec);
+	if (strncmp(sec, "none", 4) != 0) {
+		if (sec[slen - 1] != '.')
+			dprintf(fd, "\tIN\tNS\t%s.\n", sec);
+		else
+			dprintf(fd, "\tIN\tNS\t%s\n", sec);
+	}
 }
 
 static void
