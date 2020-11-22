@@ -12,5 +12,6 @@ cmdb_dirs:
   - "{{ cmdb_dir }}/scripts"
   - "{{ cmdb_dir }}/sql"
   - "{{ cmdb_dir }}/web"
+  - "{{ cmdb_dir }}/tmp"
 tftp_dir: /srv/tftp
 pxelinux: /usr/lib/PXELINUX/pxelinux.0

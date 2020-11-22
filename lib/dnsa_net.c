@@ -931,9 +931,16 @@ dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone)
 		ailsa_syslog(LOG_ERR, "Cannot add primary DNS server to list");
 		return retval;
 	}
-	if ((retval = cmdb_add_string_to_list(cbs->secns, zone)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add secondary DNS server to list");
-		return retval;
+	if (cbs->secns) {
+		if ((retval = cmdb_add_string_to_list(cbs->secns, zone)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add secondary DNS server to list");
+			return retval;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("none", zone)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add none secondary DNS server to list");
+			return retval;
+		}
 	}
 	if ((retval = cmdb_add_number_to_list(cbs->refresh, zone)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add refresh value to list");
