@@ -230,11 +230,11 @@ main(int argc, char *argv[])
 		retval = add_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == CMDB_ADD && cvcl->type == CPACKAGE)
 		retval = add_cbc_package(cmc, cvcl);
-	else if (cvcl->action == RM_CONFIG && cvcl->type == CVARIENT)
+	else if (cvcl->action == CMDB_RM && cvcl->type == CVARIENT)
 		retval = remove_cbc_build_varient(cmc, cvcl);
-	else if (cvcl->action == RM_CONFIG && cvcl->type == CPACKAGE)
+	else if (cvcl->action == CMDB_RM && cvcl->type == CPACKAGE)
 		retval = remove_cbc_package(cmc, cvcl);
-	else if (cvcl->action == MOD_CONFIG)
+	else if (cvcl->action == CMDB_MOD)
 		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
 	else if (cvcl->action == CMDB_DEFAULT)
 		retval = set_default_cbc_varient(cmc, cvcl);
@@ -324,9 +324,9 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		}else if (opt == 'l')
 			cvl->action = CMDB_LIST;
 		else if (opt == 'r')
-			cvl->action = RM_CONFIG;
+			cvl->action = CMDB_RM;
 		else if (opt == 'm')
-			cvl->action = MOD_CONFIG;
+			cvl->action = CMDB_MOD;
 		else if (opt == 'z')
 			cvl->action = CMDB_DEFAULT;
 		else if (opt == 'v')
@@ -377,7 +377,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 	if (cvl->type == CPACKAGE) {
 		if (!(cvl->package))
 			return NO_PACKAGE;
-		if ((cvl->action != CMDB_ADD) && (cvl->action != RM_CONFIG)) {
+		if ((cvl->action != CMDB_ADD) && (cvl->action != CMDB_RM)) {
 			ailsa_syslog(LOG_ERR, "Can only add or remove packages\n");
 			return WRONG_ACTION;
 		}

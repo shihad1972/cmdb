@@ -127,7 +127,7 @@ main (int argc, char *argv[])
 		retval = display_full_seed_scheme(cmc, cpl);
 	else if (cpl->action == CMDB_LIST)
 		retval = list_seed_schemes(cmc);
-	else if (cpl->action == RM_CONFIG)
+	else if (cpl->action == CMDB_RM)
 		retval = remove_scheme_part(cmc, cpl);
 	else if (cpl->action == CMDB_DEFAULT)
 		retval = set_default_scheme(cmc, cpl);
@@ -201,9 +201,9 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'l') {
 			cpl->action = CMDB_LIST;
 		} else if (opt == 'm') {
-			cpl->action = MOD_CONFIG;
+			cpl->action = CMDB_MOD;
 		} else if (opt == 'r') {
-			cpl->action = RM_CONFIG;
+			cpl->action = CMDB_RM;
 		} else if (opt == 'z') {
 			cpl->action = CMDB_DEFAULT;
 		} else if (opt == 'j') {
@@ -314,8 +314,8 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 		return NO_ACTION;
 	if ((cpl->action != CMDB_LIST) && (!(cpl->scheme)))
 		return NO_SCHEME_INFO;
-	if (cpl->action == CMDB_ADD || cpl->action == RM_CONFIG ||
-	    cpl->action == MOD_CONFIG) {
+	if (cpl->action == CMDB_ADD || cpl->action == CMDB_RM ||
+	    cpl->action == CMDB_MOD) {
 		if (cpl->type == NONE)
 			return NO_TYPE;
 		if (!(cpl->partition) && (cpl->type == PARTITION))

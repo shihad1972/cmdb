@@ -99,7 +99,7 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage(cbc);
 		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage(cbc, cbs);
-		else if (cbs->action == RM_CONFIG)
+		else if (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
@@ -108,7 +108,7 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
-		else if (cbs->action == RM_CONFIG)
+		else if (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
@@ -117,7 +117,7 @@ main(int argc, char *argv[])
 			retval = list_cbc_syspackage_conf(cbc, cbs);
 		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
-		else if  (cbs->action == RM_CONFIG)
+		else if  (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage_conf(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
@@ -170,9 +170,9 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		else if (opt == 'l')
 			cbcs->action = CMDB_LIST;
 		else if (opt == 'm')
-			cbcs->action = MOD_CONFIG;
+			cbcs->action = CMDB_MOD;
 		else if (opt == 'r')
-			cbcs->action = RM_CONFIG;
+			cbcs->action = CMDB_RM;
 		else if (opt == 'o')
 			cbcs->what = SPACKCNF;
 		else if (opt == 'p')
@@ -263,10 +263,10 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		}
 	} else if (cbcs->what == SPACKARG) {
 		if (cbcs->action != CMDB_LIST) {
-			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
+			if ((cbcs->action != CMDB_RM) && (!(cbcs->type) || !(cbcs->field))) {
 				fprintf(stderr, "You need both package field and type\n");
 				retval = DISPLAY_USAGE;
-			} else if (cbcs->action == RM_CONFIG && !(cbcs->field)) {
+			} else if (cbcs->action == CMDB_RM && !(cbcs->field)) {
 				fprintf(stderr,
 "You need to provide the field you want to remove\n");
 				retval = DISPLAY_USAGE;

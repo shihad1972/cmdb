@@ -128,7 +128,7 @@ main (int argc, char *argv[])
 		retval = display_cbc_build_os(cmc, cocl);
 	else if (cocl->action == CMDB_ADD)
 		retval = add_cbc_build_os(cmc, cocl);
-	else if (cocl->action == RM_CONFIG)
+	else if (cocl->action == CMDB_RM)
 		retval = remove_cbc_build_os(cmc, cocl);
 	else if (cocl->action == DOWNLOAD)
 		retval = cbcos_grab_boot_files(cmc, cocl);
@@ -202,7 +202,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'l')
 			col->action = CMDB_LIST;
 		else if (opt == 'r')
-			col->action = RM_CONFIG;
+			col->action = CMDB_RM;
 		else if (opt == 'v')
 			col->action = CVERSION;
 		else if (opt == 'g')
@@ -237,7 +237,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		return NO_ACTION;
 	}
 	if (((col->action == CMDB_ADD) || (col->action == CMDB_DEFAULT) ||
-	      (col->action == RM_CONFIG)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
+	      (col->action == CMDB_RM)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}

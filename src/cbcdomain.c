@@ -239,13 +239,13 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	if (cdl->action != CMDB_LIST && cdl->action != CMDB_WRITE &&
 	     !(cdl->domain))
 		return NO_DOMAIN_NAME;
-	if ((cdl->action == MOD_CONFIG) && ((cdl->start_ip != 0) ||
+	if ((cdl->action == CMDB_MOD) && ((cdl->start_ip != 0) ||
 		                            (cdl->end_ip != 0) ||
 		                            (cdl->netmask != 0) ||
 		                            (cdl->gateway != 0) ||
 		                            (cdl->ns != 0)))
 		return NO_MOD_BUILD_DOM_NET;
-	if ((cdl->action == MOD_CONFIG) && (cdl->confntp == 0))
+	if ((cdl->action == CMDB_MOD) && (cdl->confntp == 0))
 		return NO_NTP_SERVER;
 	return retval;
 }
