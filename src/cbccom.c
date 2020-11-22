@@ -97,23 +97,23 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->server_id = strtoul(optarg, NULL, 10);
 			cb->server = ID;
 		} else if (opt == 'u') {
-			cb->action = VIEW_DEFAULT;
+			cb->action = CMDB_DEFAULT;
 		} else if (opt == 'a') {
-			cb->action = ADD_CONFIG;
+			cb->action = CMDB_ADD;
 		} else if (opt == 'd') {
-			cb->action = DISPLAY_CONFIG;
+			cb->action = CMDB_DISPLAY;
 		} else if (opt == 'g') {
 			cb->removeip = TRUE;
 		} else if (opt == 'l') {
-			cb->action = LIST_CONFIG;
+			cb->action = CMDB_LIST;
 		} else if (opt == 'm') {
-			cb->action = MOD_CONFIG;
+			cb->action = CMDB_MOD;
 		} else if (opt == 'q') {
-			cb->action = QUERY_CONFIG;
+			cb->action = CMDB_QUERY;
 		} else if (opt == 'r') {
-			cb->action = RM_CONFIG;
+			cb->action = CMDB_RM;
 		} else if (opt == 'w') {
-			cb->action = WRITE_CONFIG;
+			cb->action = CMDB_WRITE;
 		} else if (opt == 'b') {
 			cb->build_domain = strndup(optarg, RBUFF_S);
 		} else if (opt == 'e') {
@@ -150,14 +150,14 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		return DISPLAY_USAGE;
 	else if (cb->action == CVERSION)
 		return CVERSION;
-	else if (cb->action == QUERY_CONFIG)
+	else if (cb->action == CMDB_QUERY)
 		return NONE;
 	else if (cb->action == NONE)
 		return NO_ACTION;
-	else if ((cb->action != LIST_CONFIG) && (cb->action != VIEW_DEFAULT) &&
+	else if ((cb->action != CMDB_LIST) && (cb->action != CMDB_DEFAULT) &&
 		 (cb->server == 0))
 		return NO_NAME_OR_ID;
-	if (cb->action == ADD_CONFIG) {
+	if (cb->action == CMDB_ADD) {
 		if (!(cb->harddisk)) {
 			ailsa_syslog(LOG_INFO, "No disk provided. Setting to vda");
 			cb->harddisk = strdup("vda");
@@ -175,14 +175,14 @@ void
 print_cbc_command_line_values(cbc_comm_line_s *cml)
 {
 	fprintf(stderr, "########\nCommand line Values\n");
-	if (cml->action == WRITE_CONFIG)
+	if (cml->action == CMDB_WRITE)
 		fprintf(stderr, "Action: Write configuration file\n");
-	else if (cml->action == DISPLAY_CONFIG)
+	else if (cml->action == CMDB_DISPLAY)
 		fprintf(stderr, "Action: Display configuration\n");
-	else if (cml->action == ADD_CONFIG)
+	else if (cml->action == CMDB_ADD)
 		fprintf(stderr, "Action: Add configuration for build\n");
-	else if (cml->action == CREATE_CONFIG)
-		fprintf(stderr, "Action: Create build configuration\n");
+	else if (cml->action == CMDB_WRITE)
+		fprintf(stderr, "Action: Write build configuration file\n");
 	else
 		fprintf(stderr, "Action: Unknown!!\n");
 	if (cml->config)

@@ -49,21 +49,21 @@ main(int argc, char *argv[])
 		retval = query_config();
 	else
 		parse_cmdb_config(cmc);
-	if (cml->action == DISPLAY_CONFIG)
+	if (cml->action == CMDB_DISPLAY)
 		retval = display_build_config(cmc, cml);
-	else if (cml->action == LIST_CONFIG)
+	else if (cml->action == CMDB_LIST)
 		list_build_servers(cmc);
-	else if (cml->action == WRITE_CONFIG)
+	else if (cml->action == CMDB_WRITE)
 		retval = write_build_config(cmc, cml);
-	else if (cml->action == ADD_CONFIG)
+	else if (cml->action == CMDB_ADD)
 		retval = create_build_config(cmc, cml);
-	else if (cml->action == MOD_CONFIG)
+	else if (cml->action == CMDB_MOD)
 		retval = modify_build_config(cmc, cml);
-	else if (cml->action == RM_CONFIG)
+	else if (cml->action == CMDB_RM)
 		retval = remove_build_config(cmc, cml);
-	else if (cml->action == VIEW_DEFAULT)
+	else if (cml->action == CMDB_DEFAULT)
 		retval = view_defaults_for_cbc(cmc, cml);
-	else if (cml->action == QUERY_CONFIG)
+	else if (cml->action == CMDB_QUERY)
 		;
 	else
 		printf("Case %d not implemented yet\n", cml->action);

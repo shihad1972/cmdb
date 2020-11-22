@@ -116,19 +116,19 @@ main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
-	if (cdcl->action == LIST_CONFIG)
+	if (cdcl->action == CMDB_LIST)
 		retval = list_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == DISPLAY_CONFIG)
+	else if (cdcl->action == CMDB_DISPLAY)
 		retval = display_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == ADD_CONFIG)
+	else if (cdcl->action == CMDB_ADD)
 		retval = add_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == RM_CONFIG)
+	else if (cdcl->action == CMDB_RM)
 		retval = remove_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == MOD_CONFIG)
+	else if (cdcl->action == CMDB_MOD)
 		retval = modify_cbc_build_domain(cmc, cdcl);
-	else if (cdcl->action == WRITE_CONFIG)
+	else if (cdcl->action == CMDB_WRITE)
 		retval = write_dhcp_net_config(cmc);
-	else if (cdcl->action == SET_DEFAULT)
+	else if (cdcl->action == CMDB_DEFAULT)
 		retval = set_default_cbc_build_domain(cmc, cdcl);
 	else
 		printf("Unknown Action type\n");
@@ -200,19 +200,19 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a') {
-			cdl->action = ADD_CONFIG;
+			cdl->action = CMDB_ADD;
 		} else if (opt == 'd') {
-			cdl->action = DISPLAY_CONFIG;
+			cdl->action = CMDB_DISPLAY;
 		} else if (opt == 'l') {
-			cdl->action = LIST_CONFIG;
+			cdl->action = CMDB_LIST;
 		} else if (opt == 'm') {
-			cdl->action = MOD_CONFIG;
+			cdl->action = CMDB_MOD;
 		} else if (opt == 'r') {
-			cdl->action = RM_CONFIG;
+			cdl->action = CMDB_RM;
 		} else if (opt == 'w') {
-			cdl->action = WRITE_CONFIG;
+			cdl->action = CMDB_WRITE;
 		} else if (opt == 'z') {
-			cdl->action = SET_DEFAULT;
+			cdl->action = CMDB_DEFAULT;
 		} else if (opt == 'k') {
 			retval = split_network_args(cdl, optarg);
 		} else if (opt == 'n') {

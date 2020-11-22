@@ -85,15 +85,15 @@ main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(ccs);
-	if (cl->action == LIST_CONFIG)
+	if (cl->action == CMDB_LIST)
 		retval = list_locales(ccs);
-	else if (cl->action == DISPLAY_CONFIG)
+	else if (cl->action == CMDB_DISPLAY)
 		retval = display_locale(ccs, cl);
-	else if (cl->action == ADD_CONFIG)
+	else if (cl->action == CMDB_ADD)
 		retval = add_locale(ccs, cl);
-	else if (cl->action == RM_CONFIG)
+	else if (cl->action == CMDB_RM)
 		retval = remove_locale(ccs, cl);
-	else if (cl->action == SET_DEFAULT)
+	else if (cl->action == CMDB_DEFAULT)
 		retval = set_default_locale(ccs, cl);
 	else {
 		ailsa_syslog(LOG_ERR, "Action not yet implemented\n");
@@ -137,17 +137,17 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a')
-			cl->action = ADD_CONFIG;
+			cl->action = CMDB_ADD;
 		else if (opt == 'd')
-			cl->action = DISPLAY_CONFIG;
+			cl->action = CMDB_DISPLAY;
 		else if (opt == 'l')
-			cl->action = LIST_CONFIG;
+			cl->action = CMDB_LIST;
 		else if (opt == 'r')
-			cl->action = RM_CONFIG;
+			cl->action = CMDB_RM;
 		else if (opt == 'v')
 			return CVERSION;
 		else if (opt == 'x')
-			cl->action = SET_DEFAULT;
+			cl->action = CMDB_DEFAULT;
 		else if (opt == 'g')
 			cl->language = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'k')
@@ -163,13 +163,13 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else
 			return DISPLAY_USAGE;
 	}
-	if ((cl->action == CVERSION) || (cl->action == LIST_CONFIG))
+	if ((cl->action == CVERSION) || (cl->action == CMDB_LIST))
 		return retval;
-	if ((cl->action != LIST_CONFIG) && (!(cl->name)))
+	if ((cl->action != CMDB_LIST) && (!(cl->name)))
 		return NO_NAME;
 	if (cl->action == 0)
 		return NO_ACTION;
-	if (cl->action == ADD_CONFIG) {
+	if (cl->action == CMDB_ADD) {
 		if (!(cl->language)) {
 			ailsa_syslog(LOG_ERR, "No language specified\n\n");
 			return DISPLAY_USAGE;

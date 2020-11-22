@@ -1,6 +1,6 @@
 22/11/2020
 In getting config values, adding a trailing / to value not read results in a
-segmentation fault. I need to check if value exists first
+segmentation fault. I need to check if value exists first.
 
 03/11/2020
 When adding package to varient, we need to check if the package already
