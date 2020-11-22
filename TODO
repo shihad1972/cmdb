@@ -7,6 +7,7 @@ exists in that varient and not add it again. IDEMPOTENT
 When displaying build OS, it would be useful to know what servers are
 built with that OS.
 Also display does not honour -o <os_version> nor -t <architecture>
+	** Display now honours above switches. Commit ID: 2d05b2f
 
 11/07/2020
 Should be able to read config values from environment variables. Also
