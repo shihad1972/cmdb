@@ -773,6 +773,8 @@ zone \"%s\" {\n\
 			memset(ip, 0, INET6_ADDRSTRLEN);
 		} else if (strcmp(type, "slave") == 0) {
 			dprintf(fd, "\t\t\tmasters { %s; };\n\t\t};\n", master);
+		} else {
+			dprintf(fd, "\t\t};\n");
 		}
 		e = ailsa_move_down_list(e, len);
 		
