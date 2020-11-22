@@ -2,13 +2,16 @@
 # defaults file for cmdb
 
 domain: example.net
+dbtype: mysql
 cmdb_uname: cmdb
 cmdb_group: "{{ cmdb_uname }}"
 cmdb_uid: 145
+cmdb_config_dir: /etc/cmdb
 do_cmdb_user: false
 interface: eth0
+ip_address: 172.26.80.9
 interfaces:
-  - address: 172.26.80.9
+  - address: "{{ ip_address }}"
     interface: "{{ interface }}"
     network: 172.26.80.0
     netmask_full: 255.255.255.0

@@ -3,7 +3,7 @@
 - name: Create cmdb group
   become: true
   group:
-    name: "{{ cmdb_uname }}"
+    name: "{{ cmdb_group }}"
     gid: "{{ cmdb_uid }}"
   when: do_cmdb_user|bool
 
@@ -12,7 +12,7 @@
   user:
     name: "{{ cmdb_uname }}"
     comment: "CMDB system user"
-    group: "{{ cmdb_uname }}"
+    group: "{{ cmdb_group }}"
     home: "{{ cmdb_dir }}"
     shell: /bin/bash
     uid: "{{ cmdb_uid }}"
@@ -22,7 +22,7 @@
   become: true
   file:
     group: "{{ cmdb_uname }}"
-    owner: "{{ cmdb_uname }}"
+    owner: "{{ cmdb_group }}"
     mode: 0775
     path: "{{ cmdb_dir }}"
     state: directory
@@ -31,7 +31,7 @@
   become: true
   file:
     group: "{{ cmdb_uname }}"
-    owner: "{{ cmdb_uname }}"
+    owner: "{{ cmdb_group }}"
     mode: 0775
     path: "{{ item }}"
     state: directory

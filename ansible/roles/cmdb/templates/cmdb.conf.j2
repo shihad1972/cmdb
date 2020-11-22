@@ -1,0 +1,39 @@
+## DB Driver
+DBTYPE={{ dbtype }}
+
+## SQLITE PATH
+FILE={{ cmdb_dir }}/sql/cmdb.sql
+
+## MYSQL DB Connectivity
+DB={{ mysql_db_name }}    # Database
+USER=root                 # DB user
+PASS={{ mysql_password }} # DB pass
+HOST={{ mysql_host }}     # DB host
+PORT=3306
+
+## DNSA Settings
+
+BIND=/etc/bind/                 # BIND configuration directory
+DIR=/etc/bind/db/               # BIND data directory for zone files
+DNSA=dnsa-fwd.conf              # DNSA configuration filename for bind
+REV=dnsa-rev.conf               # Reverse zone configuration file for bind
+RNDC=/usr/sbin/rndc             # Path to rndc command
+CHKZ=/usr/sbin/named-checkzone  # Path to checkzone command
+CHKC=/usr/sbin/named-checkconf  # Path to checkconf command
+REFRESH=28800
+RETRY=7200
+EXPIRE=1209600
+TTL=86400
+PRIDNS={{ ip_address }}
+SECDNS=
+HOSTMASTER=hostmaster@{{ domain }}
+PRINS={{ ansible_fqdn }}
+SECNS=
+
+## CBC settings
+TFTPDIR=/srv/tftp/
+PXE=pxelinux.cfg
+TOPLEVELOS={{ cmdb_dir }}
+PRESEED=preseed/
+KICKSTART=ks/
+DHCPCONF={{ dhcp_conf_dir }}

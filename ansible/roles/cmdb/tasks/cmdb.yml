@@ -1,0 +1,19 @@
+---
+
+- name: Create cmdb configuration directory
+  become: true
+  file:
+    state: directory
+    mode: 0775
+    owner: "{{ cmdb_uname }}"
+    group: "{{ cmdb_group }}"
+    path: "{{ cmdb_config_dir }}"
+
+- name: Create cmdb config file
+  become: true
+  template:
+    src: cmdb.conf.j2
+    dest: "{{ cmdb_config_dir }}/cmdb.conf"
+    owner: cmdb
+    group: cmdb
+    mode: 0664

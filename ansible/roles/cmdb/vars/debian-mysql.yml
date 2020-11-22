@@ -8,5 +8,6 @@ mysql_packages:
 
 mysql_db_name: ailsa
 mysql_service: mariadb
+mysql_host: localhost
 mysql_dump_file: /root/dump.sql
 mysql_triggers: /root/triggers.sql
