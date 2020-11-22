@@ -15,8 +15,8 @@ PORT=3306
 
 BIND=/etc/bind/                 # BIND configuration directory
 DIR=/etc/bind/db/               # BIND data directory for zone files
-DNSA=dnsa-fwd.conf              # DNSA configuration filename for bind
-REV=dnsa-rev.conf               # Reverse zone configuration file for bind
+DNSA={{ fwd_config }}              # DNSA configuration filename for bind
+REV={{ rev_config }}               # Reverse zone configuration file for bind
 RNDC=/usr/sbin/rndc             # Path to rndc command
 CHKZ=/usr/sbin/named-checkzone  # Path to checkzone command
 CHKC=/usr/sbin/named-checkconf  # Path to checkconf command

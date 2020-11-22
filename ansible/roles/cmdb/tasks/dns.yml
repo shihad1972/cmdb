@@ -18,3 +18,11 @@
     group: "{{ cmdb_group }}"
     mode: 02775
 
+- name: Create main named.conf file
+  become: true
+  template:
+    src: named.conf.j2
+    dest: "{{ bind_dir }}/named.conf"
+    owner: "{{ bind_user }}"
+    group: "{{ cmdb_group }}"
+    mode: 0664
