@@ -22,3 +22,7 @@ interfaces:
 dhcp_conf_dir: /etc/dhcp
 do_mysql: true
 mysql_password: CwIn.tqjE2S_gqb4-xAet5D
+bind_dir: /etc/bind
+bind_db_directory: "{{ bind_dir }}/db"
+bind_user: bind
+bind_group: "{{ bind_user }}"

@@ -1,0 +1,20 @@
+---
+
+- name: Create main bind directory
+  become: true
+  file:
+    state: directory
+    path: "{{ bind_dir }}"
+    owner: "{{ bind_user }}"
+    group: "{{ cmdb_group }}"
+    mode: 02775
+
+- name: Create DNS DB directory
+  become: true
+  file:
+    state: directory
+    path: "{{ bind_db_directory }}"
+    owner: "{{ bind_user }}"
+    group: "{{ cmdb_group }}"
+    mode: 02775
+

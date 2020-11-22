@@ -763,7 +763,7 @@ cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs)
 zone \"%s\" {\n\
 \t\t\ttype %s;\n\
 \t\t\tfile \"%s%s\";\n", name, type, cbs->dir, name);
-		if (strcmp(type, "master") == 0) {
+		if ((strcmp(type, "master") == 0) && (strcmp(sec, "none") != 0)) {
 			if ((retval = cmdb_getaddrinfo(sec, ip, &t)) != 0)
 				goto cleanup;
 			if (t == 4)
@@ -979,7 +979,7 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain)
 	AILLIST *l = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_check_for_fwd_zone(dc, domain)) > 0) {
-		ailsa_syslog(LOG_INFO, "Zone %s already in database");
+		ailsa_syslog(LOG_INFO, "Zone %s already in database", domain);
 		retval = 0;
 	} else if (retval == -1) {
 		goto cleanup;

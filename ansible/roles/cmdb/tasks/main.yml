@@ -8,6 +8,7 @@
   when: ansible_distribution == 'Debian'
 - import_tasks: tftp.yml
 - import_tasks: dhcp.yml
+- import_tasks: dns.yml
 - import_tasks: mysql.yml
   when: do_mysql|bool
 - import_tasks: cmdb.yml
