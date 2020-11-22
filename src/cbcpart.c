@@ -121,15 +121,15 @@ main (int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
-	if (cpl->action == ADD_CONFIG)
+	if (cpl->action == CMDB_ADD)
 		retval = add_scheme_part(cmc, cpl);
-	else if (cpl->action == DISPLAY_CONFIG)
+	else if (cpl->action == CMDB_DISPLAY)
 		retval = display_full_seed_scheme(cmc, cpl);
-	else if (cpl->action == LIST_CONFIG)
+	else if (cpl->action == CMDB_LIST)
 		retval = list_seed_schemes(cmc);
 	else if (cpl->action == RM_CONFIG)
 		retval = remove_scheme_part(cmc, cpl);
-	else if (cpl->action == SET_DEFAULT)
+	else if (cpl->action == CMDB_DEFAULT)
 		retval = set_default_scheme(cmc, cpl);
 	if (retval == WRONG_TYPE)
 		ailsa_syslog(LOG_ERR, "Wrong type specified. Neither partition or scheme?\n");
@@ -195,17 +195,17 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a') {
-			cpl->action = ADD_CONFIG;
+			cpl->action = CMDB_ADD;
 		} else if (opt == 'd') {
-			cpl->action = DISPLAY_CONFIG;
+			cpl->action = CMDB_DISPLAY;
 		} else if (opt == 'l') {
-			cpl->action = LIST_CONFIG;
+			cpl->action = CMDB_LIST;
 		} else if (opt == 'm') {
 			cpl->action = MOD_CONFIG;
 		} else if (opt == 'r') {
 			cpl->action = RM_CONFIG;
 		} else if (opt == 'z') {
-			cpl->action = SET_DEFAULT;
+			cpl->action = CMDB_DEFAULT;
 		} else if (opt == 'j') {
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
@@ -312,16 +312,16 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 		return CVERSION;
 	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
-	if ((cpl->action != LIST_CONFIG) && (!(cpl->scheme)))
+	if ((cpl->action != CMDB_LIST) && (!(cpl->scheme)))
 		return NO_SCHEME_INFO;
-	if (cpl->action == ADD_CONFIG || cpl->action == RM_CONFIG ||
+	if (cpl->action == CMDB_ADD || cpl->action == RM_CONFIG ||
 	    cpl->action == MOD_CONFIG) {
 		if (cpl->type == NONE)
 			return NO_TYPE;
 		if (!(cpl->partition) && (cpl->type == PARTITION))
 			return NO_PARTITION_INFO;
 	}
-	if (cpl->action == ADD_CONFIG) {
+	if (cpl->action == CMDB_ADD) {
 		if (cpl->type == PARTITION) {
 			if ((cpl->min == 0) && (cpl->max > 0))
 				cpl->min = cpl->max;

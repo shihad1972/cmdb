@@ -150,7 +150,7 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	case DISPLAY:
 		cmdb_display_customer(cm, cc);
 		break;
-	case SET_DEFAULT:
+	case CMDB_DEFAULT:
 		retval = cmdb_set_default_customer(cm, cc);
 		break;
 	case VIEW_DEFAULT:

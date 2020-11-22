@@ -236,7 +236,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		return CVERSION;
 	if (cdl->action == NONE)
 		return NO_ACTION;
-	if (cdl->action != LIST_CONFIG && cdl->action != WRITE_CONFIG &&
+	if (cdl->action != CMDB_LIST && cdl->action != CMDB_WRITE &&
 	     !(cdl->domain))
 		return NO_DOMAIN_NAME;
 	if ((cdl->action == MOD_CONFIG) && ((cdl->start_ip != 0) ||

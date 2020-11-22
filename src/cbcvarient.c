@@ -222,13 +222,13 @@ main(int argc, char *argv[])
 	else if (!(cvcl->valias))
 		snprintf(error, URL_S, "name %s", cvcl->varient);
 	parse_cmdb_config(cmc);
-	if (cvcl->action == LIST_CONFIG)
+	if (cvcl->action == CMDB_LIST)
 		retval = list_cbc_build_varient(cmc);
-	else if (cvcl->action == DISPLAY_CONFIG)
+	else if (cvcl->action == CMDB_DISPLAY)
 		retval = display_cbc_build_varient(cmc, cvcl);
-	else if (cvcl->action == ADD_CONFIG && cvcl->type == CVARIENT)
+	else if (cvcl->action == CMDB_ADD && cvcl->type == CVARIENT)
 		retval = add_cbc_build_varient(cmc, cvcl);
-	else if (cvcl->action == ADD_CONFIG && cvcl->type == CPACKAGE)
+	else if (cvcl->action == CMDB_ADD && cvcl->type == CPACKAGE)
 		retval = add_cbc_package(cmc, cvcl);
 	else if (cvcl->action == RM_CONFIG && cvcl->type == CVARIENT)
 		retval = remove_cbc_build_varient(cmc, cvcl);
@@ -236,7 +236,7 @@ main(int argc, char *argv[])
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == MOD_CONFIG)
 		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
-	else if (cvcl->action == SET_DEFAULT)
+	else if (cvcl->action == CMDB_DEFAULT)
 		retval = set_default_cbc_varient(cmc, cvcl);
 	else
 		printf("Unknown action type\n");
@@ -317,18 +317,18 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a')
-			cvl->action = ADD_CONFIG;
+			cvl->action = CMDB_ADD;
 		else if (opt == 'd') {
-			cvl->action = DISPLAY_CONFIG;
+			cvl->action = CMDB_DISPLAY;
 			cvl->type = CVARIENT;
 		}else if (opt == 'l')
-			cvl->action = LIST_CONFIG;
+			cvl->action = CMDB_LIST;
 		else if (opt == 'r')
 			cvl->action = RM_CONFIG;
 		else if (opt == 'm')
 			cvl->action = MOD_CONFIG;
 		else if (opt == 'z')
-			cvl->action = SET_DEFAULT;
+			cvl->action = CMDB_DEFAULT;
 		else if (opt == 'v')
 			cvl->action = CVERSION;
 		else if (opt == 'h')
@@ -364,20 +364,20 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return CVERSION;
 	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
-	if (cvl->action == SET_DEFAULT)
+	if (cvl->action == CMDB_DEFAULT)
 		cvl->type = CVARIENT;
-	if (cvl->type == 0 && cvl->action != LIST_CONFIG)
+	if (cvl->type == 0 && cvl->action != CMDB_LIST)
 		return NO_TYPE;
-	if (cvl->action != LIST_CONFIG && !(cvl->varient) && !(cvl->valias))
+	if (cvl->action != CMDB_LIST && !(cvl->varient) && !(cvl->valias))
 		return NO_VARIENT;
-	if ((cvl->action == ADD_CONFIG) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
+	if ((cvl->action == CMDB_ADD) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
 		ailsa_syslog(LOG_ERR, "You need to supply both a varient name and valias when adding\n");
 		return DISPLAY_USAGE;
 	}
 	if (cvl->type == CPACKAGE) {
 		if (!(cvl->package))
 			return NO_PACKAGE;
-		if ((cvl->action != ADD_CONFIG) && (cvl->action != RM_CONFIG)) {
+		if ((cvl->action != CMDB_ADD) && (cvl->action != RM_CONFIG)) {
 			ailsa_syslog(LOG_ERR, "Can only add or remove packages\n");
 			return WRONG_ACTION;
 		}

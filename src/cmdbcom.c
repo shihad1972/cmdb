@@ -147,7 +147,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'r')
 			comp->action = RM_FROM_DB;
 		else if (opt == 'z')
-			comp->action = SET_DEFAULT;
+			comp->action = CMDB_DEFAULT;
 		else if (opt == 'q')
 			comp->action = VIEW_DEFAULT;
 		else if (opt == 'm')
@@ -318,7 +318,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 	} else if (comp->action  == VIEW_DEFAULT) {
 		if (comp->type != CUSTOMER)
 			retval = WRONG_TYPE;
-	} else if (comp->action == SET_DEFAULT) {
+	} else if (comp->action == CMDB_DEFAULT) {
 		if (!(comp->coid))
 			retval = NO_COID;
 		else if (comp->type != CUSTOMER)

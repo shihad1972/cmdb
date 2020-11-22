@@ -95,27 +95,27 @@ main(int argc, char *argv[])
 	}
 	parse_cmdb_config(cbc);
 	if (cbs->what == SPACKAGE) {
-		if (cbs->action == LIST_CONFIG)
+		if (cbs->action == CMDB_LIST)
 			retval = list_cbc_syspackage(cbc);
-		else if (cbs->action == ADD_CONFIG)
+		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage(cbc, cbs);
 		else if (cbs->action == RM_CONFIG)
 			retval = rem_cbc_syspackage(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
-		if (cbs->action == LIST_CONFIG)
+		if (cbs->action == CMDB_LIST)
 			retval = list_cbc_syspackage_arg(cbc, cbs);
-		else if (cbs->action == ADD_CONFIG)
+		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage_arg(cbc, cbs);
 		else if (cbs->action == RM_CONFIG)
 			retval = rem_cbc_syspackage_arg(cbc, cbs);
 		else
 			retval = WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
-		if (cbs->action == LIST_CONFIG)
+		if (cbs->action == CMDB_LIST)
 			retval = list_cbc_syspackage_conf(cbc, cbs);
-		else if (cbs->action == ADD_CONFIG)
+		else if (cbs->action == CMDB_ADD)
 			retval = add_cbc_syspackage_conf(cbc, cbs);
 		else if  (cbs->action == RM_CONFIG)
 			retval = rem_cbc_syspackage_conf(cbc, cbs);
@@ -166,9 +166,9 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a')
-			cbcs->action = ADD_CONFIG;
+			cbcs->action = CMDB_ADD;
 		else if (opt == 'l')
-			cbcs->action = LIST_CONFIG;
+			cbcs->action = CMDB_LIST;
 		else if (opt == 'm')
 			cbcs->action = MOD_CONFIG;
 		else if (opt == 'r')
@@ -257,12 +257,12 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 		fprintf(stderr, "No action spcified\n\n");
 		retval = DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
-		if (!(cbcs->name) && (cbcs->action != LIST_CONFIG)) {
+		if (!(cbcs->name) && (cbcs->action != CMDB_LIST)) {
 			fprintf(stderr, "You need a package name!\n\n");
 			retval = DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKARG) {
-		if (cbcs->action != LIST_CONFIG) {
+		if (cbcs->action != CMDB_LIST) {
 			if ((cbcs->action != RM_CONFIG) && (!(cbcs->type) || !(cbcs->field))) {
 				fprintf(stderr, "You need both package field and type\n");
 				retval = DISPLAY_USAGE;
@@ -280,11 +280,11 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 			ailsa_syslog(LOG_ERR, "No build domain supplied");
 			return DISPLAY_USAGE;
 		}
-		if ((cbcs->action != LIST_CONFIG) && (!(cbcs->name) || !(cbcs->field))) {
+		if ((cbcs->action != CMDB_LIST) && (!(cbcs->name) || !(cbcs->field))) {
 			ailsa_syslog(LOG_ERR, "Need both package name and field to add or remove config");
 			return DISPLAY_USAGE;
 		}
-		if ((cbcs->action != LIST_CONFIG) && !(cbcs->arg)) {
+		if ((cbcs->action != CMDB_LIST) && !(cbcs->arg)) {
 			ailsa_syslog(LOG_ERR, "Need a package argument to add or delete a config");
 			return DISPLAY_USAGE;
 		}

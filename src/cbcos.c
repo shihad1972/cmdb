@@ -122,17 +122,17 @@ main (int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cmc);
-	if (cocl->action == LIST_CONFIG)
+	if (cocl->action == CMDB_LIST)
 		list_cbc_build_os(cmc);
-	else if (cocl->action == DISPLAY_CONFIG)
+	else if (cocl->action == CMDB_DISPLAY)
 		retval = display_cbc_build_os(cmc, cocl);
-	else if (cocl->action == ADD_CONFIG)
+	else if (cocl->action == CMDB_ADD)
 		retval = add_cbc_build_os(cmc, cocl);
 	else if (cocl->action == RM_CONFIG)
 		retval = remove_cbc_build_os(cmc, cocl);
 	else if (cocl->action == DOWNLOAD)
 		retval = cbcos_grab_boot_files(cmc, cocl);
-	else if (cocl->action == SET_DEFAULT)
+	else if (cocl->action == CMDB_DEFAULT)
 		retval = cbcos_set_default_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
@@ -196,11 +196,11 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a')
-			col->action = ADD_CONFIG;
+			col->action = CMDB_ADD;
 		else if (opt == 'd')
-			col->action = DISPLAY_CONFIG;
+			col->action = CMDB_DISPLAY;
 		else if (opt == 'l')
-			col->action = LIST_CONFIG;
+			col->action = CMDB_LIST;
 		else if (opt == 'r')
 			col->action = RM_CONFIG;
 		else if (opt == 'v')
@@ -208,7 +208,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'g')
 			col->action = DOWNLOAD;
 		else if (opt == 'z')
-			col->action = SET_DEFAULT;
+			col->action = CMDB_DEFAULT;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'e')
@@ -236,12 +236,12 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		printf("No action provided\n");
 		return NO_ACTION;
 	}
-	if (((col->action == ADD_CONFIG) || (col->action == SET_DEFAULT) ||
+	if (((col->action == CMDB_ADD) || (col->action == CMDB_DEFAULT) ||
 	      (col->action == RM_CONFIG)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return DISPLAY_USAGE;
 	}
-	if ((col->action != LIST_CONFIG && col->action != DOWNLOAD) && 
+	if ((col->action != CMDB_LIST && col->action != DOWNLOAD) && 
 		!((col->os))) {
 		printf("No OS name was provided\n");
 		return DISPLAY_USAGE;
