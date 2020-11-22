@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 		clean_cbc_comm_line(cml);
 		display_command_line_error(retval, argv[0]);
 	}
-	if (cml->action == QUERY_CONFIG)
+	if (cml->action == CMDB_QUERY)
 		retval = query_config();
 	else
 		parse_cmdb_config(cmc);

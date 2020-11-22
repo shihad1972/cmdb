@@ -359,20 +359,6 @@ enum {			/* cmdb Action codes */
 	VERS = 9
 };
 
-enum {			/* cbc action codes */
-	SET_DEFAULT = 10,
-	WRITE_CONFIG = 11,
-	DISPLAY_CONFIG = 12,
-	ADD_CONFIG = 13,
-	CREATE_CONFIG = 14,
-	MOD_CONFIG = 15,
-	RM_CONFIG = 16,
-	LIST_CONFIG = 17,
-	QUERY_CONFIG = 18,
-	LIST_SERVERS = 19,
-	VIEW_DEFAULT = 20,
-};
-
 enum {			/* dnsa action codes */
 	DISPLAY_ZONE = 21,
 	LIST_ZONES = 22,

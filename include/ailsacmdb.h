@@ -121,6 +121,7 @@ enum {                  // Action Codes
 	CMDB_WRITE = 6,
 	CMDB_DEFAULT = 7,
 	CMDB_QUERY = 8,
+	CMDB_VIEW_DEFAULT = 9,
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,

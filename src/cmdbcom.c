@@ -149,7 +149,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'z')
 			comp->action = CMDB_DEFAULT;
 		else if (opt == 'q')
-			comp->action = VIEW_DEFAULT;
+			comp->action = CMDB_VIEW_DEFAULT;
 		else if (opt == 'm')
 			comp->action = MODIFY;
 		else if (opt == 'h')
@@ -315,7 +315,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		} else if (!comp->name) {
 			retval = NO_NAME;
 		}
-	} else if (comp->action  == VIEW_DEFAULT) {
+	} else if (comp->action  == CMDB_VIEW_DEFAULT) {
 		if (comp->type != CUSTOMER)
 			retval = WRONG_TYPE;
 	} else if (comp->action == CMDB_DEFAULT) {
