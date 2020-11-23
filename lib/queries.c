@@ -1866,7 +1866,8 @@ ailsa_basic_query_sqlite(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results
 	sqlite3 *sql = NULL;
 	sqlite3_stmt *state = NULL;
 
-	ailsa_setup_ro_sqlite(query, file, &sql, &state);
+	if ((retval = ailsa_setup_ro_sqlite(query, file, &sql, &state)) != 0)
+		return retval;
 	while ((retval = sqlite3_step(state)) == SQLITE_ROW)
 		ailsa_store_basic_sqlite(state, results);
 	ailsa_sqlite_cleanup(sql, state);
@@ -1888,7 +1889,8 @@ ailsa_argument_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s a
 	unsigned int t = argument.number;
 	const unsigned int *f = argument.fields;
 
-	ailsa_setup_ro_sqlite(query, file, &sql, &state);
+	if ((retval = ailsa_setup_ro_sqlite(query, file, &sql, &state)) != 0)
+		return retval;
 	if ((retval = ailsa_bind_arguments_sqlite(state, args, t, f)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		return retval;
@@ -1914,7 +1916,8 @@ ailsa_delete_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 	unsigned int t = query.number;
 	const unsigned int *f = query.fields;
 
-	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state);
+	if ((retval = ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state)) != 0)
+		return retval;
 	if ((retval = ailsa_bind_arguments_sqlite(state, delete, t, f)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		goto cleanup;
@@ -1944,7 +1947,8 @@ ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 	unsigned int t = query.number;
 	const unsigned int *f = query.fields;
 
-	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state);
+	if ((retval = ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &sql, &state)) != 0)
+		return retval;
 	if ((retval = ailsa_bind_arguments_sqlite(state, insert, t, f)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: got error %d", retval);
 		goto cleanup;
@@ -1972,7 +1976,8 @@ ailsa_multiple_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST 
 	const char *sql_query = sql->query;
 	const char *file = cmdb->file;
 
-	ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &lite, &state);
+	if ((retval = ailsa_setup_rw_sqlite(sql_query, strlen(sql_query), file, &lite, &state)) != 0)
+		return retval;
 	if ((retval = ailsa_bind_arguments_sqlite(state, insert, sql->total, sql->fields)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind sqlite arguments: error %d", retval);
 		goto cleanup;

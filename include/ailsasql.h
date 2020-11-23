@@ -591,10 +591,10 @@ ailsa_convert_mysql_time(MYSQL_TIME *time);
 
 # ifdef HAVE_SQLITE3
 #  include <sqlite3.h>
-void
+int
 ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 
-void
+int
 ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt);
 
 void

@@ -166,28 +166,29 @@ ailsa_convert_mysql_time(MYSQL_TIME *time)
 
 #ifdef HAVE_SQLITE3
 
-void
+int
 ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
 {
 	int retval;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot open SQL file %s", file);
-		exit(FILE_O_FAIL);
+		return FILE_O_FAIL;
 	}
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		exit(SQLITE_STATEMENT_FAILED);
+		return SQLITE_STATEMENT_FAILED;
 	}
+	return retval;
 }
 
-void
+int
 ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 **cmdb, sqlite3_stmt **stmt)
 {
 	int retval, sqlret = 0;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot open SQL file %s", file);
-		exit(FILE_O_FAIL);
+		return FILE_O_FAIL;
 	}
 	if ((retval = sqlite3_db_config(*cmdb, SQLITE_DBCONFIG_ENABLE_FKEY, 1, &sqlret)) != SQLITE_OK)
 		ailsa_syslog(LOG_ERR, "Cannot enable foreign key support in sqlite");
@@ -196,8 +197,9 @@ ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 *
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, (int)len, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		exit(SQLITE_STATEMENT_FAILED);
+		return SQLITE_STATEMENT_FAILED;
 	}
+	return retval;
 }
 
 void

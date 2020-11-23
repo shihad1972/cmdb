@@ -36,6 +36,7 @@ Consolidate the cmdb_add_*_id_to_list into 2 functions:
 	1 for char **
 Have to be careful of the char ** one; Need to tell length of list. Maybe end
 with NULL pointer at the end of list?
+	** Leaving this one out. There is no need to do this **
 
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.
