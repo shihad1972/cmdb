@@ -84,7 +84,7 @@ int
 main(int argc, char *argv[])
 {
 	int retval;
-	char *config = ailsa_calloc(CONF_S, "config in main");
+	char *config = ailsa_calloc(CONFIG_LEN, "config in main");
 	ailsa_cmdb_s *cbc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cbc in main");
 	cbc_sysp_s *cbs = ailsa_calloc(sizeof(cbc_sysp_s), "cbs in main");
 

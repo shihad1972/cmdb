@@ -110,12 +110,12 @@ cbcos_set_default_os(ailsa_cmdb_s *cc, cbcos_comm_line_s *ccl);
 int
 main (int argc, char *argv[])
 {
-	char error[URL_S];
+	char error[CONFIG_LEN];
 	int retval = 0;
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbcos_comm_line_s *cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
 
-	memset(error, 0, URL_S);
+	memset(error, 0, CONFIG_LEN);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
 		cbcos_clean_comm_line(cocl);
 		ailsa_clean_cmdb(cmc);
@@ -152,12 +152,12 @@ cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
 {
 	if (cocl->version) {
 		if (cocl->arch)
-			snprintf(error, URL_S, "%s %s %s",
+			snprintf(error, CONFIG_LEN, "%s %s %s",
 			 cocl->os, cocl->version, cocl->arch);
 		else
-			snprintf(error, URL_S, "%s %s", cocl->os, cocl->version);
+			snprintf(error, CONFIG_LEN, "%s %s", cocl->os, cocl->version);
 	} else {
-		snprintf(error, URL_S, "%s", cocl->os);
+		snprintf(error, CONFIG_LEN, "%s", cocl->os);
 	}
 }
 
@@ -212,17 +212,17 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'e')
-			col->ver_alias = strndup(optarg, MAC_S);
+			col->ver_alias = strndup(optarg, MAC_LEN);
 		else if (opt == 'f')
 			col->force = 1;
 		else if (opt == 'n')
-			col->os = strndup(optarg, MAC_S);
+			col->os = strndup(optarg, MAC_LEN);
 		else if (opt == 'o')
-			col->version = strndup(optarg, MAC_S);
+			col->version = strndup(optarg, MAC_LEN);
 		else if (opt == 's')
-			col->alias = strndup(optarg, MAC_S);
+			col->alias = strndup(optarg, MAC_LEN);
 		else if (opt == 't')
-			col->arch = strndup(optarg, RANGE_S);
+			col->arch = strndup(optarg, SERVICE_LEN);
 		else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;
@@ -289,34 +289,34 @@ check_for_build_os(ailsa_cbcos_s *cos, char *version, char *valias, char *arch)
 	if (arch) {
 		if (version || valias) {
 			if (version) {
-				if (strncmp(cos->os_version, version, MAC_S) == 0)
+				if (strncmp(cos->os_version, version, MAC_LEN) == 0)
 					retval = 1;
 				else
 					retval = 0;
 			} else if (valias) {
-				if (strncmp(cos->ver_alias, valias, MAC_S) == 0)
+				if (strncmp(cos->ver_alias, valias, MAC_LEN) == 0)
 					retval = 1;
 				else
 					retval = 0;
 			}
 			if (retval == 1) {
-				if (strncmp(cos->arch, arch, RANGE_S) == 0)
+				if (strncmp(cos->arch, arch, SERVICE_LEN) == 0)
 					retval = 1;
 				else
 					retval = 0;
 			}
-		} else if (strncmp(cos->arch, arch, RANGE_S) == 0) {
+		} else if (strncmp(cos->arch, arch, SERVICE_LEN) == 0) {
 			retval = 1;
 		}
 		return retval;
 	} else {
 		if (version) {
-			if (strncmp(cos->os_version, version, MAC_S) == 0)
+			if (strncmp(cos->os_version, version, MAC_LEN) == 0)
 				retval = 1;
 			else
 				retval = 0;
 		} else if (valias) {
-			if (strncmp(cos->ver_alias, valias, MAC_S) == 0)
+			if (strncmp(cos->ver_alias, valias, MAC_LEN) == 0)
 				retval = 1;
 			else
 				retval = 0;
@@ -360,7 +360,7 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 				e = e->next;
 				continue;
 			}
-			if (strncasecmp(cos->ver_alias, "none", COMM_S) == 0) {
+			if (strncasecmp(cos->ver_alias, "none", BYTE_LEN) == 0) {
 				printf("%s\tnone\t\t%s\t\t",
 				     cos->os_version, cos->arch);
 			} else {
@@ -629,23 +629,23 @@ cbcos_check_for_os(cbcos_comm_line_s *col, AILELEM *head, int *test)
 	if ((*test & 4) == 4) {		// check if os name / alias set on command line
 		*test = *test | 32;
 	} else if (col->os) {
-		if (strncasecmp(col->os, os->os, MAC_S) == 0)
+		if (strncasecmp(col->os, os->os, MAC_LEN) == 0)
 			*test = *test | 32;
 	} else if (col->alias) {
-		if (strncasecmp(col->alias, os->alias, MAC_S) == 0)
+		if (strncasecmp(col->alias, os->alias, MAC_LEN) == 0)
 			*test = *test | 32;
 	}
 	if ((*test & 1) == 1)		// check if os arch set on command line
 		*test = *test | 8;
-	else if (strncasecmp(col->arch, os->arch, RANGE_S) == 0)
+	else if (strncasecmp(col->arch, os->arch, SERVICE_LEN) == 0)
 		*test = *test | 8;
 	if ((*test & 2) == 2) {		// check if os version set on command line
 		*test = *test | 16;
 	} else if (col->version) {
-		if (strncasecmp(col->version, os->os_version, MAC_S) == 0)
+		if (strncasecmp(col->version, os->os_version, MAC_LEN) == 0)
 			*test = *test | 16;
 	} else if (col->ver_alias) {
-		if (strncasecmp(col->ver_alias, os->ver_alias, MAC_S) == 0)
+		if (strncasecmp(col->ver_alias, os->ver_alias, MAC_LEN) == 0)
 			*test = *test | 16;
 	}
 }

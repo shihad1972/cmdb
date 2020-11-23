@@ -161,22 +161,22 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		}
 	}
 	if (comp->rtype) {
-		if (strncmp(comp->rtype, "SRV", COMM_S) == 0) {
+		if (strncmp(comp->rtype, "SRV", BYTE_LEN) == 0) {
 /* Check if user has specified destination with -h and act accordingly */
 			if ((comp->host) && (!(comp->dest)))
 				comp->dest = strndup(comp->host, DOMAIN_LEN);
 			if (!(comp->protocol)) {
 				ailsa_syslog(LOG_INFO, "No protocol provided with -o. Setting to tcp!\n");
 				comp->protocol = strdup("tcp");
-			} else if (!((strncmp(comp->protocol, "tcp", COMM_S) == 0) ||
-			     (strncmp(comp->protocol, "udp", COMM_S) == 0)))
+			} else if (!((strncmp(comp->protocol, "tcp", BYTE_LEN) == 0) ||
+			     (strncmp(comp->protocol, "udp", BYTE_LEN) == 0)))
 				report_error(USER_INPUT_INVALID, "protocol");
 			if (comp->prefix == 0) {
 				ailsa_syslog(LOG_INFO, "No priority provided with -p. Setting to 100!\n");
 				comp->prefix = 100;
 			}
 		}
-		if ((strncmp(comp->rtype, "MX", COMM_S) == 0) && comp->prefix == 0) {
+		if ((strncmp(comp->rtype, "MX", BYTE_LEN) == 0) && comp->prefix == 0) {
 			comp->prefix = 100;
 			fprintf(stderr, "No priority specified for MX record, using 100\n");
 		}
@@ -263,86 +263,86 @@ parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config)
 int
 read_dnsa_config_values(ailsa_cmdb_s *dc, FILE *cnf)
 {
-	char buff[RBUFF_S] = "";
-	char port[RANGE_S] = "";
-	char refresh[MAC_S] = "";
-	char retry[MAC_S] = "";
-	char expire[MAC_S] = "";
-	char ttl[MAC_S] = "";
+	char buff[CONFIG_LEN] = "";
+	char port[SERVICE_LEN] = "";
+	char refresh[MAC_LEN] = "";
+	char retry[MAC_LEN] = "";
+	char expire[MAC_LEN] = "";
+	char ttl[MAC_LEN] = "";
 	char *hostmaster;
 	int retval = 0;
 	unsigned long int portno;
 	
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "DBTYPE=%s", dc->dbtype);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "PASS=%s", dc->pass);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "FILE=%s", dc->file);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "HOST=%s", dc->host);	
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "USER=%s", dc->user);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "DB=%s", dc->db);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "SOCKET=%s", dc->socket);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "PORT=%s", port);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "DIR=%s", dc->dir);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "BIND=%s", dc->bind);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "REV=%s", dc->rev);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "DNSA=%s", dc->dnsa);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "RNDC=%s", dc->rndc);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "CHKZ=%s", dc->chkz);
 	rewind(cnf);
-	while ((fgets(buff, CONF_S, cnf)))
+	while ((fgets(buff, CONFIG_LEN, cnf)))
 		sscanf(buff, "CHKC=%s", dc->chkc);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "REFRESH=%s", refresh);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "RETRY=%s", retry);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "EXPIRE=%s", expire);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "TTL=%s", ttl);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "PRIDNS=%s", dc->pridns);
 	rewind(cnf);
-	while ((fgets(buff, MAC_S, cnf)))
+	while ((fgets(buff, MAC_LEN, cnf)))
 		sscanf(buff, "SECDNS=%s", dc->secdns);
 	rewind(cnf);
-	while ((fgets(buff, RBUFF_S - 1, cnf)))
+	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
 		sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
 	rewind(cnf);
-	while ((fgets(buff, RBUFF_S - 1, cnf)))
+	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
 		sscanf(buff, "PRINS=%s", dc->prins);
 	rewind(cnf);
-	while ((fgets(buff, RBUFF_S - 1, cnf)))
+	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
 		sscanf(buff, "SECNS=%s", dc->secns);
 	rewind(cnf);
 	retval = NONE;
@@ -412,11 +412,11 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 			return DOMAIN_INPUT_INVALID;
 /* Test values for different RR's. Still need to add check for AAAA */
 	if (comm->rtype) {
-		if (strncmp(comm->rtype, "A", COMM_S) == 0) {
+		if (strncmp(comm->rtype, "A", BYTE_LEN) == 0) {
 			if (comm->dest)
 				if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)
 					return DEST_INPUT_INVALID;
-			if (strncmp(comm->host, "@", COMM_S) == 0) {
+			if (strncmp(comm->host, "@", BYTE_LEN) == 0) {
 				if (ailsa_validate_input(comm->dest, NAME_REGEX) < 0)
 					if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
 						return DEST_INPUT_INVALID;
@@ -425,23 +425,23 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 					if (ailsa_validate_input(comm->host, DOMAIN_REGEX) < 0)
 						return HOST_INPUT_INVALID;
 			}
-		} else if ((strncmp(comm->rtype, "NS", COMM_S) == 0) ||
-			   (strncmp(comm->rtype, "MX", COMM_S) == 0)) {
+		} else if ((strncmp(comm->rtype, "NS", BYTE_LEN) == 0) ||
+			   (strncmp(comm->rtype, "MX", BYTE_LEN) == 0)) {
 			if (comm->dest)
 				if (ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0)
 					return DEST_INPUT_INVALID;
-			if ((strncmp(comm->host, "NULL", COMM_S) != 0) &&
-			    (strncmp(comm->host, "@", COMM_S) != 0))
+			if ((strncmp(comm->host, "NULL", BYTE_LEN) != 0) &&
+			    (strncmp(comm->host, "@", BYTE_LEN) != 0))
 				if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
 						return HOST_INPUT_INVALID;
-		} else if (strncmp(comm->rtype, "SRV", COMM_S) == 0) {
+		} else if (strncmp(comm->rtype, "SRV", BYTE_LEN) == 0) {
 			if (comm->dest)
 				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
 			   	 (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
 					return DEST_INPUT_INVALID;
 			if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 				return SERVICE_INPUT_INVALID;
-		} else if (strncmp(comm->rtype, "CNAME", COMM_S) == 0) {
+		} else if (strncmp(comm->rtype, "CNAME", BYTE_LEN) == 0) {
 			if (comm->dest)
 				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
 			   	 (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
@@ -474,7 +474,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 				return DOMAIN_INPUT_INVALID;
 	} else {
 		if ((comm->rtype) && (comm->host)) {
-			if (strncmp(comm->rtype, "TXT", COMM_S) == 0) {
+			if (strncmp(comm->rtype, "TXT", BYTE_LEN) == 0) {
 				if (host[0] == '_') {
 					if (ailsa_validate_input(host + 1, NAME_REGEX) < 0)
 						return HOST_INPUT_INVALID;
@@ -506,9 +506,9 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 
 	dlen = strlen(regexps[DOMAIN_REGEX]);
 	ilen = strlen(regexps[IP_REGEX]);
-	if ((ilen + dlen + 4) > RBUFF_S)
+	if ((ilen + dlen + 4) > CONFIG_LEN)
 		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
-	regex = ailsa_calloc(RBUFF_S, "regex in validate_glue_comm_line");
+	regex = ailsa_calloc(CONFIG_LEN, "regex in validate_glue_comm_line");
 	if (comm->glue_ip) {
 		if (strchr(comm->glue_ip, ',')) {
 			snprintf(regex, ilen, "%s", regexps[IP_REGEX]);
@@ -525,7 +525,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 			}
 		}
 	}
-	memset(regex, 0, RBUFF_S);
+	memset(regex, 0, CONFIG_LEN);
 	if (comm->glue_ns) {
 		if (strchr(comm->glue_ns, ',')) {
 			snprintf(regex, dlen, "%s", regexps[DOMAIN_REGEX]);

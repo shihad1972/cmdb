@@ -358,7 +358,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No number was supplied\n");
 	else if (retval == NO_NTP_SERVER)
 		fprintf(stderr, "No ntp server was supplied\n");
-	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", RANGE_S)) == 0)
+	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", SERVICE_LEN)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
 	else if (retval == AILSA_NO_DISK_DEV)
 		ailsa_syslog(LOG_ERR, "No disk device was provided");
@@ -387,27 +387,27 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
-		if ((strncmp(program, "cmdb", CONF_S) == 0) || (strncmp(program, "cmdb2", CONF_S) == 0))
+		if ((strncmp(program, "cmdb", CONFIG_LEN) == 0) || (strncmp(program, "cmdb2", CONFIG_LEN) == 0))
 			display_cmdb_usage();
-		else if ((strncmp(program, "cbc", CONF_S) == 0))
+		else if ((strncmp(program, "cbc", CONFIG_LEN) == 0))
 			display_cbc_usage();
-		else if ((strncmp(program, "dnsa", CONF_S) ==0))
+		else if ((strncmp(program, "dnsa", CONFIG_LEN) ==0))
 			display_dnsa_usage();
-		else if ((strncmp(program, "cbcdomain", CONF_S) == 0))
+		else if ((strncmp(program, "cbcdomain", CONFIG_LEN) == 0))
 			display_cbcdomain_usage();
-		else if ((strncmp(program, "cbcos", CONF_S) == 0))
+		else if ((strncmp(program, "cbcos", CONFIG_LEN) == 0))
 			display_cbcos_usage();
-		else if ((strncmp(program, "cbcvarient", CONF_S) == 0))
+		else if ((strncmp(program, "cbcvarient", CONFIG_LEN) == 0))
 			display_cbcvarient_usage();
-		else if ((strncmp(program, "cbcpart", CONF_S) == 0))
+		else if ((strncmp(program, "cbcpart", CONFIG_LEN) == 0))
 			display_cbcpart_usage();
-		else if ((strncmp(program, "cpc", CONF_S) == 0))
+		else if ((strncmp(program, "cpc", CONFIG_LEN) == 0))
 			display_cpc_usage();
-		else if ((strncmp(program, "cbcsysp", CONF_S) == 0))
+		else if ((strncmp(program, "cbcsysp", CONFIG_LEN) == 0))
 			display_cbcsysp_usage();
-		else if ((strncmp(program, "cbcscript", CONF_S) == 0))
+		else if ((strncmp(program, "cbcscript", CONFIG_LEN) == 0))
 			display_cbcscript_usage();
-		else if (strncmp(program, "cbclocale", CONF_S) == 0)
+		else if (strncmp(program, "cbclocale", CONFIG_LEN) == 0)
 			display_cbclocale_usage();
 		exit(0);
 	} else {
@@ -708,81 +708,81 @@ void
 get_error_string(int error, char *errstr)
 {
 	if (error == SERVER_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Server not found.");
+		snprintf(errstr, CONFIG_LEN, "Server not found.");
 	else if (error == SERVER_UUID_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Server not found.");
+		snprintf(errstr, CONFIG_LEN, "Server not found.");
 	else if (error == SERVER_ID_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Server not found.");
+		snprintf(errstr, CONFIG_LEN, "Server not found.");
 	else if (error == NO_NAME_UUID_ID)
-		snprintf(errstr, CONF_S, "No server specifier.");
+		snprintf(errstr, CONFIG_LEN, "No server specifier.");
 	else if (error == BUILD_DOMAIN_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Build domain not found.");
+		snprintf(errstr, CONFIG_LEN, "Build domain not found.");
 	else if (error == NO_BUILD_IP) 
-		snprintf(errstr, CONF_S, "No IP's left in build domain.");
+		snprintf(errstr, CONFIG_LEN, "No IP's left in build domain.");
 	else if (error == BUILD_IP_OUT_OF_RANGE)
-		snprintf(errstr, CONF_S, "Build IP from DNS outside range.");
+		snprintf(errstr, CONFIG_LEN, "Build IP from DNS outside range.");
 	else if (error == BUILD_IP_IN_USE)
-		snprintf(errstr, CONF_S, "Build IP already in use.");
+		snprintf(errstr, CONFIG_LEN, "Build IP already in use.");
 	else if (error == CANNOT_INSERT_IP)
-		snprintf(errstr, CONF_S, "Cannot insert build IP into DB.");
+		snprintf(errstr, CONFIG_LEN, "Cannot insert build IP into DB.");
 	else if (error == SERVER_BUILD_NOT_FOUND)
-		snprintf(errstr, CONF_S, "No server build.");
+		snprintf(errstr, CONFIG_LEN, "No server build.");
 	else if (error == NO_DHCP_B_ERR)
-		snprintf(errstr, CONF_S, "Cannot find dhcp details.");
+		snprintf(errstr, CONFIG_LEN, "Cannot find dhcp details.");
 	else if (error == MULTI_DHCP_B_ERR)
-		snprintf(errstr, CONF_S, "Multiple dhcp details.");
+		snprintf(errstr, CONFIG_LEN, "Multiple dhcp details.");
 	else if (error == NO_TFTP_B_ERR)
-		snprintf(errstr, CONF_S, "Cannot find TFTP details.");
+		snprintf(errstr, CONFIG_LEN, "Cannot find TFTP details.");
 	else if (error == MULTI_TFTP_B_ERR)
-		snprintf(errstr, CONF_S, "Multiple TFTP details.");
+		snprintf(errstr, CONFIG_LEN, "Multiple TFTP details.");
 	else if (error == NO_NET_BUILD_ERR)
-		snprintf(errstr, CONF_S, "Cannot find NET_BUILD_DETAILS.");
+		snprintf(errstr, CONFIG_LEN, "Cannot find NET_BUILD_DETAILS.");
 	else if (error == MULTI_NET_BUILD_ERR)
-		snprintf(errstr, CONF_S, "Multiple NET_BUILD_DETAILS.");
+		snprintf(errstr, CONFIG_LEN, "Multiple NET_BUILD_DETAILS.");
 	else if (error == NO_BUILD_MIRR_ERR)
-		snprintf(errstr, CONF_S, "Cannot find BUILD_MIRROR.");
+		snprintf(errstr, CONFIG_LEN, "Cannot find BUILD_MIRROR.");
 	else if (error == MULTI_BUILD_MIRR_ERR)
-		snprintf(errstr, CONF_S, "Multiple BUILD_MIRROR.");
+		snprintf(errstr, CONFIG_LEN, "Multiple BUILD_MIRROR.");
 	else if (error == VARIENT_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Unknown build varient.");
+		snprintf(errstr, CONFIG_LEN, "Unknown build varient.");
 	else if (error == MULTIPLE_VARIENTS)
-		snprintf(errstr, CONF_S, "Multiple varients found.");
+		snprintf(errstr, CONFIG_LEN, "Multiple varients found.");
 	else if (error == NO_NETWORK_HARDWARE)
-		snprintf(errstr, CONF_S, "Network device not found.");
+		snprintf(errstr, CONFIG_LEN, "Network device not found.");
 	else if (error == OS_NOT_FOUND)
-		snprintf(errstr, CONF_S, "OS not found.");
+		snprintf(errstr, CONFIG_LEN, "OS not found.");
 	else if (error == MULTIPLE_OS)
-		snprintf(errstr, CONF_S, "Multiple OS found.");
+		snprintf(errstr, CONFIG_LEN, "Multiple OS found.");
 	else if (error == SCHEME_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Partition scheme not found.");
+		snprintf(errstr, CONFIG_LEN, "Partition scheme not found.");
 	else if (error == INSERT_NOT_CONFIGURED)
-		snprintf(errstr, CONF_S, "No Database insert function.");
+		snprintf(errstr, CONFIG_LEN, "No Database insert function.");
 	else if (error == CANNOT_FIND_BUILD_IP)
-		snprintf(errstr, CONF_S, "Cannot find the build IP!");
+		snprintf(errstr, CONFIG_LEN, "Cannot find the build IP!");
 	else if (error == BUILD_IN_DATABASE)
-		snprintf(errstr, CONF_S, "Build for server already exists.");
+		snprintf(errstr, CONFIG_LEN, "Build for server already exists.");
 	else if (error == CANNOT_MODIFY_BUILD_DOMAIN)
-		snprintf(errstr, CONF_S, "Cannot modify build domain.");
+		snprintf(errstr, CONFIG_LEN, "Cannot modify build domain.");
 	else if (error == LOCALE_NOT_IMPLEMENTED)
-		snprintf(errstr, CONF_S, "Locale not implemented, sorry.");
+		snprintf(errstr, CONFIG_LEN, "Locale not implemented, sorry.");
 	else if (error == NO_MODIFIERS)
-		snprintf(errstr, CONF_S, "No modifiers supplied.");
+		snprintf(errstr, CONFIG_LEN, "No modifiers supplied.");
 	else if (error == PARTITIONS_NOT_FOUND)
-		snprintf(errstr, CONF_S, "Partition scheme not found.");
+		snprintf(errstr, CONFIG_LEN, "Partition scheme not found.");
 	else if (error == NO_BASIC_DISK)
-		snprintf(errstr, CONF_S, "Cannot find partitions.");
+		snprintf(errstr, CONFIG_LEN, "Cannot find partitions.");
 	else if (error == NO_BUILD_URL)
-		snprintf(errstr, CONF_S, "No url in build domain.");
+		snprintf(errstr, CONFIG_LEN, "No url in build domain.");
 	else if (error == NO_LOG_CONFIG)
-		snprintf(errstr, CONF_S, "Cannot get log config.");
+		snprintf(errstr, CONFIG_LEN, "Cannot get log config.");
 	else if (error == NO_BD_CONFIG)
-		snprintf(errstr, CONF_S, "Cannot get build domain config.");
+		snprintf(errstr, CONFIG_LEN, "Cannot get build domain config.");
 	else if (error == NO_HARD_DISK_DEV)
-		snprintf(errstr, CONF_S, "Cannot find disk for server");
+		snprintf(errstr, CONFIG_LEN, "Cannot find disk for server");
 	else if (error == NO_BUILD_PACKAGES)
-		snprintf(errstr, CONF_S, "No build packages in database");
+		snprintf(errstr, CONFIG_LEN, "No build packages in database");
 	else
-		snprintf(errstr, CONF_S, "Unknown error %d", error);
+		snprintf(errstr, CONFIG_LEN, "Unknown error %d", error);
 }
 
 void 
@@ -790,39 +790,39 @@ display_type_error(short int type)
 {
 	char *message;
 	
-	if (!(message = calloc(CONF_S, sizeof(char))))
+	if (!(message = calloc(CONFIG_LEN, sizeof(char))))
 		report_error(MALLOC_FAIL, "message in display_type_error");
-	snprintf(message, HOST_S, "\
+	snprintf(message, HOST_LEN, "\
 Unable to perform requested action on ");
 	if (type == SERVER) {
-		strncat(message, "server\n", MAC_S);
+		strncat(message, "server\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == CUSTOMER) {
-		strncat(message, "customer\n", MAC_S);
+		strncat(message, "customer\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == CONTACT) {
-		strncat(message, "contact\n", MAC_S);
+		strncat(message, "contact\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == SERVICE) {
-		strncat(message, "service\n", MAC_S);
+		strncat(message, "service\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == HARDWARE) {
-		strncat(message, "hardware\n", MAC_S);
+		strncat(message, "hardware\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == HARDWARE_TYPE) {
-		strncat(message, "hardware type\n", MAC_S);
+		strncat(message, "hardware type\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == SERVICE_TYPE) {
-		strncat(message, "service type\n", MAC_S);
+		strncat(message, "service type\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == SERVER_TYPE) {
-		strncat(message, "server type\n", MAC_S);
+		strncat(message, "server type\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else if (type == VM_HOST) {
-		strncat(message, "virtual machine host\n", MAC_S);
+		strncat(message, "virtual machine host\n", MAC_LEN);
 		fprintf(stderr, "%s", message);
 	} else {
-		strncat(message, "unknown type ", MAC_S);
+		strncat(message, "unknown type ", MAC_LEN);
 		fprintf(stderr, "%s", message);
 		fprintf(stderr, "%d\n", type);
 	}

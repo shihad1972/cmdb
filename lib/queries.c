@@ -313,7 +313,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
-	{ // NAME_SERVERS_ON_NAME
+	{ // CONFIG_LENERVERS_ON_NAME
 "SELECT pri_dns, sec_dns FROM zones WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
@@ -1164,14 +1164,14 @@ ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 	int retval = DB_TYPE_INVALID;
 	const char *query = basic_queries[query_no];
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_basic_query_mysql(cmdb, query, results);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_basic_query_sqlite(cmdb, query, results);
 #endif
 	else
@@ -1185,14 +1185,14 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 	int retval = DB_TYPE_INVALID;
 	const struct ailsa_sql_query_s argument = argument_queries[query_no];
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_argument_query_mysql(cmdb, argument, args, results);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_argument_query_sqlite(cmdb, argument, args, results);
 #endif
 	else
@@ -1205,14 +1205,14 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 {
 	int retval = DB_TYPE_INVALID;
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_argument_query_mysql(cmdb, *query, args, results);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_argument_query_sqlite(cmdb, *query, args, results);
 #endif
 	else
@@ -1225,14 +1225,14 @@ ailsa_delete_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s query, AILLIST *d
 {
 	int retval = DB_TYPE_INVALID;
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_mysql(cmdb, query, delete);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_sqlite(cmdb, query, delete);
 #endif
 	else
@@ -1245,14 +1245,14 @@ ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AIL
 {
 	int retval = DB_TYPE_INVALID;
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_mysql(cmdb, query, update);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_sqlite(cmdb, query, update);
 #endif
 	else
@@ -1266,14 +1266,14 @@ ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
 	int retval = DB_TYPE_INVALID;
 	const struct ailsa_sql_query_s query = insert_queries[query_no];
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_insert_query_mysql(cmdb, query, insert);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_insert_query_sqlite(cmdb, query, insert);
 #endif
 	else
@@ -1292,14 +1292,14 @@ ailsa_multiple_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, A
 		goto cleanup;
 	}
 	retval = DB_TYPE_INVALID;
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_multiple_query_mysql(cmdb, sql, insert);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_multiple_query_sqlite(cmdb, sql, insert);
 #endif
 	else
@@ -1324,14 +1324,14 @@ ailsa_multiple_delete(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, 
 	}
 	retval = DB_TYPE_INVALID;
 
-	if ((strncmp(cmdb->dbtype, "none", RANGE_S) == 0))
+	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
-	else if ((strncmp(cmdb->dbtype, "mysql", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_mysql(cmdb, *s, del);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
-	else if ((strncmp(cmdb->dbtype, "sqlite", RANGE_S) == 0))
+	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
 		retval = ailsa_delete_query_sqlite(cmdb, *s, del);
 #endif
 	else

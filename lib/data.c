@@ -554,12 +554,12 @@ get_config_file_location(char *config)
 	FILE *cnf;
 	const char *conf = config;
 
-	if (snprintf(config, CONF_S, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONF_S)
+	if (snprintf(config, CONFIG_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONFIG_LEN)
 		report_error(BUFFER_TOO_SMALL, "for config file");
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{
-		if (snprintf(config, CONF_S, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONF_S)
+		if (snprintf(config, CONFIG_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONFIG_LEN)
 			report_error(BUFFER_TOO_SMALL, "for config file");
 		if ((cnf = fopen(conf, "r")))
 			fclose(cnf);
@@ -596,7 +596,7 @@ convert_time(char *timestamp, unsigned long int *store)
 	size_t len;
 	time_t epoch;
 
-	if (strncmp(timestamp, "0", COMM_S) == 0) {
+	if (strncmp(timestamp, "0", BYTE_LEN) == 0) {
 		*store = 0;
 		return;
 	}
@@ -671,7 +671,7 @@ get_ip_from_hostname(dbdata_s *data)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	if (strlen(list->fields.text) == 0) {
-		if ((retval = gethostname(list->fields.text, RBUFF_S)) != 0) {
+		if ((retval = gethostname(list->fields.text, CONFIG_LEN)) != 0) {
 			fprintf(stderr, "%s", strerror(errno));
 			return NO_NAME;
 		}
@@ -688,7 +688,7 @@ get_ip_from_hostname(dbdata_s *data)
 		freeaddrinfo(srvinfo);
 		return NO_NAME;
 	}
-	inet_ntop(srvinfo->ai_family, addr, list->args.text, RBUFF_S);
+	inet_ntop(srvinfo->ai_family, addr, list->args.text, CONFIG_LEN);
 	freeaddrinfo(srvinfo);
 	return retval;
 }
@@ -749,9 +749,9 @@ clean_dbdata_struct(dbdata_s *list)
 void
 init_string_len(string_len_s *string)
 {
-	string->len = BUFF_S;
+	string->len = BUFFER_LEN;
 	string->size = NONE;
-	string->string = ailsa_calloc(BUFF_S, "string->string in init_string_len");
+	string->string = ailsa_calloc(BUFFER_LEN, "string->string in init_string_len");
 }
 
 void
@@ -768,7 +768,7 @@ void
 init_string_l(string_l *string)
 {
 	memset(string, 0, sizeof(string_l));
-	if (!(string->string = calloc(RBUFF_S, sizeof(char))))
+	if (!(string->string = calloc(CONFIG_LEN, sizeof(char))))
 		report_error(MALLOC_FAIL, "stirng->string in init_string_l");
 }
 
@@ -1081,7 +1081,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	len++;/* Got to remember the terminating \0 :) */
 	if (!(line = calloc(len, sizeof(char))))
 		report_error(MALLOC_FAIL, "line in get_in_addr_string");
-	if (!(classless = calloc(CONF_S, sizeof(char))))
+	if (!(classless = calloc(CONFIG_LEN, sizeof(char))))
 		report_error(MALLOC_FAIL, "classless in get_in_addr_string");
 
 	snprintf(line, len, "%s", range);
@@ -1133,7 +1133,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 		strcat(in_addr, ".");
 		--tmp;
 		*tmp = '\0';
-		snprintf(classless, CONF_S, "/%lu.", prefix);
+		snprintf(classless, CONFIG_LEN, "/%lu.", prefix);
 		strncat(in_addr, classless, SERVICE_LEN);
 		while ((tmp = strrchr(line, c))) {
 			++tmp;

@@ -35,7 +35,7 @@
 int
 main(int argc, char *argv[])
 {
-	char sretval[CONF_S];
+	char sretval[CONFIG_LEN];
 	int retval = NONE;
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbc_comm_line_s *cml = ailsa_calloc(sizeof(cbc_comm_line_s), "cml in main");

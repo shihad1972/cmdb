@@ -205,22 +205,23 @@ set_default_cbc_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 int
 main(int argc, char *argv[])
 {
-	char error[URL_S];
+	char error[DOMAIN_LEN];
 	int retval = NONE;
 	ailsa_cmdb_s *cmc;
 	cbcvari_comm_line_s *cvcl;
 
 	cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in cbcvarient main");
 	cvcl = ailsa_calloc(sizeof(cbcvari_comm_line_s), "cvcl in cbcvarient main");
+	memset(error, 0, DOMAIN_LEN);
 	if ((retval = parse_cbcvarient_comm_line(argc, argv, cvcl)) != 0) {
 		free(cmc);
 		clean_cbcvarient_comm_line(cvcl);
 		display_command_line_error(retval, argv[0]);
 	}
 	if (!(cvcl->varient))
-		snprintf(error, URL_S, "alias %s", cvcl->valias);
+		snprintf(error, DOMAIN_LEN, "alias %s", cvcl->valias);
 	else if (!(cvcl->valias))
-		snprintf(error, URL_S, "name %s", cvcl->varient);
+		snprintf(error, DOMAIN_LEN, "name %s", cvcl->varient);
 	parse_cmdb_config(cmc);
 	if (cvcl->action == CMDB_LIST)
 		retval = list_cbc_build_varient(cmc);
@@ -240,20 +241,12 @@ main(int argc, char *argv[])
 		retval = set_default_cbc_varient(cmc, cvcl);
 	else
 		printf("Unknown action type\n");
-	if (retval == OS_NOT_FOUND) {
-		if (cvcl->os)
-			snprintf(error, HOST_S, "%s", cvcl->os);
-		else if (cvcl->alias)
-			snprintf(error, HOST_S, "alias %s", cvcl->alias);
-	} else if (retval == NO_RECORDS) {
-		goto cleanup;
-	}
-	cleanup:
-		ailsa_clean_cmdb(cmc);
-		clean_cbcvarient_comm_line(cvcl);
-		if (retval > 0)
-			report_error(retval, error);
-		exit(retval);
+
+	ailsa_clean_cmdb(cmc);
+	clean_cbcvarient_comm_line(cvcl);
+	if (retval > 0)
+		report_error(retval, error);
+	exit(retval);
 }
 
 static void
@@ -338,21 +331,21 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		else if (opt == 'j')
 			cvl->type = CVARIENT;
 		else if (opt == 'e')
-			cvl->ver_alias = strndup(optarg, MAC_S);
+			cvl->ver_alias = strndup(optarg, MAC_LEN);
 		else if (opt == 'k')
-			cvl->valias = strndup(optarg, MAC_S);
+			cvl->valias = strndup(optarg, MAC_LEN);
 		else if (opt == 'n')
-			cvl->os = strndup(optarg, MAC_S);
+			cvl->os = strndup(optarg, MAC_LEN);
 		else if (opt == 'o')
-			cvl->version = strndup(optarg, MAC_S);
+			cvl->version = strndup(optarg, MAC_LEN);
 		else if (opt == 'p')
-			cvl->package = strndup(optarg, HOST_S);
+			cvl->package = strndup(optarg, HOST_LEN);
 		else if (opt == 's')
-			cvl->alias = strndup(optarg, MAC_S);
+			cvl->alias = strndup(optarg, MAC_LEN);
 		else if (opt == 't')
-			cvl->arch = strndup(optarg, RANGE_S);
+			cvl->arch = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'x')
-			cvl->varient = strndup(optarg, HOST_S);
+			cvl->varient = strndup(optarg, HOST_LEN);
 		else {
 			printf("Unknown option: %c\n", opt);
 			return DISPLAY_USAGE;

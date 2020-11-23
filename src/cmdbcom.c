@@ -111,7 +111,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 #endif // HAVE_GETOPT_H
 	retval = 0;
 	if (!(comp->config)) {
-		comp->config = ailsa_calloc(CONF_S, "comp->config in parse_cmdb_command_line");
+		comp->config = ailsa_calloc(CONFIG_LEN, "comp->config in parse_cmdb_command_line");
 		get_config_file_location(comp->config);
 	}
 #ifdef HAVE_GETOPT_H
@@ -157,51 +157,51 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'f')
 			comp->force = 1;
 		else if (opt == 'c')
-			comp->config = strndup(optarg, RBUFF_S);
+			comp->config = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'n')
-			comp->name = strndup(optarg, HOST_S);
+			comp->name = strndup(optarg, HOST_LEN);
 		else if (opt == 'i')
-			comp->id = strndup(optarg, CONF_S);
+			comp->id = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'x')
-			comp->vmhost = strndup(optarg, HOST_S);
+			comp->vmhost = strndup(optarg, HOST_LEN);
 		else if (opt == 'y')
-			comp->shtype = strndup(optarg, MAC_S);
+			comp->shtype = strndup(optarg, MAC_LEN);
 		else if (opt == 'V')
-			comp->vendor = strndup(optarg, CONF_S);
+			comp->vendor = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'M')
-			comp->make = strndup(optarg, CONF_S);
+			comp->make = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'O')
-			comp->model = strndup(optarg, CONF_S);
+			comp->model = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'U')
-			comp->uuid = strndup(optarg, CONF_S);
+			comp->uuid = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'C')
-			comp->coid = strndup(optarg, RANGE_S);
+			comp->coid = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'A')
-			comp->address = strndup(optarg, NAME_S);
+			comp->address = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'T')
-			comp->city = strndup(optarg, HOST_S);
+			comp->city = strndup(optarg, HOST_LEN);
 		else if (opt == 'Y')
-			comp->county = strndup(optarg, MAC_S);
+			comp->county = strndup(optarg, MAC_LEN);
 		else if (opt == 'Z')
-			comp->postcode = strndup(optarg, RANGE_S);
+			comp->postcode = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'N')
-			comp->fullname = strndup(optarg, HOST_S);
+			comp->fullname = strndup(optarg, HOST_LEN);
 		else if (opt == 'P')
-			comp->phone = strndup(optarg, MAC_S);
+			comp->phone = strndup(optarg, MAC_LEN);
 		else if (opt == 'E')
-			comp->email = strndup(optarg, HOST_S);
+			comp->email = strndup(optarg, HOST_LEN);
 		else if (opt == 'D')
-			comp->detail = strndup(optarg, HOST_S);
+			comp->detail = strndup(optarg, HOST_LEN);
 		else if (opt == 'I')
 			comp->sid = strtoul(optarg, NULL, 10);
 		else if (opt == 'L')
-			comp->url = strndup(optarg, RBUFF_S);
+			comp->url = strndup(optarg, CONFIG_LEN);
 		else if (opt == 'B')
-			comp->device = strndup(optarg, MAC_S);
+			comp->device = strndup(optarg, MAC_LEN);
 		else if (opt == 'S')
-			comp->service = strndup(optarg, RANGE_S);
+			comp->service = strndup(optarg, SERVICE_LEN);
 		else if (opt == 'H')
-			comp->hclass = strndup(optarg, MAC_S);
+			comp->hclass = strndup(optarg, MAC_LEN);
 		else
 			return DISPLAY_USAGE;
 	}

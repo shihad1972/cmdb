@@ -219,25 +219,25 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'o') {
 			cpl->type = OPTION;
 		} else if (opt == 'f') {
-			cpl->fs = ailsa_calloc(RANGE_S, errmsg);
-			snprintf(cpl->fs, RANGE_S, "%s", optarg);
+			cpl->fs = ailsa_calloc(SERVICE_LEN, errmsg);
+			snprintf(cpl->fs, SERVICE_LEN, "%s", optarg);
 		}
 		else if (opt == 'g') {
 			if (cpl->lvm < 1) {
 				ailsa_syslog(LOG_ERR, "LVM not set before logvol\n");
 				return DISPLAY_USAGE;
 			}
-			cpl->log_vol = ailsa_calloc(MAC_S, errmsg);
-			snprintf(cpl->log_vol, MAC_S, "%s", optarg);
+			cpl->log_vol = ailsa_calloc(MAC_LEN, errmsg);
+			snprintf(cpl->log_vol, MAC_LEN, "%s", optarg);
 		} else if (opt == 'n') {
-			cpl->scheme = ailsa_calloc(CONF_S, errmsg);
-			snprintf(cpl->scheme, CONF_S, "%s", optarg);
+			cpl->scheme = ailsa_calloc(CONFIG_LEN, errmsg);
+			snprintf(cpl->scheme, CONFIG_LEN, "%s", optarg);
 		} else if (opt == 'b') {
-			cpl->option = ailsa_calloc(CONF_S, errmsg);
-			snprintf(cpl->option, CONF_S, "%s", optarg);
+			cpl->option = ailsa_calloc(CONFIG_LEN, errmsg);
+			snprintf(cpl->option, CONFIG_LEN, "%s", optarg);
 		} else if (opt == 't') {
-			cpl->partition = ailsa_calloc(RBUFF_S, errmsg);
-			snprintf(cpl->partition, RBUFF_S, "%s", optarg);
+			cpl->partition = ailsa_calloc(CONFIG_LEN, errmsg);
+			snprintf(cpl->partition, CONFIG_LEN, "%s", optarg);
 		} else if (opt == 'i') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				ailsa_syslog(LOG_ERR, "minimum not a number?\n");

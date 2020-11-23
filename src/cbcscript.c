@@ -170,11 +170,11 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		else if (opt == 'b')
 			cbcs->domain = strndup(optarg, (CONFIG_LEN));
 		else if (opt == 'g')
-			cbcs->arg = strndup(optarg, (CONF_S - 1));
+			cbcs->arg = strndup(optarg, (CONFIG_LEN - 1));
 		else if (opt == 'n')
-			cbcs->name = strndup(optarg, (CONF_S - 1));
+			cbcs->name = strndup(optarg, (CONFIG_LEN - 1));
 		else if (opt == 't')
-			cbcs->type = strndup(optarg, (MAC_S - 1));
+			cbcs->type = strndup(optarg, (MAC_LEN - 1));
 		else
 			retval = DISPLAY_USAGE;
 	}

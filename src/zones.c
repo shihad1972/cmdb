@@ -465,12 +465,12 @@ print_rev_zone_records(AILLIST *r)
 int
 check_zone(char *domain, ailsa_cmdb_s *dc)
 {
-	char *command, syscom[RBUFF_S];
+	char *command, syscom[CONFIG_LEN];
 	int retval;
 	
 	command = &syscom[0];
 	
-	snprintf(command, RBUFF_S, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
+	snprintf(command, CONFIG_LEN, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
 	retval = system(syscom);
 	if (retval != 0)
 		retval = CHKZONE_FAIL;
@@ -1726,7 +1726,7 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
 	}
 	range = get_net_range(dcl->prefix);
 	ip_addr += (uint32_t)range - 1;
-	inet_ntop(AF_INET, &ip_addr, buff, RANGE_S);
+	inet_ntop(AF_INET, &ip_addr, buff, SERVICE_LEN);
 	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add net_finish to list");
 		goto cleanup;

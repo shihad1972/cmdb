@@ -91,7 +91,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'n') {
-			cb->name = strndup(optarg, NAME_S);
+			cb->name = strndup(optarg, CONFIG_LEN);
 			cb->server = NAME;
 		} else if (opt == 'i') {
 			cb->server_id = strtoul(optarg, NULL, 10);
@@ -115,24 +115,24 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'w') {
 			cb->action = CMDB_WRITE;
 		} else if (opt == 'b') {
-			cb->build_domain = strndup(optarg, RBUFF_S);
+			cb->build_domain = strndup(optarg, CONFIG_LEN);
 		} else if (opt == 'e') {
-			cb->locale = strndup(optarg, NAME_S);
+			cb->locale = strndup(optarg, CONFIG_LEN);
 		} else if (opt == 'k') {
-			cb->netcard = strndup(optarg, HOST_S);
+			cb->netcard = strndup(optarg, HOST_LEN);
 		} else if (opt == 'j') {
 // We do not check for a starting /dev here.
-			cb->harddisk = strndup(optarg, HOST_S);
+			cb->harddisk = strndup(optarg, HOST_LEN);
 		} else if (opt == 'o') {
-			cb->os = strndup(optarg, MAC_S);
+			cb->os = strndup(optarg, MAC_LEN);
 		} else if (opt == 'p') {
-			cb->partition = strndup(optarg, CONF_S);
+			cb->partition = strndup(optarg, CONFIG_LEN);
 		} else if (opt == 't') {
-			cb->arch = strndup(optarg, RANGE_S);
+			cb->arch = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 's') {
-			cb->os_version = strndup(optarg, MAC_S);
+			cb->os_version = strndup(optarg, MAC_LEN);
 		} else if (opt == 'x') {
-			cb->varient = strndup(optarg, CONF_S);
+			cb->varient = strndup(optarg, CONFIG_LEN);
 		} else if (opt == 'y') {
 			cb->gui = 1;
 		} else if (opt == 'v') {

@@ -174,7 +174,7 @@ ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlit
 		ailsa_syslog(LOG_ERR, "Cannot open SQL file %s", file);
 		return FILE_O_FAIL;
 	}
-	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFF_S, stmt, NULL)) > 0) {
+	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFFER_LEN, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
 		return SQLITE_STATEMENT_FAILED;

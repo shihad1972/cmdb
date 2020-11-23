@@ -1022,7 +1022,7 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 	unsigned long int size;
 	size_t len;
 	FILE *tx = NULL, *rx = NULL, *krn = NULL, *intrd = NULL;
-	char kfile[BUFF_S], infile[BUFF_S];
+	char kfile[BUFFER_LEN], infile[BUFFER_LEN];
 	char *buff = NULL, *kernel = NULL, *initrd = NULL;
 	char *host;
 	struct addrinfo h, *r, *p;
@@ -1030,9 +1030,9 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 	AILLIST *mirror = ailsa_db_data_list_init();
 
 	r = NULL;
-	if (!(kernel = calloc(RBUFF_S, 1)))
+	if (!(kernel = calloc(CONFIG_LEN, 1)))
 		goto cleanup;
-	if (!(initrd = calloc(RBUFF_S, 1)))
+	if (!(initrd = calloc(CONFIG_LEN, 1)))
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(os, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add os alias to list");
@@ -1049,39 +1049,39 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 		retval = AILSA_NO_MIRROR;
 		goto cleanup;
 	}
-	if (strncmp(os, "debian", COMM_S) == 0) {
-		if (strncmp(arch, "i386", COMM_S) == 0) {
-			snprintf(kernel, BUFF_S, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+	if (strncmp(os, "debian", BYTE_LEN) == 0) {
+		if (strncmp(arch, "i386", BYTE_LEN) == 0) {
+			snprintf(kernel, BUFFER_LEN, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, deb_i386_boot, host);
-			snprintf(initrd, BUFF_S, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			snprintf(initrd, BUFFER_LEN, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, deb_i386_boot, host);
-		} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
-			snprintf(kernel, BUFF_S, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+		} else if (strncmp(arch, "x86_64", BYTE_LEN) == 0) {
+			snprintf(kernel, BUFFER_LEN, "GET /debian/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, deb_amd64_boot, host);
-			snprintf(initrd, BUFF_S, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			snprintf(initrd, BUFFER_LEN, "GET /debian/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, deb_amd64_boot, host);
 		}
-	} else if (strncmp(os, "ubuntu", COMM_S) == 0) {
-		if (strncmp(arch, "i386", COMM_S) == 0) {
-			snprintf(kernel, BUFF_S, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+	} else if (strncmp(os, "ubuntu", BYTE_LEN) == 0) {
+		if (strncmp(arch, "i386", BYTE_LEN) == 0) {
+			snprintf(kernel, BUFFER_LEN, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, ubu_i386_boot, host);
-			snprintf(initrd, BUFF_S, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			snprintf(initrd, BUFFER_LEN, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, ubu_i386_boot, host);
-		} else if (strncmp(arch, "x86_64", COMM_S) == 0) {
-			snprintf(kernel, BUFF_S, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
+		} else if (strncmp(arch, "x86_64", BYTE_LEN) == 0) {
+			snprintf(kernel, BUFFER_LEN, "GET /ubuntu/dists/%s%s/linux HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, ubu_amd64_boot, host);
-			snprintf(initrd, BUFF_S, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+			snprintf(initrd, BUFFER_LEN, "GET /ubuntu/dists/%s%s/initrd.gz HTTP/1.1\r\nHOST: %s\r\n\r\n",
 			 vail, ubu_amd64_boot, host);
 		}
-	} else if (strncmp(os, "centos", COMM_S) == 0) {
-		snprintf(kernel, BUFF_S, "GET /centos/%s/os/%s/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n\r\n",
+	} else if (strncmp(os, "centos", BYTE_LEN) == 0) {
+		snprintf(kernel, BUFFER_LEN, "GET /centos/%s/os/%s/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n\r\n",
 		 ver, arch, host);
-		snprintf(initrd, BUFF_S, "GET /centos/%s/os/%s/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n\r\n",
+		snprintf(initrd, BUFFER_LEN, "GET /centos/%s/os/%s/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n\r\n",
 		 ver, arch, host);
-	} else if (strncmp(os, "fedora", COMM_S) == 0) {
-		snprintf(kernel, BUFF_S, "GET %s/releases/%s/Server/%s/os/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n",
+	} else if (strncmp(os, "fedora", BYTE_LEN) == 0) {
+		snprintf(kernel, BUFFER_LEN, "GET %s/releases/%s/Server/%s/os/isolinux/vmlinuz HTTP/1.1\r\nHOST: %s\r\n",
 		 fed_tld, ver, arch, host);
-		snprintf(initrd, BUFF_S, "GET %s/releases/%s/Server/%s/os/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n",
+		snprintf(initrd, BUFFER_LEN, "GET %s/releases/%s/Server/%s/os/isolinux/initrd.img HTTP/1.1\r\nHOST: %s\r\n",
 		 fed_tld, ver, arch, host);
 	}
 	fill_addrtcp(&h);
@@ -1109,8 +1109,8 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 		fprintf(stderr, "fdopen(tx): %s\n", strerror(errno));
 		goto cleanup;
 	}
-	snprintf(kfile, RBUFF_S, "%s/vmlinuz-%s-%s-%s", cmc->tftpdir, os, ver, arch);
-	snprintf(infile, RBUFF_S, "%s/initrd-%s-%s-%s.img", cmc->tftpdir, os, ver, arch);
+	snprintf(kfile, CONFIG_LEN, "%s/vmlinuz-%s-%s-%s", cmc->tftpdir, os, ver, arch);
+	snprintf(infile, CONFIG_LEN, "%s/initrd-%s-%s-%s.img", cmc->tftpdir, os, ver, arch);
 	if ((retval = setvbuf(rx, NULL, _IOLBF, MAXDATASIZE)) != 0) {
 		perror("setvbuf: ");
 		goto cleanup;
@@ -1241,7 +1241,7 @@ decode_http_header(FILE *rx, unsigned long int *len)
  *
  * http://www.w3.org/Protocols/rfc2616/rfc2616.html
  */
-		if (strncmp(t, "Content-Length:", RANGE_S) == 0) {
+		if (strncmp(t, "Content-Length:", SERVICE_LEN) == 0) {
 			if (!(t = strtok(NULL, " "))) {
 				fprintf(stderr, "Cannot get length\n");
 				goto cleanup;

@@ -52,6 +52,7 @@ ailsacmdb.h and will remove another dependency on cmdb.h
 In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
 need to stop exiting in these functions. They should pass their error back up
 the function stack
+	*** Done. commit ID: bb2ecda ***
 
 05/05/2020
 cbcscript is tightly tied into the build_type table; also the system_scripts_args
