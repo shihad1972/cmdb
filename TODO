@@ -45,6 +45,7 @@ the 2nd time it is built.
 06/06/2020
 Should probably move all actions to the CMDB_ definitions. These are in
 ailsacmdb.h and will remove another dependency on cmdb.h
+	*** Done. Completed with commit ID 25661a8 ***
 
 06/05/2020
 In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
@@ -65,33 +66,17 @@ error, and get back to main, so we can free memory there
 03/05/2020
 Adding a system package in cbcsysp should not automatically configure the
 package. Indeed, it should check if the package is in the varient. This will
-obviously fail for packaes that are part of a base install, and so those
+obviously fail for packages that are part of a base install, and so those
 packages should be added to the base varient.
 
 20/04/2020
 When adding a locale, need to check if that locale already exists
+	*** Done. Fixed in commit ID 3baec109 ***
 
 19/04/2020
 When adding packages, I need to check if the package already exists for
 that particular varient and OS combination.
-
-10/04/2020
-When grabbing kernel and initrd boot files, a summary of download speed
-should be printed.
-	** This is hipster bullshit. Fuck off! **
-
-04/04/2020
-Programs moved to new AILLIST database model:
-	cmdb		**Done**
-	dnsa		**Done**
-	cbc		**Done**
-	cbcvarient	**Done**
-	cbcdomain	**Done**
-	cbcos		**Done**
-	cbcsysp		**Done**
-	cbcscript	**Done**
-	cbcpart		**Done**
-	cbclocale	**Done**
+	***  Done. Fixed in commit ID 51dcd4e ***
 
 31/10/2016
 Add support for a YAML data file, so we do not have the unwieldy command

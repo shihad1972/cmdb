@@ -316,8 +316,13 @@ display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 		ailsa_syslog(LOG_ERR, "LOCALE_ON_NAME query failed");
 		goto cleanup;
 	}
+	if (r->total == 0) {
+		ailsa_syslog(LOG_INFO, "No locale named %s", cl->name);
+		goto cleanup;
+	}
 	if (r->total != 8) {
 		ailsa_syslog(LOG_ERR, "Should have 8 in list; got %zu", r->total);
+		retval = WRONG_LENGTH_LIST;
 		goto cleanup;
 	}
 	e = r->head;
