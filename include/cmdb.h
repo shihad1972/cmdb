@@ -367,11 +367,6 @@ typedef struct string_l {
 	struct string_l *next;
 } string_l;
 
-typedef unsigned long int uli_t;
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
 // Error reporting function
 void 
 report_error(int error, const char *errstr);
