@@ -35,7 +35,7 @@ while getopts "a:t:" opt; do
 done
 
 if [ -z "${APP}" ]; then
-  echo "APP not set! Defaulting to provision"
+  echo "APP not set! Defaulting to cmdb"
   APP=cmdb
 fi
 
