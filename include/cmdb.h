@@ -359,21 +359,6 @@ enum {			/* cmdb Action codes */
 	VERS = 9
 };
 
-enum {			/* dnsa action codes */
-	DISPLAY_ZONE = 21,
-	LIST_ZONES = 22,
-	COMMIT_ZONES = 23,
-	ADD_ZONE = 24,
-	ADD_HOST = 25,
-	BUILD_REV = 26,
-	MULTIPLE_A = 27,
-	ADD_PREFER_A = 28,
-	DELETE_ZONE = 29,
-	DELETE_RECORD = 30,
-	DELETE_PREFERRED = 31,
-	ADD_CNAME_ON_ROOT = 32
-};
-
 enum {			/* cbc values for build type */
 	PRESEED = 1,
 	KICKSTART = 2

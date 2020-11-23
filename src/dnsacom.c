@@ -95,37 +95,37 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 #endif // HAVE_GETOPT_H
 	{
 		if (opt == 'a') {
-			comp->action = ADD_HOST;
+			comp->action = DNSA_AHOST;
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'b') {
-			comp->action = BUILD_REV;
+			comp->action = DNSA_BREV;
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'd') {
-			comp->action = DISPLAY_ZONE;
+			comp->action = DNSA_DISPLAY;
 		} else if (opt == 'e') {
-			comp->action = ADD_PREFER_A;
+			comp->action = DNSA_ADD_MULTI;
 			comp->type = REVERSE_ZONE;
 			comp->rtype = strndup("A", MAC_LEN);
 		} else if (opt == 'g') {
-			comp->action = DELETE_PREFERRED;
+			comp->action = DNSA_DPREFA;
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'l') {
-			comp->action = LIST_ZONES;
+			comp->action = DNSA_LIST;
 		} else if (opt == 'm') {
-			comp->action = ADD_CNAME_ON_ROOT;
+			comp->action = DNSA_CNAME;
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'r') {
-			comp->action = DELETE_RECORD;
+			comp->action = DNSA_DREC;
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'u') {
-			comp->action = MULTIPLE_A;
+			comp->action = DNSA_DISPLAY_MULTI;
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'w') {
-			comp->action = COMMIT_ZONES;
+			comp->action = DNSA_COMMIT;
 		} else if (opt == 'x') {
-			comp->action = DELETE_ZONE;
+			comp->action = DNSA_DZONE;
 		} else if (opt == 'z') {
-			comp->action = ADD_ZONE;
+			comp->action = DNSA_AZONE;
 		} else if (opt == 'F') {
 			comp->type = FORWARD_ZONE;
 		} else if (opt == 'R') {
@@ -193,24 +193,24 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if ((!(comp->domain)) && (comp->action != LIST_ZONES)
-		  && (comp->action != MULTIPLE_A) && (comp->action != DELETE_PREFERRED)
-		  && (comp->action != COMMIT_ZONES))
+	else if ((!(comp->domain)) && (comp->action != DNSA_LIST)
+		  && (comp->action != DNSA_DISPLAY_MULTI) && (comp->action != DNSA_DPREFA)
+		  && (comp->action != DNSA_COMMIT))
 		retval = NO_DOMAIN_NAME;
-	else if ((comp->action == MULTIPLE_A) && (!(comp->domain)) && (!(comp->dest)))
+	else if ((comp->action == DNSA_DISPLAY_MULTI) && (!(comp->domain)) && (!(comp->dest)))
 		retval = NO_DOMAIN_NAME;
-	else if ((comp->action == MULTIPLE_A) && (comp->domain) && (comp->dest))
+	else if ((comp->action == DNSA_DISPLAY_MULTI) && (comp->domain) && (comp->dest))
 		retval = DOMAIN_AND_IP_GIVEN;
-	else if ((comp->action == ADD_HOST) && (!(comp->dest)))
+	else if ((comp->action == DNSA_AHOST) && (!(comp->dest)))
 		retval = NO_IP_ADDRESS;
-	else if (((comp->action == ADD_HOST) || (comp->action == DELETE_RECORD) ||
-	      (comp->action == ADD_CNAME_ON_ROOT)) && (!(comp->host)))
+	else if (((comp->action == DNSA_AHOST) || (comp->action == DNSA_DREC) ||
+	      (comp->action == DNSA_CNAME)) && (!(comp->host)))
 		retval = NO_HOST_NAME;
-	else if (comp->action == ADD_HOST && (!(comp->rtype)))
+	else if (comp->action == DNSA_AHOST && (!(comp->rtype)))
 		retval = NO_RECORD_TYPE;
-	else if ((comp->action == ADD_ZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
+	else if ((comp->action == DNSA_AZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
 		retval = NO_PREFIX;
-	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ns)) && (comp->action == ADD_ZONE))
+	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ns)) && (comp->action == DNSA_AZONE))
 		retval = NO_GLUE_NS;
 	if (retval == NO_GLUE_NS) {
 		comp->glue_ns = strdup("ns1,ns2");
@@ -383,7 +383,7 @@ validate_comm_line(dnsa_comm_line_s *comm)
 {
 	int retval = 0;
 	
-	if ((comm->action == LIST_ZONES) || (comm->action == COMMIT_ZONES))
+	if ((comm->action == DNSA_LIST) || (comm->action == DNSA_COMMIT))
 		return retval;
 	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE))
 		retval = validate_fwd_comm_line(comm);
@@ -451,7 +451,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 				return HOST_INPUT_INVALID;
 		}
 	}
-	if (comm->action == DELETE_RECORD) {
+	if (comm->action == DNSA_DREC) {
 		if (comm->protocol) {
 			if (!(comm->prefix))
 				return AILSA_NO_PRIORITY;
@@ -464,7 +464,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 				return AILSA_NO_PROTOCOL;
 		}
 	}
-	if (comm->action == ADD_CNAME_ON_ROOT) {
+	if (comm->action == DNSA_CNAME) {
 		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
 			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->host, NAME_REGEX) < 0)
@@ -492,7 +492,7 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 	if (comm->service)
 		if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
 			return SERVICE_INPUT_INVALID;
-	if (comm->type == GLUE_ZONE && comm->action != DISPLAY_ZONE)
+	if (comm->type == GLUE_ZONE && comm->action != DNSA_DISPLAY)
 		retval = validate_glue_comm_line(comm);
 	return retval;
 }
@@ -518,7 +518,7 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 				retval = GLUE_IP_INPUT_INVALID;
 				goto cleanup;
 			}
-		} else if (comm->action != DELETE_ZONE) {
+		} else if (comm->action != DNSA_DZONE) {
 			if (ailsa_validate_input(comm->glue_ip, IP_REGEX) < 0) {
 				retval =  GLUE_IP_INPUT_INVALID;
 				goto cleanup;
@@ -551,10 +551,10 @@ int
 validate_rev_comm_line(dnsa_comm_line_s *comm)
 {
 	int retval = 0;
-	if ((comm->domain) && (comm->action != ADD_PREFER_A) && (comm->action != DELETE_PREFERRED))
+	if ((comm->domain) && (comm->action != DNSA_ADD_MULTI) && (comm->action != DNSA_DPREFA))
 		if (ailsa_validate_input(comm->domain, IP_REGEX) < 0)
 			return DOMAIN_INPUT_INVALID;
-	if (comm->action == ADD_PREFER_A) {
+	if (comm->action == DNSA_ADD_MULTI) {
 		if (ailsa_validate_input(comm->domain, DOMAIN_REGEX) < 0)
 			return DOMAIN_INPUT_INVALID;
 		if (ailsa_validate_input(comm->dest, IP_REGEX) < 0)

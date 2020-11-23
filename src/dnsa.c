@@ -49,57 +49,57 @@ int main(int argc, char *argv[])
 	if (cm->domain)
 		domain = cm->domain;
 	if (cm->type == FORWARD_ZONE) {
-		if (cm->action == LIST_ZONES) {
+		if (cm->action == DNSA_LIST) {
 			list_zones(dc);
 			retval = 0;
-		} else if (cm->action == DISPLAY_ZONE) {
+		} else if (cm->action == DNSA_DISPLAY) {
 			display_zone(domain, dc);
 			retval = 0;
-		} else if (cm->action == COMMIT_ZONES) {
+		} else if (cm->action == DNSA_COMMIT) {
 			retval = commit_fwd_zones(dc, domain);
-		} else if (cm->action == ADD_HOST) {
+		} else if (cm->action == DNSA_AHOST) {
 			retval = add_host(dc, cm);
-		} else if (cm->action == ADD_ZONE) {
+		} else if (cm->action == DNSA_AZONE) {
 			retval = add_fwd_zone(dc, cm);
-		} else if (cm->action == DELETE_RECORD) {
+		} else if (cm->action == DNSA_DREC) {
 			retval = delete_record(dc, cm);
-		} else if (cm->action == DELETE_ZONE) {
+		} else if (cm->action == DNSA_DZONE) {
 			retval = delete_fwd_zone(dc, cm);
-		} else if (cm->action == ADD_CNAME_ON_ROOT) {
+		} else if (cm->action == DNSA_CNAME) {
 			retval = add_cname_to_root_domain(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
 	} else if (cm->type == REVERSE_ZONE) {
-		if (cm->action == LIST_ZONES) {
+		if (cm->action == DNSA_LIST) {
 			list_rev_zones(dc);
 			retval = 0;
-		} else if (cm->action == DISPLAY_ZONE) {
+		} else if (cm->action == DNSA_DISPLAY) {
 			display_rev_zone(domain, dc);
 			retval = 0;
-		} else if (cm->action == COMMIT_ZONES) {
+		} else if (cm->action == DNSA_COMMIT) {
 			retval = commit_rev_zones(dc, domain);
-		} else if (cm->action == ADD_ZONE) {
+		} else if (cm->action == DNSA_AZONE) {
 			retval = add_rev_zone(dc, cm);
-		} else if (cm->action == MULTIPLE_A) {
+		} else if (cm->action == DNSA_DISPLAY_MULTI) {
 			retval = display_multi_a_records(dc, cm);
-		} else if (cm->action == ADD_PREFER_A) {
+		} else if (cm->action == DNSA_ADD_MULTI) {
 			retval = mark_preferred_a_record(dc, cm);
-		} else if (cm->action == BUILD_REV) {
+		} else if (cm->action == DNSA_BREV) {
 			retval = build_reverse_zone(dc, cm);
-		} else if (cm->action == DELETE_PREFERRED) {
+		} else if (cm->action == DNSA_DPREFA) {
 			retval = delete_preferred_a(dc, cm);
-		} else if (cm->action == DELETE_ZONE) {
+		} else if (cm->action == DNSA_DZONE) {
 			retval = delete_reverse_zone(dc, cm);
 		} else {
 			printf("Action code %d not implemented\n", cm->action);
 		}
 	} else if (cm->type == GLUE_ZONE) {
-		if (cm->action == ADD_ZONE)
+		if (cm->action == DNSA_AZONE)
 			retval = add_glue_zone(dc, cm);
-		else if (cm->action == LIST_ZONES)
+		else if (cm->action == DNSA_LIST)
 			list_glue_zones(dc);
-		else if (cm->action == DELETE_ZONE)
+		else if (cm->action == DNSA_DZONE)
 			delete_glue_zone(dc, cm);
 		else
 			printf("Action code %d not implemented\n", cm->action);
