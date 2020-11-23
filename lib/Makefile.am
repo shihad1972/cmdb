@@ -1,7 +1,6 @@
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_CPPFLAGS = -I$(top_srcdir)/include/ -I$(top_srcdir)/src/
 AM_LDFLAGS =
-LDADD =
 lib_LTLIBRARIES = libailsacmdb.la libailsasql.la
 libailsacmdb_la_SOURCES = ailsacmdb.c logging.c regexp.c data.c \
 			errors.c list.c hash.c config.c uuid.c
@@ -32,5 +31,5 @@ endif
 
 if HAVE_LIBGCRYPT
 AM_CPPFLAGS += $(LIBGCRYPT_CFLAGS)
-LDADD += $(LIBGCRYPT_LIBS)
+LIBS += $(LIBGCRYPT_LIBS)
 endif
