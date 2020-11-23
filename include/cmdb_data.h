@@ -25,21 +25,21 @@
 # include <ailsacmdb.h>
 
 typedef struct cmdb_config_s { /* Hold CMDB configuration values */
-	char dbtype[RANGE_S];
-	char file[CONF_S];
-	char db[CONF_S];
-	char user[CONF_S];
-	char pass[CONF_S];
-	char host[CONF_S];
-	char socket[CONF_S];
+	char dbtype[SERVICE_LEN];
+	char file[CONFIG_LEN];
+	char db[CONFIG_LEN];
+	char user[CONFIG_LEN];
+	char pass[CONFIG_LEN];
+	char host[CONFIG_LEN];
+	char socket[CONFIG_LEN];
 	unsigned int port;
 	unsigned long int cliflag;
 } cmdb_config_s;
 
 typedef struct cmdb_server_s {
 	unsigned short int type;
-	char name[HOST_S];
-	char server_name[RBUFF_S];
+	char name[HOST_LEN];
+	char server_name[CONFIG_LEN];
 	unsigned long int server_id;
 	unsigned long int server_type_id;
 	unsigned long int cust_id;
@@ -53,10 +53,10 @@ typedef struct cmdb_server_s {
 
 typedef struct cmdb_server_type_s {
 	unsigned short int type;
-	char vendor[HOST_S];
-	char make[HOST_S];
-	char model[MAC_S];
-	char alias[MAC_S];
+	char vendor[HOST_LEN];
+	char make[HOST_LEN];
+	char model[MAC_LEN];
+	char alias[MAC_LEN];
 	unsigned long int server_type_id;
 	unsigned long int cuser;
 	unsigned long int muser;
@@ -67,12 +67,12 @@ typedef struct cmdb_server_type_s {
 
 typedef struct cmdb_customer_s {
 	struct cmdb_customer_s *next;
-	char name[HOST_S];
-	char address[NAME_S];
-	char city[HOST_S];
-	char county[MAC_S];
-	char postcode[RANGE_S];
-	char coid[RANGE_S];
+	char name[HOST_LEN];
+	char address[CONFIG_LEN];
+	char city[HOST_LEN];
+	char county[MAC_LEN];
+	char postcode[SERVICE_LEN];
+	char coid[SERVICE_LEN];
 	unsigned long int cust_id;
 	unsigned long int cuser;
 	unsigned long int muser;
@@ -82,9 +82,9 @@ typedef struct cmdb_customer_s {
 
 typedef struct cmdb_contact_s {
 	struct cmdb_contact_s *next;
-	char name[HOST_S];
-	char phone[MAC_S];
-	char email[HOST_S];
+	char name[HOST_LEN];
+	char phone[MAC_LEN];
+	char email[HOST_LEN];
 	unsigned long int cont_id;
 	unsigned long int cust_id;
 	unsigned long int cuser;
@@ -96,8 +96,8 @@ typedef struct cmdb_contact_s {
 typedef struct cmdb_service_s {
 	struct cmdb_service_s *next;
 	struct cmdb_service_type_s *servicetype;
-	char detail[HOST_S];
-	char url[RBUFF_S];
+	char detail[HOST_LEN];
+	char url[CONFIG_LEN];
 	unsigned long int service_id;
 	unsigned long int server_id;
 	unsigned long int cust_id;
@@ -110,16 +110,16 @@ typedef struct cmdb_service_s {
 
 typedef struct cmdb_service_type_s {
 	struct cmdb_service_type_s *next;
-	char service[RANGE_S];
-	char detail[MAC_S];
+	char service[SERVICE_LEN];
+	char detail[MAC_LEN];
 	unsigned long int service_id;
 } cmdb_service_type_s;
 
 typedef struct cmdb_hardware_s {
 	struct cmdb_hardware_s *next;
 	struct cmdb_hard_type_s *hardtype;
-	char detail[HOST_S];
-	char device[MAC_S];
+	char detail[HOST_LEN];
+	char device[MAC_LEN];
 	unsigned long int hard_id;
 	unsigned long int server_id;
 	unsigned long int ht_id;
@@ -131,22 +131,22 @@ typedef struct cmdb_hardware_s {
 
 typedef struct cmdb_hard_type_s {
 	struct cmdb_hard_type_s *next;
-	char type[MAC_S];
-	char hclass[MAC_S];
+	char type[MAC_LEN];
+	char hclass[MAC_LEN];
 	unsigned long int ht_id;
 } cmdb_hard_type_s;
 
-typedef struct cmdb_vm_host_s {
-	struct cmdb_vm_host_s *next;
-	char name[RBUFF_S];
-	char type[MAC_S];
+typedef struct cmdb_vm_HOST_LEN {
+	struct cmdb_vm_HOST_LEN *next;
+	char name[CONFIG_LEN];
+	char type[MAC_LEN];
 	unsigned long int id;
 	unsigned long int server_id;
 	unsigned long int cuser;
 	unsigned long int muser;
 	unsigned long int ctime;
 	unsigned long int mtime;
-} cmdb_vm_host_s;
+} cmdb_vm_HOST_LEN;
 
 typedef struct cmdb_s {
 	struct cmdb_server_s *server;
@@ -157,7 +157,7 @@ typedef struct cmdb_s {
 	struct cmdb_service_type_s *servicetype;
 	struct cmdb_hardware_s *hardware;
 	struct cmdb_hard_type_s *hardtype;
-	struct cmdb_vm_host_s *vmhost;
+	struct cmdb_vm_HOST_LEN *vmhost;
 } cmdb_s;
 
 typedef struct cmdb_comm_line_s { /* Hold parsed command line args */
@@ -207,7 +207,7 @@ cmdb_init_hardtype_t(cmdb_hard_type_s *type);
 void
 cmdb_init_servicetype_t(cmdb_service_type_s *type);
 void
-cmdb_init_vmhost_t(cmdb_vm_host_s *type);
+cmdb_init_vmhost_t(cmdb_vm_HOST_LEN *type);
 /* New clean functions for linked list */
 
 void
@@ -229,7 +229,7 @@ clean_hardware_list(cmdb_hardware_s *list);
 void
 clean_hardware_type_list(cmdb_hard_type_s *list);
 void
-clean_vmhost_list(cmdb_vm_host_s *list);
+clean_vmhost_list(cmdb_vm_HOST_LEN *list);
 void
 clean_cmdb_comm_line(cmdb_comm_line_s *list);
 

@@ -26,22 +26,6 @@
 # ifdef HAVE_SQLITE3
 #  include <sqlite3.h>
 # endif /* HAVE_SQLITE3 */
-enum {			/* Buffer Sizes */
-	CH_S = 2,
-	COMM_S = 8,
-	RANGE_S = 16,
-	MAC_S = 32,
-	HOST_S = 64,
-	CONF_S = 128,
-	NAME_S = 128,
-	URL_S = 256,
-	RBUFF_S = 256,
-	TBUFF_S = 512,
-	BUFF_S = 1024,
-	FILE_S = 4096,
-	BUILD_S = 65536
-};
-
 
 enum {			/* dnsa error codes */
 	OK = 0,
@@ -361,7 +345,7 @@ enum {
 };
 
 typedef union dbdata_u {
-	char text[RBUFF_S];
+	char text[256];
 	unsigned long int number;
 	short int small;
 } dbdata_u;

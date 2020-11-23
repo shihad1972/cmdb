@@ -53,11 +53,11 @@ typedef struct cbc_comm_line_s {	/* Hold parsed command line args */
 } cbc_comm_line_s;
 
 typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
-	char file[CONF_S];
-	char name[CONF_S];
-	char eth[MAC_S];
-	char ip[MAC_S];
-	char domain[RBUFF_S];
+	char file[CONFIG_LEN];
+	char name[CONFIG_LEN];
+	char eth[MAC_LEN];
+	char ip[MAC_LEN];
+	char domain[CONFIG_LEN];
 } cbc_dhcp_config_s;
 
 void
