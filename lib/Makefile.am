@@ -1,6 +1,7 @@
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_CPPFLAGS = -I$(top_srcdir)/include/ -I$(top_srcdir)/src/
 AM_LDFLAGS =
+LDADD =
 lib_LTLIBRARIES = libailsacmdb.la libailsasql.la
 libailsacmdb_la_SOURCES = ailsacmdb.c logging.c regexp.c data.c \
 			errors.c list.c hash.c config.c uuid.c
@@ -24,8 +25,12 @@ AM_LDFLAGS += $(SQLITE3_LDFLAGS)
 endif
 
 if HAVE_OPENSSL
-AM_CFLAGS += $(OPENSSL_INCLUDES)
+AM_CPPFLAGS += $(OPENSSL_INCLUDES)
 AM_LDFLAGS += $(OPENSSL_LDFLAGS)
 LIBS += $(OPENSSL_LIBS)
 endif
 
+if HAVE_LIBGCRYPT
+AM_CPPFLAGS += $(LIBGCRYPT_CFLAGS)
+LDADD += $(LIBGCRYPT_LIBS)
+endif
