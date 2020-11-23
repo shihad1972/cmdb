@@ -145,7 +145,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else if (opt == 'r')
 			cl->action = CMDB_RM;
 		else if (opt == 'v')
-			return CVERSION;
+			return AILSA_VERSION;
 		else if (opt == 'x')
 			cl->action = CMDB_DEFAULT;
 		else if (opt == 'g')
@@ -163,7 +163,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else
 			return DISPLAY_USAGE;
 	}
-	if ((cl->action == CVERSION) || (cl->action == CMDB_LIST))
+	if ((cl->action == AILSA_VERSION) || (cl->action == CMDB_LIST))
 		return retval;
 	if ((cl->action != CMDB_LIST) && (!(cl->name)))
 		return NO_NAME;

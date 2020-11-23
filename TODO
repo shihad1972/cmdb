@@ -19,6 +19,7 @@ have defaults either in config file, environment or database
 
 02/07/2020
 Fix cbcvarient where displaying varient that does not exist blows up.
+	** Seems fixed. Commit ID: 9ae6239 **
 
 28/06/2020
 The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do

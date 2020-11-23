@@ -209,7 +209,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'j') {
 			cpl->lvm = TRUE;
 		} else if (opt == 'v') {
-			cpl->action = CVERSION;
+			cpl->action = AILSA_VERSION;
 		} else if (opt == 'h') {
 			return DISPLAY_USAGE;
 		} else if (opt == 'p') {
@@ -308,8 +308,8 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 {
 	int retval = 0;
 
-	if (cpl->action == CVERSION)
-		return CVERSION;
+	if (cpl->action == AILSA_VERSION)
+		return AILSA_VERSION;
 	if (cpl->action == NONE && argc != 1)
 		return NO_ACTION;
 	if ((cpl->action != CMDB_LIST) && (!(cpl->scheme)))

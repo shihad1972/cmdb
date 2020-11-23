@@ -384,7 +384,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
 	else if (retval == USER_INPUT_INVALID)
 		ailsa_syslog(LOG_ERR, "User input was not validated.");
-	else if (retval == CVERSION)
+	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONF_S) == 0) || (strncmp(program, "cmdb2", CONF_S) == 0))

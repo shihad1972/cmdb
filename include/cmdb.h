@@ -42,22 +42,6 @@ enum {			/* Buffer Sizes */
 	BUILD_S = 65536
 };
 
-enum {			/* Database column types */
-	DBTEXT = 1,
-	DBINT = 2,
-	DBSHORT = 3,
-	DBTINY = 4,
-	DBTIME = 5
-};
-
-enum {			/* Database query types */
-	DBSEL = 1,
-	DBINS = 2,
-	DBDEL = 3,
-	DBSER = 4,
-	DBUPD = 5
-};
-
 
 enum {			/* dnsa error codes */
 	OK = 0,
@@ -344,19 +328,6 @@ enum {			/* config file error codes */
 	MULTI_DHCP_ERR = 330,
 	UCONF_ERR = 331,
 	UPORT_ERR = 332
-};
-
-enum {			/* cmdb Action codes */
-	NONE = 0,
-	DISPLAY = 1,
-	LIST_OBJ = 2,
-	ADD_TO_DB = 3,
-	RM_FROM_DB = 4,
-	CVERSION = 5,
-	MODIFY = 6,
-	DOWNLOAD = 7,
-	HELP = 8,
-	VERS = 9
 };
 
 enum {			/* cbc values for build type */

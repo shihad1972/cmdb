@@ -330,7 +330,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		else if (opt == 'z')
 			cvl->action = CMDB_DEFAULT;
 		else if (opt == 'v')
-			cvl->action = CVERSION;
+			cvl->action = AILSA_VERSION;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'g')
@@ -360,8 +360,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cvl->action == CVERSION)
-		return CVERSION;
+	if (cvl->action == AILSA_VERSION)
+		return AILSA_VERSION;
 	if (cvl->action == 0 && argc != 1)
 		return NO_ACTION;
 	if (cvl->action == CMDB_DEFAULT)

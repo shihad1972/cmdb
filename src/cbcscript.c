@@ -160,7 +160,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'v')
-			return CVERSION;
+			return AILSA_VERSION;
 		else if (opt == 's')
 			cbcs->what = CBCSCRIPT;
 		else if (opt == 'f')

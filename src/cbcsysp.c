@@ -182,8 +182,8 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'v') {
-			cbcs->action = CVERSION;
-			retval = CVERSION;
+			cbcs->action = AILSA_VERSION;
+			retval = AILSA_VERSION;
 		} else if (opt == 'b') {
 			cbcs->domain = strndup(optarg, DOMAIN_LEN);
 		} else if (opt == 'f') {
@@ -199,7 +199,7 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	}
 	if (argc == 1)
 		retval = DISPLAY_USAGE;
-	if ((retval != DISPLAY_USAGE) && (retval != CVERSION))
+	if ((retval != DISPLAY_USAGE) && (retval != AILSA_VERSION))
 		if ((retval = validate_cbcsysp_comm_line(cbcs)) != 0)
 			return retval;
 	return check_sysp_comm_line_for_errors(cbcs);

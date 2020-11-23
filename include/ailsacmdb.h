@@ -113,6 +113,7 @@ enum {			// Client commands
 };
 
 enum {                  // Action Codes
+	NONE = 0,
 	CMDB_ADD = 1,
 	CMDB_DISPLAY = 2,
 	CMDB_LIST = 3,
@@ -134,6 +135,9 @@ enum {                  // Action Codes
 	DNSA_DREC = 20,
 	DNSA_DPREFA = 21,
 	DNSA_CNAME = 22,
+	DOWNLOAD = 31,
+	HELP = 32,
+	VERS = 33,
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,

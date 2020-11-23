@@ -114,16 +114,16 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (!(cm) || !(cc))
 		return AILSA_NO_DATA;
 	switch(cm->action) {
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_server_to_database(cm, cc);
 		break;
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_servers(cc);
 		break;
-	case DISPLAY:
+	case CMDB_DISPLAY:
 		cmdb_display_server(cm, cc);
 		break;
-	case RM_FROM_DB:
+	case CMDB_RM:
 		retval = cmdb_remove_server_from_database(cm, cc);
 		break;
 	default:
@@ -141,13 +141,13 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (!(cm) || !(cc))
 		return AILSA_NO_DATA;
 	switch(cm->action) {
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_customer_to_database(cm, cc);
 		break;
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_customers(cc);
 		break;
-	case DISPLAY:
+	case CMDB_DISPLAY:
 		cmdb_display_customer(cm, cc);
 		break;
 	case CMDB_DEFAULT:
@@ -171,10 +171,10 @@ cmdb_contact_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	if (!(cm) | !(cc))
 		return AILSA_NO_DATA;
 	switch(cm->action) {
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_contacts_to_database(cm, cc);
 		break;
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_contacts_for_customer(cm, cc);
 		break;
 	default:
@@ -192,10 +192,10 @@ cmdb_service_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	switch(cm->action) {
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_services_for_server(cm, cc);
 		break;
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		cmdb_add_services_to_database(cm, cc);
 		break;
 	default:
@@ -213,10 +213,10 @@ cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	switch(cm->action) {
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_hardware_for_server(cm, cc);
 		break;
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		cmdb_add_hardware_to_database(cm, cc);
 		break;
 	default:
@@ -234,13 +234,13 @@ cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	switch(cm->action) {
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_vm_server_hosts(cc);
 		break;
-	case DISPLAY:
+	case CMDB_DISPLAY:
 		cmdb_display_vm_server(cm, cc);
 		break;
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_vm_host_to_database(cm, cc);
 		break;
 	default:
@@ -258,10 +258,10 @@ cmdb_service_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	switch(cm->action) {
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_service_types(cc);
 		break;
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_service_type_to_database(cm, cc);
 		break;
 	default:
@@ -279,10 +279,10 @@ cmdb_hardware_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		return AILSA_NO_DATA;
 	int retval = 0;
 	switch(cm->action) {
-	case LIST_OBJ:
+	case CMDB_LIST:
 		cmdb_list_hardware_types(cc);
 		break;
-	case ADD_TO_DB:
+	case CMDB_ADD:
 		retval = cmdb_add_hardware_type_to_database(cm, cc);
 		break;
 	default:

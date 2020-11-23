@@ -204,7 +204,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'r')
 			col->action = CMDB_RM;
 		else if (opt == 'v')
-			col->action = CVERSION;
+			col->action = AILSA_VERSION;
 		else if (opt == 'g')
 			col->action = DOWNLOAD;
 		else if (opt == 'z')
@@ -230,8 +230,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 	}
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (col->action == CVERSION)
-		return CVERSION;
+	if (col->action == AILSA_VERSION)
+		return AILSA_VERSION;
 	if (col->action == 0 && argc != 1) {
 		printf("No action provided\n");
 		return NO_ACTION;

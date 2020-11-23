@@ -221,7 +221,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 			cdl->ntpserver = strndup(optarg, DOMAIN_LEN);
 			cdl->confntp = 1;
 		} else if (opt == 'v') {
-			cdl->action = CVERSION;
+			cdl->action = AILSA_VERSION;
 		} else if (opt == 'h') {
 			return DISPLAY_USAGE;
 		} else {
@@ -232,8 +232,8 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	validate_cbcdomain_comm_line(cdl);
 	if (argc == 1)
 		return DISPLAY_USAGE;
-	if (cdl->action == CVERSION)
-		return CVERSION;
+	if (cdl->action == AILSA_VERSION)
+		return AILSA_VERSION;
 	if (cdl->action == NONE)
 		return NO_ACTION;
 	if (cdl->action != CMDB_LIST && cdl->action != CMDB_WRITE &&

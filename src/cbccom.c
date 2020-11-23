@@ -136,7 +136,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'y') {
 			cb->gui = 1;
 		} else if (opt == 'v') {
-			cb->action = CVERSION;
+			cb->action = AILSA_VERSION;
 		} else if (opt == 'h') {
 			return DISPLAY_USAGE;
 		} else {
@@ -148,8 +148,8 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	 (cb->server == NONE) &&
 	 (!(cb->action_type)))
 		return DISPLAY_USAGE;
-	else if (cb->action == CVERSION)
-		return CVERSION;
+	else if (cb->action == AILSA_VERSION)
+		return AILSA_VERSION;
 	else if (cb->action == CMDB_QUERY)
 		return NONE;
 	else if (cb->action == NONE)

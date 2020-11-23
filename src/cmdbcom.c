@@ -137,21 +137,21 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'o')
 			comp->type = VM_HOST;
 		else if (opt == 'd')
-			comp->action = DISPLAY;
+			comp->action = CMDB_DISPLAY;
 		else if (opt == 'v')
-			comp->action = CVERSION;
+			comp->action = AILSA_VERSION;
 		else if (opt == 'l')
-			comp->action = LIST_OBJ;
+			comp->action = CMDB_LIST;
 		else if (opt == 'a')
-			comp->action = ADD_TO_DB;
+			comp->action = CMDB_ADD;
 		else if (opt == 'r')
-			comp->action = RM_FROM_DB;
+			comp->action = CMDB_RM;
 		else if (opt == 'z')
 			comp->action = CMDB_DEFAULT;
 		else if (opt == 'q')
 			comp->action = CMDB_VIEW_DEFAULT;
 		else if (opt == 'm')
-			comp->action = MODIFY;
+			comp->action = CMDB_MOD;
 		else if (opt == 'h')
 			return DISPLAY_USAGE;
 		else if (opt == 'f')
@@ -221,13 +221,13 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 	if ((!(comp->name)) && (!(comp->id)) && (comp->type == 0) && 
 		(comp->action == 0))
 		retval = DISPLAY_USAGE;
-	else if (comp->action == CVERSION)
-		retval = CVERSION;
+	else if (comp->action == AILSA_VERSION)
+		retval = AILSA_VERSION;
 	else if (comp->action == NONE)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
 		retval = NO_TYPE;
-	else if (comp->action == LIST_OBJ) {
+	else if (comp->action == CMDB_LIST) {
 		if (comp->type == CONTACT) {
 			if ((!(comp->id)) && (!(comp->coid)))
 				retval = NO_COID;
@@ -238,7 +238,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			if (!(comp->id) && !(comp->name))
 				retval = NO_NAME_OR_ID;
 		}
-	} else if (comp->action == ADD_TO_DB) {
+	} else if (comp->action == CMDB_ADD) {
 		if (comp->type == CONTACT) {
 			if (!(comp->fullname))
 				retval = NO_CONT_NAME;
@@ -306,7 +306,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			else if (!(comp->postcode))
 				retval = NO_POSTCODE;
 		}
-	} else if (comp->action == DISPLAY) {
+	} else if (comp->action == CMDB_DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {
 			retval = WRONG_TYPE_FOR_DISPLAY;
 		} else if (comp->type == CUSTOMER) {
@@ -327,7 +327,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 		(comp->type != NONE || comp->action != NONE) &&
 		(comp->type != CONTACT)) {
 		retval = NO_NAME_OR_ID;
-	} else if (comp->action == RM_FROM_DB) {
+	} else if (comp->action == CMDB_RM) {
 		if (comp->type == SERVICE) {
 			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))
 				retval = NO_NAME_OR_ID;

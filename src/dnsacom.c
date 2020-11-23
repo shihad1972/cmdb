@@ -157,7 +157,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		} else if (opt == 't') {
 			comp->rtype = strndup(optarg, SERVICE_LEN);
 		} else if (opt == 'v') {
-			comp->action = CVERSION;
+			comp->action = AILSA_VERSION;
 		}
 	}
 	if (comp->rtype) {
@@ -187,8 +187,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	}
 	if ((comp->action == NONE) && (comp->type == NONE) && (!(comp->domain)))
 		retval = DISPLAY_USAGE;
-	else if (comp->action == CVERSION)
-		retval = CVERSION;
+	else if (comp->action == AILSA_VERSION)
+		retval = AILSA_VERSION;
 	else if (comp->action == NONE)
 		retval = NO_ACTION;
 	else if (comp->type == NONE)
