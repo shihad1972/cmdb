@@ -18,6 +18,7 @@ src/cbcdomain
 src/cbcos
 src/cbcvariant
 src/dnsa
+src/cmdb-identity
 *.swp
 *.kate-swp
 *.db

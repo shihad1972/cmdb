@@ -123,6 +123,7 @@ enum {                  // Action Codes
 	CMDB_DEFAULT = 7,
 	CMDB_QUERY = 8,
 	CMDB_VIEW_DEFAULT = 9,
+	CMDB_USAGE = 10,
 	DNSA_DISPLAY = 11,
 	DNSA_LIST = 12,
 	DNSA_COMMIT = 13,

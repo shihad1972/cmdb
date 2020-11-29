@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb mkvm mksp
+bin_PROGRAMS = cmdb mkvm mksp cmdb-identity
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
@@ -14,6 +14,7 @@ cbclocale_SOURCES = cbclocale.c
 cbcvarient_SOURCES = cbcvarient.c
 cbcsysp_SOURCES = cbcsysp.c
 cbcscript_SOURCES = cbcscript.c
+cmdb-identity_SOURCES = cmdb-identity.c
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript
