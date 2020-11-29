@@ -695,6 +695,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	3,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // IDENTITY_ID_ON_SERVER_USER
+"SELECT identity_id FROM identity WHERE server_id = ? AND username = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT}
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
@@ -882,6 +887,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 "INSERT INTO default_customer(cust_id, cuser, muser) VALUES (?, ?, ?)",
 	3,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_IDENTITY
+"INSERT INTO identity(server_id, username, pass, hash, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT}
 	},
 };
 
@@ -1090,6 +1100,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE default_customer SET cust_id = ?, muser = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_IDENTITY 
+"UPDATE identity SET pass = ?, hash = ?, muser = ? WHERE identity_id = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 

@@ -268,6 +268,7 @@ enum {			// SQL ARGUMENT QUERIES
 	DOMAIN_BUILD_ALIAS_ON_SERVER_ID,
 	MIRROR_ON_BUILD_ALIAS,
 	PACKAGE_FULL,
+	IDENTITY_ID_ON_SERVER_USER,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -308,6 +309,7 @@ enum {			// SQL INSERT QUERIES
 	INSERT_DEFAULT_VARIENT,
 	INSERT_DEFAULT_DOMAIN,
 	INSERT_DEFAULT_CUSTOMER,
+	INSERT_IDENTITY,
 };
 
 enum {			// SQL DELETE QUERIES
@@ -354,6 +356,7 @@ enum {			// SQL UPDATE QUERIES
 	UPDATE_DEFAULT_VARIENT,
 	UPDATE_DEFAULT_DOMAIN,
 	UPDATE_DEFAULT_CUSTOMER,
+	UPDATE_IDENTITY,
 };
 
 typedef struct ailsa_sql_single_s {
@@ -477,6 +480,9 @@ int
 cmdb_add_disk_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);
 
 int
@@ -502,6 +508,9 @@ cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list
 
 int
 cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list);
+
+int
+cmdb_check_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);

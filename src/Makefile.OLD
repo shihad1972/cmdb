@@ -9,7 +9,7 @@ RM = rm -f
 override CFLAGS := $(CFLAGS) -ansi -std=c99 -pedantic -O0 -W -Wall -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -Wunused -g -D_XOPEN_SOURCE=700
 override CPPFLAGS := $(CPPFLAGS) -I/usr/include/mysql -I../include/ -I/usr/include/libxml2
 LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
-LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid -lgcrypt
+LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid -lcrypt -lgcrypt
 bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cbcsysp cbcscript cbclocale cmdb hellolv mkvm mksp cmdb-identity
 
 DNSCOMOBJ = zones.o dnsacom.o

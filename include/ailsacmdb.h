@@ -33,6 +33,9 @@
 #  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 # endif // my_free
 
+# ifdef HAVE_STDBOOL_H
+#  include <stdbool.h>
+# endif // HAVE_STDBOOL_H
 # ifndef true
 #  define true 1
 # endif // true
@@ -139,6 +142,7 @@ enum {                  // Action Codes
 	DOWNLOAD = 31,
 	HELP = 32,
 	VERS = 33,
+	AILSA_INPUT_INVALID = 34,
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,
@@ -154,6 +158,7 @@ enum {                  // Error codes
 	AILSA_NO_POOL = 6,
 	AILSA_NO_NETWORK = 7,
 	AILSA_NO_COID = 8,
+	AILSA_NO_USER = 9,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -177,6 +182,7 @@ enum {                  // Error codes
 	AILSA_LOCALE_REPLACE_FAIL = 222,
 	AILSA_OS_REPLACE_FAIL = 223,
 	AILSA_NO_MIRROR = 224,
+	CANNOT_FIND_IDENTITY_ID = 225,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -743,6 +749,8 @@ void
 ailsa_chomp(char *line);
 void
 ailsa_munch(char *line);
+void
+random_string(char *str, size_t len);
 
 // Logging functions
 

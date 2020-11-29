@@ -1149,3 +1149,24 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	free(line);
 	free(classless);
 }
+
+void
+random_string(char *str, size_t len)
+{
+	if (!(str))
+		return;
+	size_t pos;
+	size_t index;
+	char charset[] = "0123456789" 
+			 "abcdefghijklmnopqrstuvwxyz"
+			 "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	srand((unsigned int)(time(NULL)));
+	pos = 0;
+	while (pos < (len - 1)) {
+		index = (size_t) rand() % (sizeof charset - 1);
+		*str++ = charset[index];
+		pos++;
+	}
+	*str = '\0';
+}

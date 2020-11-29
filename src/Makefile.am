@@ -30,7 +30,7 @@ endif
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS = -L$(top_builddir)/lib
-LIBS += -lailsasql -lailsacmdb
+LIBS += -lailsasql -lailsacmdb -lcrypt
 
 if HAVE_MYSQL
 AM_CPPFLAGS += $(MYSQL_CFLAGS)
