@@ -87,6 +87,8 @@ const char *basic_queries[] = {
 "SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
 "SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
 "SELECT coid, name FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
+"SELECT s.name, i.username, i.cuser, i.muser, i.ctime, i.mtime FROM server s \
+  LEFT JOIN identity i WHERE s.server_id = i.server_id", // IDENTITIES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {

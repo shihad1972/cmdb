@@ -44,7 +44,6 @@
 
 typedef struct cmdb_identity_comm_line_s { /* Hold parsed command line args for cmdb-identity */
 	char *hash;
-	char *name;
 	char *pass;
         char *server;
 	char *user;
@@ -70,6 +69,12 @@ clean_cmdb_identity_comm_line(cmdb_identity_comm_line_s *comm);
 static int
 add_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml);
 
+static int
+list_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml);
+
+static void
+display_identity(AILELEM *e);
+
 int
 main(int argc, char *argv[])
 {
@@ -87,6 +92,9 @@ main(int argc, char *argv[])
         case CMDB_ADD:
                 retval = add_identity(cc, cml);
                 break;
+        case CMDB_LIST:
+                retval = list_identity(cc, cml);
+                break;
         default:
                 display_usage();
                 break;
@@ -102,12 +110,11 @@ parse_command_line(int argc, char *argv[], cmdb_identity_comm_line_s *cml)
 {
         int retval = 0;
         int opt;
-        const char *optstr = "adlrs:u:p";
+        const char *optstr = "alrs:u:p";
 #ifdef HAVE_GETOPT_H
 	int index;
         struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
-                {"display",             no_argument,            NULL,   'd'},
                 {"list",                no_argument,            NULL,   'l'},
                 {"remove",              no_argument,            NULL,   'r'},
                 {"delete",              no_argument,            NULL,   'r'},
@@ -123,8 +130,6 @@ parse_command_line(int argc, char *argv[], cmdb_identity_comm_line_s *cml)
         {
 		if (opt == 'a')
 			cml->action = CMDB_ADD;
-                else if (opt == 'd')
-                        cml->action = CMDB_DISPLAY;
                 else if (opt == 'l')
                         cml->action = CMDB_LIST;
                 else if (opt == 'r')
@@ -184,8 +189,6 @@ clean_cmdb_identity_comm_line(cmdb_identity_comm_line_s *comm)
 		my_free(comm->user);
 	if (comm->pass)
 		my_free(comm->pass);
-	if (comm->name)
-		my_free(comm->name);
         if (comm->server)
                 my_free(comm->server);
 	my_free(comm);
@@ -194,7 +197,7 @@ clean_cmdb_identity_comm_line(cmdb_identity_comm_line_s *comm)
 static void
 display_usage()
 {
-        ailsa_syslog(LOG_ERR, "Usage: %s ( -a | -d | -l | -r ) [ -p ] [ -u user ] [ -s server ]", PROGRAM);
+        ailsa_syslog(LOG_ERR, "Usage: %s ( -a | -l | -r ) [ -p ] [ -u user ] [ -s server ]", PROGRAM);
 }
 
 static int
@@ -275,4 +278,68 @@ add_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml)
                 ailsa_list_full_clean(id);
                 ailsa_list_full_clean(check);
                 return retval;
+}
+static int
+list_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml)
+{
+        if (!(cc) || !(cml))
+                return AILSA_NO_DATA;
+        int retval;
+        size_t len = 6;
+        AILLIST *id = ailsa_db_data_list_init();
+        AILELEM *ptr;
+        ailsa_data_s *server, *user;
+
+        if ((retval = ailsa_basic_query(cc, IDENTITIES, id)) != 0) {
+                ailsa_syslog(LOG_ERR, "IDENTITIES query failed");
+                goto cleanup;
+        }
+        ptr = id->head;
+        if (ptr)
+                printf("Server\t\tUser\tCreated by\tModified by\tCreation time\t\tModification Time\n");
+        while (ptr) {
+                server = ptr->data;
+                user = ptr->next->data;
+                if (cml->server) {
+                        if (cml->user) {
+                                if ((strncmp(cml->user, user->data->text, CONFIG_LEN) == 0) &&
+                                    (strncmp(cml->server, server->data->text, HOST_LEN) == 0))
+                                        display_identity(ptr);
+                        } else {
+                                if (strncmp(cml->server, server->data->text, HOST_LEN) == 0)
+                                        display_identity(ptr);
+                        }
+                } else if (cml->user) {
+                        if (strncmp(cml->user, user->data->text, CONFIG_LEN) == 0)
+                                display_identity(ptr);
+                } else {
+                        display_identity(ptr);
+                }
+                ptr = ailsa_move_down_list(ptr, len);
+        }
+        cleanup:
+                ailsa_list_full_clean(id);
+                return retval;
+}
+
+static void
+display_identity(AILELEM *e)
+{
+        ailsa_data_s *server, *user, *cuser, *muser, *ctime, *mtime;
+
+        server = e->data;
+        if (strlen(server->data->text) < 8)
+                printf("%s\t\t", server->data->text);
+        else
+                printf("%s\t", server->data->text);
+        user = e->next->data;
+        printf("%s\t", user->data->text);
+        cuser = e->next->next->data;
+        printf("%s\t\t", cmdb_get_uname(cuser->data->number));
+        muser = e->next->next->next->data;
+        printf("%s\t\t", cmdb_get_uname(muser->data->number));
+        ctime = e->next->next->next->next->data;
+        printf("%s\t", ctime->data->text);
+        mtime = e->next->next->next->next->next->data;
+        printf("%s\n", mtime->data->text);
 }
