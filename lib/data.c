@@ -507,6 +507,20 @@ clean_cbc_syss_s(cbc_syss_s *scr)
 }
 
 void
+ailsa_clean_account(void *acc)
+{
+	if (!(acc))
+		return;
+	ailsa_account_s *data = acc;
+	if (data->username)
+		my_free(data->username);
+	if (data->hash)
+		my_free(data->hash);
+	if (data->pass)
+		my_free(data->pass);
+	my_free(data);
+}
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
@@ -877,6 +891,14 @@ ailsa_sysscript_list_init(void)
 	return list;
 }
 
+AILLIST *
+ailsa_account_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_account_list_init");
+	ailsa_list_init(list, ailsa_clean_account);
+	return list;
+}
+
 ailsa_data_s *
 ailsa_db_text_data_init(void)
 {
@@ -1148,4 +1170,25 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	strncat(in_addr, louisa, SERVICE_LEN);
 	free(line);
 	free(classless);
+}
+
+void
+random_string(char *str, size_t len)
+{
+	if (!(str))
+		return;
+	size_t pos;
+	size_t index;
+	char charset[] = "0123456789" 
+			 "abcdefghijklmnopqrstuvwxyz"
+			 "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	srand((unsigned int)(time(NULL)));
+	pos = 0;
+	while (pos < (len - 1)) {
+		index = (size_t) rand() % (sizeof charset - 1);
+		*str++ = charset[index];
+		pos++;
+	}
+	*str = '\0';
 }

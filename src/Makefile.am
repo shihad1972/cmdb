@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb mkvm mksp
+bin_PROGRAMS = cmdb mkvm mksp cmdb-identity
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c virtual.h
@@ -14,6 +14,7 @@ cbclocale_SOURCES = cbclocale.c
 cbcvarient_SOURCES = cbcvarient.c
 cbcsysp_SOURCES = cbcsysp.c
 cbcscript_SOURCES = cbcscript.c
+cmdb_identity_SOURCES = cmdb-identity.c
 
 if HAVE_CBC
 bin_PROGRAMS += cbc cbcdomain cbcos cbcpart cbcvarient cbclocale cbcsysp cbcscript
@@ -29,7 +30,7 @@ endif
 
 AM_CFLAGS = -W -Wall -Wshadow -Wcast-qual -Wwrite-strings -D_XOPEN_SOURCE=700
 AM_LDFLAGS = -L$(top_builddir)/lib
-LIBS += -lailsasql -lailsacmdb
+LIBS += -lailsasql -lailsacmdb -lcrypt
 
 if HAVE_MYSQL
 AM_CPPFLAGS += $(MYSQL_CFLAGS)
@@ -51,4 +52,10 @@ AM_CPPFLAGS += $(LIBVIRT_CPPFLAGS)
 AM_CFLAGS += $(LIBVIRT_CFLAGS)
 AM_LDFLAGS += $(LIBVIRT_LDFLAGS)
 LIBS += $(LIBVIRT_LIBS)
+endif
+
+if HAVE_OPENSSL
+AM_CFLAGS += $(OPENSSL_INCLUDES)
+AM_LDFLAGS += $(OPENSSL_LDFLAGS)
+LIBS += $(OPENSSL_LIBS)
 endif

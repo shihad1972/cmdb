@@ -33,6 +33,9 @@
 #  define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 # endif // my_free
 
+# ifdef HAVE_STDBOOL_H
+#  include <stdbool.h>
+# endif // HAVE_STDBOOL_H
 # ifndef true
 #  define true 1
 # endif // true
@@ -123,6 +126,7 @@ enum {                  // Action Codes
 	CMDB_DEFAULT = 7,
 	CMDB_QUERY = 8,
 	CMDB_VIEW_DEFAULT = 9,
+	CMDB_USAGE = 10,
 	DNSA_DISPLAY = 11,
 	DNSA_LIST = 12,
 	DNSA_COMMIT = 13,
@@ -138,6 +142,7 @@ enum {                  // Action Codes
 	DOWNLOAD = 31,
 	HELP = 32,
 	VERS = 33,
+	AILSA_INPUT_INVALID = 34,
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,
@@ -153,6 +158,7 @@ enum {                  // Error codes
 	AILSA_NO_POOL = 6,
 	AILSA_NO_NETWORK = 7,
 	AILSA_NO_COID = 8,
+	AILSA_NO_USER = 9,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -176,6 +182,7 @@ enum {                  // Error codes
 	AILSA_LOCALE_REPLACE_FAIL = 222,
 	AILSA_OS_REPLACE_FAIL = 223,
 	AILSA_NO_MIRROR = 224,
+	CANNOT_FIND_IDENTITY_ID = 225,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -544,6 +551,14 @@ typedef struct ailsa_sysscript_s {
 	unsigned long int no;
 } ailsa_sysscript_s;
 
+typedef struct ailsa_account_s {
+	char *username;
+	char *hash;
+	char *pass;
+	unsigned long int server_id;
+	unsigned long int identity_id;
+} ailsa_account_s;
+
 enum {
 	CBCSCRIPT = 1,
 	CBCSCRARG = 2
@@ -692,6 +707,8 @@ void
 ailsa_clean_iface(void *data);
 void
 clean_cbc_syss_s(cbc_syss_s *scr);
+void
+ailsa_clean_account(void *acc);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -742,6 +759,8 @@ void
 ailsa_chomp(char *line);
 void
 ailsa_munch(char *line);
+void
+random_string(char *str, size_t len);
 
 // Logging functions
 
@@ -834,6 +853,9 @@ ailsa_syspack_list_init(void);
 
 AILLIST *
 ailsa_sysscript_list_init(void);
+
+AILLIST *
+ailsa_account_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

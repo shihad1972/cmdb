@@ -94,6 +94,9 @@ static int
 write_build_config_file(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml);
 
 static int
+get_server_accounts(ailsa_cmdb_s *cmc, cbc_comm_line_s *cbc, AILLIST *acc);
+
+static int
 write_dhcp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 static int
@@ -101,6 +104,9 @@ write_tftp_config(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml);
 
 static int
 write_preseed_net_mirror(int fd, ailsa_build_s *bld);
+
+static int
+write_preseed_user_accounts(int fd, AILLIST *acc);
 
 static int
 write_partition_head(int fd, AILLIST *disk, ailsa_build_s *build);
@@ -900,6 +906,7 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	int fd = 0;
 	AILLIST *server = ailsa_db_data_list_init();
 	AILLIST *build = ailsa_db_data_list_init();
+	AILLIST *acc = ailsa_account_list_init();
 	AILLIST *disk = ailsa_db_data_list_init();
 	AILLIST *partitions = ailsa_db_data_list_init();
 	AILLIST *part = ailsa_partition_list_init();
@@ -919,6 +926,8 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_syslog(LOG_ERR, "BUILD_DETAILS query failed");
 		goto cleanup;
 	}
+	if ((retval = get_server_accounts(cmc, cml, acc)) != 0)
+		goto cleanup;
 	if ((retval = ailsa_argument_query(cmc, DISK_DEV_DETAILS_ON_SERVER_ID, server, disk)) != 0) {
 		ailsa_syslog(LOG_ERR, "DISK_DEV_DETAILS_ON_SERVER_ID query failed");
 		goto cleanup;
@@ -954,6 +963,8 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	}
 	if ((retval = write_preseed_net_mirror(fd, bld)) != 0)
 		goto cleanup;
+	if ((retval = write_preseed_user_accounts(fd, acc)) != 0)
+		goto cleanup;
 	if ((retval = write_partition_head(fd, disk, bld)) != 0)
 		goto cleanup;
 	if ((retval = write_preseed_partitions(fd, disk, part)) != 0)
@@ -968,6 +979,7 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		mask = umask(um);
 		if (bld)
 			ailsa_clean_build(bld);
+		ailsa_list_full_clean(acc);
 		ailsa_list_full_clean(build);
 		ailsa_list_full_clean(disk);
 		ailsa_list_full_clean(packages);
@@ -976,6 +988,60 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 		ailsa_list_full_clean(server);
 		ailsa_list_full_clean(sys);
 		ailsa_list_full_clean(syspack);
+		return retval;
+}
+
+static int
+get_server_accounts(ailsa_cmdb_s *cbc, cbc_comm_line_s *cml, AILLIST *acc)
+{
+	if (!(cbc) || !(cml) || !(acc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *results = ailsa_db_data_list_init();
+	AILLIST *server_id = ailsa_db_data_list_init();
+	size_t len = 4;
+	unsigned long int sid;
+	AILELEM *e;
+	ailsa_data_s *d;
+	ailsa_account_s *a;
+
+
+	if ((retval = cmdb_add_string_to_list(cml->name, server)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add server name to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_server_id_to_list(cml->name, cbc, server_id)) != 0)
+		goto cleanup;
+	e = server_id->head;
+	d = e->data;
+	sid = d->data->number;
+	if ((retval = ailsa_argument_query(cbc, IDENTITIES_ON_SERVER_NAME, server, results)) != 0) {
+		ailsa_syslog(LOG_ERR, "IDENTITIES_ON_SERVER_NAME query failed");
+		goto cleanup;
+	}
+	e = results->head;
+	while (e) {
+		a = ailsa_calloc(sizeof(ailsa_account_s), "a in get_server_accounts");
+		d = e->data;
+		a->username = strndup(d->data->text, CONFIG_LEN);
+		d = e->next->data;
+		a->pass = strndup(d->data->text, SQL_TEXT_MAX);
+		d = e->next->next->data;
+		a->hash = strndup(d->data->text, CONFIG_LEN);
+		d = e->next->next->next->data;
+		a->identity_id = d->data->number;
+		a->server_id = sid;
+		e = ailsa_move_down_list(e, len);
+		if ((retval = ailsa_list_insert(acc, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add account into list");
+			goto cleanup;
+		}
+	}
+	cleanup:
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(results);
+		ailsa_list_full_clean(server_id);
 		return retval;
 }
 
@@ -1021,14 +1087,6 @@ d-i mirror/http/hostname string %s\n\
 d-i mirror/http/directory string /%s\n\
 d-i mirror/suite string %s\n\
 \n\
-### Account setup\n\
-d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n\
-d-i passwd/user-fullname string Admin User\n\
-d-i passwd/username string sysadmin\n\
-d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
-d-i passwd/user-default-groups string audio cdrom video dip floppy plugdev netdev sudo\n\
-d-i clock-setup/utc boolean true\n\
-\n\
 d-i time/zone string %s\n\
 ", bld->mirror, bld->os, bld->version, bld->country);
 	if (bld->do_ntp > 0)
@@ -1038,6 +1096,41 @@ d-i clock-setup/ntp-server string %s\n", bld->ntp);
 	else
 		dprintf(fd, "\
 d-i clock-setup/ntp boolean false\n");
+	dprintf(fd, "\
+d-i clock-setup/utc boolean true\n");
+	return retval;
+}
+static int
+write_preseed_user_accounts(int fd, AILLIST *acc)
+{
+	if ((fd == 0) || !(acc))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	ailsa_account_s *ptr;
+	AILELEM *e;
+	e = acc->head;
+	while (e) {
+		ptr = e->data;
+		if (strncmp("root", ptr->username, 4) == 0)
+			break;
+		e = e->next;
+	}
+	if (e)
+		dprintf(fd, "\
+d-i passwd/root-password-crypted password %s\n", ptr->hash);
+	else
+		dprintf(fd, "\
+d-i passwd/root-password-crypted password $6$SF7COIid$q3o/XlLgy95kfJTuJwqshfRrVmZlhqT3sKDxUiyUd6OV2W0uwphXDJm.T1nXTJgY4.5UaFyhYjaixZvToazrZ/\n");
+	e = acc->head;
+/* Need to think about a default user here; this should be added to all builds
+   with the same username and password. Could do by build domain also. For now
+   we will just do sysadmin */
+	dprintf(fd, "\
+d-i passwd/user-fullname string Admin User\n\
+d-i passwd/username string sysadmin\n\
+d-i passwd/user-password-crypted password $6$loNBON/G$GN9geXUrajd7lPAZETkCz/c2DgkeZqNwMR9W.YpCqxAIxoNXdaHjXj1MH7DM3gMjoUvkIdgeRnkB4QDwrgqUS1\n\
+d-i passwd/user-default-groups string audio cdrom video dip floppy plugdev netdev sudo\n\
+\n");
 	return retval;
 }
 

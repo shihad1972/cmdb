@@ -87,6 +87,8 @@ const char *basic_queries[] = {
 "SELECT varient FROM varient WHERE varient_id = (SELECT varient_id FROM default_varient)", // DEFAULT_VARIENT_DETAILS
 "SELECT domain FROM build_domain WHERE bd_id = (SELECT bd_id FROM default_domain)", // DEFAULT_DOMAIN_DETAILS
 "SELECT coid, name FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
+"SELECT s.name, i.username, i.cuser, i.muser, i.ctime, i.mtime FROM server s \
+  LEFT JOIN identity i WHERE s.server_id = i.server_id", // IDENTITIES
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {
@@ -695,6 +697,16 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	3,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // IDENTITY_ID_ON_SERVER_USER
+"SELECT identity_id FROM identity WHERE server_id = ? AND username = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT}
+	},
+	{ // IDENTITIES_ON_SERVER_NAME
+"SELECT username, pass, hash, identity_id FROM identity WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
@@ -883,6 +895,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	3,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_IDENTITY
+"INSERT INTO identity(server_id, username, pass, hash, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT}
+	},
 };
 
 const struct ailsa_sql_query_s delete_queries[] = {
@@ -1006,6 +1023,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_IDENTITY
+"DELETE FROM identity WHERE server_id = ? and username = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {
@@ -1090,6 +1112,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE default_customer SET cust_id = ?, muser = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // UPDATE_IDENTITY 
+"UPDATE identity SET pass = ?, hash = ?, muser = ? WHERE identity_id = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 

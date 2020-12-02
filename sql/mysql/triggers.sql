@@ -22,6 +22,8 @@ CREATE TRIGGER glue_zones_insert BEFORE INSERT ON glue_zones FOR EACH ROW set NE
 CREATE TRIGGER glue_zones_update BEFORE UPDATE ON glue_zones FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER hardware_insert BEFORE INSERT ON hardware FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER hardware_update BEFORE UPDATE ON hardware FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER identity_insert BEFORE INSERT ON identity FOR EACH ROW set NEW.mtime = NOW();
+CREATE TRIGGER identity_update BEFORE UPDATE ON identity FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER locale_insert BEFORE INSERT ON locale FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER locale_update BEFORE UPDATE ON locale FOR EACH ROW set NEW.mtime = NOW();
 CREATE TRIGGER packages_insert BEFORE INSERT ON packages FOR EACH ROW set NEW.mtime = NOW();

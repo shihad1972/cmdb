@@ -31,13 +31,14 @@ AX_LIB_UUID
 AX_LIB_ODBC
 AX_LIB_YAML
 AM_PATH_XML2(2.4.0)
+AX_CHECK_OPENSSL([AC_DEFINE([HAVE_OPENSSL], [1], [Have openssl])])
 PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt])])
 AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
                   sys/socket.h unistd.h wordexp.h errno.h getopt.h\
-		  stdbool.h regex.h])
+		          stdbool.h regex.h features.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -69,6 +70,7 @@ AM_CONDITIONAL([HAVE_CBC], [$HAVE_CBC])
 AM_CONDITIONAL([HAVE_LIBXML], [$HAVE_LIBXML])
 AM_CONDITIONAL([HAVE_LIBVIRT], [$HAVE_LIBVIRT])
 AM_CONDITIONAL([HAVE_LIBODBC], [$HAVE_LIBODBC])
+AM_CONDITIONAL([HAVE_OPENSSL], [test x"$HAVE_OPENSSL" = xtrue])
 
 dnl if --prefix is /usr, don't use /usr/var for localstatedir
 dnl or /usr/etc for sysconfdir

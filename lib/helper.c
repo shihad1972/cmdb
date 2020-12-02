@@ -557,6 +557,28 @@ cmdb_add_disk_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(ident) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_server_id_to_list(ident[0], cc, l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list(ident[1], l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add username to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, IDENTITY_ID_ON_SERVER_USER, l, list)) != 0)
+		ailsa_syslog(LOG_ERR, "IDENTITY_ID_ON_SERVER_USER query failed");
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 {
 	if (!(cc) || !(zone))
@@ -762,6 +784,22 @@ cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list)
 		ailsa_syslog(LOG_ERR, "Cannot find IP for server %s", host);
 		retval = CANNOT_FIND_BUILD_IP;
 	}
+	return retval;
+}
+
+int
+cmdb_check_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(ident) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+	if ((retval = cmdb_add_identity_id_to_list(ident, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add identity id to list");
+		return retval;
+	}
+	if (list->total != (total + 1))
+		retval = CANNOT_FIND_IDENTITY_ID;
 	return retval;
 }
 
