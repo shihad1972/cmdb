@@ -1,11 +1,11 @@
 pipeline {
-    agent {               
-        docker {                       
+    agent {
+        docker {
             alwaysPull true
             image 'cmdb'
             registryUrl "https://docker.shihad.org:5000"
         }
-    } 
+    }
     stages {
         stage('build') {
             steps {
