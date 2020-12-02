@@ -507,6 +507,20 @@ clean_cbc_syss_s(cbc_syss_s *scr)
 }
 
 void
+ailsa_clean_account(void *acc)
+{
+	if (!(acc))
+		return;
+	ailsa_account_s *data = acc;
+	if (data->username)
+		my_free(data->username);
+	if (data->hash)
+		my_free(data->hash);
+	if (data->pass)
+		my_free(data->pass);
+	my_free(data);
+}
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
@@ -874,6 +888,14 @@ ailsa_sysscript_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_sysscript_list_init");
 	ailsa_list_init(list, ailsa_clean_sysscript);
+	return list;
+}
+
+AILLIST *
+ailsa_account_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_account_list_init");
+	ailsa_list_init(list, ailsa_clean_account);
 	return list;
 }
 

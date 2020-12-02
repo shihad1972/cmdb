@@ -551,6 +551,14 @@ typedef struct ailsa_sysscript_s {
 	unsigned long int no;
 } ailsa_sysscript_s;
 
+typedef struct ailsa_account_s {
+	char *username;
+	char *hash;
+	char *pass;
+	unsigned long int server_id;
+	unsigned long int identity_id;
+} ailsa_account_s;
+
 enum {
 	CBCSCRIPT = 1,
 	CBCSCRARG = 2
@@ -699,6 +707,8 @@ void
 ailsa_clean_iface(void *data);
 void
 clean_cbc_syss_s(cbc_syss_s *scr);
+void
+ailsa_clean_account(void *acc);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -843,6 +853,9 @@ ailsa_syspack_list_init(void);
 
 AILLIST *
 ailsa_sysscript_list_init(void);
+
+AILLIST *
+ailsa_account_list_init(void);
 
 ailsa_data_s *
 ailsa_db_text_data_init(void);

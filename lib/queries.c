@@ -702,6 +702,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT}
 	},
+	{ // IDENTITIES_ON_SERVER_NAME
+"SELECT username, pass, hash, identity_id FROM identity WHERE server_id = (SELECT server_id FROM server WHERE name = ?)",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
