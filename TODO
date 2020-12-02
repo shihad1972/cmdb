@@ -1,3 +1,8 @@
+02/12/2020
+Will need to check the basic queries that join on other tables; these will
+fail if the initial table is empty (also presume if the target table is also
+empty)
+
 22/11/2020
 In getting config values, adding a trailing / to value not read results in a
 segmentation fault. I need to check if value exists first.

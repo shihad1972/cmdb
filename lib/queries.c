@@ -89,6 +89,7 @@ const char *basic_queries[] = {
 "SELECT coid, name FROM customer WHERE cust_id = (SELECT cust_id FROM default_customer)", // DEFAULT_CUSTOMER_DETAILS
 "SELECT s.name, i.username, i.cuser, i.muser, i.ctime, i.mtime FROM server s \
   LEFT JOIN identity i WHERE s.server_id = i.server_id", // IDENTITIES
+"SELECT server_id, username, cuser, muser, ctime, mtime from identity", // IDENTITIES_NO_SERVER_NAME
 };
 
 const struct ailsa_sql_query_s argument_queries[] = {

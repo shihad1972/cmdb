@@ -293,9 +293,18 @@ list_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml)
         int retval;
         size_t len = 6;
         AILLIST *id = ailsa_db_data_list_init();
+        AILLIST *sn = ailsa_db_data_list_init();
         AILELEM *ptr;
         ailsa_data_s *server, *user;
 
+        if ((retval = ailsa_basic_query(cc, IDENTITIES_NO_SERVER_NAME, sn)) != 0) {
+                ailsa_syslog(LOG_ERR, "IDENTITIES_NO_SERVER_NAME query failed");
+                goto cleanup;
+        }
+        if (sn->total == 0) {
+                ailsa_syslog(LOG_INFO, "No identities present");
+                goto cleanup;
+        }
         if ((retval = ailsa_basic_query(cc, IDENTITIES, id)) != 0) {
                 ailsa_syslog(LOG_ERR, "IDENTITIES query failed");
                 goto cleanup;
@@ -325,6 +334,7 @@ list_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml)
         }
         cleanup:
                 ailsa_list_full_clean(id);
+                ailsa_list_full_clean(sn);
                 return retval;
 }
 
