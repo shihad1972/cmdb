@@ -75,6 +75,9 @@ list_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml);
 static void
 display_identity(AILELEM *e);
 
+static int
+remove_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml);
+
 int
 main(int argc, char *argv[])
 {
@@ -94,6 +97,9 @@ main(int argc, char *argv[])
                 break;
         case CMDB_LIST:
                 retval = list_identity(cc, cml);
+                break;
+        case CMDB_RM:
+                retval = remove_identity(cc, cml);
                 break;
         default:
                 display_usage();
@@ -342,4 +348,26 @@ display_identity(AILELEM *e)
         printf("%s\t", ctime->data->text);
         mtime = e->next->next->next->next->next->data;
         printf("%s\n", mtime->data->text);
+}
+static int
+remove_identity(ailsa_cmdb_s *cc, cmdb_identity_comm_line_s *cml)
+{
+        if (!(cc) || !(cml))
+                return AILSA_NO_DATA;
+        int retval;
+        AILLIST *id = ailsa_db_data_list_init();
+
+        if ((retval = cmdb_check_add_server_id_to_list(cml->server, cc, id)) != 0)
+                goto cleanup;
+        if ((retval = cmdb_add_string_to_list(cml->user, id)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot add username to list");
+                goto cleanup;
+        }
+        if ((retval = ailsa_delete_query(cc, delete_queries[DELETE_IDENTITY], id)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot delete identity for server %s and user %s", cml->server, cml->user);
+                goto cleanup;
+        }
+        cleanup:
+                ailsa_list_full_clean(id);
+                return retval;
 }

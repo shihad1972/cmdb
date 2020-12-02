@@ -1018,6 +1018,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	1,
 	{ AILSA_DB_LINT }
 	},
+	{ // DELETE_IDENTITY
+"DELETE FROM identity WHERE server_id = ? and username = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {
