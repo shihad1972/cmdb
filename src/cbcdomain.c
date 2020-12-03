@@ -44,7 +44,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
@@ -235,7 +234,7 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	if (cdl->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	if (cdl->action == NONE)
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	if (cdl->action != CMDB_LIST && cdl->action != CMDB_WRITE &&
 	     !(cdl->domain))
 		return NO_DOMAIN_NAME;

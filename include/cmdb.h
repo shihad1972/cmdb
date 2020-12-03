@@ -367,43 +367,6 @@ typedef struct string_l {
 	struct string_l *next;
 } string_l;
 
-// Error reporting function
-void 
-report_error(int error, const char *errstr);
-void
-display_type_error(short int type);
-void
-get_error_string(int error, char *errstr);
-
-// cmdb comand line error function
-
-void
-display_command_line_error(int retval, char *program);
-void
-display_cmdb_usage(void);
-void
-display_cbc_usage(void);
-void
-display_cbcdomain_usage(void);
-void
-display_cbcos_usage(void);
-void
-display_cbcvarient_usage(void);
-void
-display_cbcpart_usage(void);
-void
-display_dnsa_usage(void);
-void
-display_cpc_usage(void);
-void
-display_ckc_usage(void);
-void
-display_cbclocale_usage(void);
-void
-display_cbcsysp_usage(void);
-void
-display_cbcscript_usage(void);
-
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *

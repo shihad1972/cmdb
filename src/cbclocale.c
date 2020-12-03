@@ -97,7 +97,7 @@ main(int argc, char *argv[])
 		retval = set_default_locale(ccs, cl);
 	else {
 		ailsa_syslog(LOG_ERR, "Action not yet implemented\n");
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	}
 	ailsa_clean_cmdb(ccs);
 	clean_cbc_local_comm_line(cl);
@@ -130,7 +130,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 	};
 
 	if (argc == 1)
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
 #else
 	while ((opt = getopt(argc, argv, optsttr)) != -1)
@@ -161,30 +161,30 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		else if (opt == 'u')
 			cl->country = strndup(optarg, HOST_LEN);
 		else
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 	}
 	if ((cl->action == AILSA_VERSION) || (cl->action == CMDB_LIST))
 		return retval;
 	if ((cl->action != CMDB_LIST) && (!(cl->name)))
-		return NO_NAME;
+		return AILSA_NO_NAME;
 	if (cl->action == 0)
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	if (cl->action == CMDB_ADD) {
 		if (!(cl->language)) {
 			ailsa_syslog(LOG_ERR, "No language specified\n\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else if (!(cl->keymap)) {
 			ailsa_syslog(LOG_ERR, "No keymap specified\n\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else if (!(cl->locale)) {
 			ailsa_syslog(LOG_ERR, "No locale specified\n\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else if (!(cl->timezone)) {
 			ailsa_syslog(LOG_ERR, "No timezone specified\n\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else if (!(cl->country)) {
 			ailsa_syslog(LOG_ERR, "No country specified\n\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
 	validate_locale_comm_line(cl);
@@ -322,7 +322,7 @@ display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 	}
 	if (r->total != 8) {
 		ailsa_syslog(LOG_ERR, "Should have 8 in list; got %zu", r->total);
-		retval = WRONG_LENGTH_LIST;
+		retval = AILSA_WRONG_LIST_LENGHT;
 		goto cleanup;
 	}
 	e = r->head;

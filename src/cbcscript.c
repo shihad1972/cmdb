@@ -39,7 +39,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 static int
 cbc_script_add_script(ailsa_cmdb_s *cbc, cbc_syss_s *scr);
@@ -87,31 +86,35 @@ main(int argc, char *argv[])
 		display_command_line_error(retval, argv[0]);
 	}
 	parse_cmdb_config(cbc);
-	if (scr->action == CMDB_ADD) {
+	switch (scr->action) {
+	case CMDB_ADD:
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_add_script(cbc, scr);
 		else if (scr->what == CBCSCRARG)
 			retval = cbc_script_add_script_arg(cbc, scr);
 		else
-			retval = WRONG_TYPE;
-	} else if (scr->action == CMDB_RM) {
+			retval = AILSA_WRONG_TYPE;
+		break;
+	case CMDB_RM:
 		if (scr->what == CBCSCRIPT)
 			retval = cbc_script_rm_script(cbc, scr);
 		else if (scr->what == CBCSCRARG)
 			retval = cbc_script_rm_arg(cbc, scr);
 		else
-			retval = WRONG_TYPE;
-	} else if (scr->action == CMDB_LIST) {
+			retval = AILSA_WRONG_TYPE;
+		break;
+	case CMDB_LIST:
 		retval = cbc_script_list_script(cbc);
-	} else if (scr->action == CMDB_DISPLAY) {
+		break;
+	case CMDB_DISPLAY:
 		retval = cbc_script_display_script(cbc, scr);
-	} else {
-		retval = WRONG_ACTION;
+		break;
+	default:
+		retval = AILSA_WRONG_ACTION;
+		break;
 	}
 	ailsa_clean_cmdb(cbc);
 	clean_cbc_syss_s(scr);
-	if ((retval != 0) && (retval != NO_RECORDS))
-		report_error(retval, "");
 	return retval;
 }
 
@@ -158,7 +161,7 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		else if (opt == 'r')
 			cbcs->action = CMDB_RM;
 		else if (opt == 'h')
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		else if (opt == 'v')
 			return AILSA_VERSION;
 		else if (opt == 's')
@@ -176,10 +179,10 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 		else if (opt == 't')
 			cbcs->type = strndup(optarg, (MAC_LEN - 1));
 		else
-			retval = DISPLAY_USAGE;
+			retval = AILSA_DISPLAY_USAGE;
 	}
 	if (argc == 1)
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	else
 		retval = check_cbc_script_comm_line(cbcs);
 	return retval;
@@ -191,26 +194,26 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 	int retval = 0;
 
 	if (cbcs->action == 0) {
-		retval = NO_ACTION;
+		retval = AILSA_NO_ACTION;
 	} else if (cbcs->action == CMDB_DISPLAY) {
 		if (!(cbcs->domain) && !(cbcs->name))
-			retval = NO_DOMAIN_OR_NAME;
+			retval = AILSA_NO_DOMAIN_OR_NAME;
 	} else if (cbcs->action == CMDB_LIST) {
 		cbcs->what = CBCSCRIPT;	// Listing just args makes no sense
 	} else if (cbcs->action != CMDB_LIST) {
 		if (!(cbcs->name))
-			retval = NO_NAME;
+			retval = AILSA_NO_NAME;
 		else if (cbcs->what == 0)
-			retval = NO_TYPE;
+			retval = AILSA_NO_TYPE;
 		else if (cbcs->what == CBCSCRARG) {
 			if (cbcs->no == 0)
-				retval = NO_NUMBER;
+				retval = AILSA_NO_NUMBER;
 			else if (!(cbcs->type))
-				retval = NO_ALIAS;
+				retval = AILSA_NO_ALIAS;
 			else if (!(cbcs->domain))
-				retval = NO_BUILD_DOMAIN;
+				retval = AILSA_NO_BUILD_DOMAIN;
 			else if (!(cbcs->arg))
-				retval = NO_ARG;
+				retval = AILSA_NO_ARG;
 		}
 	}
 	return retval;

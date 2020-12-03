@@ -255,7 +255,7 @@ display_command_line_error(int retval, char *program)
 		program = strrchr(program, '/');
 		program++;
 	}
-	if (retval == NO_NAME)
+	if (retval == AILSA_NO_NAME)
 		fprintf(stderr, "No name specified with -n.\n");
 	else if (retval == NO_ID)
 		fprintf(stderr, "No ID specified with -i.\n");
@@ -265,7 +265,7 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No action specified on command line.\n");
 	else if (retval == WRONG_ACTION)
 		fprintf(stderr, "Unable to complete this action.\n");
-	else if (retval == NO_NAME_OR_ID)
+	else if (retval == AILSA_NO_NAME_OR_ID)
 		fprintf(stderr, "No name or ID specified on command line.\n");
 	else if (retval == GENERIC_ERROR)
 		fprintf(stderr, "Unknown command line option.\n");
@@ -358,8 +358,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No number was supplied\n");
 	else if (retval == NO_NTP_SERVER)
 		fprintf(stderr, "No ntp server was supplied\n");
+// Don't really need this one
 	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", SERVICE_LEN)) == 0)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
+// End
 	else if (retval == AILSA_NO_DISK_DEV)
 		ailsa_syslog(LOG_ERR, "No disk device was provided");
 	else if (retval == AILSA_INVALID_DBTYPE)
@@ -382,8 +384,10 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		ailsa_syslog(LOG_ERR, "No build type alias was supplied");
 	else if (retval == NO_OPTION)
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
+// Can remove this one when new error function create
 	else if (retval == USER_INPUT_INVALID)
 		ailsa_syslog(LOG_ERR, "User input was not validated.");
+// End
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == DISPLAY_USAGE) {
@@ -447,6 +451,12 @@ ailsa_comm_line_strerror(int error)
 	default:
 		return "Unknown command line error";
 	}
+}
+
+void
+ailsa_display_validation_error(int error)
+{
+	ailsa_syslog(LOG_ERR, "Command line validation failed: %s", ailsa_comm_line_strerror(error));
 }
 
 void

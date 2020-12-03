@@ -81,27 +81,27 @@ ailsa_run_mysql_stmt(MYSQL *cmdb, MYSQL_BIND *my_bind, const struct ailsa_sql_qu
 
 	if (!(stmt = mysql_stmt_init(cmdb))) {
 		ailsa_syslog(LOG_ERR, "%s", mysql_error(cmdb));
-		retval = -1;
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0) {
 		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
-		retval = -1;
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	if ((retval = ailsa_bind_params_mysql(stmt, &my_bind, argu, args)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot bind paramaters for sql query");
-		retval = -1;
+		retval = AILSA_SQL_BIND_FAIL;
 		goto cleanup;
 	}
 	if ((retval = mysql_stmt_bind_param(stmt, my_bind)) != 0) {
 		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
-		retval = -1;
+		retval = AILSA_SQL_BIND_FAIL;
 		goto cleanup;
 	}
 	if ((retval = mysql_stmt_execute(stmt)) != 0) {
 		ailsa_syslog(LOG_ERR, "%s", mysql_stmt_error(stmt));
-		retval = -1;
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	retval = (int)mysql_stmt_affected_rows(stmt);
@@ -131,8 +131,10 @@ ailsa_bind_parameters_mysql(MYSQL_STMT *stmt, MYSQL_BIND **bind, AILLIST *list, 
 		elem = elem->next;
 	}
 	*bind = tmp;
-	if ((retval = mysql_stmt_bind_param(stmt, tmp)) != 0)
+	if ((retval = mysql_stmt_bind_param(stmt, tmp)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to bind parameters: %s", mysql_stmt_error(stmt));
+		retval = AILSA_SQL_BIND_FAIL;
+	}
 	return retval;
 }
 
@@ -172,12 +174,12 @@ ailsa_setup_ro_sqlite(const char *query, const char *file, sqlite3 **cmdb, sqlit
 	int retval;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READONLY, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot open SQL file %s", file);
-		return FILE_O_FAIL;
+		return AILSA_SQL_FILE_INIT_FAIL;
 	}
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, BUFFER_LEN, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		return SQLITE_STATEMENT_FAILED;
+		return AILSA_STATEMENT_FAIL;
 	}
 	return retval;
 }
@@ -188,7 +190,7 @@ ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 *
 	int retval, sqlret = 0;
 	if ((retval = sqlite3_open_v2(file, cmdb, SQLITE_OPEN_READWRITE, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot open SQL file %s", file);
-		return FILE_O_FAIL;
+		return AILSA_SQL_FILE_INIT_FAIL;
 	}
 	if ((retval = sqlite3_db_config(*cmdb, SQLITE_DBCONFIG_ENABLE_FKEY, 1, &sqlret)) != SQLITE_OK)
 		ailsa_syslog(LOG_ERR, "Cannot enable foreign key support in sqlite");
@@ -197,7 +199,7 @@ ailsa_setup_rw_sqlite(const char *query, size_t len, const char *file, sqlite3 *
 	if ((retval = sqlite3_prepare_v2(*cmdb, query, (int)len, stmt, NULL)) > 0) {
 		ailsa_syslog(LOG_ERR, "Cannot prepare statement for sqlite: %s", sqlite3_errstr(retval));
 		retval = sqlite3_close(*cmdb);
-		return SQLITE_STATEMENT_FAILED;
+		return AILSA_STATEMENT_FAIL;
 	}
 	return retval;
 }

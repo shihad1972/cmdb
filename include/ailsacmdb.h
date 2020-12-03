@@ -159,6 +159,15 @@ enum {                  // Error codes
 	AILSA_NO_NETWORK = 7,
 	AILSA_NO_COID = 8,
 	AILSA_NO_USER = 9,
+	AILSA_NO_NAME_OR_ID = 10,
+	AILSA_NO_NUMBER = 11,
+	AILSA_NO_ALIAS = 12,
+	AILSA_NO_BUILD_DOMAIN = 13,
+	AILSA_NO_ARG = 14,
+	AILSA_DISPLAY_USAGE = 31,
+	AILSA_WRONG_TYPE = 32,
+	AILSA_WRONG_ACTION = 33,
+	AILSA_NO_DOMAIN_OR_NAME = 34,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -183,12 +192,21 @@ enum {                  // Error codes
 	AILSA_OS_REPLACE_FAIL = 223,
 	AILSA_NO_MIRROR = 224,
 	CANNOT_FIND_IDENTITY_ID = 225,
+	AILSA_WRONG_LIST_LENGHT = 226,
+	AILSA_OS_NOT_FOUND = 227,
+	AILSA_BUILD_TYPE_NO_FOUND = 228,
+	AILSA_BUILD_OS_IN_USE = 229,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
 	AILSA_NO_PARAMETERS = 303,
 	AILSA_NO_QUERY_NO = 304,
 	AILSA_NO_FIELDS = 305,
+	AILSA_QUERY_FAIL = 306,
+	AILSA_STORE_FAIL = 307,
+	AILSA_STATEMENT_FAIL = 308,
+	AILSA_SQL_FILE_INIT_FAIL = 309,
+	AILSA_SQL_BIND_FAIL = 310,
 	UUID_REGEX_ERROR = 400,
 	NAME_REGEX_ERROR = 401,
 	ID_REGEX_ERROR = 402,
@@ -209,7 +227,8 @@ enum {                  // Error codes
 	DEST_INPUT_INVALID = 607,
 	MASTER_INPUT_INVALID = 608,
 	GLUE_IP_INPUT_INVALID = 609,
-	GLUE_NS_INPUT_INVALID = 610
+	GLUE_NS_INPUT_INVALID = 610,
+	AILSA_SERVER_NOT_FOUND = 700,
 };
 
 enum {			// zone types; use NONE from action codes
@@ -630,6 +649,42 @@ const char *
 ailsa_strerror(int type);
 const char *
 ailsa_comm_line_strerror(int error);
+void
+ailsa_display_validation_error(int error);
+void 
+report_error(int error, const char *errstr);
+void
+get_error_string(int error, char *errstr);
+
+// cmdb comand line error function
+
+void
+display_command_line_error(int retval, char *program);
+void
+display_cmdb_usage(void);
+void
+display_cbc_usage(void);
+void
+display_cbcdomain_usage(void);
+void
+display_cbcos_usage(void);
+void
+display_cbcvarient_usage(void);
+void
+display_cbcpart_usage(void);
+void
+display_dnsa_usage(void);
+void
+display_cpc_usage(void);
+void
+display_ckc_usage(void);
+void
+display_cbclocale_usage(void);
+void
+display_cbcsysp_usage(void);
+void
+display_cbcscript_usage(void);
+
 // AIL_ data functions;
 
 // Linked List

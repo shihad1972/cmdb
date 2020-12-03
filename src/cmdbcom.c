@@ -232,10 +232,10 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_COID;
 		} else if (comp->type == SERVICE) {
 			if (!(comp->id) && !(comp->name))
-				retval = NO_NAME_OR_ID;
+				retval = AILSA_NO_NAME_OR_ID;
 		} else if (comp->type == HARDWARE) {
 			if (!(comp->id) && !(comp->name))
-				retval = NO_NAME_OR_ID;
+				retval = AILSA_NO_NAME_OR_ID;
 		}
 	} else if (comp->action == CMDB_ADD) {
 		if (comp->type == CONTACT) {
@@ -247,7 +247,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_PHONE;
 		} else if (comp->type == SERVER) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			if (!(comp->make))
 				comp->make = strdup("none");
 			if (!(comp->model))
@@ -270,12 +270,12 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_TYPE;
 		} else if (comp->type == VM_HOST) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			else if (!(comp->shtype))
 				retval = NO_VHOST_TYPE;
 		} else if (comp->type == HARDWARE) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			else if (!(comp->detail))
 				retval = NO_DETAIL;
 			else if (!(comp->device))
@@ -284,7 +284,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_ID_OR_CLASS;
 		} else if (comp->type == SERVICE) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			else if (!(comp->detail))
 				retval = NO_DETAIL;
 			else if (!(comp->url))
@@ -293,7 +293,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = NO_SERVICE;
 		} else if (comp->type == CUSTOMER) {
 			if (!(comp->fullname))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			else if (!(comp->coid))
 				retval = NO_COID;
 			else if (!(comp->county))
@@ -312,7 +312,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			if (!comp->coid)
 				retval = NO_COID;
 		} else if (!comp->name) {
-			retval = NO_NAME;
+			retval = AILSA_NO_NAME;
 		}
 	} else if (comp->action  == CMDB_VIEW_DEFAULT) {
 		if (comp->type != CUSTOMER)
@@ -325,19 +325,19 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 	} else if ((!(comp->name)) && (!(comp->id)) && 
 		(comp->type != NONE || comp->action != NONE) &&
 		((comp->type != CONTACT) && (comp->type != CUSTOMER))) {
-		retval = NO_NAME_OR_ID;
+		retval = AILSA_NO_NAME_OR_ID;
 	} else if (comp->action == CMDB_RM) {
 		if (comp->type == SERVICE) {
 			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))
-				retval = NO_NAME_OR_ID;
+				retval = AILSA_NO_NAME_OR_ID;
 			else if ((!(comp->service)) && (!(comp->url)) && (comp->force != 1))
 				retval = NO_SERVICE_URL;
 		} else if (comp->type == SERVER) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 		} else if (comp->type == HARDWARE) {
 			if (!(comp->name))
-				retval = NO_NAME;
+				retval = AILSA_NO_NAME;
 			else if ((!(comp->device)) && (!(comp->detail)))
 				retval = NO_DEVICE | NO_DETAIL;
 		}

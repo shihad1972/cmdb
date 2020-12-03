@@ -1398,7 +1398,7 @@ cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_q
 	if (!(tmp)) {
 		my_free(q);
 		ailsa_syslog(LOG_ERR, "Cannot find = in query string");
-		return MY_QUERY_FAIL;
+		return AILSA_QUERY_FAIL;
 	}
 	sprintf(tmp, "IN (" );
 	tmp += 4;
@@ -1505,12 +1505,12 @@ ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 
 	if ((retval = ailsa_mysql_query_with_checks(&sql, query)) != 0) {
 		ailsa_syslog(LOG_ERR, "MySQL query failed: %s", mysql_error(&sql));
-		exit(MY_QUERY_FAIL);
+		return AILSA_QUERY_FAIL;
 	}
 	if (!(sql_res = mysql_store_result(&sql))) {
 		ailsa_mysql_cleanup(&sql);
 		ailsa_syslog(LOG_ERR, "MySQL store result failed: %s", mysql_error(&sql));
-		exit(MY_STORE_FAIL);
+		return AILSA_STORE_FAIL;
 	}
 
 	total = mysql_num_fields(sql_res);
@@ -1546,7 +1546,7 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 	ailsa_mysql_init(cmdb, &sql);
 	if (!(stmt = mysql_stmt_init(&sql))) {
 		ailsa_syslog(LOG_ERR, "Error from mysql: %s", mysql_error(&sql));
-		retval = MY_STATEMENT_FAIL;
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	if ((retval = mysql_stmt_prepare(stmt, query, strlen(query))) != 0) {

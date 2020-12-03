@@ -210,7 +210,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		else if (opt == 'z')
 			col->action = CMDB_DEFAULT;
 		else if (opt == 'h')
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		else if (opt == 'e')
 			col->ver_alias = strndup(optarg, MAC_LEN);
 		else if (opt == 'f')
@@ -225,26 +225,26 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->arch = strndup(optarg, SERVICE_LEN);
 		else {
 			printf("Unknown option: %c\n", opt);
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
 	if (argc == 1)
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	if (col->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	if (col->action == 0 && argc != 1) {
 		printf("No action provided\n");
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	}
 	if (((col->action == CMDB_ADD) || (col->action == CMDB_DEFAULT) ||
 	      (col->action == CMDB_RM)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 	}
 	if ((col->action != CMDB_LIST && col->action != DOWNLOAD) && 
 		!((col->os))) {
 		printf("No OS name was provided\n");
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	}
 	return NONE;
 }
@@ -487,11 +487,11 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 	args[2] = col->arch;
 	if ((retval = cmdb_add_os_id_to_list(args, cmc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get OS id");
-		retval = OS_NOT_FOUND;
+		retval = AILSA_OS_NOT_FOUND;
 		goto cleanup;
 	}
 	if (list->total == 0) {
-		retval = OS_NOT_FOUND;
+		retval = AILSA_OS_NOT_FOUND;
 		goto cleanup;
 	}
 	element = list->head;
@@ -505,7 +505,7 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		display_server_name_for_build_os_id(build);
 		if (col->force == 0) {
 			ailsa_syslog(LOG_ERR, "Build OS in use. If you want to delete, use -f");
-			retval = BUILD_OS_IN_USE;
+			retval = AILSA_BUILD_OS_IN_USE;
 			goto cleanup;
 		}
 	}
@@ -703,7 +703,7 @@ cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 		return retval;
 	}
 	if ((retval = cmdb_add_build_type_id_to_list(col->alias, cmc, os)) != 0)
-		return BUILD_TYPE_NOT_FOUND;
+		return AILSA_BUILD_TYPE_NO_FOUND;
 	retval = cmdb_populate_cuser_muser(os);
 	return retval;
 }
@@ -717,7 +717,7 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 	unsigned long int new_os_id;
 	void *ptr;
 	if (os->total != 8)
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	AILLIST *pack = ailsa_db_data_list_init();
 	AILLIST *list = ailsa_db_data_list_init();
 	AILLIST *results = ailsa_db_data_list_init();
