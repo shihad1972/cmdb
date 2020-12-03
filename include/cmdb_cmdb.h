@@ -73,6 +73,9 @@ cmdb_set_default_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 void
 cmdb_display_default_customer(ailsa_cmdb_s *cc);
 
+int
+cmdb_remove_customer_from_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
+
 void
 cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc);
 

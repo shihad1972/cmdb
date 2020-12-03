@@ -1029,6 +1029,11 @@ const struct ailsa_sql_query_s delete_queries[] = {
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	},
+	{ // DELETE_CUSTOMER
+"DELETE FROM customer WHERE cust_id = ?",
+	1,
+	{ AILSA_DB_LINT }
+	},
 };
 
 const struct ailsa_sql_query_s update_queries[] = {

@@ -470,3 +470,23 @@ cmdb_display_default_customer(ailsa_cmdb_s *cc)
 		ailsa_list_full_clean(list);
 		return;
 }
+
+int
+cmdb_remove_customer_from_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
+{
+	if (!(cm) || !(cc))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *customer = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, customer)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_delete_query(cc, delete_queries[DELETE_CUSTOMER], customer)) != 0){
+		ailsa_syslog(LOG_ERR, "DELETE_CUSTOMER query failed");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(customer);
+		return retval;
+}

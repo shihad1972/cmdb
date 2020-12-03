@@ -66,8 +66,10 @@ main(int argc, char *argv[])
 	size_t len = sizeof(ailsa_cmdb_s);
 	ailsa_cmdb_s *cc = ailsa_calloc(len, "cc in main");
 
-	if ((retval = parse_cmdb_command_line(argc, argv, cm)) != 0)
+	if ((retval = parse_cmdb_command_line(argc, argv, cm)) != 0) {
+		display_command_line_error(retval, argv[0]);
 		goto cleanup;
+	}
 	parse_cmdb_config(cc);
 	switch(cm->type) {
 	case SERVER:
@@ -102,8 +104,6 @@ main(int argc, char *argv[])
 	cleanup:
 		ailsa_clean_cmdb(cc);
 		clean_cmdb_comm_line(cm);
-		if (retval != 0)
-			display_command_line_error(retval, argv[0]);
 		return retval;
 }
 
@@ -155,6 +155,9 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	case CMDB_VIEW_DEFAULT:
 		cmdb_display_default_customer(cc);
+		break;
+	case CMDB_RM:
+		retval = cmdb_remove_customer_from_database(cm, cc);
 		break;
 	default:
 		display_type_error(cm->type);

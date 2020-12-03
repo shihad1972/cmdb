@@ -324,7 +324,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			retval = WRONG_TYPE;
 	} else if ((!(comp->name)) && (!(comp->id)) && 
 		(comp->type != NONE || comp->action != NONE) &&
-		(comp->type != CONTACT)) {
+		((comp->type != CONTACT) && (comp->type != CUSTOMER))) {
 		retval = NO_NAME_OR_ID;
 	} else if (comp->action == CMDB_RM) {
 		if (comp->type == SERVICE) {
