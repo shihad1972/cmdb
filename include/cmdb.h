@@ -403,65 +403,7 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
-/*
-void
-display_version(char *prog);
-*/
-// Database fields query mismatch error functions
 
-
-// Miscellaneous
-
-unsigned int
-cmdb_get_max(const unsigned int args, const unsigned int fields);
-void
-cmdb_prep_db_query(dbdata_s **data, const unsigned int *values[], int query);
-unsigned int
-cmdb_get_max_val(const unsigned int *search[], int query);
-int
-check_data_length(dbdata_s *data, unsigned int len);
-dbdata_s *
-move_down_list_data(dbdata_s *data, unsigned int len);
-int
-write_file(char *filename, char *output);
-void
-convert_time(char *timestamp, unsigned long int *store);
-int
-get_ip_from_hostname(dbdata_s *data);
-
-// Initialisation functions
-
-void
-initialise_string_array(char *list[], size_t num, size_t len[]);
-void
-init_dbdata_struct(dbdata_s *data);
-void
-init_multi_dbdata_struct(dbdata_s **data, unsigned int i);
-void
-init_string_len(string_len_s *string);
-void
-init_string_l(string_l *string);
-void
-init_initial_string_l(string_l **string, int count);
-
-// Memory functions - first cleanup
-void
-clean_dbdata_struct(dbdata_s *data);
-void
-clean_string_len(string_len_s *string);
-void
-clean_string_l(string_l *list);
-
-// And now manipulation
-
-void *
-cmdb_malloc(size_t len, const char *msg);
-void
-cmdb_free(void *data, size_t len);
-void
-resize_string_buff(string_len_s *build);
-void *
-check_for_resize(void *ptr, size_t *size, size_t len);
 # ifdef HAVE_SQLITE3
 #  ifndef HAVE_SQLITE3_ERRSTR
 const char *

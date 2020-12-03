@@ -915,10 +915,6 @@ void
 display_type_error(short int type);
 void
 get_config_file_location(char *config);
-int
-write_file(char *filename, char *output);
-void
-convert_time(char *timestamp, unsigned long int *store);
 char *
 cmdb_get_uname(unsigned long int uid);
 const char *
