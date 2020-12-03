@@ -1,0 +1,59 @@
+.TH cmdb-identity 8 "Version 0.3: 02 December 2020" "CMDB suite manuals" "cmdb, cbc and dnsa collection"
+.SH NAME
+cmdb-identity \- Add server user identities and passwords
+.SH SYNOPSIS
+
+.B cmdb-identity
+(
+.B -a | -l | -r
+) [
+.B -s server
+] [
+.B -u user
+] [
+.B -p
+]
+
+.SH DESCRIPTION
+\fBcmdb-identity\fP will add users for the server, along with a password, into
+the database to be used when building a server. The \fBroot\fP user can be
+added along with a regular user.
+
+.SH OPTIONS
+.B Actions
+.IP "Action options require no additional parameter."
+.IP "-a,   --add"
+Use this to add an identity
+.IP "-l,   --list"
+Use this to list the identities. Modifiers can be used to narrow down
+responses
+.IP "-r,   --remove"
+Use this to remove an identity. Both user and server must be specified
+.PP
+.B Modifiers
+.IP "-s,   --server \fBname\fP"
+Specify the server name
+.IP "-u,   --user \fBusername\fP"
+Specify the username
+.IP "-p,   --password"
+Prompt for a password for the user. Not specifying this option will result in
+a psuedo random password 25 character password.
+.SH FILES
+.I /etc/cmdb/cmdb.conf
+.I ~/.cmdb.conf
+.RS
+The system wide and user configuration files for the cmdb / dnsa / cbc suite
+of programs. See
+.BR cmdb.conf (5)
+for further details.
+.RE
+.SH ENVIRONMENT
+This suite of programs do not  make use of environment variables at present
+although this may change in the future. Watch this space!
+.SH AUTHOR
+Iain M Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8),
+.BR cbc(7),
+.BR cbc(8),
+.BR cmdb(8)
