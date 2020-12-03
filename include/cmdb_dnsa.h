@@ -22,7 +22,6 @@
 
 #ifndef __CMDB_DNSA_H__
 # define __CMDB_DNSA_H__
-# include "cmdb.h"
 
 typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	short int action;

@@ -111,7 +111,8 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 	retval = 0;
 	if (!(comp->config)) {
 		comp->config = ailsa_calloc(CONFIG_LEN, "comp->config in parse_cmdb_command_line");
-		get_config_file_location(comp->config);
+		if ((retval = get_config_file_location(comp->config)) != 0)
+			return retval;
 	}
 #ifdef HAVE_GETOPT_H
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)

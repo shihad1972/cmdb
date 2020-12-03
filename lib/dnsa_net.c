@@ -41,7 +41,6 @@
 #include <errno.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_dnsa.h"
 
 
@@ -120,18 +119,18 @@ do_rev_lookup(char *ip, char *host, size_t size)
 	socklen_t hlen = (socklen_t)size;
 
 	if (!(ip) || !(host))
-		return NULL_POINTER_PASSED;
+		return AILSA_NO_DATA;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	if ((retval = getaddrinfo(ip, NULL, &hints, &res)) != 0) {
 		fprintf(stderr, "Getaddrinfo in do_rev_lookup: %s\n",
 		  gai_strerror(retval));
-		return NET_FUNC_FAILED;
+		return AILSA_GETADDR_FAIL;
 	}
 	if ((retval = getnameinfo(res->ai_addr, len, host, hlen, NULL, 0, NI_NAMEREQD)) != 0) {
 		fprintf(stderr, "getnameinfo: %s\n", gai_strerror(retval));
-		retval = DNS_LOOKUP_FAILED;
+		retval = AILSA_DNS_LOOKUP_FAIL;
 	}
 	return retval;
 }
@@ -158,7 +157,7 @@ cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone)
 		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Unknown zone type %s", type);
-		retval = UNKNOWN_ZONE_TYPE;
+		retval = AILSA_WRONG_ZONE_TYPE;
 		break;
 	}
 	return retval;
@@ -251,7 +250,7 @@ write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_INFO, "Path truncated in write_fwd_zone_file");
 	if ((fd = open(name, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		goto cleanup;
 	}
 	write_zone_file_header(fd, n, s, cbc->hostmaster);
@@ -279,7 +278,7 @@ ailsa_check_for_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
 		return AILSA_NO_DATA;
 	if ((l->total % 6) != 0) {
 		ailsa_syslog(LOG_ERR, "Wrong number in list. wanted 6 got %zu", l->total);
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	}
 	int retval = 0;
 	AILLIST *s = ailsa_db_data_list_init();
@@ -319,7 +318,7 @@ ailsa_check_for_rev_zone_update(ailsa_cmdb_s *cbs, AILLIST *l, char *zone)
 		return AILSA_NO_DATA;
 	if ((l->total % 8) != 0) {
 		ailsa_syslog(LOG_ERR, "Wrong number in list. wanted 8 got %zu", l->total);
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	}
 	int retval = 0;
 	AILLIST *s = ailsa_db_data_list_init();
@@ -519,7 +518,7 @@ cmdb_check_zone(ailsa_cmdb_s *cbs, char *zone)
 	memset(command, 0, CONFIG_LEN);
 	snprintf(command, CONFIG_LEN, "%s %s %s%s", cbs->chkz, zone, cbs->dir, zone);
 	if (system(command) != 0)
-		retval = CHKZONE_FAIL;
+		retval = AILSA_CHKZONE_FAIL;
 	else
 		retval = 0;
 	return retval;
@@ -595,7 +594,7 @@ write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_INFO, "path truncated in write_rev_zone_file");
 	if ((fd = open(name, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open zone file for writing: %s", strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		goto cleanup;
 	}
 	write_rev_zone_header(fd, s, cbc->hostmaster);
@@ -701,8 +700,10 @@ generate_zone_serial(void)
         unsigned long int serial;
 
         now = time(0);
-        if (!(lctime = localtime(&now)))
-                report_error(GET_TIME_FAILED, strerror(errno));
+        if (!(lctime = localtime(&now))) {
+		ailsa_syslog(LOG_ERR, "Get time failed");
+		return 0;
+	}
         snprintf(syear, SERVICE_LEN, "%d", lctime->tm_year + 1900);
         if (lctime->tm_mon < 9)
                 snprintf(smonth, SERVICE_LEN, "0%d", lctime->tm_mon + 1);
@@ -742,7 +743,7 @@ cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs)
 		ailsa_syslog(LOG_INFO, "Path truncated in cmdb_write_fwd_zone_config");
 	if ((fd = open(filename, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
-		return FILE_O_FAIL;
+		return AILSA_FILE_ERROR;
 	}
 	if ((retval = ailsa_basic_query(cbs, FWD_ZONE_CONFIG, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "FWD_ZONE_CONFIG query failed");
@@ -825,7 +826,7 @@ cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs)
 		ailsa_syslog(LOG_INFO, "Path truncated in cmdb_write_rev_zone_config");
 	if ((fd = open(filename, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
-		return FILE_O_FAIL;
+		return AILSA_FILE_ERROR;
 	}
 	e = l->head;
 	while (e) {
@@ -885,7 +886,7 @@ cmdb_getaddrinfo(char *name, char *ip, int *type)
 	hints.ai_flags = AI_PASSIVE;
 	if ((retval = getaddrinfo(name, service, &hints, &results)) != 0) {
 		ailsa_syslog(LOG_ERR, "getaddrinfo failed in cmdb_getaddrinfo: %s", gai_strerror(retval));
-		retval = NAME_TO_IP_FAIL;
+		retval = AILSA_GETADDR_FAIL;
 		goto cleanup;
 	}
 	for (p = results; p != NULL; p = p->ai_next) {
@@ -895,7 +896,7 @@ cmdb_getaddrinfo(char *name, char *ip, int *type)
 			*type = 4;
 			if (!(inet_ntop(AF_INET, addr, ip, INET_ADDRSTRLEN))) {
 				ailsa_syslog(LOG_INFO, "Cannot convert %s to IP: %s", name, strerror(errno));
-				retval = NAME_TO_IP_FAIL;
+				retval = AILSA_GETADDR_FAIL;
 				goto cleanup;
 			}
 			break;
@@ -905,7 +906,7 @@ cmdb_getaddrinfo(char *name, char *ip, int *type)
 			*type = 6;
 			if (!(inet_ntop(AF_INET6, addr, ip, INET6_ADDRSTRLEN))) {
 				ailsa_syslog(LOG_INFO, "Cannot convert %s to IP: %s", name, strerror(errno));
-				retval = NAME_TO_IP_FAIL;
+				retval = AILSA_GETADDR_FAIL;
 				goto cleanup;
 			}
 			break;
@@ -1195,13 +1196,10 @@ static int
 decode_http_header(FILE *rx, unsigned long int *len)
 {
 	char *buf, *t;
-	int retval = CANNOT_DOWNLOAD_BOOT_FILES;
+	int retval = AILSA_DOWNLOAD_FAIL;
 	unsigned long int code;
 
-	if (!(buf = malloc(MAXDATASIZE))) {
-		perror("malloc in decode_header");
-		return retval;
-	}
+	buf = ailsa_calloc(MAXDATASIZE, "buff in decode_http_header");
 	if (!(fgets(buf, MAXDATASIZE, rx))) {
 		fprintf(stderr, "Cannot read HTTP line\n");
 		goto cleanup;

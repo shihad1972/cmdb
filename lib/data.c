@@ -45,7 +45,6 @@
 #include <fcntl.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include <cmdb.h>
 
 // Various data functions.
 
@@ -562,24 +561,31 @@ ailsa_fill_string(ailsa_string_s *str, const char *s)
 }
 
 
-void
+int
 get_config_file_location(char *config)
 {
+	int retval = 0;
 	FILE *cnf;
 	const char *conf = config;
 
 	if (snprintf(config, CONFIG_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONFIG_LEN)
-		report_error(BUFFER_TOO_SMALL, "for config file");
+		report_error(AILSA_BUFFER_TOO_SMALL, "for config file");
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{
-		if (snprintf(config, CONFIG_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONFIG_LEN)
-			report_error(BUFFER_TOO_SMALL, "for config file");
+		if (snprintf(config, CONFIG_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONFIG_LEN) {
+			ailsa_syslog(LOG_ERR, "Buffer too small to hold config file location");
+			retval = AILSA_BUFFER_TOO_SMALL;
+		}
 		if ((cnf = fopen(conf, "r")))
 			fclose(cnf);
-		else
-			report_error(CONF_ERR, "no config file");
+		else {
+			ailsa_syslog(LOG_ERR, "Cannot open config file %s", conf);
+			retval = AILSA_FILE_ERROR;
+		}
+			
 	}
+	return retval;
 }
 
 char *
@@ -885,10 +891,8 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	tmp = 0;
 	len = strlen(range);
 	len++;/* Got to remember the terminating \0 :) */
-	if (!(line = calloc(len, sizeof(char))))
-		report_error(MALLOC_FAIL, "line in get_in_addr_string");
-	if (!(classless = calloc(CONFIG_LEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "classless in get_in_addr_string");
+	line = ailsa_calloc(len, "line in get_in_addr_string");
+	classless = ailsa_calloc(CONFIG_LEN, "classless in get_in_addr_string");
 
 	snprintf(line, len, "%s", range);
 	if (prefix == 24) {

@@ -44,6 +44,7 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
+#include "cmdb.h"
 #include "cmdb_cbc.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"

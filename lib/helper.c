@@ -40,7 +40,6 @@
 #endif /*HAVE_SQLITE3 */
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 int
 cmdb_add_hard_type_id_to_list(char *hclass, ailsa_cmdb_s *cc, AILLIST *list)
@@ -373,7 +372,7 @@ cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
 			ailsa_syslog(LOG_ERR, "REV_ZONE_ID_ON_RANGE query failed");
 		break;
 	default:
-		retval = UNKNOWN_ZONE_TYPE;
+		retval = AILSA_WRONG_ZONE_TYPE;
 		break;
 	}
 	cleanup:
@@ -706,7 +705,7 @@ cmdb_check_add_server_id_to_list(char *server, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find server %s", server);
-		retval = SERVER_NOT_FOUND;
+		retval = AILSA_SERVER_NOT_FOUND;
 	}
 	return retval;
 }
@@ -725,7 +724,7 @@ cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", coid);
-		retval = CUSTOMER_NOT_FOUND;
+		retval = AILSA_CUSTOMER_NOT_FOUND;
 	}
 	return retval;
 }
@@ -744,7 +743,7 @@ cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find zone %s", zone);
-		retval = NO_ZONE_FOUND;
+		retval = AILSA_ZONE_NOT_FOUND;
 	}
 	return retval;
 }
@@ -763,7 +762,7 @@ cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_INFO, "Cannot find varient %s", varient);
-		retval = VARIENT_NOT_FOUND;
+		retval = AILSA_VARIENT_NOT_FOUND;
 	}
 	return retval;
 }
@@ -782,7 +781,7 @@ cmdb_check_add_ip_id_to_list(char *host, ailsa_cmdb_s *cc, AILLIST *list)
 	}
 	if (list->total != (total + 1)) {
 		ailsa_syslog(LOG_ERR, "Cannot find IP for server %s", host);
-		retval = CANNOT_FIND_BUILD_IP;
+		retval = AILSA_BUILD_IP_NOT_FOUND;
 	}
 	return retval;
 }

@@ -40,13 +40,12 @@
 #endif /*HAVE_SQLITE3 */
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 #ifdef HAVE_MYSQL
 
 char mysql_time[MAC_LEN];
 
-void
+int
 ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql)
 {
 	const char *unix_socket;
@@ -54,11 +53,15 @@ ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql)
 	unix_socket = dc->socket;
 
 	if (!(mysql_init(cbc_mysql))) {
-		report_error(MY_INIT_FAIL, mysql_error(cbc_mysql));
+		ailsa_syslog(LOG_ERR, "mysql initialisation failed: %s", mysql_error(cbc_mysql));
+		return AILSA_MY_INIT_FAIL;
 	}
 	if (!(mysql_real_connect(cbc_mysql, dc->host, dc->user, dc->pass,
-		dc->db, dc->port, unix_socket, dc->cliflag)))
-		report_error(MY_CONN_FAIL, mysql_error(cbc_mysql));
+	 dc->db, dc->port, unix_socket, dc->cliflag))) {
+		ailsa_syslog(LOG_ERR, "mysql connection failed: %s", mysql_error(cbc_mysql));
+		return AILSA_MY_CONN_FAIL;
+	}
+	return 0;
 }
 
 int

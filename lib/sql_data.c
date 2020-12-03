@@ -45,7 +45,6 @@
 #endif /*HAVE_SQLITE3 */
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 void
 cmdb_clean_ailsa_sql_multi(ailsa_sql_multi_s *data)

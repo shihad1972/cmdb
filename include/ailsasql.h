@@ -571,7 +571,7 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
-void
+int
 ailsa_mysql_init(ailsa_cmdb_s *dc, MYSQL *cbc_mysql);
 
 int

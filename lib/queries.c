@@ -43,7 +43,6 @@
 
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include <cmdb.h>
 
 const char *basic_queries[] = {
 "SELECT s.name, c.coid FROM server s INNER JOIN customer c on c.cust_id = s.cust_id", // SERVER_NAME_COID
@@ -1194,7 +1193,7 @@ ailsa_remove_empty_results_mysql(MYSQL_STMT *stmt, AILLIST *results);
 int
 ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 	const char *query = basic_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
@@ -1215,7 +1214,7 @@ ailsa_basic_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *results)
 int
 ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, AILLIST *results)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 	const struct ailsa_sql_query_s argument = argument_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
@@ -1236,7 +1235,7 @@ ailsa_argument_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *args, A
 int
 ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLIST *args, AILLIST *results)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -1256,7 +1255,7 @@ ailsa_individual_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s *query, AILLI
 int
 ailsa_delete_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s query, AILLIST *delete)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -1276,7 +1275,7 @@ ailsa_delete_query(ailsa_cmdb_s *cmdb, const ailsa_sql_query_s query, AILLIST *d
 int
 ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *update)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -1296,7 +1295,7 @@ ailsa_update_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AIL
 int
 ailsa_insert_query(ailsa_cmdb_s *cmdb, unsigned int query_no, AILLIST *insert)
 {
-	int retval = DB_TYPE_INVALID;
+	int retval = AILSA_WRONG_DBTYPE;
 	const struct ailsa_sql_query_s query = insert_queries[query_no];
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
@@ -1324,7 +1323,7 @@ ailsa_multiple_query(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, A
 		ailsa_syslog(LOG_ERR, "Unable to create multiple struct");
 		goto cleanup;
 	}
-	retval = DB_TYPE_INVALID;
+	retval = AILSA_WRONG_DBTYPE;
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
@@ -1355,7 +1354,7 @@ ailsa_multiple_delete(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, 
 		ailsa_syslog(LOG_ERR, "Unable to create multi delete sql struct");
 		return retval;
 	}
-	retval = DB_TYPE_INVALID;
+	retval = AILSA_WRONG_DBTYPE;
 
 	if ((strncmp(cmdb->dbtype, "none", SERVICE_LEN) == 0))
 		ailsa_syslog(LOG_ERR, "no dbtype set");
@@ -1386,7 +1385,7 @@ cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_q
 
 	if (query.number != 1) {
 		ailsa_syslog(LOG_ERR, "Can only multi delete with a single argument. Query has %zu", total);
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	}
 	len_q = strlen(query.query);
 	len_s = (total * 3) + 3;
@@ -1501,7 +1500,8 @@ ailsa_basic_query_mysql(ailsa_cmdb_s *cmdb, const char *query, AILLIST *results)
 	MYSQL_FIELD *field;
 	my_ulonglong sql_rows;
 
-	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
+		return retval;
 
 	if ((retval = ailsa_mysql_query_with_checks(&sql, query)) != 0) {
 		ailsa_syslog(LOG_ERR, "MySQL query failed: %s", mysql_error(&sql));
@@ -1543,7 +1543,8 @@ ailsa_argument_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s ar
 	MYSQL_BIND *params = NULL;
 	MYSQL_BIND *res = NULL;
 
-	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
+		return retval;
 	if (!(stmt = mysql_stmt_init(&sql))) {
 		ailsa_syslog(LOG_ERR, "Error from mysql: %s", mysql_error(&sql));
 		retval = AILSA_STATEMENT_FAIL;
@@ -1600,7 +1601,8 @@ ailsa_delete_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s dele
 	MYSQL_BIND *bind = NULL;
 	const char *query = delete.query;
 
-	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
+		return retval;
 	if ((retval = ailsa_run_mysql_stmt(&sql, bind, delete, list)) == 0)
 		ailsa_syslog(LOG_INFO, "No affected rows for %s", query);
 	else if (retval < 0)
@@ -1621,7 +1623,8 @@ ailsa_insert_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s inse
 	MYSQL_BIND *bind = NULL;
 	const char *query = insert.query;
 
-	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
+		return retval;
 	if ((retval = ailsa_run_mysql_stmt(&sql, bind, insert, list)) == 0)
 		ailsa_syslog(LOG_INFO, "No affected rows for %s", query);
 	else if (retval < 0)
@@ -1644,7 +1647,8 @@ ailsa_multiple_query_mysql(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *insert, AILLIS
 	MYSQL_STMT *stmt;
 	MYSQL_BIND *bind = NULL;
 
-	ailsa_mysql_init(cmdb, &sql);
+	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
+		return retval;
 	if (!(stmt = mysql_stmt_init(&sql))) {
 		ailsa_syslog(LOG_ERR, "MySQL stmt failed: %s", mysql_error(&sql));
 		goto cleanup;
@@ -1956,8 +1960,8 @@ ailsa_delete_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 		goto cleanup;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
-		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
-		retval = SQLITE_INSERT_FAILED;
+		ailsa_syslog(LOG_ERR, "Unable to delete from sqlite database: %s", sqlite3_errstr(retval));
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	cleanup:
@@ -1987,8 +1991,8 @@ ailsa_insert_query_sqlite(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s que
 		goto cleanup;
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
-		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
-		retval = SQLITE_INSERT_FAILED;
+		ailsa_syslog(LOG_ERR, "sqlite query failed: %s", sqlite3_errstr(retval));
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	cleanup:
@@ -2017,7 +2021,7 @@ ailsa_multiple_query_sqlite(ailsa_cmdb_s *cmdb, ailsa_sql_multi_s *sql, AILLIST 
 	}
 	if ((retval = sqlite3_step(state)) != SQLITE_DONE) {
 		ailsa_syslog(LOG_ERR, "Unable to insert into sqlite database: %s", sqlite3_errstr(retval));
-		retval = SQLITE_INSERT_FAILED;
+		retval = AILSA_STATEMENT_FAIL;
 		goto cleanup;
 	}
 	cleanup:
@@ -2083,7 +2087,7 @@ ailsa_bind_arguments_sqlite(sqlite3_stmt *state, AILLIST *args, unsigned int t, 
 			data = tmp->data;
 		} else {
 			ailsa_syslog(LOG_ERR, "List stopped with %hi of %hi arguments bound for sqlite", i, t);
-			retval = CBC_DATA_WRONG_COUNT;
+			retval = AILSA_WRONG_LIST_LENGHT;
 			break;
 		}
 		switch (f[i]) {

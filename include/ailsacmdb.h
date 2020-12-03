@@ -193,9 +193,15 @@ enum {                  // Error codes
 	AILSA_NO_MIRROR = 224,
 	CANNOT_FIND_IDENTITY_ID = 225,
 	AILSA_WRONG_LIST_LENGHT = 226,
-	AILSA_OS_NOT_FOUND = 227,
+	AILSA_WRONG_ZONE_TYPE = 227,
 	AILSA_BUILD_TYPE_NO_FOUND = 228,
 	AILSA_BUILD_OS_IN_USE = 229,
+	AILSA_BUFFER_TOO_SMALL = 230,
+	AILSA_GETADDR_FAIL = 231,
+	AILSA_DNS_LOOKUP_FAIL = 232,
+	AILSA_CHKZONE_FAIL = 233,
+	AILSA_FILE_ERROR = 233,	
+	AILSA_DOWNLOAD_FAIL = 234,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -207,6 +213,9 @@ enum {                  // Error codes
 	AILSA_STATEMENT_FAIL = 308,
 	AILSA_SQL_FILE_INIT_FAIL = 309,
 	AILSA_SQL_BIND_FAIL = 310,
+	AILSA_WRONG_DBTYPE = 311,
+	AILSA_MY_CONN_FAIL = 312,
+	AILSA_MY_INIT_FAIL = 313,
 	UUID_REGEX_ERROR = 400,
 	NAME_REGEX_ERROR = 401,
 	ID_REGEX_ERROR = 402,
@@ -229,6 +238,12 @@ enum {                  // Error codes
 	GLUE_IP_INPUT_INVALID = 609,
 	GLUE_NS_INPUT_INVALID = 610,
 	AILSA_SERVER_NOT_FOUND = 700,
+	AILSA_CUSTOMER_NOT_FOUND = 701,
+	AILSA_ZONE_NOT_FOUND = 702,
+	AILSA_BUILD_IP_NOT_FOUND = 703,
+	AILSA_VARIENT_NOT_FOUND = 704,
+	AILSA_OS_NOT_FOUND = 705,
+
 };
 
 enum {			// zone types; use NONE from action codes
@@ -968,7 +983,7 @@ void
 chomp(char *input);
 void 
 display_type_error(short int type);
-void
+int
 get_config_file_location(char *config);
 char *
 cmdb_get_uname(unsigned long int uid);
