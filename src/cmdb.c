@@ -101,6 +101,12 @@ main(int argc, char *argv[])
 		goto cleanup;
 	}
 
+	if (retval != 0) {
+		ailsa_clean_cmdb(cc);
+		clean_cmdb_comm_line(cm);
+		report_error(retval, " ");
+	}
+
 	cleanup:
 		ailsa_clean_cmdb(cc);
 		clean_cmdb_comm_line(cm);

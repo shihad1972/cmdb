@@ -12,24 +12,9 @@ empty)
 In getting config values, adding a trailing / to value not read results in a
 segmentation fault. I need to check if value exists first.
 
-03/11/2020
-When adding package to varient, we need to check if the package already
-exists in that varient and not add it again. IDEMPOTENT
-	** Done. Commit ID: 51dcd4e **
-
-17/07/2020
-When displaying build OS, it would be useful to know what servers are
-built with that OS.
-Also display does not honour -o <os_version> nor -t <architecture>
-	** Display now honours above switches. Commit ID: 2d05b2f
-
 11/07/2020
 Should be able to read config values from environment variables. Also
 have defaults either in config file, environment or database
-
-02/07/2020
-Fix cbcvarient where displaying varient that does not exist blows up.
-	** Seems fixed. Commit ID: 9ae6239 **
 
 28/06/2020
 The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do
@@ -40,29 +25,10 @@ do this when consolidating these functions doing note 24/06/2020.
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)
 
-24/06/2020
-Consolidate the cmdb_add_*_id_to_list into 2 functions:
-	1 for char *
-	1 for char **
-Have to be careful of the char ** one; Need to tell length of list. Maybe end
-with NULL pointer at the end of list?
-	** Leaving this one out. There is no need to do this **
-
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.
 It does not add the record in on the first time the zone is built, only on
 the 2nd time it is built.
-
-06/06/2020
-Should probably move all actions to the CMDB_ definitions. These are in
-ailsacmdb.h and will remove another dependency on cmdb.h
-	*** Done. Completed with commit ID 25661a8 ***
-
-06/05/2020
-In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
-need to stop exiting in these functions. They should pass their error back up
-the function stack
-	*** Done. commit ID: bb2ecda ***
 
 05/05/2020
 cbcscript is tightly tied into the build_type table; also the system_scripts_args
@@ -73,22 +39,16 @@ packages where there is an args and a conf table.
 Need to fix the error returns, as report_error does not free memory in use
 before exiting. The error report function should only report an error.
 The error code should be able to 'bubble up' from whatever function had an
-error, and get back to main, so we can free memory there
+error, and get back to main, so we can free memory there.
+	** Update ** Should provide a different error function for the
+	   command line validation; can pass the REGEX number to get the
+	   correct error to display.
 
 03/05/2020
 Adding a system package in cbcsysp should not automatically configure the
 package. Indeed, it should check if the package is in the varient. This will
 obviously fail for packages that are part of a base install, and so those
 packages should be added to the base varient.
-
-20/04/2020
-When adding a locale, need to check if that locale already exists
-	*** Done. Fixed in commit ID 3baec109 ***
-
-19/04/2020
-When adding packages, I need to check if the package already exists for
-that particular varient and OS combination.
-	***  Done. Fixed in commit ID 51dcd4e ***
 
 31/10/2016
 Add support for a YAML data file, so we do not have the unwieldy command
@@ -259,25 +219,8 @@ Need to add Root-CA field into the build_domain table of database.
   we do not automatically configure them.
 Fixed
 
-26/08/2013
-Add checks against all strtoul from DB as if given NULL it will segfault.
-	**DONE** New DB access
-
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
-
-30/06/2013
-Have a generic config struct (config_s) that all the others (e.g.
-dnsa_config_s) contain that can be shared between the programs. This way we
-can have standard SQL functions that can be shared amongst the programs.
-	*** Done: now have ailsa_cmdb_s ***
-
-Problem with this is to work out a way of passing the program to the SQL
-search so that it will do a, e.g. cbc_search and get the correct values
-for number and type of args and fields. Also this will need to be the
-correct search itself. Could this config contain this information?
-	** Started. ailsa_cmdb_s **
-	** Done: Various commits. All progrmas use ailsa_cmdb_s
 
 05/06/2013
 Need to add the first zone in for dnsa otherwise the software complains
@@ -288,23 +231,6 @@ in the zone. DOH!
 	the DB and then add these records to the zonefile. If you are
 	adding a zone there should not be any records yet.
 
-04/06/2013
-For all build options there should be a default option so when you
-create a build you do not need to specify all the options.
-This will help for first install too, if I create some default options
-	*** Done: OS varient, partition scheme and build domain all
-	    have default options. Commit id: 475199d ***
-	*** Also added default customer: Commit id: 4b64960 ***
-
-02/06/2013
-Should have the root password for the machine in the database and
-add this to the build file. Need to work out how to get hash
-	*** Done: Commit id 250d84c ***
-
-Also need to add an email alias for root in smtp configuration
-	06/11/2015 **UPDATE**
-	The package configuration for postfix is supposed to do this, but
-	only seems to work in stretch (and not jessie nor wheezy)
 
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements
@@ -331,3 +257,84 @@ Need to sort out an install script for the database and decide what tables
 to populate at install time, and how to get the default values from the user
 Currently I am thinking make postinstall or perhaps make dbinstall
 	*** Added an ansible playbook to install cmdb on a host ***
+
+
+======================= COMPLETE ============================
+
+02/06/2013
+Should have the root password for the machine in the database and
+add this to the build file. Need to work out how to get hash
+	*** Done: Commit id 250d84c ***
+
+Also need to add an email alias for root in smtp configuration
+	06/11/2015 **UPDATE**
+	The package configuration for postfix is supposed to do this, but
+	only seems to work in stretch (and not jessie nor wheezy)
+
+04/06/2013
+For all build options there should be a default option so when you
+create a build you do not need to specify all the options.
+This will help for first install too, if I create some default options
+	*** Done: OS varient, partition scheme and build domain all
+	    have default options. Commit id: 475199d ***
+	*** Also added default customer: Commit id: 4b64960 ***
+
+30/06/2013
+Have a generic config struct (config_s) that all the others (e.g.
+dnsa_config_s) contain that can be shared between the programs. This way we
+can have standard SQL functions that can be shared amongst the programs.
+	*** Done: now have ailsa_cmdb_s ***
+
+Problem with this is to work out a way of passing the program to the SQL
+search so that it will do a, e.g. cbc_search and get the correct values
+for number and type of args and fields. Also this will need to be the
+correct search itself. Could this config contain this information?
+	** Started. ailsa_cmdb_s **
+	** Done: Various commits. All progrmas use ailsa_cmdb_s
+
+26/08/2013
+Add checks against all strtoul from DB as if given NULL it will segfault.
+	**DONE** New DB access
+
+20/04/2020
+When adding a locale, need to check if that locale already exists
+	*** Done. Fixed in commit ID 3baec109 ***
+
+19/04/2020
+When adding packages, I need to check if the package already exists for
+that particular varient and OS combination.
+	***  Done. Fixed in commit ID 51dcd4e ***
+
+03/11/2020
+When adding package to varient, we need to check if the package already
+exists in that varient and not add it again. IDEMPOTENT
+	** Done. Commit ID: 51dcd4e **
+
+17/07/2020
+When displaying build OS, it would be useful to know what servers are
+built with that OS.
+Also display does not honour -o <os_version> nor -t <architecture>
+	** Display now honours above switches. Commit ID: 2d05b2f
+
+02/07/2020
+Fix cbcvarient where displaying varient that does not exist blows up.
+	** Seems fixed. Commit ID: 9ae6239 **
+
+24/06/2020
+Consolidate the cmdb_add_*_id_to_list into 2 functions:
+	1 for char *
+	1 for char **
+Have to be careful of the char ** one; Need to tell length of list. Maybe end
+with NULL pointer at the end of list?
+	** Leaving this one out. There is no need to do this **
+
+06/06/2020
+Should probably move all actions to the CMDB_ definitions. These are in
+ailsacmdb.h and will remove another dependency on cmdb.h
+	*** Done. Completed with commit ID 25661a8 ***
+
+06/05/2020
+In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
+need to stop exiting in these functions. They should pass their error back up
+the function stack
+	*** Done. commit ID: bb2ecda ***
