@@ -20,7 +20,7 @@
 
 - name: Set database root password
   become: true
-  shell: "mysql -e \"ALTER USER \'root\'@\'localhost\' IDENTIFIED BY \'{{ mysql_password }}\';\" && touch /root/.mysql_ansible"
+  shell: "mysql -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_password }}';\" && touch /root/.mysql_ansible"
   args:
     creates: /root/.mysql_ansible
     
