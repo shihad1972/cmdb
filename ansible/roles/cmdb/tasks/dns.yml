@@ -29,7 +29,8 @@
   notify: restart bind
 
 - name: Create fwd config file
-  file:
+  become: true
+  copy:
     content: ""
     dest: "{{ bind_dir }}/{{ fwd_config }}"
     force: no
@@ -39,7 +40,8 @@
   notify: restart bind
 
 - name: Create rev config file
-  file:
+  become: true
+  copy:
     content: ""
     dest: "{{ bind_dir }}/{{ rev_config }}"
     force: no

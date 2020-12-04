@@ -223,6 +223,8 @@ in the zone. DOH!
 	I could probably just add the name server(s) as A records into
 	the DB and then add these records to the zonefile. If you are
 	adding a zone there should not be any records yet.
+	04/12/2020 **UPDATE**
+	This is no longer an issue. The initial zone can now be added fine.
 
 
 06/05/2013
