@@ -33,7 +33,6 @@
 #include <unistd.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_data.h"
 #include "cmdb_cmdb.h"
 

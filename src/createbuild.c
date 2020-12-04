@@ -44,7 +44,6 @@
 #include <netdb.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "build.h"
 
@@ -375,9 +374,10 @@ cbc_get_build_dom_info(ailsa_cmdb_s *cbt, cbc_comm_line_s *cml, AILLIST *bdom)
 		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_NET_INFO query failed");
 		goto cleanup;
 	}
-	if (bdom->total == 0)
-		retval = BUILD_DOMAIN_NOT_FOUND;
-
+	if (bdom->total == 0) {
+		ailsa_syslog(LOG_ERR, "Cannot find build domain %s", cml->build_domain);
+		retval = AILSA_NO_BUILD_DOMAIN;
+	}
 	cleanup:
 		ailsa_list_full_clean(list);
 		return retval;
@@ -549,7 +549,7 @@ cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long i
 		}
 	} else {
 		ailsa_syslog(LOG_ERR, "Wrong number in list. Wanted 4; got %zu", rec->total);
-		retval = WRONG_LENGTH_LIST;
+		retval = AILSA_WRONG_LIST_LENGHT;
 		goto cleanup;
 	}
 	if ((retval = cmdb_populate_cuser_muser(rec)) != 0) {

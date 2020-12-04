@@ -42,7 +42,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include <cmdb.h>
 #include <cmdb_data.h>
 
 static int
@@ -153,7 +152,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'm')
 			comp->action = CMDB_MOD;
 		else if (opt == 'h')
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		else if (opt == 'f')
 			comp->force = 1;
 		else if (opt == 'c')
@@ -203,7 +202,7 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 		else if (opt == 'H')
 			comp->hclass = strndup(optarg, MAC_LEN);
 		else
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 	}
 
 	if ((retval = check_cmdb_comm_options(comp)) != 0)
@@ -220,17 +219,17 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 	retval = NONE;
 	if ((!(comp->name)) && (!(comp->id)) && (comp->type == 0) && 
 		(comp->action == 0))
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	else if (comp->action == AILSA_VERSION)
 		retval = AILSA_VERSION;
 	else if (comp->action == NONE)
-		retval = NO_ACTION;
+		retval = AILSA_NO_ACTION;
 	else if (comp->type == NONE)
-		retval = NO_TYPE;
+		retval = AILSA_NO_TYPE;
 	else if (comp->action == CMDB_LIST) {
 		if (comp->type == CONTACT) {
 			if ((!(comp->id)) && (!(comp->coid)))
-				retval = NO_COID;
+				retval = AILSA_NO_COID;
 		} else if (comp->type == SERVICE) {
 			if (!(comp->id) && !(comp->name))
 				retval = AILSA_NO_NAME_OR_ID;
@@ -241,11 +240,11 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 	} else if (comp->action == CMDB_ADD) {
 		if (comp->type == CONTACT) {
 			if (!(comp->fullname))
-				retval = NO_CONT_NAME;
+				retval = AILSA_NO_CONTACT_NAME;
 			else if (!(comp->email))
-				retval = NO_EMAIL;
+				retval = AILSA_NO_EMAIL_ADDRESS;
 			else if (!(comp->phone))
-				retval = NO_PHONE;
+				retval = AILSA_NO_PHONE_NUMBER;
 		} else if (comp->type == SERVER) {
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
@@ -261,68 +260,68 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			}
 		} else if (comp->type == SERVICE_TYPE) {
 			if (!(comp->detail))
-				retval = NO_DETAIL;
+				retval = AILSA_NO_DETAIL;
 			else if (!(comp->service))
-				retval = NO_SERVICE;
+				retval = AILSA_NO_SERVICE;
 		} else if (comp->type == HARDWARE_TYPE) {
 			if (!(comp->hclass))
-				retval = NO_CLASS;
+				retval = AILSA_NO_CLASS;
 			else if (!(comp->shtype))
-				retval = NO_TYPE;
+				retval = AILSA_NO_TYPE;
 		} else if (comp->type == VM_HOST) {
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
 			else if (!(comp->shtype))
-				retval = NO_VHOST_TYPE;
+				retval = AILSA_NO_VHOST_TYPE;
 		} else if (comp->type == HARDWARE) {
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
 			else if (!(comp->detail))
-				retval = NO_DETAIL;
+				retval = AILSA_NO_DETAIL;
 			else if (!(comp->device))
-				retval = NO_DEVICE;
+				retval = AILSA_NO_DEVICE;
 			else if (!(comp->hclass) && !(comp->sid))
-				retval = NO_ID_OR_CLASS;
+				retval = AILSA_NO_ID_OR_CLASS;
 		} else if (comp->type == SERVICE) {
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
 			else if (!(comp->detail))
-				retval = NO_DETAIL;
+				retval = AILSA_NO_DETAIL;
 			else if (!(comp->url))
-				retval = NO_SERVICE_URL;
+				retval = AILSA_NO_SERVICE_URL;
 			else if (!(comp->service))
-				retval = NO_SERVICE;
+				retval = AILSA_NO_SERVICE;
 		} else if (comp->type == CUSTOMER) {
 			if (!(comp->fullname))
 				retval = AILSA_NO_NAME;
 			else if (!(comp->coid))
-				retval = NO_COID;
+				retval = AILSA_NO_COID;
 			else if (!(comp->county))
-				retval = NO_COUNTY;
+				retval = AILSA_NO_COUNTY;
 			else if (!(comp->address))
-				retval = CBC_NO_ADDRESS;
+				retval = AILSA_NO_ADDRESS;
 			else if (!(comp->city))
-				retval = NO_CITY;
+				retval = AILSA_NO_CITY;
 			else if (!(comp->postcode))
-				retval = NO_POSTCODE;
+				retval = AILSA_NO_POSTCODE;
 		}
 	} else if (comp->action == CMDB_DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {
-			retval = WRONG_TYPE_FOR_DISPLAY;
+			retval = AILSA_WRONG_TYPE_DISPLAY;
 		} else if (comp->type == CUSTOMER) {
 			if (!comp->coid)
-				retval = NO_COID;
+				retval = AILSA_NO_COID;
 		} else if (!comp->name) {
 			retval = AILSA_NO_NAME;
 		}
 	} else if (comp->action  == CMDB_VIEW_DEFAULT) {
 		if (comp->type != CUSTOMER)
-			retval = WRONG_TYPE;
+			retval = AILSA_WRONG_TYPE;
 	} else if (comp->action == CMDB_DEFAULT) {
 		if (!(comp->coid))
-			retval = NO_COID;
+			retval = AILSA_NO_COID;
 		else if (comp->type != CUSTOMER)
-			retval = WRONG_TYPE;
+			retval = AILSA_WRONG_TYPE;
 	} else if ((!(comp->name)) && (!(comp->id)) && 
 		(comp->type != NONE || comp->action != NONE) &&
 		((comp->type != CONTACT) && (comp->type != CUSTOMER))) {
@@ -332,7 +331,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			if ((!(comp->id)) && (!(comp->coid)) && (!(comp->name)))
 				retval = AILSA_NO_NAME_OR_ID;
 			else if ((!(comp->service)) && (!(comp->url)) && (comp->force != 1))
-				retval = NO_SERVICE_URL;
+				retval = AILSA_NO_SERVICE_URL;
 		} else if (comp->type == SERVER) {
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
@@ -340,7 +339,7 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 			if (!(comp->name))
 				retval = AILSA_NO_NAME;
 			else if ((!(comp->device)) && (!(comp->detail)))
-				retval = NO_DEVICE | NO_DETAIL;
+				retval = AILSA_NO_DEVICE_DETAIL;
 		}
 	}
 	return retval;
@@ -355,66 +354,66 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp)
 	if (comp->vmhost)
 		if ((ailsa_validate_input(comp->vmhost, DOMAIN_REGEX) != 0) &&
 		    (ailsa_validate_input(comp->vmhost, NAME_REGEX) != 0))
-			return USER_INPUT_INVALID;
+			return VMHOST_INVALID;
 	if (comp->vendor)
 		if (ailsa_validate_input(comp->vendor, CUSTOMER_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return VENDOR_INVALID;
 	if (comp->make)
 		if (ailsa_validate_input(comp->make, CUSTOMER_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return MAKE_INVALID;
 	if (comp->model)
 		if (ailsa_validate_input(comp->model, CUSTOMER_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return MODEL_INVALID;
 	if (comp->uuid)
 		if (ailsa_validate_input(comp->uuid, UUID_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return UUID_INPUT_INVALID;
 	if (comp->name)
 		if (ailsa_validate_input(comp->name, NAME_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return HOST_INPUT_INVALID;
 	if (comp->fullname)
 		if (ailsa_validate_input(comp->fullname, CUSTOMER_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return CUSTOMER_NAME_INVALID;
 	if (comp->address)
 		if (ailsa_validate_input(comp->address, ADDRESS_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return ADDRESS_INVALID;
 	if (comp->city)
 		if (ailsa_validate_input(comp->city, ADDRESS_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return CITY_INVALID;
 	if (comp->email)
 		if (ailsa_validate_input(comp->email, EMAIL_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return EMAIL_ADDRESS_INVALID;
 	if (comp->detail)
 		if ((ailsa_validate_input(comp->detail, MAC_REGEX) != 0) &&
 		    (ailsa_validate_input(comp->detail, ADDRESS_REGEX) != 0) &&
 		    (ailsa_validate_input(comp->detail, CUSTOMER_REGEX) != 0))
-			return USER_INPUT_INVALID;
+			return DETAIL_INVALID;
 	if (comp->hclass)
 		if (ailsa_validate_input(comp->hclass, CUSTOMER_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return HCLASS_INVALID;
 	if (comp->url)
 		if (ailsa_validate_input(comp->url, URL_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return URL_INVALID;
 	if (comp->device)
 		if (ailsa_validate_input(comp->device, DEV_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return DEVICE_INVALID;
 	if (comp->phone)
 		if (ailsa_validate_input(comp->phone, PHONE_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return PHONE_NUMBER_INVALID;
 	if (comp->postcode)
 		if (ailsa_validate_input(comp->postcode, POSTCODE_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return POSTCODE_INVALID;
 	if (comp->county)
 		if (ailsa_validate_input(comp->county, ADDRESS_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return COUNTY_INVALID;
 	if (comp->coid)
 		if (ailsa_validate_input(comp->coid, COID_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return COID_INVALID;
 	if (comp->service)
 		if (ailsa_validate_input(comp->service, NAME_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return SERVICE_INPUT_INVALID;
 	if (comp->shtype)
 		if (ailsa_validate_input(comp->shtype, ADDRESS_REGEX) != 0)
-			return USER_INPUT_INVALID;
+			return TYPE_INVALID;
 	return 0;
 }
 

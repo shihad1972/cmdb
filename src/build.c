@@ -43,7 +43,6 @@
 #include <arpa/inet.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "build.h"
 
@@ -689,7 +688,7 @@ cbc_write_dhcp_config_file(char *filename, AILLIST *dhcp)
 	retval = 0;
 	if ((fd = open(filename, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open dhcp config file %s: %s", filename, strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		return retval;
 	}
 	while (e) {
@@ -825,7 +824,7 @@ cbc_write_tftp_config_file(cbc_comm_line_s *cml, char *filename, ailsa_tftp_s *t
 	retval = 0;
 	if ((fd = open(filename, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open tftp config file %s: %s", filename, strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		return retval;
 	}
 	dprintf(fd, "\
@@ -958,7 +957,7 @@ write_preseed_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	}
 	if ((fd = open(file, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open preseed build file %s for writing: %s", file, strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		goto cleanup;
 	}
 	if ((retval = write_preseed_net_mirror(fd, bld)) != 0)
@@ -1349,7 +1348,7 @@ cbc_write_script_file(char *file, char *host, AILLIST *domain, AILLIST *sys)
 	retval = 0;
 	if ((fd = open(file, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open file %s for writing", file);
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		return retval;
 	}
 	dprintf(fd, "\
@@ -1523,7 +1522,7 @@ cbc_fill_partition_details(AILLIST *list, AILLIST *dest)
 	size_t total = 6;
 	if ((list->total == 0) || ((list->total % total) != 0)) {
 		ailsa_syslog(LOG_ERR, "list in cbc_fill_partition_details has wrong length %zu", list->total);
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	}
 	while (e) {
 		p = ailsa_calloc(sizeof(ailsa_partition_s), "p in cbc_fill_partition_details");
@@ -1558,7 +1557,7 @@ cbc_fill_sys_pack_details(AILLIST *sys, AILLIST *pack, ailsa_build_s *bld)
 	ailsa_data_s *d;
 
 	if ((sys->total % total) != 0)
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	if (sys->total == 0)
 		return 0;
 	e = sys->head;
@@ -1615,7 +1614,7 @@ cbc_fill_system_scripts(AILLIST *list, AILLIST *dest)
 		return AILSA_NO_DATA;
 	size_t total = 3;
 	if ((list->total % total) != 0)
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	int retval = 0;
 	AILELEM *e = list->head;
 	ailsa_sysscript_s *sys;
@@ -1705,7 +1704,7 @@ write_kickstart_build_file(ailsa_cmdb_s *cmc, cbc_comm_line_s *cml)
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
 	if ((fd = open(file, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open kickstart build file %s for writing: %s", file, strerror(errno));
-		retval = FILE_O_FAIL;
+		retval = AILSA_FILE_ERROR;
 		goto cleanup;
 	}
 	if ((retval = cbc_write_kickstart_base(cmc, cml->name, fd, locale)) != 0)
@@ -1750,7 +1749,7 @@ cbc_write_kickstart_base(ailsa_cmdb_s *cmc, char *name, int fd, AILLIST *list)
 	size_t total = 4;
 
 	if ((list->total == 0) || ((list->total % total) != 0))
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	d = list->head->next->data;
 	lang = d->data->text;
 	d = list->head->next->next->data;

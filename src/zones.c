@@ -41,7 +41,6 @@
 #include <errno.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_dnsa.h"
 
 static void
@@ -473,7 +472,7 @@ check_zone(char *domain, ailsa_cmdb_s *dc)
 	snprintf(command, CONFIG_LEN, "%s %s %s%s", dc->chkz, domain, dc->dir, domain);
 	retval = system(syscom);
 	if (retval != 0)
-		retval = CHKZONE_FAIL;
+		retval = AILSA_CHKZONE_FAIL;
 	return retval;
 }
 
@@ -845,10 +844,13 @@ mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		goto cleanup;
 	}
 	ailsa_list_clean(r);
-	if (inet_pton(AF_INET, cm->dest, &ip_addr))
+	if (inet_pton(AF_INET, cm->dest, &ip_addr)) {
 		ip = (unsigned long int)htonl(ip_addr);
-	else
-		return USER_INPUT_INVALID;
+	} else {
+		ailsa_syslog(LOG_ERR, "Cannot convert IP address: %s", cm->dest);
+		retval =  DEST_INPUT_INVALID;
+		goto cleanup;
+	}
 	if ((retval = cmdb_add_number_to_list(ip, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add network IP address to list");
 		goto cleanup;
@@ -949,7 +951,7 @@ add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		break;
 	default:
 		ailsa_syslog(LOG_ERR, "Wrong number in list record list: %zu", rec->total);
-		retval = WRONG_LENGTH_LIST;
+		retval = AILSA_WRONG_LIST_LENGHT;
 		goto cleanup;
 	}
 	if ((retval = ailsa_insert_query(dc, query, rec)) != 0) {
@@ -1195,7 +1197,7 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		break;
 	default:
 		ailsa_syslog(LOG_INFO, "Got %zu numbers in list?");
-		retval = WRONG_LENGTH_LIST;
+		retval = AILSA_WRONG_LIST_LENGHT;
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(dc, query, rec, list)) != 0) {
@@ -1436,7 +1438,7 @@ cmdb_trim_record_list(AILLIST *r, AILLIST *p)
 	if ((r->total == 0) || (p->total == 0))
 		return retval;
 	if (((r->total % rec_tot) != 0) || ((p->total % pref_tot) != 0))
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	if (!(r->destroy))
 		return AILSA_LIST_NO_DESTROY;
 	pref = p->head;
@@ -1488,7 +1490,7 @@ cmdb_records_to_remove(char *range, AILLIST *rec, AILLIST *rev, AILLIST *remove)
 	size_t rec_tot = 4;
 	size_t rev_tot = 2;
 	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	char *fqdn = ailsa_calloc(DOMAIN_LEN, "fqdn in cmdb_records_to_remove");
 	size_t len = strlen(range);
 	size_t gap = MAC_LEN - len;
@@ -1593,7 +1595,7 @@ cmdb_records_to_add(char *range, AILLIST *rec, AILLIST *rev, AILLIST *add)
 	if ((rev->total == 0) || (rev->total == 0))
 		return retval;
 	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
-		return WRONG_LENGTH_LIST;
+		return AILSA_WRONG_LIST_LENGHT;
 	ce = rec->head;
 	while (ce) {
 		ve = rev->head;

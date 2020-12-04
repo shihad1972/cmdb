@@ -30,7 +30,6 @@
 #include <syslog.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include <cmdb.h>
 #include <cmdb_cmdb.h>
 
 static int
@@ -128,7 +127,7 @@ cmdb_server_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -161,7 +160,7 @@ cmdb_customer_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -182,7 +181,7 @@ cmdb_contact_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -203,7 +202,7 @@ cmdb_service_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -224,7 +223,7 @@ cmdb_hardware_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -248,7 +247,7 @@ cmdb_vm_host_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -269,7 +268,7 @@ cmdb_service_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;
@@ -290,7 +289,7 @@ cmdb_hardware_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		break;
 	default:
 		display_type_error(cm->type);
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 		break;
 	}
 	return retval;

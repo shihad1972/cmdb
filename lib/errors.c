@@ -257,78 +257,64 @@ display_command_line_error(int retval, char *program)
 	}
 	if (retval == AILSA_NO_NAME)
 		fprintf(stderr, "No name specified with -n.\n");
-	else if (retval == NO_ID)
-		fprintf(stderr, "No ID specified with -i.\n");
-	else if (retval == NO_TYPE)
+	else if (retval == AILSA_NO_TYPE)
 		fprintf(stderr, "No type specified on command line.\n");
-	else if (retval == NO_ACTION)
+	else if (retval == AILSA_NO_ACTION)
 		fprintf(stderr, "No action specified on command line.\n");
-	else if (retval == WRONG_ACTION)
+	else if (retval == AILSA_WRONG_ACTION)
 		fprintf(stderr, "Unable to complete this action.\n");
 	else if (retval == AILSA_NO_NAME_OR_ID)
 		fprintf(stderr, "No name or ID specified on command line.\n");
-	else if (retval == GENERIC_ERROR)
-		fprintf(stderr, "Unknown command line option.\n");
-	else if (retval == NO_SERVICE)
+	else if (retval == AILSA_NO_SERVICE)
 		fprintf(stderr, "No service provided on command line\n");
-	else if (retval == NO_DETAIL)
+	else if (retval == AILSA_NO_DETAIL)
 		fprintf(stderr, "No detail provided on command line\n");
-	else if (retval == NO_DEVICE)
+	else if (retval == AILSA_NO_DEVICE)
 		fprintf(stderr, "No device provided on command line\n");
-	else if (retval == NO_VHOST_TYPE)
+	else if (retval == AILSA_NO_VHOST_TYPE)
 		fprintf(stderr, "No virtual machine host type specified on command line\n");
-	else if (retval == NO_ID_OR_CLASS)
+	else if (retval == AILSA_NO_ID_OR_CLASS)
 		fprintf(stderr, "No hardware ID or class was specified on command line\n");
-	else if (retval == NO_DOMAIN_NAME)
+	else if (retval == AILSA_NO_DOMAIN_NAME)
 		fprintf(stderr, "No domain specified on command line.\n");
-	else if (retval == NO_IP_ADDRESS)
+	else if (retval == AILSA_NO_IP_ADDRESS)
 		fprintf(stderr, "No IP address specified on command line.\n");
-	else if (retval == NO_HOST_NAME)
+	else if (retval == AILSA_NO_HOST_NAME)
 		fprintf(stderr, "No hostname specified on command line.\n");
-	else if (retval == NO_RECORD_TYPE) 
+	else if (retval == AILSA_NO_RECORD_TYPE) 
 		fprintf(stderr, "No record type specified on command line.\n");
-	else if (retval == NO_UUID)
-		fprintf(stderr, "No UUID specified on command line.\n");
-	else if (retval == NO_MAKE)
-		fprintf(stderr, "No make specified on command line.\n");
-	else if (retval == NO_MODEL)
-		fprintf(stderr, "No model specified on command line.\n");
-	else if (retval == NO_CLASS)
+	else if (retval == AILSA_NO_CLASS)
 		fprintf(stderr, "No hardware class specified on command line.\n");
-	else if (retval == NO_VENDOR)
-		fprintf(stderr, "No vendor specified on command line.\n");
-	else if (retval == CBC_NO_ADDRESS)
+	else if (retval == AILSA_NO_ADDRESS)
 		fprintf(stderr, "No address specified on command line.\n");
-	else if (retval == NO_CITY)
+	else if (retval == AILSA_NO_CITY)
 		fprintf(stderr, "No city specified on command line.\n");
-	else if (retval == NO_COUNTY)
+	else if (retval == AILSA_NO_COUNTY)
 		fprintf(stderr, "No county specified on command line.\n");
-	else if (retval == NO_POSTCODE)
+	else if (retval == AILSA_NO_POSTCODE)
 		fprintf(stderr, "No postcode specified on command line.\n");
-	else if (retval == NO_COID)
+	else if (retval == AILSA_NO_COID)
 		fprintf(stderr, "No coid specified on command line.\n");
-	else if (retval == NO_NAME_COID)
-		fprintf(stderr, "No server name or customer coid was specified.\n");
 	else if (retval == NO_CONT_NAME)
 		fprintf(stderr, "No name specified with -N.\n");
 	else if (retval == NO_SERVICE_URL)
 		fprintf(stderr, "A service name or URL was not specified\n\
 If you wish to remove all services (for a server or customer) add the -f option\n");
-	else if (retval == NO_PHONE)
+	else if (retval == AILSA_NO_PHONE_NUMBER)
 		fprintf(stderr, "No phone no. specified with -P.\n");
 	else if (retval == NO_PACKAGE)
 		fprintf(stderr, "No package supplied.\n");
 	else if (retval == NO_OS_COMM)
 		fprintf(stderr, "No os or alias supplied.\n");
-	else if (retval == NO_VARIENT)
+	else if (retval == AILSA_NO_VARIENT)
 		fprintf(stderr, "No varient or valias supplied.\n");
-	else if (retval == NO_EMAIL)
+	else if (retval == AILSA_NO_EMAIL_ADDRESS)
 		fprintf(stderr, "No email address specified with -E.\n");
 	else if (retval == WRONG_TYPE_FOR_DISPLAY)
 		fprintf(stderr, "Cannot display this type in cmdb\n");
 	else if (retval == DOMAIN_AND_IP_GIVEN)
 		fprintf(stderr, "Both domain name and IP given on command line.\n");
-	else if (retval == NO_DOMAIN_OR_NAME)
+	else if (retval == AILSA_NO_DOMAIN_OR_NAME)
 		ailsa_syslog(LOG_ERR, "Neither build domaion nor script name was provided");
 	else if (retval == NO_PARTITION_INFO)
 		fprintf(stderr, "No partition information on command line.\n");
@@ -336,17 +322,13 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		fprintf(stderr, "No scheme name was supplied on the command line.\n");
 	else if (retval == NO_OS_SPECIFIED)
 		fprintf(stderr, "No OS or not enough OS options supplied on command line.\n");
-	else if (retval == NO_BUILD_DOMAIN)
+	else if (retval == AILSA_NO_BUILD_DOMAIN)
 		fprintf(stderr, "No Build Domain supplied on command line\n");
-	else if (retval == NO_BUILD_VARIENT)
-		fprintf(stderr, "No Build Varient supplied on command line\n");
-	else if (retval == NO_BUILD_PARTITION)
-		fprintf(stderr, "No Build Partition Scheme supplied on command line\n");
 	else if (retval == NO_MOD_BUILD_DOM_NET)
 		fprintf(stderr, "Cowardly refusal to modify network settings for build domain\n");
 	else if (retval == MULTI_BUILD_DOM_APP_MOD)
 		fprintf(stderr, "Cowardly refusal to modify multiple application settings\n");
-	else if (retval == NO_MASTER)
+	else if (retval == AILSA_NO_MASTER)
 		fprintf(stderr, "Slave zone specified but no master IP given\n");
 	else if (retval == NO_MASTER_NAME)
 		fprintf(stderr, "Slave zone specified but no master name given\n");
@@ -390,7 +372,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 // End
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
-	else if (retval == DISPLAY_USAGE) {
+	else if (retval == AILSA_DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONFIG_LEN) == 0) || (strncmp(program, "cmdb2", CONFIG_LEN) == 0))
 			display_cmdb_usage();
 		else if ((strncmp(program, "cbc", CONFIG_LEN) == 0))
@@ -448,6 +430,54 @@ ailsa_comm_line_strerror(int error)
 		return "Glue IP address was invalid";
 	case GLUE_NS_INPUT_INVALID:
 		return "Glue hostname was invalid";
+	case UUID_INPUT_INVALID:
+		return "UUID supplied was invalid";
+	case NAME_REGEX_INVALID:
+		return "Name supplied was invalid";
+	case OS_INVALID:
+		return "Operating System supplied was invalid";
+	case OS_VERSION_INVALID:
+		return "Operating System version was invalid";
+	case PART_SCHEME_INVALID:
+		return "Partition scheme name was invalid";
+	case VARIENT_INVALID:
+		return "Varient name supplied was invalid";
+	case ARCH_INVALID:
+		return "Architecture supplied was invalid";
+	case NET_CARD_INVALID:
+		return "Network card device name was invalid";
+	case HARD_DISK_INVALID:
+		return "Hard disk device name was invalid";
+	case CONFIG_INVALID:
+		return "Config file path was invalid";
+	case LOCALE_INVALID:
+		return "Locale name supplied was invalid";
+	case PROTOCOL_INVALID:
+		return "Protocol supplied was neither tcp nor udp";
+	case VMHOST_INVALID:
+		return "VM hostname supplied was invalid";
+	case MAKE_INVALID:
+		return "Make supplied was invalid";
+	case VENDOR_INVALID:
+		return "Vendor supplied was invalid";
+	case CUSTOMER_NAME_INVALID:
+		return "Customer name supplied was invalid";
+	case ADDRESS_INVALID:
+		return "Address supplied was invalid";
+	case CITY_INVALID:
+		return "City supplied was invalid";
+	case EMAIL_ADDRESS_INVALID:
+		return "Email address supplied was invalid";
+	case DETAIL_INVALID:
+		return "Service or hardware detail was invalid";
+	case HCLASS_INVALID:
+		return "Hardware class supplied was invalid";
+	case URL_INVALID:
+		return "URL specified was invalid";
+	case TYPE_INVALID:
+		return "VM host or hardware type supplied was invalid";
+	case IP_INVALID:
+		return "IP Supplied is invalid";
 	default:
 		return "Unknown command line error";
 	}
@@ -504,15 +534,14 @@ display_cbc_usage(void)
 	printf("-r: remove build for server\n-u: show defaults\n");
 	printf("-w: write build files\n\n");
 	printf("Display and write options:\n");
-	printf("cbc ( -d | -w ) ( -n | -i ) <server specifier>\n\n");
+	printf("cbc ( -d | -w ) -n <server name>\n\n");
 	printf("Remove options:\n");
-	printf("cbc -r [ -g ] ( -n | -i | -u ) <server specifier>\n");
+	printf("cbc -r [ -g ] -n <server name>\n");
 	printf("-g will remove the build IP from DB. Dangerous if server is still online\n\n");
 	printf("Create and modify options:\n");
 	printf("cbc ( -a | -m ) -o<OS> -s<version> -t<arch> -b<domain> -x");
 	printf("<varient> -e<locale_id>\n -p<scheme> -k<network device> -j<hardisk device> ");
-	printf("(-n | -i ) ");
-	printf("<server_specifier>\n\n");
+	printf("-n <server name>\n\n");
 	printf("The various associated programs will give you the names ");
 	printf("for these options.\n\n");
 	printf("cbcos cbcdomain cbcvarient cbcpart cbclocale\n");

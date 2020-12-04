@@ -28,14 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ailsacmdb.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #include "build.h"
 
 int
 main(int argc, char *argv[])
 {
-	char sretval[CONFIG_LEN];
 	int retval = NONE;
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbc_comm_line_s *cml = ailsa_calloc(sizeof(cbc_comm_line_s), "cml in main");
@@ -69,12 +67,8 @@ main(int argc, char *argv[])
 		printf("Case %d not implemented yet\n", cml->action);
 	ailsa_clean_cmdb(cmc);
 	clean_cbc_comm_line(cml);
-	if (retval == DISPLAY_USAGE)
+	if (retval == AILSA_DISPLAY_USAGE)
 		retval = NONE;
-	if (retval != NONE) {
-		get_error_string(retval, sretval);
-		report_error(CREATE_BUILD_FAILED, sretval);
-	}
 	exit(retval);
 }
 

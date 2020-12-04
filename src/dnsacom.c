@@ -39,7 +39,6 @@
 # define _GNU_SOURCE
 # include <getopt.h>
 #endif // H)AVE_GETOPT_H
-#include "cmdb.h"
 #include <ailsacmdb.h>
 #include "cmdb_dnsa.h"
 
@@ -170,7 +169,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 				comp->protocol = strdup("tcp");
 			} else if (!((strncmp(comp->protocol, "tcp", BYTE_LEN) == 0) ||
 			     (strncmp(comp->protocol, "udp", BYTE_LEN) == 0)))
-				report_error(USER_INPUT_INVALID, "protocol");
+				return PROTOCOL_INVALID;
 			if (comp->prefix == 0) {
 				ailsa_syslog(LOG_INFO, "No priority provided with -p. Setting to 100!\n");
 				comp->prefix = 100;
@@ -183,36 +182,36 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	}
 	if (comp->ztype) {
 		if (!(comp->master))
-			retval = NO_MASTER;
+			retval = AILSA_NO_MASTER;
 	}
 	if ((comp->action == NONE) && (comp->type == NONE) && (!(comp->domain)))
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	else if (comp->action == AILSA_VERSION)
 		retval = AILSA_VERSION;
 	else if (comp->action == NONE)
-		retval = NO_ACTION;
+		retval = AILSA_NO_ACTION;
 	else if (comp->type == NONE)
-		retval = NO_TYPE;
+		retval = AILSA_NO_TYPE;
 	else if ((!(comp->domain)) && (comp->action != DNSA_LIST)
 		  && (comp->action != DNSA_DISPLAY_MULTI) && (comp->action != DNSA_DPREFA)
 		  && (comp->action != DNSA_COMMIT))
-		retval = NO_DOMAIN_NAME;
+		retval = AILSA_NO_DOMAIN_NAME;
 	else if ((comp->action == DNSA_DISPLAY_MULTI) && (!(comp->domain)) && (!(comp->dest)))
-		retval = NO_DOMAIN_NAME;
+		retval = AILSA_NO_DOMAIN_NAME;
 	else if ((comp->action == DNSA_DISPLAY_MULTI) && (comp->domain) && (comp->dest))
-		retval = DOMAIN_AND_IP_GIVEN;
+		retval = AILSA_DOMAIN_AND_IP_GIVEN;
 	else if ((comp->action == DNSA_AHOST) && (!(comp->dest)))
-		retval = NO_IP_ADDRESS;
+		retval = AILSA_NO_IP_ADDRESS;
 	else if (((comp->action == DNSA_AHOST) || (comp->action == DNSA_DREC) ||
 	      (comp->action == DNSA_CNAME)) && (!(comp->host)))
-		retval = NO_HOST_NAME;
+		retval = AILSA_NO_HOST_NAME;
 	else if (comp->action == DNSA_AHOST && (!(comp->rtype)))
-		retval = NO_RECORD_TYPE;
+		retval = AILSA_NO_RECORD_TYPE;
 	else if ((comp->action == DNSA_AZONE && comp->type == REVERSE_ZONE && comp->prefix == 0))
-		retval = NO_PREFIX;
+		retval = AILSA_NO_PREFIX;
 	else if ((comp->type == GLUE_ZONE) && (!(comp->glue_ns)) && (comp->action == DNSA_AZONE))
-		retval = NO_GLUE_NS;
-	if (retval == NO_GLUE_NS) {
+		retval = AILSA_NO_GLUE_NS;
+	if (retval == AILSA_NO_GLUE_NS) {
 		comp->glue_ns = strdup("ns1,ns2");
 		retval = NONE;
 	}
@@ -222,175 +221,20 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 }
 
 int
-parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config)
-{
-	int retval = 0;
-	FILE *cnf;
-#ifdef HAVE_WORDEXP_H
-	char **uconf;
-	wordexp_t p;
-#endif /* HAVE_WORDEXP_H */
-
-	dc->port = 3306;
-	dc->cliflag = 0;
-
-	if (!(cnf = fopen(config, "r"))) {
-		fprintf(stderr, "Cannot open config file %s\n", config);
-		retval = CONF_ERR;
-	} else {
-		read_dnsa_config_values(dc, cnf);
-		fclose(cnf);
-	}
-#ifdef HAVE_WORDEXP
-	if ((retval = wordexp("~/.dnsa.conf", &p, 0)) == 0) {
-		uconf = p.we_wordv;
-		if ((cnf = fopen(*uconf, "r"))) {
-			read_dnsa_config_values(dc, cnf);
-			fclose(cnf);
-		}
-		wordfree(&p);
-	}
-#endif /* HAVE_WORDEXP */
-	if ((retval = ailsa_add_trailing_slash(dc->dir)) != 0)
-		return DIR_ERR;
-	if ((retval = ailsa_add_trailing_slash(dc->bind)) != 0)
-		return BIND_ERR;
-	if ((retval = ailsa_add_trailing_dot(dc->hostmaster)) != 0)
-		return HOSTM_ERR;
-	return retval;
-}
-
-int
-read_dnsa_config_values(ailsa_cmdb_s *dc, FILE *cnf)
-{
-	char buff[CONFIG_LEN] = "";
-	char port[SERVICE_LEN] = "";
-	char refresh[MAC_LEN] = "";
-	char retry[MAC_LEN] = "";
-	char expire[MAC_LEN] = "";
-	char ttl[MAC_LEN] = "";
-	char *hostmaster;
-	int retval = 0;
-	unsigned long int portno;
-	
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "DBTYPE=%s", dc->dbtype);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "PASS=%s", dc->pass);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "FILE=%s", dc->file);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "HOST=%s", dc->host);	
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "USER=%s", dc->user);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "DB=%s", dc->db);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "SOCKET=%s", dc->socket);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "PORT=%s", port);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "DIR=%s", dc->dir);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "BIND=%s", dc->bind);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "REV=%s", dc->rev);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "DNSA=%s", dc->dnsa);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "RNDC=%s", dc->rndc);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "CHKZ=%s", dc->chkz);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN, cnf)))
-		sscanf(buff, "CHKC=%s", dc->chkc);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "REFRESH=%s", refresh);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "RETRY=%s", retry);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "EXPIRE=%s", expire);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "TTL=%s", ttl);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "PRIDNS=%s", dc->pridns);
-	rewind(cnf);
-	while ((fgets(buff, MAC_LEN, cnf)))
-		sscanf(buff, "SECDNS=%s", dc->secdns);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
-		sscanf(buff, "HOSTMASTER=%s", dc->hostmaster);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
-		sscanf(buff, "PRINS=%s", dc->prins);
-	rewind(cnf);
-	while ((fgets(buff, CONFIG_LEN - 1, cnf)))
-		sscanf(buff, "SECNS=%s", dc->secns);
-	rewind(cnf);
-	retval = NONE;
-
-	portno = strtoul(port, NULL, 10);
-	if (portno > 65535) {
-		retval = PORT_ERR;
-	} else {
-		dc->port = (unsigned int) portno;
-	}
-	if (strlen(refresh) > 0)
-		dc->refresh = strtoul(refresh, NULL, 10);
-	if (strlen(retry) > 0)
-		dc->retry = strtoul(retry, NULL, 10);
-	if (strlen(expire) > 0)
-		dc->expire = strtoul(expire, NULL, 10);
-	if (strlen(ttl) > 0)
-		dc->ttl = strtoul(ttl, NULL, 10);
-	hostmaster = strchr(dc->hostmaster, '@');
-	if (hostmaster)
-		*hostmaster = '.';
-	return retval;
-}
-
-void
-parse_dnsa_config_error(int error)
-{
-	if (error == PORT_ERR)
-		fprintf(stderr, "Port higher than 65535!\n");
-	else if (error == DIR_ERR)
-		fprintf(stderr, "Cannot add trailing / to DIR: > 79 characters\n");
-	else if (BIND_ERR)
-		fprintf(stderr, "Cannot add trailing / to BIND: > 79 characters\n");
-}
-
-int
 validate_comm_line(dnsa_comm_line_s *comm)
 {
 	int retval = 0;
 	
 	if ((comm->action == DNSA_LIST) || (comm->action == DNSA_COMMIT))
 		return retval;
-	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE))
+	if ((comm->type == FORWARD_ZONE) || (comm->type == GLUE_ZONE)) {
 		retval = validate_fwd_comm_line(comm);
-	else if (comm->type == REVERSE_ZONE)
+	} else if (comm->type == REVERSE_ZONE) {
 		retval = validate_rev_comm_line(comm);
-	else
-		report_error(UNKNOWN_ZONE_TYPE, "validate_comm_line");
+	} else {
+		ailsa_syslog(LOG_ERR, "Unknown zone type %d", comm->type);
+		retval = AILSA_UNKNOWN_ZONE_TYPE;
+	}
 	return retval;
 }
 
@@ -506,8 +350,10 @@ validate_glue_comm_line(dnsa_comm_line_s *comm)
 
 	dlen = strlen(regexps[DOMAIN_REGEX]);
 	ilen = strlen(regexps[IP_REGEX]);
-	if ((ilen + dlen + 4) > CONFIG_LEN)
-		report_error(BUFFER_TOO_SMALL, "regex in validate_glue_comm_line");
+	if ((ilen + dlen + 4) > CONFIG_LEN) {
+		ailsa_syslog(LOG_ERR, "Buffer too small for regexs in validate_glue_comm_line");
+		return AILSA_BUFFER_TOO_SMALL;
+	}
 	regex = ailsa_calloc(CONFIG_LEN, "regex in validate_glue_comm_line");
 	if (comm->glue_ip) {
 		if (strchr(comm->glue_ip, ',')) {

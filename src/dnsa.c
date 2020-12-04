@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ailsacmdb.h>
-#include "cmdb.h"
 #include "cmdb_dnsa.h"
 
 static void

@@ -46,12 +46,6 @@ int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
 // Grab config values from file
 int
-parse_dnsa_config_file(ailsa_cmdb_s *dc, char *config);
-int
-read_dnsa_config_values(ailsa_cmdb_s *dc, FILE *cnf);
-void
-parse_dnsa_config_error(int error);
-int
 validate_comm_line(dnsa_comm_line_s *comm);
 int
 validate_fwd_comm_line(dnsa_comm_line_s *comm);

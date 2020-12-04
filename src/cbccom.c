@@ -39,21 +39,19 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
 #endif // HAVE_DNSA
 
-static void
+static int
 validate_cbc_comm_line(cbc_comm_line_s *cml);
 
 int
 parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 {
-	const char *optstr = "ab:de:ghi:j:k:lmn:o:p:qrs:t:uvwx:y";
+	const char *optstr = "ab:de:ghj:k:lmn:o:p:qrs:t:uvwx:y";
 	int retval, opt;
-	retval = NONE;
 #ifdef HAVE_GETOPT_H
 	int index;
 	struct option lopts[] = {
@@ -64,7 +62,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		{"display",		no_argument,		NULL,	'd'},
 		{"remove-ip",		no_argument,		NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
-		{"id",			required_argument,	NULL,	'i'},
 		{"hard-disk",		required_argument,	NULL,	'j'},
 		{"network-card",	required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
@@ -92,10 +89,6 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	{
 		if (opt == 'n') {
 			cb->name = strndup(optarg, CONFIG_LEN);
-			cb->server = NAME;
-		} else if (opt == 'i') {
-			cb->server_id = strtoul(optarg, NULL, 10);
-			cb->server = ID;
 		} else if (opt == 'u') {
 			cb->action = CMDB_DEFAULT;
 		} else if (opt == 'a') {
@@ -103,7 +96,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'd') {
 			cb->action = CMDB_DISPLAY;
 		} else if (opt == 'g') {
-			cb->removeip = TRUE;
+			cb->removeip = true;
 		} else if (opt == 'l') {
 			cb->action = CMDB_LIST;
 		} else if (opt == 'm') {
@@ -138,25 +131,25 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 		} else if (opt == 'v') {
 			cb->action = AILSA_VERSION;
 		} else if (opt == 'h') {
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else {
 			printf("Unknown option: %c\n", opt);
-			retval = DISPLAY_USAGE;
+			retval = AILSA_DISPLAY_USAGE;
 		}
 	}
 	if ((cb->action == NONE) && 
 	 (cb->server == NONE) &&
 	 (!(cb->action_type)))
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	else if (cb->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	else if (cb->action == CMDB_QUERY)
 		return NONE;
 	else if (cb->action == NONE)
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	else if ((cb->action != CMDB_LIST) && (cb->action != CMDB_DEFAULT) &&
 		 (cb->server == 0))
-		return NO_NAME_OR_ID;
+		return AILSA_NO_NAME_OR_ID;
 	if (cb->action == CMDB_ADD) {
 		if (!(cb->harddisk)) {
 			ailsa_syslog(LOG_INFO, "No disk provided. Setting to vda");
@@ -167,7 +160,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 			cb->netcard = strdup("eth0");
 		}
 	}
-	validate_cbc_comm_line(cb);
+	retval = validate_cbc_comm_line(cb);
 	return retval;
 }
 
@@ -213,46 +206,46 @@ print_cbc_command_line_values(cbc_comm_line_s *cml)
 	fprintf(stderr, "\n");
 }
 
-static void
+static int
 validate_cbc_comm_line(cbc_comm_line_s *cml)
 {
 	if (cml->uuid)
 		if (ailsa_validate_input(cml->uuid, UUID_REGEX) < 0)
-			if (ailsa_validate_input(cml->uuid, FS_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "uuid");
+			return UUID_INPUT_INVALID;
 	if (cml->name)
 		if (ailsa_validate_input(cml->name, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "name");
+			return NAME_REGEX_INVALID;
 	if (cml->os)
 		if (ailsa_validate_input(cml->os, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "os");
+			return OS_INVALID;
 	if (cml->os_version)
 		if (ailsa_validate_input(cml->os_version, OS_VER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "os version");
+			return OS_VERSION_INVALID;
 	if (cml->partition)
 		if (ailsa_validate_input(cml->partition, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "partition scheme");
+			return PART_SCHEME_INVALID;
 	if (cml->varient)
 		if (ailsa_validate_input(cml->varient, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "varient");
+			return VARIENT_INVALID;
 	if (cml->build_domain)
 		if (ailsa_validate_input(cml->build_domain, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "build domain");
+			return DOMAIN_INPUT_INVALID;
 	if (cml->arch)
 		if (ailsa_validate_input(cml->arch, CUSTOMER_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "architecture");
+			return ARCH_INVALID;
 	if (cml->netcard)
 		if (ailsa_validate_input(cml->netcard, DEV_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "network device");
+			return NET_CARD_INVALID;
 	if (cml->harddisk)
 		if (ailsa_validate_input(cml->harddisk, DEV_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "disk drive device");
+			return HARD_DISK_INVALID;
 	if (cml->config)
 		if (ailsa_validate_input(cml->config, PATH_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "config file path");
+			return CONFIG_INVALID;
 	if (cml->locale)
 		if (ailsa_validate_input(cml->locale, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "locale");
+			return LOCALE_INVALID;
+	return 0;
 }
 
 void
