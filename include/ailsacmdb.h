@@ -139,7 +139,6 @@ enum {                  // Action Codes
 	DNSA_DREC = 20,
 	DNSA_DPREFA = 21,
 	DNSA_CNAME = 22,
-	AILSA_DISPLAY_USAGE = 23,
 	DOWNLOAD = 31,
 	HELP = 32,
 	VERS = 33,
@@ -147,7 +146,8 @@ enum {                  // Action Codes
 	AILSA_ADD = 1,
 	AILSA_CMDB_ADD = 50,
 	AILSA_HELP = 100,
-	AILSA_VERSION = 101
+	AILSA_VERSION = 101,
+	AILSA_DISPLAY_USAGE = 102,
 };
 
 enum {                  // Error codes
