@@ -39,15 +39,6 @@ table has too much information in it. It would be better to be like system
 packages where there is an args and a conf table.
 
 03/05/2020
-Need to fix the error returns, as report_error does not free memory in use
-before exiting. The error report function should only report an error.
-The error code should be able to 'bubble up' from whatever function had an
-error, and get back to main, so we can free memory there.
-	** Update ** Should provide a different error function for the
-	   command line validation; can pass the REGEX number to get the
-	   correct error to display.
-
-03/05/2020
 Adding a system package in cbcsysp should not automatically configure the
 package. Indeed, it should check if the package is in the varient. This will
 obviously fail for packages that are part of a base install, and so those
@@ -341,3 +332,13 @@ In the sqlite setup functions (ailsa_setup_rw_sqlite and ailsa_setup_ro_sqlite)
 need to stop exiting in these functions. They should pass their error back up
 the function stack
 	*** Done. commit ID: bb2ecda ***
+
+03/05/2020
+Need to fix the error returns, as report_error does not free memory in use
+before exiting. The error report function should only report an error.
+The error code should be able to 'bubble up' from whatever function had an
+error, and get back to main, so we can free memory there.
+	** Update ** Should provide a different error function for the
+	   command line validation; can pass the REGEX number to get the
+	   correct error to display.
+	   	*** Done: Commit ID 0d2a63b ***
