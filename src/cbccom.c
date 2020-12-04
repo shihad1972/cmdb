@@ -148,7 +148,7 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	else if (cb->action == NONE)
 		return AILSA_NO_ACTION;
 	else if ((cb->action != CMDB_LIST) && (cb->action != CMDB_DEFAULT) &&
-		 (cb->server == 0))
+		 (cb->name == 0))
 		return AILSA_NO_NAME_OR_ID;
 	if (cb->action == CMDB_ADD) {
 		if (!(cb->harddisk)) {
