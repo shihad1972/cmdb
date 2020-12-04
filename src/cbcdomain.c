@@ -44,7 +44,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 #ifdef HAVE_DNSA
 # include "cmdb_dnsa.h"
@@ -53,7 +52,7 @@
 static int
 parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl);
 
-static void
+static int
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl);
 
 static int
@@ -135,8 +134,6 @@ main(int argc, char *argv[])
 
 	cbcdomain_clean_comm_line(cdcl);
 	ailsa_clean_cmdb(cmc);
-	if (retval > 0)
-		report_error(retval, argv[0]);
 	exit(retval);
 }
 
@@ -154,16 +151,17 @@ cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc)
 	my_free(cdc);
 }
 
-static void
+static int
 validate_cbcdomain_comm_line(cbcdomain_comm_line_s *cdl)
 {
 	if (cdl->ntpserver)
 		if (ailsa_validate_input(cdl->ntpserver, DOMAIN_REGEX) < 0)
 			if (ailsa_validate_input(cdl->ntpserver, IP_REGEX) < 0)
-				report_error(USER_INPUT_INVALID, "ntp server");
+				return NTP_SERVER_INVALID;
 	if (cdl->domain)
 		if (ailsa_validate_input(cdl->domain, DOMAIN_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "domain");
+			return DOMAIN_INPUT_INVALID;
+	return 0;
 }
 
 static int
@@ -223,30 +221,29 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 		} else if (opt == 'v') {
 			cdl->action = AILSA_VERSION;
 		} else if (opt == 'h') {
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else {
 			printf("Unknown option: %c\n", opt);
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
-	validate_cbcdomain_comm_line(cdl);
+	if ((retval = validate_cbcdomain_comm_line(cdl)) != 0)
+		return retval;
 	if (argc == 1)
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	if (cdl->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	if (cdl->action == NONE)
 		return AILSA_NO_ACTION;
 	if (cdl->action != CMDB_LIST && cdl->action != CMDB_WRITE &&
 	     !(cdl->domain))
-		return NO_DOMAIN_NAME;
+		return AILSA_NO_BUILD_DOMAIN;
 	if ((cdl->action == CMDB_MOD) && ((cdl->start_ip != 0) ||
 		                            (cdl->end_ip != 0) ||
 		                            (cdl->netmask != 0) ||
 		                            (cdl->gateway != 0) ||
 		                            (cdl->ns != 0)))
-		return NO_MOD_BUILD_DOM_NET;
-	if ((cdl->action == CMDB_MOD) && (cdl->confntp == 0))
-		return NO_NTP_SERVER;
+		return AILSA_NO_MOD_BUILD_DOM_NET;
 	return retval;
 }
 
@@ -264,14 +261,14 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 			*tmp = '\0';
 			tmp++;
 		} else {
-			return USER_INPUT_INVALID;
+			return BUILD_DOMAIN_NETWORK_INVALID;
 		}
 		if (ailsa_validate_input(ip, IP_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "network");
+			return BUILD_DOMAIN_NETWORK_INVALID;
 		if (inet_pton(AF_INET, ip, &ip_addr))
 			ips[i] = (unsigned long int) htonl(ip_addr);
 		else
-			report_error(USER_INPUT_INVALID, "network");
+			return BUILD_DOMAIN_NETWORK_INVALID;
 		ip = tmp;
 	}
 	cdl->start_ip = ips[0];
@@ -279,11 +276,11 @@ split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo)
 	cdl->gateway = ips[2];
 	cdl->netmask = ips[3];
 	if (ailsa_validate_input(ip, IP_REGEX) < 0)
-		report_error(USER_INPUT_INVALID, "network");
+		return BUILD_DOMAIN_NETWORK_INVALID;
 	if (inet_pton(AF_INET, ip, &ip_addr)) {
 		cdl->ns = (unsigned long int) htonl(ip_addr);
 	} else {
-		retval = USER_INPUT_INVALID;
+		retval = BUILD_DOMAIN_NETWORK_INVALID;
 	}
 	return retval;
 }
@@ -659,8 +656,10 @@ check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_OVERLAP query failed");
 		goto cleanup;
 	}
-	if (r->total > 0)
-		retval = BDOM_OVERLAP;
+	if (r->total > 0) {
+		ailsa_syslog(LOG_ERR, "Network details for build domain overlap");
+		retval = AILSA_BUILD_DOMAIN_OVERLAP;
+	}
 	cleanup:
 		ailsa_list_destroy(l);
 		ailsa_list_destroy(r);

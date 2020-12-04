@@ -369,7 +369,7 @@ validate_cmdb_comm_line(cmdb_comm_line_s *comp)
 			return UUID_INPUT_INVALID;
 	if (comp->name)
 		if (ailsa_validate_input(comp->name, NAME_REGEX) != 0)
-			return HOST_INPUT_INVALID;
+			return SERVER_NAME_INVALID;
 	if (comp->fullname)
 		if (ailsa_validate_input(comp->fullname, CUSTOMER_REGEX) != 0)
 			return CUSTOMER_NAME_INVALID;

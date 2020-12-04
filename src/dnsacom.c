@@ -183,6 +183,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	if (comp->ztype) {
 		if (!(comp->master))
 			retval = AILSA_NO_MASTER;
+		
 	}
 	if ((comp->action == NONE) && (comp->type == NONE) && (!(comp->domain)))
 		retval = AILSA_DISPLAY_USAGE;

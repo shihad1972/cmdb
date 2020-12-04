@@ -39,7 +39,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 static int
 validate_cbcsysp_comm_line(cbc_sysp_s *cbs);
@@ -102,7 +101,7 @@ main(int argc, char *argv[])
 		else if (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage(cbc, cbs);
 		else
-			retval = WRONG_ACTION;
+			retval = AILSA_WRONG_ACTION;
 	} else if (cbs->what == SPACKARG) {
 		if (cbs->action == CMDB_LIST)
 			retval = list_cbc_syspackage_arg(cbc, cbs);
@@ -111,7 +110,7 @@ main(int argc, char *argv[])
 		else if (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage_arg(cbc, cbs);
 		else
-			retval = WRONG_ACTION;
+			retval = AILSA_WRONG_ACTION;
 	} else if (cbs->what == SPACKCNF) {
 		if (cbs->action == CMDB_LIST)
 			retval = list_cbc_syspackage_conf(cbc, cbs);
@@ -120,15 +119,13 @@ main(int argc, char *argv[])
 		else if  (cbs->action == CMDB_RM)
 			retval = rem_cbc_syspackage_conf(cbc, cbs);
 		else
-			retval = WRONG_ACTION;
+			retval = AILSA_WRONG_ACTION;
 	}
-	if (retval == WRONG_ACTION)
+	if (retval == AILSA_WRONG_ACTION)
 		fprintf(stderr, "Action not supported for type\n");
 	clean_cbcsysp_s(cbs);
 	ailsa_clean_cmdb(cbc);
 	free(config);
-	if ((retval != 0) && (retval != NO_RECORDS))
-		report_error(retval, "");
 	return retval;
 }
 
@@ -180,7 +177,7 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		else if (opt == 'y')
 			cbcs->what = SPACKARG;
 		else if (opt == 'h')
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		else if (opt == 'v') {
 			cbcs->action = AILSA_VERSION;
 			retval = AILSA_VERSION;
@@ -195,11 +192,11 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 		} else if (opt == 't') {
 			cbcs->type = strndup(optarg, DOMAIN_LEN);
 		} else
-			retval = DISPLAY_USAGE;
+			retval = AILSA_DISPLAY_USAGE;
 	}
 	if (argc == 1)
-		retval = DISPLAY_USAGE;
-	if ((retval != DISPLAY_USAGE) && (retval != AILSA_VERSION))
+		retval = AILSA_DISPLAY_USAGE;
+	if ((retval != AILSA_DISPLAY_USAGE) && (retval != AILSA_VERSION))
 		if ((retval = validate_cbcsysp_comm_line(cbcs)) != 0)
 			return retval;
 	return check_sysp_comm_line_for_errors(cbcs);
@@ -213,34 +210,24 @@ validate_cbcsysp_comm_line(cbc_sysp_s *cbs)
 	int retval = 0;
 
 	if (cbs->domain) {
-		if (ailsa_validate_input(cbs->domain, DOMAIN_REGEX)) {
-			ailsa_syslog(LOG_ERR, "Domain invalid");
-			return USER_INPUT_INVALID;
-		}
+		if (ailsa_validate_input(cbs->domain, DOMAIN_REGEX))
+			return DOMAIN_INPUT_INVALID;
 	}
 	if (cbs->field) {
-		if (ailsa_validate_input(cbs->field, PACKAGE_FIELD_REGEX)) {
-			ailsa_syslog(LOG_ERR, "Field invalid");
-			return USER_INPUT_INVALID;
-		}
+		if (ailsa_validate_input(cbs->field, PACKAGE_FIELD_REGEX)) 
+			return PACKAGE_FIELD_INVALID;
 	}
 	if (cbs->arg) {
-		if (ailsa_validate_input(cbs->arg, SYSTEM_PACKAGE_ARG_REGEX)) {
-			ailsa_syslog(LOG_ERR, "Args invalid");
-			return USER_INPUT_INVALID;
-		}
+		if (ailsa_validate_input(cbs->arg, SYSTEM_PACKAGE_ARG_REGEX)) 
+			return PACKAGE_ARG_INVALID;
 	}
 	if (cbs->name) {
-		if (ailsa_validate_input(cbs->name, DOMAIN_REGEX)) {
-			ailsa_syslog(LOG_ERR, "Name invalid");
-			return USER_INPUT_INVALID;
-		}
+		if (ailsa_validate_input(cbs->name, DOMAIN_REGEX)) 
+			return PACKAGE_NAME_INVALID;
 	}
 	if (cbs->type) {
-		if (ailsa_validate_input(cbs->type, DOMAIN_REGEX)) {
-			ailsa_syslog(LOG_ERR, "Type invalid");
-			return USER_INPUT_INVALID;
-		}
+		if (ailsa_validate_input(cbs->type, DOMAIN_REGEX))
+			return PACKAGE_TYPE_INVALID;
 	}
 	return retval;
 }
@@ -252,41 +239,41 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 
 	if (cbcs->what == 0) {
 		fprintf(stderr, "No type specified\n\n");
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
-		retval = DISPLAY_USAGE;
+		retval = AILSA_DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != CMDB_LIST)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = DISPLAY_USAGE;
+			retval = AILSA_DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKARG) {
 		if (cbcs->action != CMDB_LIST) {
 			if ((cbcs->action != CMDB_RM) && (!(cbcs->type) || !(cbcs->field))) {
 				fprintf(stderr, "You need both package field and type\n");
-				retval = DISPLAY_USAGE;
+				retval = AILSA_DISPLAY_USAGE;
 			} else if (cbcs->action == CMDB_RM && !(cbcs->field)) {
 				fprintf(stderr,
 "You need to provide the field you want to remove\n");
-				retval = DISPLAY_USAGE;
+				retval = AILSA_DISPLAY_USAGE;
 			}
 		} else if (!(cbcs->name)) {
 			fprintf(stderr, "You need a package name!\n\n");
-			retval = DISPLAY_USAGE;
+			retval = AILSA_DISPLAY_USAGE;
 		}
 	} else if (cbcs->what == SPACKCNF) {
 		if (!(cbcs->domain))  {
 			ailsa_syslog(LOG_ERR, "No build domain supplied");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 		if ((cbcs->action != CMDB_LIST) && (!(cbcs->name) || !(cbcs->field))) {
 			ailsa_syslog(LOG_ERR, "Need both package name and field to add or remove config");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 		if ((cbcs->action != CMDB_LIST) && !(cbcs->arg)) {
 			ailsa_syslog(LOG_ERR, "Need a package argument to add or delete a config");
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
 	return retval;
@@ -376,7 +363,6 @@ list_cbc_syspackage_conf(ailsa_cmdb_s *cbc, cbc_sysp_s *css)
 	}
 	if (res->total == 0) {
 		ailsa_syslog(LOG_INFO, "Build domain %s has no configured packages\n", css->domain);
-		retval = NO_RECORDS;
 		goto cleanup;
 	} else if ((res->total % total) != 0) {
 		ailsa_syslog(LOG_ERR, "Query returned wrong number of elements?");

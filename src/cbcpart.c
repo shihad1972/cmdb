@@ -37,8 +37,7 @@
 # include <getopt.h>
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
-#include <ailsasql.h>
-#include "cmdb.h"
+#include <ailsasql.h> 
 
 enum {
 	PARTITION = 1,
@@ -131,7 +130,7 @@ main (int argc, char *argv[])
 		retval = remove_scheme_part(cmc, cpl);
 	else if (cpl->action == CMDB_DEFAULT)
 		retval = set_default_scheme(cmc, cpl);
-	if (retval == WRONG_TYPE)
+	if (retval == AILSA_WRONG_TYPE)
 		ailsa_syslog(LOG_ERR, "Wrong type specified. Neither partition or scheme?\n");
 	ailsa_clean_cmdb(cmc);
 	clean_cbcpart_comm_line(cpl);
@@ -207,11 +206,11 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		} else if (opt == 'z') {
 			cpl->action = CMDB_DEFAULT;
 		} else if (opt == 'j') {
-			cpl->lvm = TRUE;
+			cpl->lvm = true;
 		} else if (opt == 'v') {
 			cpl->action = AILSA_VERSION;
 		} else if (opt == 'h') {
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		} else if (opt == 'p') {
 			cpl->type = PARTITION;
 		} else if (opt == 's') {
@@ -225,7 +224,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		else if (opt == 'g') {
 			if (cpl->lvm < 1) {
 				ailsa_syslog(LOG_ERR, "LVM not set before logvol\n");
-				return DISPLAY_USAGE;
+				return AILSA_DISPLAY_USAGE;
 			}
 			cpl->log_vol = ailsa_calloc(MAC_LEN, errmsg);
 			snprintf(cpl->log_vol, MAC_LEN, "%s", optarg);
@@ -240,31 +239,25 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			snprintf(cpl->partition, CONFIG_LEN, "%s", optarg);
 		} else if (opt == 'i') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				ailsa_syslog(LOG_ERR, "minimum not a number?\n");
-				return USER_INPUT_INVALID;
-			}
+				return MIN_INVALID;}
 			cpl->min = strtoul(optarg, NULL, 10);
 		} else if (opt == 'x') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				ailsa_syslog(LOG_ERR, "maximum not a number?\n");
-				return USER_INPUT_INVALID;
-			}
+				return MAX_INVALID;}
 			cpl->max = strtoul(optarg, NULL, 10);
 		} else if (opt == 'y') {
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
-				ailsa_syslog(LOG_ERR, "priority not a number?\n");
-				return USER_INPUT_INVALID;
-			}
+				return PRI_INVALID;}
 			cpl->pri = strtoul(optarg, NULL, 10);
 		} else {
 			printf("Unknown option: %c\n", opt);
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
-	if ((validate_cbcpart_comm_line(cpl)) != 0)
-		return USER_INPUT_INVALID;
+	if ((retval = validate_cbcpart_comm_line(cpl)) != 0)
+		return retval;
 	if (argc == 1)
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	retval = validate_cbcpart_user_input(cpl, argc);
 	return retval;
 }
@@ -275,30 +268,20 @@ validate_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 	int retval = 0;
 
 	if (cpl->fs) {
-		if ((ailsa_validate_input(cpl->fs, FS_REGEX)) < 0) {
-			ailsa_syslog(LOG_ERR, "filesystem (-f) invalid!\n");
-			return USER_INPUT_INVALID;
-		}
+		if ((ailsa_validate_input(cpl->fs, FS_REGEX)) < 0)
+			return FILESYSTEM_INVALID;
 	} else if (cpl->log_vol) {
-		if ((ailsa_validate_input(cpl->log_vol, LOGVOL_REGEX)) < 0) {
-			ailsa_syslog(LOG_ERR, "logical volume name (-g) invalid!\n");
-			return USER_INPUT_INVALID;
-		}
+		if ((ailsa_validate_input(cpl->log_vol, LOGVOL_REGEX)) < 0)
+			return LOG_VOL_INVALID;
 	} else if (cpl->partition) {
-		if ((ailsa_validate_input(cpl->partition, PATH_REGEX)) < 0) {
-			ailsa_syslog(LOG_ERR, "path (-t) invalid!\n");
-			return USER_INPUT_INVALID;
-		}
+		if ((ailsa_validate_input(cpl->partition, PATH_REGEX)) < 0)
+			return FS_PATH_INVALID;
 	} else if (cpl->option) {
-		if ((ailsa_validate_input(cpl->option, FS_REGEX)) < 0) {
-			ailsa_syslog(LOG_ERR, "partition option (-o) invalid!\n");
-			return USER_INPUT_INVALID;
-		}
+		if ((ailsa_validate_input(cpl->option, FS_REGEX)) < 0)
+			return PART_OPTION_INVALID;
 	} else if (cpl->scheme) {
-		if ((ailsa_validate_input(cpl->scheme, NAME_REGEX)) < 0) {
-			ailsa_syslog(LOG_ERR, "partition scheme name (-n) invalid!\n");
-			return USER_INPUT_INVALID;
-		}
+		if ((ailsa_validate_input(cpl->scheme, NAME_REGEX)) < 0)
+			return PART_SCHEME_INVALID;
 	}
 	return retval;
 }
@@ -311,15 +294,15 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 	if (cpl->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	if (cpl->action == NONE && argc != 1)
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	if ((cpl->action != CMDB_LIST) && (!(cpl->scheme)))
-		return NO_SCHEME_INFO;
+		return AILSA_NO_SCHEME;
 	if (cpl->action == CMDB_ADD || cpl->action == CMDB_RM ||
 	    cpl->action == CMDB_MOD) {
 		if (cpl->type == NONE)
-			return NO_TYPE;
+			return AILSA_NO_TYPE;
 		if (!(cpl->partition) && (cpl->type == PARTITION))
-			return NO_PARTITION_INFO;
+			return AILSA_NO_PARTITION;
 	}
 	if (cpl->action == CMDB_ADD) {
 		if (cpl->type == PARTITION) {
@@ -330,12 +313,12 @@ validate_cbcpart_user_input(cbcpart_comm_line_s *cpl, int argc)
 			if (cpl->pri == 0)
 				cpl->pri = 100;
 			if (!(cpl->fs))
-				return NO_FILE_SYSTEM;
+				return AILSA_NO_FILESYSTEM;
 			if ((cpl->lvm > 0) && !(cpl->log_vol))
-				return NO_LOG_VOL;
+				return AILSA_NO_LOGVOL;
 		}
 		if ((cpl->type == OPTION) && !(cpl->option))
-			return NO_OPTION;
+			return AILSA_NO_OPTION;
 	}
 	return retval;
 }
@@ -506,7 +489,7 @@ add_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	else if (cpl->type == OPTION)
 		retval = add_new_partition_option(cbc, cpl);
 	else
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 	return retval;
 }
 
@@ -522,7 +505,7 @@ remove_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	else if (cpl->type == OPTION)
 		retval = remove_part_option(cbc, cpl);
 	else
-		retval = WRONG_TYPE;
+		retval = AILSA_WRONG_TYPE;
 	return retval;
 }
 

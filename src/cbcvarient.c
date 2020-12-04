@@ -39,7 +39,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 #include "cmdb_cbc.h"
 
 
@@ -244,8 +243,6 @@ main(int argc, char *argv[])
 
 	ailsa_clean_cmdb(cmc);
 	clean_cbcvarient_comm_line(cvcl);
-	if (retval > 0)
-		report_error(retval, error);
 	exit(retval);
 }
 
@@ -325,7 +322,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		else if (opt == 'v')
 			cvl->action = AILSA_VERSION;
 		else if (opt == 'h')
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		else if (opt == 'g')
 			cvl->type = CPACKAGE;
 		else if (opt == 'j')
@@ -348,34 +345,34 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->varient = strndup(optarg, HOST_LEN);
 		else {
 			printf("Unknown option: %c\n", opt);
-			return DISPLAY_USAGE;
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
 	if (argc == 1)
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	if (cvl->action == AILSA_VERSION)
 		return AILSA_VERSION;
 	if (cvl->action == 0 && argc != 1)
-		return NO_ACTION;
+		return AILSA_NO_ACTION;
 	if (cvl->action == CMDB_DEFAULT)
 		cvl->type = CVARIENT;
 	if (cvl->type == 0 && cvl->action != CMDB_LIST)
-		return NO_TYPE;
+		return AILSA_NO_TYPE;
 	if (cvl->action != CMDB_LIST && !(cvl->varient) && !(cvl->valias))
-		return NO_VARIENT;
+		return AILSA_NO_VARIENT;
 	if ((cvl->action == CMDB_ADD) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
 		ailsa_syslog(LOG_ERR, "You need to supply both a varient name and valias when adding\n");
-		return DISPLAY_USAGE;
+		return AILSA_DISPLAY_USAGE;
 	}
 	if (cvl->type == CPACKAGE) {
 		if (!(cvl->package))
-			return NO_PACKAGE;
+			return AILSA_NO_PACKAGE;
 		if ((cvl->action != CMDB_ADD) && (cvl->action != CMDB_RM)) {
 			ailsa_syslog(LOG_ERR, "Can only add or remove packages\n");
-			return WRONG_ACTION;
+			return AILSA_WRONG_ACTION;
 		}
 		if (!(cvl->os) && !(cvl->alias))
-			return NO_OS_COMM;
+			return AILSA_NO_OS;
 	}
 	return NONE;
 }
@@ -477,7 +474,7 @@ display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
    * we can check if the OS exists and if not, tell the user then */
 	if (!(cmc) || !(cvl))
 		return AILSA_NO_DATA;
-	int retval = NO_VARIENT;
+	int retval = AILSA_NO_VARIENT;
 	char *varient;
 	ailsa_sql_query_s *query = ailsa_calloc(sizeof(ailsa_sql_query_s), "query in display_cbc_build_varient");
 	AILLIST *list = ailsa_db_data_list_init();

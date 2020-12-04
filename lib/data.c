@@ -569,7 +569,7 @@ get_config_file_location(char *config)
 	const char *conf = config;
 
 	if (snprintf(config, CONFIG_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONFIG_LEN)
-		report_error(AILSA_BUFFER_TOO_SMALL, "for config file");
+		return AILSA_BUFFER_TOO_SMALL;
 	if ((cnf = fopen(conf, "r"))) {
 		fclose(cnf);
 	} else	{

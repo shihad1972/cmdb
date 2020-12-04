@@ -190,9 +190,13 @@ enum {                  // Error codes
 	AILSA_NO_PREFIX = 37,
 	AILSA_NO_HOST_NAME = 38,
 	AILSA_UNKNOWN_ZONE_TYPE = 39,
+	AILSA_NO_OPTION = 40,
+	AILSA_NO_FILESYSTEM = 41,
 	AILSA_DOMAIN_AND_IP_GIVEN = 51,
 	AILSA_WRONG_TYPE = 52,
 	AILSA_WRONG_ACTION = 53,
+	AILSA_NO_PACKAGE = 54,
+	AILSA_NO_MASTER_NAME = 55,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -228,6 +232,10 @@ enum {                  // Error codes
 	AILSA_FILE_ERROR = 233,
 	AILSA_CONFIG_ERROR = 234,
 	AILSA_DOWNLOAD_FAIL = 234,
+	AILSA_NO_MOD_BUILD_DOM_NET = 235,
+	AILSA_BUILD_DOMAIN_OVERLAP = 236,
+	AILSA_NO_SCHEME = 237,
+	AILSA_NO_PARTITION = 238,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -264,7 +272,7 @@ enum {                  // Error codes
 	GLUE_IP_INPUT_INVALID = 609,
 	GLUE_NS_INPUT_INVALID = 610,
 	UUID_INPUT_INVALID = 611,
-	NAME_REGEX_INVALID = 612,
+	SERVER_NAME_INVALID = 612,
 	OS_INVALID = 613,
 	OS_VERSION_INVALID = 614,
 	PART_SCHEME_INVALID = 615,
@@ -273,7 +281,7 @@ enum {                  // Error codes
 	NET_CARD_INVALID = 618,
 	HARD_DISK_INVALID = 619,
 	CONFIG_INVALID = 620,
-	LOCALE_INVALID= 621,
+	LOCALE_INVALID = 621,
 	PROTOCOL_INVALID = 623,
 	VMHOST_INVALID = 624,
 	VENDOR_INVALID = 625,
@@ -293,6 +301,24 @@ enum {                  // Error codes
 	COID_INVALID = 639,
 	TYPE_INVALID = 640,
 	IP_INVALID = 641,
+	NTP_SERVER_INVALID = 642,
+	BUILD_DOMAIN_NETWORK_INVALID = 643,
+	LANGUAGE_INVALID = 644,
+	KEYMAP_INVALID = 645,
+	TIMEZONE_INVALID = 646,
+	LOCAL_NAME_INVALID = 647,
+	COUNTRY_INVALID = 648,
+	MIN_INVALID = 649,
+	MAX_INVALID = 650,
+	PRI_INVALID = 651,
+	FILESYSTEM_INVALID = 652,
+	LOG_VOL_INVALID = 653,
+	FS_PATH_INVALID = 654,
+	PART_OPTION_INVALID = 655,
+	PACKAGE_FIELD_INVALID = 656,
+	PACKAGE_ARG_INVALID = 657,
+	PACKAGE_NAME_INVALID = 658,
+	PACKAGE_TYPE_INVALID = 659,
 	AILSA_SERVER_NOT_FOUND = 700,
 	AILSA_CUSTOMER_NOT_FOUND = 701,
 	AILSA_ZONE_NOT_FOUND = 702,
@@ -722,10 +748,6 @@ const char *
 ailsa_comm_line_strerror(int error);
 void
 ailsa_display_validation_error(int error);
-void 
-report_error(int error, const char *errstr);
-void
-get_error_string(int error, char *errstr);
 
 // cmdb comand line error function
 
@@ -1033,8 +1055,6 @@ int
 ailsa_add_trailing_dot(char *member);
 void
 display_version(char *prog);
-void
-get_error_string(int error, char *errstr);
 void
 chomp(char *input);
 void 

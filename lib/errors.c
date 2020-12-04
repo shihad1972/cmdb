@@ -44,209 +44,6 @@
 #include <netdb.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
-
-void
-report_error(int error, const char *errstr)
-{
-
-	if (error == ARGC_INVAL) {
-		fprintf(stderr, "Argc is invalid\n");
-	} else if (error == ARGV_INVAL) {
-		;
-	} else if (error == CONF_ERR) {
-		fprintf(stderr, "Config file error\n");
-	} else if (error == PORT_ERR) {
-		fprintf(stderr, "MySQL port number invalid in config file\n");
-	} else if (error == NO_DOMAIN) {
-		fprintf(stderr, "No domain %s was found\n", errstr);
-	} else if (error == MULTI_DOMAIN) {
-		fprintf(stderr, "Multiple records found for %s\n", errstr);
-	} else if (error == NO_DELIM) {
-		fprintf(stderr, "No delimiter %s found in string\n", errstr);
-	} else if (error == NO_RECORDS) {
-		fprintf(stderr, "No records found for the zone %s\n", errstr);
-	} else if (error == NO_FORWARD_RECORDS) {
-		fprintf(stderr, "No records found for forward zone %s\n", errstr);
-	} else if (error == WRONG_ACTION) {
-		fprintf(stderr, "Incorrect action specified\n");
-	} else if (error == WRONG_TYPE) {
-		fprintf(stderr, "Incorrect type specified\n");
-	} else if (error == USER_INPUT_INVALID) {
-		fprintf(stderr, "Input %s not valid.\n", errstr);
-	} else if (error == BUFFER_TOO_SMALL) {
-		fprintf(stderr, "Buffer %s too small\n", errstr);
-	} else if (error == DOMAIN_LIST_FAIL) {
-		fprintf(stderr, "No domains were found to list from the database\n");
-	} else if (error == MY_INIT_FAIL) {
-		fprintf(stderr, "DB initialisation failed with %s\n", errstr);
-	} else if (error == MY_CONN_FAIL) {
-		fprintf(stderr, "Unable to connect to database: %s\n", errstr);
-	} else if (error == MY_QUERY_FAIL) {
-		fprintf(stderr, "Query to database failed with error %s\n", errstr);
-	} else if (error == MY_STORE_FAIL) {
-		fprintf(stderr, "Unable to store DB result set: %s\n", errstr);
-	} else if (error == MY_INSERT_FAIL) {
-		fprintf(stderr, "Unable to insert into DB:\n%s\n", errstr);
-	} else if ((error == MY_STATEMENT_FAIL) || (error == SQLITE_STATEMENT_FAILED)) {
-		fprintf(stderr, "DB statment failed with %s\n", errstr);
-	} else if (error == MY_BIND_FAIL) {
-		fprintf(stderr, "DB bind of prepared statement failed with %s\n", errstr);
-	} else if (error == SQLITE_BIND_FAILED) {
-		fprintf(stderr, "SQLITE bind failed in %s\n", errstr);
-	} else if (error == DB_WRONG_TYPE) {
-		fprintf(stderr, "Wrong DB type in query %s\n", errstr);
-	} else if (error == NO_ZONE_FOUND) {
-		fprintf(stderr, "Zone %s not found\n", errstr);
-	} else if (error == NO_DB_TYPE) {
-		fprintf(stderr, "No DB type configured\n");
-	} else if (error == DB_TYPE_INVALID) {
-		fprintf(stderr, "DB type %s invalid\n", errstr);
-	} else if (error == UNKNOWN_STRUCT_DB_TABLE) {
-		fprintf(stderr, "Function %s trying to use an unknown struct / db table\n", errstr);
-	} else if (error == CBC_NO_DATA) {
-		fprintf(stderr, "Null pointer passed for %s\n", errstr);
-	} else if (error == GET_TIME_FAILED) {
-		fprintf(stderr, "Call to localtime failed: %s\n", errstr);
-	} else if (error == FILE_O_FAIL) {
-		fprintf(stderr, "Unable to open file %s\n", errstr);
-	} else if (error == CHKZONE_FAIL) {
-		fprintf(stderr, "Checking the zone %s failed\n", errstr);
-	} else if (error == NO_ZONE_CONFIGURATION) {
-		fprintf(stderr, "There are no dnsa configuration values in the database\n");
-	} else if (error == CANNOT_INSERT_ZONE) {
-		fprintf(stderr, "Unable to add zone %s to database", errstr);
-	} else if (error == CANNOT_INSERT_RECORD) {
-		fprintf(stderr, "Unable to add record %s to database", errstr);
-	} else if (error == MALLOC_FAIL) {
-		fprintf(stderr, "Malloc / Calloc failed for %s\n", errstr);
-	} else if (error == NO_SERVICE_URL) {
-		fprintf(stderr, "No service type or URL was provided.\n");
-	} else if (error == SERVER_NOT_FOUND) {
-		fprintf(stderr, "Server %s not found in database\n", errstr);
-	} else if (error == MULTIPLE_SERVERS) {
-		fprintf(stderr, "Multiple servers with name %s found in database\n", errstr);
-	} else if (error == SERVER_ID_NOT_FOUND) {
-		fprintf(stderr, "Server with id %s not found in database\n", errstr);
-	} else if (error == MULTIPLE_SERVER_IDS) {
-		fprintf(stderr, "Multiple servers with id %s in database\n\
-		THIS SHOULD NOT HAPPEN. Fix the DB!!\n", errstr);
-	} else if (error == NO_MODEL) {
-		fprintf(stderr, "Server does not have a model!\n");
-	} else if (error == SERVER_UUID_NOT_FOUND) {
-		fprintf(stderr, "Server with uuid %s not found in database\n", errstr);
-	} else if (error == MULTIPLE_SERVER_UUIDS) {
-		fprintf(stderr, "Multiple servers with uuid %s in database\n\
-		THIS SHOULD NOT HAPPEN. Check your database!\n", errstr);
-	} else if (error == CUSTOMER_NOT_FOUND) {
-		fprintf(stderr, "Customer %s not found\n", errstr);
-	} else if (error == MULTIPLE_CUSTOMERS) {
-		fprintf(stderr, "Multiple customers found for %s\n", errstr);
-	} else if (error == SERVER_BUILD_NOT_FOUND) {
-		fprintf(stderr, "Build for server id %s not found\n", errstr);
-	} else if (error == MULTIPLE_SERVER_BUILDS) {
-		fprintf(stderr, "Multiple builds found for server id %s\n", errstr);
-	} else if (error == SERVER_PART_NOT_FOUND) {
-		fprintf(stderr, "No partition information for server id %s\n", errstr);
-	} else if (error == OS_NOT_FOUND) {
-		fprintf(stderr, "Build Operating System %s was not found\n", errstr);
-	} else if (error == OS_NO_VERSION) {
-		fprintf(stderr, "Version supplied with no OS\n");
-	} else if (error == NO_PARTITION_SCHEMES) {
-		fprintf(stderr, "No partition schemes were found\n");
-	} else if (error == NO_VM_HOSTS) {
-		fprintf(stderr, "No VM server hosts were found\n");
-	} else if (error == NO_CUSTOMERS) {
-		fprintf(stderr, "No customers were found\n");
-	} else if (error == NO_HARDWARE_TYPES) {
-		fprintf(stderr, "No Hardware types were found\n");
-	} else if (error == BUILD_DOMAIN_NOT_FOUND) {
-		fprintf(stderr, "No build domains found\n");
-	} else if (error == BUILD_DOMAIN_EXISTS) {
-		fprintf(stderr, "Build domain %s exists\n", errstr);
-	} else if (error == CREATE_BUILD_FAILED) {
-		fprintf(stderr, "Create build config failed with error: %s\n", errstr);
-	} else if (error == ID_INVALID) {
-		fprintf(stderr, "ID Invalid\n");
-	} else if (error == UNKNOWN_ZONE_TYPE) {
-		fprintf(stderr, "Unknown zone type in %s\n", errstr);
-	} else if (error == NAME_INVALID) {
-		fprintf(stderr, "Name %s invalid\n", errstr);
-	} else if (error == NO_LOCALE_FOR_OS) {
-		fprintf(stderr, "No locale for OS %s\n", errstr);
-	} else if (error == VARIENT_NOT_FOUND) {
-		fprintf(stderr, "No varient %s found\n", errstr);
-	} else if (error == MULTIPLE_VARIENTS) {
-		fprintf(stderr, "Multiple varients found for %s\n", errstr);
-	} else if (error == FIELDS_MISMATCH) {
-		fprintf(stderr, "Query fields mismatch for %s\n", errstr);
-	} else if (error == BUILD_OS_EXISTS) {
-		fprintf(stderr, "Build OS %s already exists\n", errstr);
-	} else if (error == VARIENT_EXISTS) {
-		fprintf(stderr, "Varient already exists in the database\n");
-	} else if (error == OS_ALIAS_NEEDED) {
-		fprintf(stderr, "Build os %s needs a version alias\n", errstr);
-	} else if (error == NO_CONTACT_INFO) {
-		fprintf(stderr, "Not enough information provided about the contact\n");
-	} else if (error == NO_CONTACT) {
-		fprintf(stderr, "This is not the contact you were looking for!\n");
-	} else if (error == MULTI_CONTACT) {
-		fprintf(stderr, "Multiple contacts found for that!\n");
-	} else if (error == BUILD_OS_IN_USE) {
-		fprintf(stderr,
-"Cowardly refusal to delete build os %s\n", errstr);
-	} else if (error == DID_NOT_MOD_BUILD_DOMAIN) {
-		fprintf(stderr, "cbcdomain modified nothing??\n");
-	} else if (error == BDOM_OVERLAP) {
-		fprintf(stderr, "build domain %s overlaps with another in the database\n", errstr);
-	} else if (error == NO_CONTACT_DATA) {
-		fprintf(stderr, "Contact query to database failed\n");
-	} else if (error == NOT_PRI_OR_SEC_NS) {
-		fprintf(stderr,
-"Something other than pri or sec ns passed to %s\n", errstr);
-	} else if (error == NO_GLUE_ZONE) {
-		fprintf(stderr, "No glue zone passed to %s\n", errstr);
-	} else if (error == LOCALE_NOT_FOUND) {
-		fprintf(stderr, "No locale for the OS and version. Did you just add it?\n");
-	} else if (error == IFACE_LIST_FAILED) {
-		fprintf(stderr, "Interface list failed in %s\n", errstr);
-	} else if (error == IFACE_FILL) {
-		fprintf(stderr, "Cannot get interface info in %s\n", errstr);
-	} else if (error == NO_IFACE) {
-		fprintf(stderr, "Interface list empty\n");
-	} else if (error == NULL_POINTER_PASSED) {
-		fprintf(stderr, "Null pointer passed\n");
-	} else if (error == DNS_LOOKUP_FAILED) {
-		fprintf(stderr, "There was a DNS lookup failure\n");
-	} else if (error == NET_FUNC_FAILED) {
-		fprintf(stderr, "A network function failed\n");
-	} else if (error == BUILD_TYPE_NOT_FOUND) {
-		fprintf(stderr, "No build type for that OS\n");
-	} else if (error == CANNOT_UPDATE) {
-		fprintf(stderr, "Database update not possible\n");
-	} else if (error == PARTITON_NOT_FOUND) {
-		fprintf(stderr, "Requested partition not found\n");
-	} else if (error == DB_DELETE_FAILED) {
-		fprintf(stderr, "Delete from database failed\n");
-	} else if (error == NO_BD_CONFIG) {
-		fprintf(stderr, "Unable to find build domain\n");
-	} else if (error == CBC_DATA_WRONG_COUNT) {
-		fprintf(stderr, "dbdata count is wrong in %s\n", errstr);
-	} else if (error == NO_SYSPACK_CONF) {
-		;
-	} else if (error == NO_DEVICE_OR_DETAIL) {
-		fprintf(stderr, "No device or detail in %s\n", errstr);
-	} else if (error == WRONG_LENGTH_LIST) {
-		fprintf(stderr, "A list of incorrect length was passed to a function");
-	} else if (error == CANNOT_DOWNLOAD_BOOT_FILES) {
-		fprintf(stderr, "Cannot download boot files\n");
-	} else if (error == NO_ARG) {
-		fprintf(stderr, "Argument does not exist\n");
-	} else {
-		fprintf(stderr, "Unknown error code %d in %s\n", error, errstr);
-	}
-	exit(error);
-}
 
 void
 display_command_line_error(int retval, char *program)
@@ -295,55 +92,47 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No postcode specified on command line.\n");
 	else if (retval == AILSA_NO_COID)
 		fprintf(stderr, "No coid specified on command line.\n");
-	else if (retval == NO_CONT_NAME)
+	else if (retval == AILSA_NO_CONTACT_NAME)
 		fprintf(stderr, "No name specified with -N.\n");
-	else if (retval == NO_SERVICE_URL)
+	else if (retval == AILSA_NO_SERVICE_URL)
 		fprintf(stderr, "A service name or URL was not specified\n\
 If you wish to remove all services (for a server or customer) add the -f option\n");
 	else if (retval == AILSA_NO_PHONE_NUMBER)
 		fprintf(stderr, "No phone no. specified with -P.\n");
-	else if (retval == NO_PACKAGE)
+	else if (retval == AILSA_NO_PACKAGE)
 		fprintf(stderr, "No package supplied.\n");
-	else if (retval == NO_OS_COMM)
+	else if (retval == AILSA_NO_OS)
 		fprintf(stderr, "No os or alias supplied.\n");
 	else if (retval == AILSA_NO_VARIENT)
 		fprintf(stderr, "No varient or valias supplied.\n");
 	else if (retval == AILSA_NO_EMAIL_ADDRESS)
 		fprintf(stderr, "No email address specified with -E.\n");
-	else if (retval == WRONG_TYPE_FOR_DISPLAY)
+	else if (retval == AILSA_WRONG_TYPE_DISPLAY)
 		fprintf(stderr, "Cannot display this type in cmdb\n");
-	else if (retval == DOMAIN_AND_IP_GIVEN)
+	else if (retval == AILSA_DOMAIN_AND_IP_GIVEN)
 		fprintf(stderr, "Both domain name and IP given on command line.\n");
 	else if (retval == AILSA_NO_DOMAIN_OR_NAME)
 		ailsa_syslog(LOG_ERR, "Neither build domaion nor script name was provided");
-	else if (retval == NO_PARTITION_INFO)
+	else if (retval == AILSA_NO_PARTITION)
 		fprintf(stderr, "No partition information on command line.\n");
-	else if (retval == NO_SCHEME_INFO)
+	else if (retval == AILSA_NO_SCHEME)
 		fprintf(stderr, "No scheme name was supplied on the command line.\n");
-	else if (retval == NO_OS_SPECIFIED)
-		fprintf(stderr, "No OS or not enough OS options supplied on command line.\n");
 	else if (retval == AILSA_NO_BUILD_DOMAIN)
 		fprintf(stderr, "No Build Domain supplied on command line\n");
-	else if (retval == NO_MOD_BUILD_DOM_NET)
+	else if (retval == AILSA_NO_MOD_BUILD_DOM_NET)
 		fprintf(stderr, "Cowardly refusal to modify network settings for build domain\n");
-	else if (retval == MULTI_BUILD_DOM_APP_MOD)
-		fprintf(stderr, "Cowardly refusal to modify multiple application settings\n");
 	else if (retval == AILSA_NO_MASTER)
 		fprintf(stderr, "Slave zone specified but no master IP given\n");
-	else if (retval == NO_MASTER_NAME)
+	else if (retval == AILSA_NO_MASTER_NAME)
 		fprintf(stderr, "Slave zone specified but no master name given\n");
-	else if (retval == NO_PREFIX)
+	else if (retval == AILSA_NO_PREFIX)
 		fprintf(stderr, "No reverse zone prefix was supplied\n");
-	else if (retval == NO_ARG)
+	else if (retval == AILSA_NO_ARG)
 		fprintf(stderr, "No arguemt was supplied\n");
-	else if (retval == NO_NUMBER)
+	else if (retval == AILSA_NO_NUMBER)
 		fprintf(stderr, "No number was supplied\n");
-	else if (retval == NO_NTP_SERVER)
-		fprintf(stderr, "No ntp server was supplied\n");
-// Don't really need this one
-	else if ((retval == USER_INPUT_INVALID) && (strncmp(program, "cbcdomain", SERVICE_LEN)) == 0)
+	else if (retval == BUILD_DOMAIN_NETWORK_INVALID)
 		fprintf(stderr, "Check your network input please. It seems wrong!\n");
-// End
 	else if (retval == AILSA_NO_DISK_DEV)
 		ailsa_syslog(LOG_ERR, "No disk device was provided");
 	else if (retval == AILSA_INVALID_DBTYPE)
@@ -354,22 +143,16 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		ailsa_syslog(LOG_ERR, "No protocol was specified");
 	else if (retval == AILSA_NO_SERVICE)
 		ailsa_syslog(LOG_ERR, "No service was specified");
-	else if (retval == NO_FILE_SYSTEM)
+	else if (retval == AILSA_NO_FILESYSTEM)
 		ailsa_syslog(LOG_ERR, "No file system type was supplied");
-	else if (retval == NO_RTYPE)
+	else if (retval == AILSA_NO_RECORD_TYPE)
 		ailsa_syslog(LOG_ERR, "No record type was specified");
-	else if (retval == NO_LOG_VOL)
+	else if (retval == AILSA_NO_LOGVOL)
 		ailsa_syslog(LOG_ERR, "No logical volume name supplied");
 	else if ((retval >= 600) && (retval < 700))
 		ailsa_syslog(LOG_ERR, "Input validation failed: %s", ailsa_comm_line_strerror(retval));
-	else if (retval == NO_ALIAS)
-		ailsa_syslog(LOG_ERR, "No build type alias was supplied");
-	else if (retval == NO_OPTION)
+	else if (retval == AILSA_NO_OPTION)
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
-// Can remove this one when new error function create
-	else if (retval == USER_INPUT_INVALID)
-		ailsa_syslog(LOG_ERR, "User input was not validated.");
-// End
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == AILSA_DISPLAY_USAGE) {
@@ -432,8 +215,8 @@ ailsa_comm_line_strerror(int error)
 		return "Glue hostname was invalid";
 	case UUID_INPUT_INVALID:
 		return "UUID supplied was invalid";
-	case NAME_REGEX_INVALID:
-		return "Name supplied was invalid";
+	case SERVER_NAME_INVALID:
+		return "Server name supplied was invalid";
 	case OS_INVALID:
 		return "Operating System supplied was invalid";
 	case OS_VERSION_INVALID:
@@ -477,7 +260,37 @@ ailsa_comm_line_strerror(int error)
 	case TYPE_INVALID:
 		return "VM host or hardware type supplied was invalid";
 	case IP_INVALID:
-		return "IP Supplied is invalid";
+		return "IP Supplied was invalid";
+	case NTP_SERVER_INVALID:
+		return "NTP server supplied was invalid";
+	case LANGUAGE_INVALID:
+		return "Language supplied was invalid";
+	case KEYMAP_INVALID:
+		return "Keymap supplied was invalid";
+	case COUNTRY_INVALID:
+		return "Country supplied was invalid";
+	case TIMEZONE_INVALID:
+		return "Timezone supplied was invalid";
+	case MIN_INVALID:
+		return "Number supplied for minimum invalid";
+	case MAX_INVALID:
+		return "Number supplied for maximum invalid";
+	case PRI_INVALID:
+		return "Number supplied for priority invalid";
+	case FILESYSTEM_INVALID:
+		return "Filesystem supplied was invalid";
+	case LOG_VOL_INVALID:
+		return "Logical volume name supplied was invalid";
+	case FS_PATH_INVALID:
+		return "Filesystem path supplied was invalid";
+	case PACKAGE_FIELD_INVALID:
+		return "Field for package supplied was invalid";
+	case PACKAGE_ARG_INVALID:
+		return "Argument for package supplied was invalid";
+	case PACKAGE_NAME_INVALID:
+		return "Package name supplied was invalid";
+	case PACKAGE_TYPE_INVALID:
+		return "Package type supplied was invalid";
 	default:
 		return "Unknown command line error";
 	}
@@ -743,94 +556,12 @@ display_cbclocale_usage(void)
 	
 }
 
-void
-get_error_string(int error, char *errstr)
-{
-	if (error == SERVER_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Server not found.");
-	else if (error == SERVER_UUID_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Server not found.");
-	else if (error == SERVER_ID_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Server not found.");
-	else if (error == NO_NAME_UUID_ID)
-		snprintf(errstr, CONFIG_LEN, "No server specifier.");
-	else if (error == BUILD_DOMAIN_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Build domain not found.");
-	else if (error == NO_BUILD_IP) 
-		snprintf(errstr, CONFIG_LEN, "No IP's left in build domain.");
-	else if (error == BUILD_IP_OUT_OF_RANGE)
-		snprintf(errstr, CONFIG_LEN, "Build IP from DNS outside range.");
-	else if (error == BUILD_IP_IN_USE)
-		snprintf(errstr, CONFIG_LEN, "Build IP already in use.");
-	else if (error == CANNOT_INSERT_IP)
-		snprintf(errstr, CONFIG_LEN, "Cannot insert build IP into DB.");
-	else if (error == SERVER_BUILD_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "No server build.");
-	else if (error == NO_DHCP_B_ERR)
-		snprintf(errstr, CONFIG_LEN, "Cannot find dhcp details.");
-	else if (error == MULTI_DHCP_B_ERR)
-		snprintf(errstr, CONFIG_LEN, "Multiple dhcp details.");
-	else if (error == NO_TFTP_B_ERR)
-		snprintf(errstr, CONFIG_LEN, "Cannot find TFTP details.");
-	else if (error == MULTI_TFTP_B_ERR)
-		snprintf(errstr, CONFIG_LEN, "Multiple TFTP details.");
-	else if (error == NO_NET_BUILD_ERR)
-		snprintf(errstr, CONFIG_LEN, "Cannot find NET_BUILD_DETAILS.");
-	else if (error == MULTI_NET_BUILD_ERR)
-		snprintf(errstr, CONFIG_LEN, "Multiple NET_BUILD_DETAILS.");
-	else if (error == NO_BUILD_MIRR_ERR)
-		snprintf(errstr, CONFIG_LEN, "Cannot find BUILD_MIRROR.");
-	else if (error == MULTI_BUILD_MIRR_ERR)
-		snprintf(errstr, CONFIG_LEN, "Multiple BUILD_MIRROR.");
-	else if (error == VARIENT_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Unknown build varient.");
-	else if (error == MULTIPLE_VARIENTS)
-		snprintf(errstr, CONFIG_LEN, "Multiple varients found.");
-	else if (error == NO_NETWORK_HARDWARE)
-		snprintf(errstr, CONFIG_LEN, "Network device not found.");
-	else if (error == OS_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "OS not found.");
-	else if (error == MULTIPLE_OS)
-		snprintf(errstr, CONFIG_LEN, "Multiple OS found.");
-	else if (error == SCHEME_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Partition scheme not found.");
-	else if (error == INSERT_NOT_CONFIGURED)
-		snprintf(errstr, CONFIG_LEN, "No Database insert function.");
-	else if (error == CANNOT_FIND_BUILD_IP)
-		snprintf(errstr, CONFIG_LEN, "Cannot find the build IP!");
-	else if (error == BUILD_IN_DATABASE)
-		snprintf(errstr, CONFIG_LEN, "Build for server already exists.");
-	else if (error == CANNOT_MODIFY_BUILD_DOMAIN)
-		snprintf(errstr, CONFIG_LEN, "Cannot modify build domain.");
-	else if (error == LOCALE_NOT_IMPLEMENTED)
-		snprintf(errstr, CONFIG_LEN, "Locale not implemented, sorry.");
-	else if (error == NO_MODIFIERS)
-		snprintf(errstr, CONFIG_LEN, "No modifiers supplied.");
-	else if (error == PARTITIONS_NOT_FOUND)
-		snprintf(errstr, CONFIG_LEN, "Partition scheme not found.");
-	else if (error == NO_BASIC_DISK)
-		snprintf(errstr, CONFIG_LEN, "Cannot find partitions.");
-	else if (error == NO_BUILD_URL)
-		snprintf(errstr, CONFIG_LEN, "No url in build domain.");
-	else if (error == NO_LOG_CONFIG)
-		snprintf(errstr, CONFIG_LEN, "Cannot get log config.");
-	else if (error == NO_BD_CONFIG)
-		snprintf(errstr, CONFIG_LEN, "Cannot get build domain config.");
-	else if (error == NO_HARD_DISK_DEV)
-		snprintf(errstr, CONFIG_LEN, "Cannot find disk for server");
-	else if (error == NO_BUILD_PACKAGES)
-		snprintf(errstr, CONFIG_LEN, "No build packages in database");
-	else
-		snprintf(errstr, CONFIG_LEN, "Unknown error %d", error);
-}
-
 void 
 display_type_error(short int type)
 {
 	char *message;
 	
-	if (!(message = calloc(CONFIG_LEN, sizeof(char))))
-		report_error(MALLOC_FAIL, "message in display_type_error");
+	message = ailsa_calloc(CONFIG_LEN, "message in display_type_error");
 	snprintf(message, HOST_LEN, "\
 Unable to perform requested action on ");
 	if (type == SERVER) {

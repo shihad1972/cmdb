@@ -34,7 +34,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 typedef struct locale_comm_line_s {
 	char *country;
@@ -52,7 +51,7 @@ get_default_locale(ailsa_cmdb_s *ccs, unsigned long int *lid);
 static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl);
 
-static void
+static int
 validate_locale_comm_line(locale_comm_line_s *cl);
 
 static int
@@ -191,27 +190,28 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 	return retval;
 }
 
-static void
+static int
 validate_locale_comm_line(locale_comm_line_s *cl)
 {
 	if (cl->language)
 		if (ailsa_validate_input(cl->language, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "language");
+			return LANGUAGE_INVALID;
 	if (cl->keymap)
 		if (ailsa_validate_input(cl->keymap, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "keymap");
+			return KEYMAP_INVALID;
 	if (cl->locale)
 		if (ailsa_validate_input(cl->locale, LOGVOL_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "locale");
+			return LOCALE_INVALID;
 	if (cl->name)
 		if (ailsa_validate_input(cl->name, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "name");
+			return LOCAL_NAME_INVALID;
 	if (cl->timezone)
 		if (ailsa_validate_input(cl->timezone, TIMEZONE_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "timezone");
+			return TIMEZONE_INVALID;
 	if (cl->country)
 		if (ailsa_validate_input(cl->country, NAME_REGEX) < 0)
-			report_error(USER_INPUT_INVALID, "country");
+			return COUNTRY_INVALID;
+	return 0;
 }
 
 static void

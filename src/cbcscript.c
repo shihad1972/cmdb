@@ -209,7 +209,7 @@ check_cbc_script_comm_line(cbc_syss_s *cbcs)
 			if (cbcs->no == 0)
 				retval = AILSA_NO_NUMBER;
 			else if (!(cbcs->type))
-				retval = AILSA_NO_ALIAS;
+				retval = AILSA_NO_OS;
 			else if (!(cbcs->domain))
 				retval = AILSA_NO_BUILD_DOMAIN;
 			else if (!(cbcs->arg))

@@ -214,7 +214,7 @@ validate_cbc_comm_line(cbc_comm_line_s *cml)
 			return UUID_INPUT_INVALID;
 	if (cml->name)
 		if (ailsa_validate_input(cml->name, NAME_REGEX) < 0)
-			return NAME_REGEX_INVALID;
+			return SERVER_NAME_INVALID;
 	if (cml->os)
 		if (ailsa_validate_input(cml->os, NAME_REGEX) < 0)
 			return OS_INVALID;

@@ -41,7 +41,6 @@
 #endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include <ailsasql.h>
-#include "cmdb.h"
 
 typedef struct cbcos_comm_line_s {
 	char *alias;
@@ -84,9 +83,6 @@ static void
 cbcos_check_for_os(cbcos_comm_line_s *col, AILELEM *head, int *test);
 
 static void
-cbcos_get_os_string(char *error, cbcos_comm_line_s *col);
-
-static void
 cbcos_clean_comm_line(cbcos_comm_line_s *cl);
 
 static int
@@ -110,12 +106,10 @@ cbcos_set_default_os(ailsa_cmdb_s *cc, cbcos_comm_line_s *ccl);
 int
 main (int argc, char *argv[])
 {
-	char error[CONFIG_LEN];
 	int retval = 0;
 	ailsa_cmdb_s *cmc = ailsa_calloc(sizeof(ailsa_cmdb_s), "cmc in main");
 	cbcos_comm_line_s *cocl = ailsa_calloc(sizeof(cbcos_comm_line_s), "cocl in main");
 
-	memset(error, 0, CONFIG_LEN);
 	if ((retval = parse_cbcos_comm_line(argc, argv, cocl)) != 0) {
 		cbcos_clean_comm_line(cocl);
 		ailsa_clean_cmdb(cmc);
@@ -136,29 +130,9 @@ main (int argc, char *argv[])
 		retval = cbcos_set_default_os(cmc, cocl);
 	else
 		printf("Unknown action type\n");
-	if (retval != 0) {
-		cbcos_get_os_string(error, cocl);
-		cbcos_clean_comm_line(cocl);
-		ailsa_clean_cmdb(cmc);
-		report_error(retval, error);
-	}
 	ailsa_clean_cmdb(cmc);
 	cbcos_clean_comm_line(cocl);
 	exit(retval);
-}
-
-static void
-cbcos_get_os_string(char *error, cbcos_comm_line_s *cocl)
-{
-	if (cocl->version) {
-		if (cocl->arch)
-			snprintf(error, CONFIG_LEN, "%s %s %s",
-			 cocl->os, cocl->version, cocl->arch);
-		else
-			snprintf(error, CONFIG_LEN, "%s %s", cocl->os, cocl->version);
-	} else {
-		snprintf(error, CONFIG_LEN, "%s", cocl->os);
-	}
 }
 
 static int
