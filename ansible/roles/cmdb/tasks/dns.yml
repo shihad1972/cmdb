@@ -26,3 +26,24 @@
     owner: "{{ bind_user }}"
     group: "{{ cmdb_group }}"
     mode: 0664
+  notify: restart bind
+
+- name: Create fwd config file
+  file:
+    content: ""
+    dest: "{{ bind_dir }}/{{ fwd_config }}"
+    force: no
+    owner: "{{ bind_user }}"
+    group: "{{ cmdb_group }}"
+    mode: 0664
+  notify: restart bind
+
+- name: Create rev config file
+  file:
+    content: ""
+    dest: "{{ bind_dir }}/{{ rev_config }}"
+    force: no
+    owner: "{{ bind_user }}"
+    group: "{{ cmdb_group }}"
+    mode: 0664
+  notify: restart bind
