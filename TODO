@@ -1,5 +1,6 @@
 04/12/2020
-We cannot add a slave zone currently.
+  * We cannot add a slave zone currently.
+  * Maybe want to be able to modify the device ID of a piece of hardware.
 
 03/12/2020
 Not really sure we need the customers, contacts and services in CMDB. It would
@@ -10,10 +11,6 @@ a separate program.
 Will need to check the basic queries that join on other tables; these will
 fail if the initial table is empty (also presume if the target table is also
 empty)
-
-22/11/2020
-In getting config values, adding a trailing / to value not read results in a
-segmentation fault. I need to check if value exists first.
 
 11/07/2020
 Should be able to read config values from environment variables. Also
@@ -342,3 +339,8 @@ error, and get back to main, so we can free memory there.
 	   command line validation; can pass the REGEX number to get the
 	   correct error to display.
 	   	*** Done: Commit ID 0d2a63b ***
+
+22/11/2020
+In getting config values, adding a trailing / to value not read results in a
+segmentation fault. I need to check if value exists first.
+	*** Done. Commit ID: b5cccdf ***
