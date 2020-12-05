@@ -1,8 +1,12 @@
+05/12/2020
+Add a script template file to the ansible role that can add some test
+data into the database.
+
 04/12/2020
   * We cannot add a slave zone currently.
   * Maybe want to be able to modify the device ID of a piece of hardware.
   * update cbcos so it can remove multiple architectures at once.
-  * Ensure ansible directory is added into distribution
+  * Ensure ansible directory is added into distribution  **DONE**
 
 03/12/2020
 Not really sure we need the customers, contacts and services in CMDB. It would

@@ -55,6 +55,7 @@ const char *deb_i386_boot = "/main/installer-i386/current/images/netboot/debian-
 const char *deb_amd64_boot = "/main/installer-amd64/current/images/netboot/debian-installer/amd64";
 const char *ubu_i386_boot = "/main/installer-i386/current/images/netboot/ubuntu-installer/i386";
 const char *ubu_amd64_boot = "/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64";
+const char *ubu_new_amd64_boot = "/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64";
 
 static int
 write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone);

@@ -50,8 +50,10 @@ const char *basic_queries[] = {
 "SELECT vm_server, type FROM vm_server_hosts", // VM_SERVERS
 "SELECT service, detail FROM service_type", // SERVICE_TYPES_ALL
 "SELECT type, class FROM hard_type", // HARDWARE_TYPES_ALL
-"SELECT DISTINCT bo.os FROM build_os bo JOIN build_type bt ON bt.alias=bo.alias", // BUILD_OS_NAME_TYPE
-"SELECT os, os_version, alias, arch, ver_alias, cuser, ctime FROM build_os", // BUILD_OSES
+"SELECT DISTINCT bo.os FROM build_os bo JOIN build_type bt ON bt.alias=bo.alias\
+ ORDER BY bo.os", // BUILD_OS_NAME_TYPE
+"SELECT os, os_version, alias, arch, ver_alias, cuser, ctime FROM build_os ORDER BY os, \
+ length(os_version), os_version", // BUILD_OSES
 "SELECT varient_id, valias, varient, cuser, muser, ctime, mtime FROM varient", // BUILD_VARIENTS
 "SELECT DISTINCT alias FROM build_os",	// BUILD_OS_ALIASES
 "SELECT p.package, p.os_id FROM packages p LEFT JOIN varient v ON v.varient_id = p.varient_id \

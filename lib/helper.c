@@ -287,6 +287,7 @@ cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 	char *version = NULL;
 	char *arch = NULL;
 	int retval = 0;
+	unsigned int query = BUILD_OS_ON_ALL;
 	AILLIST *a = ailsa_db_data_list_init();
 
 	if (!(args[0]) && !(args[1]) && !(args[2])) {
@@ -314,11 +315,15 @@ cmdb_add_os_id_to_list(char **args, ailsa_cmdb_s *cc, AILLIST *list)
 			ailsa_syslog(LOG_ERR, "Cannot add version alias to list");
 			goto cleanup;
 		}
-		if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
-			goto cleanup;
+		if (!(arch)) {
+			query = BUILD_OS_ON_NAME_VERSION;
+		} else {
+			if ((retval = cmdb_add_string_to_list(arch, a)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot add OS arch to list");
+				goto cleanup;
+			}
 		}
-		if ((retval = ailsa_argument_query(cc, BUILD_OS_ON_ALL, a, list)) != 0)
+		if ((retval = ailsa_argument_query(cc, query, a, list)) != 0)
 			ailsa_syslog(LOG_ERR, "CHECK_BUILD_OS query failed");
 	}
 	cleanup:

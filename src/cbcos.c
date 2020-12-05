@@ -210,8 +210,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		printf("No action provided\n");
 		return AILSA_NO_ACTION;
 	}
-	if (((col->action == CMDB_ADD) || (col->action == CMDB_DEFAULT) ||
-	      (col->action == CMDB_RM)) && ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
+	if (((col->action == CMDB_DEFAULT) || (col->action == CMDB_ADD))
+		&& ((!(col->version)) || (!(col->os)) || (!(col->arch)))) {
 			printf("Some details were not provided\n");
 			return AILSA_DISPLAY_USAGE;
 	}
@@ -483,7 +483,7 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 			goto cleanup;
 		}
 	}
-	if ((retval = ailsa_delete_query(cmc, delete_queries[DELETE_BUILD_OS], list)) != 0) {
+	if ((retval = ailsa_multiple_delete(cmc, delete_queries[DELETE_BUILD_OS], list)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_BUILD_OS query failed");
 		goto cleanup;
 	}

@@ -328,7 +328,7 @@ cmdb_list_servers(ailsa_cmdb_s *cc)
 				coid = name->next;
 		}
 	} else {
-		ailsa_syslog(LOG_INFO, "No servers found in the database\n");
+		ailsa_syslog(LOG_INFO, "No servers found in the database");
 	}
 
 	cleanup:
