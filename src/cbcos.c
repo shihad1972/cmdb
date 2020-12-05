@@ -215,6 +215,12 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			printf("Some details were not provided\n");
 			return AILSA_DISPLAY_USAGE;
 	}
+	if (col->action == CMDB_RM) {
+		if (!(col->version) || ((!col->os) && !(col->alias))) {
+			ailsa_syslog(LOG_ERR, "Version or os name / alias not provided");
+			return AILSA_DISPLAY_USAGE;
+		}
+	}
 	if ((col->action != CMDB_LIST && col->action != DOWNLOAD) && 
 		!((col->os))) {
 		printf("No OS name was provided\n");
