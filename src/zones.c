@@ -505,11 +505,9 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		}
 		e = r->head;
 		type = ((ailsa_data_s *)e->data)->data->text;
-		if (strcmp(type, "master") == 0) {
-			if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone)) != 0) {
-				ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
-				goto cleanup;
-			}
+		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
+			goto cleanup;
 		} else {
 			ailsa_syslog(LOG_INFO, "zone %s not master. %s", zone, type);
 			goto cleanup; // maybe go on to write the zone file anyway??
@@ -531,10 +529,8 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		while (e) {
 			zone = ((ailsa_data_s *)e->data)->data->text;
 			type = ((ailsa_data_s *)e->next->data)->data->text;
-			if (strcmp(type, "master") == 0) {
-				if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone)) != 0) {
-					ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
-				}
+			if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
 			}
 			e = ailsa_move_down_list(e, len);
 		}
@@ -561,7 +557,7 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 		return AILSA_NO_DATA;
 	int retval;
 	char *comm = ailsa_calloc(DOMAIN_LEN, "comm in commit_rev_zones");
-	char *zone;
+	char *zone, *type;
 	AILLIST *l = ailsa_db_data_list_init();
 	AILELEM *e;
 	ailsa_data_s *d;
@@ -578,15 +574,17 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 	while (e) {
 		d = e->data;
 		zone = d->data->text;
+		d = e->next->data;
+		type = d->data->text;
 		if (name) {
 			if (strncmp(name, zone, DOMAIN_LEN) == 0)
-				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone)) != 0)
+				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type)) != 0)
 					ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
 		} else {
-			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone)) != 0)
+			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type)) != 0)
 				ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
 		}
-		e = e->next;
+		e = ailsa_move_down_list(e, 2);
 	}
 	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to create reverse config");
@@ -855,7 +853,7 @@ mark_preferred_a_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot add network IP address to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, r)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, r)) != 0)
 		goto cleanup;
 	if ((retval = dnsa_populate_record(dc, cm, r)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot populate record info");
@@ -921,7 +919,7 @@ add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *z = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, rec)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, rec)) != 0)
 		goto cleanup;
 	if ((retval = dnsa_populate_record(dc, cm, rec)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot populate list with record details");
@@ -962,7 +960,7 @@ add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot add muser to update list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, z)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, z)) != 0)
 		goto cleanup;
 	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], z)) != 0)
 		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
@@ -1031,7 +1029,7 @@ add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		tmp = strchr(domain, '.');
 		if (tmp) {
 			tmp++;
-			if ((retval = cmdb_check_add_zone_id_to_list(tmp, FORWARD_ZONE, dc, c)) != 0)
+			if ((retval = cmdb_check_add_zone_id_to_list(tmp, FORWARD_ZONE, "master", dc, c)) != 0)
 				goto cleanup;
 		} else {
 			ailsa_syslog(LOG_ERR, "Cannot determine top level domain");
@@ -1040,7 +1038,7 @@ add_cname_to_root_domain(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		}
 		cm->toplevel = strndup(tmp, DOMAIN_LEN);
 	} else {
-		if ((retval = cmdb_check_add_zone_id_to_list(cm->toplevel, FORWARD_ZONE, dc, c)) != 0)
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->toplevel, FORWARD_ZONE, "master", dc, c)) != 0)
 			goto cleanup;
 	}
 	if ((retval = cmdb_add_string_to_list("CNAME", c)) != 0) {
@@ -1090,17 +1088,17 @@ check_for_zones_and_hosts(ailsa_cmdb_s *dc, char *dom, char *top, char *host)
 	char *tmp;
 	int retval;
 
-	if ((retval = cmdb_check_add_zone_id_to_list(dom, FORWARD_ZONE, dc, d)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(dom, FORWARD_ZONE, "master", dc, d)) != 0)
 		goto cleanup;
 	if (top) {
-		if ((retval = cmdb_check_add_zone_id_to_list(top, FORWARD_ZONE, dc, t)) != 0)
+		if ((retval = cmdb_check_add_zone_id_to_list(top, FORWARD_ZONE, "master", dc, t)) != 0)
 			goto cleanup;
 	} else {
 		snprintf(domain, DOMAIN_LEN, "%s", dom);
 		tmp = strchr(domain, '.');
 		if (tmp) {
 			tmp++;
-			if ((retval = cmdb_check_add_zone_id_to_list(tmp, FORWARD_ZONE, dc, t)) != 0)
+			if ((retval = cmdb_check_add_zone_id_to_list(tmp, FORWARD_ZONE, "master", dc, t)) != 0)
 				goto cleanup;
 		} else {
 			ailsa_syslog(LOG_ERR, "Cannot determine top level domain");
@@ -1156,7 +1154,7 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *list = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, rec)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, rec)) != 0)
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(cm->rtype, rec)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add record type to list");
@@ -1222,7 +1220,7 @@ add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-	int retval = add_forward_zone(dc, cm->domain);
+	int retval = add_forward_zone(dc, cm->domain, cm->ztype, cm->master);
 	return retval;
 }
 
@@ -1235,8 +1233,13 @@ delete_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	int retval;
 	AILLIST *z = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, dc, z)) != 0)
-		goto cleanup;
+	if (cm->ztype) {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, cm->ztype, dc, z)) != 0)
+			goto cleanup;
+	} else {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, z)) != 0)
+			goto cleanup;
+	}
 	// We are not checking if any of the records in this zone are in use. Beware!
 	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_FWD_ZONE], z)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_FWD_ZONE query failed");
@@ -1266,8 +1269,13 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	AILLIST *rev = ailsa_db_data_list_init();
 	AILLIST *rid = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, dc, rid)) != 0)
-		goto cleanup;
+	if (cm->ztype) {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, cm->ztype, dc, rid)) != 0)
+			goto cleanup;
+	} else {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, "master", dc, rid)) != 0)
+			goto cleanup;
+	}
 	if ((retval = dnsa_populate_rev_zone(dc, cm, rev)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot create list for DB insert");
 		goto cleanup;
@@ -1276,11 +1284,9 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_ZONE query failed");
 		goto cleanup;
 	}
-	if (!(cm->ztype)) {
-		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain)) != 0) {
-			ailsa_syslog(LOG_ERR, "Unable to validate new zone %s", cm->domain);
-			goto cleanup;
-		}
+	if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, cm->ztype)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to validate new zone %s", cm->domain);
+		goto cleanup;
 	}
 	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot write reverse zones configuration");
@@ -1306,8 +1312,13 @@ delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	int retval;
 	AILLIST *rev = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, dc, rev)) != 0)
-		goto cleanup;
+	if (cm->ztype) {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, cm->ztype, dc, rev)) != 0)
+			goto cleanup;
+	} else {
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, "master", dc, rev)) != 0)
+			goto cleanup;
+	}
 	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_REV_ZONE], rev)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_REV_ZONE query failed");
 		goto cleanup;
@@ -1344,6 +1355,10 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 
 	if ((retval = cmdb_add_string_to_list(cm->domain, net)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add network range to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_for_rev_zone(dc, cm->domain, "master")) != 0) {
+		ailsa_syslog(LOG_INFO, "Zone with range %s does not exist or is not a master zone", cm->domain);
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_NET_RANGE, net, rev)) != 0) {
@@ -1409,7 +1424,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 			ailsa_syslog(LOG_ERR, "Update query SET_REV_ZONE_UPDATED failed");
 			goto cleanup;
 		}
-		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain)) != 0) {
+		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, "master")) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", cm->domain);
 			goto cleanup;
 		}
@@ -1549,7 +1564,7 @@ cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *rem)
 	if (rem->total == 0)
 		goto cleanup;
 
-	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, dc, l)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, "master", dc, l)) != 0)
 		goto cleanup;
 	e = rem->head;
 	while (e) {
@@ -1660,7 +1675,7 @@ cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
 			host++;
 		else
 			goto jump;
-		if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, dc, a)) != 0)
+		if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, "master", dc, a)) != 0)
 			goto cleanup;
 		if ((retval = cmdb_add_string_to_list(host, a)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add host to list");
@@ -1823,7 +1838,7 @@ add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot add parent domain to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(parent, FORWARD_ZONE, dc, z)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(parent, FORWARD_ZONE, "master", dc, z)) != 0)
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(cm->domain, z)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add domain to list");
@@ -1849,7 +1864,7 @@ add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot insert muser into update list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(parent, FORWARD_ZONE, dc, u)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(parent, FORWARD_ZONE, "master", dc, u)) != 0)
 		goto cleanup;
 	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], u)) != 0) {
 		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");

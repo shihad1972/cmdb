@@ -519,7 +519,7 @@ cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long i
 	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *zone = ailsa_db_data_list_init();
 
-	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, rec)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, "master", cbt, rec)) != 0)
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list("A", rec)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add type string to list");
@@ -564,7 +564,7 @@ cbc_add_host_to_dns(ailsa_cmdb_s *cbt, char *domain, char *host, unsigned long i
 		ailsa_syslog(LOG_ERR, "Cannot add muser to zone update list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, cbt, zone)) != 0)
+	if ((retval = cmdb_check_add_zone_id_to_list(domain, FORWARD_ZONE, "master", cbt, zone)) != 0)
 		goto cleanup;
 	if ((retval = ailsa_update_query(cbt, update_queries[SET_FWD_ZONE_UPDATED], zone)) != 0) {
 		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");

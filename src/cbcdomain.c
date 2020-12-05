@@ -493,7 +493,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	if ((retval = write_dhcp_net_config(cbs)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot write new dhcpd.networks file\n");
 #ifdef HAVE_DNSA
-	if ((retval = add_forward_zone(cbs, cdl->domain)) != 0) {
+	if ((retval = add_forward_zone(cbs, cdl->domain, "master", NULL)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add DNS domain %s to database", cdl->domain);
 		goto cleanup;
 	}

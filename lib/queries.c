@@ -71,7 +71,7 @@ const char *basic_queries[] = {
 "SELECT net_range, prefix, valid, serial,type, master FROM rev_zones", // REV_ZONE_INFORMATION
 "SELECT z.name, g.name, g.pri_ns, g.sec_ns, g.pri_dns, g.sec_dns \
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
-"SELECT net_range FROM rev_zones WHERE type = 'master'", // REV_ZONES_NET_RANGE
+"SELECT net_range, type FROM rev_zones", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
 "SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
 "SELECT s.name, b.mac_addr, ip.ip, db.domain FROM build b \
@@ -308,14 +308,14 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // FWD_ZONE_ID_ON_ZONE_NAME
-"SELECT id FROM zones WHERE name = ? AND type = 'master'",
-	1,
-	{ AILSA_DB_TEXT }
+"SELECT id FROM zones WHERE name = ? AND type = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 	{ // REV_ZONE_ID_ON_RANGE
-"SELECT rev_zone_id FROM rev_zones WHERE net_range = ?",
-	1,
-	{ AILSA_DB_TEXT }
+"SELECT rev_zone_id FROM rev_zones WHERE net_range = ? and type = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 	{ // CONFIG_LENERVERS_ON_NAME
 "SELECT pri_dns, sec_dns FROM zones WHERE name = ?",
@@ -793,9 +793,14 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_FORWARD_ZONE
-"INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-	10,
-	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+"INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, type, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	11,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // INSERT_FORWARD_SLAVE_ZONE
+"INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	12,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_SYSTEM_PACKAGE
 "INSERT INTO system_packages (name, cuser, muser) VALUES (?, ?, ?)",

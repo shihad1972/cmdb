@@ -356,7 +356,7 @@ cmdb_add_os_alias_to_list(char *os, ailsa_cmdb_s *cc, AILLIST *list)
 		return retval;
 }
 int
-cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_add_zone_id_to_list(char *zone, int type, const char *ztype, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(zone) || !(cc) || !(list))
 		return AILSA_NO_DATA;
@@ -366,6 +366,17 @@ cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
 	if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add zone name %s to list", zone);
 		goto cleanup;
+	}
+	if (ztype) {
+		if ((retval = cmdb_add_string_to_list(ztype, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone type %s to list", ztype);
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("master", l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add zone type 'master' to list");
+			goto cleanup;
+		}
 	}
 	switch (type) {
 	case FORWARD_ZONE:
@@ -583,16 +594,23 @@ cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
-cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
+cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone, const char *type)
 {
 	if (!(cc) || !(zone))
 		return AILSA_NO_DATA;
 	AILLIST *l = ailsa_db_data_list_init();
 	int retval;
 
-	if ((retval = cmdb_add_zone_id_to_list(zone, FORWARD_ZONE, cc, l)) != 0) {
-		retval = -1;
-		goto cleanup;
+	if (type) {
+		if ((retval = cmdb_add_zone_id_to_list(zone, FORWARD_ZONE, type, cc, l)) != 0) {
+			retval = -1;
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_zone_id_to_list(zone, FORWARD_ZONE, "master", cc, l)) != 0) {
+			retval = -1;
+			goto cleanup;
+		}
 	}
 	retval = (int)l->total;
 	cleanup:
@@ -600,6 +618,30 @@ cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone)
 		return retval;
 }
 
+int
+cmdb_check_for_rev_zone(ailsa_cmdb_s *cc, char *zone, const char *type)
+{
+	if (!(cc) || !(zone))
+		return AILSA_NO_DATA;
+	AILLIST *l = ailsa_db_data_list_init();
+	int retval;
+
+	if (type) {
+		if ((retval = cmdb_add_zone_id_to_list(zone, REVERSE_ZONE, type, cc, l)) != 0) {
+			retval = -1;
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_zone_id_to_list(zone, REVERSE_ZONE, "master", cc, l)) != 0) {
+			retval = -1;
+			goto cleanup;
+		}
+	}
+	retval = (int)l->total;
+	cleanup:
+		ailsa_list_full_clean(l);
+		return retval;
+}
 int
 cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec)
 {
@@ -735,14 +777,14 @@ cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
-cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list)
+cmdb_check_add_zone_id_to_list(char *zone, int type, const char *ztype, ailsa_cmdb_s *cc, AILLIST *list)
 {
 	if (!(zone) || !(cc) || !(list) || (type == 0))
 		return AILSA_NO_DATA;
 	int retval;
 	size_t total = list->total;
 
-	if ((retval = cmdb_add_zone_id_to_list(zone, type, cc, list)) != 0) {
+	if ((retval = cmdb_add_zone_id_to_list(zone, type, ztype, cc, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
 		return retval;
 	}

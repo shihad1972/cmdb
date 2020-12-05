@@ -5,7 +5,7 @@ data into the database.
 04/12/2020
   * We cannot add a slave zone currently.
   * Maybe want to be able to modify the device ID of a piece of hardware.
-  * update cbcos so it can remove multiple architectures at once.
+  * update cbcos so it can remove multiple architectures at once. ** DONE **
   * Ensure ansible directory is added into distribution  **DONE**
 
 03/12/2020
@@ -25,8 +25,7 @@ have defaults either in config file, environment or database
 28/06/2020
 The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do
 not find what they are searching for. Should maybe have a wrapper function
-for them if we want to be _sure_ there the server is added. Could probably
-do this when consolidating these functions doing note 24/06/2020.
+for them if we want to be _sure_ there the server is added.
 
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)

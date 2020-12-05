@@ -292,6 +292,7 @@ enum {			// SQL INSERT QUERIES
 	INSERT_PART_OPTION,
 	INSERT_BUILD_DOMAIN,
 	INSERT_FORWARD_ZONE,
+	INSERT_FORWARD_SLAVE_ZONE,
 	INSERT_SYSTEM_PACKAGE,
 	INSERT_SYSTEM_PACKAGE_ARGS,
 	INSERT_SYSTEM_PACKAGE_CONF,
@@ -467,7 +468,7 @@ int
 cmdb_add_system_script_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_add_zone_id_to_list(char *zone, int type, const char *ztype, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_add_vm_server_id_to_list(char *name, ailsa_cmdb_s *cc, AILLIST *list);
@@ -488,7 +489,10 @@ int
 cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone);
+cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone, const char *type);
+
+int
+cmdb_check_for_rev_zone(ailsa_cmdb_s *cc, char *zone, const char *type);
 
 int
 cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec);
@@ -506,7 +510,7 @@ int
 cmdb_check_add_cust_id_to_list(char *coid, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
-cmdb_check_add_zone_id_to_list(char *zone, int type, ailsa_cmdb_s *cc, AILLIST *list);
+cmdb_check_add_zone_id_to_list(char *zone, int type, const char *ztype, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
 cmdb_check_add_varient_id_to_list(char *varient, ailsa_cmdb_s *cc, AILLIST *list);
@@ -521,7 +525,7 @@ int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
 int
-dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, AILLIST *zone);
+dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone);
 
 // Data manipulation functions
 
@@ -558,7 +562,7 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 // Some zone functions
 
 int
-cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone);
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype);
 
 int
 cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);
@@ -567,7 +571,7 @@ int
 cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs);
 
 int
-add_forward_zone(ailsa_cmdb_s *dc, char *domain);
+add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *master);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>
