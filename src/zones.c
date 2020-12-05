@@ -508,9 +508,6 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
 			goto cleanup;
-		} else {
-			ailsa_syslog(LOG_INFO, "zone %s not master. %s", zone, type);
-			goto cleanup; // maybe go on to write the zone file anyway??
 		}
 	} else {
 		if ((retval = ailsa_basic_query(dc, ZONE_NAME_TYPES, r)) != 0) {

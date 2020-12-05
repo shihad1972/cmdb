@@ -2,8 +2,12 @@
 Add a script template file to the ansible role that can add some test
 data into the database.
 
+Also, adding SRV (and probably MX records) do not check for trailing .
+in the hostname. If this is a FQDN it will not be added as such to the
+zonefile.
+
 04/12/2020
-  * We cannot add a slave zone currently.
+  * We cannot add a slave zone currently. ** DONE **
   * Maybe want to be able to modify the device ID of a piece of hardware.
   * update cbcos so it can remove multiple architectures at once. ** DONE **
   * Ensure ansible directory is added into distribution  **DONE**
@@ -29,6 +33,8 @@ for them if we want to be _sure_ there the server is added.
 
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)
+Would need to have the size of the data pointer in the element. Also, want to
+add after, before, head or tail.
 
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.
@@ -54,11 +60,6 @@ definition language for the daemon too.
 Reworking the SQL code:
   - allow inserts of multiple entries				**DONE**
   - condense cmdb dnsa and cbc sql into 1 set of functions	**DONE**
-
-09/11/2018
-Deleting SRV records is tricky; it seems to delete all SRV records
-for a given service (e.g. ldap) and we cannot specify which one
-to delete
 
 06/03/2016
 I should probably have a default configuration file, and use make to create
@@ -351,3 +352,9 @@ error, and get back to main, so we can free memory there.
 In getting config values, adding a trailing / to value not read results in a
 segmentation fault. I need to check if value exists first.
 	*** Done. Commit ID: b5cccdf ***
+
+09/11/2018
+Deleting SRV records is tricky; it seems to delete all SRV records
+for a given service (e.g. ldap) and we cannot specify which one
+to delete.
+	** Fixed. You can now specifiy using service, priority and protocol.

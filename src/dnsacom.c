@@ -159,7 +159,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->action = AILSA_VERSION;
 		}
 	}
-	if (comp->rtype) {
+	if (comp->rtype && (comp->action == DNSA_AHOST)) {
 		if (strncmp(comp->rtype, "SRV", BYTE_LEN) == 0) {
 /* Check if user has specified destination with -h and act accordingly */
 			if ((comp->host) && (!(comp->dest)))
@@ -283,8 +283,9 @@ validate_fwd_comm_line(dnsa_comm_line_s *comm)
 				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
 			   	 (ailsa_validate_input(comm->dest, NAME_REGEX) < 0))
 					return DEST_INPUT_INVALID;
-			if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
-				return SERVICE_INPUT_INVALID;
+			if (comm->service)
+				if (ailsa_validate_input(comm->service, NAME_REGEX) < 0)
+					return SERVICE_INPUT_INVALID;
 		} else if (strncmp(comm->rtype, "CNAME", BYTE_LEN) == 0) {
 			if (comm->dest)
 				if ((ailsa_validate_input(comm->dest, DOMAIN_REGEX) < 0) &&
