@@ -242,7 +242,7 @@ ailsa_list_pop_element(AILLIST *list, AILELEM *element)
 }
 
 int
-ailsa_element_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size)
+ailsa_list_insert_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size)
 {
 	if (!(list) || !(copy) || (action == 0) || (size == 0))
 		return -1;
@@ -289,6 +289,20 @@ ailsa_element_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size
 		ailsa_syslog(LOG_ERR, "Element in destination list was empty");
 		return AILSA_LIST_CLONE_FAILED;
 }
+
+AILELEM *
+ailsa_clone_element(AILELEM *e, size_t size)
+{
+	if (!(e))
+		return NULL;
+	AILELEM *c = ailsa_calloc(sizeof(AILELEM), "c in ailsa_clone_element");
+	void *data = ailsa_calloc(size, "data in ailsa_clone_element");
+
+	memcpy(data, e->data, size);
+	c->data = data;
+	return c;
+}
+
 void
 ailsa_clean_element(AILLIST *list, AILELEM *e)
 {

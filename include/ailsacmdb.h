@@ -804,7 +804,9 @@ ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len);
 int
 ailsa_list_pop_element(AILLIST *list, AILELEM *element);
 int
-ailsa_element_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size);
+ailsa_list_insert_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size);
+AILELEM *
+ailsa_clone_element(AILELEM *e, size_t size);
 void
 ailsa_clean_element(AILLIST *list, AILELEM *e);
 void
