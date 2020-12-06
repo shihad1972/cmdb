@@ -11,7 +11,7 @@ pipeline {
             steps {
                 script {
                     def autoconf = load 'ci/autoConfBuildSteps.groovy'
-                    autoconf.init()
+                    autoconf.autoInit()
                     autoconf.clean()
                     autoconf.check()
                 }

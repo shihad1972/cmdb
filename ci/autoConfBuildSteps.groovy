@@ -1,4 +1,4 @@
-def init() {
+def autoInit() {
         sh "git log --stat --name-only --date=short --abbrev-commit > ChangeLog"
         sh "autoreconf -iv"
 }
