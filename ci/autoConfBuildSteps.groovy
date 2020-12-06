@@ -1,4 +1,4 @@
-def autoInit() {
+def init() {
         sh "git log --stat --name-only --date=short --abbrev-commit > ChangeLog"
         sh "autoreconf -iv"
 }
@@ -18,3 +18,5 @@ def install() {
         sh "make"
         sh "sudo make install"
 }
+
+return this
