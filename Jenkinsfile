@@ -9,16 +9,20 @@ pipeline {
     stages {
         stage('distcheck') {
             steps {
-                def autoconf = load 'ci/autoConfBuildSteps.groovy'
-                autoconf.init
-                autoconf.clean
-                autoconf.check
+                script {
+                    def autoconf = load 'ci/autoConfBuildSteps.groovy'
+                    autoconf.init
+                    autoconf.clean
+                    autoconf.check
+                }
             }
         }
         stage('install') {
             steps {
-                def autoconf = load 'ci/autoConfBuildSteps.groovy'
-                autoconf.install
+                script {
+                    def autoconf = load 'ci/autoConfBuildSteps.groovy'
+                    autoconf.install
+                }
             }
         }
     }
