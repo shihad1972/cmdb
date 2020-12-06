@@ -2,6 +2,9 @@
 Add a script template file to the ansible role that can add some test
 data into the database.
 
+Also, look into having an ailsalib subdirectory for most of the code that is
+in ailsacmdb library, and move the ailsasql library into ailsacmdb.
+
 Also, adding SRV (and probably MX records) do not check for trailing .
 in the hostname. If this is a FQDN it will not be added as such to the
 zonefile.
@@ -30,6 +33,8 @@ have defaults either in config file, environment or database
 The cmdb_add_*_id_to_list functions are inconsistent. Some fail if they do
 not find what they are searching for. Should maybe have a wrapper function
 for them if we want to be _sure_ there the server is added.
+	** Update ** Not sure this is an issue any more. When I have the test
+	harness, it should pick this up.
 
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)
