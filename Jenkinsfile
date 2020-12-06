@@ -7,16 +7,18 @@ pipeline {
         }
     }
     stages {
-        stage('build') {
+        stage('distcheck') {
             steps {
-                sh '''
-                   git log --stat --name-only --date=short --abbrev-commit > ChangeLog
-                   autoreconf -iv
-                   ./configure --sysconfdir=/etc --localstatedir=/var/lib
-                   make distclean
-                   ./configure --sysconfdir=/etc --localstatedir=/var/lib
-                   make distcheck
-                '''
+                def autoconf = load 'ci/autoConfBuildSteps.groovy'
+                autoconf.init
+                autoconf.clean
+                autoconf.check
+            }
+        }
+        stage('install') {
+            steps {
+                def autoconf = load 'ci/autoConfBuildSteps.groovy'
+                autoconf.install
             }
         }
     }
