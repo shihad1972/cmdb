@@ -107,14 +107,6 @@ enum {			/* regex search codes */
 	SYSTEM_PACKAGE_ARG_REGEX
 };
 
-enum {			// Client commands
-	CHECKIN = 1,
-	HOST = 2,
-	DATA = 3,
-	UPDATE = 4,
-	CLOSE = 5
-};
-
 enum {                  // Action Codes
 	NONE = 0,
 	CMDB_ADD = 1,
@@ -197,6 +189,7 @@ enum {                  // Error codes
 	AILSA_WRONG_ACTION = 53,
 	AILSA_NO_PACKAGE = 54,
 	AILSA_NO_MASTER_NAME = 55,
+	AILSA_LIST_CLONE_FAILED = 56,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -358,6 +351,15 @@ typedef struct ailsa_list_s {
 	AILELEM	*head;
 	AILELEM	*tail;
 } AILLIST;
+
+// Linked list clone types
+
+enum {
+	AILSA_BEFORE = 1,
+	AILSA_AFTER,
+	AILSA_HEAD,
+	AILSA_TAIL,
+};
 
 // Hash table types
 
@@ -801,6 +803,8 @@ int
 ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len);
 int
 ailsa_list_pop_element(AILLIST *list, AILELEM *element);
+int
+ailsa_element_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size);
 void
 ailsa_clean_element(AILLIST *list, AILELEM *e);
 void

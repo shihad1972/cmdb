@@ -209,6 +209,7 @@ ailsa_list_remove_elements(AILLIST *l, AILELEM *e, size_t len)
 	}
 	return 0;
 }
+
 int
 ailsa_list_pop_element(AILLIST *list, AILELEM *element)
 {
@@ -216,7 +217,10 @@ ailsa_list_pop_element(AILLIST *list, AILELEM *element)
 	if (!(element) || list->total == 0)
 		return -1;
 	if (element == list->head) {
-		list->head = NULL;
+		if (element->next)
+			list->head = element->next;
+		else
+			list->head = NULL;
 	} else if (element == list->tail) {
 		list->tail = list->tail->prev;
 		list->tail->next = NULL;
@@ -237,6 +241,54 @@ ailsa_list_pop_element(AILLIST *list, AILELEM *element)
 	return 0;
 }
 
+int
+ailsa_element_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, size_t size)
+{
+	if (!(list) || !(copy) || (action == 0) || (size == 0))
+		return -1;
+	int retval = 0;
+	void *data = ailsa_calloc(size, "data in ailsa_list_clone");
+
+	memcpy(data, copy->data, size);
+	switch (action) {
+	case AILSA_BEFORE:
+		if (!(ptr))
+			goto cleanup;
+		if ((retval = ailsa_list_ins_prev(list, ptr, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert data into previous position in the list");
+			retval =  AILSA_LIST_CLONE_FAILED;
+		}
+		break;
+	case AILSA_AFTER:
+		if (!(ptr))
+			goto cleanup;
+		if ((retval = ailsa_list_ins_next(list, ptr, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert data into next position in the list");
+			retval = AILSA_LIST_CLONE_FAILED;
+		}
+		break;
+	case AILSA_HEAD:
+		if ((retval = ailsa_list_ins_prev(list, list->head, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot inset element to be head of list");
+			retval = AILSA_LIST_CLONE_FAILED;
+		}
+		break;
+	case AILSA_TAIL:
+		if ((retval = ailsa_list_ins_next(list, list->tail, data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert element to be tail of list");
+			retval = AILSA_LIST_CLONE_FAILED;
+		}
+		break;
+	default:
+		ailsa_syslog(LOG_ERR, "Unknown action passed to ailsa_list_clone");
+		retval = AILSA_LIST_CLONE_FAILED;
+		break;
+	}
+	return retval;
+	cleanup:
+		ailsa_syslog(LOG_ERR, "Element in destination list was empty");
+		return AILSA_LIST_CLONE_FAILED;
+}
 void
 ailsa_clean_element(AILLIST *list, AILELEM *e)
 {
