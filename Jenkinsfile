@@ -17,13 +17,5 @@ pipeline {
                 }
             }
         }
-        stage('install') {
-            steps {
-                script {
-                    def autoconf = load 'ci/autoConfBuildSteps.groovy'
-                    autoconf.install()
-                }
-            }
-        }
     }
 }
