@@ -684,3 +684,33 @@ cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm)
 		ailsa_list_full_clean(l);
 		return retval;
 }
+
+int
+ailsa_list_networks(ailsa_mkvm_s *vm)
+{
+        if (!(vm))
+                return AILSA_NO_DATA;
+        int retval, i;
+        virConnectPtr conn;
+	virNetworkPtr *ptr = NULL;
+	virNetworkPtr *n;
+	unsigned int flags = VIR_CONNECT_LIST_NETWORKS_ACTIVE | VIR_CONNECT_LIST_NETWORKS_PERSISTENT | VIR_CONNECT_LIST_NETWORKS_AUTOSTART;
+
+	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot connect to libvirt URL %s", vm->uri);
+		return retval;
+	}
+	if ((retval = virConnectListAllNetworks(conn, &ptr, flags)) == -1) {
+		ailsa_syslog(LOG_ERR, "Cannot list networks: %s", virGetLastErrorMessage());
+		goto cleanup;
+	}
+	n = ptr;
+	for (i = 0; i< retval; i++) {
+		printf("%s\n", virNetworkGetName(*n));
+		virNetworkFree(*n);
+		n++;
+	}
+	cleanup:
+		virConnectClose(conn);
+	        return retval;
+}

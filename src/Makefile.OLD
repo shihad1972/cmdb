@@ -17,6 +17,7 @@ COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
 VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)
+MKNETOBJS = mknet.o $(VOBJECTS)
 DOBJECTS = dnsa.o $(DNSCOMOBJ)
 BOBJECTS = cbc.o $(DNSCOMOBJ) build.o createbuild.o cbccom.o
 CDOBJECTS = cbcdomain.o $(DNSCOMOBJ)
@@ -54,6 +55,8 @@ cbcscript:	$(SSOBJECTS)
 mkvm:	$(MKVMOBJETS)
 
 mksp:	$(MKPOOLOBJECTS)
+
+mknet:	$(MKNETOBJS)
 
 cmdb-identity:	$(CIDENOBJS)
 

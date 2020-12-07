@@ -33,5 +33,5 @@ daemon/cmdbd
 src/hellolv
 src/mkvm
 src/mksp
-src/dnsa
+src/mknet
 .vscode/*
