@@ -956,6 +956,9 @@ ailsa_get_iface_list(AILLIST *list);
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 
+int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest);
+
 // These should probably be moved to ailsasql.h
 
 void

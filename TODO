@@ -47,7 +47,7 @@ add after, before, head or tail.
 	without casting, and the function should be working with *void data
 	types. However, I _could_ have a clone function in AILLIST data type
 	that would know the data type of the element, in much the same way the
-	destroy function does. 
+	destroy function does.
 
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.

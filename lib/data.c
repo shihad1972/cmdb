@@ -560,6 +560,40 @@ ailsa_fill_string(ailsa_string_s *str, const char *s)
 	str->len = strlen(str->string);
 }
 
+int
+cbc_fill_partition_details(AILLIST *list, AILLIST *dest)
+{
+	if (!(list) || !(dest))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e = list->head;
+	ailsa_data_s *d;
+	ailsa_partition_s *p;
+	size_t total = 6;
+	if ((list->total == 0) || ((list->total % total) != 0)) {
+		ailsa_syslog(LOG_ERR, "list in cbc_fill_partition_details has wrong length %zu", list->total);
+		return AILSA_WRONG_LIST_LENGHT;
+	}
+	while (e) {
+		p = ailsa_calloc(sizeof(ailsa_partition_s), "p in cbc_fill_partition_details");
+		d = e->data;
+		p->min = d->data->number;
+		d = e->next->data;
+		p->max = d->data->number;
+		d = e->next->next->data;
+		p->pri = d->data->number;
+		d = e->next->next->next->data;
+		p->mount = strndup(d->data->text, DOMAIN_LEN);
+		d = e->next->next->next->next->data;
+		p->fs = strndup(d->data->text, SERVICE_LEN);
+		d = e->next->next->next->next->next->data;
+		p->logvol = strndup(d->data->text, MAC_LEN);
+		e = ailsa_move_down_list(e, total);
+		if ((retval = ailsa_list_insert(dest, p)) != 0)
+			return retval;
+	}
+	return 0;
+}
 
 int
 get_config_file_location(char *config)
