@@ -1,8 +1,8 @@
 bin_PROGRAMS = cmdb mkvm mksp cmdb-identity
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
-mkvm_SOURCES = mkvm.c virtual.c virtual.h
-mksp_SOURCES = mksp.c virtual.c virtual.h
+mkvm_SOURCES = mkvm.c virtual.c
+mksp_SOURCES = mksp.c virtual.c
 cmdb_SOURCES = cmdb.c cmdbcom.c servers.c customers.c
 dnsa_SOURCES = dnsa.c zones.c dnsacom.c
 CBC_DNSA = dnsacom.c zones.c

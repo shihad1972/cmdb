@@ -305,7 +305,11 @@ parse_system_mkvm_config(ailsa_mkvm_s *vm)
 #endif
 		goto cleanup;
 	}
-	parse_mkvm_config_values(vm, conf);
+	fseek(conf, 0, SEEK_END);
+	if (ftell(conf) > 0) {
+		fseek(conf, 0, SEEK_SET);
+		parse_mkvm_config_values(vm, conf);
+	}
 	cleanup:
 		if (conf)
 			fclose(conf);
@@ -347,7 +351,12 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 			goto cleanup;
 		}
 	}
-	parse_mkvm_config_values(vm, conf);
+	fseek(conf, 0, SEEK_END);
+	if (ftell(conf) > 0) {
+		fseek(conf, 0, SEEK_SET);
+		parse_mkvm_config_values(vm, conf);
+	}
+	
 	cleanup:
 		if (conf)
 			fclose(conf);
@@ -358,6 +367,7 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 
 /* Grab config values from confile file that uses NAME=value as configuration
    options */
+// valgrind reports an error if the file is empty for mk programs
 #ifndef GET_CONFIG_OPTION
 # define GET_CONFIG_OPTION(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \

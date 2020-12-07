@@ -155,6 +155,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
+	else if (retval == AILSA_NO_URI)
+		ailsa_syslog(LOG_ERR, "No URI was specified for the libvirt connection");
 	else if (retval == AILSA_DISPLAY_USAGE) {
 		if ((strncmp(program, "cmdb", CONFIG_LEN) == 0) || (strncmp(program, "cmdb2", CONFIG_LEN) == 0))
 			display_cmdb_usage();

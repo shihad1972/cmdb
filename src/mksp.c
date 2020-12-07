@@ -1,6 +1,6 @@
 /*
  *
- *  mksp : make storgae pool
+ *  mksp : make storage pool
  *  Copyright (C) 2018 - 2020  Iain M Conochie <iain-AT-thargoid.co.uk>
  *
  *  This program is free software; you can redistribute it and/or modify
