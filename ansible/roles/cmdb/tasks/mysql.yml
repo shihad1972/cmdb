@@ -1,8 +1,12 @@
 ---
 
-- name: Grab distro specific mysql vars
+- name: Grab Debian mysql vars
   include_vars: debian-mysql.yml
   when: ansible_distribution == 'Debian'
+
+- name: Grab Ubuntu mysql vars
+  include_vars: ubuntu-mysql.yml
+  when: ansible_distribution == 'Ubuntu'
 
 - name: Install the mysql package
   become: true

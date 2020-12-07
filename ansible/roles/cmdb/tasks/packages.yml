@@ -1,8 +1,12 @@
 ---
 
-- name: Grab packages list
+- name: Grab Debian packages list
   include_vars: debian-packages.yml
   when: ansible_distribution == 'Debian'
+
+- name: Grab Ubuntu packages list
+  include_vars: ubuntu-packages.yml
+  when: ansible_distribution == 'Ubuntu'
 
 - name: Install server packages
   become: true
