@@ -248,7 +248,7 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // PARTITIONS_ON_SCHEME_NAME
-"SELECT priority, minimum, maximum, filesystem, logical_volume, mount_point FROM default_part dp LEFT JOIN seed_schemes ss ON ss.def_scheme_id = dp.def_scheme_id WHERE ss.scheme_name = ?",
+"SELECT minimum, maximum, priority, mount_point, filesystem, logical_volume FROM default_part dp LEFT JOIN seed_schemes ss ON ss.def_scheme_id = dp.def_scheme_id WHERE ss.scheme_name = ?",
 	1,
 	{ AILSA_DB_TEXT }
 	},

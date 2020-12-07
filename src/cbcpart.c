@@ -369,12 +369,13 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	AILLIST *s = ailsa_db_data_list_init();
 	AILLIST *a = ailsa_db_data_list_init();
 	AILLIST *o = ailsa_db_data_list_init();
+	AILLIST *part = ailsa_partition_list_init();
 	AILELEM *e, *g;
-	size_t parts, i, len;
+	ailsa_partition_s *r;
+	size_t len;
 	int retval;
 	short int lvm;
-	char *str = NULL, *uname = NULL;
-	void *data;
+	char *uname = NULL;
 	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
 		goto cleanup;
@@ -391,7 +392,10 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		retval = AILSA_NO_DATA;
 		goto cleanup;
 	}
-	parts = p->total / 6;
+	if ((retval = cbc_fill_partition_details(p, part)) != 0) {
+		ailsa_syslog(LOG_ERR, "Unable to populate partition list");
+		goto cleanup;
+	}
 	printf("Partitioning scheme: %s, ", cpl->scheme);
 	lvm = ((ailsa_data_s *)s->head->next->data)->data->small;
 	if (lvm > 0)
@@ -410,33 +414,38 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		printf("\tVolume\n");
 	else
 		printf("\n");
-	e = p->head;
-	for (i = 0; i< parts; i++) {
-		str = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
-		while (a->total > 1) {
-			g = a->tail;
-			ailsa_list_remove(a, g, &data);
-			ailsa_clean_data(data);
+	e = part->head;
+	while (e) {
+		r = e->data;
+		if (a) {
+			ailsa_list_full_clean(a);
+			a = ailsa_db_data_list_init();
 		}
-		if ((retval = cmdb_add_string_to_list(str, a)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add partition name into list");
+		if (o) {
+			ailsa_list_full_clean(o);
+			o = ailsa_db_data_list_init();
+		}
+		if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
+			goto cleanup;
+		}
+		if ((retval = cmdb_add_string_to_list(r->mount, a)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add mount point to list");
 			goto cleanup;
 		}
 		if ((retval = ailsa_argument_query(cbc, PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION, a, o)) != 0) {
 			ailsa_syslog(LOG_ERR, "PART_OPTIONS_ON_SCHEME_NAME_AND_PARTITION query failed");
 			goto cleanup;
 		}
-		printf("%s\t", str);
-		if (strlen(str) < 7)
+		printf("%s\t", r->mount);
+		if (strlen(r->mount) < 7)
 			printf("\t");
-		else if (strlen(str) > 15)
+		else if (strlen(r->mount) > 15)
 			printf("\n\t\t");
-		str = ((ailsa_data_s *)e->next->next->next->data)->data->text;
-		printf("%s\t", str);
-		printf("%lu\t%lu\t", ((ailsa_data_s *)e->next->data)->data->number,
-		  ((ailsa_data_s *)e->next->next->data)->data->number);
-		g = o->head;
+		printf("%s\t", r->fs);
+		printf("%lu\t%lu\t", r->min, r->max);
 		len = 0;
+		g = o->head;
 		if (o->total == 0) {
 			printf("none\t\t\t");
 		} else {
@@ -447,31 +456,24 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 				printf("%s", ((ailsa_data_s *)g->data)->data->text);
 				g = g->next;
 			}
-			if (len > 16)
+			if (len >= 16)
 				printf("\t");
-			else if (len > 8 )
+			else if (len >= 8)
 				printf("\t\t");
 			else
 				printf("\t\t\t");
-			ailsa_list_destroy(o);
-			ailsa_list_init(o, ailsa_clean_data);
 		}
-		if (lvm > 0) {
-			str = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
-			printf("%s", str);
-		}
+		if (lvm > 0)
+			printf("%s", r->logvol);
 		printf("\n");
-		e = e->next->next->next->next->next->next;
+		e = e->next;
 	}
 	cleanup:
-		ailsa_list_destroy(p);
-		ailsa_list_destroy(s);
-		ailsa_list_destroy(a);
-		ailsa_list_destroy(o);
-		my_free(p);
-		my_free(s);
-		my_free(a);
-		my_free(o);
+		ailsa_list_full_clean(p);
+		ailsa_list_full_clean(s);
+		ailsa_list_full_clean(a);
+		ailsa_list_full_clean(o);
+		ailsa_list_full_clean(part);
 		if (uname)
 			my_free(uname);
 		return retval;
