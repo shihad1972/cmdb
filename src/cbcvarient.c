@@ -734,17 +734,16 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 		return AILSA_NO_DATA;
 	AILLIST *build_os = ailsa_db_data_list_init();
 	AILLIST *scratch = ailsa_db_data_list_init();
+	AILLIST *varient = ailsa_db_data_list_init();
 	AILELEM *e;
 	unsigned long int vid;
 	unsigned int query_no;
 	size_t i;
 	int retval = 0;
 
-	if ((retval = cmdb_check_add_varient_id_to_list(vari, cbc, scratch)) != 0)
+	if ((retval = cmdb_check_add_varient_id_to_list(vari, cbc, varient)) != 0)
 		goto cleanup;
-	vid = ((ailsa_data_s *)scratch->head->data)->data->number;
-	ailsa_list_destroy(scratch);
-	ailsa_list_init(scratch, ailsa_clean_data);
+	vid = ((ailsa_data_s *)varient->head->data)->data->number;
 	if ((retval = get_build_os_query(scratch, &query_no, os, vers, arch)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get build_os query");
 		goto cleanup;
@@ -774,10 +773,9 @@ build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, cha
 		e = e->next;
 	}
 	cleanup:
-		ailsa_list_destroy(build_os);
-		ailsa_list_destroy(scratch);
-		my_free(build_os);
-		my_free(scratch);
+		ailsa_list_full_clean(build_os);
+		ailsa_list_full_clean(scratch);
+		ailsa_list_full_clean(varient);
 		return retval;
 }
 
@@ -821,10 +819,10 @@ check_package_list(ailsa_cmdb_s *cbc, AILLIST *list)
 			if ((retval = ailsa_list_remove_elements(list, head, len)) != 0)
 				goto cleanup;
 		}
-		ailsa_list_destroy(pack);
-		ailsa_list_destroy(results);
-		ailsa_list_init(pack, ailsa_clean_data);
-		ailsa_list_init(results, ailsa_clean_data);
+		ailsa_list_full_clean(pack);
+		ailsa_list_full_clean(results);
+		pack = ailsa_db_data_list_init();
+		results = ailsa_db_data_list_init();
 	}
 	cleanup:
 		ailsa_list_full_clean(results);
