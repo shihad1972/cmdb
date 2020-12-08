@@ -722,25 +722,11 @@ cmdb_populate_server_details(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc, AILLIST *se
 		ailsa_syslog(LOG_ERR, "Cannot insert uuid into server list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, server)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert cust_id into server list");
+	if ((retval = cmdb_check_add_cust_id_to_list(cm->coid, cc, server)) != 0)
 		goto cleanup;
-	}
-	if (server->total == 5) {
-		ailsa_syslog(LOG_ERR, "Cannot find customer with coid %s", cm->coid);
-		goto cleanup;
-	}
 	if (cm->vmhost) {
-		ailsa_list_destroy(args);
-		ailsa_list_init(args, ailsa_clean_data);
-		if ((retval = cmdb_add_string_to_list(cm->vmhost, args)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot insert vm hostname into list");
+		if ((retval = cmdb_check_add_vm_id_to_list(cm->vmhost, cc, server)) != 0)
 			goto cleanup;
-		}
-		if ((retval = ailsa_argument_query(cc, VM_SERVER_ID_ON_NAME, args, server)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot query for vmhost");
-			goto cleanup;
-		}
 	} else {
 		if ((retval = cmdb_add_number_to_list(0, server)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot insert empty vm_host_id into list");

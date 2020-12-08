@@ -869,6 +869,25 @@ cmdb_check_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_check_add_vm_id_to_list(char *vm, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(vm) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_vm_server_id_to_list(vm, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add vm id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find vm host id for host %s", vm);
+		return AILSA_NO_VM_HOST;
+	}
+	return retval;
+}
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {
 	if (!(cc) || (query == 0) || (!(name) && number == 0))
