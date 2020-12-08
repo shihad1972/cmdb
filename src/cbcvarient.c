@@ -539,6 +539,8 @@ add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	AILELEM *e;
 	AILLIST *v = ailsa_db_data_list_init();
 	AILLIST *r = ailsa_db_data_list_init();
+	AILLIST *base = ailsa_db_data_list_init();
+	AILLIST *pack = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_add_string_to_list(cvl->varient, v)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
@@ -569,24 +571,20 @@ add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 		goto cleanup;
 	}
 	vid = ((ailsa_data_s *)r->head->data)->data->number;
-	ailsa_list_destroy(r);
-	ailsa_list_init(r, ailsa_clean_data);
-	ailsa_list_destroy(v);
-	ailsa_list_init(v, ailsa_clean_data);
-	if ((retval = ailsa_basic_query(cmc, BASE_VARIENT_PACKAGES, r)) != 0) {
+	if ((retval = ailsa_basic_query(cmc, BASE_VARIENT_PACKAGES, base)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to get list of packages for base varient");
 		goto cleanup;
 	}
-	if (r->total == 0) {
+	if (base->total == 0) {
 		ailsa_syslog(LOG_ERR, "Cannot find any packages for base varient");
 		ailsa_syslog(LOG_ERR, "You will have to create a package list from scratch");
 		goto cleanup;
 	}
-	e = r->head;
-	for (i = 0; i < (r->total / 2); i++) {
+	e = base->head;
+	for (i = 0; i < (base->total / 2); i++) {
 		if (!(e))
 			break;
-		if ((retval = cmdb_add_string_to_list(((ailsa_data_s *)e->data)->data->text, v)) != 0) {
+		if ((retval = cmdb_add_string_to_list(((ailsa_data_s *)e->data)->data->text, pack)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add package name to list");
 			goto cleanup;
 		}
@@ -594,27 +592,27 @@ add_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 			e = e->next;
 		else
 			break;
-		if ((retval = cmdb_add_number_to_list(vid, v)) != 0) {
+		if ((retval = cmdb_add_number_to_list(vid, pack)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add varient id to list");
 			goto cleanup;
 		}
-		if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)e->data)->data->number, v)) != 0) {
+		if ((retval = cmdb_add_number_to_list(((ailsa_data_s *)e->data)->data->number, pack)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add os id to list");
 			goto cleanup;
 		}
-		if ((retval = cmdb_populate_cuser_muser(v)) != 0) {
+		if ((retval = cmdb_populate_cuser_muser(pack)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
 			goto cleanup;
 		}
 		e = e->next;
 	}
-	if ((retval = ailsa_multiple_query(cmc, insert_queries[INSERT_BUILD_PACKAGE], v)) != 0)
+	if ((retval = ailsa_multiple_query(cmc, insert_queries[INSERT_BUILD_PACKAGE], pack)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot insert build packages for new varient");
 	cleanup:
-		ailsa_list_destroy(v);
-		ailsa_list_destroy(r);
-		my_free(v);
-		my_free(r);
+		ailsa_list_full_clean(v);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(base);
+		ailsa_list_full_clean(pack);
 		return retval;
 }
 
