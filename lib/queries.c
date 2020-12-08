@@ -778,9 +778,9 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	{ AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_PARTITION
-"INSERT INTO default_part (minimum, maximum, priority, mount_point, filesystem, def_scheme_id, logical_volume, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+"INSERT INTO default_part (def_scheme_id, minimum, maximum, priority, mount_point, filesystem, logical_volume, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	9,
-	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_PART_OPTION
 "INSERT INTO part_options (def_scheme_id, def_part_id, poption, cuser, muser) VALUES (?, ?, ?, ?, ?)",

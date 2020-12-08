@@ -518,12 +518,10 @@ add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		return AILSA_NO_DATA;
 	AILLIST *a = ailsa_db_data_list_init();
 	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *i = ailsa_db_data_list_init();
 	int retval;
 	size_t total;
-	unsigned long int scheme_id;
 
-	if (!(cpl->log_vol))
-		cpl->log_vol = strdup("none");
 	if ((retval = cmdb_add_string_to_list(cpl->scheme, a)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add scheme name to list");
 		goto cleanup;
@@ -536,16 +534,11 @@ add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		ailsa_syslog(LOG_ERR, "Scheme %s is an LVM scheme. Need a logical volume name!", cpl->scheme);
 		goto cleanup;
 	}
-	total = l->total;
-	if ((retval = ailsa_argument_query(cbc, SEED_SCHEME_ON_NAME, a, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "SEED_SCHEME_ON_NAME query failed");
+	if (!(cpl->log_vol))
+		cpl->log_vol = strdup("none");
+	if ((retval = cmdb_check_add_scheme_id_to_list(cpl->scheme, cbc, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
 		goto cleanup;
-	}
-	if (l->total == total) {
-		ailsa_syslog(LOG_ERR, "Cannot find partition scheme %s in database", cpl->scheme);
-		goto cleanup;
-	} else {
-		scheme_id = ((ailsa_data_s *)l->head->next->data)->data->number;
 	}
 	if ((retval = cmdb_add_string_to_list(cpl->partition, a)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add mount point to list");
@@ -560,51 +553,44 @@ add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		ailsa_syslog(LOG_INFO, "Partition %s is already in the scheme %s\n", cpl->partition, cpl->scheme);
 		goto cleanup;
 	}
-	ailsa_list_destroy(l);
-	ailsa_list_init(l, ailsa_clean_data);
-	if ((retval = cmdb_add_number_to_list(cpl->min, l)) != 0) {
+	if ((retval = cmdb_add_number_to_list(cpl->min, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add minimum to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list(cpl->max, l)) != 0) {
+	if ((retval = cmdb_add_number_to_list(cpl->max, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add maximum to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list(cpl->pri, l)) != 0) {
+	if ((retval = cmdb_add_number_to_list(cpl->pri, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add priority to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cpl->partition, l)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cpl->partition, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add partition to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cpl->fs, l)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cpl->fs, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add filesystem to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list(scheme_id, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add priority to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_string_to_list(cpl->log_vol, l)) != 0) {
+	if ((retval = cmdb_add_string_to_list(cpl->log_vol, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add logical volume to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_populate_cuser_muser(l)) != 0) {
+	if ((retval = cmdb_populate_cuser_muser(i)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_insert_query(cbc, INSERT_PARTITION, l)) != 0) {
+	if ((retval = ailsa_insert_query(cbc, INSERT_PARTITION, i)) != 0) {
 		ailsa_syslog(LOG_ERR, "INSERT_PARTITION query failed");
 		goto cleanup;
 	}
 	if ((retval = set_db_row_updated(cbc, SET_PART_SCHEME_UPDATED, cpl->scheme, 0)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot update the partition scheme in the database");
 	cleanup:
-		ailsa_list_destroy(a);
-		ailsa_list_destroy(l);
-		my_free(a);
-		my_free(l);
+		ailsa_list_full_clean(a);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(i);
 		return retval;
 }
 

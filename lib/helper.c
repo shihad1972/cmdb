@@ -850,6 +850,25 @@ cmdb_check_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list
 }
 
 int
+cmdb_check_add_scheme_id_to_list(char *scheme, ailsa_cmdb_s *cc, AILLIST *list)
+{
+	if (!(scheme) || !(cc) || !(list))
+		return AILSA_NO_DATA;
+	int retval;
+	size_t total = list->total;
+
+	if ((retval = cmdb_add_scheme_id_to_list(scheme, cc, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add scheme id to list");
+		return retval;
+	}
+	if (list->total != (total + 1)) {
+		ailsa_syslog(LOG_ERR, "Cannot find scheme id for scheme %s", scheme);
+		return AILSA_NO_SCHEME;
+	}
+	return retval;
+}
+
+int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number)
 {
 	if (!(cc) || (query == 0) || (!(name) && number == 0))
