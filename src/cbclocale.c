@@ -107,14 +107,14 @@ static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 {
 	int retval = 0;
-	const char *optstr = "adg:hk:lo:n:rt:u:vx";
+	const char *optstr = "adg:hk:lo:n:rt:u:vz";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
 		{"display",		no_argument,		NULL,	'd'},
-		{"language",		required_argument,	NULL,	'g'},
+		{"language",	required_argument,	NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"keymap",		required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
@@ -122,10 +122,10 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		{"name",		required_argument,	NULL,	'n'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
-		{"timezone",		required_argument,	NULL,	't'},
+		{"timezone",	required_argument,	NULL,	't'},
 		{"country",		required_argument,	NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
-		{"default",		no_argument,		NULL,	'x'}
+		{"default",		no_argument,		NULL,	'z'}
 	};
 
 	if (argc == 1)

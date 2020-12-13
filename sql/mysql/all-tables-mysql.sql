@@ -646,7 +646,7 @@ CREATE TABLE `default_scheme` (
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`restrict`),
   KEY `def_scheme_id` (`def_scheme_id`),
-  CONSTRAINT `default_scheme_ibfk_1` FOREIGN KEY (`def_scheme_id`) REFERENCES `build_scheme` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `default_scheme_ibfk_1` FOREIGN KEY (`def_scheme_id`) REFERENCES `seed_schemes` (`def_scheme_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

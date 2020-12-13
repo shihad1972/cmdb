@@ -1,3 +1,8 @@
+13/12/2020
+mkvm is not idempotent. If there is an error in adding to cmdb, then when
+run again, it will bail out after trying to add the libvirt VM, as it already
+exists.
+
 05/12/2020
 Add a script template file to the ansible role that can add some test
 data into the database.
