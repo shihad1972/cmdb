@@ -59,8 +59,10 @@ main(int argc, char *argv[])
 
 	parse_mkvm_config(vm);
 	parse_cmdb_config(cmdb);
-	if ((retval = parse_mknet_command_line(argc, argv, vm)) != 0)
+	if ((retval = parse_mknet_command_line(argc, argv, vm)) != 0) {
+                display_usage();
 		goto cleanup;
+        }
         switch(vm->action) {
         case CMDB_LIST:
                 retval = ailsa_list_networks(vm);
