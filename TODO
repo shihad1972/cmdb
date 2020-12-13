@@ -48,6 +48,8 @@ add after, before, head or tail.
 	types. However, I _could_ have a clone function in AILLIST data type
 	that would know the data type of the element, in much the same way the
 	destroy function does.
+	** Done: Added clone function to list, and ailsa_clone_data function
+	   for ailsa_data_s data type. Commit ID: 24c2529
 
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.
