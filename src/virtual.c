@@ -718,3 +718,38 @@ ailsa_list_networks(ailsa_mkvm_s *vm)
 		virConnectClose(conn);
 	        return retval;
 }
+
+int
+ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
+{
+	if (!(cbs) || !(vm))
+		return AILSA_NO_DATA;
+	int retval, counter, flag;
+	char iface_name[SERVICE_LEN];
+	AILLIST *ice = ailsa_iface_list_init();
+	AILELEM *element = NULL;
+	ailsa_iface_s *iface = NULL;
+
+	if ((retval = ailsa_get_iface_list(ice)) != 0)
+		goto cleanup;
+	for (counter = 0; counter < BUFFER_LEN; counter++) {
+		flag = false;
+		memset(iface_name, 0, SERVICE_LEN);
+		snprintf(iface_name, SERVICE_LEN, "virbr%d", counter);
+		element = ice->head;
+		while (element) {
+			iface = element->data;
+			if ((strncmp(iface_name, iface->name, SERVICE_LEN)) == 0) {
+				flag = true;
+				break;
+			}
+			element = element->next;
+		}
+		if (flag == false)
+			break;
+	}
+	printf("Using interface %s\n", iface_name);
+	cleanup:
+		ailsa_list_full_clean(ice);
+		return retval;
+}

@@ -33,3 +33,6 @@ mkvm_add_to_cmdb(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm);
 
 int
 ailsa_list_networks(ailsa_mkvm_s *vm);
+
+int
+ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm);

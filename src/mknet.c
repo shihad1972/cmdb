@@ -40,6 +40,7 @@
 # include <wordexp.h>
 #endif // HAVE_WORDEXP_H
 #include <ailsacmdb.h>
+#include <ailsasql.h>
 #include "virtual.h"
 
 const char *prog = "mknet";
@@ -70,6 +71,9 @@ main(int argc, char *argv[])
         case AILSA_DISPLAY_USAGE:
                 display_usage();
                 break;
+        case CMDB_ADD:
+                retval = ailsa_add_network(cmdb, vm);
+                break;
         case AILSA_VERSION:
                 ailsa_syslog(LOG_INFO, "%s: version %s", prog, VERSION);
                 break;
@@ -85,7 +89,7 @@ static int
 parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
         int retval, opt;
-        const char *optstr = "hlvn:u:";
+        const char *optstr = "adhlvn:u:";
 
         retval = 0;
 #ifdef HAVE_GOTOPT_H
@@ -93,6 +97,8 @@ parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
         struct option opts[] = {
                 {"uri",		required_argument,	NULL,	'u'},
 		{"network",	required_argument,	NULL,	'k'},
+                {"add",         no_argument,            NULL,   'a'},
+                {"cmdb",        no_argument,            NULL,   'd'},
                 {"list",        no_argument,            NULL,   'l'},
                 {"help",        no_argument,            NULL,   'h'},
                 {"version",     no_argument,            NULL,   'v'},
@@ -104,6 +110,9 @@ parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 #endif // HAVE_GETOPT_H
         {
                 switch(opt) {
+                case 'a':
+                        vm->action = CMDB_ADD;
+                        break;
                 case 'l':
                         vm->action = CMDB_LIST;
                         break;
@@ -129,6 +138,9 @@ parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
                         else
                                 vm->uri = strndup(optarg, CONFIG_LEN);
                         break;
+		case 'd':
+			vm->cmdb = AILSA_CMDB_ADD;
+			break;
                 default:
 			ailsa_syslog(LOG_ERR, "Unknown option %c\n", opt);
 			return 1;
