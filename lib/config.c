@@ -25,6 +25,7 @@
  */
 
 #include <config.h>
+#include <configmake.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -296,9 +297,11 @@ parse_cmdb_config(ailsa_cmdb_s *cmdb)
 static void
 parse_system_mkvm_config(ailsa_mkvm_s *vm)
 {
-	const char *path = "/etc/cmdb/mkvm.conf";
+	char path[FILE_LEN];
 	FILE *conf = NULL;
 
+	memset(path, 0, FILE_LEN);
+	snprintf(path, FILE_LEN, "%s/cmdb/mkvm.conf", SYSCONFDIR);
 	if (!(conf = fopen(path, "r"))) {
 #ifdef DEBUG
 		ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", path);
@@ -534,16 +537,20 @@ display_mksp_usage(void)
 static void
 parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
 {
-	const char *path = NULL;
+	char path[FILE_LEN];
 	FILE *conf = NULL;
 
-	path = "/etc/cmdb/cmdb.conf";
+	memset(path, 0, FILE_LEN);
+	snprintf(path, FILE_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR);
 	OPEN_CMDB_FILE
-	path = "/etc/cmdb/dnsa.conf";
+	memset(path, 0, FILE_LEN);
+	snprintf(path, FILE_LEN, "%s/cmdb/dnsa.conf", SYSCONFDIR);
 	OPEN_CMDB_FILE
-	path = "/etc/dnsa/cmdb.conf";
+	memset(path, 0, FILE_LEN);
+	snprintf(path, FILE_LEN, "%s/dnsa/cmdb.conf", SYSCONFDIR);
 	OPEN_CMDB_FILE
-	path = "/etc/dnsa/dnsa.conf";
+	memset(path, 0, FILE_LEN);
+	snprintf(path, FILE_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR);
 	OPEN_CMDB_FILE
 	cleanup:
 		if (conf)
