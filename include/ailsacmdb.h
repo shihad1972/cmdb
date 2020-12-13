@@ -349,6 +349,7 @@ typedef struct ailsa_element_s {
 typedef struct ailsa_list_s {
 	size_t 	total;
 	int 	(*cmp)(const void *key1, const void *key2);
+	AILELEM *(*clone)(AILELEM *e);
 	void 	(*destroy)(void *data);
 	AILELEM	*head;
 	AILELEM	*tail;

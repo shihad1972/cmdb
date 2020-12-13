@@ -651,11 +651,42 @@ cmdb_get_uname(unsigned long int uid)
 	return user;
 }
 
+AILELEM *
+ailsa_clone_data(AILELEM *e)
+{
+	if (!(e))
+		return NULL;
+	AILELEM *tmp = ailsa_calloc(sizeof(AILELEM), "tmp in ailsa_clone_data");
+	ailsa_data_s *data = ailsa_calloc(sizeof(ailsa_data_s), "data in ailsa_clone_data");
+	ailsa_data_u *u = ailsa_calloc(sizeof(ailsa_data_u), "u in ailsa_clone_data");
+	ailsa_data_s *d = e->data;
+
+	tmp->data = data;
+	data->data = u;
+	data->type = d->type;
+	switch (d->type) {
+	case AILSA_DB_TEXT:
+		u->text = strndup(d->data->text, CONFIG_LEN);
+		break;
+#ifdef HAVE_MYSQL
+	case AILSA_DB_TIME:
+		u->time = ailsa_calloc(sizeof(MYSQL_TIME), "time in ailsa_clone_data");
+		memcpy(u->time, d->data->time, sizeof(MYSQL_TIME));
+		break;
+#endif
+	default:
+		memcpy(d->data, u, sizeof(ailsa_data_u));
+		break;
+	}
+	return tmp;
+}
+
 AILLIST *
 ailsa_db_data_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
 	ailsa_list_init(list, ailsa_clean_data);
+	list->clone = ailsa_clone_data;
 	return list;
 }
 

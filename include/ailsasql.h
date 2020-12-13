@@ -547,6 +547,9 @@ ailsa_get_bdom_list(ailsa_cmdb_s *cbs, AILLIST *list);
 int
 cmdb_populate_cuser_muser(AILLIST *list);
 
+AILELEM *
+ailsa_clone_data(AILELEM *e);
+
 unsigned long int
 generate_zone_serial(void);
 
