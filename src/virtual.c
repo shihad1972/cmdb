@@ -142,6 +142,10 @@ mkvm_create_vm(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm)
 		retval = -1;
 		goto cleanup;
 	}
+/* If we put this inside cleanup, then we will always add to cmdb. This is
+   probably what we want, as even if the domain fails, we want to try to add
+   to cmdb. mkvm_add_to_cmdb will need to be idempotent so if will not add
+   the server and hardware twice. */
 	if (vm->cmdb > 0)
 		retval = mkvm_add_to_cmdb(cms, vm);
 	cleanup:

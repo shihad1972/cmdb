@@ -550,7 +550,7 @@ display_cbclocale_usage(void)
 	printf("Usage:\t");
 	printf("cbclocale <action> <options>\n");
 	printf("Action options\n");
-	printf("-a: add\t-d display\t-l: list\t-r: remove\n-x: set default locale\n");
+	printf("-a: add\t-d display\t-l: list\t-r: remove\n-z: set default locale\n");
 	printf("Options\n");
 	printf("-g language\t-k keymap\t-o locale\t-n name\n");
 	printf("-t timezone\t-u country\n");
