@@ -547,10 +547,12 @@ typedef struct ailsa_mkvm_s {
 	char *logvol;
 	char *uuid;
 	char *coid;
+	char *range;
 	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
 	unsigned long int sptype;
+	unsigned long int prefix;
 	short int action;
 	short int cmdb;
 } ailsa_mkvm_s;

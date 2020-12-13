@@ -280,6 +280,32 @@ parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 	return retval;
 }
 
+int
+get_config_file_location(char *config)
+{
+	int retval = 0;
+	FILE *cnf;
+	const char *conf = config;
+
+	if (snprintf(config, CONFIG_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONFIG_LEN)
+		return AILSA_BUFFER_TOO_SMALL;
+	if ((cnf = fopen(conf, "r"))) {
+		fclose(cnf);
+	} else	{
+		if (snprintf(config, CONFIG_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONFIG_LEN) {
+			ailsa_syslog(LOG_ERR, "Buffer too small to hold config file location");
+			retval = AILSA_BUFFER_TOO_SMALL;
+		}
+		if ((cnf = fopen(conf, "r")))
+			fclose(cnf);
+		else {
+			ailsa_syslog(LOG_ERR, "Cannot open config file %s", conf);
+			retval = AILSA_FILE_ERROR;
+		}
+	}
+	return retval;
+}
+
 void
 parse_mkvm_config(ailsa_mkvm_s *vm)
 {

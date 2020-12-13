@@ -939,6 +939,130 @@ cmdb_getaddrinfo(char *name, char *ip, int *type)
 }
 
 int
+ailsa_get_iface_list(AILLIST *list)
+{
+/* This function completely ignores IPv6 addresses. In fact, many areas of
+ * this software collection ignore the existance of IPv6. *sigh*
+ */
+
+	if (!(list))
+		return AILSA_NO_DATA;
+	int retval;
+	struct ifaddrs *iface, *p;
+	ailsa_iface_s *ice;
+
+	if ((retval = getifaddrs(&iface)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get interface list: %s", strerror(errno));
+		goto cleanup;
+	}
+
+	p = iface;
+	while (p) {
+		if (p->ifa_addr->sa_family == AF_INET) {
+			ice = ailsa_calloc(sizeof(ailsa_iface_s), "ice in ailsa_get_iface_list");
+			ice->name = strndup(p->ifa_name, SERVICE_LEN);
+			ice->ip = ntohl(((struct sockaddr_in *)p->ifa_addr)->sin_addr.s_addr);
+			ice->nm = ntohl(((struct sockaddr_in *)p->ifa_netmask)->sin_addr.s_addr);
+			ice->nw = ice->ip & ice->nm;
+			ice->bc = ice->nw | (~ice->nm);
+			ice->sip = ice->nw + 1;
+			ice->fip = ice->bc - 1;
+			if ((retval = ailsa_list_insert(list, ice)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot insert iface into list");
+				goto cleanup;
+			}
+		}
+		p = p->ifa_next;
+	}
+	cleanup:
+		if (iface)
+			freeifaddrs(iface);
+		return retval;
+}
+
+void
+get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
+{
+	size_t len;
+	char *tmp, *line, *classless;
+	char louisa[] = ".in-addr.arpa";
+	int c, i;
+
+	c = '.';
+	i = 0;
+	tmp = 0;
+	len = strlen(range);
+	len++;/* Got to remember the terminating \0 :) */
+	line = ailsa_calloc(len, "line in get_in_addr_string");
+	classless = ailsa_calloc(CONFIG_LEN, "classless in get_in_addr_string");
+
+	snprintf(line, len, "%s", range);
+	if (prefix == 24) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			strncat(in_addr, tmp, SERVICE_LEN);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if (prefix == 16) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			strncat(in_addr, tmp, SERVICE_LEN);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if(prefix == 8) {
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			strncat(in_addr, tmp, SERVICE_LEN);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	} else if (prefix == 25 || prefix == 26 || prefix == 27 ||
+		prefix == 28 || prefix == 29 || prefix == 30 ||
+		prefix == 31 || prefix == 32) {
+		tmp = strrchr(line, c);
+		++tmp;
+		strncat(in_addr, tmp, SERVICE_LEN);
+		strcat(in_addr, ".");
+		--tmp;
+		*tmp = '\0';
+		snprintf(classless, CONFIG_LEN, "/%lu.", prefix);
+		strncat(in_addr, classless, SERVICE_LEN);
+		while ((tmp = strrchr(line, c))) {
+			++tmp;
+			strncat(in_addr, tmp, SERVICE_LEN);
+			strcat(in_addr, ".");
+			--tmp;
+			*tmp = '\0';
+			i++;
+		}
+	}
+	strncat(in_addr, line, SERVICE_LEN);
+	strncat(in_addr, louisa, SERVICE_LEN);
+	free(line);
+	free(classless);
+}
+
+int
 dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone)
 {
 	if (!(cbs) || !(domain) || !(zone))
