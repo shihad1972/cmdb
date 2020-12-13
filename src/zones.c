@@ -419,6 +419,8 @@ display_rev_zone(char *domain, ailsa_cmdb_s *dc)
 	}
 	prefix = strtoul(d->data->text, NULL, 10);
 	get_in_addr_string(in_addr, domain, prefix);
+	if ((retval = ailsa_insert_clone(l, z->tail)) != 0)
+		goto cleanup;
 	if ((retval = ailsa_argument_query(dc, REV_ZONE_ID_ON_RANGE, l, i)) != 0)
 		goto cleanup;
 	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_ZONE_ID, i, r)) != 0)

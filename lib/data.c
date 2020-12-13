@@ -652,7 +652,7 @@ cmdb_get_uname(unsigned long int uid)
 }
 
 AILELEM *
-ailsa_clone_data(AILELEM *e)
+ailsa_clone_data_element(AILELEM *e)
 {
 	if (!(e))
 		return NULL;
@@ -686,7 +686,7 @@ ailsa_db_data_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_db_data_list_init");
 	ailsa_list_init(list, ailsa_clean_data);
-	list->clone = ailsa_clone_data;
+	list->clone = ailsa_clone_data_element;
 	return list;
 }
 

@@ -548,7 +548,10 @@ int
 cmdb_populate_cuser_muser(AILLIST *list);
 
 AILELEM *
-ailsa_clone_data(AILELEM *e);
+ailsa_clone_data_element(AILELEM *e);
+
+int
+ailsa_insert_clone(AILLIST *list, AILELEM *elem);
 
 unsigned long int
 generate_zone_serial(void);

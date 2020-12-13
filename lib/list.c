@@ -290,6 +290,28 @@ ailsa_list_insert_clone(AILLIST *list, AILELEM *copy, AILELEM *ptr, int action, 
 		return AILSA_LIST_CLONE_FAILED;
 }
 
+int
+ailsa_insert_clone(AILLIST *list, AILELEM *elem)
+{
+	if ((!list) || !(elem))
+		return AILSA_NO_DATA;
+	int retval = 0;
+	AILELEM *copy = list->clone(elem);
+	if (copy) {
+		if ((retval = ailsa_list_insert(list, copy->data)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert cloned data into list");
+			goto cleanup;
+		}
+	} else {
+		ailsa_syslog(LOG_ERR, "Cannot clone data element");
+		return AILSA_LIST_CLONE_FAILED;
+	}
+
+	cleanup:
+		my_free(copy);
+		return retval;
+}
+
 AILELEM *
 ailsa_clone_element(AILELEM *e, size_t size)
 {
