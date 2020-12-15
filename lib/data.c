@@ -122,6 +122,10 @@ ailsa_clean_mkvm(void *vm)
 		my_free(i->coid);
 	if (i->range)
 		my_free(i->range);
+	if (i->interface)
+		my_free(i->interface);
+	if (i->domain)
+		my_free(i->domain);
 	my_free(i);
 }
 

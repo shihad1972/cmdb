@@ -132,6 +132,7 @@ ailsa_gen_mac(char *mac, int type)
 	long int r;
 	if (!(mac))
 		return AILSA_NO_DATA;
+	srand((unsigned int)(time(NULL)));
 	r = random();
 	if (type == AILSA_ESX) {
 		snprintf(buf, MAC_LEN, "00:50:56:%lx:%lx:%lx",

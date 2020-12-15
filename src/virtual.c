@@ -29,6 +29,8 @@
 #include <string.h>
 #include <errno.h>
 #include <syslog.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <ailsacmdb.h>
 #include <ailsasql.h>
 #include <libvirt/libvirt.h>
@@ -72,6 +74,12 @@ mkvm_fill_server_list(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm, AILLIST *server);
 
 static int
 cmdb_add_hardware_to_new_vm(ailsa_cmdb_s *cmdb, ailsa_mkvm_s *vm);
+
+static int
+get_ip_and_netmask(ailsa_mkvm_s *vm);
+
+static int
+ailsa_define_network_xml(ailsa_mkvm_s *vm);
 
 #ifndef DEBUG
 static void
@@ -724,32 +732,116 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 {
 	if (!(cbs) || !(vm))
 		return AILSA_NO_DATA;
-	int retval, counter, flag;
-	char iface_name[SERVICE_LEN];
+	int retval;
+	char buff[FILE_LEN];
 	AILLIST *ice = ailsa_iface_list_init();
-	AILELEM *element = NULL;
-	ailsa_iface_s *iface = NULL;
+	virConnectPtr conn;
+	virNetworkPtr vnet = NULL;
 
-	if ((retval = ailsa_get_iface_list(ice)) != 0)
-		goto cleanup;
-	for (counter = 0; counter < BUFFER_LEN; counter++) {
-		flag = false;
-		memset(iface_name, 0, SERVICE_LEN);
-		snprintf(iface_name, SERVICE_LEN, "virbr%d", counter);
-		element = ice->head;
-		while (element) {
-			iface = element->data;
-			if ((strncmp(iface_name, iface->name, SERVICE_LEN)) == 0) {
-				flag = true;
-				break;
-			}
-			element = element->next;
-		}
-		if (flag == false)
-			break;
+	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot connect to libvirt URL %s", vm->uri);
+		return retval;
 	}
-	printf("Using interface %s\n", iface_name);
+	vm->mac = ailsa_calloc(MAC_LEN, "vm->mac in ailsa_add_network");
+	memset(buff, 0, FILE_LEN);
+	if (!(vm->interface = get_iface_name("virbr"))) {
+		retval = AILSA_NO_DATA;
+		goto cleanup;
+	}
+	if (!(vm->uuid = ailsa_gen_uuid_str())) {
+		ailsa_syslog(LOG_ERR, "Cannot create UUID string");
+		goto cleanup;
+	}
+	if ((retval = ailsa_gen_mac(vm->mac, AILSA_KVM)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot generate mac address");
+		goto cleanup;
+	}
+	if ((retval = get_ip_and_netmask(vm)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_define_network_xml(vm)) != 0)
+		goto cleanup;
+	if (!(vnet = virNetworkDefineXML(conn, vm->storxml))) {
+		ailsa_syslog(LOG_ERR, "Cannot create virtual network: %s", virGetLastErrorMessage());
+		goto cleanup;
+	}
+	if ((retval = virNetworkSetAutostart(vnet, true)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot autostart network: %s", virGetLastErrorMessage());
+		goto cleanup;
+	}
+	if ((retval = virNetworkCreate(vnet)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot activate network: %s", virGetLastErrorMessage());
+		goto cleanup;
+	}
 	cleanup:
+		if (vnet)
+			retval = virNetworkFree(vnet);
+		virConnectClose(conn);
 		ailsa_list_full_clean(ice);
 		return retval;
+}
+
+static int
+get_ip_and_netmask(ailsa_mkvm_s *vm)
+{
+	if (!(vm))
+		return AILSA_NO_DATA;
+	int retval;
+	uint32_t inet;
+
+	inet = prefix_to_mask_ipv4(vm->prefix);
+	vm->nm = htonl(inet);
+	if ((retval = inet_pton(AF_INET, vm->range, &inet)) != 1) {
+		ailsa_syslog(LOG_ERR, "Cannot convert IP %s to network bytes", vm->range);
+		return AILSA_IP_CONVERT_FAILED;
+	}
+	if ((vm->nm| inet) != vm->nm) {
+		ailsa_syslog(LOG_ERR, "Range outside of netmask");
+		return AILSA_RANGE_ERROR;
+	}
+	inet = ntohl(inet);
+	vm->ip = htonl(++inet);
+	return 0;
+}
+
+static int
+ailsa_define_network_xml(ailsa_mkvm_s *vm)
+{
+	if (!(vm))
+		return AILSA_NO_DATA;
+	char *ptr;
+	char nm[MAC_LEN];
+	char ip[MAC_LEN];
+	size_t len, max;
+
+	max = FILE_LEN;
+	if (vm->storxml) {
+		ailsa_syslog(LOG_ERR, "vm->xmlstor already defined");
+		return AILSA_XML_DEFINED;
+	}
+	if (!(inet_ntop(AF_INET, &(vm->ip), ip, MAC_LEN)))
+		return AILSA_IP_CONVERT_FAILED;
+	if (!(inet_ntop(AF_INET, &(vm->nm), nm, MAC_LEN)))
+		return AILSA_IP_CONVERT_FAILED;
+	vm->storxml = ailsa_calloc(max, "vm->xmlstor in ailsa_define_network_xml");
+	snprintf(vm->storxml, max, "\
+<network>\n\
+  <name>%s</name>\n\
+  <uuid>%s</uuid>\n\
+  <forward dev='%s' mode='route'>\n\
+    <interface dev='%s'/>\n\
+  </forward>\n", vm->network, vm->uuid, vm->netdev, vm->netdev);
+	len = strlen(vm->storxml);
+	if (len > (max / 2)) {
+		max *=2;
+		vm->storxml = ailsa_realloc(vm->storxml, max, "realloc of vm->xmlstor in ailsa_define_network_xml");
+	}
+	ptr = vm->storxml + len;
+	snprintf(ptr, max - len, "\
+  <bridge name='%s' stp='on' delay='0'/>\n\
+  <mac address='%s'/>\n\
+  <domain name='%s'/>\n\
+  <ip address='%s' netmask='%s'>\n\
+  </ip>\n\
+</network>\n", vm->network, vm->mac, vm->domain, ip, nm);
+	return 0;
 }

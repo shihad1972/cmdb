@@ -111,6 +111,18 @@ get_net_range(unsigned long int prefix)
         return range;
 }
 
+uint32_t
+prefix_to_mask_ipv4(unsigned long int prefix)
+{
+	uint32_t pf;
+	if (prefix) {
+		pf = (uint32_t)(4294967295 << (32 - prefix));
+		return pf;
+	} else {
+		return 0;
+	}
+}
+
 int
 do_rev_lookup(char *ip, char *host, size_t size)
 {
@@ -980,6 +992,66 @@ ailsa_get_iface_list(AILLIST *list)
 		return retval;
 }
 
+char *
+get_iface_name(const char *name)
+{
+	int counter, retval, flag;
+	char *iface = NULL;
+	ailsa_iface_s *ifce = NULL;
+	AILELEM *e;
+	AILLIST *ice = ailsa_iface_list_init();
+
+	if ((retval = ailsa_get_iface_list(ice)) != 0)
+		return iface;
+	iface = ailsa_calloc(SERVICE_LEN, "iface in get_iface_name");
+/* This routine will NOT find a bridge that is part of an inactive network.
+   While the network is inactive, this is probably not an issue. Cannot see
+   how to use libvirt to query avaiable bridge interface names */
+	for (counter = 0; counter < BUFFER_LEN; counter++) {
+		flag = false;
+		memset(iface, 0, SERVICE_LEN);
+		snprintf(iface, SERVICE_LEN, "%s%d", name, counter);
+		e = ice->head;
+		while (e) {
+			ifce = e->data;
+			if ((strncmp(iface, ifce->name, SERVICE_LEN)) == 0) {
+				flag = true;
+				break;
+			}
+			e = e->next;
+		}
+		if (flag == false)
+			break;
+	}
+	ailsa_list_full_clean(ice);
+	return iface;
+}
+
+int
+get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix)
+{
+	if (!(ip) || !(range) || !(prefix))
+		return AILSA_NO_DATA;
+	char *tmp = strndup(ip, MAC_LEN);
+	char *ptr;
+	if (!(ptr = strchr(tmp, '/'))) {
+		ailsa_syslog(LOG_ERR, "Character / not in string for netowrk range: %s", ip);
+		return AILSA_INPUT_INVALID;
+	}
+	*ptr++ = '\0';
+	if (!(*range = strndup(tmp, SERVICE_LEN))) {
+		ailsa_syslog(LOG_ERR, "strndup failed for range in get_ip_addr_and_prefix");
+		return AILSA_STRING_FAIL;
+	}
+	if (strlen(ptr) > 2) {
+		ailsa_syslog(LOG_ERR, "Netmask can only be donoted in prefix format, e.g. /24");
+		return AILSA_STRING_FAIL;
+	} else {
+		*prefix = strtoul(ptr, NULL, 10);
+	}
+	my_free(tmp);
+	return 0;
+}
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 {

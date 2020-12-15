@@ -397,6 +397,7 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 /* Grab config values from confile file that uses NAME=value as configuration
    options */
 // valgrind reports an error if the file is empty for mk programs
+// This was due to the buffer not being zeroed. *DOH*
 #ifndef GET_CONFIG_OPTION
 # define GET_CONFIG_OPTION(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \
@@ -423,10 +424,13 @@ parse_mkvm_config_values(ailsa_mkvm_s *vm, FILE *conf)
 
 	char buff[CONFIG_LEN], temp[CONFIG_LEN];
 
-	GET_CONFIG_OPTION("NETWORK=%s", vm->network);
+	memset(buff, 0, CONFIG_LEN);
+	memset(temp, 0, CONFIG_LEN);
 	GET_CONFIG_OPTION("URI=%s", vm->uri);
 	GET_CONFIG_OPTION("POOL=%s", vm->pool);
 	GET_CONFIG_OPTION("NAME=%s", vm->name);
+	GET_CONFIG_OPTION("INTERFACE=%s", vm->netdev);
+	GET_CONFIG_OPTION("NETWORK=%s", vm->network);
 	GET_CONFIG_INT("RAM=%lu", vm->ram);
 	GET_CONFIG_INT("CPUS=%lu", vm->cpus);
 	GET_CONFIG_INT("STORAGE=%lu", vm->size);

@@ -231,6 +231,8 @@ enum {                  // Error codes
 	AILSA_NO_SCHEME = 237,
 	AILSA_NO_PARTITION = 238,
 	AILSA_NO_VM_HOST = 239,
+	AILSA_STRING_FAIL = 240,
+	AILSA_XML_DEFINED = 241,
 	AILSA_NO_QUERY = 300,
 	AILSA_NO_DBTYPE = 301,
 	AILSA_INVALID_DBTYPE = 302,
@@ -548,11 +550,15 @@ typedef struct ailsa_mkvm_s {
 	char *uuid;
 	char *coid;
 	char *range;
+	char *domain;
+	char *interface;
 	unsigned long int size;
 	unsigned long int ram;
 	unsigned long int cpus;
 	unsigned long int sptype;
 	unsigned long int prefix;
+	uint32_t nm;
+	uint32_t ip;
 	short int action;
 	short int cmdb;
 } ailsa_mkvm_s;
@@ -892,6 +898,12 @@ ailsa_gen_uuid_str(void);
 int
 ailsa_gen_mac(char *mac, int type);
 
+uint32_t
+prefix_to_mask_ipv4(unsigned long int prefix);
+
+int
+get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix);
+
 // Config and command line parsing
 
 void
@@ -962,6 +974,9 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix);
 
 int
 cbc_fill_partition_details(AILLIST *list, AILLIST *dest);
+
+char *
+get_iface_name(const char *name);
 
 // These should probably be moved to ailsasql.h
 

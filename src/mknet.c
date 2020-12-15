@@ -89,20 +89,23 @@ static int
 parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
 {
         int retval, opt;
-        const char *optstr = "adhlvn:u:";
+        const char *optstr = "adhlvb:g:n:u:";
 
         retval = 0;
 #ifdef HAVE_GOTOPT_H
         int index;
         struct option opts[] = {
-                {"uri",		required_argument,	NULL,	'u'},
-		{"network",	required_argument,	NULL,	'k'},
-                {"add",         no_argument,            NULL,   'a'},
-                {"cmdb",        no_argument,            NULL,   'd'},
-                {"list",        no_argument,            NULL,   'l'},
-                {"help",        no_argument,            NULL,   'h'},
-                {"version",     no_argument,            NULL,   'v'},
-                {NULL,		0,			NULL,	0}
+                {"domain",              required_argument,      NULL,   'b'},
+                {"build-domain",        required_argument,      NULL,   'b'},
+                {"uri",                 required_argument,	NULL,	'u'},
+                {"network",             required_argument,	NULL,	'k'},
+                {"range",               required_argument,      NULL,   'g'},
+                {"add",                 no_argument,            NULL,   'a'},
+                {"cmdb",                no_argument,            NULL,   'd'},
+                {"list",                no_argument,            NULL,   'l'},
+                {"help",                no_argument,            NULL,   'h'},
+                {"version",             no_argument,            NULL,   'v'},
+                {NULL,                  0,			NULL,	0}
         };
         while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
 #else
@@ -121,6 +124,20 @@ parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
                         break;
                 case 'v':
                         vm->action = AILSA_VERSION;
+                        break;
+                case 'g':
+                        if ((retval = get_ip_addr_and_prefix(optarg, &(vm->range), &(vm->prefix))) != 0) {
+                                ailsa_syslog(LOG_ERR, "Cannot split network range argument");
+                                return retval;
+                        }
+                        break;
+                case 'b':
+                        if (strlen(optarg) >= DOMAIN_LEN)
+                                ailsa_syslog(LOG_ERR, "Domain trimmed to 255 charaters");
+                        if (vm->domain)
+                                snprintf(vm->domain, DOMAIN_LEN, "%s", optarg);
+                        else
+                                vm->domain = strndup(optarg, DOMAIN_LEN);
                         break;
                 case 'n':
                         if (strlen(optarg) >= CONFIG_LEN)
@@ -160,10 +177,16 @@ display_usage(void)
 
         printf("%s: make virtual network %s\n", prog, VERSION);
         printf("Usage:\t");
-	printf("%s <action> <options>\n", prog);
-	printf("Actions\n");
-	printf("\t-l: list\n");
+        printf("%s <action> <options>\n", prog);
+        printf("Actions\n");
+        printf("\t-a: add\n");
+        printf("\t-l: list\n");
+        printf("\t-h: help\n");
+        printf("\t-v: version\n");
         printf("Options\n");
-	printf("\t-u <uri>: Connection URI for libvirtd\n");
+        printf("\t-b <domain>: Build domain for the network\n");
+        printf("\t-g <network/prefix>: Network range\n");
+        printf("\t-u <uri>: Connection URI for libvirtd\n");
         printf("\t-n <network>: Name of the libvirt network\n");
+        printf("\t-d Add network to cmdb\n");
 }
