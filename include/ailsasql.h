@@ -530,6 +530,29 @@ cmdb_check_add_vm_id_to_list(char *vm, ailsa_cmdb_s *cc, AILLIST *list);
 int
 set_db_row_updated(ailsa_cmdb_s *cc, unsigned int query, char *name, unsigned long int number);
 
+// Network functions
+
+unsigned long int
+generate_zone_serial(void);
+
+int
+cmdb_get_port_number(char *proto, char *service, unsigned int *port);
+
+int
+cmdb_getaddrinfo(char *name, char *ip, int *type);
+
+unsigned long int
+get_net_range(unsigned long int prefix);
+
+int
+do_rev_lookup(char *ip, char *host, size_t len);
+
+int
+cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
+
+int
+check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips);
+
 int
 dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone);
 
@@ -552,24 +575,6 @@ ailsa_clone_data_element(AILELEM *e);
 
 int
 ailsa_insert_clone(AILLIST *list, AILELEM *elem);
-
-unsigned long int
-generate_zone_serial(void);
-
-int
-cmdb_get_port_number(char *proto, char *service, unsigned int *port);
-
-int
-cmdb_getaddrinfo(char *name, char *ip, int *type);
-
-unsigned long int
-get_net_range(unsigned long int prefix);
-
-int
-do_rev_lookup(char *ip, char *host, size_t len);
-
-int
-cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 // Some zone functions
 

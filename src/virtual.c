@@ -81,6 +81,9 @@ get_ip_and_netmask(ailsa_mkvm_s *vm);
 static int
 ailsa_define_network_xml(ailsa_mkvm_s *vm);
 
+static int
+ailsa_add_build_domain_to_cmdb(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm);
+
 #ifndef DEBUG
 static void
 ailsa_custom_libvirt_err(void *data, virErrorPtr err)
@@ -706,6 +709,8 @@ ailsa_list_networks(ailsa_mkvm_s *vm)
         virConnectPtr conn;
 	virNetworkPtr *ptr = NULL;
 	virNetworkPtr *n;
+	/* These flags stop listing of all networks. Also, there is more
+	   information that could be listed here (e.g. autostart, persistent) */
 	unsigned int flags = VIR_CONNECT_LIST_NETWORKS_ACTIVE | VIR_CONNECT_LIST_NETWORKS_PERSISTENT | VIR_CONNECT_LIST_NETWORKS_AUTOSTART;
 
 	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
@@ -738,9 +743,16 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 	virConnectPtr conn;
 	virNetworkPtr vnet = NULL;
 
+#ifndef DEBUG
+	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
+#endif
 	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot connect to libvirt URL %s", vm->uri);
 		return retval;
+	}
+	if ((vnet = virNetworkLookupByName(conn, vm->network))) {
+		ailsa_syslog(LOG_ERR, "Network %s already defined", vm->network);
+		goto cmdb;
 	}
 	vm->mac = ailsa_calloc(MAC_LEN, "vm->mac in ailsa_add_network");
 	memset(buff, 0, FILE_LEN);
@@ -772,6 +784,17 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 		ailsa_syslog(LOG_ERR, "Cannot activate network: %s", virGetLastErrorMessage());
 		goto cleanup;
 	}
+	cmdb:
+		if (vm->cmdb) {
+			if ((retval = ailsa_add_build_domain_to_cmdb(cbs, vm)) != 0)
+				goto cleanup;
+#ifdef HAVE_DNSA
+			if ((retval = add_forward_zone(cbs, vm->domain, "master", NULL)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot add DNS domain %s to database", vm->domain);
+				goto cleanup;
+			}
+#endif // HAVE_DNSA
+		}
 	cleanup:
 		if (vnet)
 			retval = virNetworkFree(vnet);
@@ -844,4 +867,60 @@ ailsa_define_network_xml(ailsa_mkvm_s *vm)
   </ip>\n\
 </network>\n", vm->network, vm->mac, vm->domain, ip, nm);
 	return 0;
+}
+
+static int
+ailsa_add_build_domain_to_cmdb(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
+{
+	if (!(vm))
+		return AILSA_NO_DATA;
+	unsigned long int start, end, netmask, gateway, hostmask;
+	int retval;
+	AILLIST *dom = ailsa_db_data_list_init();
+	AILLIST *check = ailsa_db_data_list_init();
+
+	gateway = (unsigned long int)ntohl(vm->ip);
+	netmask = (unsigned long int)ntohl(vm->nm);
+	start = gateway + 15; // first 16 IP's not used
+	hostmask = ~netmask;
+	end = (start | hostmask); // This is actually the broadcast
+	end--;
+	if ((retval = cmdb_add_string_to_list(vm->domain, check)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_ID_ON_DOMAIN, check, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "Check for build domain failed");
+		goto cleanup;
+	}
+	if (dom->total > 0) {
+		ailsa_syslog(LOG_INFO, "Build domain %s already in database", vm->domain);
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(start, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(end, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(gateway, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(gateway, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(netmask, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_string_to_list(vm->domain, dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_short_to_list(1, dom)) != 0)
+		goto cleanup;
+// HARDCODED
+	if ((retval = cmdb_add_string_to_list("kerberos01.shihad.org", dom)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_populate_cuser_muser(dom)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN, dom)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
+		goto cleanup;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(dom);
+		ailsa_list_full_clean(check);
+		return retval;
 }

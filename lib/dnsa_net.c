@@ -1004,9 +1004,18 @@ get_iface_name(const char *name)
 	if ((retval = ailsa_get_iface_list(ice)) != 0)
 		return iface;
 	iface = ailsa_calloc(SERVICE_LEN, "iface in get_iface_name");
-/* This routine will NOT find a bridge that is part of an inactive network.
+/* This function will NOT find a bridge that is part of an inactive network.
    While the network is inactive, this is probably not an issue. Cannot see
-   how to use libvirt to query avaiable bridge interface names */
+   how to use libvirt to query avaiable bridge interface names.
+
+   This _IS_ an issue, and libvirt fails to define a network with a bridge
+   name that is already used. Can use the function 
+      char *virNetworkGetBridgeName	(virNetworkPtr network)
+   to return the bridge name of a network. I need to loop through all networks
+   to check if a braide name is in use.
+   
+   However, this function is no longer in use. Instead, call the bridge name
+   the name of the network. */
 	for (counter = 0; counter < BUFFER_LEN; counter++) {
 		flag = false;
 		memset(iface, 0, SERVICE_LEN);
@@ -1180,7 +1189,7 @@ dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char
 		ailsa_syslog(LOG_ERR, "Cannot add zone serial to list");
 		return retval;
 	}
-	if (type) {
+	if (master) {
 		if ((retval = cmdb_add_string_to_list(type, zone)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add zone type to list");
 			return retval;
@@ -1488,5 +1497,37 @@ decode_http_header(FILE *rx, unsigned long int *len)
 
 	cleanup:
 		my_free(buf);
+		return retval;
+}
+
+int
+check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips)
+{
+	if (!(cbs) || !(ips))
+		return AILSA_NO_DATA;
+	unsigned long int *ip = ips;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+
+	while (*ip) {
+		if ((retval = cmdb_add_number_to_list(*ip, l)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert first IP address into list");
+			return retval;
+		}
+		ip++;
+	}
+	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_OVERLAP, l, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_OVERLAP query failed");
+		goto cleanup;
+	}
+	if (r->total > 0) {
+		ailsa_syslog(LOG_ERR, "Network details for build domain overlap");
+		retval = AILSA_BUILD_DOMAIN_OVERLAP;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(l);
 		return retval;
 }

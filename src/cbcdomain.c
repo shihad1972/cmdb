@@ -80,13 +80,7 @@ static void
 cbcdomain_clean_comm_line(cbcdomain_comm_line_s *cdc);
 
 static int
-check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl);
-
-static int
 split_network_args(cbcdomain_comm_line_s *cdl, char *netinfo);
-
-static int
-add_ips_to_list(unsigned long i, unsigned long int j, AILLIST *l);
 
 static int
 write_dhcp_net_config(ailsa_cmdb_s *cbs);
@@ -463,6 +457,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	AILLIST *r = ailsa_db_data_list_init();
 	char *domain = cdl->domain;
 	int retval = 0;
+	unsigned long int ips[] = {cdl->start_ip, cdl->end_ip, cdl->start_ip, cdl->start_ip, cdl->end_ip, cdl->end_ip, 0};
 
 	if (!(cdl->ntpserver))
 		cdl->ntpserver = strdup("none");
@@ -478,10 +473,8 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		ailsa_syslog(LOG_ERR, "Build domain %s already exists in database", domain);
 		goto cleanup;
 	}
-	if ((retval = check_for_bdom_overlap(cbs, cdl)) != 0) {
-		ailsa_syslog(LOG_ERR, "IP's in this range overlap with existing build domain");
+	if ((retval = check_for_build_domain_overlap(cbs, ips)) != 0)
 		goto cleanup;
-	}
 	if ((retval = cbc_populate_domain(cbs, cdl, d)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot populate build domain values");
 		goto cleanup;
@@ -629,57 +622,6 @@ write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom)
 	mask = umask(um);
 	cleanup:
 		my_free(name);
-}
-
-static int
-check_for_bdom_overlap(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
-{
-	if (!(cbs) || !(cdl))
-		return AILSA_NO_DATA;
-	int retval;
-	AILLIST *l = ailsa_db_data_list_init();
-	AILLIST *r = ailsa_db_data_list_init();
-
-	if ((retval = add_ips_to_list(cdl->start_ip, cdl->end_ip, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add IP's to list");
-		goto cleanup;
-	}
-	if ((retval = add_ips_to_list(cdl->start_ip, cdl->start_ip, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add start IP's to list");
-		goto cleanup;
-	}
-	if ((retval = add_ips_to_list(cdl->end_ip, cdl->end_ip, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add end IP's to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(cbs, BUILD_DOMAIN_OVERLAP, l, r)) != 0) {
-		ailsa_syslog(LOG_ERR, "BUILD_DOMAIN_OVERLAP query failed");
-		goto cleanup;
-	}
-	if (r->total > 0) {
-		ailsa_syslog(LOG_ERR, "Network details for build domain overlap");
-		retval = AILSA_BUILD_DOMAIN_OVERLAP;
-	}
-	cleanup:
-		ailsa_list_destroy(l);
-		ailsa_list_destroy(r);
-		my_free(l);
-		my_free(r);
-		return retval;
-}
-
-static int
-add_ips_to_list(unsigned long i, unsigned long int j, AILLIST *l)
-{
-	int retval;
-
-	if ((retval = cmdb_add_number_to_list(i, l)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert first IP address into list");
-		return retval;
-	}
-	if ((retval = cmdb_add_number_to_list(j, l)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot insert second IP address into list");
-	return retval;
 }
 
 static int
