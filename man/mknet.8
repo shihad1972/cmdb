@@ -1,0 +1,73 @@
+.TH mknet 8 "Version 0.3: 16 Dec 2020" "MKVM suite manuals" "mkvm collection"
+.SH NAME
+mknet \- Make Virtual Network
+.SH SYNOPSIS
+.B mknet
+[
+.B action
+] [
+.B options
+]
+
+.B cbclocale
+[
+.B -alhv
+] [
+.B -b <domain> -g <network range> -n <network> -u <uri> -d
+]
+
+.SH DESCRIPTION
+\fBmknet\fP creates a virtual network in a libvirt host. You can also add the
+domain into the cmdb for \fBcbcdomain\fP and \fBdnsa\fP.
+
+.SH OPTIONS
+.B Actions
+.IP "-a,  --add"
+add a network
+.IP "-l,  --list"
+list the active networks
+.IP "-h,  --help"
+display a short help message
+.IP "-v,  --version"
+display the program version
+.PP
+.B Details
+.IP "-b,  --domain, --build-domain \fBdomain\fP"
+domain name to be associated with the network. Also, the name of the
+\fBcbcdomain\fP and \fBdnsa\fP domain.
+.IP "-g,  --range \fBrange/prefix\fP"
+IP Address range and prefix (x.x.x.x/x)
+.IP "-n,  --name \fBname\fP"
+Name for the network. This will also be the name of the network interface on
+the virtualisation host
+.IP "-u,  --uri \fBuri\fB"
+Libvirt connection URI
+.IP "-d,  --cmdb"
+Add into \fBcmdb\fP for \fBcbcdomain\fP and \fBdnsa\fP
+.PP
+.SH FILES
+.I /etc/cmdb/cmdb.conf
+.PP
+.I /etc/mkvm/mkvm.conf
+.RS
+System wide configuration files for cmdb and mkvm suites
+.PP
+.RE
+.I ~/.cmdb.conf
+.PP
+.I ~/.mkvm.conf
+.RS
+User configuration files for cmdb and mkvm suites. See
+.BR cmdb.conf (5)
+.BR mkvm.conf (5)
+for further details
+.RE
+.SH ENVIRONMENT
+HOME is used to locate the user configuration files.
+.SH AUTHOR
+Iain M. Conochie <iain-at-thargoid-dot-co-dot-uk>
+.SH "SEE ALSO"
+.BR dnsa(8)
+.BR cbcdomain(8)
+.BR mkvm(8)
+.BR mksp(8)

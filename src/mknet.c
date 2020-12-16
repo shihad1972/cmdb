@@ -97,15 +97,15 @@ parse_mknet_command_line(int argc, char *argv[], ailsa_mkvm_s *vm)
         struct option opts[] = {
                 {"domain",              required_argument,      NULL,   'b'},
                 {"build-domain",        required_argument,      NULL,   'b'},
-                {"uri",                 required_argument,	NULL,	'u'},
-                {"network",             required_argument,	NULL,	'k'},
+                {"uri",                 required_argument,      NULL,   'u'},
+                {"network",             required_argument,      NULL,   'n'},
                 {"range",               required_argument,      NULL,   'g'},
                 {"add",                 no_argument,            NULL,   'a'},
                 {"cmdb",                no_argument,            NULL,   'd'},
                 {"list",                no_argument,            NULL,   'l'},
                 {"help",                no_argument,            NULL,   'h'},
                 {"version",             no_argument,            NULL,   'v'},
-                {NULL,                  0,			NULL,	0}
+                {NULL,                  0,                      NULL,   0}
         };
         while ((opt = getopt_long(argc, argv, optstr, opts, &index)) != -1)
 #else
