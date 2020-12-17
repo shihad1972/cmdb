@@ -316,6 +316,15 @@ parse_mkvm_config(ailsa_mkvm_s *vm)
 void
 parse_cmdb_config(ailsa_cmdb_s *cmdb)
 {
+	if (!(cmdb->toplevelos))
+		cmdb->toplevelos = ailsa_calloc(CONFIG_LEN, "cmdb->toplevelos in parse_cmdb_config");
+	if (!(cmdb->tmpdir))
+		cmdb->tmpdir = ailsa_calloc(CONFIG_LEN, "cmdb->tmpdir in parse_cmdb_config");
+	if (!(cmdb->pxe))
+		cmdb->pxe = ailsa_calloc(CONFIG_LEN, "cmdb->pxe in parse_cmdb_config");
+	snprintf(cmdb->toplevelos, CONFIG_LEN, "%s/cmdb", LOCALSTATEDIR);
+	snprintf(cmdb->tmpdir, CONFIG_LEN, "%s/cmdb/tmp", LOCALSTATEDIR);
+	snprintf(cmdb->pxe, CONFIG_LEN, "pxelinux.cfg");
 	parse_system_cmdb_config(cmdb);
 	parse_user_cmdb_config(cmdb);
 }
@@ -396,8 +405,6 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 
 /* Grab config values from confile file that uses NAME=value as configuration
    options */
-// valgrind reports an error if the file is empty for mk programs
-// This was due to the buffer not being zeroed. *DOH*
 #ifndef GET_CONFIG_OPTION
 # define GET_CONFIG_OPTION(CONFIG, option) { \
    while (fgets(buff, CONFIG_LEN, conf)) \
@@ -445,6 +452,9 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 	memset(buff, 0, CONFIG_LEN);
 	memset(temp, 0, CONFIG_LEN);
 
+	GET_CONFIG_OPTION("TMPDIR=%s", cmdb->tmpdir);
+	GET_CONFIG_OPTION("TOPLEVELOS=%s", cmdb->toplevelos);
+	GET_CONFIG_OPTION("PXE=%s", cmdb->pxe);
 	GET_CONFIG_OPTION("DBTYPE=%s", cmdb->dbtype);
 	GET_CONFIG_OPTION("DB=%s", cmdb->db);
 	GET_CONFIG_OPTION("FILE=%s", cmdb->file);
@@ -464,13 +474,8 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 	GET_CONFIG_OPTION("SECNS=%s", cmdb->secns);
 	GET_CONFIG_OPTION("PRIDNS=%s", cmdb->pridns);
 	GET_CONFIG_OPTION("SECDNS=%s", cmdb->secdns);
-	GET_CONFIG_OPTION("TMPDIR=%s", cmdb->tmpdir);
 	GET_CONFIG_OPTION("TFTPDIR=%s", cmdb->tftpdir);
-	GET_CONFIG_OPTION("PXE=%s", cmdb->pxe);
-	GET_CONFIG_OPTION("TOPLEVELOS=%s", cmdb->toplevelos);
 	GET_CONFIG_OPTION("DHCPCONF=%s", cmdb->dhcpconf);
-	GET_CONFIG_OPTION("KICKSTART=%s", cmdb->kickstart);
-	GET_CONFIG_OPTION("PRESEED=%s", cmdb->preseed);
 	GET_CONFIG_INT("PORT=%u", cmdb->port);
 	GET_CONFIG_INT("REFRESH=%lu", cmdb->refresh);
 	GET_CONFIG_INT("RETRY=%lu", cmdb->retry);
@@ -503,12 +508,6 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 	if(cmdb->dhcpconf)
 		if (ailsa_add_trailing_slash(cmdb->dhcpconf) != 0)
 			ailsa_syslog(LOG_ERR, "Cannot add / to the end of DHCPCONF");
-	if (cmdb->preseed)
-		if (ailsa_add_trailing_slash(cmdb->preseed) != 0)
-			ailsa_syslog(LOG_ERR, "Cannot add / to the end of PRESEED");
-	if (cmdb->kickstart)
-		if (ailsa_add_trailing_slash(cmdb->kickstart) != 0)
-			ailsa_syslog(LOG_ERR, "Cannot add / to the end of KICKSTART");
 }
 
 void

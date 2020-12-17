@@ -484,7 +484,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		query = INSERT_BUILD_DOMAIN;
 	else
 		query = INSERT_BUILD_DOMAIN_NO_NTP;
-	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN, d)) != 0) {
+	if ((retval = ailsa_insert_query(cbs, query, d)) != 0) {
 		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
 		goto cleanup;
 	}

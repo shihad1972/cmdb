@@ -264,10 +264,6 @@ ailsa_clean_cmdb(void *cmdb)
 		my_free(i->toplevelos);
 	if (i->dhcpconf)
 		my_free(i->dhcpconf);
-	if (i->kickstart)
-		my_free(i->kickstart);
-	if (i->preseed)
-		my_free(i->preseed);
 	free(i);
 }
 

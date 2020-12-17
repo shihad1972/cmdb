@@ -1,4 +1,9 @@
 16/12/2020
+Adding cbcdomain and also vmnet does not add reverse zone. Need range and
+prefix to check for existing rev zone. Will need to rewrite the adding of a 
+rev zone in dnsa.
+
+16/12/2020
 NTP configuration in debian is not working; the preseed configuration file
 does not configure the NTP server. The 2 PI's are not good time sources in
 any case.
@@ -46,21 +51,6 @@ for them if we want to be _sure_ there the server is added.
 	** Update ** Not sure this is an issue any more. When I have the test
 	harness, it should pick this up.
 
-27/06/2020
-It would be useful to have extra functions for the list(clone being an example)
-Would need to have the size of the data pointer in the element. Also, want to
-add after, before, head or tail.
-	Added *ailsa_clone_element* and *ailsa_list_insert_clone*. These will
-	only work on data types that do NOT have pointers in them, so cannot
-	use them for ailsa_data_s :( This would also include data types that
-	have pointers to strings as well. There is no easy way around this
-	without casting, and the function should be working with *void data
-	types. However, I _could_ have a clone function in AILLIST data type
-	that would know the data type of the element, in much the same way the
-	destroy function does.
-	** Done: Added clone function to list, and ailsa_clone_data function
-	   for ailsa_data_s data type. Commit ID: 24c2529
-
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.
 It does not add the record in on the first time the zone is built, only on
@@ -81,10 +71,6 @@ packages should be added to the base varient.
 Add support for a YAML data file, so we do not have the unwieldy command
 line options. Once this is up and working, this can be the default data
 definition language for the daemon too.
-
-Reworking the SQL code:
-  - allow inserts of multiple entries				**DONE**
-  - condense cmdb dnsa and cbc sql into 1 set of functions	**DONE**
 
 06/03/2016
 I should probably have a default configuration file, and use make to create
@@ -111,10 +97,6 @@ os_id.
 	*** Add: Can even just have versions in build_os; no need to have
 	name and alias; Have those in build_type and then refernce from
 	build_os
-
-31/01/2015
-Need to check all programs are checking for ~/.dnsa.conf and also add
-the -c <confg-file> option
 
 06/01/2015
 I want to be able to limit the number of results returned from the DB query
@@ -144,46 +126,6 @@ Need to break out the address for customer from the main customer table. This
 will be to allow multiple customer addresses / sites. Would we want to be able
 to assign a service to a site? What about hardware?
 
-10/08/2014 - Part III
-Would be good to be able to lock down the preseed file and host script to only 
-that IP address. As this is HTTP this will have to be in the apache config.
-
-10/08/2014 - Part II
-I should split out the generic arguments into double dashes -- , but also be
-able to read them from a config file; one per line
-Will need to work out priority for system config and user config
-
-10/08/2014
-Might be good to have a version of cbc that can work without cmdb. I will need 
-to distill it down to the esentials of the build. Will need to investigate
--- arguments to command line for the partitions
-
-		 base + varient
-		/
-varient / package 
-		\
-		 what base? how to choose..
-
-	 size of the disk
-	/
-partition		     specific part's, but can still choose
-	\		    /
-	 specific partitions?
-
-		 Do I have to specify supported OS's?
-		/ 
-operating system
-
-
-	 Mostly IP's, mostly + DNS
-	/
-domain
-
-cpc	create preseed config
-ckc	create kickstart config
-**** Basic version of cpc has been written ****
-**** Basic version of ckc has been written ****
-
 09/08/2014
 Need to be able to update / modify in cmdb. I will need to the add the
 updates to the database.
@@ -192,17 +134,6 @@ updates to the database.
 
 02/06/2014
 Need to add support for internal / external views.
-
-17/04/2014
-The applications in build domain should be associated with a "system" group
-of packages, separate from the "application" packages currently in the
-packages table. In preseed this would allow me to create a table that can
-have entries added to them by the user; the package names and the debconf
-configurations for those packages, as this is what the build domain
-applications currently do. For kickstart, there would be a configuration
-script associated with them. Can also have a config script associated
-with preseed.
-*** Maybe fixed? cbcsysp and cbcscript ***
 
 29/03/2014
 If I change the id field in the database to a uuid then I can have
@@ -223,10 +154,6 @@ Only need one initial customer; techies. Need to think more about
 internal customers; again most of the crap should be able to be added
 later
 
-The base.sh install script for debian could download a config script
-for that host using the hostname.
-Fixed
-
 15/09/2013
 When addding a server, it's bullshit that we have to add the network
 card and hard disk seperately, and also that we have to know the ID's
@@ -243,18 +170,6 @@ Fixed
 
 07/08/2013
 Use amd64 instead of x86_64 - perhaps alias? (this is for the tftp names)
-
-05/06/2013
-Need to add the first zone in for dnsa otherwise the software complains
-it cannot add the zone due to the A records for the NS records are not
-in the zone. DOH!
-	03/08/2013 **UPDATE **
-	I could probably just add the name server(s) as A records into
-	the DB and then add these records to the zonefile. If you are
-	adding a zone there should not be any records yet.
-	04/12/2020 **UPDATE**
-	This is no longer an issue. The initial zone can now be added fine.
-
 
 06/05/2013
 Database access is pretty poor. Multiple inserts need multiple statements
@@ -276,14 +191,23 @@ Allow packages to be grouped, so e.g. PHP can contain all php modules
 
 Should probably add racks / power points / switch points into cmdb.
 
-*** ALL ***
-Need to sort out an install script for the database and decide what tables
-to populate at install time, and how to get the default values from the user
-Currently I am thinking make postinstall or perhaps make dbinstall
-	*** Added an ansible playbook to install cmdb on a host ***
-
 
 ======================= COMPLETE ============================
+
+27/06/2020
+It would be useful to have extra functions for the list(clone being an example)
+Would need to have the size of the data pointer in the element. Also, want to
+add after, before, head or tail.
+	Added *ailsa_clone_element* and *ailsa_list_insert_clone*. These will
+	only work on data types that do NOT have pointers in them, so cannot
+	use them for ailsa_data_s :( This would also include data types that
+	have pointers to strings as well. There is no easy way around this
+	without casting, and the function should be working with *void data
+	types. However, I _could_ have a clone function in AILLIST data type
+	that would know the data type of the element, in much the same way the
+	destroy function does.
+	** Done: Added clone function to list, and ailsa_clone_data function
+	   for ailsa_data_s data type. Commit ID: 24c2529
 
 02/06/2013
 Should have the root password for the machine in the database and
@@ -323,6 +247,12 @@ Add checks against all strtoul from DB as if given NULL it will segfault.
 20/04/2020
 When adding a locale, need to check if that locale already exists
 	*** Done. Fixed in commit ID 3baec109 ***
+
+31/01/2015
+Need to check all programs are checking for ~/.dnsa.conf and also add
+the -c <confg-file> option
+	** Added. Commit ID: 1047af9d **
+	Will not be adding the -c <config-file> option
 
 19/04/2020
 When adding packages, I need to check if the package already exists for
@@ -383,3 +313,79 @@ Deleting SRV records is tricky; it seems to delete all SRV records
 for a given service (e.g. ldap) and we cannot specify which one
 to delete.
 	** Fixed. You can now specifiy using service, priority and protocol.
+
+05/06/2013
+Need to add the first zone in for dnsa otherwise the software complains
+it cannot add the zone due to the A records for the NS records are not
+in the zone. DOH!
+	03/08/2013 **UPDATE **
+	I could probably just add the name server(s) as A records into
+	the DB and then add these records to the zonefile. If you are
+	adding a zone there should not be any records yet.
+	04/12/2020 **UPDATE**
+	This is no longer an issue. The initial zone can now be added fine.
+
+*** ALL ***
+Need to sort out an install script for the database and decide what tables
+to populate at install time, and how to get the default values from the user
+Currently I am thinking make postinstall or perhaps make dbinstall
+	*** Added an ansible playbook to install cmdb on a host ***
+
+The base.sh install script for debian could download a config script
+for that host using the hostname.
+Fixed
+
+17/04/2014
+The applications in build domain should be associated with a "system" group
+of packages, separate from the "application" packages currently in the
+packages table. In preseed this would allow me to create a table that can
+have entries added to them by the user; the package names and the debconf
+configurations for those packages, as this is what the build domain
+applications currently do. For kickstart, there would be a configuration
+script associated with them. Can also have a config script associated
+with preseed.
+*** Maybe fixed? cbcsysp and cbcscript ***
+
+10/08/2014 - Part III
+Would be good to be able to lock down the preseed file and host script to only 
+that IP address. As this is HTTP this will have to be in the apache config.
+
+10/08/2014 - Part II
+I should split out the generic arguments into double dashes -- , but also be
+able to read them from a config file; one per line
+Will need to work out priority for system config and user config
+
+10/08/2014
+Might be good to have a version of cbc that can work without cmdb. I will need 
+to distill it down to the esentials of the build. Will need to investigate
+-- arguments to command line for the partitions
+
+		 base + varient
+		/
+varient / package
+		\
+		 what base? how to choose..
+
+	 size of the disk
+	/
+partition		     specific part's, but can still choose
+	\		    /
+	 specific partitions?
+
+		 Do I have to specify supported OS's?
+		/
+operating system
+
+
+	 Mostly IP's, mostly + DNS
+	/
+domain
+
+cpc	create preseed config
+ckc	create kickstart config
+**** Basic version of cpc has been written ****
+**** Basic version of ckc has been written ****
+
+Reworking the SQL code:
+  - allow inserts of multiple entries				**DONE**
+  - condense cmdb dnsa and cbc sql into 1 set of functions	**DONE**

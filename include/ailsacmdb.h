@@ -509,10 +509,8 @@ typedef struct ailsa_cmdb_s {
 	char *toplevelos;
 	char *pxe;
 	char *tmpdir;
-	char *preseed;
 	char *tftpdir;
 	char *dhcpconf;
-	char *kickstart;
 	unsigned int port;
 	unsigned long int refresh;
 	unsigned long int retry;
