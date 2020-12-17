@@ -27,13 +27,7 @@
 void
 cmdb_main_free(cmdb_comm_line_s *cm, cmdb_config_s *cmc, char *cmdb_config);
 int
-parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comm);
-int
-check_cmdb_comm_options(cmdb_comm_line_s *conf);
-int
 check_for_comm_line_errors(int cl, cmdb_comm_line_s *cm);
-void
-clean_cmdb_comm_line(cmdb_comm_line_s *list);
 
 // Various DB functions
 

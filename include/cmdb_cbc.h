@@ -60,20 +60,5 @@ typedef struct cbc_dhcp_config_s { /* Hold information about dhcp config */
 	char domain[CONFIG_LEN];
 } cbc_dhcp_config_s;
 
-void
-init_cbc_comm_values(cbc_comm_line_s *cbt);
-
-void
-clean_cbc_comm_line(cbc_comm_line_s *cbt);
-
-void
-print_cbc_command_line_values(cbc_comm_line_s *command_line);
-
-int
-parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb);
-
-int
-query_config();
-
 
 #endif

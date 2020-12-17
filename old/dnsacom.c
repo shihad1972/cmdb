@@ -38,7 +38,7 @@
 #ifdef HAVE_GETOPT_H
 # define _GNU_SOURCE
 # include <getopt.h>
-#endif // H)AVE_GETOPT_H
+#endif // HAVE_GETOPT_H
 #include <ailsacmdb.h>
 #include "cmdb_dnsa.h"
 

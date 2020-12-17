@@ -230,8 +230,6 @@ void
 clean_hardware_type_list(cmdb_hard_type_s *list);
 void
 clean_vmhost_list(cmdb_vm_HOST_LEN *list);
-void
-clean_cmdb_comm_line(cmdb_comm_line_s *list);
 
 /* Fill struct functions. These use the regex to check input */
 int

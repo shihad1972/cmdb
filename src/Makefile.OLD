@@ -12,14 +12,14 @@ LDFLAGS = -L../lib/ -L/usr/lib/mysql -L/usr/lib/x86_64-linux-gnu
 LDLIBS = -lailsasql -lailsacmdb -lmysqlclient -lsqlite3 -lyaml -lvirt -lxml2 -luuid -lcrypt -lgcrypt
 bin_programs = dnsa cbc cbcdomain cbcos cbcvarient cbcpart cbcsysp cbcscript cbclocale cmdb hellolv mkvm mksp cmdb-identity mknet
 
-DNSCOMOBJ = zones.o dnsacom.o
-COBJECTS = cmdb.o cmdbcom.o servers.o customers.o
+DNSCOMOBJ = zones.o
+COBJECTS = cmdb.o servers.o customers.o
 VOBJECTS = virtual.o
 MKVMOBJETS = mkvm.o $(VOBJECTS)
 MKPOOLOBJECTS = mksp.o $(VOBJECTS)
 MKNETOBJS = mknet.o $(VOBJECTS)
 DOBJECTS = dnsa.o $(DNSCOMOBJ)
-BOBJECTS = cbc.o $(DNSCOMOBJ) build.o createbuild.o cbccom.o
+BOBJECTS = cbc.o $(DNSCOMOBJ) build.o createbuild.o
 CDOBJECTS = cbcdomain.o $(DNSCOMOBJ)
 COOBJECTS = cbcos.o
 CVOBJECTS = cbcvarient.o

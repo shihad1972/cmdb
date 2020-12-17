@@ -41,18 +41,6 @@ typedef struct dnsa_comm_line_s { /* Hold parsed command line args */
 	char *glue_ns;
 } dnsa_comm_line_s;
 
-// Get command line args and pass them. Put actions into the struct
-int
-parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comm);
-// Grab config values from file
-int
-validate_comm_line(dnsa_comm_line_s *comm);
-int
-validate_fwd_comm_line(dnsa_comm_line_s *comm);
-int
-validate_glue_comm_line(dnsa_comm_line_s *comm);
-int
-validate_rev_comm_line(dnsa_comm_line_s *comm);
 // Zone action Functions
 int
 add_fwd_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm);
