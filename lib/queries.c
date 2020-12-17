@@ -792,6 +792,11 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	10,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_SINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // INSERT_BUILD_DOMAIN_NO_NTP
+"INSERT INTO build_domain (start_ip, end_ip, ns, gateway, netmask, domain, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	8,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 	{ // INSERT_FORWARD_ZONE
 "INSERT INTO zones (name, pri_dns, sec_dns, refresh, retry, expire, ttl, serial, type, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	11,

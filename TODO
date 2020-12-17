@@ -1,3 +1,8 @@
+16/12/2020
+NTP configuration in debian is not working; the preseed configuration file
+does not configure the NTP server. The 2 PI's are not good time sources in
+any case.
+
 13/12/2020
 mkvm is not idempotent. If there is an error in adding to cmdb, then when
 run again, it will bail out after trying to add the libvirt VM, as it already

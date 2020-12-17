@@ -746,6 +746,8 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 #ifndef DEBUG
 	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
 #endif
+	if ((retval = get_ip_and_netmask(vm)) != 0)
+		goto cleanup;
 	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot connect to libvirt URL %s", vm->uri);
 		return retval;
@@ -768,8 +770,6 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 		ailsa_syslog(LOG_ERR, "Cannot generate mac address");
 		goto cleanup;
 	}
-	if ((retval = get_ip_and_netmask(vm)) != 0)
-		goto cleanup;
 	if ((retval = ailsa_define_network_xml(vm)) != 0)
 		goto cleanup;
 	if (!(vnet = virNetworkDefineXML(conn, vm->storxml))) {
@@ -907,14 +907,9 @@ ailsa_add_build_domain_to_cmdb(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(vm->domain, dom)) != 0)
 		goto cleanup;
-	if ((retval = cmdb_add_short_to_list(1, dom)) != 0)
-		goto cleanup;
-// HARDCODED
-	if ((retval = cmdb_add_string_to_list("kerberos01.shihad.org", dom)) != 0)
-		goto cleanup;
 	if ((retval = cmdb_populate_cuser_muser(dom)) != 0)
 		goto cleanup;
-	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN, dom)) != 0) {
+	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN_NO_NTP, dom)) != 0) {
 		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
 		goto cleanup;
 	}

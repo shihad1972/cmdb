@@ -457,6 +457,7 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 	AILLIST *r = ailsa_db_data_list_init();
 	char *domain = cdl->domain;
 	int retval = 0;
+	unsigned int query;
 	unsigned long int ips[] = {cdl->start_ip, cdl->end_ip, cdl->start_ip, cdl->start_ip, cdl->end_ip, cdl->end_ip, 0};
 
 	if (!(cdl->ntpserver))
@@ -479,6 +480,10 @@ add_cbc_build_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl)
 		ailsa_syslog(LOG_ERR, "Cannot populate build domain values");
 		goto cleanup;
 	}
+	if ((cdl->confntp))
+		query = INSERT_BUILD_DOMAIN;
+	else
+		query = INSERT_BUILD_DOMAIN_NO_NTP;
 	if ((retval = ailsa_insert_query(cbs, INSERT_BUILD_DOMAIN, d)) != 0) {
 		ailsa_syslog(LOG_ERR, "INSERT_BUILD_DOMAIN query failed");
 		goto cleanup;
@@ -655,13 +660,15 @@ cbc_populate_domain(ailsa_cmdb_s *cbs, cbcdomain_comm_line_s *cdl, AILLIST *dom)
 		ailsa_syslog(LOG_ERR, "Cannot add domain name to list");
 		return retval;
 	}
-	if ((retval = cmdb_add_short_to_list(cdl->confntp, dom)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add config ntp to list");
-		return retval;
-	}
-	if ((retval = cmdb_add_string_to_list(cdl->ntpserver, dom)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add ntp server name to list");
-		return retval;
+	if ((cdl->confntp)) {
+		if ((retval = cmdb_add_short_to_list(cdl->confntp, dom)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add config ntp to list");
+			return retval;
+		}
+		if ((retval = cmdb_add_string_to_list(cdl->ntpserver, dom)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add ntp server name to list");
+			return retval;
+		}
 	}
 	if ((retval = cmdb_populate_cuser_muser(dom)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
