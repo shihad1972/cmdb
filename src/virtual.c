@@ -746,12 +746,12 @@ ailsa_add_network(ailsa_cmdb_s *cbs, ailsa_mkvm_s *vm)
 #ifndef DEBUG
 	virSetErrorFunc(NULL, ailsa_custom_libvirt_err);
 #endif
-	if ((retval = get_ip_and_netmask(vm)) != 0)
-		goto cleanup;
 	if ((retval = ailsa_connect_libvirt(&conn, vm->uri)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot connect to libvirt URL %s", vm->uri);
 		return retval;
 	}
+	if ((retval = get_ip_and_netmask(vm)) != 0)
+		goto cleanup;
 	if ((vnet = virNetworkLookupByName(conn, vm->network))) {
 		ailsa_syslog(LOG_ERR, "Network %s already defined", vm->network);
 		goto cmdb;
