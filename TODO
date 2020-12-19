@@ -81,17 +81,6 @@ Add support for a YAML data file, so we do not have the unwieldy command
 line options. Once this is up and working, this can be the default data
 definition language for the daemon too.
 
-06/03/2016
-I should probably have a default configuration file, and use make to create
-it and then have make install install it in ${sysconfdir}/cmdb. Using the
-configmake header, I can then work out where this is supposed to be.
-This will probably be less necessary when I move to a daemon for the main
-work, and the command line programs just contact the daemon to do the work,
-as the daemon can have a config file passed to it on startup.
-	*** Update: 07/03/2016 ***
-	Install script cmdb.sh now takes into account the values in
-	configmake.h
-
 03/03/2015
 I want to get rid of the need to have a server already in the database before
 adding a build. This would mean extending the ethernet and hard-disk options
@@ -202,6 +191,18 @@ Should probably add racks / power points / switch points into cmdb.
 
 
 ======================= COMPLETE ============================
+
+06/03/2016
+I should probably have a default configuration file, and use make to create
+it and then have make install install it in ${sysconfdir}/cmdb. Using the
+configmake header, I can then work out where this is supposed to be.
+This will probably be less necessary when I move to a daemon for the main
+work, and the command line programs just contact the daemon to do the work,
+as the daemon can have a config file passed to it on startup.
+	*** Update: 07/03/2016 ***
+	Install script cmdb.sh now takes into account the values in
+	configmake.h
+	** Done. config.c in lib using SYSCONFDIR. Commit id: 105bf20 **
 
 27/06/2020
 It would be useful to have extra functions for the list(clone being an example)

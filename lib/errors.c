@@ -156,7 +156,7 @@ If you wish to remove all services (for a server or customer) add the -f option\
 	else if (retval == AILSA_PREFIX_OUT_OF_RANGE)
 		ailsa_syslog(LOG_ERR, "Prefix provided out of range. Allow ranges: 8, 16, 24 and above");
 	else if (retval == AILSA_VERSION)
-		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
+		ailsa_syslog(LOG_ERR, "%s: %s", program, VERSION);
 	else if (retval == AILSA_NO_URI)
 		ailsa_syslog(LOG_ERR, "No URI was specified for the libvirt connection");
 	else if (retval == AILSA_DISPLAY_USAGE) {
