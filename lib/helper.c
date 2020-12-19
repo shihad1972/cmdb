@@ -788,10 +788,8 @@ cmdb_check_add_zone_id_to_list(char *zone, int type, const char *ztype, ailsa_cm
 		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
 		return retval;
 	}
-	if (list->total != (total + 1)) {
-		ailsa_syslog(LOG_ERR, "Cannot find zone %s", zone);
+	if (list->total != (total + 1))
 		retval = AILSA_ZONE_NOT_FOUND;
-	}
 	return retval;
 }
 

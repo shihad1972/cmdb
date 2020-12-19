@@ -153,6 +153,8 @@ If you wish to remove all services (for a server or customer) add the -f option\
 		ailsa_syslog(LOG_ERR, "Input validation failed: %s", ailsa_comm_line_strerror(retval));
 	else if (retval == AILSA_NO_OPTION)
 		ailsa_syslog(LOG_ERR, "Partition option specified but no option supplied");
+	else if (retval == AILSA_PREFIX_OUT_OF_RANGE)
+		ailsa_syslog(LOG_ERR, "Prefix provided out of range. Allow ranges: 8, 16, 24 and above");
 	else if (retval == AILSA_VERSION)
 		ailsa_syslog(LOG_ERR, "%s: %s\n", program, VERSION);
 	else if (retval == AILSA_NO_URI)

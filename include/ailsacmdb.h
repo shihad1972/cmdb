@@ -191,6 +191,7 @@ enum {                  // Error codes
 	AILSA_NO_PACKAGE = 54,
 	AILSA_NO_MASTER_NAME = 55,
 	AILSA_LIST_CLONE_FAILED = 56,
+	AILSA_PREFIX_OUT_OF_RANGE = 57,
 	AILSA_NO_DATA = 200,
 	AILSA_NO_CONNECT = 201,
 	AILSA_NO_HOST = 202,
@@ -895,10 +896,8 @@ ailsa_gen_uuid_str(void);
 // Network functions
 int
 ailsa_gen_mac(char *mac, int type);
-
 uint32_t
 prefix_to_mask_ipv4(unsigned long int prefix);
-
 int
 get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix);
 

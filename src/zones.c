@@ -86,9 +86,6 @@ static int
 cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add);
 
 static int
-dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
-
-static int
 dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 
 static int
@@ -1263,43 +1260,11 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-	char *command = ailsa_calloc(CONFIG_LEN, "command in add_rev_zone");
+
 	int retval;
-	AILLIST *rev = ailsa_db_data_list_init();
-	AILLIST *rid = ailsa_db_data_list_init();
 
-	if (cm->ztype) {
-		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, cm->ztype, dc, rid)) != 0)
-			goto cleanup;
-	} else {
-		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, "master", dc, rid)) != 0)
-			goto cleanup;
-	}
-	if ((retval = dnsa_populate_rev_zone(dc, cm, rev)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot create list for DB insert");
-		goto cleanup;
-	}
-	if ((retval = ailsa_insert_query(dc, INSERT_REVERSE_ZONE, rev)) != 0) {
-		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_ZONE query failed");
-		goto cleanup;
-	}
-	if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, cm->ztype)) != 0) {
-		ailsa_syslog(LOG_ERR, "Unable to validate new zone %s", cm->domain);
-		goto cleanup;
-	}
-	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot write reverse zones configuration");
-		goto cleanup;
-	}
-	snprintf(command, CONFIG_LEN, "%s reload", dc->rndc);
-	if ((retval = system(command)) != 0)
-		ailsa_syslog(LOG_ERR, "Reload of nameserver failed!");
-
-	cleanup:
-		my_free(command);
-		ailsa_list_full_clean(rev);
-		ailsa_list_full_clean(rid);
-		return retval;
+	retval = add_reverse_zone(dc, cm->domain, cm->ztype, cm->master, cm->prefix);
+	return retval;
 }
 
 int
@@ -1706,112 +1671,6 @@ cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
 		ailsa_list_full_clean(a);
 		ailsa_list_full_clean(l);
 		ailsa_list_full_clean(rec);
-		return retval;
-}
-
-static int
-dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list)
-{
-	if (!(cbc) || !(dcl) || !(list))
-		return AILSA_NO_DATA;
-	char buff[CONFIG_LEN];
-	int retval;
-	uint32_t ip_addr;
-	unsigned long int range;
-
-	if ((retval = cmdb_add_string_to_list(dcl->domain, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add net_range to list");
-		goto cleanup;
-	}
-	memset(buff, 0, CONFIG_LEN);
-	snprintf(buff, CONFIG_LEN, "%lu", dcl->prefix);
-	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add prefix to list");
-		goto cleanup;
-	}
-	memset(buff, 0, CONFIG_LEN);
-	if ((retval = cmdb_add_string_to_list(dcl->domain, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add net_start to list");
-		goto cleanup;
-	}
-	inet_pton(AF_INET, dcl->domain, &ip_addr);
-	ip_addr = htonl(ip_addr);
-	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add start_ip to list");
-		goto cleanup;
-	}
-	range = get_net_range(dcl->prefix);
-	ip_addr += (uint32_t)range - 1;
-	inet_ntop(AF_INET, &ip_addr, buff, SERVICE_LEN);
-	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add net_finish to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add finish_ip to list");
-		goto cleanup;
-	}
-	if (!(dcl->ztype)) {
-		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
-			goto cleanup;
-		}
-	} else {
-		if ((retval = cmdb_add_string_to_list("NULL", list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add NULL server to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
-			goto cleanup;
-		}
-	}
-	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone serial number to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_number_to_list(cbc->refresh, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone refresh to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_number_to_list(cbc->retry, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone retry to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_number_to_list(cbc->expire, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone expire to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_add_number_to_list(cbc->ttl, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone ttl to list");
-		goto cleanup;
-	}
-	if (!(dcl->ztype)) {
-		if ((retval = cmdb_add_string_to_list("master", list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add zone type to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list("NULL", list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add NULL master to list");
-			goto cleanup;
-		}
-	} else {
-		if ((retval = cmdb_add_string_to_list(dcl->ztype, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add zone type to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list(dcl->master, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add master to list");
-			goto cleanup;
-		}
-	}
-	if ((retval = cmdb_populate_cuser_muser(list)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
-	cleanup:
 		return retval;
 }
 

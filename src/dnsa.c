@@ -334,6 +334,10 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		comp->glue_ns = strdup("ns1,ns2");
 		retval = NONE;
 	}
+	if (comp->prefix > 0) {
+		if (((comp->prefix > 8) && (comp->prefix < 16)) || ((comp->prefix > 16 && comp->prefix < 24)))
+			retval = AILSA_PREFIX_OUT_OF_RANGE;
+	}
 	if (retval == 0)
 		retval = validate_comm_line(comp);
 	return retval;

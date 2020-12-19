@@ -557,6 +557,9 @@ check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips);
 int
 dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone);
 
+int
+dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, char *range, char *master, unsigned long int prefix, AILLIST *list);
+
 // Data manipulation functions
 
 void
@@ -590,6 +593,9 @@ cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs);
 
 int
 add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *master);
+
+int
+add_reverse_zone(ailsa_cmdb_s *dc, char *range, const char *type, char *master, unsigned long int prefix);
 
 # ifdef HAVE_MYSQL
 #  include <mysql.h>

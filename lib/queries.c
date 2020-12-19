@@ -833,9 +833,9 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_REVERSE_ZONE
-"INSERT INTO rev_zones (net_range, prefix, net_start, start_ip, net_finish, finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-	17,
-	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+"INSERT INTO rev_zones (net_range, prefix, net_start, start_ip, net_finish, finish_ip, pri_dns, sec_dns, serial, refresh, retry, expire, ttl, type, master, valid, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	18,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_RECORD_BASE
 "INSERT INTO records (zone, type, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
@@ -1615,9 +1615,7 @@ ailsa_delete_query_mysql(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s dele
 
 	if ((retval = ailsa_mysql_init(cmdb, &sql)) != 0)
 		return retval;
-	if ((retval = ailsa_run_mysql_stmt(&sql, bind, delete, list)) == 0)
-		ailsa_syslog(LOG_INFO, "No affected rows for %s", query);
-	else if (retval < 0)
+	if ((retval = ailsa_run_mysql_stmt(&sql, bind, delete, list)) < 0)
 		ailsa_syslog(LOG_ERR, "Statement failed: %s", query);
 	else
 		retval = 0;
