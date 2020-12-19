@@ -1,3 +1,12 @@
+19/12/2020
+Currently, can only add rev zones if the have a prefix of 8, 16 or 24 or
+greater. It would be good to be able to add other prefixes. This is complex
+as the zone files require these prefixes. Should they be separate zones in
+the database, or should the program just deal with multiple zonefiles for this
+prefix? Also, when adding a reverse zone, we just check for _this zone_ and
+not if it overlaps with other zones. This will be required if we have other
+prefixes.
+
 16/12/2020
 Adding cbcdomain and also vmnet does not add reverse zone. Need range and
 prefix to check for existing rev zone. Will need to rewrite the adding of a 
