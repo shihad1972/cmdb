@@ -185,12 +185,14 @@ cmdb_validate_fwd_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype)
 	char *command = ailsa_calloc(CONFIG_LEN, "command in cmdb_validate_fwd_zone");
 	int retval;
 
-	if (strncmp(ztype, "slave", BYTE_LEN) == 0) {
-		if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add invalid to list");
-			goto cleanup;
+	if (ztype) {
+		if (strncmp(ztype, "slave", BYTE_LEN) == 0) {
+			if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot add invalid to list");
+				goto cleanup;
+			}
+			goto validate;
 		}
-		goto validate;
 	}
 	if ((retval = write_fwd_zone_file(cbc, zone)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot write zone file for domain %s", zone);
