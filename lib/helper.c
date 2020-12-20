@@ -594,6 +594,37 @@ cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list)
 }
 
 int
+cmdb_get_rev_zone_prefix(ailsa_cmdb_s *cc, char *range, unsigned long int *prefix)
+{
+	if (!(cc) || !(range))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *p = ailsa_db_data_list_init();
+	ailsa_data_s *d;
+
+	if ((retval = cmdb_add_string_to_list(range, l)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add range %s to list", range);
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cc, PREFIX_ON_NET_RANGE, l, p)) != 0) {
+		ailsa_syslog(LOG_ERR, "PREFIX_ON_NET_RANGE query failed");
+		goto cleanup;
+	}
+	if (p->total > 0) {
+		d = p->head->data;
+		*prefix = strtoul(d->data->text, NULL, 10);
+	} else {
+		*prefix = 0;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(p);
+		return retval;
+}
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone, const char *type)
 {
 	if (!(cc) || !(zone))
@@ -642,6 +673,7 @@ cmdb_check_for_rev_zone(ailsa_cmdb_s *cc, char *zone, const char *type)
 		ailsa_list_full_clean(l);
 		return retval;
 }
+
 int
 cmdb_check_for_fwd_record(ailsa_cmdb_s *cc, AILLIST *rec)
 {

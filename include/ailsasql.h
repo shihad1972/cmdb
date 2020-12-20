@@ -490,6 +490,9 @@ int
 cmdb_add_identity_id_to_list(char **ident, ailsa_cmdb_s *cc, AILLIST *list);
 
 int
+cmdb_get_rev_zone_prefix(ailsa_cmdb_s *cc, char *range, unsigned long int *prefix);
+
+int
 cmdb_check_for_fwd_zone(ailsa_cmdb_s *cc, char *zone, const char *type);
 
 int
