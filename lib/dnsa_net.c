@@ -514,10 +514,10 @@ write_glue_records(ailsa_cmdb_s *cbc, int fd, AILLIST *g, const char *zone)
 		name = ((ailsa_data_s *)e->data)->data->text;
 		pri = ((ailsa_data_s *)e->next->data)->data->text;
 		sec = ((ailsa_data_s *)e->next->next->data)->data->text;
-		dprintf(fd, "%s\tIN\tNS\t%s\n", name, pri);
+		dprintf(fd, "%s.\tIN\tNS\t%s\n", name, pri);
 		if (sec)
 			if ((strlen(sec) > 0) && (strcmp(sec, "none") != 0))
-				dprintf(fd, "%s\tIN\tNS\t%s\n", name, sec);
+				dprintf(fd, "%s.\tIN\tNS\t%s\n", name, sec);
 // At this point, we should check if the NS records are FQDNs. Alternatively,
 // do not allow non FQDN records
 		e = ailsa_move_down_list(e, len);

@@ -1149,6 +1149,7 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	unsigned int query, delete;
 	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *list = ailsa_db_data_list_init();
+	AILLIST *zone = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, rec)) != 0)
 		goto cleanup;
@@ -1204,10 +1205,20 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	}
 	if ((retval = ailsa_delete_query(dc, delete_queries[delete], rec)) != 0)
 		ailsa_syslog(LOG_ERR, "delete query failed");
-
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, zone)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
+		goto cleanup;
+	}
+	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], zone)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot set zone %s update", cm->domain);
 	cleanup:
 		ailsa_list_full_clean(rec);
 		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(zone);
 		return retval;
 }
 
@@ -1260,7 +1271,6 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-
 	int retval;
 
 	retval = add_reverse_zone(dc, cm->domain, cm->ztype, cm->master, cm->prefix);
@@ -1362,17 +1372,13 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot create list of records to add");
 		goto cleanup;
 	}
-	if (rem->total > 0) {
-		if ((retval = cmdb_remove_reverse_records(dc, cm->domain, rem)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
-			goto cleanup;
-		}
+	if ((retval = cmdb_remove_reverse_records(dc, cm->domain, rem)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
+		goto cleanup;
 	}
-	if (add->total > 0) {
-		if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
-			goto cleanup;
-		}
+	if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
+		goto cleanup;
 	}
 	if (rem->total > 0 || add->total > 0) {
 		ailsa_list_clean(net);
@@ -1548,10 +1554,10 @@ cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *rem)
 	AILELEM *e;
 	ailsa_data_s *d;
 
-	if (rem->total == 0)
-		goto cleanup;
 
 	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, "master", dc, l)) != 0)
+		goto cleanup;
+	if (rem->total == 0)
 		goto cleanup;
 	e = rem->head;
 	while (e) {
@@ -1653,12 +1659,12 @@ cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
 	AILELEM *e;
 	ailsa_data_s *d, *h;
 
-	if (add->total == 0)
-		goto cleanup;
 	if ((retval = cmdb_get_rev_zone_prefix(dc, range, &prefix)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot get prefix for range %s", range);
 		goto cleanup;
 	}
+	if (add->total == 0)
+		goto cleanup;
 	if (prefix == 0) {
 		ailsa_syslog(LOG_ERR, "No prefix for range %s", range);
 		goto cleanup;
@@ -1924,6 +1930,7 @@ delete_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		return AILSA_NO_DATA;
 	int retval;
 	AILLIST *g = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_add_string_to_list(cm->domain, g)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add glue domain name to list");
@@ -1931,8 +1938,17 @@ delete_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	}
 	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_GLUE_ZONE], g)) != 0)
 		ailsa_syslog(LOG_ERR, "DELETE_GLUE_ZONE query failed");
+	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), z)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add muser to update list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, z)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], z)) != 0)
+		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
 	cleanup:
 		ailsa_list_full_clean(g);
+		ailsa_list_full_clean(z);
 		return retval;
 }
 
@@ -1941,10 +1957,12 @@ list_glue_zones(ailsa_cmdb_s *dc)
 {
 	if (!(dc))
 		return;
+	char *str;
 	int retval;
 	size_t total = 6;
 	AILLIST *g = ailsa_db_data_list_init();
 	AILELEM *e;
+	size_t len = 0;
 
 	if ((retval = ailsa_basic_query(dc, GLUE_ZONE_INFORMATION, g)) != 0) {
 		ailsa_syslog(LOG_ERR, "GLUE_ZONE_INFORMATION query failed");
@@ -1961,11 +1979,29 @@ list_glue_zones(ailsa_cmdb_s *dc)
 	}
 	e = g->head;
 	while (e) {
-		printf("%s\t", ((ailsa_data_s *)e->data)->data->text);
-		printf("%s\t", ((ailsa_data_s *)e->next->data)->data->text);
-		printf("%s,", ((ailsa_data_s *)e->next->next->data)->data->text);
+		str = ((ailsa_data_s *)e->data)->data->text;
+		len = strnlen(str, DOMAIN_LEN);
+		printf("%s", str);
+		if (len < 8)
+			printf("\t\t");
+		else if (len < 16)
+			printf("\t");
+		else
+			printf("\n\t\t");
+		str = ((ailsa_data_s *)e->next->data)->data->text;
+		len = strnlen(str, DOMAIN_LEN);
+		printf("%s", str);
+		if (len < 8)
+			printf("\t\t\t");
+		else if (len < 16)
+			printf("\t\t");
+		else if (len < 24)
+			printf("\t");
+		else
+			printf("\n\t\t\t");
+		printf("%s ", ((ailsa_data_s *)e->next->next->data)->data->text);
+		printf("%s ", ((ailsa_data_s *)e->next->next->next->next->data)->data->text);
 		printf("%s\t", ((ailsa_data_s *)e->next->next->next->data)->data->text);
-		printf("%s,", ((ailsa_data_s *)e->next->next->next->data)->data->text);
 		printf("%s\n", ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text);
 		e = ailsa_move_down_list(e, total);
 	}
