@@ -911,7 +911,6 @@ add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		return AILSA_NO_DATA;
 	int retval;
 	unsigned int query;
-	uid_t uid = getuid();
 	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *z = ailsa_db_data_list_init();
 
@@ -952,14 +951,8 @@ add_host(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Insert record query %u failed", query);
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list((unsigned long int)uid, z)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add muser to update list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, z)) != 0)
-		goto cleanup;
-	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], z)) != 0)
-		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+	if ((retval = set_db_row_updated(dc, SET_FWD_ZONE_UPDATED_ON_NAME, cm->domain, 0)) != 0)
+		ailsa_syslog(LOG_ERR, "Failed to set zone %s as updated", cm->domain);
 
 	cleanup:
 		ailsa_list_full_clean(rec);
@@ -1205,16 +1198,8 @@ delete_record(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	}
 	if ((retval = ailsa_delete_query(dc, delete_queries[delete], rec)) != 0)
 		ailsa_syslog(LOG_ERR, "delete query failed");
-	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), zone)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add muser to list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, zone)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add zone id to list");
-		goto cleanup;
-	}
-	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], zone)) != 0)
-		ailsa_syslog(LOG_ERR, "Cannot set zone %s update", cm->domain);
+	if ((retval = set_db_row_updated(dc, SET_FWD_ZONE_UPDATED_ON_NAME, cm->domain, 0)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot set zone %s to updated", cm->domain);
 	cleanup:
 		ailsa_list_full_clean(rec);
 		ailsa_list_full_clean(list);
@@ -1780,16 +1765,8 @@ add_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "INSERT_GLUE_ZONE query failed");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), u)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot insert muser into update list");
-		goto cleanup;
-	}
-	if ((retval = cmdb_check_add_zone_id_to_list(parent, FORWARD_ZONE, "master", dc, u)) != 0)
-		goto cleanup;
-	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], u)) != 0) {
-		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
-		goto cleanup;
-	}
+	if ((retval = set_db_row_updated(dc, SET_FWD_ZONE_UPDATED_ON_NAME, parent, 0)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot set zone %s to be updated", parent);
 	cleanup:
 		ailsa_list_full_clean(p);
 		ailsa_list_full_clean(u);
@@ -1931,24 +1908,31 @@ delete_glue_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	int retval;
 	AILLIST *g = ailsa_db_data_list_init();
 	AILLIST *z = ailsa_db_data_list_init();
+	AILLIST *i = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_add_string_to_list(cm->domain, g)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add glue domain name to list");
 		goto cleanup;
 	}
-	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_GLUE_ZONE], g)) != 0)
-		ailsa_syslog(LOG_ERR, "DELETE_GLUE_ZONE query failed");
-	if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), z)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add muser to update list");
+	if ((retval = ailsa_argument_query(dc, PARENT_ZONE_ID_ON_GLUE_ZONE, g, i)) != 0) {
+		ailsa_syslog(LOG_ERR, "PARENT_ZONE_ID_ON_GLUE_ZONE query failed");
 		goto cleanup;
 	}
-	if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, FORWARD_ZONE, "master", dc, z)) != 0)
+	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_GLUE_ZONE], g)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_GLUE_ZONE query failed");
 		goto cleanup;
-	if ((retval = ailsa_update_query(dc, update_queries[SET_FWD_ZONE_UPDATED], z)) != 0)
-		ailsa_syslog(LOG_ERR, "SET_FWD_ZONE_UPDATED query failed");
+	}
+	if (i->total == 0) {
+		ailsa_syslog(LOG_ERR, "PARENT_ZONE_ID_ON_GLUE_ZONE query got nothing");
+		goto cleanup;
+	}
+	if ((retval = set_db_row_updated(dc, SET_FWD_ZONE_UPDATED, NULL, ((ailsa_data_s *)i->head->data)->data->number)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot set parent zone for %s to be updated", cm->domain);
+	
 	cleanup:
 		ailsa_list_full_clean(g);
 		ailsa_list_full_clean(z);
+		ailsa_list_full_clean(i);
 		return retval;
 }
 

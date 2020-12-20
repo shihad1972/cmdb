@@ -709,6 +709,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // PARENT_ZONE_ID_ON_GLUE_ZONE
+"SELECT zone_id FROM glue_zones WHERE name = ?",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
@@ -1087,6 +1092,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 "UPDATE zones SET muser = ?, updated = 'yes' WHERE id = ?",
 	2,
 	{ AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // SET_FWD_ZONE_UPDATED_ON_NAME
+"UPDATE zones SET muser = ?, updated = 'yes' WHERE name = ?",
+	2,
+	{ AILSA_DB_LINT, AILSA_DB_TEXT }
 	},
 	{ // SET_REV_ZONE_UPDATED
 "UPDATE rev_zones SET muser = ?, updated = 'yes' WHERE net_range = ?",

@@ -60,11 +60,6 @@ for them if we want to be _sure_ there the server is added.
 	** Update ** Not sure this is an issue any more. When I have the test
 	harness, it should pick this up.
 
-20/06/2020
-Strange bug when building reverse zones with newly set preferred A record.
-It does not add the record in on the first time the zone is built, only on
-the 2nd time it is built.
-
 05/05/2020
 cbcscript is tightly tied into the build_type table; also the system_scripts_args
 table has too much information in it. It would be better to be like system
@@ -191,6 +186,12 @@ Should probably add racks / power points / switch points into cmdb.
 
 
 ======================= COMPLETE ============================
+
+20/06/2020
+Strange bug when building reverse zones with newly set preferred A record.
+It does not add the record in on the first time the zone is built, only on
+the 2nd time it is built.
+	** Fixed. Commit id: f45e301 **
 
 06/03/2016
 I should probably have a default configuration file, and use make to create

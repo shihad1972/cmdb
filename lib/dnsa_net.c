@@ -1334,12 +1334,14 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 	unsigned int query;
 	AILLIST *l = ailsa_db_data_list_init();
 
-	if ((master) && (strncmp(type, "slave", BYTE_LEN) == 0)) {
-		query = INSERT_FORWARD_SLAVE_ZONE;
-	} else if (!(master) && (strncmp(type, "slave", BYTE_LEN) == 0)) {
-		ailsa_syslog(LOG_ERR, "Trying to insert slave zone with no master IP address");
-		retval = AILSA_NO_MASTER;
-		goto cleanup;
+	if (type) {
+		if ((master) && (strncmp(type, "slave", BYTE_LEN) == 0)) {
+			query = INSERT_FORWARD_SLAVE_ZONE;
+		} else if (!(master) && (strncmp(type, "slave", BYTE_LEN) == 0)) {
+			ailsa_syslog(LOG_ERR, "Trying to insert slave zone with no master IP address");
+			retval = AILSA_NO_MASTER;
+			goto cleanup;
+		}
 	} else {
 		query = INSERT_FORWARD_ZONE;
 	}
