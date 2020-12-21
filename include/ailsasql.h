@@ -547,6 +547,9 @@ cmdb_get_port_number(char *proto, char *service, unsigned int *port);
 int
 cmdb_getaddrinfo(char *name, char *ip, int *type);
 
+int
+get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix);
+
 unsigned long int
 get_net_range(unsigned long int prefix);
 
@@ -555,6 +558,15 @@ do_rev_lookup(char *ip, char *host, size_t len);
 
 int
 get_zone_index(unsigned long int prefix, unsigned long int *index);
+
+int
+convert_bin_ipv4_to_text(unsigned long int ip, char *addr);
+
+int
+convert_text_ipv4_to_bin(unsigned long int *ip, const char *addr);
+
+int
+get_range_search_string(const char *range, char *search, unsigned long int prefix, unsigned long int index);
 
 int
 cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);

@@ -112,43 +112,6 @@ get_net_range(unsigned long int prefix)
         return range;
 }
 
-uint32_t
-prefix_to_mask_ipv4(unsigned long int prefix)
-{
-	uint32_t pf;
-	if (prefix) {
-		pf = (uint32_t)(4294967295 << (32 - prefix));
-		return pf;
-	} else {
-		return 0;
-	}
-}
-
-int
-do_rev_lookup(char *ip, char *host, size_t size)
-{
-	int retval = 0;
-	struct addrinfo hints, *res;
-	socklen_t len = sizeof(struct sockaddr_in6);
-	socklen_t hlen = (socklen_t)size;
-
-	if (!(ip) || !(host))
-		return AILSA_NO_DATA;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	if ((retval = getaddrinfo(ip, NULL, &hints, &res)) != 0) {
-		fprintf(stderr, "Getaddrinfo in do_rev_lookup: %s\n",
-		  gai_strerror(retval));
-		return AILSA_GETADDR_FAIL;
-	}
-	if ((retval = getnameinfo(res->ai_addr, len, host, hlen, NULL, 0, NI_NAMEREQD)) != 0) {
-		fprintf(stderr, "getnameinfo: %s\n", gai_strerror(retval));
-		retval = AILSA_DNS_LOOKUP_FAIL;
-	}
-	return retval;
-}
-
 int
 cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype)
 {
@@ -1152,31 +1115,6 @@ get_iface_name(const char *name)
 	return iface;
 }
 
-int
-get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix)
-{
-	if (!(ip) || !(range) || !(prefix))
-		return AILSA_NO_DATA;
-	char *tmp = strndup(ip, MAC_LEN);
-	char *ptr;
-	if (!(ptr = strchr(tmp, '/'))) {
-		ailsa_syslog(LOG_ERR, "Character / not in string for netowrk range: %s", ip);
-		return AILSA_INPUT_INVALID;
-	}
-	*ptr++ = '\0';
-	if (!(*range = strndup(tmp, SERVICE_LEN))) {
-		ailsa_syslog(LOG_ERR, "strndup failed for range in get_ip_addr_and_prefix");
-		return AILSA_STRING_FAIL;
-	}
-	if (strlen(ptr) > 2) {
-		ailsa_syslog(LOG_ERR, "Netmask can only be donoted in prefix format, e.g. /24");
-		return AILSA_STRING_FAIL;
-	} else {
-		*prefix = strtoul(ptr, NULL, 10);
-	}
-	my_free(tmp);
-	return 0;
-}
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 {
@@ -1334,7 +1272,7 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 		return AILSA_NO_DATA;
 	char *command = ailsa_calloc(CONFIG_LEN, "command in add_forward_zone");
 	int retval;
-	unsigned int query;
+	unsigned int query = INSERT_FORWARD_ZONE;
 	AILLIST *l = ailsa_db_data_list_init();
 
 	if (type) {
@@ -1345,8 +1283,6 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 			retval = AILSA_NO_MASTER;
 			goto cleanup;
 		}
-	} else {
-		query = INSERT_FORWARD_ZONE;
 	}
 	if ((retval = cmdb_check_for_fwd_zone(dc, domain, type)) > 0) {
 		ailsa_syslog(LOG_INFO, "Zone %s already in database", domain);
@@ -1691,26 +1627,4 @@ check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips)
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(l);
 		return retval;
-}
-
-int
-get_zone_index(unsigned long int prefix, unsigned long int *index)
-{
-	if (!(index) || (prefix == 0))
-		return AILSA_NO_DATA;
-	unsigned long int i = 0;
-	double power;
-	if (prefix < 8)
-		return AILSA_PREFIX_OUT_OF_RANGE;
-	else if ((prefix > 8) && (prefix < 16))
-		i = 16 - prefix;
-	else if ((prefix > 16) && (prefix < 24))
-		i = 24 - prefix;
-	if (i != 0)
-		power = pow(2, (double)i);
-	else
-		power = 1;
-	i = (unsigned long int)power;
-	*index = i;
-	return 0;
 }

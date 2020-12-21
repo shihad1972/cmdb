@@ -2000,9 +2000,9 @@ list_test_zones(ailsa_cmdb_s *dc)
 		return;
 	int c = 6;
 	int i, retval;
+	char search[SERVICE_LEN];
 	const char *zones[] = { "192.168.32.0/24", "192.168.80.0/20", "172.16.0.0/14", "16.0.0.0/13", "10.0.0.0/8", "172.24.0.0/16" };
-	unsigned long int prefixes[c];
-	unsigned long indicies[c];
+	unsigned long int prefixes[c], indicies[c], j;
 	char **ips = ailsa_calloc((sizeof(char *)) * (size_t)c, "ips in list_test_zones");
 	for (i = 0; i < c; i++) {
 		if ((retval = get_ip_addr_and_prefix(zones[i], &(ips[i]), &prefixes[i])) != 0) {
@@ -2014,6 +2014,14 @@ list_test_zones(ailsa_cmdb_s *dc)
 			goto cleanup;
 		}
 		printf("Range: %s\n\tNetwork: %s\tPrefix: %lu\tIndexes: %lu\n", zones[i], ips[i], prefixes[i], indicies[i]);
+		for (j = 0; j < indicies[i]; j++) {
+			if ((retval = get_range_search_string(ips[i], search, prefixes[i], j)) != 0) {
+				ailsa_syslog(LOG_ERR, "search range lookup failed for %s on %lu", zones[i], j);
+				goto cleanup;
+			}
+			printf("\t%s\t%lu\n", search, j);
+		}
+		printf("\n");
 	}
 	cleanup:
 		for (i = 0; i < c; i++) {

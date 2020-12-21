@@ -521,6 +521,33 @@ ailsa_clean_account(void *acc)
 		my_free(data->pass);
 	my_free(data);
 }
+
+void
+ailsa_clean_preferred(void *pref)
+{
+	if (!(pref))
+		return;
+	ailsa_preferred_s *data = pref;
+	if (data->ip)
+		my_free(data->ip);
+	if (data->fqdn)
+		my_free(data->fqdn);
+	my_free(data);
+}
+
+void
+ailsa_clean_record(void *rec)
+{
+	if (!(rec))
+		return;
+	ailsa_record_s *data = rec;
+	if (data->host)
+		my_free(data->host);
+	if (data->dest)
+		my_free(data->dest);
+	my_free(data);
+}
+
 void
 ailsa_init_string(ailsa_string_s *str)
 {

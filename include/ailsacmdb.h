@@ -688,6 +688,22 @@ typedef struct ailsa_account_s {
 	unsigned long int identity_id;
 } ailsa_account_s;
 
+typedef struct ailsa_preferred_s {
+	char *ip;
+	char *fqdn;
+	unsigned long int ip_addr;
+	unsigned long int prefa_id;
+	unsigned long int record_id;
+} ailsa_preferred_s;
+
+typedef struct ailsa_record_s {	// Can use for fwd or rev records
+	char *host;
+	char *dest;
+	unsigned long int id;
+	unsigned long int zone;
+	unsigned long int index;
+} ailsa_record_s;
+
 enum {
 	CBCSCRIPT = 1,
 	CBCSCRARG = 2
@@ -899,8 +915,6 @@ int
 ailsa_gen_mac(char *mac, int type);
 uint32_t
 prefix_to_mask_ipv4(unsigned long int prefix);
-int
-get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix);
 
 // Config and command line parsing
 
