@@ -1998,11 +1998,11 @@ list_test_zones(ailsa_cmdb_s *dc)
 {
 	if (!(dc))
 		return;
-	int c = 6;
+	int c = 5;
 	int i, retval;
 	char search[SERVICE_LEN];
-	const char *zones[] = { "192.168.32.0/24", "192.168.80.0/20", "172.16.0.0/14", "16.0.0.0/13", "10.0.0.0/8", "172.24.0.0/16" };
-	unsigned long int prefixes[c], indicies[c], j;
+	const char *zones[] = { "192.168.1.0/24", "192.168.80.0/21", "172.16.0.0/14", "10.0.0.0/8", "172.24.0.0/16" };
+	unsigned long int prefixes[c], indicies[c], start[c], end[c], j;
 	char **ips = ailsa_calloc((sizeof(char *)) * (size_t)c, "ips in list_test_zones");
 	for (i = 0; i < c; i++) {
 		if ((retval = get_ip_addr_and_prefix(zones[i], &(ips[i]), &prefixes[i])) != 0) {
@@ -2013,7 +2013,12 @@ list_test_zones(ailsa_cmdb_s *dc)
 			ailsa_syslog(LOG_ERR, "Cannot get index number %d for prefix %lu", i, prefixes[i]);
 			goto cleanup;
 		}
+		if ((retval = get_start_finsh_ips(ips[i], prefixes[i], &start[i], &end[i])) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot get start and end IP address");
+			goto cleanup;
+		}
 		printf("Range: %s\n\tNetwork: %s\tPrefix: %lu\tIndexes: %lu\n", zones[i], ips[i], prefixes[i], indicies[i]);
+		printf("  Start IP: %lu\t  End IP: %lu\n", start[i], end[i]);
 		for (j = 0; j < indicies[i]; j++) {
 			if ((retval = get_range_search_string(ips[i], search, prefixes[i], j)) != 0) {
 				ailsa_syslog(LOG_ERR, "search range lookup failed for %s on %lu", zones[i], j);

@@ -569,6 +569,12 @@ int
 get_range_search_string(const char *range, char *search, unsigned long int prefix, unsigned long int index);
 
 int
+get_offset_ip(const char *range, char *search, unsigned long int prefix, unsigned long int index);
+
+int
+get_start_finsh_ips(const char *range, unsigned long int prefix, unsigned long int *start, unsigned long int *end);
+
+int
 cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 int

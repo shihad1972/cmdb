@@ -1328,6 +1328,8 @@ add_reverse_zone(ailsa_cmdb_s *dc, char *range, const char *type, char *master, 
 	AILLIST *rev = ailsa_db_data_list_init();
 	AILLIST *rid = ailsa_db_data_list_init();
 
+/* Need a much better check here. I should check if there is overlap with
+   _any_ reverse zone, and if found, show the overlap */
 	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, type, dc, rid)) != AILSA_ZONE_NOT_FOUND) {
 		ailsa_syslog(LOG_ERR, "Zone %s already in database", range);
 		goto cleanup;

@@ -1,3 +1,7 @@
+21/12/2020
+Need to check when adding a reverse zone if there is any overlap with other
+zones. We do this for the build domain...
+
 19/12/2020
 Currently, can only add rev zones if the have a prefix of 8, 16 or 24 or
 greater. It would be good to be able to add other prefixes. This is complex

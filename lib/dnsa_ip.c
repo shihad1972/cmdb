@@ -166,6 +166,34 @@ get_range_search_string(const char *range, char *search, unsigned long int prefi
                 return AILSA_NO_DATA;
         int retval;
         char *p;
+
+        if ((retval = get_offset_ip(range, search, prefix, index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get offset IP address");
+                return retval;
+        }
+        if (!(p = strchr(search, '.')))
+                return AILSA_IP_CONVERT_FAILED;
+        p++;
+        if (prefix > 8) {
+                if (!(p = strchr(p, '.')))
+                        return AILSA_IP_CONVERT_FAILED;
+                p++;
+        }
+        if (prefix > 16) {
+                if (!(p = strchr(p, '.')))
+                        return AILSA_IP_CONVERT_FAILED;
+                p++;
+        }
+        snprintf(p, 2, "%%");
+        return retval;
+}
+
+int
+get_offset_ip(const char *range, char *addr, unsigned long int prefix, unsigned long int index)
+{
+        if (!(range) || !(addr) || (prefix == 0))
+                return AILSA_NO_DATA;
+        int retval;
         unsigned long int ip;
         unsigned long int third = 256;
         unsigned long int second = 256 * 256;
@@ -183,21 +211,37 @@ get_range_search_string(const char *range, char *search, unsigned long int prefi
         } else {
                 return AILSA_IP_CONVERT_FAILED;
         }
-        if ((retval = convert_bin_ipv4_to_text(ip, search)) != 0)
-                return retval;
-        if (!(p = strchr(search, '.')))
-                return AILSA_IP_CONVERT_FAILED;
-        p++;
-        if (prefix > 8) {
-                if (!(p = strchr(p, '.')))
-                        return AILSA_IP_CONVERT_FAILED;
-                p++;
-        }
-        if (prefix > 16) {
-                if (!(p = strchr(p, '.')))
-                        return AILSA_IP_CONVERT_FAILED;
-                p++;
-        }
-        snprintf(p, 2, "%%");
+        retval = convert_bin_ipv4_to_text(ip, addr);
         return retval;
+}
+
+int
+get_start_finsh_ips(const char *range, unsigned long int prefix, unsigned long int *start, unsigned long int *end)
+{
+        if (!(range) && (prefix == 0))
+                return AILSA_NO_DATA;
+        char *ip = ailsa_calloc(MAC_LEN, "ip in get_start_finish_ips");
+        int retval;
+        unsigned long int index, last;
+
+        if ((retval = convert_text_ipv4_to_bin(start, range)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot convert range %s to binary", range);
+                goto cleanup;
+        }
+        if ((retval = get_zone_index(prefix, &index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get index for prefix %lu", prefix);
+                goto cleanup;
+        }
+        if ((retval = get_offset_ip(range, ip, prefix, index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get index IP address");
+                goto cleanup;
+        }
+        if ((retval = convert_text_ipv4_to_bin(&last, ip)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot convert offset %s to binary", ip);
+                goto cleanup;
+        }
+        *end = --last;
+        cleanup:
+                my_free(ip);
+                return retval;
 }
