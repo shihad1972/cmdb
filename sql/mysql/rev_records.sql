@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS `rev_records`;
 CREATE TABLE `rev_records` (
   `rev_record_id` int(7) NOT NULL AUTO_INCREMENT,
   `rev_zone` int(7) NOT NULL DEFAULT '0',
+  `zone_index` int(7) NOT NULL DEFAULT '0',
   `host` varchar(11) NOT NULL DEFAULT 'NULL',
   `destination` varchar(255) NOT NULL,
   `valid` varchar(15) NOT NULL DEFAULT 'unknown',
