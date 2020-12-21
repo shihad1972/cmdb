@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb mkvm mksp cmdb-identity
+bin_PROGRAMS = cmdb mkvm mksp mknet cmdb-identity
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c
