@@ -554,6 +554,9 @@ int
 do_rev_lookup(char *ip, char *host, size_t len);
 
 int
+get_zone_index(unsigned long int prefix, unsigned long int *index);
+
+int
 cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 int

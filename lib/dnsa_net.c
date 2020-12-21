@@ -28,6 +28,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <time.h>
+#include <math.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -1690,4 +1691,26 @@ check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips)
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(l);
 		return retval;
+}
+
+int
+get_zone_index(unsigned long int prefix, unsigned long int *index)
+{
+	if (!(index) || (prefix == 0))
+		return AILSA_NO_DATA;
+	unsigned long int i = 0;
+	double power;
+	if (prefix < 8)
+		return AILSA_PREFIX_OUT_OF_RANGE;
+	else if ((prefix > 8) && (prefix < 16))
+		i = 16 - prefix;
+	else if ((prefix > 16) && (prefix < 24))
+		i = 24 - prefix;
+	if (i != 0)
+		power = pow(2, (double)i);
+	else
+		power = 1;
+	i = (unsigned long int)power;
+	*index = i;
+	return 0;
 }

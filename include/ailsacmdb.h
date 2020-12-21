@@ -329,7 +329,8 @@ enum {                  // Error codes
 enum {			// zone types; use NONE from action codes
 	FORWARD_ZONE = 1,
 	REVERSE_ZONE = 2,
-	GLUE_ZONE = 3
+	GLUE_ZONE = 3,
+	TEST_ZONE = 4
 };
 
 enum {			// record types; use NONE from action codes

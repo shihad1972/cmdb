@@ -1992,3 +1992,33 @@ list_glue_zones(ailsa_cmdb_s *dc)
 	cleanup:
 		ailsa_list_full_clean(g);
 }
+
+void
+list_test_zones(ailsa_cmdb_s *dc)
+{
+	if (!(dc))
+		return;
+	int c = 6;
+	int i, retval;
+	const char *zones[] = { "192.168.32.0/24", "192.168.80.0/20", "172.16.0.0/14", "16.0.0.0/13", "10.0.0.0/8", "172.24.0.0/16" };
+	unsigned long int prefixes[c];
+	unsigned long indicies[c];
+	char **ips = ailsa_calloc((sizeof(char *)) * (size_t)c, "ips in list_test_zones");
+	for (i = 0; i < c; i++) {
+		if ((retval = get_ip_addr_and_prefix(zones[i], &(ips[i]), &prefixes[i])) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot convert index no %d: %s", i, zones[i]);
+			goto cleanup;
+		}
+		if ((retval = get_zone_index(prefixes[i], &indicies[i])) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot get index number %d for prefix %lu", i, prefixes[i]);
+			goto cleanup;
+		}
+		printf("Range: %s\n\tNetwork: %s\tPrefix: %lu\tIndexes: %lu\n", zones[i], ips[i], prefixes[i], indicies[i]);
+	}
+	cleanup:
+		for (i = 0; i < c; i++) {
+			if (ips[i])
+				my_free(ips[i]);
+		}
+		my_free(ips);
+}
