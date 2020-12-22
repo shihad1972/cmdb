@@ -8,7 +8,7 @@ libailsacmdb.a:	libailsacmdb.a(ailsacmdb.o) libailsacmdb.a(logging.o) libailsacm
 		libailsacmdb.a(hash.o) libailsacmdb.a(config.o) libailsacmdb.a(uuid.o)
 
 libailsasql.a:	libailsasql.a(queries.o) libailsasql.a(sql.o) libailsasql.a(helper.o) \
-		libailsasql.a(sql_data.o) libailsasql.a(dnsa_net.o) libailsasql.a(dnsa_ip.o)
+		libailsasql.a(sql_data.o) libailsasql.a(dnsa_net.o)
 
 libailsacmdb.a(ailsacmdb.o):	ailsacmdb.o
 	$(AR) $(ARFLAGS) $@ $<
@@ -41,9 +41,6 @@ libailsacmdb.a(errors.o):	errors.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(dnsa_net.o): dnsa_net.o
-	$(AR) $(ARFLAGS) $@ $<
-
-libailsasql.a(dnsa_ip.o): dnsa_ip.o
 	$(AR) $(ARFLAGS) $@ $<
 
 libailsasql.a(sql.o):	sql.o

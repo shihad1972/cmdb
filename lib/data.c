@@ -549,6 +549,27 @@ ailsa_clean_record(void *rec)
 }
 
 void
+ailsa_clean_rev_zone(void *zone)
+{
+	if (!(zone))
+		return;
+	ailsa_rev_zone_s *data = zone;
+	if (data->type)
+		my_free(data->type);
+	if (data->net_range)
+		my_free(data->net_range);
+	if (data->pri_dns)
+		my_free(data->pri_dns);
+	if (data->sec_dns)
+		my_free(data->sec_dns);
+	if (data->master)
+		my_free(data->master);
+	if (data->in_addr)
+		my_free(data->in_addr);
+	my_free(data);
+}
+
+void
 ailsa_init_string(ailsa_string_s *str)
 {
 	str->size = FILE_LEN;
@@ -753,6 +774,14 @@ ailsa_account_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_account_list_init");
 	ailsa_list_init(list, ailsa_clean_account);
+	return list;
+}
+
+AILLIST *
+ailsa_rev_zone_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_rev_zone_list_init");
+	ailsa_list_init(list, ailsa_clean_rev_zone);
 	return list;
 }
 

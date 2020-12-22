@@ -273,6 +273,7 @@ enum {			// SQL ARGUMENT QUERIES
 	IDENTITY_ID_ON_SERVER_USER,
 	IDENTITIES_ON_SERVER_NAME,
 	PARENT_ZONE_ID_ON_GLUE_ZONE,
+	REV_ZONE_OVERLAP,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -581,6 +582,9 @@ int
 check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips);
 
 int
+check_for_rev_zone_overlap(ailsa_cmdb_s *cbc, unsigned long int start, unsigned long int end);
+
+int
 dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone);
 
 int
@@ -606,10 +610,13 @@ ailsa_clone_data_element(AILELEM *e);
 int
 ailsa_insert_clone(AILLIST *list, AILELEM *elem);
 
+int
+ailsa_fill_rev_zone_list(AILLIST *l, AILLIST *z);
+
 // Some zone functions
 
 int
-cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype);
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype, unsigned long int prefix);
 
 int
 cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);

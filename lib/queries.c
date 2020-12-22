@@ -71,7 +71,7 @@ const char *basic_queries[] = {
 "SELECT net_range, prefix, valid, serial,type, master FROM rev_zones", // REV_ZONE_INFORMATION
 "SELECT z.name, g.name, g.pri_ns, g.sec_ns, g.pri_dns, g.sec_dns \
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
-"SELECT net_range, type FROM rev_zones", // REV_ZONES_NET_RANGE
+"SELECT net_range, type, prefix FROM rev_zones", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
 "SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
 "SELECT s.name, b.mac_addr, ip.ip, db.domain FROM build b \
@@ -428,9 +428,9 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_TEXT }
 	},
 	{ // REV_RECORDS_ON_NET_RANGE
-"SELECT host, destination FROM rev_records WHERE rev_zone = (SELECT rev_zone_id FROM rev_zones WHERE net_range = ?)",
-	1,
-	{ AILSA_DB_TEXT }
+"SELECT host, destination FROM rev_records WHERE rev_zone = (SELECT rev_zone_id FROM rev_zones WHERE net_range = ?) AND zone_index = ?",
+	2,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT }
 	},
 	{ // RECORD_ID_BASE
 "SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND destination = ?",
@@ -713,6 +713,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT zone_id FROM glue_zones WHERE name = ?",
 	1,
 	{ AILSA_DB_TEXT }
+	},
+	{ // REV_ZONE_OVERLAP
+"SELECT rev_zone_id FROM rev_zones WHERE (start_ip >= ? AND finish_ip <= ?) OR (start_ip <= ? AND finish_ip >= ?) OR (start_ip <= ? AND finish_ip >= ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 };
 

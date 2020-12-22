@@ -504,7 +504,7 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		}
 		e = r->head;
 		type = ((ailsa_data_s *)e->data)->data->text;
-		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type)) != 0) {
+		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type, 0)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
 			goto cleanup;
 		}
@@ -525,7 +525,7 @@ commit_fwd_zones(ailsa_cmdb_s *dc, char *name)
 		while (e) {
 			zone = ((ailsa_data_s *)e->data)->data->text;
 			type = ((ailsa_data_s *)e->next->data)->data->text;
-			if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type)) != 0) {
+			if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, zone, type, 0)) != 0) {
 				ailsa_syslog(LOG_ERR, "Cannot validate zone %s", zone);
 			}
 			e = ailsa_move_down_list(e, len);
@@ -554,6 +554,7 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 	int retval;
 	char *comm = ailsa_calloc(DOMAIN_LEN, "comm in commit_rev_zones");
 	char *zone, *type;
+	unsigned long int prefix;
 	AILLIST *l = ailsa_db_data_list_init();
 	AILELEM *e;
 	ailsa_data_s *d;
@@ -572,12 +573,14 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 		zone = d->data->text;
 		d = e->next->data;
 		type = d->data->text;
+		d = e->next->next->data;
+		prefix = d->data->number;
 		if (name) {
 			if (strncmp(name, zone, DOMAIN_LEN) == 0)
-				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type)) != 0)
+				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type, prefix)) != 0)
 					ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
 		} else {
-			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type)) != 0)
+			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type, prefix)) != 0)
 				ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
 		}
 		e = ailsa_move_down_list(e, 2);
@@ -1256,9 +1259,7 @@ add_rev_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-	int retval;
-
-	retval = add_reverse_zone(dc, cm->domain, cm->ztype, cm->master, cm->prefix);
+	int retval = add_reverse_zone(dc, cm->domain, cm->ztype, cm->master, cm->prefix);
 	return retval;
 }
 
@@ -1304,6 +1305,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	char *range = ailsa_calloc(MAC_LEN, "range in build_reverse_zone");
 	char *tmp;
 	int retval = 0;
+	ailsa_data_s *d;
 	size_t len;
 	AILLIST *add = ailsa_db_data_list_init();
 	AILLIST *net = ailsa_db_data_list_init();
@@ -1311,6 +1313,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	AILLIST *rem = ailsa_db_data_list_init();
 	AILLIST *pref = ailsa_db_data_list_init();
 	AILLIST *rev = ailsa_db_data_list_init();
+	AILLIST *fix = ailsa_db_data_list_init();
 
 	if ((retval = cmdb_add_string_to_list(cm->domain, net)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add network range to list");
@@ -1320,8 +1323,19 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_INFO, "Zone with range %s does not exist or is not a master zone", cm->domain);
 		goto cleanup;
 	}
+// Until we add the index for complex prefixes, this will FAIL!
 	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_NET_RANGE, net, rev)) != 0) {
 		ailsa_syslog(LOG_ERR, "REV_RECORDS_ON_NET_RANGE query failed");
+		goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(dc, PREFIX_ON_NET_RANGE, net, fix)) != 0) {
+		ailsa_syslog(LOG_ERR, "PREFIX_ON_NET_RANGE query failed");
+		goto cleanup;
+	}
+	if (fix->total > 0) {
+		d = fix->head->data;
+	} else {
+		ailsa_syslog(LOG_ERR, "Could not get prefix for zone %s", cm->domain);
 		goto cleanup;
 	}
 	if ((retval = setup_net_range(dc, cm->domain, range)) != 0) {
@@ -1379,7 +1393,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 			ailsa_syslog(LOG_ERR, "Update query SET_REV_ZONE_UPDATED failed");
 			goto cleanup;
 		}
-		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, "master")) != 0) {
+		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, "master", d->data->number)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", cm->domain);
 			goto cleanup;
 		}
@@ -1391,6 +1405,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_list_full_clean(rem);
 		ailsa_list_full_clean(pref);
 		ailsa_list_full_clean(rev);
+		ailsa_list_full_clean(fix);
 		my_free(range);
 		return retval;
 }
