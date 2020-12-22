@@ -942,10 +942,10 @@ zone \"%s\" {\n", r->in_addr);
 			dprintf(fd, "\
 \t\t\ttype slave;\n\
 \t\t\tmasters { %s; };\n", r->master);
+		}
 		dprintf(fd, "\
 \t\t\tfile \"%s%s\";\n\
 \t\t};\n", cbs->dir, r->net_range);
-		}
 		e = e->next;
 	}
 	cleanup:
