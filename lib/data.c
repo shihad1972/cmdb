@@ -545,6 +545,8 @@ ailsa_clean_record(void *rec)
 		my_free(data->host);
 	if (data->dest)
 		my_free(data->dest);
+	if (data->domain)
+		my_free(data->domain);
 	my_free(data);
 }
 
@@ -782,6 +784,22 @@ ailsa_rev_zone_list_init(void)
 {
 	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_rev_zone_list_init");
 	ailsa_list_init(list, ailsa_clean_rev_zone);
+	return list;
+}
+
+AILLIST *
+ailsa_record_list_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_record_list_init");
+	ailsa_list_init(list, ailsa_clean_record);
+	return list;
+}
+
+AILLIST *
+ailsa_preferred_init(void)
+{
+	AILLIST *list = ailsa_calloc(sizeof(AILLIST), "list in ailsa_record_list_init");
+	ailsa_list_init(list, ailsa_clean_preferred);
 	return list;
 }
 

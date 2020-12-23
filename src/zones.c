@@ -71,19 +71,31 @@ static int
 multi_a_ip_address(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl);
 
 static int
+fill_rev_records(AILLIST *list, AILLIST *rev, unsigned long int index);
+
+static int
+fill_fwd_records(AILLIST *list, AILLIST *rev, unsigned long int index);
+
+static int
+fill_pref_records(AILLIST *list, AILLIST *pref);
+
+static int
+get_rev_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int index);
+
+static int
+get_fwd_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int prefix);
+
+static int
+get_pref_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int prefix);
+
+static int
 cmdb_trim_record_list(AILLIST *rev, AILLIST *pref);
 
 static int
-cmdb_records_to_remove(char *range, AILLIST *rec, AILLIST *rev, AILLIST *remove);
+cmdb_records_to_remove(char *range, unsigned long int prefix, AILLIST *rec, AILLIST *rev, AILLIST *remove);
 
 static int
-cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *remove);
-
-static int
-cmdb_records_to_add(char *range, AILLIST *rec, AILLIST *rev, AILLIST *add);
-
-static int
-cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add);
+cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int prefix, AILLIST *rec, AILLIST *rev, AILLIST *add);
 
 static int
 dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
@@ -1302,81 +1314,58 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 {
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
-	char *range = ailsa_calloc(MAC_LEN, "range in build_reverse_zone");
-	char *tmp;
-	int retval = 0;
-	ailsa_data_s *d;
-	size_t len;
+	int retval;
+	unsigned long int prefix, index, zone_id;
 	AILLIST *add = ailsa_db_data_list_init();
 	AILLIST *net = ailsa_db_data_list_init();
-	AILLIST *rec = ailsa_db_data_list_init();
 	AILLIST *rem = ailsa_db_data_list_init();
-	AILLIST *pref = ailsa_db_data_list_init();
-	AILLIST *rev = ailsa_db_data_list_init();
 	AILLIST *fix = ailsa_db_data_list_init();
+	AILLIST *rec = ailsa_record_list_init();
+	AILLIST *rev = ailsa_record_list_init();
+	AILLIST *pref = ailsa_preferred_init();
 
-	if ((retval = cmdb_add_string_to_list(cm->domain, net)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add network range to list");
+	if ((retval = cmdb_add_string_to_list(cm->domain, net)) != 0)
 		goto cleanup;
-	}
-	if ((retval = cmdb_check_for_rev_zone(dc, cm->domain, "master")) == 0) {
-		ailsa_syslog(LOG_INFO, "Zone with range %s does not exist or is not a master zone", cm->domain);
+	if ((retval = ailsa_argument_query(dc, PREFIX_ON_NET_RANGE, net, fix)) != 0)
 		goto cleanup;
-	}
-// Until we add the index for complex prefixes, this will FAIL!
-	if ((retval = ailsa_argument_query(dc, REV_RECORDS_ON_NET_RANGE, net, rev)) != 0) {
-		ailsa_syslog(LOG_ERR, "REV_RECORDS_ON_NET_RANGE query failed");
+	if (fix->total == 0)
 		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(dc, PREFIX_ON_NET_RANGE, net, fix)) != 0) {
-		ailsa_syslog(LOG_ERR, "PREFIX_ON_NET_RANGE query failed");
+	prefix = strtoul(((ailsa_data_s *)fix->head->data)->data->text, NULL, 10);
+	ailsa_list_clean(fix);
+	if ((retval = cmdb_add_string_to_list("master", net)) != 0)
 		goto cleanup;
-	}
-	if (fix->total > 0) {
-		d = fix->head->data;
-	} else {
-		ailsa_syslog(LOG_ERR, "Could not get prefix for zone %s", cm->domain);
+	if ((retval = ailsa_argument_query(dc, REV_ZONE_ID_ON_RANGE, net, fix)) != 0)
 		goto cleanup;
-	}
-	if ((retval = setup_net_range(dc, cm->domain, range)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot get search range");
+	if (fix->total > 0)
+		zone_id = ((ailsa_data_s *)fix->head->data)->data->number;
+	else
 		goto cleanup;
-	}
-	ailsa_list_clean(net);
-	if ((retval = cmdb_add_string_to_list(range, net)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add search net range to list");
+	if ((retval = get_zone_index(prefix, &index)) != 0)
 		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(dc, RECORDS_ON_NET_RANGE, net, rec)) != 0) {
-		ailsa_syslog(LOG_ERR, "DUP_IP_NET_RANGE query failed");
+	if ((retval = get_rev_records(dc, rev, cm->domain, index)) != 0)
 		goto cleanup;
-	}
-	if ((retval = ailsa_argument_query(dc, PREFER_A_INFO_ON_RANGE, net, pref)) != 0) {
-		ailsa_syslog(LOG_ERR, "PREFER_A_INFO_ON_RANGE query failed");
+	if ((retval = get_fwd_records(dc, rec, cm->domain, prefix)) != 0)
 		goto cleanup;
-	}
+	if ((retval = get_pref_records(dc, pref, cm->domain, prefix)) != 0)
+		goto cleanup;
 	if ((retval = cmdb_trim_record_list(rec, pref)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot trim records list");
 		goto cleanup;
 	}
-	len = strlen(range);
-	tmp = range + len - 1;
-	*tmp = '\0';
-	if ((retval = cmdb_records_to_remove(range, rec, rev, rem)) != 0) {
+	if ((retval = cmdb_records_to_remove(cm->domain, prefix, rec, rev, rem)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot create list of records to remove");
 		goto cleanup;
 	}
-	*tmp = '\0';
-	if ((retval = cmdb_records_to_add(range, rec, rev, add)) != 0) {
+	if ((retval = cmdb_records_to_add(cm->domain, zone_id, prefix, rec, rev, add)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot create list of records to add");
 		goto cleanup;
 	}
-	if ((retval = cmdb_remove_reverse_records(dc, cm->domain, rem)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot remove stale rev records");
+	if ((retval = ailsa_multiple_delete(dc, delete_queries[DELETE_REVERSE_RECORD], rem)) != 0) {
+		ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_reverse_records(dc, cm->domain, add)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add new reverse records");
+	if ((retval = ailsa_multiple_query(dc, insert_queries[INSERT_REVERSE_RECORD], add)) != 0) {
+		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_RECORD multi query failed");
 		goto cleanup;
 	}
 	if (rem->total > 0 || add->total > 0) {
@@ -1393,7 +1382,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 			ailsa_syslog(LOG_ERR, "Update query SET_REV_ZONE_UPDATED failed");
 			goto cleanup;
 		}
-		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, "master", d->data->number)) != 0) {
+		if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, cm->domain, "master", prefix)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", cm->domain);
 			goto cleanup;
 		}
@@ -1406,8 +1395,180 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_list_full_clean(pref);
 		ailsa_list_full_clean(rev);
 		ailsa_list_full_clean(fix);
-		my_free(range);
 		return retval;
+}
+
+static int
+get_rev_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int index)
+{
+	if (!(dc) || !(r) || !(range))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *net = ailsa_db_data_list_init();
+	ailsa_data_s *data;
+	unsigned long int i;
+
+	if ((retval = cmdb_add_string_to_list(range, net)) != 0)
+		goto cleanup;
+	for (i = 0; i < index; i++) {
+		if ((retval = cmdb_add_number_to_list(i, net)) != 0)
+			goto cleanup;
+		if ((retval = ailsa_argument_query(dc, FULL_REV_RECORDS, net, l)) != 0)
+			goto cleanup;
+		if ((retval = fill_rev_records(l, r, i)) != 0)
+			goto cleanup;
+		if ((retval = ailsa_list_remove(net, net->tail, (void **)&data)) == 0)
+			net->destroy(data);
+		else
+			return AILSA_LIST_CANNOT_REMOVE;
+		ailsa_list_clean(l);
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(net);
+		return retval;
+}
+
+static int
+fill_rev_records(AILLIST *list, AILLIST *rev, unsigned long int index)
+{
+	if (!(list) || !(rev))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e;
+	ailsa_record_s *record;
+
+	e = list->head;
+	while (e) {
+		record = ailsa_calloc(sizeof(ailsa_record_s), "record in fill_rev_records");
+		record->host = strndup(((ailsa_data_s *)e->data)->data->text, HOST_LEN);
+		record->dest = strndup(((ailsa_data_s *)e->next->data)->data->text, DOMAIN_LEN);
+		record->id = ((ailsa_data_s *)e->next->next->data)->data->number;
+		record->zone = ((ailsa_data_s *)e->next->next->next->data)->data->number;
+		record->index = index;
+		if ((retval = ailsa_list_insert(rev, record)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert record into list");
+			return retval;
+		}
+		e = ailsa_move_down_list(e, 4);
+	}
+	return retval;
+}
+
+static int
+get_fwd_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int prefix)
+{
+	if (!(dc) || !(r) || !(range) || (prefix == 0))
+		return AILSA_NO_DATA;
+	int retval;
+	char search[HOST_LEN];
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *net = ailsa_db_data_list_init();
+	unsigned long int index, i;
+
+	if ((retval = get_zone_index(prefix, &index)) != 0)
+		goto cleanup;
+	for (i = 0; i < index; i++) {
+		memset(search, 0, HOST_LEN);
+		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
+			goto cleanup;
+		if ((retval = cmdb_add_string_to_list(search, net)) != 0)
+			goto cleanup;
+		if ((retval = ailsa_argument_query(dc, RECORDS_ON_NET_RANGE, net, l)) != 0)
+			goto cleanup;
+		if ((retval = fill_fwd_records(l, r, i)) != 0)
+			goto cleanup;
+		ailsa_list_clean(l);
+		ailsa_list_clean(net);
+	}
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(net);
+		return retval;
+}
+
+static int
+fill_fwd_records(AILLIST *list, AILLIST *rec, unsigned long int index)
+{
+	if (!(list) || !(rec))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e;
+	ailsa_record_s *record;
+
+	e = list->head;
+	while (e) {
+		record = ailsa_calloc(sizeof(ailsa_record_s), "record in fill_fwd_zones");
+		record->id = ((ailsa_data_s *)e->next->data)->data->number;
+		record->index = index;
+		record->dest = strndup(((ailsa_data_s *)e->data)->data->text, DOMAIN_LEN);
+		record->host = strndup(((ailsa_data_s *)e->next->next->data)->data->text, DOMAIN_LEN);
+		record->domain = strndup(((ailsa_data_s *)e->next->next->next->data)->data->text, DOMAIN_LEN);
+		if ((retval = ailsa_list_insert(rec, record)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert record into list");
+			return retval;
+		}
+		e = ailsa_move_down_list(e, 4);
+	}
+	return retval;
+}
+
+static int
+get_pref_records(ailsa_cmdb_s *dc, AILLIST *r, char *range, unsigned long int prefix)
+{
+	if (!(dc) || !(r) || !(range))
+		return AILSA_NO_DATA;
+	int retval;
+	char search[HOST_LEN];
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *p = ailsa_db_data_list_init();
+	unsigned long int index, i;
+
+	if ((retval = get_zone_index(prefix, &index)) != 0)
+		goto cleanup;
+	for (i = 0; i < index; i++) {
+		memset(search, 0, HOST_LEN);
+		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
+			goto cleanup;
+		if ((retval = cmdb_add_string_to_list(search, l)) != 0)
+			goto cleanup;
+		if ((retval = ailsa_argument_query(dc, PREFER_A_INFO_ON_RANGE, l, p)) != 0)
+			goto cleanup;
+		if ((retval = fill_pref_records(p, r)) != 0)
+			goto cleanup;
+		ailsa_list_clean(l);
+		ailsa_list_clean(p);
+	}
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(p);
+		return retval;
+}
+
+static int
+fill_pref_records(AILLIST *list, AILLIST *pref)
+{
+	if (!(list) || !(pref))
+		return AILSA_NO_DATA;
+	int retval;
+	AILELEM *e;
+	ailsa_preferred_s *p;
+
+	e = list->head;
+	while (e) {
+		p = ailsa_calloc(sizeof(ailsa_preferred_s), "p in fill_pref_records");
+		p->ip = strndup(((ailsa_data_s *)e->data)->data->text, HOST_LEN);
+		p->fqdn = strndup(((ailsa_data_s *)e->next->data)->data->text, DOMAIN_LEN);
+		p->record_id = ((ailsa_data_s *)e->next->next->data)->data->number;
+		if ((retval = ailsa_list_insert(pref, p)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot insert preferred into list");
+			return retval;
+		}
+		e = ailsa_move_down_list(e, 3);
+	}
+	return retval;
 }
 
 static int
@@ -1416,323 +1577,163 @@ cmdb_trim_record_list(AILLIST *r, AILLIST *p)
 	if (!(r) || !(p))
 		return AILSA_NO_DATA;
 	int retval = 0;
-	size_t rec_tot = 4;
-	size_t pref_tot = 3;
-	AILELEM *rec, *pref, *tmp;
-	ailsa_data_s *pd, *rev;
+	void *data;
+	AILELEM *record, *preferred, *tmp;
+	ailsa_preferred_s *pref;
+	ailsa_record_s *rec;
 	if ((r->total == 0) || (p->total == 0))
 		return retval;
-	if (((r->total % rec_tot) != 0) || ((p->total % pref_tot) != 0))
-		return AILSA_WRONG_LIST_LENGHT;
 	if (!(r->destroy))
 		return AILSA_LIST_NO_DESTROY;
-	pref = p->head;
-	while (pref) {
-		rec = r->head;
-		while (rec) {
-			pd = pref->data;
-			rev = rec->data;
-			if (strncmp(pd->data->text, rev->data->text, DOMAIN_LEN) == 0) {
-				pd = pref->next->next->data;
-				rev = rec->next->data;
-				if (pd->data->number != rev->data->number) {
-					if (rec->prev) {
-						tmp = rec->prev;
-						if ((retval = ailsa_list_remove(r, tmp->next, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
+	preferred = p->head;
+	while (preferred) {
+		record = r->head;
+		while (record) {
+			pref = preferred->data;
+			rec = record->data;
+			if (strncmp(pref->ip, rec->dest, DOMAIN_LEN) == 0) {
+				if (rec->id != pref->record_id) {
+					if (record->prev) {
+						tmp = record->prev;
+						if ((retval = ailsa_list_remove(r, tmp->next, &data)) == 0) {
+							r->destroy(data);
+						} else {
+							ailsa_syslog(LOG_ERR, "Cannot remove element from list");
 							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, tmp->next, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, tmp->next, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, tmp->next, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						rec = tmp->next;
+						}
+						record = tmp->next;
 					} else {
-						if ((retval = ailsa_list_remove(r, r->head, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
+						if ((retval = ailsa_list_remove(r, r->head, &data)) == 0) {
+							r->destroy(data);
+						} else {
+							ailsa_syslog(LOG_ERR, "Cannot remove head element from list");
 							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, r->head, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, r->head, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						if ((retval = ailsa_list_remove(r, r->head, (void **)&pd)) == 0)
-							r->destroy(pd);
-						else
-							return AILSA_LIST_CANNOT_REMOVE;
-						rec = r->head;
+						}
+						record = r->head;
 					}
 					continue;
 				}
 			}
-			rec = ailsa_move_down_list(rec, rec_tot);
+			record = record->next;
 		}
-		pref = ailsa_move_down_list(pref, pref_tot);
+		preferred = preferred->next;
 	}
 	return retval;
 }
 
 static int
-cmdb_records_to_remove(char *net_range, AILLIST *rec, AILLIST *rev, AILLIST *remove)
+cmdb_records_to_remove(char *range, unsigned long int prefix, AILLIST *rec, AILLIST *rev, AILLIST *remove)
 {
-	if (!(net_range) || !(rec) || !(rev) || !(remove))
+	if (!(range) || !(rec) || !(rev) || !(remove))
 		return AILSA_NO_DATA;
-	int retval = 0;
-	if ((rec->total == 0) || (rev->total == 0))
-		return retval;
-	size_t rec_tot = 4;
-	size_t rev_tot = 2;
-	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
-		return AILSA_WRONG_LIST_LENGHT;
-	char *fqdn = ailsa_calloc(DOMAIN_LEN, "fqdn in cmdb_records_to_remove");
-	char *range = ailsa_calloc(MAC_LEN, "range in cmdb_records_to_remove");
-	snprintf(range, MAC_LEN, "%s", net_range);
-	size_t len = strlen(range);
-	size_t gap = MAC_LEN - len;
-	char *tmp = range + len;
-	AILELEM *ce, *ve;
-	ailsa_data_s *c, *v, *d;
-	ve = rev->head;
-	while (ve) {
-		ce = rec->head;
-		while (ce) {
-			tmp = range + len;
-			memset(tmp, 0, gap);
-			c = ce->data;
-			v = ve->data;
-			snprintf(tmp, gap, "%s", v->data->text);
-			if (strncmp(range, c->data->text, MAC_LEN) == 0) {
-				c = ce->next->next->data;
-				d = ce->next->next->next->data;
-				if (strncmp("@", c->data->text, BYTE_LEN) == 0)
-					snprintf(fqdn, DOMAIN_LEN, "%s.", d->data->text);
-				else
-					snprintf(fqdn, DOMAIN_LEN, "%s.%s.", c->data->text, d->data->text);
-				v = ve->next->data;
-				if (strncmp(v->data->text, fqdn, DOMAIN_LEN) == 0)
-					break;
-			}
-			ce = ailsa_move_down_list(ce, rec_tot);
-		}
-		if (!(ce)) {
-			v = ve->data;
-			if ((retval = cmdb_add_string_to_list(v->data->text, remove)) != 0) {
-				ailsa_syslog(LOG_ERR, "Cannot add record to delete list");
-				goto cleanup;
-			}
-		}
-		ve = ailsa_move_down_list(ve, rev_tot);
-	}
-	cleanup:
-		my_free(fqdn);
-		my_free(range);
-		return retval;
-}
-
-static int
-cmdb_remove_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *rem)
-{
-	if (!(dc) || !(range) || !(rem))
-		return AILSA_NO_DATA;
-	char *host;
 	int retval;
-	size_t total = 1;
-	AILLIST *l = ailsa_db_data_list_init();
-	AILLIST *r = ailsa_db_data_list_init();
-	AILELEM *e;
-	ailsa_data_s *d;
+	char search[HOST_LEN];
+	char fqdn[DOMAIN_LEN];
+	char *ptr;
+	unsigned long int index, i;
+	AILELEM *r, *f;
+	ailsa_record_s *reverse, *forward;
 
-
-	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, "master", dc, l)) != 0)
-		goto cleanup;
-	if (rem->total == 0)
-		goto cleanup;
-	e = rem->head;
-	while (e) {
-		d = e->data;
-		host = d->data->text;
-		if ((retval = cmdb_add_string_to_list(host, l)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add host string to list");
-			goto cleanup;
-		}
-		if ((retval = ailsa_argument_query(dc, REV_RECORD_ID_ON_ZONE_HOST, l, r)) != 0) {
-			ailsa_syslog(LOG_ERR, "REV_RECORD_ID_ON_ZONE_HOST query failed");
-			goto cleanup;
-		}
-		if ((retval = ailsa_list_remove(l, l->tail, (void **)&d)) == 0)
-			l->destroy(d);
-		else
-			goto cleanup;
-		e = ailsa_move_down_list(e, total);
-	}
-	if ((retval = ailsa_multiple_delete(dc, delete_queries[DELETE_REVERSE_RECORD], r)) != 0) {
-		ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
-		goto cleanup;
-	}
-	cleanup:
-		ailsa_list_full_clean(l);
-		ailsa_list_full_clean(r);
+	if ((retval = get_zone_index(prefix, &index)) != 0)
 		return retval;
+	for (i = 0; i < index; i++) {
+		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
+			return retval;
+		if (!(ptr =  strrchr(search, '%')))
+			goto cleanup;
+		r = rev->head;
+		while (r) {
+			f = rec->head;
+			while (f) {
+				reverse = r->data;
+				forward = f->data;
+				snprintf(ptr, SERVICE_LEN, "%s", reverse->host);
+				if (strncmp(search, forward->dest, HOST_LEN) == 0){
+					memset(fqdn, 0, DOMAIN_LEN);
+					if (strncmp("@", forward->host, BYTE_LEN) == 0)
+						snprintf(fqdn, DOMAIN_LEN, "%s.", forward->domain);
+					else
+						snprintf(fqdn, DOMAIN_LEN, "%s.%s.", forward->host, forward->domain);
+					if (strncmp(reverse->dest, fqdn, DOMAIN_LEN) == 0)
+						break;
+				}
+				f = f->next;
+			}
+			if (!(f)) {
+				if ((retval = cmdb_add_number_to_list(reverse->id, remove)) != 0)
+					return retval;
+			}
+			r = r->next;
+		}
+	}
+
+	cleanup:
+		ailsa_syslog(LOG_ERR, "String manipulation failed");
+		return AILSA_STRING_FAIL;
 }
 
 static int
-cmdb_records_to_add(char *range, AILLIST *rec, AILLIST *rev, AILLIST *add)
+cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int prefix, AILLIST *rec, AILLIST *rev, AILLIST *add)
 {
 	if (!(range) || !(rec) || !(rev) || !(add))
 		return AILSA_NO_DATA;
-	int retval = 0;
-	size_t rec_tot = 4;
-	size_t rev_tot = 2;
-	size_t len = strlen(range);
-	size_t gap = MAC_LEN - len;
-	char host_fqdn[DOMAIN_LEN];
-	char rev_fqdn[DOMAIN_LEN];
-	char *tmp = range + len;
-	AILELEM *ce, *ve;
-	ailsa_data_s *c, *v, *reg, *host, *domain, *fqdn;
-	if ((rev->total == 0) && (rec->total == 0))
-		return retval;
-	if (((rec->total % rec_tot) != 0) || ((rev->total % rev_tot) != 0))
-		return AILSA_WRONG_LIST_LENGHT;
-	ce = rec->head;
-	while (ce) {
-		ve = rev->head;
-		while (ve) {
-			tmp = range + len;
-			memset(tmp, 0, gap);
-			memset(host_fqdn, 0, DOMAIN_LEN);
-			memset(rev_fqdn, 0, DOMAIN_LEN);
-			c = ce->data;
-			v = ve->data;
-			snprintf(tmp, gap, "%s", v->data->text);
-			if (strncmp(range, c->data->text, MAC_LEN) == 0) {
-				fqdn = ve->next->data;
-				host = ce->next->next->data;
-				domain = ce->next->next->next->data;
-				if (strncmp(host->data->text, "@", 2) == 0)
-					snprintf(host_fqdn, DOMAIN_LEN, "%s.", domain->data->text);
-				else
-					snprintf(host_fqdn, DOMAIN_LEN, "%s.%s.", host->data->text, domain->data->text);
-				snprintf(rev_fqdn, DOMAIN_LEN, "%s", fqdn->data->text);
-				if (strncmp(host_fqdn, rev_fqdn, DOMAIN_LEN) == 0)
-					break;
-			}
-			ve = ailsa_move_down_list(ve, rev_tot);
-		}
-		if (!(ve)) {
-			reg = ce->next->data;
-			if ((retval = cmdb_add_number_to_list(reg->data->number, add)) != 0) {
-				ailsa_syslog(LOG_ERR, "Cannot add PTR destination to list");
-				return retval;
-			}
-		}
-		ce = ailsa_move_down_list(ce, rec_tot);
-	}
-	return retval;
-}
-
-static int
-cmdb_add_reverse_records(ailsa_cmdb_s *dc, char *range, AILLIST *add)
-{
-	if (!(dc) || !(range) || !(add))
-		return AILSA_NO_DATA;
 	int retval;
-	char *host;
-	char *domain = ailsa_calloc(DOMAIN_LEN, "domain in cmdb_add_reverse_records");
-	size_t total = 1;
-	unsigned long int record_id, prefix;
-	AILLIST *a = ailsa_db_data_list_init();
-	AILLIST *l = ailsa_db_data_list_init();
-	AILLIST *rec = ailsa_db_data_list_init();
-	AILELEM *e;
-	ailsa_data_s *d, *h;
+	char search[DOMAIN_LEN];
+	char fqdn[DOMAIN_LEN];
+	char *ptr;
+	unsigned long int index, i;
+	AILELEM *r, *f;
+	ailsa_record_s *reverse, *forward;
 
-	if ((retval = cmdb_get_rev_zone_prefix(dc, range, &prefix)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot get prefix for range %s", range);
-		goto cleanup;
+	if ((retval = get_zone_index(prefix, &index)) != 0)
+		return retval;
+	for (i = 0; i < index; i++) {
+		memset(search, 0, DOMAIN_LEN);
+		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
+			return retval;
+		if (!(ptr =  strrchr(search, '%')))
+			goto cleanup;
+		f = rec->head;
+		while (f) {
+			forward = f->data;
+			r = rev->head;
+			while (r) {
+				reverse = r->data;
+				snprintf(ptr, MAC_LEN, "%s", reverse->host);
+				if (strncmp(forward->dest, search, DOMAIN_LEN) == 0) {
+					memset(fqdn, 0, DOMAIN_LEN);
+					if (strncmp(forward->host, "@", BYTE_LEN) == 0)
+						snprintf(fqdn, DOMAIN_LEN, "%s.", forward->domain);
+					else
+						snprintf(fqdn, DOMAIN_LEN, "%s.%s.", forward->host, forward->domain);
+					if ((strncmp(fqdn, reverse->dest, DOMAIN_LEN) == 0))
+						break;
+				}
+				r = r->next;
+			}
+			if (!(r)) {
+				if ((retval = cmdb_add_number_to_list(zone_id, add)) != 0)
+					return retval;
+				if ((retval = cmdb_add_number_to_list(i, add)) != 0)
+					return retval;
+				if ((retval = cmdb_add_string_to_list(ptr, add)) != 0)
+					goto cleanup;
+				memset(fqdn, 0, DOMAIN_LEN);
+				if (strncmp(forward->host, "@", BYTE_LEN) == 0)
+					snprintf(fqdn, DOMAIN_LEN, "%s.", forward->domain);
+				else
+					snprintf(fqdn, DOMAIN_LEN, "%s.%s.", forward->host, forward->domain);
+				if ((retval = cmdb_add_string_to_list(fqdn, add)) != 0)
+					return retval;
+				if ((retval = cmdb_populate_cuser_muser(add)) != 0)
+					goto cleanup;
+			}
+			f = f->next;
+		}
 	}
-	if (add->total == 0)
-		goto cleanup;
-	if (prefix == 0) {
-		ailsa_syslog(LOG_ERR, "No prefix for range %s", range);
-		goto cleanup;
-	}
-	e = add->head;
-	while (e) {
-		d = e->data;
-		record_id = d->data->number;
-		if ((retval = cmdb_add_number_to_list(record_id, rec)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add record_id to list");
-			goto cleanup;
-		}
-		if ((retval = ailsa_argument_query(dc, DESTINATION_ON_RECORD_ID, rec, l)) != 0) {
-			ailsa_syslog(LOG_ERR, "DESTINATION_ON_RECORD_ID query failed");
-			goto cleanup;
-		}
-		if (l->total > 0)
-			d = l->head->data;
-		else
-			goto jump;
-		host = strchr(d->data->text, '.');
-		if (!(host))
-			goto jump;
-		host++;
-		if (prefix > 8) {
-			host = strchr(host, '.');
-			if (!(host))
-				goto jump;
-			host++;
-		}
-		if (prefix > 16) {
-			host = strchr(host, '.');
-			if (!(host))
-				goto jump;
-			host++;
-		}
-		if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, "master", dc, a)) != 0)
-			goto cleanup;
-		if ((retval = cmdb_add_string_to_list(host, a)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add host to list");
-			goto cleanup;
-		}
-		d = l->head->next->data;
-		h = l->head->next->next->data;
-		snprintf(domain, DOMAIN_LEN, "%s.%s.", d->data->text, h->data->text);
-		if ((retval = cmdb_add_string_to_list(domain, a)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add FQDN to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_populate_cuser_muser(a)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add cuser and muser to list");
-			goto cleanup;
-		}
-		jump:
-			ailsa_list_clean(l);
-			ailsa_list_clean(rec);
-			e = ailsa_move_down_list(e, total);
-			memset(domain, 0, DOMAIN_LEN);
-	}
-	if ((retval = ailsa_multiple_query(dc, insert_queries[INSERT_REVERSE_RECORD], a)) != 0) {
-		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_RECORD multi query failed");
-		goto cleanup;
-	}
+
 	cleanup:
-		my_free(domain);
-		ailsa_list_full_clean(a);
-		ailsa_list_full_clean(l);
-		ailsa_list_full_clean(rec);
+		ailsa_syslog(LOG_ERR, "String manipulation failed");
 		return retval;
 }
 

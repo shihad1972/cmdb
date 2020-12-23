@@ -432,6 +432,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_LINT }
 	},
+	{ // FULL_REV_RECORDS
+"SELECT host, destination, rev_record_id, rev_zone FROM rev_records WHERE rev_zone = (SELECT rev_zone_id FROM rev_zones WHERE net_range = ?) AND zone_index = ?",
+	4,
+	{ AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
 	{ // RECORD_ID_BASE
 "SELECT id FROM records WHERE zone = ? AND type = ? AND host = ? AND destination = ?",
 	4,
@@ -863,9 +868,9 @@ const struct ailsa_sql_query_s insert_queries[] = {
 	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT },
 	},
 	{ // INSERT_REVERSE_RECORD
-"INSERT INTO rev_records (rev_zone, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?)",
-	5,
-	{ AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
+"INSERT INTO rev_records (rev_zone, index, host, destination, cuser, muser) VALUES (?, ?, ?, ?, ?, ?)",
+	6,
+	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
 	{ // INSERT_GLUE_ZONE
 "INSERT INTO glue_zones (zone_id, name, pri_ns, sec_ns, pri_dns, sec_dns, cuser, muser) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

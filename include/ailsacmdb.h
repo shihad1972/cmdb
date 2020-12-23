@@ -700,6 +700,7 @@ typedef struct ailsa_preferred_s {
 typedef struct ailsa_record_s {	// Can use for fwd or rev records
 	char *host;
 	char *dest;
+	char *domain;
 	unsigned long int id;
 	unsigned long int zone;
 	unsigned long int index;
@@ -871,41 +872,13 @@ ailsa_hash_lookup(AILHASH *htbl, void **data, const char *key);
 // memory functions
 
 void
+clean_cbc_syss_s(cbc_syss_s *scr);
+void
 ailsa_clean_mkvm(void *vm);
 void
 ailsa_clean_cmdb(void *cmdb);
 void
 ailsa_init_data(ailsa_data_s *data);
-void
-ailsa_clean_data(void *data);
-void
-ailsa_clean_dhcp(void *data);
-void
-ailsa_clean_cbcos(void *cbcos);
-void
-ailsa_clean_dhcp_config(void *dhcp);
-void
-ailsa_clean_tftp(void *tftp);
-void
-ailsa_clean_build(void *build);
-void
-ailsa_clean_partition(void *partition);
-void
-ailsa_clean_syspack(void *sysp);
-void
-ailsa_clean_sysscript(void *script);
-void
-ailsa_clean_iface(void *data);
-void
-clean_cbc_syss_s(cbc_syss_s *scr);
-void
-ailsa_clean_preferred(void *pref);
-void
-ailsa_clean_record(void *rec);
-void
-ailsa_clean_account(void *acc);
-void
-ailsa_clean_rev_zone(void *zone);
 void *
 ailsa_calloc(size_t len, const char *msg);
 void *
@@ -1065,6 +1038,12 @@ ailsa_account_list_init(void);
 AILLIST *
 ailsa_rev_zone_list_init(void);
 
+AILLIST *
+ailsa_record_list_init(void);
+
+AILLIST *
+ailsa_preferred_init(void);
+
 ailsa_data_s *
 ailsa_db_text_data_init(void);
 
@@ -1086,6 +1065,34 @@ void
 ailsa_clean_pkg(void *pkg);
 void
 ailsa_clean_mkvm(void *vm);
+void
+ailsa_clean_data(void *data);
+void
+ailsa_clean_dhcp(void *data);
+void
+ailsa_clean_cbcos(void *cbcos);
+void
+ailsa_clean_dhcp_config(void *dhcp);
+void
+ailsa_clean_tftp(void *tftp);
+void
+ailsa_clean_build(void *build);
+void
+ailsa_clean_partition(void *partition);
+void
+ailsa_clean_syspack(void *sysp);
+void
+ailsa_clean_sysscript(void *script);
+void
+ailsa_clean_iface(void *data);
+void
+ailsa_clean_preferred(void *pref);
+void
+ailsa_clean_record(void *rec);
+void
+ailsa_clean_account(void *acc);
+void
+ailsa_clean_rev_zone(void *zone);
 
 // client_info clean
 
