@@ -98,6 +98,9 @@ static int
 cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int prefix, AILLIST *rec, AILLIST *rev, AILLIST *add);
 
 static int
+cmdb_get_rev_dest_from_search(char *search, char *dest, char *fqdn);
+
+static int
 dnsa_populate_record(ailsa_cmdb_s *cbc, dnsa_comm_line_s *dcl, AILLIST *list);
 
 static int
@@ -1315,6 +1318,7 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	if (!(dc) || !(cm))
 		return AILSA_NO_DATA;
 	int retval;
+	char comm[DOMAIN_LEN];
 	unsigned long int prefix, index, zone_id;
 	AILLIST *add = ailsa_db_data_list_init();
 	AILLIST *net = ailsa_db_data_list_init();
@@ -1360,15 +1364,19 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		ailsa_syslog(LOG_ERR, "Cannot create list of records to add");
 		goto cleanup;
 	}
-	if ((retval = ailsa_multiple_delete(dc, delete_queries[DELETE_REVERSE_RECORD], rem)) != 0) {
-		ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
-		goto cleanup;
-	}
-	if ((retval = ailsa_multiple_query(dc, insert_queries[INSERT_REVERSE_RECORD], add)) != 0) {
-		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_RECORD multi query failed");
-		goto cleanup;
-	}
 	if (rem->total > 0 || add->total > 0) {
+		if (rem->total > 0) {
+			if ((retval = ailsa_multiple_delete(dc, delete_queries[DELETE_REVERSE_RECORD], rem)) != 0) {
+				ailsa_syslog(LOG_ERR, "DELETE_REVERSE_RECORD multi query failed");
+				goto cleanup;
+			}
+		}
+		if (add->total > 0) {
+			if ((retval = ailsa_multiple_query(dc, insert_queries[INSERT_REVERSE_RECORD], add)) != 0) {
+				ailsa_syslog(LOG_ERR, "INSERT_REVERSE_RECORD multi query failed");
+				goto cleanup;
+			}
+		}
 		ailsa_list_clean(net);
 		if ((retval = cmdb_add_number_to_list((unsigned long int)getuid(), net)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add muser to list");
@@ -1386,6 +1394,12 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", cm->domain);
 			goto cleanup;
 		}
+		memset(comm, 0, DOMAIN_LEN);
+		snprintf(comm, CONFIG_LEN, "%s reload", dc->rndc);
+		if ((retval = system(comm)) != 0)
+			ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
+        cleanup:
+
 	}
 	cleanup:
 		ailsa_list_full_clean(add);
@@ -1435,7 +1449,7 @@ fill_rev_records(AILLIST *list, AILLIST *rev, unsigned long int index)
 {
 	if (!(list) || !(rev))
 		return AILSA_NO_DATA;
-	int retval;
+	int retval = 0;
 	AILELEM *e;
 	ailsa_record_s *record;
 
@@ -1493,7 +1507,7 @@ fill_fwd_records(AILLIST *list, AILLIST *rec, unsigned long int index)
 {
 	if (!(list) || !(rec))
 		return AILSA_NO_DATA;
-	int retval;
+	int retval = 0;
 	AILELEM *e;
 	ailsa_record_s *record;
 
@@ -1552,7 +1566,7 @@ fill_pref_records(AILLIST *list, AILLIST *pref)
 {
 	if (!(list) || !(pref))
 		return AILSA_NO_DATA;
-	int retval;
+	int retval = 0;
 	AILELEM *e;
 	ailsa_preferred_s *p;
 
@@ -1637,15 +1651,16 @@ cmdb_records_to_remove(char *range, unsigned long int prefix, AILLIST *rec, AILL
 	if ((retval = get_zone_index(prefix, &index)) != 0)
 		return retval;
 	for (i = 0; i < index; i++) {
+		memset(search, 0, HOST_LEN);
 		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
 			return retval;
 		if (!(ptr =  strrchr(search, '%')))
 			goto cleanup;
 		r = rev->head;
 		while (r) {
+			reverse = r->data;
 			f = rec->head;
 			while (f) {
-				reverse = r->data;
 				forward = f->data;
 				snprintf(ptr, SERVICE_LEN, "%s", reverse->host);
 				if (strncmp(search, forward->dest, HOST_LEN) == 0){
@@ -1666,7 +1681,7 @@ cmdb_records_to_remove(char *range, unsigned long int prefix, AILLIST *rec, AILL
 			r = r->next;
 		}
 	}
-
+	return retval;
 	cleanup:
 		ailsa_syslog(LOG_ERR, "String manipulation failed");
 		return AILSA_STRING_FAIL;
@@ -1680,8 +1695,9 @@ cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int pr
 	int retval;
 	char search[DOMAIN_LEN];
 	char fqdn[DOMAIN_LEN];
-	char *ptr;
+	char *ptr, *pts;
 	unsigned long int index, i;
+	size_t len;
 	AILELEM *r, *f;
 	ailsa_record_s *reverse, *forward;
 
@@ -1712,29 +1728,53 @@ cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int pr
 				r = r->next;
 			}
 			if (!(r)) {
-				if ((retval = cmdb_add_number_to_list(zone_id, add)) != 0)
-					return retval;
-				if ((retval = cmdb_add_number_to_list(i, add)) != 0)
-					return retval;
-				if ((retval = cmdb_add_string_to_list(ptr, add)) != 0)
-					goto cleanup;
 				memset(fqdn, 0, DOMAIN_LEN);
-				if (strncmp(forward->host, "@", BYTE_LEN) == 0)
-					snprintf(fqdn, DOMAIN_LEN, "%s.", forward->domain);
-				else
-					snprintf(fqdn, DOMAIN_LEN, "%s.%s.", forward->host, forward->domain);
-				if ((retval = cmdb_add_string_to_list(fqdn, add)) != 0)
-					return retval;
-				if ((retval = cmdb_populate_cuser_muser(add)) != 0)
-					goto cleanup;
+				snprintf(fqdn, DOMAIN_LEN, "%s", search);
+				pts = strrchr(fqdn, '.');
+				*pts = '\0';
+				len = strlen(fqdn);
+				if (strncmp(fqdn, forward->dest, len) == 0) {
+					if ((retval = cmdb_add_number_to_list(zone_id, add)) != 0)
+						return retval;
+					if ((retval = cmdb_add_number_to_list(i, add)) != 0)
+						return retval;
+					memset(fqdn, 0, DOMAIN_LEN);
+					if ((retval = cmdb_get_rev_dest_from_search(search, forward->dest, fqdn)) != 0)
+						goto cleanup;
+					if ((retval = cmdb_add_string_to_list(fqdn, add)) != 0)
+						goto cleanup;
+					memset(fqdn, 0, DOMAIN_LEN);
+					if (strncmp(forward->host, "@", BYTE_LEN) == 0)
+						snprintf(fqdn, DOMAIN_LEN, "%s.", forward->domain);
+					else
+						snprintf(fqdn, DOMAIN_LEN, "%s.%s.", forward->host, forward->domain);
+					if ((retval = cmdb_add_string_to_list(fqdn, add)) != 0)
+						return retval;
+					if ((retval = cmdb_populate_cuser_muser(add)) != 0)
+						goto cleanup;
+				}
 			}
 			f = f->next;
 		}
 	}
-
+	return retval;
 	cleanup:
 		ailsa_syslog(LOG_ERR, "String manipulation failed");
 		return retval;
+}
+
+static int
+cmdb_get_rev_dest_from_search(char *search, char *dest, char *fqdn)
+{
+	if (!(search) || !(dest) || !(fqdn))
+		return AILSA_NO_DATA;
+	size_t len;
+	char *ptr;
+
+	len = strlen(search) - 1;
+	ptr = dest + len;
+	snprintf(fqdn, MAC_LEN, "%s", ptr);
+	return 0;
 }
 
 int
