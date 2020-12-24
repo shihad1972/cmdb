@@ -1,11 +1,52 @@
-#!/bin/bash
+#!/bin/bash -x
+
+exec >> /tmp/initial.log
+
+******* Starting initial entries script $(date) *****"
 
 DOMAIN={{ domain}}
+IP={{ ip_address }}
 REVERSE={{ interfaces.network }}
 START={{ interfaces.start }}
 END={{ interfaces.end }}
 NETMASK={{ interfaces.netmask }}
 PREFIX={{ interfaces.prefix }}
+
+test_listing()
+{
+    if ! dnsa -l -F; then
+        exit 1;
+    fi
+    if ! dnsa -l -R; then
+        exit 1
+    fi
+    if ! cmdb -l -s; then
+        exit 1
+    fi
+    if ! cmdb -l -u; then
+        exit 1
+    fi
+    if ! cmdb -l -o; then
+        exit 1
+    fi
+    if ! cmdb -l -j; then
+        exit 1
+    fi
+    if ! cmdb -l -g; then
+        exit 1
+    fi
+    for i in cmdb-identity cbc cbcdomain cbclocale cbcos cbcpart cbcscript cbcvarient; do
+        if ! ${i} -l; then
+            exit 1
+        fi
+    done
+    if ! cbcsysp -l -p; then
+        exit 1
+    fi
+}
+
+echo "\
+
 
 for i in cmdb dnsa cbc cbcdomain cbcpack cbcvarient cbcos cmdb-identity; do
     if ! which $i >/dev/null; then
@@ -13,3 +54,72 @@ for i in cmdb dnsa cbc cbcdomain cbcpack cbcvarient cbcos cmdb-identity; do
         exit 1
     fi
 done
+
+echo "First testing listing everything"
+test_listing
+
+echo "Adding build domain ${DOMAIN}"
+echo ""
+
+cbcdomain -a -n ${DOMAIN} -k ${START},${END},${IP},${NETMASK},${IP}
+
+if ! dnsa -l -F | grep ^${DOMAIN}; then
+    echo "Domain not added into dnsa?"
+    exit 1;
+fi
+
+echo "Setting default build domain"
+echo ""
+if ! cbcdomain -z -n ${DOMAIN}; then
+    echo "Cannot set default build domain: $?"
+    exit 1;
+fi
+
+echo "Testing double add into dnsa"
+echo ""
+if ! dnsa -z -F -n ${DOMAIN}; then
+    echo "Adding test zone failed? $?"
+    exit 1;
+fi
+
+echo "Adding reverse zone..."
+echo ""
+if ! dnsa -a -R -n ${REVERSE} -p "{PREFIX}; then
+    echo "Adding reverse zone failed: $?"
+    exit 1
+fi
+
+echo "Testing listing reverse zone"
+echo ""
+if ! dnsa -l -R | grep ^${REVERSE}; then
+    echo "Cannot list reverse zone ${REVERSE}/${PREFIX}"
+    exit 1;
+fi
+
+echo "Adding OS"
+echo ""
+if ! cbcos -a -n Debian -s debian -o 10 -e buster -t x86_64; then
+    echo "Cannot add Debian OS: $?"
+    exit 1;
+fi
+
+echo "Setting default OS"
+echo ""
+if ! cbcos -z -n debian -o 10 -t x86_64; then
+    echo "Cannot set default OS: $?"
+    exit 1;
+fi
+
+echo "Adding locale"
+echo ""
+if ! cbclocale -a -k gb -o en_GB -n english -t Europe/London -u GB -g en; then
+    echo "Cannot add locale english: $?"
+    exit 1;
+fi
+
+echo "Setting default locale"
+echo ""
+if ! cbclocale -z -n english; then
+    echo "Cannot set default locale: $?"
+    exit 1;
+fi
