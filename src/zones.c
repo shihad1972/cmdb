@@ -1288,11 +1288,15 @@ delete_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 	AILLIST *rev = ailsa_db_data_list_init();
 
 	if (cm->ztype) {
-		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, cm->ztype, dc, rev)) != 0)
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, cm->ztype, dc, rev)) != 0) {
+			retval = 0;
 			goto cleanup;
+		}
 	} else {
-		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, "master", dc, rev)) != 0)
+		if ((retval = cmdb_check_add_zone_id_to_list(cm->domain, REVERSE_ZONE, "master", dc, rev)) != 0) {
+			retval = 0;
 			goto cleanup;
+		}
 	}
 	if ((retval = ailsa_delete_query(dc, delete_queries[DELETE_REV_ZONE], rev)) != 0) {
 		ailsa_syslog(LOG_ERR, "DELETE_REV_ZONE query failed");
