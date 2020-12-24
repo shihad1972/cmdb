@@ -5,8 +5,8 @@ iface {{ item.interface }} inet {{ item.type }}
   {% if item.gateway is defined %}
       gateway {{ item.gateway }}
   {% endif %}
-  {% if item.netmask_full is defined %}
-      netmask {{ item.netmask_full }}
+  {% if item.netmask is defined %}
+      netmask {{ item.netmask }}
   {% endif %}
   {% if item.dns_server is defined %}
       # dns-* options are implemented by the resolvconf package, if installed

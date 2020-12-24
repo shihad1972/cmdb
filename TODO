@@ -7,31 +7,15 @@ reverse zone easier.
 Also, have the record ID in the rev_zone table (i.e. the id of the record
 the PRT rev record is pointing to) will make building the zone much easier.
 
-21/12/2020
-Need to check when adding a reverse zone if there is any overlap with other
-zones. We do this for the build domain...
-	** Fixed. Commit ID: 275a0eb **
-
-19/12/2020
-Currently, can only add rev zones if the have a prefix of 8, 16 or 24 or
-greater. It would be good to be able to add other prefixes. This is complex
-as the zone files require these prefixes. Should they be separate zones in
-the database, or should the program just deal with multiple zonefiles for this
-prefix? Also, when adding a reverse zone, we just check for _this zone_ and
-not if it overlaps with other zones. This will be required if we have other
-prefixes.
-	** Fixed. Commit ID: 275a0eb **
+16/12/2020
+NTP configuration in debian is not working; the preseed configuration file
+does not configure the NTP server. The 2 PI's are not good time sources in
+any case.
 
 16/12/2020
 Adding cbcdomain and also vmnet does not add reverse zone. Need range and
 prefix to check for existing rev zone. Will need to rewrite the adding of a 
 rev zone in dnsa.
-	** Rewriting of DNSA done. Commit ID: 275a0eb **
-
-16/12/2020
-NTP configuration in debian is not working; the preseed configuration file
-does not configure the NTP server. The 2 PI's are not good time sources in
-any case.
 
 13/12/2020
 mkvm is not idempotent. If there is an error in adding to cmdb, then when
@@ -203,6 +187,21 @@ Should probably add racks / power points / switch points into cmdb.
 
 
 ======================= COMPLETE ============================
+
+21/12/2020
+Need to check when adding a reverse zone if there is any overlap with other
+zones. We do this for the build domain...
+	** Fixed. Commit ID: 275a0eb **
+
+19/12/2020
+Currently, can only add rev zones if the have a prefix of 8, 16 or 24 or
+greater. It would be good to be able to add other prefixes. This is complex
+as the zone files require these prefixes. Should they be separate zones in
+the database, or should the program just deal with multiple zonefiles for this
+prefix? Also, when adding a reverse zone, we just check for _this zone_ and
+not if it overlaps with other zones. This will be required if we have other
+prefixes.
+	** Fixed. Commit ID: 275a0eb **
 
 20/06/2020
 Strange bug when building reverse zones with newly set preferred A record.

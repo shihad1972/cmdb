@@ -14,7 +14,8 @@ interfaces:
   - address: "{{ ip_address }}"
     interface: "{{ interface }}"
     network: 172.26.80.0
-    netmask_full: 255.255.255.0
+    prefix: 24
+    netmask: 255.255.255.0
     start: 172.26.80.11
     end: 172.26.80.224
     type: static

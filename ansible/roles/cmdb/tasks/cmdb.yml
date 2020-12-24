@@ -17,3 +17,12 @@
     owner: cmdb
     group: cmdb
     mode: 0664
+
+- name: Create initial entries script
+  become: true
+  template:
+    src: initial-entries.sh.j2
+    dest: /usr/local/bin/initial-entries.sh
+    owner: root
+    group: root
+    mode: 0755

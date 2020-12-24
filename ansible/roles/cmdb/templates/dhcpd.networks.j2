@@ -3,7 +3,7 @@
         option domain-name-servers {{ item.address }};
         option domain-search "{{ item.domain }}";
         option routers {{ item.address }};
-        subnet {{ item.network }} netmask {{ item.netmask_full }} {
+        subnet {{ item.network }} netmask {{ item.netmask }} {
                 authoratative;
                 next-server {{ item.address }};
                 filename "pxelinux.0";

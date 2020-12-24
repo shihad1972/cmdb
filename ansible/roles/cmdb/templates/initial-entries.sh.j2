@@ -1,0 +1,15 @@
+#!/bin/bash
+
+DOMAIN={{ domain}}
+REVERSE={{ interfaces.network }}
+START={{ interfaces.start }}
+END={{ interfaces.end }}
+NETMASK={{ interfaces.netmask }}
+PREFIX={{ interfaces.prefix }}
+
+for i in cmdb dnsa cbc cbcdomain cbcpack cbcvarient cbcos cmdb-identity; do
+    if ! which $i >/dev/null; then
+        echo "No $i"
+        exit 1
+    fi
+done
