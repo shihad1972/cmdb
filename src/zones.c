@@ -589,16 +589,16 @@ commit_rev_zones(ailsa_cmdb_s *dc, char *name)
 		d = e->next->data;
 		type = d->data->text;
 		d = e->next->next->data;
-		prefix = d->data->number;
+		prefix = strtoul(d->data->text, NULL, 10);
 		if (name) {
 			if (strncmp(name, zone, DOMAIN_LEN) == 0)
 				if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type, prefix)) != 0)
 					ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
 		} else {
 			if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, zone, type, prefix)) != 0)
-				ailsa_syslog(LOG_ERR, "Unable to validate zone %s");
+				ailsa_syslog(LOG_ERR, "Unable to validate zone %s", zone);
 		}
-		e = ailsa_move_down_list(e, 2);
+		e = ailsa_move_down_list(e, 3);
 	}
 	if ((retval = cmdb_write_rev_zone_config(dc)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to create reverse config");
@@ -1398,8 +1398,6 @@ build_reverse_zone(ailsa_cmdb_s *dc, dnsa_comm_line_s *cm)
 		snprintf(comm, CONFIG_LEN, "%s reload", dc->rndc);
 		if ((retval = system(comm)) != 0)
 			ailsa_syslog(LOG_ERR, "Reload of nameserver failed");
-        cleanup:
-
 	}
 	cleanup:
 		ailsa_list_full_clean(add);

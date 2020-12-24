@@ -1004,7 +1004,8 @@ ailsa_fill_rev_zone_list(AILLIST *l, AILLIST *z)
 		} else {
 			rev = ailsa_calloc(sizeof(ailsa_rev_zone_s), "rev in ailsa_fill_rev_zone");
 			rev->type = strndup(((ailsa_data_s *)e->data)->data->text, SERVICE_LEN);
-			rev->master = strndup(((ailsa_data_s *)e->next->next->next->next->data)->data->text, DOMAIN_LEN);
+			if (strncmp(rev->type, "slave", BYTE_LEN) == 0)
+				rev->master = strndup(((ailsa_data_s *)e->next->next->next->next->data)->data->text, DOMAIN_LEN);
 			rev->net_range = strndup(((ailsa_data_s *)e->next->data)->data->text, DOMAIN_LEN);
 			rev->in_addr = ailsa_calloc(HOST_LEN, "rev->in_addr in ailsa_fill_rev_zone_list");
 			get_in_addr_string(rev->in_addr, rev->net_range, prefix);
