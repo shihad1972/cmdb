@@ -652,6 +652,7 @@ static int
 cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 {
 	int retval;
+	int len;
 	if (!(cmc) || !(col) || !(os))
 		return AILSA_NO_DATA;
 
@@ -682,8 +683,13 @@ cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 		ailsa_syslog(LOG_ERR, "Cannot insert OS architecture into list");
 		return retval;
 	}
+	len = os->total;
 	if ((retval = cmdb_add_build_type_id_to_list(col->alias, cmc, os)) != 0)
 		return AILSA_BUILD_TYPE_NO_FOUND;
+	if (os->total != len + 1) {
+		ailsa_syslog(LOG_ERR, "Build type for %s not found", col->alias);
+		return AILSA_BUILD_TYPE_NO_FOUND;
+	}
 	retval = cmdb_populate_cuser_muser(os);
 	return retval;
 }
