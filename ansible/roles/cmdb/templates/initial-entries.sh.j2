@@ -1,16 +1,16 @@
 #!/bin/bash -x
 
-exec >> /tmp/initial.log
+exec > /tmp/initial.log 2>&1
 
-******* Starting initial entries script $(date) *****"
+echo "******* Starting initial entries script $(date) *****"
 
 DOMAIN={{ domain}}
 IP={{ ip_address }}
-REVERSE={{ interfaces.network }}
-START={{ interfaces.start }}
-END={{ interfaces.end }}
-NETMASK={{ interfaces.netmask }}
-PREFIX={{ interfaces.prefix }}
+REVERSE={{ interfaces[0].network }}
+START={{ interfaces[0].start }}
+END={{ interfaces[0].end }}
+NETMASK={{ interfaces[0].netmask }}
+PREFIX={{ interfaces[0].prefix }}
 
 test_listing()
 {
@@ -45,10 +45,8 @@ test_listing()
     fi
 }
 
-echo "\
 
-
-for i in cmdb dnsa cbc cbcdomain cbcpack cbcvarient cbcos cmdb-identity; do
+for i in cmdb dnsa cbc cbcdomain cbcpart cbcvarient cbcos cmdb-identity; do
     if ! which $i >/dev/null; then
         echo "No $i"
         exit 1
@@ -84,7 +82,7 @@ fi
 
 echo "Adding reverse zone..."
 echo ""
-if ! dnsa -a -R -n ${REVERSE} -p "{PREFIX}; then
+if ! dnsa -x -R -n ${REVERSE} -p ${PREFIX}; then
     echo "Adding reverse zone failed: $?"
     exit 1
 fi

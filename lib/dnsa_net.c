@@ -662,9 +662,16 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, char *range, char *master, unsigned lo
 		ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
-		goto cleanup;
+	if (cbc->secns) {
+		if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
+			goto cleanup;
+		}
+	} else {
+		if ((retval = cmdb_add_string_to_list("none", list)) != 0) {
+			ailsa_syslog(LOG_ERR, "Cannot add none nameserver to list");
+			goto cleanup;
+		}
 	}
 	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add zone serial number to list");
@@ -748,10 +755,12 @@ write_rev_zone_header(int fd, AILLIST *soa, char *hostmaster)
 		dprintf(fd, "\t\tIN\tNS\t%s.\n", pri);
 	else
 		dprintf(fd, "\t\tIN\tNS\t%s\n", pri);
-	if (sec[slen - 1] != '.')
-		dprintf(fd, "\t\tIN\tNS\t%s.\n", sec);
-	else
-		dprintf(fd, "\t\tIN\tNS\t%s\n", sec);
+	if (sec) {
+		if (sec[slen - 1] != '.')
+			dprintf(fd, "\t\tIN\tNS\t%s.\n", sec);
+		else
+			dprintf(fd, "\t\tIN\tNS\t%s\n", sec);
+	}
 }
 
 static void
