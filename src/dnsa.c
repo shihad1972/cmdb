@@ -122,6 +122,11 @@ int main(int argc, char *argv[])
 			delete_glue_zone(dc, cm);
 		else
 			printf("Action code %d not implemented\n", cm->action);
+	} else if (cm->type == TEST_ZONE) {
+		if (cm->action == DNSA_LIST)
+			list_test_zones(dc);
+		else
+			printf("Action code %d not implemented\n", cm->action);
 	}
 
 	clean_dnsa_comm_line(cm);
@@ -165,7 +170,7 @@ clean_dnsa_comm_line(void *comm)
 static int
 parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 {
-	const char *optstr = "abdeglmruvwxzFGI:M:N:RSh:i:j:n:o:p:s:t:";
+	const char *optstr = "abdeglmruvwxzFGI:M:N:RSTh:i:j:n:o:p:s:t:";
 	int opt, retval;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -204,6 +209,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		{"name-servers",	required_argument,	NULL,	'N'},
 		{"reverse-zone",	no_argument,		NULL,	'R'},
 		{"slave-zone",		no_argument,		NULL,	'S'},
+		{"test",		no_argument,		NULL,	'T'},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -250,6 +256,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 			comp->type = REVERSE_ZONE;
 		} else if (opt == 'G') {
 			comp->type = GLUE_ZONE;
+		} else if (opt == 'T') {
+			comp->type = TEST_ZONE;
 		} else if (opt == 'S') {
 			comp->ztype = strdup("slave");
 		} else if (opt == 'M') {
@@ -334,8 +342,8 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		comp->glue_ns = strdup("ns1,ns2");
 		retval = NONE;
 	}
-	if (comp->prefix > 0) {
-		if (((comp->prefix > 8) && (comp->prefix < 16)) || ((comp->prefix > 16 && comp->prefix < 24)))
+	if ((comp->prefix > 0) && (comp->action == DNSA_AZONE)) {
+		if ((comp->prefix < 8) && (comp->prefix > 24))
 			retval = AILSA_PREFIX_OUT_OF_RANGE;
 	}
 	if (retval == 0)

@@ -81,6 +81,8 @@ void
 display_rev_zone(char *domain, ailsa_cmdb_s *dc);
 void
 list_glue_zones(ailsa_cmdb_s *dc);
+void
+list_test_zones(ailsa_cmdb_s *dc);
 /* Various zone functions */
 /* Added 05/03/2013 */
 int

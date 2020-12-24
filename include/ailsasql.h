@@ -219,6 +219,7 @@ enum {			// SQL ARGUMENT QUERIES
 	REV_RECORDS_ON_ZONE_ID,
 	REV_SOA_ON_NET_RANGE,
 	REV_RECORDS_ON_NET_RANGE,
+	FULL_REV_RECORDS,
 	RECORD_ID_BASE,
 	RECORD_ID_MX,
 	RECORD_ID_SRV,
@@ -273,6 +274,7 @@ enum {			// SQL ARGUMENT QUERIES
 	IDENTITY_ID_ON_SERVER_USER,
 	IDENTITIES_ON_SERVER_NAME,
 	PARENT_ZONE_ID_ON_GLUE_ZONE,
+	REV_ZONE_OVERLAP,
 };
 
 enum {			// SQL INSERT QUERIES
@@ -547,6 +549,9 @@ cmdb_get_port_number(char *proto, char *service, unsigned int *port);
 int
 cmdb_getaddrinfo(char *name, char *ip, int *type);
 
+int
+get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix);
+
 unsigned long int
 get_net_range(unsigned long int prefix);
 
@@ -554,10 +559,31 @@ int
 do_rev_lookup(char *ip, char *host, size_t len);
 
 int
+get_zone_index(unsigned long int prefix, unsigned long int *index);
+
+int
+convert_bin_ipv4_to_text(unsigned long int ip, char *addr);
+
+int
+convert_text_ipv4_to_bin(unsigned long int *ip, const char *addr);
+
+int
+get_range_search_string(const char *range, char *search, unsigned long int prefix, unsigned long int index);
+
+int
+get_offset_ip(const char *range, char *search, unsigned long int prefix, unsigned long int index);
+
+int
+get_start_finsh_ips(const char *range, unsigned long int prefix, unsigned long int *start, unsigned long int *end);
+
+int
 cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vail);
 
 int
 check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips);
+
+int
+check_for_rev_zone_overlap(ailsa_cmdb_s *cbc, unsigned long int start, unsigned long int end);
 
 int
 dnsa_populate_zone(ailsa_cmdb_s *cbs, char *domain, const char *type, const char *master, AILLIST *zone);
@@ -585,10 +611,13 @@ ailsa_clone_data_element(AILELEM *e);
 int
 ailsa_insert_clone(AILLIST *list, AILELEM *elem);
 
+int
+ailsa_fill_rev_zone_list(AILLIST *l, AILLIST *z);
+
 // Some zone functions
 
 int
-cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype);
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype, unsigned long int prefix);
 
 int
 cmdb_write_fwd_zone_config(ailsa_cmdb_s *cbs);

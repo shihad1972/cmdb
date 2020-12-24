@@ -1,3 +1,17 @@
+23/12/2020
+The preferred_a table is a mess. It has a link to the record, but not the
+reverse record. It has the IP address in it, and the FQDN in it GRRRR.
+Just need to have a link the rev_record for the IP, and the forward record
+to get the FQDN. Simples. This will make the comparison for building the
+reverse zone easier.
+Also, have the record ID in the rev_zone table (i.e. the id of the record
+the PRT rev record is pointing to) will make building the zone much easier.
+
+21/12/2020
+Need to check when adding a reverse zone if there is any overlap with other
+zones. We do this for the build domain...
+	** Fixed. Commit ID: 275a0eb **
+
 19/12/2020
 Currently, can only add rev zones if the have a prefix of 8, 16 or 24 or
 greater. It would be good to be able to add other prefixes. This is complex
@@ -6,11 +20,13 @@ the database, or should the program just deal with multiple zonefiles for this
 prefix? Also, when adding a reverse zone, we just check for _this zone_ and
 not if it overlaps with other zones. This will be required if we have other
 prefixes.
+	** Fixed. Commit ID: 275a0eb **
 
 16/12/2020
 Adding cbcdomain and also vmnet does not add reverse zone. Need range and
 prefix to check for existing rev zone. Will need to rewrite the adding of a 
 rev zone in dnsa.
+	** Rewriting of DNSA done. Commit ID: 275a0eb **
 
 16/12/2020
 NTP configuration in debian is not working; the preseed configuration file
@@ -32,6 +48,7 @@ in ailsacmdb library, and move the ailsasql library into ailsacmdb.
 Also, adding SRV (and probably MX records) do not check for trailing .
 in the hostname. If this is a FQDN it will not be added as such to the
 zonefile.
+	This bit me on the ass BIG STYLE. Fixed. Commit ID: 275a0eb
 
 04/12/2020
   * We cannot add a slave zone currently. ** DONE **

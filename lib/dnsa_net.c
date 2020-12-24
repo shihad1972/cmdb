@@ -28,6 +28,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <time.h>
+#include <math.h>
 /* For freeBSD ?? */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -61,7 +62,7 @@ static int
 write_fwd_zone_file(ailsa_cmdb_s *cbc, char *zone);
 
 static int
-write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone);
+write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone, unsigned long int prefix, unsigned long int index);
 
 static int
 ailsa_check_for_zone_update(ailsa_cmdb_s *cbc, AILLIST *l, char *zone);
@@ -82,7 +83,7 @@ static int
 cmdb_validate_fwd_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype);
 
 static int
-cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype);
+cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype, unsigned long int prefix);
 
 static int
 cmdb_check_zone(ailsa_cmdb_s *cbs, char *zone);
@@ -111,45 +112,8 @@ get_net_range(unsigned long int prefix)
         return range;
 }
 
-uint32_t
-prefix_to_mask_ipv4(unsigned long int prefix)
-{
-	uint32_t pf;
-	if (prefix) {
-		pf = (uint32_t)(4294967295 << (32 - prefix));
-		return pf;
-	} else {
-		return 0;
-	}
-}
-
 int
-do_rev_lookup(char *ip, char *host, size_t size)
-{
-	int retval = 0;
-	struct addrinfo hints, *res;
-	socklen_t len = sizeof(struct sockaddr_in6);
-	socklen_t hlen = (socklen_t)size;
-
-	if (!(ip) || !(host))
-		return AILSA_NO_DATA;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	if ((retval = getaddrinfo(ip, NULL, &hints, &res)) != 0) {
-		fprintf(stderr, "Getaddrinfo in do_rev_lookup: %s\n",
-		  gai_strerror(retval));
-		return AILSA_GETADDR_FAIL;
-	}
-	if ((retval = getnameinfo(res->ai_addr, len, host, hlen, NULL, 0, NI_NAMEREQD)) != 0) {
-		fprintf(stderr, "getnameinfo: %s\n", gai_strerror(retval));
-		retval = AILSA_DNS_LOOKUP_FAIL;
-	}
-	return retval;
-}
-
-int
-cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype)
+cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype, unsigned long int prefix)
 {
 	if (!(cbc) || !(zone))
 		return AILSA_NO_DATA;
@@ -163,7 +127,7 @@ cmdb_validate_zone(ailsa_cmdb_s *cbc, int type, char *zone, const char *ztype)
 		}
 		break;
 	case REVERSE_ZONE:
-		if ((retval = cmdb_validate_rev_zone(cbc, zone, ztype)) != 0) {
+		if ((retval = cmdb_validate_rev_zone(cbc, zone, ztype, prefix)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate reverse zone");
 			return retval;
 		}
@@ -458,9 +422,9 @@ write_fwd_header_records(int fd, AILLIST *r, char *zone)
 			dest = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
 			slen = strlen(dest);
 			if (dest[slen - 1] != '.') {
-				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
+				dprintf(fd, "_%s._%s.%s.\tIN SRV %lu 0 %u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
 			} else {
-				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s\n", host, proto, zone, pri, port, dest);
+				dprintf(fd, "_%s._%s.%s.\tIN SRV %lu 0 %u\t%s\n", host, proto, zone, pri, port, dest);
 			}
 			e = ailsa_move_down_list(e, len);
 		}
@@ -548,13 +512,14 @@ cmdb_check_zone(ailsa_cmdb_s *cbs, char *zone)
 }
 
 static int
-cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype)
+cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype, unsigned long int prefix)
 {
 	if (!(cbc) || !(zone))
 		return AILSA_NO_DATA;
 	AILLIST *l = ailsa_db_data_list_init();
+	char addr[MAC_LEN];
 	int retval;
-
+	unsigned long int index, i;
 	if (ztype) {
 		if (strncmp(ztype, "slave", BYTE_LEN) == 0) {
 			if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
@@ -564,22 +529,23 @@ cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype)
 			goto validate;
 		}
 	}
-	if ((retval = write_rev_zone_file(cbc, zone)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot write zone file for zone %s", zone);
+	if ((retval = get_zone_index(prefix, &index)) != 0)
 		goto cleanup;
-	}
-	if ((retval = cmdb_check_zone(cbc, zone)) != 0) {
-		ailsa_syslog(LOG_ERR, "Zone %s could not be validated");
-		if ((retval = cmdb_add_string_to_list("no", l)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add invalid to list");
+	for (i = 0; i < index; i++) {
+		memset(addr, 0, MAC_LEN);
+		if ((retval = get_offset_ip(zone, addr, prefix, i)) != 0)
 			goto cleanup;
-		}
-	} else {
-		if ((retval = cmdb_add_string_to_list("yes", l)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add valid to list");
+		if ((retval = write_rev_zone_file(cbc, zone, prefix, i)) != 0)
 			goto cleanup;
+		if ((retval = cmdb_check_zone(cbc, addr)) != 0) {
+			if ((retval = cmdb_add_string_to_list("no", l)) != 0)
+				goto cleanup;
+			goto validate;
 		}
 	}
+	if ((retval = cmdb_add_string_to_list("yes", l)) != 0)
+		goto cleanup;
+
 	validate:
 		if ((retval = cmdb_add_string_to_list(zone, l)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot add rev zone name to list");
@@ -593,11 +559,12 @@ cmdb_validate_rev_zone(ailsa_cmdb_s *cbc, char *zone, const char *ztype)
 }
 
 static int
-write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
+write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone, unsigned long int prefix, unsigned long int index)
 {
 	if (!(cbc) || !(zone))
 		return AILSA_NO_DATA;
 	char *name = ailsa_calloc(DOMAIN_LEN, "name in write_rev_zone_file");
+	char *ip = ailsa_calloc(MAC_LEN, "ip in write_rev_zone_file");
 	int retval, flags, fd;
 	mode_t um, mask;
 	AILLIST *a = ailsa_db_data_list_init();
@@ -616,14 +583,18 @@ write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_syslog(LOG_ERR, "Cannot check or set zone updated");
 		goto cleanup;
 	}
+	if ((retval = cmdb_add_number_to_list(index, a)) != 0)
+		goto cleanup;
 	if ((retval = ailsa_argument_query(cbc, REV_RECORDS_ON_NET_RANGE, a, r)) != 0) {
 		ailsa_syslog(LOG_ERR, "REV_RECORDS_ON_NET_RANGE query failed");
 		goto cleanup;
 	}
+	if ((retval = get_offset_ip(zone, ip, prefix, index)) != 0)
+		goto cleanup;
 	um = umask(0);
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
-	if ((snprintf(name, DOMAIN_LEN, "%s%s", cbc->dir, zone)) >= DOMAIN_LEN)
+	if ((snprintf(name, DOMAIN_LEN, "%s%s", cbc->dir, ip)) >= DOMAIN_LEN)
 		ailsa_syslog(LOG_INFO, "path truncated in write_rev_zone_file");
 	if ((fd = open(name, flags, mask)) == -1) {
 		ailsa_syslog(LOG_ERR, "Cannot open zone file for writing: %s", strerror(errno));
@@ -639,6 +610,7 @@ write_rev_zone_file(ailsa_cmdb_s *cbc, char *zone)
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(s);
 		my_free(name);
+		my_free(ip);
 		return retval;
 }
 
@@ -649,14 +621,13 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, char *range, char *master, unsigned lo
 		return AILSA_NO_DATA;
 	char buff[CONFIG_LEN];
 	int retval;
-	uint32_t ip_addr, finish;
-	unsigned long int ip_range;
+	unsigned long int start, end;
 
+	memset(buff, 0, CONFIG_LEN);
 	if ((retval = cmdb_add_string_to_list(range, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add net_range to list");
 		goto cleanup;
 	}
-	memset(buff, 0, CONFIG_LEN);
 	snprintf(buff, CONFIG_LEN, "%lu", prefix);
 	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add prefix to list");
@@ -667,42 +638,33 @@ dnsa_populate_rev_zone(ailsa_cmdb_s *cbc, char *range, char *master, unsigned lo
 		ailsa_syslog(LOG_ERR, "Cannot add net_start to list");
 		goto cleanup;
 	}
-	inet_pton(AF_INET, range, &ip_addr);
-	ip_addr = htonl(ip_addr);
-	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
+	if ((retval = get_start_finsh_ips(range, prefix, &start, &end)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot get start and end IP's");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_number_to_list(start, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add start_ip to list");
 		goto cleanup;
 	}
-	ip_range = get_net_range(prefix);
-	ip_addr += (uint32_t)ip_range - 1;
-	finish = ntohl(ip_addr);
-	inet_ntop(AF_INET, &finish, buff, SERVICE_LEN);
+	if ((retval = convert_bin_ipv4_to_text(end, buff)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot convert end IP to text");
+		goto cleanup;
+	}
 	if ((retval = cmdb_add_string_to_list(buff, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add net_finish to list");
 		goto cleanup;
 	}
-	if ((retval = cmdb_add_number_to_list(ip_addr, list)) != 0) {
+	if ((retval = cmdb_add_number_to_list(end, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add finish_ip to list");
 		goto cleanup;
 	}
-	if (!(master)) {
-		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
-			goto cleanup;
-		}
-	} else {
-		if ((retval = cmdb_add_string_to_list("NULL", list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add NULL server to list");
-			goto cleanup;
-		}
-		if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
-			ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
-			goto cleanup;
-		}
+	if ((retval = cmdb_add_string_to_list(cbc->prins, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add primary nameserver to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cbc->secns, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add secondary nameserver to list");
+		goto cleanup;
 	}
 	if ((retval = cmdb_add_number_to_list(generate_zone_serial(), list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add zone serial number to list");
@@ -941,28 +903,24 @@ cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs)
 	if (!(cbs))
 		return AILSA_NO_DATA;
 	char *filename = ailsa_calloc(DOMAIN_LEN, "filename in cmdb_write_rev_zone_config");
-	char *ip = ailsa_calloc(INET6_ADDRSTRLEN, "ip in cmdb_write_rev_zone_config");
-	char *master_ip = ailsa_calloc(INET6_ADDRSTRLEN, "master_ip in cmdb_write_rev_zone_config");
-	char *type, *range, *master;
-	int retval, flags, iptype;
+	int retval, flags;
 	int fd = 0;
-	size_t total = 6;
-	unsigned long int prefix;
 	mode_t um, mask;
 	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *z = ailsa_rev_zone_list_init();
 	AILELEM *e;
+	ailsa_rev_zone_s *r;
 
 	if ((retval = ailsa_basic_query(cbs, REV_ZONE_CONFIG, l)) != 0) {
 		ailsa_syslog(LOG_ERR, "REV_ZONE_CONFIG query failed");
 		goto cleanup;
 	}
 	if (l->total == 0) {
-		ailsa_syslog(LOG_INFO, "No reverse zones found in the database");
-		goto cleanup;
-	} else if ((l->total % total) != 0) {
-		ailsa_syslog(LOG_ERR, "Wrong factor. Expected 4 got total of %zu", l->total);
+		ailsa_syslog(LOG_INFO, "No reverse zones found in DB");
 		goto cleanup;
 	}
+	if ((retval = ailsa_fill_rev_zone_list(l, z)) != 0)
+		goto cleanup;
 	um = umask(0);
 	mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	flags = O_CREAT | O_WRONLY | O_TRUNC;
@@ -972,34 +930,23 @@ cmdb_write_rev_zone_config(ailsa_cmdb_s *cbs)
 		ailsa_syslog(LOG_ERR, "%s", strerror(errno));
 		return AILSA_FILE_ERROR;
 	}
-	e = l->head;
+	e = z->head;
 	while (e) {
-		memset(ip, 0, INET6_ADDRSTRLEN);
-		memset(master_ip, 0, INET6_ADDRSTRLEN);
-		type = ((ailsa_data_s *)e->data)->data->text;
-		range = ((ailsa_data_s *)e->next->data)->data->text;
-		master = ((ailsa_data_s *)e->next->next->next->next->data)->data->text;
-		prefix = strtoul(((ailsa_data_s *)e->next->next->next->next->next->data)->data->text, NULL, 10);
-		get_in_addr_string(ip, range, prefix);
-		if (strcmp(type, "master") == 0) {
+		r = e->data;
+		dprintf(fd, "\
+zone \"%s\" {\n", r->in_addr);
+		if (strcmp(r->type, "master") == 0) {
 			dprintf(fd, "\
-zone \"%s\" {\n\
-\t\t\ttype master;\n\
-\t\t\tfile \"%s%s\";\n\
-\t\t};\n", ip, cbs->dir, range);
-		} else if (strcmp(type, "slave") == 0) {
-			if ((retval = cmdb_getaddrinfo(master, master_ip, &iptype)) != 0) {
-				ailsa_syslog(LOG_ERR, "Cannot get IP address for name %s", master);
-				goto cleanup;
-			}
+\t\t\ttype master;\n");
+		} else if (strcmp(r->type, "slave") == 0) {
 			dprintf(fd, "\
-zone \"%s\" {\n\
 \t\t\ttype slave;\n\
-\t\t\tmasters { %s; };\n\
-\t\t\tfile \"%s%s\";\n\
-\t\t};\n", ip, master_ip, cbs->dir, range);
+\t\t\tmasters { %s; };\n", r->master);
 		}
-		e = ailsa_move_down_list(e, total);
+		dprintf(fd, "\
+\t\t\tfile \"%s%s\";\n\
+\t\t};\n", cbs->dir, r->net_range);
+		e = e->next;
 	}
 	cleanup:
 		if (fd > 0) {
@@ -1007,10 +954,70 @@ zone \"%s\" {\n\
 			mask = umask(um);
 		}
 		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(z);
 		my_free(filename);
-		my_free(ip);
-		my_free(master_ip);
 		return retval;
+}
+
+int
+ailsa_fill_rev_zone_list(AILLIST *l, AILLIST *z)
+{
+	if (!(l) || !(z))
+		return AILSA_NO_DATA;
+	int retval;
+	char *range;
+	size_t total = 6;
+	AILELEM *e;
+	ailsa_rev_zone_s *rev;
+	unsigned long int prefix, index, i;
+
+	if ((l->total % total) != 0) {
+		ailsa_syslog(LOG_ERR, "Wrong factor. Expected 6 got total of %zu", l->total);
+		return AILSA_WRONG_LIST_LENGHT;
+	}
+	e = l->head;
+	while (e) {
+		prefix = strtoul(((ailsa_data_s *)e->next->next->next->next->next->data)->data->text, NULL, 10);
+		if ((prefix != 8) && (prefix != 16) && (prefix != 24)) {
+			if ((retval = get_zone_index(prefix, &index)) != 0)
+				return retval;
+			for (i = 0; i < index; i++) {
+				rev = ailsa_calloc(sizeof(ailsa_rev_zone_s), "rev in ailsa_fill_rev_zone");
+				rev->type = strndup(((ailsa_data_s *)e->data)->data->text, SERVICE_LEN);
+				rev->master = strndup(((ailsa_data_s *)e->next->next->next->next->data)->data->text, DOMAIN_LEN);
+				rev->net_range = ailsa_calloc(MAC_LEN, "rev->net_range in ailsa_fill_rev_zone");
+				range = ((ailsa_data_s *)e->next->data)->data->text;
+				if ((retval = get_offset_ip(range, rev->net_range, prefix, i)) != 0) {
+					ailsa_syslog(LOG_ERR, "Cannot get net_range");
+					if (ailsa_list_insert(z, rev) != 0)
+						ailsa_clean_rev_zone(rev);
+					return retval;
+				}
+				rev->in_addr = ailsa_calloc(HOST_LEN, "rev->in_addr in ailsa_fill_rev_zone_list");
+				get_in_addr_string(rev->in_addr, rev->net_range, prefix);
+				if ((retval = ailsa_list_insert(z, rev)) != 0) {
+					ailsa_syslog(LOG_ERR, "Cannot add rev into list z");
+					ailsa_clean_rev_zone(rev);
+					return retval;
+				}
+			}
+		} else {
+			rev = ailsa_calloc(sizeof(ailsa_rev_zone_s), "rev in ailsa_fill_rev_zone");
+			rev->type = strndup(((ailsa_data_s *)e->data)->data->text, SERVICE_LEN);
+			if (strncmp(rev->type, "slave", BYTE_LEN) == 0)
+				rev->master = strndup(((ailsa_data_s *)e->next->next->next->next->data)->data->text, DOMAIN_LEN);
+			rev->net_range = strndup(((ailsa_data_s *)e->next->data)->data->text, DOMAIN_LEN);
+			rev->in_addr = ailsa_calloc(HOST_LEN, "rev->in_addr in ailsa_fill_rev_zone_list");
+			get_in_addr_string(rev->in_addr, rev->net_range, prefix);
+			if ((retval = ailsa_list_insert(z, rev)) != 0) {
+				ailsa_syslog(LOG_ERR, "Cannot add rev zone into list z");
+				ailsa_clean_rev_zone(rev);
+				return retval;
+			}
+		}
+		e = ailsa_move_down_list(e, total);
+	}
+	return retval;
 }
 
 int
@@ -1151,31 +1158,6 @@ get_iface_name(const char *name)
 	return iface;
 }
 
-int
-get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix)
-{
-	if (!(ip) || !(range) || !(prefix))
-		return AILSA_NO_DATA;
-	char *tmp = strndup(ip, MAC_LEN);
-	char *ptr;
-	if (!(ptr = strchr(tmp, '/'))) {
-		ailsa_syslog(LOG_ERR, "Character / not in string for netowrk range: %s", ip);
-		return AILSA_INPUT_INVALID;
-	}
-	*ptr++ = '\0';
-	if (!(*range = strndup(tmp, SERVICE_LEN))) {
-		ailsa_syslog(LOG_ERR, "strndup failed for range in get_ip_addr_and_prefix");
-		return AILSA_STRING_FAIL;
-	}
-	if (strlen(ptr) > 2) {
-		ailsa_syslog(LOG_ERR, "Netmask can only be donoted in prefix format, e.g. /24");
-		return AILSA_STRING_FAIL;
-	} else {
-		*prefix = strtoul(ptr, NULL, 10);
-	}
-	my_free(tmp);
-	return 0;
-}
 void
 get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 {
@@ -1193,7 +1175,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 	classless = ailsa_calloc(CONFIG_LEN, "classless in get_in_addr_string");
 
 	snprintf(line, len, "%s", range);
-	if (prefix == 24) {
+	if ((prefix <= 24) && (prefix > 16)) {
 		tmp = strrchr(line, c);
 		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
@@ -1204,22 +1186,7 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			*tmp = '\0';
 			i++;
 		}
-	} else if (prefix == 16) {
-		tmp = strrchr(line, c);
-		*tmp = '\0';
-		tmp = strrchr(line, c);
-		*tmp = '\0';
-		while ((tmp = strrchr(line, c))) {
-			++tmp;
-			strncat(in_addr, tmp, SERVICE_LEN);
-			strcat(in_addr, ".");
-			--tmp;
-			*tmp = '\0';
-			i++;
-		}
-	} else if(prefix == 8) {
-		tmp = strrchr(line, c);
-		*tmp = '\0';
+	} else if ((prefix <= 16) && (prefix > 8)) {
 		tmp = strrchr(line, c);
 		*tmp = '\0';
 		tmp = strrchr(line, c);
@@ -1232,17 +1199,13 @@ get_in_addr_string(char *in_addr, char range[], unsigned long int prefix)
 			*tmp = '\0';
 			i++;
 		}
-	} else if (prefix == 25 || prefix == 26 || prefix == 27 ||
-		prefix == 28 || prefix == 29 || prefix == 30 ||
-		prefix == 31 || prefix == 32) {
+	} else if (prefix == 8) {
 		tmp = strrchr(line, c);
-		++tmp;
-		strncat(in_addr, tmp, SERVICE_LEN);
-		strcat(in_addr, ".");
-		--tmp;
 		*tmp = '\0';
-		snprintf(classless, CONFIG_LEN, "/%lu.", prefix);
-		strncat(in_addr, classless, SERVICE_LEN);
+		tmp = strrchr(line, c);
+		*tmp = '\0';
+		tmp = strrchr(line, c);
+		*tmp = '\0';
 		while ((tmp = strrchr(line, c))) {
 			++tmp;
 			strncat(in_addr, tmp, SERVICE_LEN);
@@ -1333,7 +1296,7 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 		return AILSA_NO_DATA;
 	char *command = ailsa_calloc(CONFIG_LEN, "command in add_forward_zone");
 	int retval;
-	unsigned int query;
+	unsigned int query = INSERT_FORWARD_ZONE;
 	AILLIST *l = ailsa_db_data_list_init();
 
 	if (type) {
@@ -1344,8 +1307,6 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 			retval = AILSA_NO_MASTER;
 			goto cleanup;
 		}
-	} else {
-		query = INSERT_FORWARD_ZONE;
 	}
 	if ((retval = cmdb_check_for_fwd_zone(dc, domain, type)) > 0) {
 		ailsa_syslog(LOG_INFO, "Zone %s already in database", domain);
@@ -1361,7 +1322,7 @@ add_forward_zone(ailsa_cmdb_s *dc, char *domain, const char *type, const char *m
 			ailsa_syslog(LOG_ERR, "INSERT_FORWARD_ZONE query failed");
 			goto cleanup;
 		}
-		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, domain, type)) != 0) {
+		if ((retval = cmdb_validate_zone(dc, FORWARD_ZONE, domain, type, 0)) != 0) {
 			ailsa_syslog(LOG_ERR, "Cannot validate zone %s", domain);
 			goto cleanup;
 		}
@@ -1386,13 +1347,16 @@ add_reverse_zone(ailsa_cmdb_s *dc, char *range, const char *type, char *master, 
 	if (!(dc) || !(range) || (prefix == 0))
 		return AILSA_NO_DATA;
 
-	char *command = ailsa_calloc(CONFIG_LEN, "command in add_rev_zone");
+	char *command = ailsa_calloc(CONFIG_LEN, "command in add_reverse_zone");
 	int retval;
 	AILLIST *rev = ailsa_db_data_list_init();
 	AILLIST *rid = ailsa_db_data_list_init();
+	unsigned long int start, end;
 
-	if ((retval = cmdb_check_add_zone_id_to_list(range, REVERSE_ZONE, type, dc, rid)) != AILSA_ZONE_NOT_FOUND) {
-		ailsa_syslog(LOG_ERR, "Zone %s already in database", range);
+	if ((retval = get_start_finsh_ips(range, prefix, &start, &end)) != 0)
+		goto cleanup;
+	if ((retval = check_for_rev_zone_overlap(dc, start, end)) != 0) {
+		ailsa_syslog(LOG_ERR, "Reverse zone %s overlaps", range);
 		goto cleanup;
 	}
 	if ((retval = dnsa_populate_rev_zone(dc, range, master, prefix, rev)) != 0) {
@@ -1403,7 +1367,7 @@ add_reverse_zone(ailsa_cmdb_s *dc, char *range, const char *type, char *master, 
 		ailsa_syslog(LOG_ERR, "INSERT_REVERSE_ZONE query failed");
 		goto cleanup;
 	}
-	if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, range, type)) != 0) {
+	if ((retval = cmdb_validate_zone(dc, REVERSE_ZONE, range, type, prefix)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to validate new zone %s", range);
 		goto cleanup;
 	}
@@ -1690,4 +1654,241 @@ check_for_build_domain_overlap(ailsa_cmdb_s *cbs, unsigned long int *ips)
 		ailsa_list_full_clean(r);
 		ailsa_list_full_clean(l);
 		return retval;
+}
+
+int
+check_for_rev_zone_overlap(ailsa_cmdb_s *cbc, unsigned long int start, unsigned long int end)
+{
+	if (!(cbc) || (start == 0) || (end == 0) || (end < start))
+		return AILSA_NO_DATA;
+	int retval, i;
+	AILLIST *l = ailsa_db_data_list_init();
+	AILLIST *r = ailsa_db_data_list_init();
+
+	if ((retval = cmdb_add_number_to_list(start, l)) != 0)
+		goto cleanup;
+	if ((retval = cmdb_add_number_to_list(end, l)) != 0)
+		goto cleanup;
+	for (i = 0; i < 2; i++) {
+		if ((retval = cmdb_add_number_to_list(start, l)) != 0)
+			goto cleanup;
+	}
+	for (i = 0; i < 2; i++) {
+		if ((retval = cmdb_add_number_to_list(end, l)) != 0)
+			goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cbc, REV_ZONE_OVERLAP, l, r)) != 0) {
+		ailsa_syslog(LOG_ERR, "REV_ZONE_OVERLAP query failed");
+		goto cleanup;
+	}
+	if (r->total > 0)
+		retval = AILSA_REV_ZONE_OVERLAP;
+
+	cleanup:
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		return retval;
+}
+
+int
+get_zone_index(unsigned long int prefix, unsigned long int *index)
+{
+	if (!(index) || (prefix == 0))
+		return AILSA_NO_DATA;
+	unsigned long int i = 0;
+	double power;
+	if (prefix < 8)
+		return AILSA_PREFIX_OUT_OF_RANGE;
+	else if ((prefix > 8) && (prefix < 16))
+		i = 16 - prefix;
+	else if ((prefix > 16) && (prefix < 24))
+		i = 24 - prefix;
+	if (i != 0)
+		power = pow(2, (double)i);
+	else
+		power = 1;
+	i = (unsigned long int)power;
+	*index = i;
+	return 0;
+}
+
+int
+get_ip_addr_and_prefix(const char *ip, char **range, unsigned long int *prefix)
+{
+	if (!(ip) || !(range) || !(prefix))
+		return AILSA_NO_DATA;
+	char *tmp = strndup(ip, MAC_LEN);
+	char *ptr;
+	if (!(ptr = strchr(tmp, '/'))) {
+		ailsa_syslog(LOG_ERR, "Character / not in string for netowrk range: %s", ip);
+		return AILSA_INPUT_INVALID;
+	}
+	*ptr++ = '\0';
+	if (!(*range = strndup(tmp, SERVICE_LEN))) {
+		ailsa_syslog(LOG_ERR, "strndup failed for range in get_ip_addr_and_prefix");
+		return AILSA_STRING_FAIL;
+	}
+	if (strlen(ptr) > 2) {
+		ailsa_syslog(LOG_ERR, "Netmask can only be donoted in prefix format, e.g. /24");
+		return AILSA_STRING_FAIL;
+	} else {
+		*prefix = strtoul(ptr, NULL, 10);
+	}
+	my_free(tmp);
+	return 0;
+}
+
+uint32_t
+prefix_to_mask_ipv4(unsigned long int prefix)
+{
+	uint32_t pf;
+	if (prefix) {
+		pf = (uint32_t)(4294967295 << (32 - prefix));
+		return pf;
+	} else {
+		return 0;
+	}
+}
+
+int
+do_rev_lookup(char *ip, char *host, size_t size)
+{
+	int retval = 0;
+	struct addrinfo hints, *res;
+	socklen_t len = sizeof(struct sockaddr_in6);
+	socklen_t hlen = (socklen_t)size;
+
+	if (!(ip) || !(host))
+		return AILSA_NO_DATA;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	if ((retval = getaddrinfo(ip, NULL, &hints, &res)) != 0) {
+		fprintf(stderr, "Getaddrinfo in do_rev_lookup: %s\n",
+		  gai_strerror(retval));
+		return AILSA_GETADDR_FAIL;
+	}
+	if ((retval = getnameinfo(res->ai_addr, len, host, hlen, NULL, 0, NI_NAMEREQD)) != 0) {
+		fprintf(stderr, "getnameinfo: %s\n", gai_strerror(retval));
+		retval = AILSA_DNS_LOOKUP_FAIL;
+	}
+	return retval;
+}
+
+int
+convert_bin_ipv4_to_text(unsigned long int ip, char *addr)
+{
+	if (!(addr) || (ip == 0))
+		return AILSA_NO_DATA;
+	uint32_t bin = htonl((u_int32_t)ip);
+
+	if (!(inet_ntop(AF_INET, &bin, addr, SERVICE_LEN))) {
+		ailsa_syslog(LOG_ERR, "IP address to text conversion failed");
+		return AILSA_IP_CONVERT_FAILED;
+	}
+	return 0;
+}
+
+int
+convert_text_ipv4_to_bin(unsigned long int *ip, const char *addr)
+{
+        if (!(ip) || !(addr))
+                return AILSA_NO_DATA;
+        u_int32_t bin, host;
+        int retval;
+
+        if ((retval = inet_pton(AF_INET, addr, &bin)) != 1) {
+                ailsa_syslog(LOG_ERR, "IP addresss to binary conversion failed");
+                return AILSA_IP_CONVERT_FAILED;
+        }
+        host = ntohl(bin);
+        *ip = (unsigned long int)host;
+        return 0;
+}
+
+int
+get_range_search_string(const char *range, char *search, unsigned long int prefix, unsigned long int index)
+{
+        if (!(range) || !(search) || (prefix == 0))
+                return AILSA_NO_DATA;
+        int retval;
+        char *p;
+
+        if ((retval = get_offset_ip(range, search, prefix, index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get offset IP address");
+                return retval;
+        }
+        if (!(p = strchr(search, '.')))
+                return AILSA_IP_CONVERT_FAILED;
+        p++;
+        if (prefix > 8) {
+                if (!(p = strchr(p, '.')))
+                        return AILSA_IP_CONVERT_FAILED;
+                p++;
+        }
+        if (prefix > 16) {
+                if (!(p = strchr(p, '.')))
+                        return AILSA_IP_CONVERT_FAILED;
+                p++;
+        }
+        snprintf(p, 2, "%%");
+        return retval;
+}
+
+int
+get_offset_ip(const char *range, char *addr, unsigned long int prefix, unsigned long int index)
+{
+        if (!(range) || !(addr) || (prefix == 0))
+                return AILSA_NO_DATA;
+        int retval;
+        unsigned long int ip;
+        unsigned long int third = 256;
+        unsigned long int second = 256 * 256;
+
+        if ((retval = convert_text_ipv4_to_bin(&ip, range)) != 0)
+                return retval;
+        if ((prefix > 16) && (prefix <= 24)) {
+                if (index > 0)
+                        ip += (third * index);
+        } else if ((prefix > 8 ) && (prefix <= 16)) {
+                if (index > 0)
+                        ip += (second * index);
+        } else if ((prefix == 8)) {
+                ;
+        } else {
+                return AILSA_IP_CONVERT_FAILED;
+        }
+        retval = convert_bin_ipv4_to_text(ip, addr);
+        return retval;
+}
+
+int
+get_start_finsh_ips(const char *range, unsigned long int prefix, unsigned long int *start, unsigned long int *end)
+{
+        if (!(range) && (prefix == 0))
+                return AILSA_NO_DATA;
+        char *ip = ailsa_calloc(MAC_LEN, "ip in get_start_finish_ips");
+        int retval;
+        unsigned long int index, last;
+
+        if ((retval = convert_text_ipv4_to_bin(start, range)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot convert range %s to binary", range);
+                goto cleanup;
+        }
+        if ((retval = get_zone_index(prefix, &index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get index for prefix %lu", prefix);
+                goto cleanup;
+        }
+        if ((retval = get_offset_ip(range, ip, prefix, index)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot get index IP address");
+                goto cleanup;
+        }
+        if ((retval = convert_text_ipv4_to_bin(&last, ip)) != 0) {
+                ailsa_syslog(LOG_ERR, "Cannot convert offset %s to binary", ip);
+                goto cleanup;
+        }
+        *end = --last;
+        cleanup:
+                my_free(ip);
+                return retval;
 }
