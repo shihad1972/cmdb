@@ -422,9 +422,9 @@ write_fwd_header_records(int fd, AILLIST *r, char *zone)
 			dest = ((ailsa_data_s *)e->next->next->next->next->next->data)->data->text;
 			slen = strlen(dest);
 			if (dest[slen - 1] != '.') {
-				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
+				dprintf(fd, "_%s._%s.%s.\tIN SRV %lu 0 %u\t%s.%s.\n", host, proto, zone, pri, port, dest, zone);
 			} else {
-				dprintf(fd, "_%s._%s.%s\tIN SRV %lu 0 %u\t%s\n", host, proto, zone, pri, port, dest);
+				dprintf(fd, "_%s._%s.%s.\tIN SRV %lu 0 %u\t%s\n", host, proto, zone, pri, port, dest);
 			}
 			e = ailsa_move_down_list(e, len);
 		}
