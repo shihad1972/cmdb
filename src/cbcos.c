@@ -652,7 +652,7 @@ static int
 cmdb_fill_os_details(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col, AILLIST *os)
 {
 	int retval;
-	int len;
+	size_t len;
 	if (!(cmc) || !(col) || !(os))
 		return AILSA_NO_DATA;
 
