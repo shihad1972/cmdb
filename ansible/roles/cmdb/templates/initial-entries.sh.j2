@@ -82,7 +82,7 @@ fi
 
 echo "Adding reverse zone..."
 echo ""
-if ! dnsa -x -R -n ${REVERSE} -p ${PREFIX}; then
+if ! dnsa -z -R -n ${REVERSE} -p ${PREFIX}; then
     echo "Adding reverse zone failed: $?"
     exit 1
 fi
