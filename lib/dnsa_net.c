@@ -1356,7 +1356,7 @@ add_reverse_zone(ailsa_cmdb_s *dc, char *range, const char *type, char *master, 
 	if ((retval = get_start_finsh_ips(range, prefix, &start, &end)) != 0)
 		goto cleanup;
 	if ((retval = check_for_rev_zone_overlap(dc, start, end)) != 0) {
-		ailsa_syslog(LOG_ERR, "Build domain overlaps");
+		ailsa_syslog(LOG_ERR, "Reverse zone %s overlaps", range);
 		goto cleanup;
 	}
 	if ((retval = dnsa_populate_rev_zone(dc, range, master, prefix, rev)) != 0) {
