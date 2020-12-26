@@ -29,3 +29,6 @@ bind_user: bind
 bind_group: "{{ bind_user }}"
 fwd_config: dnsa-fwd.conf
 rev_config: dnsa-rev.conf
+debian_mirror: ftp.uk.debian.org
+ubuntu_mirror: mirror.bytemark.co.uk
+centos_mirror: mirror.bytemark.co.uk

@@ -58,3 +58,19 @@
     state: import
     name: "{{ mysql_db_name }}"
     target: "{{ mysql_dump_file }}"
+
+- name: Create the SQL file for build_type entries
+  become: true
+  template:
+    src: initial.sql.j2
+    dest: "{{ mysql_build_type }}"
+    mode: 0600
+    owner: root
+    group: root
+
+- name: Import build type into database
+  become: true
+  mysql_db:
+    state: import
+    name: "{{ mysql_db_name }}"
+    target: "{{ mysql_build_type }}"

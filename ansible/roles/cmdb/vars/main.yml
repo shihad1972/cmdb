@@ -15,3 +15,10 @@ cmdb_dirs:
   - "{{ cmdb_dir }}/tmp"
 tftp_dir: /srv/tftp
 pxelinux: /usr/lib/PXELINUX/pxelinux.0
+
+mysql_db_name: ailsa
+mysql_service: mariadb
+mysql_host: localhost
+mysql_dump_file: /root/dump.sql
+mysql_triggers: /root/triggers.sql
+mysql_build_type: /root/build_type.sql

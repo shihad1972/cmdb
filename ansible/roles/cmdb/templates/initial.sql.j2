@@ -1,0 +1,3 @@
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("debian", "preseed", "url", "http://{{ ansible_fqdn }}/cmdb/", "{{ debian_mirror }}", "locale=en_GB.UTF-8 keymap=uk auto=true priority=critical vga=788");
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("ubuntu", "preseed", "url", "http://{{ ansible_fqdn }}/cmdb/", "{{ ubuntu_mirror }}", "auto=true priority=critical vga=788");
+INSERT INTO build_type (alias, build_type, arg, url, mirror, boot_line) VALUES ("centos", "kickstart", "ks", "http://{{ ansible_fqdn }}/cmdb/", "{{ centos_mirror }}", "ksdevice=eth0 console=tty0 ramdisk_size=8192");

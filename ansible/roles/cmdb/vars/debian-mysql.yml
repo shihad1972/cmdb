@@ -5,9 +5,3 @@ mysql_packages:
   - mariadb-plugin-gssapi-server
   - mariadb-plugin-gssapi-client
   - python-pymysql
-
-mysql_db_name: ailsa
-mysql_service: mariadb
-mysql_host: localhost
-mysql_dump_file: /root/dump.sql
-mysql_triggers: /root/triggers.sql
