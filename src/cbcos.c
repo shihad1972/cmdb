@@ -725,6 +725,10 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 		ailsa_syslog(LOG_ERR, "SQL query for os_id failed with %d", retval);
 		goto cleanup;
 	}
+	if (results->total < 2) {
+		ailsa_syslog(LOG_INFO, "Initial OS inserted into list. Manual creation of build varient required.");
+		goto cleanup;
+	}
 	id = results->head;
 	tmp = id->data;
 	new_os_id = tmp->data->number;
