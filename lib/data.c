@@ -622,9 +622,11 @@ cbc_fill_partition_details(AILLIST *list, AILLIST *dest)
 	ailsa_data_s *d;
 	ailsa_partition_s *p;
 	size_t total = 6;
-	if ((list->total == 0) || ((list->total % total) != 0)) {
+	if ((list->total % total) != 0) {
 		ailsa_syslog(LOG_ERR, "list in cbc_fill_partition_details has wrong length %zu", list->total);
 		return AILSA_WRONG_LIST_LENGHT;
+	} else if (list->total == 0) {
+		return retval;
 	}
 	while (e) {
 		p = ailsa_calloc(sizeof(ailsa_partition_s), "p in cbc_fill_partition_details");

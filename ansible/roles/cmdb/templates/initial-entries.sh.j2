@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 exec > /tmp/initial.log 2>&1
 
@@ -207,7 +207,7 @@ fi
 
 echo "Adding packages to base varient"
 for i in ntp openssh-server postfix sudo sysstat ntpdate nfs4-acl-tools less locate sssd; do
-    if ! cbcvarient -a -g -x base -n debian -o -p $i; then
+    if ! cbcvarient -a -g -x base -n debian -o 10 -p $i; then
         echo "Cannot add package $i to base varient"
         exit 1
     fi
@@ -216,6 +216,12 @@ done
 echo "Adding web server varient"
 if ! cbcvarient -a -j -x "Web Server" -k web; then
     echo "Cannot add web server varient"
+    exit 1
+fi
+
+echo "Setting default varient"
+if ! cbcvarient -z -k base; then
+    echo "Cannot set base varient as default"
     exit 1
 fi
 

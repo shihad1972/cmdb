@@ -222,10 +222,7 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			snprintf(cpl->fs, SERVICE_LEN, "%s", optarg);
 		}
 		else if (opt == 'g') {
-			if (cpl->lvm < 1) {
-				ailsa_syslog(LOG_ERR, "LVM not set before logvol\n");
-				return AILSA_DISPLAY_USAGE;
-			}
+			cpl->lvm = true;
 			cpl->log_vol = ailsa_calloc(MAC_LEN, errmsg);
 			snprintf(cpl->log_vol, MAC_LEN, "%s", optarg);
 		} else if (opt == 'n') {
@@ -394,6 +391,10 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	}
 	if ((retval = cbc_fill_partition_details(p, part)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to populate partition list");
+		goto cleanup;
+	}
+	if (part->total == 0) {
+		ailsa_syslog(LOG_INFO, "Partition scheme %s has no partitions", cpl->scheme);
 		goto cleanup;
 	}
 	printf("Partitioning scheme: %s, ", cpl->scheme);
