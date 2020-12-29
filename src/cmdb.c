@@ -554,17 +554,17 @@ check_cmdb_comm_options(cmdb_comm_line_s *comp)
 				retval = AILSA_NO_SERVICE;
 		} else if (comp->type == CUSTOMER) {
 			if (!(comp->fullname))
-				retval = AILSA_NO_NAME;
+				retval = AILSA_NO_FULLNAME;
 			else if (!(comp->coid))
 				retval = AILSA_NO_COID;
 			else if (!(comp->county))
-				retval = AILSA_NO_COUNTY;
+				comp->county = strdup("none");
 			else if (!(comp->address))
-				retval = AILSA_NO_ADDRESS;
+				comp->address = strdup("none");
 			else if (!(comp->city))
-				retval = AILSA_NO_CITY;
+				comp->city = strdup("none");
 			else if (!(comp->postcode))
-				retval = AILSA_NO_POSTCODE;
+				comp->postcode = strdup("none");
 		}
 	} else if (comp->action == CMDB_DISPLAY) {
 		if ((comp->type != SERVER) && (comp->type != CUSTOMER) && (comp->type != VM_HOST)) {

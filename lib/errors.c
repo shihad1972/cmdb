@@ -82,8 +82,8 @@ display_command_line_error(int retval, char *program)
 		fprintf(stderr, "No record type specified on command line.\n");
 	else if (retval == AILSA_NO_CLASS)
 		fprintf(stderr, "No hardware class specified on command line.\n");
-	else if (retval == AILSA_NO_ADDRESS)
-		fprintf(stderr, "No address specified on command line.\n");
+	else if (retval == AILSA_NO_FULLNAME)
+		fprintf(stderr, "No full name specified on command line.\n");
 	else if (retval == AILSA_NO_CITY)
 		fprintf(stderr, "No city specified on command line.\n");
 	else if (retval == AILSA_NO_COUNTY)
