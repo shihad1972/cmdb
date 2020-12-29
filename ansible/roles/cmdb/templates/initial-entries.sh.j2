@@ -236,7 +236,13 @@ if cbc -u | grep ^No; then
 fi
 
 echo "Adding base customer"
-if ! cmdb -a -u -C AILSAT -n Ailsatech; then
+if ! cmdb -a -u -C AILSAT -N Ailsatech; then
     echo "Cannot add customer AILSAT"
+    exit 1
+fi
+
+echo "Setting default customer"
+if ! cmdb -z -u -C AILSAT; then
+    echo "Cannot set default customer"
     exit 1
 fi
