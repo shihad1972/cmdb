@@ -311,7 +311,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		else if (opt == 'd') {
 			cvl->action = CMDB_DISPLAY;
 			cvl->type = CVARIENT;
-		}else if (opt == 'l')
+		} else if (opt == 'l')
 			cvl->action = CMDB_LIST;
 		else if (opt == 'r')
 			cvl->action = CMDB_RM;

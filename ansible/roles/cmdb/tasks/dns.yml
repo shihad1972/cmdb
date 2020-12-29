@@ -53,7 +53,7 @@
 - name: Update group ownership of rndc.key
   become: true
   file:
-    src: "{{ rndc_key }}"
+    path: "{{ rndc_key }}"
     owner: bind
     group: cmdb
     mode: 0640
