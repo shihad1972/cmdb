@@ -69,10 +69,8 @@ cmdb_add_customer_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	}
 	retval = ailsa_insert_query(cc, INSERT_CUSTOMER, customer);
 	cleanup:
-		ailsa_list_destroy(args);
-		ailsa_list_destroy(customer);
-		my_free(args);
-		my_free(customer);
+		ailsa_list_full_clean(args);
+		ailsa_list_full_clean(customer);
 		return retval;
 }
 
@@ -91,6 +89,10 @@ cmdb_list_customers(ailsa_cmdb_s *cc)
 		goto cleanup;
 	}
 	coid = list->head;
+	if (list->total == 0) {
+		ailsa_syslog(LOG_INFO, "No customers in database");
+		goto cleanup;
+	}
 	printf("COID\t\tName\n");
 	while (coid) {
 		name = coid->next;
@@ -108,8 +110,7 @@ cmdb_list_customers(ailsa_cmdb_s *cc)
 		coid=city->next;
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 }
 
 void
@@ -136,10 +137,8 @@ cmdb_list_contacts_for_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 		ailsa_syslog(LOG_INFO, "COID %s has no contacts", cm->coid);
 	}
 	cleanup:
-		ailsa_list_destroy(results);
-		ailsa_list_destroy(args);
-		my_free(results);
-		my_free(args);
+		ailsa_list_full_clean(results);
+		ailsa_list_full_clean(args);
 }
 
 void
@@ -180,12 +179,9 @@ cmdb_display_customer(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	cmdb_display_contacts(contacts);
 
 	cleanup:
-		ailsa_list_destroy(customer);
-		ailsa_list_destroy(contacts);
-		ailsa_list_destroy(args);
-		my_free(customer);
-		my_free(contacts);
-		my_free(args);
+		ailsa_list_full_clean(customer);
+		ailsa_list_full_clean(contacts);
+		ailsa_list_full_clean(args);
 }
 
 void
@@ -314,14 +310,10 @@ cmdb_add_contacts_to_database(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 	}
 	retval = ailsa_insert_query(cc, INSERT_CONTACT, contacts);
 	cleanup:
-		ailsa_list_destroy(check_contact);
-		ailsa_list_destroy(customer);
-		ailsa_list_destroy(contacts);
-		ailsa_list_destroy(args);
-		my_free(check_contact);
-		my_free(customer);
-		my_free(contacts);
-		my_free(args);
+		ailsa_list_full_clean(check_contact);
+		ailsa_list_full_clean(customer);
+		ailsa_list_full_clean(contacts);
+		ailsa_list_full_clean(args);
 		return retval;
 }
 
