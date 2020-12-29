@@ -18,15 +18,6 @@
     uid: "{{ cmdb_uid }}"
   when: do_cmdb_user|bool
 
-- name: Create cmdb top level directory
-  become: true
-  file:
-    group: "{{ cmdb_uname }}"
-    owner: "{{ cmdb_group }}"
-    mode: 0775
-    path: "{{ cmdb_dir }}"
-    state: directory
-
 - name: Create cmdb directory structure
   become: true
   file:

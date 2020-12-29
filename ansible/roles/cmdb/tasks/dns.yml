@@ -49,3 +49,11 @@
     group: "{{ cmdb_group }}"
     mode: 0664
   notify: restart bind
+
+- name: Update group ownership of rndc.key
+  become: true
+  file:
+    src: "{{ rndc_key }}"
+    owner: bind
+    group: cmdb
+    mode: 0640

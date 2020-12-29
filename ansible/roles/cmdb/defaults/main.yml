@@ -27,6 +27,7 @@ bind_dir: /etc/bind
 bind_db_directory: "{{ bind_dir }}/db"
 bind_user: bind
 bind_group: "{{ bind_user }}"
+rndc_key: "{{ bind_dir }}/rndc.key"
 fwd_config: dnsa-fwd.conf
 rev_config: dnsa-rev.conf
 debian_mirror: ftp.uk.debian.org
