@@ -534,6 +534,9 @@ add_partition_to_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 	if (((ailsa_data_s *)l->head->data)->data->small > 0 && !(cpl->log_vol)) {
 		ailsa_syslog(LOG_ERR, "Scheme %s is an LVM scheme. Need a logical volume name!", cpl->scheme);
 		goto cleanup;
+	} else if (((ailsa_data_s *)l->head->data)->data->small == 0 && (cpl->log_vol)) {
+		ailsa_syslog(LOG_ERR, "Scheme %s is not an LVM scheme, but logical volume name supplied", cpl->scheme);
+		goto cleanup;
 	}
 	if (!(cpl->log_vol))
 		cpl->log_vol = strdup("none");
