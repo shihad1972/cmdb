@@ -114,7 +114,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
 		{"display",		no_argument,		NULL,	'd'},
-		{"language",	required_argument,	NULL,	'g'},
+		{"language",		required_argument,	NULL,	'g'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"keymap",		required_argument,	NULL,	'k'},
 		{"list",		no_argument,		NULL,	'l'},
@@ -122,7 +122,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		{"name",		required_argument,	NULL,	'n'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
-		{"timezone",	required_argument,	NULL,	't'},
+		{"timezone",		required_argument,	NULL,	't'},
 		{"country",		required_argument,	NULL,	'u'},
 		{"version",		no_argument,		NULL,	'v'},
 		{"default",		no_argument,		NULL,	'z'}
@@ -145,7 +145,7 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 			cl->action = CMDB_RM;
 		else if (opt == 'v')
 			return AILSA_VERSION;
-		else if (opt == 'x')
+		else if (opt == 'z')
 			cl->action = CMDB_DEFAULT;
 		else if (opt == 'g')
 			cl->language = strndup(optarg, SERVICE_LEN);
