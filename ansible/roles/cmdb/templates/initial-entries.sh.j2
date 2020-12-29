@@ -121,3 +121,110 @@ if ! cbclocale -z -n english; then
     echo "Cannot set default locale: $?"
     exit 1;
 fi
+
+echo "Adding partition schemes"
+echo ""
+if ! cbcpart -a -s -n base; then
+    echo "Cannot add partition scheme base"
+    exit 1
+fi
+if ! cbcpart -a -s -j -n base-lvm; then
+    echo "Cannot add partition scheme base-lvm"
+    exit 1
+fi
+if ! cbcpart -a -s -n secure; then
+    echo "Cannot add partition scheme secure"
+    exit 1
+fi
+
+echo "Defining partitions in schemes"
+if ! cbcpart -a -p -n base -i 5120 -x 10240 -y 100 -f ext4 -t /; then
+    echo "Cannot add partition / into base partition scheme"
+    exit 1
+fi
+if ! cbcpart -a -p -n base-lvm -g root -i 5120 -x 10240 -y 100 -f ext4 -t /; then
+    echo "Cannot add partition / into base-lvm partition schme"
+    exit 1
+fi
+if ! cbcpart -a -p -n secure -i 3072 -x 6144 -y 100 -f ext4 -t /; then
+    echo "Cannot add partition / into secure partition scheme"
+    exit 1
+fi
+if ! cbcpart -a -p -n secure -i 3072 -x 6144 -y 100 -f ext4 -t /var; then
+    echo "Cannot add partition /var into secure partition scheme"
+    exit 1
+fi
+if ! cbcpart -a -p -n secure -i 3072 -x 6144 -y 100 -f ext4 -t /var/log; then
+    echo "Cannot add partition /var/log into secure partition scheme"
+    exit 1
+fi
+if ! cbcpart -a -p -n secure -i 1024 -x 2048 -y 100 -f ext4 -t /tmp; then
+    echo "Cannot add partition /tmp into secure partition scheme"
+    exit 1
+fi
+
+echo "Adding partition options for the secure scheme"
+if ! cbcpart -a -o -n secure -t /var -b nosuid; then
+    echo "Cannot add nosuid option to partition /var in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /var -b nodev; then
+    echo "Cannot add nodev option to partition /var in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /tmp -b nosuid; then
+    echo "Cannot add nosuid option to partition /tmp in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /tmp -b nodev; then
+    echo "Cannot add nodev option to partition /tmp in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /var/log -b nosuid; then
+    echo "Cannot add nosuid option to partition /var/log in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /var/log -b nodev; then
+    echo "Cannot add nodev option to partition /var/log in scheme secure"
+    exit 1
+fi
+if ! cbcpart -a -o -n secure -t /var/log -b noexec; then
+    echo "Cannot add noexec option to partition /var/log in scheme secure"
+    exit 1
+fi
+
+echo "Setting default partition scheme"
+if ! cbcpart -z -n secure; then
+    echo "Cannot set default partition scheme"
+    exit 1
+fi
+
+echo "Adding base varient"
+if ! cbcvarient -a -j -x "Base varient" -k base; then
+    echo "Cannot add base varient"
+    exit 1
+fi
+
+echo "Adding packages to base varient"
+for i in ntp openssh-server postfix sudo sysstat ntpdate nfs4-acl-tools less locate sssd; do
+    if ! cbcvarient -a -g -x base -n debian -o -p $i; then
+        echo "Cannot add package $i to base varient"
+        exit 1
+    fi
+done
+
+echo "Adding web server varient"
+if ! cbcvarient -a -j -x "Web Server" -k web; then
+    echo "Cannot add web server varient"
+    exit 1
+fi
+
+echo "Checking defaults for build"
+if ! cbc -u; then 
+    echo "Cannot display defaults for build"
+    exit 1
+fi
+if cbc -u | grep ^No; then
+    echo "Some defaults have not been set"
+    exit 1
+fi
