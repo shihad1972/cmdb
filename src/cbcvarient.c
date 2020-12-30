@@ -313,47 +313,65 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a')
+		switch (opt) {
+		case 'a':
 			cvl->action = CMDB_ADD;
-		else if (opt == 'd') {
+			break;
+		case 'd':
 			cvl->action = CMDB_DISPLAY;
 			cvl->type = CVARIENT;
-		} else if (opt == 'l')
+			break;
+		case 'l':
 			cvl->action = CMDB_LIST;
-		else if (opt == 'q')
+			break;
+		case 'q':
 			cvl->action = CBC_SERVER;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			cvl->action = CMDB_RM;
-		else if (opt == 'm')
+			break;
+		case 'm':
 			cvl->action = CMDB_MOD;
-		else if (opt == 'z')
+			break;
+		case 'z':
 			cvl->action = CMDB_DEFAULT;
-		else if (opt == 'v')
+			break;
+		case 'v':
 			cvl->action = AILSA_VERSION;
-		else if (opt == 'h')
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		else if (opt == 'g')
+		case 'g':
 			cvl->type = CPACKAGE;
-		else if (opt == 'j')
+			break;
+		case 'j':
 			cvl->type = CVARIENT;
-		else if (opt == 'e')
+			break;
+		case 'e':
 			cvl->ver_alias = strndup(optarg, MAC_LEN);
-		else if (opt == 'k')
+			break;
+		case 'k':
 			cvl->valias = strndup(optarg, MAC_LEN);
-		else if (opt == 'n')
+			break;
+		case 'n':
 			cvl->os = strndup(optarg, MAC_LEN);
-		else if (opt == 'o')
+			break;
+		case 'o':
 			cvl->version = strndup(optarg, MAC_LEN);
-		else if (opt == 'p')
+			break;
+		case 'p':
 			cvl->package = strndup(optarg, HOST_LEN);
-		else if (opt == 's')
+			break;
+		case 's':
 			cvl->alias = strndup(optarg, MAC_LEN);
-		else if (opt == 't')
+			break;
+		case 't':
 			cvl->arch = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'x')
+			break;
+		case 'x':
 			cvl->varient = strndup(optarg, HOST_LEN);
-		else {
-			printf("Unknown option: %c\n", opt);
+			break;
+		default:
 			return AILSA_DISPLAY_USAGE;
 		}
 	}

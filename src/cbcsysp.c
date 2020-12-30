@@ -120,6 +120,8 @@ main(int argc, char *argv[])
 			retval = rem_cbc_syspackage_conf(cbc, cbs);
 		else
 			retval = AILSA_WRONG_ACTION;
+	} else if (cbs->action == AILSA_VERSION) {
+		display_version(argv[0]);
 	}
 	if (retval == AILSA_WRONG_ACTION)
 		fprintf(stderr, "Action not supported for type\n");
@@ -162,37 +164,51 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a')
+		switch (opt) {
+		case 'a':
 			cbcs->action = CMDB_ADD;
-		else if (opt == 'l')
+			break;
+		case 'l':
 			cbcs->action = CMDB_LIST;
-		else if (opt == 'm')
+			break;
+		case 'm':
 			cbcs->action = CMDB_MOD;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			cbcs->action = CMDB_RM;
-		else if (opt == 'o')
+			break;
+		case 'o':
 			cbcs->what = SPACKCNF;
-		else if (opt == 'p')
+			break;
+		case 'p':
 			cbcs->what = SPACKAGE;
-		else if (opt == 'y')
+			break;
+		case 'y':
 			cbcs->what = SPACKARG;
-		else if (opt == 'h')
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		else if (opt == 'v') {
+		case 'v':
 			cbcs->action = AILSA_VERSION;
-			retval = AILSA_VERSION;
-		} else if (opt == 'b') {
+			break;
+		case 'b':
 			cbcs->domain = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'f') {
+			break;
+		case 'f':
 			cbcs->field = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'g') {
+			break;
+		case 'g':
 			cbcs->arg = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'n') {
+			break;
+		case 'n':
 			cbcs->name = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 't') {
+			break;
+		case 't':
 			cbcs->type = strndup(optarg, DOMAIN_LEN);
-		} else
-			retval = AILSA_DISPLAY_USAGE;
+			break;
+		default:
+			return AILSA_DISPLAY_USAGE;
+		}
 	}
 	if (argc == 1)
 		retval = AILSA_DISPLAY_USAGE;
@@ -237,11 +253,13 @@ check_sysp_comm_line_for_errors(cbc_sysp_s *cbcs)
 {
 	int retval = 0;
 
-	if (cbcs->what == 0) {
-		fprintf(stderr, "No type specified\n\n");
-		retval = AILSA_DISPLAY_USAGE;
+	if (cbcs->action == AILSA_VERSION) {
+		return retval;
 	} else if (cbcs->action == 0) {
 		fprintf(stderr, "No action spcified\n\n");
+		retval = AILSA_DISPLAY_USAGE;
+	} else if (cbcs->what == 0) {
+		fprintf(stderr, "No type specified\n\n");
 		retval = AILSA_DISPLAY_USAGE;
 	} else if (cbcs->what == SPACKAGE) {
 		if (!(cbcs->name) && (cbcs->action != CMDB_LIST)) {

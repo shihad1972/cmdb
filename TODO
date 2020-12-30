@@ -8,15 +8,15 @@ cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
 
 Command line parsing needs to move away from if else statement to switch
 	dnsa		commit id: e78f342
-	cbc
-	cbcdomain
-	cbcos
+	cbc		commit id: b9a35c3
+	cbcdomain	commit id: b9a35c3
+	cbcos		commit id: b9a35c3
 	cbcvarient
-	cbcpart
+	cbcpart		commit id: b9a35c3
 	cbcsysp
-	cbcscript
-	cbclocale
-	cmdb
+	cbcscript	commit id: b9a35c3
+	cbclocale	commit id: b9a35c3
+	cmdb		commit id: b9a35c3
 	cmdb-identity	commit id: e78f342
 	mkvm		Already done!
 	mksp		Already done!
