@@ -536,20 +536,22 @@ display_servers_with_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 {
 	if (!(cmc) || !(cvl))
 		return AILSA_NO_DATA;
-	char *varient_name;
+	char *varient_name = cvl->varient;
 	int retval;
 	AILLIST *varient = ailsa_db_data_list_init();
 	AILLIST *server = ailsa_db_data_list_init();
 	AILELEM *e;
 
 	if (cvl->varient) {
-		varient_name = cvl->varient;
 		if ((retval = cmdb_check_add_varient_id_to_list(cvl->varient, cmc, varient)) != 0)
 			goto cleanup;
 	} else if (cvl->valias) {
 		varient_name = cvl->valias;
 		if ((retval = cmdb_check_add_varient_id_to_list(cvl->valias, cmc, varient)) != 0)
 			goto cleanup;
+	} else {
+		ailsa_syslog(LOG_ERR, "No varient defined in display_servers_with_varient?");
+		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cmc, SERVERS_IN_VARIENT, varient, server)) != 0)
 		goto cleanup;
