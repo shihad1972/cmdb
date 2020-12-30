@@ -1,3 +1,8 @@
+30/12/2020
+Writing the build configuration should fail earlier if there is no server.
+Currently, it will write the dhcpd.hosts config file; this is _OK_, but pretty
+ugly. Should just fail with "No server found" or similar error message.
+
 23/12/2020
 The preferred_a table is a mess. It has a link to the record, but not the
 reverse record. It has the IP address in it, and the FQDN in it GRRRR.
