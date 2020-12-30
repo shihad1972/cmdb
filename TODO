@@ -1,27 +1,3 @@
-30/12/2020
-As a user, I want to be able to list the servers build with a particular
-cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
-	cbclocale,  commit id: 1705217
-	cbcpart,    commit id: c0c886e
-	cbcvarient, commit id: 28a48f1
-	cbcos,      commit id: ed56d7f
-
-Command line parsing needs to move away from if else statement to switch
-	dnsa		commit id: e78f342
-	cbc		commit id: b9a35c3
-	cbcdomain	commit id: b9a35c3
-	cbcos		commit id: b9a35c3
-	cbcvarient
-	cbcpart		commit id: b9a35c3
-	cbcsysp
-	cbcscript	commit id: b9a35c3
-	cbclocale	commit id: b9a35c3
-	cmdb		commit id: b9a35c3
-	cmdb-identity	commit id: e78f342
-	mkvm		Already done!
-	mksp		Already done!
-	mknet		Already done!
-
 23/12/2020
 The preferred_a table is a mess. It has a link to the record, but not the
 reverse record. It has the IP address in it, and the FQDN in it GRRRR.
@@ -211,6 +187,30 @@ Should probably add racks / power points / switch points into cmdb.
 
 
 ======================= COMPLETE ============================
+
+30/12/2020
+As a user, I want to be able to list the servers build with a particular
+cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
+	cbclocale,  commit id: 1705217
+	cbcpart,    commit id: c0c886e
+	cbcvarient, commit id: 28a48f1
+	cbcos,      commit id: ed56d7f
+
+Command line parsing needs to move away from if else statement to switch
+	dnsa		commit id: e78f342
+	cbc		commit id: b9a35c3
+	cbcdomain	commit id: b9a35c3
+	cbcos		commit id: b9a35c3
+	cbcvarient	commit id: bb487f7
+	cbcpart		commit id: b9a35c3
+	cbcsysp		commit id: bb487f7
+	cbcscript	commit id: b9a35c3
+	cbclocale	commit id: b9a35c3
+	cmdb		commit id: b9a35c3
+	cmdb-identity	commit id: e78f342
+	mkvm		Already done!
+	mksp		Already done!
+	mknet		Already done!
 
 21/12/2020
 Need to check when adding a reverse zone if there is any overlap with other
