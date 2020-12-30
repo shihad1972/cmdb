@@ -248,7 +248,7 @@ main(int argc, char *argv[])
 
 	ailsa_clean_cmdb(cmc);
 	clean_cbcvarient_comm_line(cvcl);
-	exit(retval);
+	return retval;
 }
 
 static void
@@ -551,6 +551,7 @@ display_servers_with_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 			goto cleanup;
 	} else {
 		ailsa_syslog(LOG_ERR, "No varient defined in display_servers_with_varient?");
+		retval = AILSA_NO_VARIENT;
 		goto cleanup;
 	}
 	if ((retval = ailsa_argument_query(cmc, SERVERS_IN_VARIENT, varient, server)) != 0)
