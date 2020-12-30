@@ -661,7 +661,9 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // BUILD_PACKAGES_ON_SERVER_ID
-"SELECT package FROM packages p LEFT JOIN build b ON p.varient_id = b.varient_id AND p.os_id = b.os_id WHERE server_id = ?",
+"SELECT package FROM packages p \
+  LEFT JOIN build b ON p.varient_id = b.varient_id AND p.os_id = b.os_id \
+  WHERE server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},
@@ -671,7 +673,10 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // PART_OPTIONS_ON_SCHEME_NAME_MOUNT
-"SELECT poption FROM part_options WHERE def_part_id = (SELECT def_part_id FROM default_part dp LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id WHERE scheme_name = ? AND mount_point = ?)",
+"SELECT poption FROM part_options WHERE def_part_id = \
+  (SELECT def_part_id FROM default_part dp \
+   LEFT JOIN seed_schemes ss on dp.def_scheme_id = ss.def_scheme_id \
+   WHERE scheme_name = ? AND mount_point = ?)",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
@@ -685,12 +690,21 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	{ AILSA_DB_LINT }
 	},
 	{ // SYSTEM_SCRIPTS_ON_DOMAIN_AND_BUILD_TYPE
-"SELECT ss.name, sa.arg, sa.no FROM system_scripts ss JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id JOIN build_type bt ON sa.bt_id = bt.bt_id JOIN build_domain bd ON sa.bd_id = bd.bd_id WHERE bd.domain = ? AND bt.alias = ? ORDER BY ss.name, sa.no",
+"SELECT ss.name, sa.arg, sa.no FROM system_scripts ss \
+  JOIN system_scripts_args sa ON ss.systscr_id = sa.systscr_id \
+  JOIN build_type bt ON sa.bt_id = bt.bt_id \
+  JOIN build_domain bd ON sa.bd_id = bd.bd_id \
+    WHERE bd.domain = ? AND bt.alias = ? ORDER BY ss.name, sa.no",
 	2,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT }
 	},
 	{ // DOMAIN_BUILD_ALIAS_ON_SERVER_ID
-"SELECT domain, bt.alias, bt.url FROM build_domain bd JOIN build_ip bi ON bd.bd_id = bi.bd_id JOIN build b ON b.ip_id = bi.ip_id JOIN build_os bo ON bo.os_id = b.os_id JOIN build_type bt ON bo.bt_id = bt.bt_id WHERE b.server_id = ?",
+"SELECT domain, bt.alias, bt.url FROM build_domain bd \
+  JOIN build_ip bi ON bd.bd_id = bi.bd_id \
+  JOIN build b ON b.ip_id = bi.ip_id \
+  JOIN build_os bo ON bo.os_id = b.os_id \
+  JOIN build_type bt ON bo.bt_id = bt.bt_id \
+    WHERE b.server_id = ?",
 	1,
 	{ AILSA_DB_LINT }
 	},
@@ -723,6 +737,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 "SELECT rev_zone_id FROM rev_zones WHERE (start_ip >= ? AND finish_ip <= ?) OR (start_ip <= ? AND finish_ip >= ?) OR (start_ip <= ? AND finish_ip >= ?)",
 	6,
 	{ AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT, AILSA_DB_LINT }
+	},
+	{ // SERVERS_IN_LOCALE
+"SELECT name FROM server WHERE server_id IN (SELECT server_id FROM build WHERE locale_id = (SELECT locale_id FROM locale WHERE name = ?))",
+	1,
+	{ AILSA_DB_TEXT }
 	},
 };
 

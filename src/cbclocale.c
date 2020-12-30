@@ -61,6 +61,9 @@ static int
 display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
+display_servers_in_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
+
+static int
 add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl);
 
 static int
@@ -90,6 +93,8 @@ main(int argc, char *argv[])
 		retval = display_locale(ccs, cl);
 	else if (cl->action == CMDB_ADD)
 		retval = add_locale(ccs, cl);
+	else if (cl->action == CBC_SERVER)
+		retval = display_servers_in_locale(ccs, cl);
 	else if (cl->action == CMDB_RM)
 		retval = remove_locale(ccs, cl);
 	else if (cl->action == CMDB_DEFAULT)
@@ -107,7 +112,7 @@ static int
 parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 {
 	int retval = 0;
-	const char *optstr = "adg:hk:lo:n:rt:u:vz";
+	const char *optstr = "adg:hk:lo:n:rqt:u:vz";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -120,6 +125,8 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 		{"list",		no_argument,		NULL,	'l'},
 		{"locale",		required_argument,	NULL,	'o'},
 		{"name",		required_argument,	NULL,	'n'},
+		{"query",		no_argument,		NULL, 	'q'},
+		{"server",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"timezone",		required_argument,	NULL,	't'},
@@ -141,6 +148,8 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 			cl->action = CMDB_DISPLAY;
 		else if (opt == 'l')
 			cl->action = CMDB_LIST;
+		else if (opt == 'q')
+			cl->action = CBC_SERVER;
 		else if (opt == 'r')
 			cl->action = CMDB_RM;
 		else if (opt == 'v')
@@ -251,8 +260,7 @@ get_default_locale(ailsa_cmdb_s *ccs, unsigned long int *lid)
 	else
 		*lid = ((ailsa_data_s *)d->head->data)->data->number;
 	cleanup:
-		ailsa_list_destroy(d);
-		my_free(d);
+		ailsa_list_full_clean(d);
 		return retval;
 }
 
@@ -288,8 +296,7 @@ list_locales(ailsa_cmdb_s *ccs)
 		e = e->next->next;
 	}
 	cleanup:
-		ailsa_list_destroy(l);
-		my_free(l);
+		ailsa_list_full_clean(l);
 		return retval;
 }
 
@@ -342,10 +349,39 @@ display_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 	printf("  Timezone:\t%s\n", ((ailsa_data_s *)e->data)->data->text);
 
 	cleanup:
-		ailsa_list_destroy(l);
-		ailsa_list_destroy(r);
-		my_free(l);
-		my_free(r);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		return retval;
+}
+
+static int
+display_servers_in_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
+{
+	if (!(ccs) || !(cl))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *locale = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = cmdb_add_string_to_list(cl->name, locale)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(ccs, SERVERS_IN_LOCALE, locale, server)) != 0)
+		goto cleanup;
+	if (server->total == 0) {
+		ailsa_syslog(LOG_INFO, "No servers built with locale %s", cl->name);
+		goto cleanup;
+	}
+	printf("Servers build with locale %s\n", cl->name);
+	e = server->head;
+	while (e) {
+		printf(" %s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next;
+	}
+
+	cleanup:
+		ailsa_list_full_clean(locale);
+		ailsa_list_full_clean(server);
 		return retval;
 }
 
@@ -400,12 +436,9 @@ add_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 	if ((retval = ailsa_insert_query(ccs, INSERT_LOCALE, l)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot insert locale into database");
 	cleanup:
-		ailsa_list_destroy(l);
-		ailsa_list_destroy(r);
-		ailsa_list_destroy(a);
-		my_free(l);
-		my_free(r);
-		my_free(a);
+		ailsa_list_full_clean(l);
+		ailsa_list_full_clean(r);
+		ailsa_list_full_clean(a);
 		return retval;
 }
 
@@ -424,8 +457,7 @@ remove_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 	if ((retval = ailsa_delete_query(ccs, delete_queries[DELETE_LOCALE], l)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot delete locale %s\n", cl->name);
 	cleanup:
-		ailsa_list_destroy(l);
-		my_free(l);
+		ailsa_list_full_clean(l);
 		return retval;
 }
 
@@ -449,8 +481,7 @@ set_default_locale(ailsa_cmdb_s *ccs, locale_comm_line_s *cl)
 	if ((retval = ailsa_update_query(ccs, update_queries[SET_DEFAULT_LOCALE], u)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot set default locale");
 	cleanup:
-		ailsa_list_destroy(u);
-		my_free(u);
+		ailsa_list_full_clean(u);
 		return retval;
 }
 

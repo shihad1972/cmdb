@@ -131,6 +131,7 @@ enum {                  // Action Codes
 	DNSA_DREC = 20,
 	DNSA_DPREFA = 21,
 	DNSA_CNAME = 22,
+	CBC_SERVER = 30,
 	DOWNLOAD = 31,
 	HELP = 32,
 	VERS = 33,

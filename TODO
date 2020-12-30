@@ -1,3 +1,7 @@
+30/12/2020
+As a user, I want to be able to list the servers build with a particular
+cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
+
 23/12/2020
 The preferred_a table is a mess. It has a link to the record, but not the
 reverse record. It has the IP address in it, and the FQDN in it GRRRR.

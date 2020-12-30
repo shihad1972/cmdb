@@ -550,12 +550,13 @@ display_cbclocale_usage(void)
 {
 	printf("cbclocale: create build config locale %s\n", VERSION);
 	printf("Usage:\t");
-	printf("cbclocale <action> <options>\n");
+	printf("cbclocale <action> <options>\n\n");
 	printf("Action options\n");
-	printf("-a: add\t-d display\t-l: list\t-r: remove\n-z: set default locale\n");
+	printf("-a: add\n-d display\n-l: list\n-q: query servers in locale\n-r: remove\n");
+	printf("-z: set default locale\n\n");
 	printf("Options\n");
-	printf("-g language\t-k keymap\t-o locale\t-n name\n");
-	printf("-t timezone\t-u country\n");
+	printf("-g language\n-k keymap\n-o locale\n-n name\n");
+	printf("-t timezone\n-u country\n\n");
 	printf("See man page for full details\n");
 	
 }
