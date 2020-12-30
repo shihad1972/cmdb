@@ -169,6 +169,9 @@ static int
 display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
+display_servers_with_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
+
+static int
 add_cbc_build_varient(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl);
 
 static int
@@ -228,6 +231,8 @@ main(int argc, char *argv[])
 		retval = display_cbc_build_varient(cmc, cvcl);
 	else if (cvcl->action == CMDB_ADD && cvcl->type == CVARIENT)
 		retval = add_cbc_build_varient(cmc, cvcl);
+	else if (cvcl->action == CBC_SERVER)
+		retval = display_servers_with_varient(cmc, cvcl);
 	else if (cvcl->action == CMDB_ADD && cvcl->type == CPACKAGE)
 		retval = add_cbc_package(cmc, cvcl);
 	else if (cvcl->action == CMDB_RM && cvcl->type == CVARIENT)
@@ -273,7 +278,7 @@ clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl)
 static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
-	const char *optstr = "ade:ghjk:lmn:o:p:rs:t:vx:z";
+	const char *optstr = "ade:ghjk:lmn:o:p:qrs:t:vx:z";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -290,6 +295,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		{"os-name",		required_argument,	NULL,	'n'},
 		{"os-version",		required_argument,	NULL,	'o'},
 		{"package-name",	required_argument,	NULL,	'p'},
+		{"query",		no_argument,		NULL,	'q'},
+		{"server",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"os-alias",		required_argument,	NULL,	's'},
@@ -313,6 +320,8 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 			cvl->type = CVARIENT;
 		} else if (opt == 'l')
 			cvl->action = CMDB_LIST;
+		else if (opt == 'q')
+			cvl->action = CBC_SERVER;
 		else if (opt == 'r')
 			cvl->action = CMDB_RM;
 		else if (opt == 'm')
@@ -356,7 +365,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return AILSA_NO_ACTION;
 	if (cvl->action == CMDB_DEFAULT)
 		cvl->type = CVARIENT;
-	if (cvl->type == 0 && cvl->action != CMDB_LIST)
+	if (cvl->type == 0 && (cvl->action != CMDB_LIST && cvl->action != CBC_SERVER))
 		return AILSA_NO_TYPE;
 	if (cvl->action != CMDB_LIST && !(cvl->varient) && !(cvl->valias))
 		return AILSA_NO_VARIENT;
@@ -498,11 +507,47 @@ display_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	else
 		ailsa_syslog(LOG_INFO, "No packages found for build varient!");
 	cleanup:
-		ailsa_list_destroy(list);
-		ailsa_list_destroy(v);
-		my_free(list);
-		my_free(v);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(v);
 		my_free(query);
+		return retval;
+}
+
+static int
+display_servers_with_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	if (!(cmc) || !(cvl))
+		return AILSA_NO_DATA;
+	char *varient_name;
+	int retval;
+	AILLIST *varient = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if (cvl->varient) {
+		varient_name = cvl->varient;
+		if ((retval = cmdb_check_add_varient_id_to_list(cvl->varient, cmc, varient)) != 0)
+			goto cleanup;
+	} else if (cvl->valias) {
+		varient_name = cvl->valias;
+		if ((retval = cmdb_check_add_varient_id_to_list(cvl->valias, cmc, varient)) != 0)
+			goto cleanup;
+	}
+	if ((retval = ailsa_argument_query(cmc, SERVERS_IN_VARIENT, varient, server)) != 0)
+		goto cleanup;
+	if (server->total == 0) {
+		ailsa_syslog(LOG_INFO, "No servers built with build varient %s", varient_name);
+		goto cleanup;
+	}
+	printf("Server(s) build with varient %s\n", varient_name);
+	e = server->head;
+	while (e) {
+		printf(" %s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(varient);
+		ailsa_list_full_clean(server);
 		return retval;
 }
 
@@ -642,8 +687,7 @@ remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	if ((retval = ailsa_delete_query(cmc, delete_queries[DELETE_VARIENT], list)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot remove varient %s from database", varient);
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 
@@ -687,8 +731,7 @@ add_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 			ailsa_syslog(LOG_ERR, "Cannot add build package %s to varient %s for os %s\n", pack, varient, os);
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 static int
@@ -722,8 +765,7 @@ remove_cbc_package(ailsa_cmdb_s *cbc, cbcvari_comm_line_s *cvl)
 	if ((retval = ailsa_delete_query(cbc, package_deletes[query], list)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot delete build packages");
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 		return retval;
 }
 

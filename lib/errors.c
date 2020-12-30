@@ -405,8 +405,9 @@ display_cbcvarient_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add varient\n-d: display varient\n-l: list varients\n");
+	printf("-q: query servers build with build varient\n");
 	printf("-r: remove varient\n-z: set-default\n\n");
-	printf("-d, -r and -z actions need -x <varient name> or -k <valias>\n");
+	printf("-d, -q, -r and -z actions need -x <varient name> or -k <valias>\n");
 	printf("-a will need both -x <varient name> and -k <valias>\n\n");
 	printf("Definition Options:\n");
 	printf("-g: package\n-j: varient\n\n");
@@ -415,7 +416,7 @@ display_cbcvarient_usage(void)
 	printf("Detail Options:\n");
 	printf("-n: <os name>\n-e: <version alias>\n-o: <os version>\n");
 	printf("-s: <os alias>\n-t: <os architecture\n\n");
-	printf("cbcvarient ( -a | -d | -l | -r | -z ) \
+	printf("cbcvarient ( -a | -d | -l | -q | -r | -z ) \
 ( -g | -j ) ( -x | -k ) [ detail options ]\n\n");
 }
 

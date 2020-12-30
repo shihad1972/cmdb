@@ -15,7 +15,7 @@ cbcvarient \- Create Build Config Varient.
 
 .B cbcvarient
 [
-.B -adlrvz
+.B -adlqrvz
 ] [
 .B -g | -j
 ] [
@@ -36,7 +36,9 @@ You will need to know the precise package names you wish to add the build
 varient, as these will be placed in the build file, and if the package name
 does not exist the build will fail.
 When adding or removing, you will need to specify a type of varient (-j)
-or a package (-g)
+or a package (-g). You may list the varients, display what packages are in
+a varient for a specific OS, or combination of OS versions / architectures.
+You may also list the servers that are build with a specific varient.
 
 .SH OPTIONS
 .B actions
@@ -46,6 +48,8 @@ add
 display
 .IP "-l,  --list"
 list
+.IP "-q,  --query, --server"
+query servers build with a varient
 .IP "-r,  --remove, --delete"
 remove
 .IP "-z   --set-default"

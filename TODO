@@ -1,6 +1,10 @@
 30/12/2020
 As a user, I want to be able to list the servers build with a particular
 cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
+	cbclocale, commit id: 1705217
+	cbcpart,   commit id: c0c886e
+
+Command line parsing needs to move away from if else statement to switch
 
 23/12/2020
 The preferred_a table is a mess. It has a link to the record, but not the
