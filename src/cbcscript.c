@@ -152,34 +152,48 @@ parse_cbc_script_comm_line(int argc, char *argv[], cbc_syss_s *cbcs)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a')
+		switch (opt) {
+		case 'a':
 			cbcs->action = CMDB_ADD;
-		else if (opt == 'd')
+			break;
+		case 'd':
 			cbcs->action = CMDB_DISPLAY;
-		else if (opt == 'l')
+			break;
+		case 'l':
 			cbcs->action = CMDB_LIST;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			cbcs->action = CMDB_RM;
-		else if (opt == 'h')
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		else if (opt == 'v')
+			break;
+		case 'v':
 			return AILSA_VERSION;
-		else if (opt == 's')
+		case 's':
 			cbcs->what = CBCSCRIPT;
-		else if (opt == 'f')
+			break;
+		case 'f':
 			cbcs->what = CBCSCRARG;
-		else if (opt == 'o')
+			break;
+		case 'o':
 			cbcs->no = strtoul(optarg, NULL, 10);
-		else if (opt == 'b')
+			break;
+		case 'b':
 			cbcs->domain = strndup(optarg, (CONFIG_LEN));
-		else if (opt == 'g')
+			break;
+		case 'g':
 			cbcs->arg = strndup(optarg, (CONFIG_LEN - 1));
-		else if (opt == 'n')
+			break;
+		case 'n':
 			cbcs->name = strndup(optarg, (CONFIG_LEN - 1));
-		else if (opt == 't')
+			break;
+		case 't':
 			cbcs->type = strndup(optarg, (MAC_LEN - 1));
-		else
-			retval = AILSA_DISPLAY_USAGE;
+			break;
+		default:
+			return AILSA_DISPLAY_USAGE;
+		}
 	}
 	if (argc == 1)
 		retval = AILSA_DISPLAY_USAGE;

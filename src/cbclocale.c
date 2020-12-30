@@ -142,34 +142,48 @@ parse_locale_comm_line(int argc, char *argv[], locale_comm_line_s *cl)
 	while ((opt = getopt(argc, argv, optsttr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a')
+		switch (opt) {
+		case 'a':
 			cl->action = CMDB_ADD;
-		else if (opt == 'd')
+			break;
+		case 'd':
 			cl->action = CMDB_DISPLAY;
-		else if (opt == 'l')
+			break;
+		case 'l':
 			cl->action = CMDB_LIST;
-		else if (opt == 'q')
+			break;
+		case 'q':
 			cl->action = CBC_SERVER;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			cl->action = CMDB_RM;
-		else if (opt == 'v')
+			break;
+		case 'v':
 			return AILSA_VERSION;
-		else if (opt == 'z')
+		case 'z':
 			cl->action = CMDB_DEFAULT;
-		else if (opt == 'g')
+			break;
+		case 'g':
 			cl->language = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'k')
+			break;
+		case 'k':
 			cl->keymap = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'o')
+			break;
+		case 'o':
 			cl->locale = strndup(optarg, MAC_LEN);
-		else if (opt == 'n')
+			break;
+		case 'n':
 			cl->name = strndup(optarg, HOST_LEN);
-		else if (opt == 't')
+			break;
+		case 't':
 			cl->timezone = strndup(optarg, HOST_LEN);
-		else if (opt == 'u')
+			break;
+		case 'u':
 			cl->country = strndup(optarg, HOST_LEN);
-		else
+			break;
+		default:
 			return AILSA_DISPLAY_USAGE;
+		}
 	}
 	if ((cl->action == AILSA_VERSION) || (cl->action == CMDB_LIST))
 		return retval;

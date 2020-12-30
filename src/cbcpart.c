@@ -161,7 +161,6 @@ clean_cbcpart_comm_line(cbcpart_comm_line_s *cpl)
 static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
-	const char *errmsg = "parse_cbcpart_comm_line";
 	const char *optstr = "ab:df:g:hi:jlmn:opqrst:vx:y:z";
 	int opt, retval;
 	retval = 0;
@@ -200,63 +199,77 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a') {
+		switch (opt) {
+		case 'a':
 			cpl->action = CMDB_ADD;
-		} else if (opt == 'd') {
+			break;
+		case 'd':
 			cpl->action = CMDB_DISPLAY;
-		} else if (opt == 'l') {
+			break;
+		case 'l':
 			cpl->action = CMDB_LIST;
-		} else if (opt == 'm') {
+			break;
+		case 'm':
 			cpl->action = CMDB_MOD;
-		} else if (opt == 'q') {
+			break;
+		case 'q':
 			cpl->action = CBC_SERVER;
-		} else if (opt == 'r') {
+			break;
+		case 'r':
 			cpl->action = CMDB_RM;
-		} else if (opt == 'z') {
+			break;
+		case 'z':
 			cpl->action = CMDB_DEFAULT;
-		} else if (opt == 'j') {
+			break;
+		case 'j':
 			cpl->lvm = true;
-		} else if (opt == 'v') {
+			break;
+		case 'v':
 			cpl->action = AILSA_VERSION;
-		} else if (opt == 'h') {
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		} else if (opt == 'p') {
+		case 'p':
 			cpl->type = PARTITION;
-		} else if (opt == 's') {
+			break;
+		case 's':
 			cpl->type = SCHEME;
-		} else if (opt == 'o') {
+			break;
+		case 'o':
 			cpl->type = OPTION;
-		} else if (opt == 'f') {
-			cpl->fs = ailsa_calloc(SERVICE_LEN, errmsg);
-			snprintf(cpl->fs, SERVICE_LEN, "%s", optarg);
-		}
-		else if (opt == 'g') {
+			break;
+		case 'f':
+			cpl->fs = strndup(optarg, SERVICE_LEN);
+			break;
+		case 'g':
 			cpl->lvm = true;
-			cpl->log_vol = ailsa_calloc(MAC_LEN, errmsg);
-			snprintf(cpl->log_vol, MAC_LEN, "%s", optarg);
-		} else if (opt == 'n') {
-			cpl->scheme = ailsa_calloc(CONFIG_LEN, errmsg);
-			snprintf(cpl->scheme, CONFIG_LEN, "%s", optarg);
-		} else if (opt == 'b') {
-			cpl->option = ailsa_calloc(CONFIG_LEN, errmsg);
-			snprintf(cpl->option, CONFIG_LEN, "%s", optarg);
-		} else if (opt == 't') {
-			cpl->partition = ailsa_calloc(CONFIG_LEN, errmsg);
-			snprintf(cpl->partition, CONFIG_LEN, "%s", optarg);
-		} else if (opt == 'i') {
+			cpl->log_vol = strndup(optarg, MAC_LEN);
+			break;
+		case 'n':
+			cpl->scheme = strndup(optarg, CONFIG_LEN);
+			break;
+		case 'b':
+			cpl->option = strndup(optarg, CONFIG_LEN);
+			break;
+		case 't':
+			cpl->partition = strndup(optarg, CONFIG_LEN);
+			break;
+		case 'i':
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				return MIN_INVALID;}
 			cpl->min = strtoul(optarg, NULL, 10);
-		} else if (opt == 'x') {
+			break;
+		case 'x':
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				return MAX_INVALID;}
 			cpl->max = strtoul(optarg, NULL, 10);
-		} else if (opt == 'y') {
+			break;
+		case 'y':
 			if ((ailsa_validate_input(optarg, ID_REGEX)) < 0) {
 				return PRI_INVALID;}
 			cpl->pri = strtoul(optarg, NULL, 10);
-		} else {
-			printf("Unknown option: %c\n", opt);
+			break;
+		default:
 			return AILSA_DISPLAY_USAGE;
 		}
 	}

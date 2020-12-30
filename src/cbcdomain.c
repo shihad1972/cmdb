@@ -191,33 +191,44 @@ parse_cbcdomain_comm_line(int argc, char *argv[], cbcdomain_comm_line_s *cdl)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a') {
+		switch (opt) {
+		case 'a':
 			cdl->action = CMDB_ADD;
-		} else if (opt == 'd') {
+			break;
+		case 'd':
 			cdl->action = CMDB_DISPLAY;
-		} else if (opt == 'l') {
+			break;
+		case 'l':
 			cdl->action = CMDB_LIST;
-		} else if (opt == 'm') {
+			break;
+		case 'm':
 			cdl->action = CMDB_MOD;
-		} else if (opt == 'r') {
+			break;
+		case 'r':
 			cdl->action = CMDB_RM;
-		} else if (opt == 'w') {
+			break;
+		case 'w':
 			cdl->action = CMDB_WRITE;
-		} else if (opt == 'z') {
+			break;
+		case 'z':
 			cdl->action = CMDB_DEFAULT;
-		} else if (opt == 'k') {
+			break;
+		case 'k':
 			retval = split_network_args(cdl, optarg);
-		} else if (opt == 'n') {
+			break;
+		case 'n':
 			cdl->domain = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 't') {
+			break;
+		case 't':
 			cdl->ntpserver = strndup(optarg, DOMAIN_LEN);
 			cdl->confntp = 1;
-		} else if (opt == 'v') {
+			break;
+		case 'v':
 			cdl->action = AILSA_VERSION;
-		} else if (opt == 'h') {
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		} else {
-			printf("Unknown option: %c\n", opt);
+		default:
 			return AILSA_DISPLAY_USAGE;
 		}
 	}

@@ -179,38 +179,52 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a')
+		switch (opt) {
+		case 'a':
 			col->action = CMDB_ADD;
-		else if (opt == 'd')
+			break;
+		case 'd':
 			col->action = CMDB_DISPLAY;
-		else if (opt == 'l')
+			break;
+		case 'l':
 			col->action = CMDB_LIST;
-		else if (opt == 'q')
+			break;
+		case 'q':
 			col->action = CBC_SERVER;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			col->action = CMDB_RM;
-		else if (opt == 'v')
+			break;
+		case 'v':
 			col->action = AILSA_VERSION;
-		else if (opt == 'g')
+			break;
+		case 'g':
 			col->action = DOWNLOAD;
-		else if (opt == 'z')
+			break;
+		case 'z':
 			col->action = CMDB_DEFAULT;
-		else if (opt == 'h')
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		else if (opt == 'e')
+		case 'e':
 			col->ver_alias = strndup(optarg, MAC_LEN);
-		else if (opt == 'f')
+			break;
+		case 'f':
 			col->force = 1;
-		else if (opt == 'n')
+			break;
+		case 'n':
 			col->os = strndup(optarg, MAC_LEN);
-		else if (opt == 'o')
+			break;
+		case 'o':
 			col->version = strndup(optarg, MAC_LEN);
-		else if (opt == 's')
+			break;
+		case 's':
 			col->alias = strndup(optarg, MAC_LEN);
-		else if (opt == 't')
+			break;
+		case 't':
 			col->arch = strndup(optarg, SERVICE_LEN);
-		else {
-			printf("Unknown option: %c\n", opt);
+			break;
+		default:
 			return AILSA_DISPLAY_USAGE;
 		}
 	}

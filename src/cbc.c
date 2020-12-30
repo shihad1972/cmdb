@@ -147,54 +147,75 @@ parse_cbc_command_line(int argc, char *argv[], cbc_comm_line_s *cb)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'n') {
+		switch (opt) {
+		case 'n':
 			cb->name = strndup(optarg, CONFIG_LEN);
-		} else if (opt == 'u') {
+			break;
+		case 'u':
 			cb->action = CMDB_DEFAULT;
-		} else if (opt == 'a') {
+			break;
+		case 'a':
 			cb->action = CMDB_ADD;
-		} else if (opt == 'd') {
+			break;
+		case 'd':
 			cb->action = CMDB_DISPLAY;
-		} else if (opt == 'g') {
+			break;
+		case 'g':
 			cb->removeip = true;
-		} else if (opt == 'l') {
+			break;
+		case 'l':
 			cb->action = CMDB_LIST;
-		} else if (opt == 'm') {
+			break;
+		case 'm':
 			cb->action = CMDB_MOD;
-		} else if (opt == 'q') {
+			break;
+		case 'q':
 			cb->action = CMDB_QUERY;
-		} else if (opt == 'r') {
+			break;
+		case 'r':
 			cb->action = CMDB_RM;
-		} else if (opt == 'w') {
+			break;
+		case 'w':
 			cb->action = CMDB_WRITE;
-		} else if (opt == 'b') {
+			break;
+		case 'b':
 			cb->build_domain = strndup(optarg, CONFIG_LEN);
-		} else if (opt == 'e') {
+			break;
+		case 'e':
 			cb->locale = strndup(optarg, CONFIG_LEN);
-		} else if (opt == 'k') {
+			break;
+		case 'k':
 			cb->netcard = strndup(optarg, HOST_LEN);
-		} else if (opt == 'j') {
+			break;
+		case 'j':
 // We do not check for a starting /dev here.
 			cb->harddisk = strndup(optarg, HOST_LEN);
-		} else if (opt == 'o') {
+			break;
+		case 'o':
 			cb->os = strndup(optarg, MAC_LEN);
-		} else if (opt == 'p') {
+			break;
+		case 'p':
 			cb->partition = strndup(optarg, CONFIG_LEN);
-		} else if (opt == 't') {
+			break;
+		case 't':
 			cb->arch = strndup(optarg, SERVICE_LEN);
-		} else if (opt == 's') {
+			break;
+		case 's':
 			cb->os_version = strndup(optarg, MAC_LEN);
-		} else if (opt == 'x') {
+			break;
+		case 'x':
 			cb->varient = strndup(optarg, CONFIG_LEN);
-		} else if (opt == 'y') {
+			break;
+		case 'y':
 			cb->gui = 1;
-		} else if (opt == 'v') {
+			break;
+		case 'v':
 			cb->action = AILSA_VERSION;
-		} else if (opt == 'h') {
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		} else {
-			printf("Unknown option: %c\n", opt);
-			retval = AILSA_DISPLAY_USAGE;
+		default:
+			return AILSA_DISPLAY_USAGE;
 		}
 	}
 	if ((cb->action == NONE) && 

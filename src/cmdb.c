@@ -380,90 +380,132 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 's')
+		switch (opt) {
+		case 's':
 			comp->type = SERVER;
-		else if (opt == 'u')
+			break;
+		case 'u':
 			comp->type = CUSTOMER;
-		else if (opt == 't')
+			break;
+		case 't':
 			comp->type = CONTACT;
-		else if (opt == 'e')
+			break;
+		case 'e':
 			comp->type = SERVICE;
-		else if (opt == 'j')
+			break;
+		case 'j':
 			comp->type = SERVICE_TYPE;
-		else if (opt == 'w')
+			break;
+		case 'w':
 			comp->type = HARDWARE;
-		else if (opt == 'g')
+			break;
+		case 'g':
 			comp->type = HARDWARE_TYPE;
-		else if (opt == 'o')
+			break;
+		case 'o':
 			comp->type = VM_HOST;
-		else if (opt == 'd')
+			break;
+		case 'd':
 			comp->action = CMDB_DISPLAY;
-		else if (opt == 'v')
+			break;
+		case 'v':
 			comp->action = AILSA_VERSION;
-		else if (opt == 'l')
+			break;
+		case 'l':
 			comp->action = CMDB_LIST;
-		else if (opt == 'a')
+			break;
+		case 'a':
 			comp->action = CMDB_ADD;
-		else if (opt == 'r')
+			break;
+		case 'r':
 			comp->action = CMDB_RM;
-		else if (opt == 'z')
+			break;
+		case 'z':
 			comp->action = CMDB_DEFAULT;
-		else if (opt == 'q')
+			break;
+		case 'q':
 			comp->action = CMDB_VIEW_DEFAULT;
-		else if (opt == 'm')
+			break;
+		case 'm':
 			comp->action = CMDB_MOD;
-		else if (opt == 'h')
+			break;
+		case 'h':
 			return AILSA_DISPLAY_USAGE;
-		else if (opt == 'f')
+		case 'f':
 			comp->force = 1;
-		else if (opt == 'c')
+			break;
+		case 'c':
 			comp->config = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'n')
+			break;
+		case 'n':
 			comp->name = strndup(optarg, HOST_LEN);
-		else if (opt == 'i')
+			break;
+		case 'i':
 			comp->id = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'x')
+			break;
+		case 'x':
 			comp->vmhost = strndup(optarg, HOST_LEN);
-		else if (opt == 'y')
+			break;
+		case 'y':
 			comp->shtype = strndup(optarg, MAC_LEN);
-		else if (opt == 'V')
+			break;
+		case 'V':
 			comp->vendor = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'M')
+			break;
+		case 'M':
 			comp->make = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'O')
+			break;
+		case 'O':
 			comp->model = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'U')
+			break;
+		case 'U':
 			comp->uuid = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'C')
+			break;
+		case 'C':
 			comp->coid = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'A')
+			break;
+		case 'A':
 			comp->address = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'T')
+			break;
+		case 'T':
 			comp->city = strndup(optarg, HOST_LEN);
-		else if (opt == 'Y')
+			break;
+		case 'Y':
 			comp->county = strndup(optarg, MAC_LEN);
-		else if (opt == 'Z')
+			break;
+		case 'Z':
 			comp->postcode = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'N')
+			break;
+		case 'N':
 			comp->fullname = strndup(optarg, HOST_LEN);
-		else if (opt == 'P')
+			break;
+		case 'P':
 			comp->phone = strndup(optarg, MAC_LEN);
-		else if (opt == 'E')
+			break;
+		case 'E':
 			comp->email = strndup(optarg, HOST_LEN);
-		else if (opt == 'D')
+			break;
+		case 'D':
 			comp->detail = strndup(optarg, HOST_LEN);
-		else if (opt == 'I')
+			break;
+		case 'I':
 			comp->sid = strtoul(optarg, NULL, 10);
-		else if (opt == 'L')
+			break;
+		case 'L':
 			comp->url = strndup(optarg, CONFIG_LEN);
-		else if (opt == 'B')
+			break;
+		case 'B':
 			comp->device = strndup(optarg, MAC_LEN);
-		else if (opt == 'S')
+			break;
+		case 'S':
 			comp->service = strndup(optarg, SERVICE_LEN);
-		else if (opt == 'H')
+			break;
+		case 'H':
 			comp->hclass = strndup(optarg, MAC_LEN);
-		else
+			break;
+		default:
 			return AILSA_DISPLAY_USAGE;
+		}
 	}
 
 	if ((retval = check_cmdb_comm_options(comp)) != 0)

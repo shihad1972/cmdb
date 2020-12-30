@@ -7,7 +7,7 @@ cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
 	cbcos,      commit id: ed56d7f
 
 Command line parsing needs to move away from if else statement to switch
-	dnsa
+	dnsa		commit id: e78f342
 	cbc
 	cbcdomain
 	cbcos
@@ -17,7 +17,7 @@ Command line parsing needs to move away from if else statement to switch
 	cbcscript
 	cbclocale
 	cmdb
-	cmdb-identity	
+	cmdb-identity	commit id: e78f342
 	mkvm		Already done!
 	mksp		Already done!
 	mknet		Already done!
