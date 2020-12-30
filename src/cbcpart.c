@@ -79,6 +79,9 @@ static int
 display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
+display_servers_with_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
+
+static int
 add_scheme_part(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl);
 
 static int
@@ -126,6 +129,8 @@ main (int argc, char *argv[])
 		retval = display_full_seed_scheme(cmc, cpl);
 	else if (cpl->action == CMDB_LIST)
 		retval = list_seed_schemes(cmc);
+	else if (cpl->action == CBC_SERVER)
+		retval = display_servers_with_scheme(cmc, cpl);
 	else if (cpl->action == CMDB_RM)
 		retval = remove_scheme_part(cmc, cpl);
 	else if (cpl->action == CMDB_DEFAULT)
@@ -157,7 +162,7 @@ static int
 parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 {
 	const char *errmsg = "parse_cbcpart_comm_line";
-	const char *optstr = "ab:df:g:hi:jlmn:oprst:vx:y:z";
+	const char *optstr = "ab:df:g:hi:jlmn:opqrst:vx:y:z";
 	int opt, retval;
 	retval = 0;
 #ifdef HAVE_GETOPT_H
@@ -177,6 +182,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 		{"scheme-name",		required_argument,	NULL,	'n'},
 		{"option",		no_argument,		NULL,	'o'},
 		{"partition",		no_argument,		NULL,	'p'},
+		{"query",		no_argument,		NULL, 	'q'},
+		{"server",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"scheme",		no_argument,		NULL,	's'},
@@ -201,6 +208,8 @@ parse_cbcpart_comm_line(int argc, char *argv[], cbcpart_comm_line_s *cpl)
 			cpl->action = CMDB_LIST;
 		} else if (opt == 'm') {
 			cpl->action = CMDB_MOD;
+		} else if (opt == 'q') {
+			cpl->action = CBC_SERVER;
 		} else if (opt == 'r') {
 			cpl->action = CMDB_RM;
 		} else if (opt == 'z') {
@@ -477,6 +486,36 @@ display_full_seed_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
 		ailsa_list_full_clean(part);
 		if (uname)
 			my_free(uname);
+		return retval;
+}
+
+static int
+display_servers_with_scheme(ailsa_cmdb_s *cbc, cbcpart_comm_line_s *cpl)
+{
+	if (!(cbc) || !(cpl))
+		return AILSA_NO_DATA;
+	int retval;
+	AILLIST *scheme = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = cmdb_add_string_to_list(cpl->scheme, scheme)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_argument_query(cbc, SERVERS_IN_SCHEME, scheme, server)) != 0)
+		goto cleanup;
+	if (server->total == 0) {
+		ailsa_syslog(LOG_INFO, "No servers build with partition scheme %s", cpl->scheme);
+		goto cleanup;
+	}
+	e = server->head;
+	printf("Servers build with partition scheme %s\n", cpl->scheme);
+	while (e) {
+		printf(" %s\n", ((ailsa_data_s *)e->data)->data->text);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(scheme);
+		ailsa_list_full_clean(server);
 		return retval;
 }
 

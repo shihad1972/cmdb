@@ -15,7 +15,7 @@ cbcpart \- Create Build Config Partitions
 
 .B cbcpart
 [
-.B -adlmrvz
+.B -adlmqrvz
 ] [
 .B -p | -s | -o
 ] [
@@ -30,11 +30,13 @@ You can add add a scheme, display a specific scheme, list all schemes or remove
 a specific scheme.
 Once you have added a scheme name, you can then define partitions to add to the
 scheme, or remove partitions from the scheme.
+You may also query what servers have been built with a specific scheme.
 You can also configure partition schemes to use \fBLVM\fP, the Logical Volume
 Manager for more flexible partition arangements.
 
 .SH OPTIONS
 .B action
+.IP "\fBNote\fP: these options are mutually exclusive."
 .IP "-a,  --add"
 add a partition or scheme.
 .IP "-d,  --display"
@@ -43,6 +45,8 @@ display partitions in a scheme.
 list all partition schemes.
 .IP "-m,  --modify"
 modify a scheme / partition.
+.IP "-q,  --query, --server"
+query the servers build with a partition scheme
 .IP "-r,  --remove, --delete"
 remove a partition from a scheme or an entire partition scheme.
 .IP "-z   --set-default"
@@ -51,7 +55,6 @@ set a partition scheme to be default
 version (no other argument needed)
 .IP "-h,  --help"
 display a short help message
-\fBNote\fP: these options are mutually exclusive.
 .PP
 .B selection
 .IP "-p,  --partition"

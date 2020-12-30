@@ -426,7 +426,8 @@ display_cbcpart_usage(void)
 	printf("Version: %s\n", VERSION);
 	printf("Action Options:\n");
 	printf("-a: add scheme / partition\n-d: display scheme\n");
-	printf("-l: list schemes\n-r: remove scheme / partition\n");
+	printf("-l: list schemes\n-q: query servers build with scheme\n");
+	printf("-r: remove scheme / partition\n");
 	printf("-m: modify\n-z: set-default\n\n");
 	printf("Definition Options:\n");
 	printf("-p: partition\n-s: scheme\n-o: option\n\n");
@@ -441,7 +442,7 @@ display_cbcpart_usage(void)
 	printf("-b: <mount-option>\n");
 	printf("-f: <file-system-type>\n");
 	printf("-t: <mount point>\n\n");
-	printf("cbcpart: ( -a | -d | -l | -m | -r | -z ) ( -p | -s | -o ) [ ( -j -g \
+	printf("cbcpart: ( -a | -d | -l | -m | -q | -r | -z ) ( -p | -s | -o ) [ ( -j -g \
 log vol ) ] [ -n ] ( -f -x -t [ -i ] [ -y ] [ -b ] )\n");
 }
 

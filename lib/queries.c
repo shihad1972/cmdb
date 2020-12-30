@@ -743,6 +743,11 @@ const struct ailsa_sql_query_s argument_queries[] = {
 	1,
 	{ AILSA_DB_TEXT }
 	},
+	{ // SERVERS_IN_SCHEME
+"SELECT name FROM server WHERE server_id IN (SELECT server_id FROM build WHERE def_scheme_id = (SELECT def_scheme_id FROM seed_schemes WHERE scheme_name = ?))",
+	1,
+	{ AILSA_DB_TEXT }
+	},
 };
 
 const struct ailsa_sql_query_s insert_queries[] = {
