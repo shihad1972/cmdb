@@ -11,7 +11,7 @@ cbcos \- Create Build Config Operating System
 
 .B cbcos
 [
-.B -adglrvz
+.B -adglqrvz
 ] [
 .B -n <name> -e <version alias> -o <version> -s <os alias> -t <arch>
 ]
@@ -26,7 +26,8 @@ each version has a code name, such as \fIsqueeze\fP for version \fI6\fP, or in
 the ubuntu world, \fIprecise\fP for version \fI12.04\fP.
 These are required for debian based builds but are optional for redhat based
 builds.
-You are able to add, display, list and remove build operating systems.
+You are able to add, display, list and remove build operating systems. You may
+also query the servers that are build with a specific OS and version.
 Currently the \fBcbc\fP system supports the following operating systems:
 \fIdebian, ubuntu\fP and \fIcentos\fP. Soon there will be support for
 \fIredhat\fP.
@@ -44,6 +45,8 @@ display
 grab boot files
 .IP "-l,  --list"
 list
+.IP "-q,  --query, --server"
+query servers build with OS
 .IP "-r,  --remove, --delete"
 remove
 .IP "-z,  --set-default"

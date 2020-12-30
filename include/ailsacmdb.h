@@ -71,10 +71,6 @@ enum {                  // Buffer lengths
 # define B64_LINE_SIZE_TO_MIN    5
 # define B64_SYNTAX_TOOMANYARGS  6
 
-// Temporary
-# define BASEDIR "/var/lib/cmdb/data/"
-# define AILSAVERSION "0.3"
-
 // Data Definitions
 
 extern const char *regexps[];
@@ -211,6 +207,7 @@ enum {                  // Error codes
 	AILSA_NO_DISK_DEV = 215,
 	AILSA_IP_CONVERT_FAILED = 216,
 	AILSA_NO_OS = 217,
+	AILSA_NO_OS_VERSION = 218,
 	AILSA_VARIENT_REPLACE_FAIL = 220,
 	AILSA_PARTITION_REPLACE_FAIL = 221,
 	AILSA_LOCALE_REPLACE_FAIL = 222,

@@ -1,8 +1,9 @@
 30/12/2020
 As a user, I want to be able to list the servers build with a particular
 cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
-	cbclocale, commit id: 1705217
-	cbcpart,   commit id: c0c886e
+	cbclocale,  commit id: 1705217
+	cbcpart,    commit id: c0c886e
+	cbcvarient, commit id: 28a48f1
 
 Command line parsing needs to move away from if else statement to switch
 

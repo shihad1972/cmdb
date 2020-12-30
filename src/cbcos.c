@@ -65,10 +65,16 @@ static int
 display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
 
 static int
+display_servers_with_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
+
+static int
 cbc_fill_os_details(char *name, AILLIST *list, AILLIST *dest);
 
 static int
 add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
+
+static int
+get_cbcos_id_list(ailsa_cmdb_s *cmc, cbcos_comm_line_s *cl, AILLIST *list);
 
 static int
 remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col);
@@ -120,6 +126,8 @@ main (int argc, char *argv[])
 		list_cbc_build_os(cmc);
 	else if (cocl->action == CMDB_DISPLAY)
 		retval = display_cbc_build_os(cmc, cocl);
+	else if (cocl->action == CBC_SERVER)
+		retval = display_servers_with_build_os(cmc, cocl);
 	else if (cocl->action == CMDB_ADD)
 		retval = add_cbc_build_os(cmc, cocl);
 	else if (cocl->action == CMDB_RM)
@@ -138,7 +146,7 @@ main (int argc, char *argv[])
 static int
 parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 {
-	const char *optstr = "ade:fghln:o:rs:t:vz";
+	const char *optstr = "ade:fghln:o:qrs:t:vz";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -153,6 +161,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 		{"name",		required_argument,	NULL,	'n'},
 		{"os",			required_argument,	NULL,	'n'},
 		{"os-version",		required_argument,	NULL,	'o'},
+		{"query",		no_argument,		NULL,	'q'},
+		{"server",		no_argument,		NULL,	'q'},
 		{"remove",		no_argument,		NULL,	'r'},
 		{"delete",		no_argument,		NULL,	'r'},
 		{"alias",		required_argument,	NULL,	's'},
@@ -175,6 +185,8 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			col->action = CMDB_DISPLAY;
 		else if (opt == 'l')
 			col->action = CMDB_LIST;
+		else if (opt == 'q')
+			col->action = CBC_SERVER;
 		else if (opt == 'r')
 			col->action = CMDB_RM;
 		else if (opt == 'v')
@@ -215,7 +227,7 @@ parse_cbcos_comm_line(int argc, char *argv[], cbcos_comm_line_s *col)
 			printf("Some details were not provided\n");
 			return AILSA_DISPLAY_USAGE;
 	}
-	if (col->action == CMDB_RM) {
+	if ((col->action == CMDB_RM) || (col->action == CBC_SERVER)) {
 		if (!(col->version) || ((!col->os) && !(col->alias))) {
 			ailsa_syslog(LOG_ERR, "Version or os name / alias not provided");
 			return AILSA_DISPLAY_USAGE;
@@ -256,8 +268,7 @@ list_cbc_build_os(ailsa_cmdb_s *cmc)
 		name = name->next;
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		my_free(list);
+		ailsa_list_full_clean(list);
 }
 
 static int
@@ -367,6 +378,59 @@ display_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		ailsa_list_full_clean(os);
 		return retval;
 }
+
+static int
+display_servers_with_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
+{
+	if (!(cmc) || !(col))
+		return AILSA_NO_DATA;
+	int retval;
+	char *name, *version, *arch;
+	unsigned long int id;
+	AILLIST *os = ailsa_db_data_list_init();
+	AILLIST *os_id = ailsa_db_data_list_init();
+	AILLIST *server = ailsa_db_data_list_init();
+	AILLIST *details = ailsa_db_data_list_init();
+	AILELEM *e;
+
+	if ((retval = get_cbcos_id_list(cmc, col, os)) != 0)
+		goto cleanup;
+	if (os->total == 0) {
+		ailsa_syslog(LOG_INFO, "No OS were found");
+		goto cleanup;
+	}
+	e = os->head;
+	while (e) {
+		id = ((ailsa_data_s *)e->data)->data->number;
+		if ((retval = cmdb_add_number_to_list(id, os_id)) != 0)
+			goto cleanup;
+		if ((retval = ailsa_argument_query(cmc, BUILD_OS_DETAILS_ON_OS_ID, os_id, details)) != 0)
+			goto cleanup;
+		if ((details->total == 0) || ((details->total % 3) != 0))
+			goto cleanup;
+		name = ((ailsa_data_s *)details->head->data)->data->text;
+		version = ((ailsa_data_s *)details->head->next->data)->data->text;
+		arch = ((ailsa_data_s *)details->head->next->next->data)->data->text;
+		if ((retval = check_builds_for_os_id(cmc, id, server)) != 0)
+			goto cleanup;
+		if (server->total == 0) {
+			printf("No builds for os %s, version %s, arch %s\n", name, version, arch);
+		} else {
+			printf("Servers built with os %s, version %s, arch %s\n", name, version, arch);
+			display_server_name_for_build_os_id(server);
+		}
+		ailsa_list_clean(details);
+		ailsa_list_clean(server);
+		e = e->next;
+	}
+	cleanup:
+		ailsa_list_full_clean(os);
+		ailsa_list_full_clean(os_id);
+		ailsa_list_full_clean(server);
+		ailsa_list_full_clean(details);
+		return retval;
+}
+
 static int
 cbc_fill_os_details(char *name, AILLIST *list, AILLIST *dest)
 {
@@ -444,7 +508,41 @@ add_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		ailsa_syslog(LOG_ERR, "Unable to download boot files\n");
 
 	cleanup:
-		ailsa_list_destroy(os);
+		ailsa_list_full_clean(os);
+		return retval;
+}
+
+static int
+get_cbcos_id_list(ailsa_cmdb_s *cmc, cbcos_comm_line_s *cl, AILLIST *list)
+{
+	char **os = ailsa_calloc((sizeof(char *) * 3), "os in get_cbcos_id_list");
+	int retval;
+
+	if (!(cl) || !(os))
+		return AILSA_NO_DATA;
+	retval = AILSA_NO_OS;
+	if (cl->os)
+		os[0] = cl->os;
+	else if (cl->alias)
+		os[0] = cl->alias;
+	else
+		goto cleanup;
+	retval = AILSA_NO_OS_VERSION;
+	if (cl->version)
+		os[1] = cl->version;
+	else if (cl->ver_alias)
+		os[1] = cl->ver_alias;
+	else
+		goto cleanup;
+	os[2] = cl->arch;
+	if ((retval = cmdb_add_os_id_to_list(os, cmc, list)) != 0)
+		goto cleanup;
+	if (list->total == 0) {
+		retval = AILSA_OS_NOT_FOUND;
+		goto cleanup;
+	}
+
+	cleanup:
 		my_free(os);
 		return retval;
 }
@@ -454,34 +552,20 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 {
 	if (!(cmc) || !(col))
 		return AILSA_NO_DATA;
-	char **args = ailsa_calloc((sizeof(char *) * 3), "args in remove_cbc_build_os");
 	AILLIST *list = ailsa_db_data_list_init();
 	AILLIST *build = ailsa_db_data_list_init();
 	int retval;
 	unsigned long int id;
-	AILELEM *element;
-	ailsa_data_s *data;
 
-	args[0] = col->os;
-	args[1] = col->version;
-	args[2] = col->arch;
-	if ((retval = cmdb_add_os_id_to_list(args, cmc, list)) != 0) {
-		ailsa_syslog(LOG_ERR, "Cannot get OS id");
-		retval = AILSA_OS_NOT_FOUND;
+	if ((retval = get_cbcos_id_list(cmc, col, list)) != 0)
 		goto cleanup;
-	}
-	if (list->total == 0) {
-		retval = AILSA_OS_NOT_FOUND;
-		goto cleanup;
-	}
-	element = list->head;
-	data = element->data;
-	id = data->data->number;
+	id = ((ailsa_data_s *)list->head->data)->data->number;
 	if ((retval = check_builds_for_os_id(cmc, id, build)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot check for server builds with this OS");
 		goto cleanup;
 	}
 	if (build->total > 0) {
+		printf("The following servers are using the build os:\n\t");
 		display_server_name_for_build_os_id(build);
 		if (col->force == 0) {
 			ailsa_syslog(LOG_ERR, "Build OS in use. If you want to delete, use -f");
@@ -494,11 +578,8 @@ remove_cbc_build_os(ailsa_cmdb_s *cmc, cbcos_comm_line_s *col)
 		goto cleanup;
 	}
 	cleanup:
-		ailsa_list_destroy(list);
-		ailsa_list_destroy(build);
-		my_free(args);
-		my_free(list);
-		my_free(build);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(build);
 		return retval;
 }
 
@@ -513,7 +594,6 @@ display_server_name_for_build_os_id(AILLIST *list)
 
 	element = list->head;
 
-	printf("The following servers are using the build os:\n\t");
 	for (i = 0; i < list->total; i++) {
 		if (!(element))
 			break;
@@ -755,12 +835,9 @@ cbcos_create_os_profile(ailsa_cmdb_s *cmc, AILLIST *os)
 		goto cleanup;
 	}
 	cleanup:
-		ailsa_list_destroy(pack);
-		ailsa_list_destroy(list);
-		ailsa_list_destroy(results);
-		my_free(pack);
-		my_free(list);
-		my_free(results);
+		ailsa_list_full_clean(pack);
+		ailsa_list_full_clean(list);
+		ailsa_list_full_clean(results);
 		return retval;
 }
 
