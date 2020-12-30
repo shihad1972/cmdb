@@ -4,8 +4,23 @@ cbcos cbcpart cbcvarient and cbclocale. cbcdomain does this already.
 	cbclocale,  commit id: 1705217
 	cbcpart,    commit id: c0c886e
 	cbcvarient, commit id: 28a48f1
+	cbcos,      commit id: ed56d7f
 
 Command line parsing needs to move away from if else statement to switch
+	dnsa
+	cbc
+	cbcdomain
+	cbcos
+	cbcvarient
+	cbcpart
+	cbcsysp
+	cbcscript
+	cbclocale
+	cmdb
+	cmdb-identity	
+	mkvm		Already done!
+	mksp		Already done!
+	mknet		Already done!
 
 23/12/2020
 The preferred_a table is a mess. It has a link to the record, but not the

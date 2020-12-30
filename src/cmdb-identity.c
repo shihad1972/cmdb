@@ -134,20 +134,29 @@ parse_command_line(int argc, char *argv[], cmdb_identity_comm_line_s *cml)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
         {
-		if (opt == 'a')
+                switch (opt) {
+		case 'a':
 			cml->action = CMDB_ADD;
-                else if (opt == 'l')
+                        break;
+                case 'l':
                         cml->action = CMDB_LIST;
-                else if (opt == 'r')
+                        break;
+                case 'r':
                         cml->action = CMDB_RM;
-                else if (opt == 's')
+                        break;
+                case 's':
                         cml->server = strndup(optarg, HOST_LEN);
-                else if (opt == 'u')
+                        break;
+                case 'u':
                         cml->user = strndup(optarg, CONFIG_LEN);
-                else if (opt == 'p')
+                        break;
+                case 'p':
                         cml->ask_pass = true;
-                else
-			retval = CMDB_USAGE;
+                        break;
+                default:
+			return CMDB_USAGE;
+                        break;
+                }
         }
         if ((retval = check_command_line(cml)) != 0)
                 return retval;

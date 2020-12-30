@@ -218,72 +218,104 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 	while ((opt = getopt(argc, argv, optstr)) != -1)
 #endif // HAVE_GETOPT_H
 	{
-		if (opt == 'a') {
+		switch (opt) {
+		case 'a':
 			comp->action = DNSA_AHOST;
 			comp->type = FORWARD_ZONE;
-		} else if (opt == 'b') {
+			break;
+		case 'b':
 			comp->action = DNSA_BREV;
 			comp->type = REVERSE_ZONE;
-		} else if (opt == 'd') {
+			break;
+		case 'd':
 			comp->action = DNSA_DISPLAY;
-		} else if (opt == 'e') {
+			break;
+		case 'e':
 			comp->action = DNSA_ADD_MULTI;
 			comp->type = REVERSE_ZONE;
 			comp->rtype = strndup("A", MAC_LEN);
-		} else if (opt == 'g') {
+			break;
+		case 'g':
 			comp->action = DNSA_DPREFA;
 			comp->type = REVERSE_ZONE;
-		} else if (opt == 'l') {
+			break;
+		case 'l':
 			comp->action = DNSA_LIST;
-		} else if (opt == 'm') {
+			break;
+		case 'm':
 			comp->action = DNSA_CNAME;
 			comp->type = FORWARD_ZONE;
-		} else if (opt == 'r') {
+			break;
+		case 'r':
 			comp->action = DNSA_DREC;
 			comp->type = FORWARD_ZONE;
-		} else if (opt == 'u') {
+			break;
+		case 'u':
 			comp->action = DNSA_DISPLAY_MULTI;
 			comp->type = REVERSE_ZONE;
-		} else if (opt == 'w') {
+			break;
+		case 'w':
 			comp->action = DNSA_COMMIT;
-		} else if (opt == 'x') {
+			break;
+		case 'x':
 			comp->action = DNSA_DZONE;
-		} else if (opt == 'z') {
+			break;
+		case 'z':
 			comp->action = DNSA_AZONE;
-		} else if (opt == 'F') {
+			break;
+		case 'F':
 			comp->type = FORWARD_ZONE;
-		} else if (opt == 'R') {
+			break;
+		case 'R':
 			comp->type = REVERSE_ZONE;
-		} else if (opt == 'G') {
+			break;
+		case 'G':
 			comp->type = GLUE_ZONE;
-		} else if (opt == 'T') {
+			break;
+		case 'T':
 			comp->type = TEST_ZONE;
-		} else if (opt == 'S') {
+			break;
+		case 'S':
 			comp->ztype = strdup("slave");
-		} else if (opt == 'M') {
+			break;
+		case 'M':
 			comp->master = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'I') {
+			break;
+		case 'I':
 			comp->glue_ip = strndup(optarg, MAC_LEN);
-		} else if (opt == 'N') {
+			break;
+		case 'N':
 			comp->glue_ns = strndup(optarg, FILE_LEN);
-		} else if (opt == 'h') {
+			break;
+		case 'h':
 			comp->host = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'i') {
+			break;
+		case 'i':
 			comp->dest = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'n') {
+			break;
+		case 'n':
 			comp->domain = strndup(optarg, DOMAIN_LEN);
-		} else if (opt == 'o') {
+			break;
+		case 'o':
 			comp->protocol = strndup(optarg, SERVICE_LEN);
-		} else if (opt == 'p') {
+			break;
+		case 'p':
 			comp->prefix = strtoul(optarg, NULL, 10);
-		} else if (opt == 's') {
+			break;
+		case 's':
 			comp->service = strndup(optarg, SERVICE_LEN);
 			if (!(comp->host))
 				comp->host = strndup(optarg, SERVICE_LEN);
-		} else if (opt == 't') {
+			break;
+		case 't':
 			comp->rtype = strndup(optarg, SERVICE_LEN);
-		} else if (opt == 'v') {
+			break;
+		case 'v':
 			comp->action = AILSA_VERSION;
+			break;
+		default:
+			return AILSA_DISPLAY_USAGE;
+			break;
 		}
 	}
 	if (comp->rtype && (comp->action == DNSA_AHOST)) {

@@ -815,6 +815,10 @@ void
 display_cbcsysp_usage(void);
 void
 display_cbcscript_usage(void);
+void
+display_mkvm_usage(void);
+void
+display_mksp_usage(void);
 
 // AIL_ data functions;
 
@@ -903,20 +907,12 @@ ailsa_gen_mac(char *mac, int type);
 uint32_t
 prefix_to_mask_ipv4(unsigned long int prefix);
 
-// Config and command line parsing
+// Config file parsing
 
-void
-display_mkvm_usage(void);
-void
-display_mksp_usage(void);
 void
 parse_mkvm_config(ailsa_mkvm_s *vm);
 void
 parse_cmdb_config(ailsa_cmdb_s *cmdb);
-int
-parse_mkvm_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
-int
-parse_mksp_command_line(int argc, char *argv[], ailsa_mkvm_s *vm);
 
 
 // Path and various string functions
