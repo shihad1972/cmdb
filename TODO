@@ -1,3 +1,14 @@
+31/12/2020
+ailsa_multiple_delete function is not working properly. I think because the
+ailsa_sql_delete_s struct is used, this is limited to 20 arguments. Need to
+rework it to use the ailsa_sql_multi_s struct instead.
+
+Also, cmdb_records_to_remove is to aggressive in adding records to the
+remove struct. When running through the indicies, it will match a reverse
+record to remove, when it is in the _wrong_ index, as there is no forward
+record for it. Need to check if there even is a reverse for that IP (index +
+dest in rev record)
+
 30/12/2020
 Writing the build configuration should fail earlier if there is no server.
 Currently, it will write the dhcpd.hosts config file; this is _OK_, but pretty
