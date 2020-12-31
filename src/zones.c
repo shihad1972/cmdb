@@ -1661,10 +1661,14 @@ cmdb_records_to_remove(char *range, unsigned long int prefix, AILLIST *rec, AILL
 		r = rev->head;
 		while (r) {
 			reverse = r->data;
+			if (reverse->index != i) {
+				r = r->next;
+				continue;
+			}
 			f = rec->head;
+			snprintf(ptr, SERVICE_LEN, "%s", reverse->host);
 			while (f) {
 				forward = f->data;
-				snprintf(ptr, SERVICE_LEN, "%s", reverse->host);
 				if (strncmp(search, forward->dest, HOST_LEN) == 0){
 					memset(fqdn, 0, DOMAIN_LEN);
 					if (strncmp("@", forward->host, BYTE_LEN) == 0)
@@ -1709,7 +1713,7 @@ cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int pr
 		memset(search, 0, DOMAIN_LEN);
 		if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
 			return retval;
-		if (!(ptr =  strrchr(search, '%')))
+		if (!(ptr = strrchr(search, '%')))
 			goto cleanup;
 		f = rec->head;
 		while (f) {
@@ -1741,6 +1745,9 @@ cmdb_records_to_add(char *range, unsigned long int zone_id, unsigned long int pr
 					if ((retval = cmdb_add_number_to_list(i, add)) != 0)
 						return retval;
 					memset(fqdn, 0, DOMAIN_LEN);
+					memset(search, 0, DOMAIN_LEN);
+					if ((retval = get_range_search_string(range, search, prefix, i)) != 0)
+						return retval;
 					if ((retval = cmdb_get_rev_dest_from_search(search, forward->dest, fqdn)) != 0)
 						goto cleanup;
 					if ((retval = cmdb_add_string_to_list(fqdn, add)) != 0)
