@@ -1190,7 +1190,7 @@ static int
 cmdb_create_multi(ailsa_sql_multi_s *sql, const struct ailsa_sql_query_s query, size_t total);
 
 static int
-cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_query_s query, size_t total);
+cmdb_create_delete_multi(struct ailsa_sql_multi_s *sql, const struct ailsa_sql_query_s query, size_t total);
 
 static char *
 cmdb_create_value_string(const struct ailsa_sql_query_s query);
@@ -1407,11 +1407,9 @@ int
 ailsa_multiple_delete(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, AILLIST *del)
 {
 	int retval;
-	struct ailsa_sql_delete_s sql;
-	struct ailsa_sql_query_s *s = (ailsa_sql_query_s *)&sql;
+	struct ailsa_sql_multi_s *sql = ailsa_calloc(sizeof(ailsa_sql_multi_s), "sql in ailsa_multiple_delete");
 
-	memset(&sql, 0, sizeof(ailsa_sql_delete_s));
-	if ((retval = cmdb_create_delete_multi((ailsa_sql_query_s *)&sql, query, del->total)) != 0) {
+	if ((retval = cmdb_create_delete_multi(sql, query, del->total)) != 0) {
 		ailsa_syslog(LOG_ERR, "Unable to create multi delete sql struct");
 		return retval;
 	}
@@ -1421,21 +1419,21 @@ ailsa_multiple_delete(ailsa_cmdb_s *cmdb, const struct ailsa_sql_query_s query, 
 		ailsa_syslog(LOG_ERR, "no dbtype set");
 #ifdef HAVE_MYSQL
 	else if ((strncmp(cmdb->dbtype, "mysql", SERVICE_LEN) == 0))
-		retval = ailsa_delete_query_mysql(cmdb, *s, del);
+		retval = ailsa_multiple_query_mysql(cmdb, sql, del);
 #endif // HAVE_MYSQL
 #ifdef HAVE_SQLITE3
 	else if ((strncmp(cmdb->dbtype, "sqlite", SERVICE_LEN) == 0))
-		retval = ailsa_delete_query_sqlite(cmdb, *s, del);
+		retval = ailsa_multiple_query_sqlite(cmdb, sql, del);
 #endif
 	else
 		ailsa_syslog(LOG_ERR, "dbtype unavailable: %s", cmdb->dbtype);
-	if (sql.query)
-		my_free(sql.query);
+
+	cmdb_clean_ailsa_sql_multi(sql);
 	return retval;
 }
 
 static int
-cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_query_s query, size_t total)
+cmdb_create_delete_multi(struct ailsa_sql_multi_s *sql, const struct ailsa_sql_query_s query, size_t total)
 {
 	if (!(sql) || (total == 0))
 		return AILSA_NO_DATA;
@@ -1445,9 +1443,10 @@ cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_q
 	size_t len_q, len_s, i;
 
 	if (query.number != 1) {
-		ailsa_syslog(LOG_ERR, "Can only multi delete with a single argument. Query has %zu", total);
+		ailsa_syslog(LOG_ERR, "Can only multi delete with a single argument. Query has %zu", query.number);
 		return AILSA_WRONG_LIST_LENGHT;
 	}
+	sql->fields = ailsa_calloc(sizeof(unsigned long int) * total, "sql->fields in cmdb_create_delete_multi");
 	len_q = strlen(query.query);
 	len_s = (total * 3) + 3;
 	len_s += len_q;
@@ -1471,7 +1470,8 @@ cmdb_create_delete_multi(struct ailsa_sql_query_s *sql, const struct ailsa_sql_q
 	tmp -= 2;
 	sprintf(tmp, ")");
 	sql->query = q;
-	sql->number = (unsigned int)total;
+	sql->number = query.number;
+	sql->total = (unsigned int)total;
 	return retval;
 }
 
