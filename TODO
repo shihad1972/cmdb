@@ -1,3 +1,7 @@
+09/08/2023
+The main issue with mkvm is it does not add a _build_ into cmdb. It can add
+the server in there, but there is no build. We need to add this!
+
 31/12/2020
 ailsa_multiple_delete function is not working properly. I think because the
 ailsa_sql_delete_s struct is used, this is limited to 20 arguments. Need to
