@@ -304,6 +304,7 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
       <model type='virtio'/>\n\
       <boot order='1'/>\n\
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>\n\
+    </interface>\n\
 ", mac, vm->netdev);
 	else
 		snprintf(buf, FILE_LEN, "\
