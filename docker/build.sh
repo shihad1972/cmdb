@@ -50,9 +50,18 @@ fi
 
 host=docker.shihad.org:5000
 image=${host}/${APP}:${TAG}
-password=$(aws secretsmanager get-secret-value --region eu-west-1 --secret-id /shihad/docker | jq --raw-output '.SecretString' | jq -r .password)
-
-docker login ${host} --password="${password}" --username=iain
-echo "Deploying image $image:"
+echo "Building image $image:"
 docker build -t $image $APP
+
+echo "Deploying to shihad"
+aws secretsmanager get-secret-value --region eu-west-1 --secret-id /shihad/docker | jq --raw-output '.SecretString' | jq -r .iain | \
+  docker login ${host} --password-stdin --username=iain
 docker push $image
+
+echo "Deploying to AWS"
+host=$(aws sts get-caller-identity | jq -rS ".Account").dkr.ecr.${region}.amazonaws.com
+aimage=${host}/${APP}:${TAG}
+docker tag ${image} ${aimage}
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin \
+  ${host}
+docker push ${aimage}
