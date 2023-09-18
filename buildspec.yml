@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo starting build of cmdb on `date`
+      - ./configure --sysconfdir=/etc --localstatedir=/var/lib
+      - make distclean
+      - ./configure --sysconfdir=/etc --localstatedir=/var/lib
+      - make distcheck
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - cmdb-0.3.11.tar.gz
