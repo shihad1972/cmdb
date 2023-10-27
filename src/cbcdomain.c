@@ -619,7 +619,7 @@ write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom)
 			if ((iface->nw == dhcp->nw) && (iface->flag == 0)) {
 				iface->flag = 1;
 				dprintf(fd, "\
-  shared-network %s {\n\
+shared-network %s {\n\
 	option domain-name-servers %s;\n\
 	option domain-search \"%s\";\n\
 	option routers %s;\n\
@@ -629,6 +629,7 @@ write_dhcp_config_file(ailsa_cmdb_s *cbs, AILLIST *ice, AILLIST *dom)
 		filename \"pxelinux.0\";\n\
 	}\n\
 }\n\n", dhcp->dname, dhcp->nameserver, dhcp->dname, dhcp->gateway, dhcp->network, dhcp->netmask, dhcp->gateway);
+				break;
 			}
 			i = i->next;
 		}
