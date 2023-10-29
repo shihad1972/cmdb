@@ -227,6 +227,13 @@ ailsa_create_domain_xml(ailsa_mkvm_s *vm, ailsa_string_s *dom)
 		goto cleanup;
 	if (!(vm->uuid = strndup(uuid, UUID_LEN)))
 		goto cleanup;
+/*
+ * This page on stack overflow recommonds to set <apic eoi='on'/> to stop
+ * messages similar to this:
+ * Uhhuh. NMI received for unknown reason 30 on CPU 3
+ * https://unix.stackexchange.com/questions/327192/unknown-nmi-reason-20-and-30-on-a-vm
+ * need to test this :) 
+*/
 	snprintf(buf, FILE_LEN, "\
 <domain type='kvm'>\n\
   <name>%s</name>\n\
