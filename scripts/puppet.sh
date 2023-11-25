@@ -22,6 +22,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 PUPPET=$1
+ENVIRONMENT=$2
 
 if [ -d /target ]; then
   TGT=/target
@@ -32,6 +33,10 @@ DIR=${TGT}/etc/puppet
 if [ ! -d ${DIR} ]; then
   echo "$DIR does not exist"
   exit 0
+fi
+
+if [ -z "${ENVIRONMENT}" ]; then
+  ENVIRONMENT=production
 fi
 
 if [ -n "${PUPPET}" ]; then
@@ -47,6 +52,7 @@ cadir  = /var/lib/puppet/ssl/ca
 
 [agent]
 server = ${PUPPET}
+environment = ${ENVIRONMENT}
 
 STOP
 else
