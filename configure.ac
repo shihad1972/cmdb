@@ -32,8 +32,7 @@ AX_LIB_ODBC
 AX_LIB_YAML
 AM_PATH_XML2(2.4.0)
 AX_CHECK_OPENSSL([AC_DEFINE([HAVE_OPENSSL], [1], [Have openssl])])
-PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [AC_MSG_RESULT([No libvirt])])
-AS_IF([test "x$HAVE_LIBVIRT" = "xtrue"], [AC_DEFINE([HAVE_LIBVIRT], [1], [Define to 1 if we fine libvirt])])
+PKG_CHECK_MODULES([LIBVIRT], [libvirt], [HAVE_LIBVIRT="true"], [HAVE_LIBVIRT="false")])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h stdlib.h string.h\
