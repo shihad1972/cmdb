@@ -1411,9 +1411,9 @@ cbc_get_boot_files(ailsa_cmdb_s *cmc, char *os, char *ver, char *arch, char *vai
 	AILLIST *mirror = ailsa_db_data_list_init();
 
 	r = NULL;
-	if (!(kernel = calloc(CONFIG_LEN, 1)))
+	if (!(kernel = calloc(BUFFER_LEN, 1)))
 		goto cleanup;
-	if (!(initrd = calloc(CONFIG_LEN, 1)))
+	if (!(initrd = calloc(BUFFER_LEN, 1)))
 		goto cleanup;
 	if ((retval = cmdb_add_string_to_list(os, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "Cannot add os alias to list");
