@@ -535,7 +535,7 @@ list_build_servers(ailsa_cmdb_s *cmc)
 	int retval;
 	AILLIST *list = ailsa_db_data_list_init();
 	AILELEM *e;
-	ailsa_data_s *d;
+	ailsa_data_s *d, *f;
 
 	if ((retval = ailsa_basic_query(cmc, ALL_SERVERS_WITH_BUILD, list)) != 0) {
 		ailsa_syslog(LOG_ERR, "ALL_SERVERS_WITH_BUILD query failed");
@@ -544,8 +544,9 @@ list_build_servers(ailsa_cmdb_s *cmc)
 	e = list->head;
 	while (e) {
 		d = e->data;
-		printf("%s\n", d->data->text);
-		e = e->next;
+		f = e->next->data;
+		printf("%s.%s\n", d->data->text, f->data->text);
+		e = e->next->next;
 	}
 	cleanup:
 		ailsa_list_full_clean(list);

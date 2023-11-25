@@ -73,7 +73,9 @@ const char *basic_queries[] = {
  FROM glue_zones g LEFT JOIN zones z ON z.id = g.zone_id", // GLUE_ZONE_INFORMATION
 "SELECT net_range, type, prefix FROM rev_zones", // REV_ZONES_NET_RANGE
 "SELECT type, net_range, pri_dns, sec_dns, master, prefix FROM rev_zones", // REV_ZONE_CONFIG
-"SELECT name from server where server_id IN (SELECT server_id FROM build)", // ALL_SERVERS_WITH_BUILD
+"select name, domain from server s JOIN build b on b.server_id = s.server_id \
+  JOIN build_ip bi ON bi.server_id = s.server_id \
+  JOIN build_domain bd ON bd.bd_id = bi.bd_id;", // ALL_SERVERS_WITH_BUILD
 "SELECT s.name, b.mac_addr, ip.ip, db.domain FROM build b \
  LEFT JOIN server s ON s.server_id = b.server_id \
  LEFT JOIN build_ip ip ON ip.ip_id = b.ip_id \
