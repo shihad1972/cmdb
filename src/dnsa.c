@@ -233,7 +233,7 @@ parse_dnsa_command_line(int argc, char **argv, dnsa_comm_line_s *comp)
 		case 'e':
 			comp->action = DNSA_ADD_MULTI;
 			comp->type = REVERSE_ZONE;
-			comp->rtype = strndup("A", MAC_LEN);
+			comp->rtype = strdup("A");
 			break;
 		case 'g':
 			comp->action = DNSA_DPREFA;
