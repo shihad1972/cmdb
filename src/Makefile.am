@@ -1,4 +1,4 @@
-bin_PROGRAMS = cmdb mkvm mksp mknet cmdb-identity
+bin_PROGRAMS = cmdb cmdb-identity
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 
 mkvm_SOURCES = mkvm.c virtual.c
@@ -53,6 +53,7 @@ AM_CPPFLAGS += $(LIBVIRT_CPPFLAGS)
 AM_CFLAGS += $(LIBVIRT_CFLAGS)
 AM_LDFLAGS += $(LIBVIRT_LDFLAGS)
 LIBS += $(LIBVIRT_LIBS)
+bin_PROGRAMS +=  mkvm mksp mknet
 endif
 
 if HAVE_OPENSSL
