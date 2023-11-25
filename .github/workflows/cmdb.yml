@@ -13,11 +13,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: configure
+    - name: Create ChangeLog
+      run: git log --stat --name-only --date=short --abbrev-commit > ChangeLog
+    - name: Setup up build
+      run: autoreconf -iv
+    - name: Start configuration
       run: ./configure
-    - name: make
+    - name: Make Software
       run: make
-    - name: make check
+    - name: Run checks
       run: make check
-    - name: make distcheck
+    - name: Run distbuild
       run: make distcheck
