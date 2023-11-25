@@ -19,8 +19,6 @@ jobs:
       run: autoreconf -iv
     - name: Start configuration
       run: ./configure
-    - name: Make Software
-      run: make
     - name: Run checks
       run: make check
     - name: Run distbuild
