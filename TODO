@@ -1,3 +1,11 @@
+23/12/2023
+Systems with less than 768MB RAM will pause installation with a low memory
+warning. This can be overcome by adding lowmem=1 to the bootline
+
+22/12/2023
+Check writing DHCP hosts file, as we write it out even if the hostname given
+to cbc -w is incorrect
+
 09/08/2023
 The main issue with mkvm is it does not add a _build_ into cmdb. It can add
 the server in there, but there is no build. We need to add this!

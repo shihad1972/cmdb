@@ -48,6 +48,11 @@ typedef struct ailsa_virt_stor_s {
 
 // End of Storage
 
+// Used for autostarting domains
+
+#define DOMAIN_AUTOSTART_TRUE 1
+#define DOMAIN_AUTOSTART_FALSE 0
+
 static int
 mkvm_add_to_cmdb(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm);
 
@@ -153,9 +158,14 @@ mkvm_create_vm(ailsa_cmdb_s *cms, ailsa_mkvm_s *vm)
 		retval = -1;
 		goto cleanup;
 	}
+	if ((retval = virDomainSetAutostart(dom, DOMAIN_AUTOSTART_TRUE)) != 0) {
+		fprintf(stderr, "Unable to set autostart to true.\n");
+		fprintf(stderr, "You can still do this manually.\n");
+	}
+
 /* If we put this inside cleanup, then we will always add to cmdb. This is
    probably what we want, as even if the domain fails, we want to try to add
-   to cmdb. mkvm_add_to_cmdb will need to be idempotent so if will not add
+   to cmdb. mkvm_add_to_cmdb will need to be idempotent so it will not add
    the server and hardware twice. */
 	if (vm->cmdb > 0)
 		retval = mkvm_add_to_cmdb(cms, vm);
