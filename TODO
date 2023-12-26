@@ -1,3 +1,9 @@
+26/12/2023
+Investigate adding multiple network cards with mkvm, and ensure they get
+the correct name in the interface.
+    ** BONUS ** Naming the interfact in linux with the same name as the
+    network in libvirt
+
 23/12/2023
 Systems with less than 768MB RAM will pause installation with a low memory
 warning. This can be overcome by adding lowmem=1 to the bootline
