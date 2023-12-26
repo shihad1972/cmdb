@@ -63,6 +63,7 @@ typedef struct cbcvari_comm_line_s {
 	char *varient;
 	char *valias;
 	char *package;
+	const char *new;
 	short int action;
 	short int type;
 } cbcvari_comm_line_s;
@@ -184,6 +185,9 @@ static int
 remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
 
 static int
+update_cbcvarient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl);
+
+static int
 build_package_list(ailsa_cmdb_s *cbc, AILLIST *list, char *pack, char *vari, char *os, char *vers, char *arch);
 
 static int
@@ -240,7 +244,7 @@ main(int argc, char *argv[])
 	else if (cvcl->action == CMDB_RM && cvcl->type == CPACKAGE)
 		retval = remove_cbc_package(cmc, cvcl);
 	else if (cvcl->action == CMDB_MOD)
-		ailsa_syslog(LOG_ERR, "Cowardly refusal to modify varients\n");
+		retval = update_cbcvarient(cmc, cvcl);
 	else if (cvcl->action == CMDB_DEFAULT)
 		retval = set_default_cbc_varient(cmc, cvcl);
 	else
@@ -278,7 +282,7 @@ clean_cbcvarient_comm_line(cbcvari_comm_line_s *cvl)
 static int
 parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 {
-	const char *optstr = "ade:ghjk:lmn:o:p:qrs:t:vx:z";
+	const char *optstr = "ade:ghjk:lmn:o:p:qrs:t:vw:x:z";
 	int opt;
 #ifdef HAVE_GETOPT_H
 	int index;
@@ -303,6 +307,7 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		{"architecture",	required_argument,	NULL,	't'},
 		{"os-arch",		required_argument,	NULL,	't'},
 		{"version",		no_argument,		NULL,	'v'},
+		{"new",			required_argument,	NULL,	'w'},
 		{"varient-name",	required_argument,	NULL,	'x'},
 		{"set-default",		no_argument,		NULL,	'z'},
 		{NULL,			0,			NULL,	0}
@@ -371,6 +376,9 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		case 'x':
 			cvl->varient = strndup(optarg, HOST_LEN);
 			break;
+		case 'w':
+			cvl->new = optarg;
+			break;
 		default:
 			return AILSA_DISPLAY_USAGE;
 		}
@@ -383,11 +391,11 @@ parse_cbcvarient_comm_line(int argc, char *argv[], cbcvari_comm_line_s *cvl)
 		return AILSA_NO_ACTION;
 	if (cvl->action == CMDB_DEFAULT)
 		cvl->type = CVARIENT;
-	if (cvl->type == 0 && (cvl->action != CMDB_LIST && cvl->action != CBC_SERVER))
+	if (cvl->type == 0 && (cvl->action != CMDB_LIST && cvl->action != CBC_SERVER && cvl->action != CMDB_MOD))
 		return AILSA_NO_TYPE;
 	if (cvl->action != CMDB_LIST && !(cvl->varient) && !(cvl->valias))
 		return AILSA_NO_VARIENT;
-	if ((cvl->action == CMDB_ADD) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
+	if (((cvl->action == CMDB_ADD) || (cvl->action == CMDB_MOD)) && (cvl->type == CVARIENT) && (!(cvl->varient) || !(cvl->valias))) {
 		ailsa_syslog(LOG_ERR, "You need to supply both a varient name and valias when adding\n");
 		return AILSA_DISPLAY_USAGE;
 	}
@@ -707,6 +715,31 @@ remove_cbc_build_varient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
 	}
 	if ((retval = ailsa_delete_query(cmc, delete_queries[DELETE_VARIENT], list)) != 0)
 		ailsa_syslog(LOG_ERR, "Cannot remove varient %s from database", varient);
+	cleanup:
+		ailsa_list_full_clean(list);
+		return retval;
+}
+
+static int
+update_cbcvarient(ailsa_cmdb_s *cmc, cbcvari_comm_line_s *cvl)
+{
+	int retval = AILSA_NO_DATA;
+
+	if (!(cmc) || !(cvl))
+		return retval;
+	AILLIST *list = ailsa_db_data_list_init();
+	if ((retval = cmdb_add_string_to_list(cvl->varient, list)) !=0) {
+		ailsa_syslog(LOG_ERR, "Cannot add varient to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_add_string_to_list(cvl->new, list)) != 0) {
+		ailsa_syslog(LOG_ERR, "Cannot add valias to list");
+		goto cleanup;
+	}
+	if ((retval = cmdb_check_add_varient_id_to_list(cvl->valias, cmc, list)) != 0)
+		goto cleanup;
+	if ((retval = ailsa_update_query(cmc, update_queries[UPDATE_VARIENT_NAME], list)) != 0)
+		ailsa_syslog(LOG_ERR, "Cannot update valias %s", cvl->valias);
 	cleanup:
 		ailsa_list_full_clean(list);
 		return retval;

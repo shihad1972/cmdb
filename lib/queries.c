@@ -1186,6 +1186,11 @@ const struct ailsa_sql_query_s update_queries[] = {
 	4,
 	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT, AILSA_DB_LINT }
 	},
+	{ // UPDATE_VARIENT_NAME
+"UPDATE varient SET varient = ?, valias = ? WHERE varient_id = ?",
+	3,
+	{ AILSA_DB_TEXT, AILSA_DB_TEXT, AILSA_DB_LINT},
+	},
 };
 
 static int
