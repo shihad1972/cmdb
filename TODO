@@ -1,3 +1,7 @@
+31/12/2023
+Fix up the listing of services and network. Relying on the ID's are not
+reproducable. Should use the type name, and these should be unique.
+
 26/12/2023
 Investigate adding multiple network cards with mkvm, and ensure they get
 the correct name in the interface.
