@@ -1143,7 +1143,7 @@ get_iface_name(const char *name)
    name that is already used. Can use the function 
       char *virNetworkGetBridgeName	(virNetworkPtr network)
    to return the bridge name of a network. I need to loop through all networks
-   to check if a braide name is in use.
+   to check if a bridge name is in use.
    
    However, this function is no longer in use. Instead, call the bridge name
    the name of the network. */
