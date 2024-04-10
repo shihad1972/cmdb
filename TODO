@@ -1,3 +1,9 @@
+10/04/2024
+If we are unable to read any config files, then the config values are
+not set, and this causes big issues (seg faults). Need to check the
+autoconf script, as it is NOT setting the correct values for
+sysconfdir and localstatedir if installed into /usr/local 
+
 31/12/2023
 Fix up the listing of services and network. Relying on the ID's are not
 reproducable. Should use the type name, and these should be unique.
