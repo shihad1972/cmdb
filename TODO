@@ -1,8 +1,28 @@
+11/04/2024
+Create debian packages
+
+11/04/2024
+Use LDAP to store DHCP data. This can be added as a switch in the config
+file.
+
+11/04/2024
+Update options to mksp:
+	-g for lvm should be -m
+	-l for volume-group should be -g
+Add options to mksp:
+	-l list existing storage pools
+
+11/04/2024
+Update ax_lib_mysql to check for mysql.h header file.
+
 10/04/2024
 If we are unable to read any config files, then the config values are
 not set, and this causes big issues (seg faults). Need to check the
 autoconf script, as it is NOT setting the correct values for
-sysconfdir and localstatedir if installed into /usr/local 
+sysconfdir and localstatedir if installed into /usr/local
+	Remove checks for dnsa.conf. Config file should be
+	${sysconfdir}/cmdb/cmdb.conf. Check if it exists, and exit if
+	it does not.
 
 31/12/2023
 Fix up the listing of services and network. Relying on the ID's are not
@@ -136,7 +156,7 @@ Should probably get rid of cbcos. Should check if we have an alias in
 build_type and we can add the bt_id into the build table and remove
 os_id.
 	*** Add: Can even just have versions in build_os; no need to have
-	name and alias; Have those in build_type and then refernce from
+	name and alias; Have those in build_type and then reference from
 	build_os
 
 06/01/2015
@@ -316,6 +336,8 @@ Also need to add an email alias for root in smtp configuration
 	06/11/2015 **UPDATE**
 	The package configuration for postfix is supposed to do this, but
 	only seems to work in stretch (and not jessie nor wheezy)
+		11/04/2024 **UPDATE**
+		This is not an issue, as these versions are now outdated
 
 04/06/2013
 For all build options there should be a default option so when you
@@ -367,6 +389,7 @@ When displaying build OS, it would be useful to know what servers are
 built with that OS.
 Also display does not honour -o <os_version> nor -t <architecture>
 	** Display now honours above switches. Commit ID: 2d05b2f
+	** Added -q switch; need OS name and Version
 
 02/07/2020
 Fix cbcvarient where displaying varient that does not exist blows up.
