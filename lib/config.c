@@ -211,7 +211,6 @@ parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf)
 
 	GET_CONFIG_OPTION("TMPDIR=%s", cmdb->tmpdir);
 	GET_CONFIG_OPTION("TOPLEVELOS=%s", cmdb->toplevelos);
-	GET_CONFIG_OPTION("PXE=%s", cmdb->pxe);
 	GET_CONFIG_OPTION("DBTYPE=%s", cmdb->dbtype);
 	GET_CONFIG_OPTION("DB=%s", cmdb->db);
 	GET_CONFIG_OPTION("FILE=%s", cmdb->file);
