@@ -7,4 +7,5 @@ script_DATA = disable_install.php kick-ntp.sh kick-postfix.sh log.sh motd.sh\
               bb-mysql.pl deploy-mysql.sh lspci.sh sssd-auth.sh
 bin_SCRIPTS = cmdb.sh
 
-install-exec-hook:      mkdir $(packdir)/{hosts,web,tmp}
+install-exec-hook:
+	mkdir $(packdir)/{hosts,web,tmp}
