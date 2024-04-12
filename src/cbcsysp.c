@@ -207,6 +207,7 @@ parse_cbc_sysp_comm_line(int argc, char *argv[], cbc_sysp_s *cbcs)
 			cbcs->type = strndup(optarg, DOMAIN_LEN);
 			break;
 		default:
+			ailsa_syslog(LOG_ERR, "Incorrect option: %c\n", opt);
 			return AILSA_DISPLAY_USAGE;
 		}
 	}

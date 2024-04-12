@@ -8,7 +8,7 @@
 #define DATADIR "/usr/local/share"
 #define SYSCONFDIR "/etc"
 #define SHAREDSTATEDIR "/usr/local/com"
-#define LOCALSTATEDIR "/var/lib"
+#define LOCALSTATEDIR "/var"
 #define RUNSTATEDIR "/var/run"
 #define INCLUDEDIR "/usr/local/include"
 #define OLDINCLUDEDIR "/usr/include"
