@@ -80,7 +80,7 @@ parse_cmdb_config(ailsa_cmdb_s *cmdb)
 		cmdb->file = ailsa_calloc(CONFIG_LEN, "cmdb->fie in parse_cmdb_config");
 	snprintf(cmdb->toplevelos, CONFIG_LEN, "%s/lib/cmdb", LOCALSTATEDIR);
 	snprintf(cmdb->tmpdir, CONFIG_LEN, "%s/lib/cmdb/tmp", LOCALSTATEDIR);
-	snprintf(cmdb->tmpdir, CONFIG_LEN, "%s/lib/cmdb/sql/cmdb.sql", LOCALSTATEDIR);
+	snprintf(cmdb->file, CONFIG_LEN, "%s/lib/cmdb/sql/cmdb.sql", LOCALSTATEDIR);
 	snprintf(cmdb->pxe, CONFIG_LEN, "pxelinux.cfg");
 	parse_system_cmdb_config(cmdb);
 	parse_user_cmdb_config(cmdb);
