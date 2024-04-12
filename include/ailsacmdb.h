@@ -1120,8 +1120,6 @@ void
 chomp(char *input);
 void 
 display_type_error(short int type);
-int
-get_config_file_location(char *config);
 char *
 cmdb_get_uname(unsigned long int uid);
 const char *

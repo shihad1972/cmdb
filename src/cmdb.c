@@ -314,13 +314,12 @@ cmdb_hardware_type_actions(cmdb_comm_line_s *cm, ailsa_cmdb_s *cc)
 static int
 parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 {
-	const char *optstr = "c:i:k:n:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlmorqstuvwz";
+	const char *optstr = "i:k:n:x:y:A:B:C:D:E:H:I:L:M:N:O:P:S:T:U:V:Y:Z:adefghjlmorqstuvwz";
 	int opt, retval;
 #ifdef HAVE_GETOPT_H
 	int index;
 	struct option lopts[] = {
 		{"add",			no_argument,		NULL,	'a'},
-		{"config",		required_argument,	NULL,	'c'},
 		{"display",		no_argument, 		NULL,	'd'},
 		{"service",		no_argument,		NULL,	'e'},
 		{"force",		no_argument,		NULL,	'f'},
@@ -369,11 +368,6 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 	};
 #endif // HAVE_GETOPT_H
 	retval = 0;
-	if (!(comp->config)) {
-		comp->config = ailsa_calloc(CONFIG_LEN, "comp->config in parse_cmdb_command_line");
-		if ((retval = get_config_file_location(comp->config)) != 0)
-			return retval;
-	}
 #ifdef HAVE_GETOPT_H
 	while ((opt = getopt_long(argc, argv, optstr, lopts, &index)) != -1)
 #else
@@ -433,9 +427,6 @@ parse_cmdb_command_line(int argc, char **argv, cmdb_comm_line_s *comp)
 			return AILSA_DISPLAY_USAGE;
 		case 'f':
 			comp->force = 1;
-			break;
-		case 'c':
-			comp->config = strndup(optarg, CONFIG_LEN);
 			break;
 		case 'n':
 			comp->name = strndup(optarg, HOST_LEN);

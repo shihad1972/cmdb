@@ -60,32 +60,6 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb);
 static void
 parse_cmdb_config_values(ailsa_cmdb_s *cmdb, FILE *conf);
 
-int
-get_config_file_location(char *config)
-{
-	int retval = 0;
-	FILE *cnf;
-	const char *conf = config;
-
-	if (snprintf(config, CONFIG_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR) >= CONFIG_LEN)
-		return AILSA_BUFFER_TOO_SMALL;
-	if ((cnf = fopen(conf, "r"))) {
-		fclose(cnf);
-	} else	{
-		if (snprintf(config, CONFIG_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR) >= CONFIG_LEN) {
-			ailsa_syslog(LOG_ERR, "Buffer too small to hold config file location");
-			retval = AILSA_BUFFER_TOO_SMALL;
-		}
-		if ((cnf = fopen(conf, "r")))
-			fclose(cnf);
-		else {
-			ailsa_syslog(LOG_ERR, "Cannot open config file %s", conf);
-			retval = AILSA_FILE_ERROR;
-		}
-	}
-	return retval;
-}
-
 void
 parse_mkvm_config(ailsa_mkvm_s *vm)
 {
@@ -183,7 +157,7 @@ parse_user_mkvm_config(ailsa_mkvm_s *vm)
 #endif // HAVE_WORDEXP
 }
 
-/* Grab config values from confile file that uses NAME=value as configuration
+/* Grab config values from conffile file that uses NAME=value as configuration
    options */
 #ifndef GET_CONFIG_OPTION
 # define GET_CONFIG_OPTION(CONFIG, option) { \
@@ -334,14 +308,6 @@ display_mksp_usage(void)
 	printf("\t-p <path>: Specify the path to the storage directory\n");
 }
 
-#ifndef OPEN_CMDB_FILE
-# define OPEN_CMDB_FILE { \
-	if ((conf = fopen(path, "r"))) { \
-		parse_cmdb_config_values(cmdb, conf); \
-		goto cleanup; \
-	} \
-  }
-#endif
 
 static void
 parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
@@ -351,19 +317,13 @@ parse_system_cmdb_config(ailsa_cmdb_s *cmdb)
 
 	memset(path, 0, FILE_LEN);
 	snprintf(path, FILE_LEN, "%s/cmdb/cmdb.conf", SYSCONFDIR);
-	OPEN_CMDB_FILE
-	memset(path, 0, FILE_LEN);
-	snprintf(path, FILE_LEN, "%s/cmdb/dnsa.conf", SYSCONFDIR);
-	OPEN_CMDB_FILE
-	memset(path, 0, FILE_LEN);
-	snprintf(path, FILE_LEN, "%s/dnsa/cmdb.conf", SYSCONFDIR);
-	OPEN_CMDB_FILE
-	memset(path, 0, FILE_LEN);
-	snprintf(path, FILE_LEN, "%s/dnsa/dnsa.conf", SYSCONFDIR);
-	OPEN_CMDB_FILE
-	cleanup:
-		if (conf)
-			fclose(conf);
+	if ((conf = fopen(path, "r"))) {
+		parse_cmdb_config_values(cmdb, conf);
+		fclose(conf);
+	} else {
+		ailsa_syslog(LOG_DAEMON, "Cannot open %s for config\n", path);
+		exit (1);
+	}
 }
 
 static void
@@ -383,17 +343,6 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 #ifdef DEBUG
 			ailsa_syslog(LOG_DEBUG, "Cannot open file %s", *uconf);
 #endif
-			upath = "~/.dnsa.conf";
-			wordexp_t r;
-			if ((retval = wordexp(upath, &r, 0)) == 0) {
-				uconf = r.we_wordv;
-				if (!(conf = fopen(*uconf, "r"))) {
-#ifdef DEBUG
-					ailsa_syslog(LOG_DEBUG, "Cannot open file %s", *uconf);
-#endif
-				}
-				wordfree(&r);
-			}
 		}
 	}
 #endif // HAVE_WORDEXP
@@ -436,4 +385,3 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 
 #undef GET_CONFIG_OPTION
 #undef GET_CONFIG_INT
-#undef OPEN_CMDB_FILE
