@@ -93,6 +93,7 @@ fi
 gl_CONFIGMAKE_PREP
 
 AC_CONFIG_FILES([Makefile
+                 conf/Makefile
                  lib/Makefile
                  man/Makefile
                  scripts/Makefile

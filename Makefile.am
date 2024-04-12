@@ -6,7 +6,7 @@
 RM = rm -f
 ECHO = echo
 DIR = src
-SUBDIRS = lib src man scripts sql
+SUBDIRS = lib src man scripts sql conf
 EXTRA_DIST = docs man scripts sql lib include ansible
 ACLOCAL_AMFLAGS = -I m4
 
