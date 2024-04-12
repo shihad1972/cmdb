@@ -1,5 +1,5 @@
 ## DB Driver
-DBTYPE=mysql			# DB type
+DBTYPE=sqlite			# DB type
 
 ## SQLITE PATH
 FILE=/var/lib/cmdb/sql/cmdb.sql	# Sqlite database file
@@ -35,7 +35,6 @@ SECNS=				# DNS name of the secondary DNS server
 TMPDIR=/tmp/cmdb		# Temporary directory
 TFTPDIR=/srv/tftp		# TFTP root directory
 PXE=pxelinux.cfg		# Boot config sub-directory
-TOPLEVELOS=/var/lib/cmdb/web/	# Top level OS mirror directory
 PRESEED=preseed/		# Preseed sub-directory
 KICKSTART=ks/			# Kickstart sub-directory
 DHCPCONF=/etc/dhcp/dhcpd.hosts	# DHCP config file
