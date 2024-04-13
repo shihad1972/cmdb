@@ -345,7 +345,7 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 		if (!(conf = fopen(*uconf, "r"))) {
 #ifdef DEBUG
 			ailsa_syslog(LOG_DEBUG, "Cannot open file %s", *uconf);
-#endif
+#endif // DEBUG
 		}
 	}
 #endif // HAVE_WORDEXP
@@ -360,17 +360,8 @@ parse_user_cmdb_config(ailsa_cmdb_s *cmdb)
 		if (!(conf = fopen(wpath, "r"))) {
 #ifdef DEBUG
 			ailsa_syslog(LOG_DEBUG, "Cannot open file %s", wpath);
-#endif
-			if ((len = snprintf(wpath, CONFIG_LEN, "%s/.dnsa.conf", home)) >= CONFIG_LEN) {
-				ailsa_syslog(LOG_INFO, "Output path to config file truncated! Longer than 255 bytes\n");
-				goto cleanup;
-			}
-			if (!(conf = fopen(wpath, "r"))) {
-#ifdef DEBUG
-				ailsa_syslog(LOG_DEBUG, "Cannot open file %s\n", wpath);
-#endif
-				goto cleanup;
-			}
+#endif // DEBUG
+			goto cleanup;
 		}
 	}
 	fseek(conf, 0, SEEK_END);
