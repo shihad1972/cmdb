@@ -1,0 +1,27 @@
+##############################################################################
+#                                                                            #
+#                           mkvm configuration file                          #
+#                                                                            #
+##############################################################################
+
+## mkvm et al configuration
+#
+# Options for the mk* suite of programs (mkvm mksp mknet) that interface with
+# libvirt. 
+
+# These are the useful options to set, so you do not have to specify them
+# on the command line
+#
+
+URI=qemu:///system		# URI to access the libvirt daemon
+NETWORK=default			# Network to use when creating VM's
+RAM=1024			# Default RAM size of VM in MB
+CPUS=2				# Default no of CPU's for VM's
+STORAGE=20			# Default size of disk in GB
+POOL=default			# Storage pool
+
+# These options should not normally need set
+#
+
+#NAME=				# Default name of VM.
+#INTERFACE=			# Interface name on the host computer
