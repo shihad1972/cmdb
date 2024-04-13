@@ -1,14 +1,44 @@
+############################################################################
+#                                                                          #
+#                           cmdb configuration file                        #
+#                                                                          #
+############################################################################
+
+
 ## DB Driver
+#
+# Configure database access
+# Can be one of mysql or sqlite
+#
+#
+#FILE=                          # Optional
+
 DBTYPE=sqlite			# DB type
 
 ## MYSQL DB Connectivity
+#
+# Usual MYSQL settings. It's best to create a user and database specifically
+# for cmdb
 DB=your-mysql-db		# Database name
 USER=your-mysql-user		# DB user
 PASS=your-user-pass		# DB pass
 HOST=your-mysql-host		# DB host
 PORT=3306			# DB Port
 
+## Extra programs
+#
+# It is advisable to have at least a group for cmdb so the users can write
+# into the following directories.
+#
+# For dnsa, you can make the toplevel BIND directory group owned by the
+# group of the dns server (usually bind). Ensure the directory has the
+# group setgid
+#
+
 ## DNSA Settings
+# If you have dnsa installed, you will need these for setting up
+# DNS zones and records in bind. Ensure the users have write access
+# to the BIND directory
 
 DIR=/etc/bind/db/		# BIND data directory for zone files
 BIND=/etc/bind/			# BIND configuration directory
@@ -28,7 +58,18 @@ PRINS=				# DNS name of the primary DNS server
 SECNS=				# DNS name of the secondary DNS server
 
 ## CBC settings
+#
+# You will need to have a web server, tftp server and dhcp server installed
+# to be able to make full use of cbc and it's variants.
+#
+# apache2, tftpd-hpa and isc-dhcp-server are excellent debian package
+# candidates for this.
+#
+# All these directories will need to be writable for the users. Again
+# you should group setgid these directories with the common cmdb group and
+# ensure these directories are group writable.
 
 TFTPDIR=/srv/tftp		# TFTP root directory
 DHCPCONF=/etc/dhcp		# DHCP config directory
 
+#PXE=pxelinux.cfg               # optional; path to the pxe boot configs
